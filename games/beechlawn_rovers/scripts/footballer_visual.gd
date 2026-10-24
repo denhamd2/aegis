@@ -29,6 +29,7 @@ var _action_has_contact := false
 var _action_contact_times: Dictionary = {}
 var _stop_latched := false
 var _close_control_blend := 0.0
+var _shield_blend := 0.0
 var _appearance_profile: FootballerProfile
 var _appearance_team: FootballTeam
 var _human_rig := false
@@ -46,8 +47,10 @@ var _lod_initialized := false
 var _hair_allowed := true
 static var _kit_materials: Dictionary = {}
 static var _head_variant_meshes: Dictionary = {}
+static var _stride_motion_cache: Dictionary = {}
 @export var jog_reference_speed := 6.0
 @export var sprint_reference_speed := 8.6
+@export var stop_pose_entry_speed := 2.6
 
 
 func _ready() -> void:
@@ -56,7 +59,10 @@ func _ready() -> void:
 	_install_aerial_actions()
 	_install_volley_actions()
 	_install_match_motion()
+	_install_stride_gaits()
+	_install_keeper_high_actions()
 	_install_presentation_actions()
+	_install_skill_actions()
 	_build_locomotion_tree()
 	# Reception/kick setup reads this skeleton's boot pose in physics. Idle
 	# evaluation held the running pose for several ticks on slow renders.
@@ -128,7 +134,10 @@ func configure_appearance(profile: FootballerProfile, team: FootballTeam = null)
 		_install_aerial_actions()
 		_install_volley_actions()
 		_install_match_motion()
+		_install_stride_gaits()
+		_install_keeper_high_actions()
 		_install_presentation_actions()
+		_install_skill_actions()
 		_install_action_contact_marker(&"pass", PASS_CLIP, PASS_EVENT_METADATA)
 		_install_action_contact_marker(&"receive", RECEIVE_CLIP, RECEIVE_EVENT_METADATA)
 		_install_action_contact_marker(&"shot", SHOT_CLIP, SHOT_EVENT_METADATA)
@@ -185,7 +194,7 @@ func configure_appearance(profile: FootballerProfile, team: FootballTeam = null)
 			for surface in part.mesh.get_surface_count():
 				part.set_surface_override_material(surface, null)
 				var source_material := part.mesh.surface_get_material(surface)
-				if source_material != null and source_material.resource_name == "MAT_Des_SideBackRoots":
+				if source_material != null and (source_material.resource_name == "MAT_Des_SideBackRoots" or String(source_material.resource_name).begins_with("MAT_PortraitScalpRoots_")):
 					part.set_surface_override_material(surface,FootballCharacterLook.groom_root_for(source_material))
 			var head_fullness := part.find_blend_shape_by_name("Fullness")
 			if head_fullness >= 0: part.set_blend_shape_value(head_fullness, appearance.body_fullness)
@@ -215,10 +224,27 @@ func configure_appearance(profile: FootballerProfile, team: FootballTeam = null)
 			for index in part.mesh.get_surface_count(): source_materials.append(part.get_active_material(index))
 			_normal_head_materials[part_name] = source_materials
 	var rig_node := get_node("Rig") as Node3D
+	_configure_oral_parts(head_parts)
 	rig_node.scale = Vector3(appearance.build_scale, appearance.height_scale, appearance.build_scale)
 	_add_back_print(profile, appearance)
 	_prime_locomotion_pose()
 	_bind_pose_presentation()
+
+
+func _configure_oral_parts(parts: Dictionary) -> void:
+	# Optional individual oral geometry shares the live head's bind/skeleton.
+	# Reconfiguration removes the previous identity's parts synchronously.
+	for node in get_node("Rig").find_children("Mouth_*", "MeshInstance3D",true,false):
+		node.free()
+	for part_name in parts:
+		if not String(part_name).begins_with("Mouth_"): continue
+		var part := MeshInstance3D.new()
+		part.name=part_name
+		part.mesh=parts[part_name]
+		part.skin=_face_mesh.skin
+		part.skeleton=_face_mesh.skeleton
+		_face_mesh.get_parent().add_child(part)
+		part.transform=_face_mesh.transform
 
 
 static func _head_parts(packed: PackedScene) -> Dictionary:
@@ -397,7 +423,8 @@ func play_aerial(action: StringName, playback_speed := 1.0) -> bool:
 	return started
 
 func play_keeper_save(style: StringName = &"KeeperCatch", preparation: float = .25) -> bool:
-	return _play_action(&"keeper_save", StringName("AN_Beechlawn_" + String(style)), clampf(.25 / maxf(preparation,.09),1,2.8), true, true)
+	var minimum_speed := .55 if String(style).begins_with("KeeperHigh") or String(style).contains("DiveFull") else 1.0
+	return _play_action(&"keeper_save", StringName("AN_Beechlawn_" + String(style)), clampf(.25 / maxf(preparation,.09),minimum_speed,2.8), true, true)
 
 
 func sustain_keeper_recovery() -> float:
@@ -436,7 +463,7 @@ func is_recovery_active() -> bool:
 
 func can_start_ball_action() -> bool:
 	return _active_action in [&"", &"turn", &"stop", &"receive"] \
-		or (_action_has_contact and _active_action in [&"pass", &"shot"])
+		or (_action_has_contact and _active_action in [&"pass", &"shot", &"skill"])
 
 
 func action_contact_time(action: StringName) -> float:
@@ -451,12 +478,13 @@ func _play_action(action: StringName, clip: StringName, playback_speed: float = 
 		var interrupt_locomotion := _active_action in [&"turn", &"stop"] \
 			and action not in [&"turn", &"stop"]
 		var interrupt_follow_through := _action_has_contact \
-			and _active_action in [&"pass", &"shot", &"receive"] \
+			and _active_action in [&"pass", &"shot", &"receive", &"skill"] \
 			and action in [&"pass", &"shot", &"header", &"chest_control"]
 		if not interrupt_action and not interrupt_locomotion and not interrupt_follow_through \
 				and (not interrupt_receive or _active_action != &"receive"):
 			return false
 		var interrupted_action := _active_action
+		if interrupted_action == &"skill": animation_player.callback_mode_method = AnimationMixer.ANIMATION_CALLBACK_MODE_METHOD_DEFERRED
 		animation_player.stop()
 		_active_action = &""
 		_active_clip = &""
@@ -506,6 +534,16 @@ func set_locomotion_speed(speed_mps: float, _sprinting: bool = false,
 		animation_tree.set("parameters/Locomotion/blend_position", _blend_position)
 	if absf(float(animation_tree.get("parameters/CloseControl/blend_amount")) - _close_control_blend) >= 0.005:
 		animation_tree.set("parameters/CloseControl/blend_amount", _close_control_blend)
+	# All footwork loops share a normalized phase. Scale this branch alone;
+	# one-shot football actions retain their authored marker timing.
+	var jog_cadence := lerpf(1.14,1.333333333,clampf((speed_mps-jog_speed*.25)/(jog_speed*.25),0,1))
+	if speed_mps>jog_speed*.5:
+		jog_cadence=lerpf(1.333333333,1.5,clampf((speed_mps-jog_speed*.5)/(jog_speed*.5),0,1))
+	var sprint_weight := clampf((speed_mps-jog_speed)/(sprint_speed-jog_speed),0,1)
+	var cadence := lerpf(jog_cadence,1.875,sprint_weight)
+	cadence = lerpf(cadence,1.333333333,_close_control_blend)
+	animation_tree.set("parameters/GaitRate/scale",cadence if speed_mps>.05 else 1.0)
+	animation_tree.set("parameters/ClosePace/blend_amount",clampf(speed_mps/3.36,0,1))
 	if _active_action == &"stop" and not braking and speed_mps > 1.2:
 		animation_player.stop()
 		_active_action = &""
@@ -513,7 +551,9 @@ func set_locomotion_speed(speed_mps: float, _sprinting: bool = false,
 		animation_tree.active = true
 	if not braking:
 		_stop_latched = false
-	elif not _stop_latched and speed_mps > 0.8 and _active_action == &"":
+	# Keep stepping during fast deceleration. At the default 15 m/s² braking,
+	# 2.6 m/s leaves about 0.23 m of travel for the final planted weight shift.
+	elif not _stop_latched and speed_mps > 0.8 and speed_mps <= stop_pose_entry_speed and _active_action == &"":
 		_stop_latched = play_stop()
 
 
@@ -530,17 +570,46 @@ func _build_locomotion_tree() -> void:
 	locomotion.min_space = source.min_space
 	locomotion.max_space = source.max_space
 	locomotion.blend_mode = source.blend_mode
+	locomotion.sync = true
 	for point_index in range(3):
 		locomotion.add_blend_point(source.get_blend_point_node(point_index),
 			source.get_blend_point_position(point_index))
+	var slow_jog := AnimationNodeAnimation.new()
+	slow_jog.animation = &"AN_Beechlawn_SlowJog"
+	locomotion.add_blend_point(slow_jog,.275)
+	var walk := AnimationNodeAnimation.new()
+	walk.animation = &"AN_Beechlawn_Walk"
+	locomotion.add_blend_point(walk,.1375)
 	var close_animation := source.get_blend_point_node(3) as AnimationNodeAnimation
 	var tree := AnimationNodeBlendTree.new()
 	tree.add_node("Locomotion", locomotion, Vector2(0, 0))
 	tree.add_node("CloseControlAnimation", close_animation, Vector2(0, 180))
-	tree.add_node("CloseControl", AnimationNodeBlend2.new(), Vector2(260, 80))
+	var close_idle := AnimationNodeAnimation.new()
+	close_idle.animation = &"AN_Beechlawn_Idle"
+	var close_pace := AnimationNodeBlend2.new()
+	close_pace.sync = true
+	tree.add_node("CloseIdle", close_idle, Vector2(0, 270))
+	tree.add_node("ClosePace", close_pace, Vector2(170, 180))
+	tree.connect_node("ClosePace",0,"CloseIdle")
+	tree.connect_node("ClosePace",1,"CloseControlAnimation")
+	var close_mode := AnimationNodeBlend2.new()
+	close_mode.sync = true
+	tree.add_node("CloseControl", close_mode, Vector2(340, 80))
 	tree.connect_node("CloseControl", 0, "Locomotion")
-	tree.connect_node("CloseControl", 1, "CloseControlAnimation")
-	tree.connect_node("output", 0, "CloseControl")
+	tree.connect_node("CloseControl", 1, "ClosePace")
+	tree.add_node("GaitRate",AnimationNodeTimeScale.new(),Vector2(480,80))
+	tree.connect_node("GaitRate",0,"CloseControl")
+	var shield_animation := AnimationNodeAnimation.new()
+	shield_animation.animation = &"AN_Beechlawn_Shield"
+	var shield := AnimationNodeBlend2.new()
+	shield.filter_enabled = true
+	var motion := animation_player.get_animation(&"AN_Beechlawn_Shield")
+	for track in motion.get_track_count(): shield.set_filter_path(motion.track_get_path(track), true)
+	tree.add_node("ShieldAnimation", shield_animation, Vector2(0, 360))
+	tree.add_node("Shield", shield, Vector2(480, 80))
+	tree.connect_node("Shield", 0, "GaitRate")
+	tree.connect_node("Shield", 1, "ShieldAnimation")
+	tree.connect_node("output", 0, "Shield")
 	animation_tree.tree_root = tree
 
 
@@ -564,7 +633,7 @@ func _on_animation_finished(animation_name: StringName) -> void:
 	if animation_name != _active_clip or _active_action == &"":
 		return
 	var finished_action := _active_action
-	if finished_action in AERIAL_CLIPS or finished_action in VOLLEY_CLIPS:
+	if finished_action in AERIAL_CLIPS or finished_action in VOLLEY_CLIPS or finished_action == &"skill":
 		animation_player.callback_mode_method = AnimationMixer.ANIMATION_CALLBACK_MODE_METHOD_DEFERRED
 	if finished_action == &"slide_tackle" and animation_player.has_animation(GET_UP_CLIP):
 		_active_action = &"get_up"
@@ -648,8 +717,64 @@ static func _arm_track(path: NodePath) -> bool:
 	if path.get_subname_count() == 0: return false
 	return String(path.get_subname(0)) in ["mixamorig_LeftArm", "mixamorig_LeftForeArm", "mixamorig_LeftHand", "mixamorig_RightArm", "mixamorig_RightForeArm", "mixamorig_RightHand"]
 
+static func _gait_track(path: NodePath) -> bool:
+	if path.get_subname_count()==0:return false
+	var bone:=String(path.get_subname(0))
+	return bone=="mixamorig_Hips" or bone.contains("Leg") or bone.contains("Foot") or bone.contains("Toe")
+
+func _install_stride_gaits() -> void:
+	var library := animation_player.get_animation_library(&"")
+	var cache_key:=&"human" if _human_rig else &"proxy"
+	if _stride_motion_cache.has(cache_key):
+		for name in _stride_motion_cache[cache_key]:
+			if library.has_animation(name):library.remove_animation(name)
+			library.add_animation(name,_stride_motion_cache[cache_key][name])
+		return
+	var source := (load("res://assets/characters/shared/stride_gaits.glb") as PackedScene).instantiate()
+	var player := source.get_node("AnimationPlayer") as AnimationPlayer
+	var merged: Dictionary={}
+	for name in player.get_animation_list():
+		if name=="RESET":continue
+		var target:=StringName(String(name).trim_suffix("_Footwork"))
+		# Reuse the existing spine/head/finger content for the slower gaits;
+		# authored lower-body and arm tracks replace their movement channels.
+		var template:=&"AN_Beechlawn_Jog" if target in [&"AN_Beechlawn_SlowJog",&"AN_Beechlawn_Walk",&"AN_Beechlawn_CloseControl"] else target
+		if not library.has_animation(template):continue
+		var motion:=library.get_animation(template).duplicate() as Animation
+		var original_length:=motion.length
+		# Preserve unrelated pose content, retimed to the common gait phase.
+		for track in range(motion.get_track_count()-1,-1,-1):
+			if _gait_track(motion.track_get_path(track)) or _arm_track(motion.track_get_path(track)):
+				motion.remove_track(track)
+			else:
+				for key in range(motion.track_get_key_count(track)-1,-1,-1):
+					motion.track_set_key_time(track,key,motion.track_get_key_time(track,key)/maxf(.01,original_length))
+		var footwork:=player.get_animation(name)
+		for track in footwork.get_track_count():
+			if _gait_track(footwork.track_get_path(track)) or _arm_track(footwork.track_get_path(track)):footwork.copy_track(track,motion)
+		motion.length=1.0
+		motion.loop_mode=Animation.LOOP_LINEAR
+		if library.has_animation(target):library.remove_animation(target)
+		library.add_animation(target,motion)
+		merged[target]=motion
+	# Pose content is immutable after assembly. AnimationTree playback remains
+	# per actor; proxy and final-human imports have separate cache entries.
+	_stride_motion_cache[cache_key]=merged
+	source.free()
+
 func play_standing_tackle() -> bool:
 	return _play_action(&"standing_tackle", &"AN_Beechlawn_StandingTackle", 1.0, true, true)
+
+func _install_keeper_high_actions() -> void:
+	var library := animation_player.get_animation_library(&"")
+	for path in ["res://assets/characters/shared/keeper_high_saves.glb","res://assets/characters/shared/keeper_full_dives.glb"]:
+		var source := (load(path) as PackedScene).instantiate()
+		var player := source.get_node("AnimationPlayer") as AnimationPlayer
+		for name in player.get_animation_list():
+			if name == "RESET": continue
+			if library.has_animation(name): library.remove_animation(name)
+			library.add_animation(name,player.get_animation(name).duplicate())
+		source.free()
 
 func hand_positions() -> Array[Vector3]:
 	var result: Array[Vector3] = []
@@ -701,11 +826,57 @@ func _install_volley_actions() -> void:
 	for action in VOLLEY_CLIPS:
 		_install_action_contact_marker(action, VOLLEY_CLIPS[action], "res://assets/characters/shared/" + str(action) + "_contact.json")
 
+func _install_skill_actions() -> void:
+	var source := (load("res://assets/characters/shared/skill_actions.glb") as PackedScene).instantiate()
+	var player := source.get_node("AnimationPlayer") as AnimationPlayer
+	var library := animation_player.get_animation_library(&"")
+	for name in player.get_animation_list():
+		if name == "RESET": continue
+		var motion := player.get_animation(name).duplicate() as Animation
+		if name == "AN_Beechlawn_Shield":
+			# glTF's forced sampling expands an upper-body action to every bone.
+			# Strip those baked lower-body tracks before creating its filter.
+			for track in range(motion.get_track_count()-1, -1, -1):
+				var path := motion.track_get_path(track)
+				var bone := String(path.get_subname(0)) if path.get_subname_count() > 0 else ""
+				var upper := bone.begins_with("mixamorig_Spine") or bone.begins_with("mixamorig_LeftHand") or bone.begins_with("mixamorig_RightHand")
+				upper = upper or bone in ["mixamorig_LeftShoulder", "mixamorig_RightShoulder", "mixamorig_LeftArm", "mixamorig_RightArm", "mixamorig_LeftForeArm", "mixamorig_RightForeArm"]
+				if not upper: motion.remove_track(track)
+			motion.loop_mode = Animation.LOOP_LINEAR
+		if library.has_animation(name): library.remove_animation(name)
+		library.add_animation(name, motion)
+		if name == "AN_Beechlawn_Shield": continue
+		var suffix := "right" if String(name).ends_with("Right") else "left"
+		var kind := String(name).trim_prefix("AN_Beechlawn_").trim_suffix("Right").trim_suffix("Left").to_lower()
+		_install_action_contact_marker(&"skill", name, "res://assets/characters/shared/"+kind+"_"+suffix+"_contact.json")
+	source.free()
+
+func play_skill(clip: StringName, cancel_shot := false) -> bool:
+	if not _play_action(&"skill", clip, 1.0, true, cancel_shot): return false
+	animation_player.callback_mode_method = AnimationMixer.ANIMATION_CALLBACK_MODE_METHOD_IMMEDIATE
+	animation_player.advance(0)
+	return true
+
+func cancel_skill() -> void:
+	if _active_action != &"skill": return
+	animation_player.stop()
+	animation_player.callback_mode_method = AnimationMixer.ANIMATION_CALLBACK_MODE_METHOD_DEFERRED
+	_active_action = &""
+	_active_clip = &""
+	animation_tree.active = true
+	action_finished.emit(&"skill")
+
+func set_shielding(value: bool, delta: float) -> void:
+	_shield_blend = move_toward(_shield_blend, 1.0 if value else 0.0, delta*8)
+	animation_tree.set("parameters/Shield/blend_amount", _shield_blend)
+
 func reset_to_idle() -> void:
 	end_presentation()
 	animation_player.callback_mode_method = AnimationMixer.ANIMATION_CALLBACK_MODE_METHOD_DEFERRED
 	_blend_position=0.0
 	_close_control_blend=0.0
+	_shield_blend=0.0
+	animation_tree.set("parameters/Shield/blend_amount", 0.0)
 	animation_tree.set("parameters/Locomotion/blend_position",0.0)
 	animation_tree.set("parameters/CloseControl/blend_amount",0.0)
 	animation_tree.advance(0.0)

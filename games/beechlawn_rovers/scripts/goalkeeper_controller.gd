@@ -24,6 +24,13 @@ var _gather_elapsed := 0.0
 var _original_shape: Shape3D
 var _original_shape_position := Vector3.ZERO
 var _recovery_remaining := 0.0
+var _active_save_style: StringName = &""
+var _high_launch_pending := false
+var _high_air_active := false
+var _high_elapsed := 0.0
+var _high_vertical_speed := 0.0
+var _high_lateral_speed := 0.0
+var _high_launch_delay := 0.0
 
 func configure(player: FootballPlayer, match_ball: FootballBall) -> void:
 	keeper = player
@@ -59,12 +66,18 @@ func update_before_move(delta: float) -> void:
 			and _intercept_seconds <= 0.45 and not _save_animation_started:
 		_save_facing=atan2(ball.linear_velocity.x,ball.linear_velocity.z)
 		var style := _save_style()
+		_active_save_style = style
 		_set_dive_shape(style)
+		if String(style).contains("DiveFull"): _plan_full_dive(style)
+		elif String(style).begins_with("KeeperHigh"): _plan_high_takeoff(style)
 		keeper._start_goalkeeper_save_pose(style, maxf(.09,_intercept_seconds-.04))
 		_save_animation_started = true
 	if _save_animation_started and _shot_active and not _has_intercept and ball.position.x * keeper.attack_sign < keeper.position.x * keeper.attack_sign:
 		_shot_active = false
 		_recovery_remaining = .35
+		if String(_active_save_style).begins_with("KeeperHigh") or String(_active_save_style).contains("DiveFull"):
+			var visual := keeper.get_node_or_null("Visual") as FootballerVisual
+			if visual != null: _recovery_remaining = maxf(_recovery_remaining,visual.sustain_keeper_recovery())
 	if is_recovering():
 		keeper.ai_move_direction = Vector3.ZERO
 		keeper.ai_sprinting = false
@@ -84,6 +97,59 @@ func update_before_move(delta: float) -> void:
 	keeper.ai_move_direction = offset.normalized() if offset.length() > 0.18 else Vector3.ZERO
 	keeper.ai_sprinting = offset.length() > 2.2
 	keeper.set_meta("goalkeeper_target", target)
+
+func _plan_high_takeoff(style: StringName) -> void:
+	var height := _predicted_intercept.y-keeper.global_position.y
+	var dive := String(style).contains("Dive")
+	var standing_wrist := 1.86 if dive else 1.99
+	var rise := clampf(height-standing_wrist+.04,0,.44)
+	_high_vertical_speed = sqrt(2*FootballPlayer.LOCOMOTION_GRAVITY*rise)
+	_high_launch_delay = maxf(0,_intercept_seconds-.04-_high_vertical_speed/FootballPlayer.LOCOMOTION_GRAVITY)
+	var lateral := _predicted_intercept.z-keeper.global_position.z
+	var remaining := maxf(.09,_intercept_seconds-.04)
+	_high_lateral_speed = clampf((lateral-signf(lateral)*.60)/remaining,-4,4) if dive else 0.0
+	_high_launch_pending = true
+
+func _plan_full_dive(style: StringName) -> void:
+	# Measured extension on the unchanged rig, from the Blender source audit.
+	var high := String(style).begins_with("KeeperHigh")
+	var low := String(style).contains("Low")
+	var wrist_height := 1.31 if high else (.25 if low else .85)
+	var wrist_side := 1.04 if high else (1.13 if low else 1.10)
+	var height := _predicted_intercept.y-keeper.position.y
+	var rise := clampf(height-wrist_height,.04,.95 if high else .40)
+	_high_vertical_speed = sqrt(2*FootballPlayer.LOCOMOTION_GRAVITY*rise)
+	var arrival := maxf(.09,_intercept_seconds-.04)
+	_high_launch_delay = maxf(0,arrival-_high_vertical_speed/FootballPlayer.LOCOMOTION_GRAVITY)
+	var travel_time := maxf(.09,arrival-_high_launch_delay)
+	var lateral := _predicted_intercept.z-keeper.position.z
+	var distance := maxf(0,absf(lateral)-wrist_side)
+	# Integrate the same exponential flight damping used after locomotion.
+	_high_lateral_speed = signf(lateral)*minf(4.8,distance*.8/(1-exp(-.8*travel_time)))
+	_high_launch_pending = true
+
+func after_locomotion(delta: float) -> void:
+	if _high_launch_pending:
+		if not _shot_active:
+			_high_launch_pending = false
+			return
+		_high_launch_delay -= delta
+		if _high_launch_delay > 0: return
+		keeper.velocity.y = _high_vertical_speed
+		_high_launch_pending = false
+		_high_air_active = _high_vertical_speed > .1 or absf(_high_lateral_speed) > .1
+		_high_elapsed = 0
+	if not _high_air_active: return
+	_high_elapsed += delta
+	if _high_elapsed > .12 and keeper.is_on_floor() and keeper.velocity.y <= 0:
+		_high_air_active = false
+		_high_lateral_speed = 0
+		keeper.velocity.z = 0
+		return
+	# A bounded launch velocity drives the CharacterBody through real flight.
+	# Save recovery still blocks ordinary locomotion and foot assistance.
+	keeper.velocity.x = 0
+	keeper.velocity.z = _high_lateral_speed*exp(-.8*_high_elapsed)
 
 func try_save() -> bool:
 	if not is_instance_valid(keeper) or not is_instance_valid(ball):
@@ -108,7 +174,7 @@ func try_save() -> bool:
 	var reach := keeper.tuning.goalkeeper_save_reach if keeper.tuning != null else 0.95
 	# A close physical contact window avoids remote or full-field save assistance.
 	var height := ball.global_position.y - keeper.global_position.y
-	if flat_separation > reach + .5 or height < 0.04 or height > 2.25:
+	if flat_separation > reach + .5 or height < 0.04 or height > GOAL_HEIGHT + FootballBall.RADIUS:
 		return false
 	if not _hands_reach_ball(): return false
 	var handling := 50.0
@@ -132,11 +198,19 @@ func try_save() -> bool:
 	var parry_direction := Vector3(keeper.attack_sign, 0.0, side * 1.15).normalized()
 	var parry_speed := keeper.tuning.goalkeeper_parry_speed if keeper.tuning != null else 8.0
 	parry_speed = clampf(ball.linear_velocity.length() * 0.42, parry_speed * 0.65, parry_speed * 1.25)
-	if not ball.goalkeeper_save(keeper, parry_direction, parry_speed, 1.2):
+	var parry_lift := 1.2
+	var ground := ball.surface_height(ball.position.x,ball.position.z) if ball.use_terrain else 0.0
+	var tip_over := _active_save_style == &"KeeperHighReach" and ball.position.y-ground > 2.15 \
+		and absf(separation.z) < .35 and ball.linear_velocity.length() > 12
+	if tip_over:
+		parry_direction = Vector3(-keeper.attack_sign,0,side*.2).normalized()
+		parry_lift = 4.5
+	if not ball.goalkeeper_save(keeper, parry_direction, parry_speed, parry_lift):
 		return false
 	_commit_recovery(absf(separation.z) > catch_width or height < 0.55)
 	_begin_save_pose()
-	keeper.status_changed.emit("Goalkeeper parries the shot")
+	keeper.set_meta("last_keeper_outcome", &"tip_over" if tip_over else &"parry")
+	keeper.status_changed.emit("Goalkeeper tips the high shot over" if tip_over else "Goalkeeper parries the shot")
 	_shot_active = false
 	_has_intercept = false
 	return true
@@ -145,7 +219,13 @@ func _save_style() -> StringName:
 	var target := _predicted_intercept if _has_intercept else ball.global_position
 	var local := keeper.to_local(target)
 	var height := target.y - keeper.global_position.y
-	if height > 1.65: return &"KeeperHigh"
+	var suffix := "Left" if local.x < 0 else "Right"
+	if height > 1.65 and absf(local.x) > 1.5: return StringName("KeeperHighDiveFull"+suffix)
+	if height <= 1.65 and absf(local.x) > 1.25:
+		return StringName(("KeeperDiveFullLow" if height<.55 else "KeeperDiveFullMid")+suffix)
+	if height > 1.65:
+		if absf(local.x) > .45: return &"KeeperHighDiveLeft" if local.x < 0 else &"KeeperHighDiveRight"
+		return &"KeeperHighReach"
 	if height < .55:
 		if absf(local.x) < .35: return &"KeeperLowCenter"
 		return &"KeeperLowLeft" if local.x < 0 else &"KeeperLowRight"
@@ -201,9 +281,18 @@ func _try_gather_rebound() -> bool:
 	return true
 
 func is_recovering() -> bool:
-	return _recovery_remaining > 0.0 or _gather_pending or (_save_animation_started and _shot_active)
+	return _recovery_remaining > 0.0 or _gather_pending or _high_air_active or (_save_animation_started and _shot_active)
 
 func reset_for_stoppage() -> void:
+	if _high_air_active:
+		keeper.global_position.y = (ball.surface_height(keeper.position.x,keeper.position.z) if ball.use_terrain else 0.0)+.005
+		keeper.reset_physics_interpolation()
+	_high_launch_pending = false
+	_high_air_active = false
+	_high_lateral_speed = 0
+	_high_vertical_speed = 0
+	_high_launch_delay = 0
+	_active_save_style = &""
 	_gather_pending=false
 	_restore_dive_shape()
 	_recovery_remaining = 0.0
@@ -222,13 +311,15 @@ func _commit_recovery(stretched: bool) -> void:
 	if visual != null: _recovery_remaining = maxf(_recovery_remaining,visual.sustain_keeper_recovery())
 
 func _set_dive_shape(style: StringName) -> void:
-	if not String(style).begins_with("KeeperDive"): return
+	var high := String(style).contains("HighDive") and not String(style).contains("DiveFull")
+	if not high and not String(style).contains("DiveFull") and not String(style).begins_with("KeeperDive"): return
 	var collider := keeper.get_node("CollisionShape3D") as CollisionShape3D
 	if _original_shape == null:
 		_original_shape=collider.shape;_original_shape_position=collider.position
-	var shape := CapsuleShape3D.new();shape.radius=.34;shape.height=.8
+	var shape := CapsuleShape3D.new();shape.radius=.34;shape.height=1.3 if high else .8
 	collider.shape=shape
-	collider.position=Vector3(-.4 if style==&"KeeperDiveLeft" else .4,.4,-.05)
+	var side := -1.0 if String(style).ends_with("Left") else 1.0
+	collider.position=Vector3(side*(.3 if high else .4),.65 if high else .4,-.05)
 func _restore_dive_shape() -> void:
 	if _original_shape == null: return
 	var collider := keeper.get_node("CollisionShape3D") as CollisionShape3D
@@ -328,6 +419,10 @@ func _distribute_to_teammate() -> void:
 	var speed := clampf(distance * 0.58, 7.0, 14.0)
 	var lift := 0.25 if distance < 16.0 else 0.8
 	if ball.goalkeeper_distribute(keeper, direction, speed, lift):
+		best.receive_target = best.global_position
+		best.receive_target_time = clampf(distance / speed + .75,1,3.5)
+		best.receive_target_kind = &"ground"
+		keeper.pass_released.emit(best,ball.action_serial)
 		keeper.status_changed.emit("Goalkeeper distributes to %s" % best.profile.display_name)
 		_distribution_remaining = 0.0
 
@@ -361,7 +456,7 @@ func _predict_goalmouth_intercept() -> bool:
 	return true
 
 func _shot_height(seconds: float) -> float:
-	var ground := PitchSurface.height_at(ball.global_position.x, ball.global_position.z) if ball.use_terrain else 0.0
+	var ground := ball.surface_height(ball.global_position.x, ball.global_position.z) if ball.use_terrain else 0.0
 	var floor_y := ground + FootballBall.RADIUS
 	if ball.global_position.y <= floor_y + 0.04 and ball.linear_velocity.y <= 0.3:
 		return floor_y

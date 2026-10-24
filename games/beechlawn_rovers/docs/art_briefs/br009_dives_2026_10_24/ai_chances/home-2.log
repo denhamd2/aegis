@@ -1,0 +1,20 @@
+
+[smoke] eleven_v_eleven_match_soak.gd (timeout 120s)
+[replay] fixed render cadence 60 Hz; gameplay dt 1/60 s
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+SOAK_PROGRESS ticks=1800 remaining=155.09999999998 phase=0 elapsed=1.0 host_ms=17042
+SOAK_PROGRESS ticks=3600 remaining=133.233333333296 phase=0 elapsed=1.0 host_ms=25727
+SOAK_PROGRESS ticks=5400 remaining=103.59999999996 phase=0 elapsed=1.0 host_ms=36396
+SOAK_PROGRESS ticks=7200 remaining=75.2666666666283 phase=0 elapsed=1.0 host_ms=46011
+SOAK_PROGRESS ticks=9000 remaining=48.2999999999632 phase=0 elapsed=1.0 host_ms=55564
+SOAK_PROGRESS ticks=10800 remaining=18.2999999999649 phase=0 elapsed=1.0 host_ms=65533
+PRESENTATION_SOAK complete=false auto_skips=4 pose_data_bytes=36537168
+11v11 SOAK match_seconds=180.0 physics_ticks=12258 ball_travel_m=1294.7 shots=3/4 contested_shots=3/3 saves=2/2 shot_status={ "Shot fired": 4 } sampled_options={ &"Beechlawn Rovers": { &"none": 320, &"carry": 235, &"short_pass": 12, &"through_pass": 2, &"shoot": 1, &"cross": 1 }, &"Boardeaux": { &"none": 241, &"carry": 200, &"short_pass": 6, &"through_pass": 1, &"shoot": 2 } } sampled_shot_options=1/2 sampled_max_attack_x=48.4/54.0 closest_goal_xz_m=3.7/3.7 at_lateral=1.6/3.4 goals=1/0 longest_stationary_samples_s=0
+AI_MATCH_METRICS {"ball_travel_m":1294.73557169409,"goals":[1,0],"kickoff":"Beechlawn Rovers","longest_stationary_s":0,"statuses":{"Shot fired":4},"teams":{"Beechlawn Rovers":{"action_decisions":{"cross":2,"shoot":2,"short_pass":17,"through_pass":5},"cancelled_contacts":2,"chest_controls":0,"completed_passes":13,"contested_shots":3,"controls":26,"cross_styles":{"early_cross":1,"standard":1},"crosses":2,"final_third_entries":3,"headers":1,"intercepted_passes":8,"lofted_passes":0,"passes":26,"sampled_decisions":{"carry":235,"cross":1,"none":320,"shoot":1,"short_pass":12,"through_pass":2},"saves":2,"shot_styles":{"header":1,"power":2},"shots":3},"Boardeaux":{"action_decisions":{"cross":4,"shoot":2,"short_pass":9,"through_pass":2},"cancelled_contacts":2,"chest_controls":0,"completed_passes":8,"contested_shots":3,"controls":20,"cross_styles":{"driven_cross":1,"early_cross":2},"crosses":3,"final_third_entries":4,"headers":1,"intercepted_passes":6,"lofted_passes":0,"passes":15,"sampled_decisions":{"carry":200,"none":241,"shoot":2,"short_pass":6,"through_pass":1},"saves":2,"shot_styles":{"finesse":1,"header":1,"power":1,"standard":1},"shots":4}},"variation":2,"weather":"sunny"}
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 2 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+[passed] eleven_v_eleven_match_soak.gd (72.9s)

@@ -91,7 +91,7 @@ func start(game: Node3D) -> void:
 
 func _build_shots() -> void:
 	# A directed eighteen-second cold open, before the teams enter the pitch.
-	_add_shot("montage_goal", "KILMORE DRIVE", "Sunday league football", 3.0,
+	_add_shot("montage_goal", match_scene.venue.display_name.to_upper(), "Sunday league football", 3.0,
 		Vector3(49.3,.55,4.4), Vector3(49.8,.60,4.0), Vector3(52.5,1.12,2.0), Vector3(52.5,1.12,1.8), 48)
 	_add_shot("montage_net", "MATCHDAY", "Weathered posts. Familiar ground.", 3.0,
 		Vector3(55.0,.8,1.5),Vector3(54.8,.9,1.2),Vector3(53.9,.8,.2),Vector3(53.9,.9,0),38)
@@ -104,11 +104,16 @@ func _build_shots() -> void:
 	_add_shot("montage_des", _des.profile.display_name.to_upper(), "BOARDEAUX · PLAYER MANAGER", 3.0,
 		des_pos+Vector3(-.35,1.67,2.35),des_pos+Vector3(-.15,1.67,2.2),des_pos+Vector3(0,1.59,0),des_pos+Vector3(0,1.59,0),19)
 	var puddle := _puddle_target()
-	var wet: bool = match_scene.ball.surface_wetness > .05
+	var wet: bool = match_scene.ball.surface_wetness > .05 and match_scene.venue.worn_surface
 	_add_shot("montage_puddles", "THE GOALMOUTH", "Mud, water and Sunday football" if wet else "Worn grass and Sunday football", 3.0,
 		puddle+Vector3(-1.6,.20,1.5),puddle+Vector3(-1.3,.23,1.4),puddle+Vector3(.2,.03,0),puddle+Vector3(.35,.03,0),48)
-	_add_shot("venue", "KILMORE DRIVE", "Dublin  ·  Sunday league football", 2.8,
-		Vector3(12, 5.2, 40), Vector3(7, 5.0, 38), Vector3(0, 0.7, 0), Vector3(0, 0.7, 0), 53)
+	if not match_scene.venue.worn_surface:
+		# Replace the park's muddy-goalmouth vignette with maintained arena turf.
+		var detail: Dictionary = shots.back()
+		detail["title"] = "THE PLAYING SURFACE"
+		detail["subtitle"] = "Matchday at Rovers Arena"
+	_add_shot("venue", match_scene.venue.display_name.to_upper(), "Dublin  ·  Sunday league football", 2.8,
+		match_scene.venue.camera_anchor(&"wide"), match_scene.venue.camera_anchor(&"wide_end"), Vector3(0, 0.7, 0), Vector3(0, 0.7, 0), 53)
 	# Two readable eleven-second team cards; keep the live walk visible to
 	# their right and retain the authored 1.2 m/s player walking speed.
 	_add_shot("walk", "HERE COME THE TEAMS", "Beechlawn Rovers  /  Boardeaux", 22.0,
@@ -120,7 +125,7 @@ func _build_shots() -> void:
 	_add_shot("fans", "THE TOUCHLINE", "Local football. Familiar faces.", 2.8,
 		Vector3(-18.4, 1.6, -31.8), Vector3(-19.4, 1.6, -32.2), Vector3(-20, 1.3, -36.7), Vector3(-20, 1.3, -36.7), 43)
 	# Keep the full team sweep readable instead of racing past the faces.
-	_add_shot("lineup", "BEECHLAWN ROVERS  vs  BOARDEAUX", "Starting elevens  ·  Kilmore Drive", 12.0,
+	_add_shot("lineup", "BEECHLAWN ROVERS  vs  BOARDEAUX", "Starting elevens  ·  "+match_scene.venue.display_name, 12.0,
 		Vector3(-9, 1.65, 10), Vector3(8, 1.65, 10), Vector3(-7, 1.35, 5), Vector3(10, 1.35, 5), 52)
 	var shane_pos: Vector3 = _lineup[_shane.get_instance_id()]
 	_add_shot("portrait", _shane.profile.display_name.to_upper(), "BEECHLAWN ROVERS  /  %d" % _shane.profile.jersey_number, 3.0,
@@ -137,7 +142,7 @@ func _add_shot(id: String, title: String, subtitle: String, duration: float,
 		"from": from, "to": to, "look_from": look_from, "look_to": look_to, "fov": fov})
 
 func _place(actor: Node3D, position: Vector3, yaw: float) -> void:
-	position.y = PitchSurface.height_at(position.x, position.z) + 0.004 if match_scene.terrain_enabled else 0.0
+	position.y = match_scene.surface_height(position.x, position.z) + 0.004 if match_scene.terrain_enabled else 0.0
 	actor.global_position = position
 	actor.rotation.y = yaw
 
@@ -159,7 +164,7 @@ func _enter_shot(index: int) -> void:
 	match_scene.ball.visible = shot["id"] != "referee"
 	_lower_third.visible = shot["id"] in ["venue", "lineup"]
 	_referee_lower_third.visible = shot["id"] == "referee"
-	title_label.text = "KILMORE DRIVE" if shot["id"] == "venue" else "BEECHLAWN ROVERS"
+	title_label.text = match_scene.venue.display_name.to_upper() if shot["id"] == "venue" else "BEECHLAWN ROVERS"
 	subtitle_label.hide()
 	camera.projection = Camera3D.PROJECTION_PERSPECTIVE
 	camera.fov = float(shot["fov"])
@@ -355,7 +360,7 @@ func _build_overlay() -> void:
 	top.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	screen.add_child(top)
 	var station := Label.new()
-	station.text = "LIVE   /   SUNDAY LEAGUE                                       KILMORE DRIVE · DUBLIN"
+	station.text = "LIVE   /   SUNDAY LEAGUE                                       "+match_scene.venue.display_name.to_upper()+" · DUBLIN"
 	station.position = Vector2(73, 11)
 	station.add_theme_font_override("font", BOLD)
 	station.add_theme_font_size_override("font_size", 17)
@@ -418,5 +423,5 @@ func _puddle_target() -> Vector3:
 				var point := Vector3(x,0,z)
 				var value: float = match_scene.ball.wet_surface.sample_at(point).y
 				if value>coverage: coverage=value; best=point
-	best.y=PitchSurface.height_at(best.x,best.z)+.015 if match_scene.terrain_enabled else .015
+	best.y=match_scene.surface_height(best.x,best.z)+.015 if match_scene.terrain_enabled else .015
 	return best

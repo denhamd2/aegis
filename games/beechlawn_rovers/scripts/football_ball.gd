@@ -1,5 +1,6 @@
 extends RigidBody3D
 class_name FootballBall
+var surface_profile: FootballMatchVenue
 ## Free rolling size-five ball. Control assistance adds forces/impulses; it
 ## never parents or teleports the authoritative ball to a player's foot.
 
@@ -67,7 +68,7 @@ func _physics_process(delta: float) -> void:
 		_release_goalkeeper_holder()
 	# Editable ground resistance. The PhysicsMaterial handles surface collision,
 	# bounce and contact friction; this small force prevents endless coasting.
-	var ground_height := PitchSurface.height_at(global_position.x,global_position.z) if use_terrain else 0.0
+	var ground_height := surface_height(global_position.x,global_position.z) if use_terrain else 0.0
 	if global_position.y > ground_height + RADIUS + .035 and _curve_seconds > 0.0 and last_action == &"shot":
 		_curve_airborne = true
 		var curve_acceleration := (angular_velocity.cross(linear_velocity) * tuning.finesse_magnus).limit_length(3.5)
@@ -86,7 +87,7 @@ func _physics_process(delta: float) -> void:
 
 func dribble_touch(player: Node3D, move_direction: Vector3, sprinting: bool,
 		close_control: bool, interval: float, close_distance: float,
-		sprint_distance: float) -> bool:
+		sprint_distance: float, carrier_relative := false) -> bool:
 	if not is_instance_valid(player):
 		return false
 	if is_instance_valid(goalkeeper_holder) \
@@ -127,6 +128,10 @@ func dribble_touch(player: Node3D, move_direction: Vector3, sprinting: bool,
 	target.y = RADIUS
 	var correction := target - global_position
 	var desired_velocity := direction * (2.4 if close_control else (4.5 if sprinting else 3.1))
+	if carrier_relative and player is CharacterBody3D:
+		# A kick preparation touch follows the carrier instead of braking a
+		# sprinting ball toward the fixed close-control pace behind the boot.
+		desired_velocity=Vector3(player.velocity.x,0,player.velocity.z)
 	# Capped control force keeps the ball independent and lets hard touches,
 	# tackles and sprint turns break possession naturally.
 	var force := (correction * 19.0 + (desired_velocity - linear_velocity) * 2.1)
@@ -381,7 +386,7 @@ func release_for_restart() -> void:
 	last_touch_player=null; _last_physical_actor=null
 
 func _integrate_forces(state: PhysicsDirectBodyState3D) -> void:
-	var ground := PitchSurface.height_at(global_position.x, global_position.z) if use_terrain else 0.0
+	var ground := surface_height(global_position.x, global_position.z) if use_terrain else 0.0
 	var ground_contact := false
 	for index in state.get_contact_count():
 		var normal := state.get_contact_local_normal(index)
@@ -405,3 +410,6 @@ func _integrate_forces(state: PhysicsDirectBodyState3D) -> void:
 				record_touch(body)
 	_last_physical_actor=physical_actor
 	_velocity_before_contact=state.linear_velocity
+
+func surface_height(x: float, z: float) -> float:
+	return PitchSurface.height_at(x,z,surface_profile) if use_terrain else 0.0

@@ -16,14 +16,18 @@ parser.add_argument('--views', nargs='+', default=['front', 'threequarter', 'pro
 parser.add_argument('--output', type=Path)
 parser.add_argument('--expression', choices=('neutral','blink','smile'), default='neutral')
 parser.add_argument('--clay', action='store_true')
+parser.add_argument('--source-root',type=Path,default=HERE,help='Saved source directory, e.g. an immutable before snapshot')
 args = parser.parse_args(sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else [])
 for identity in ((args.player,) if args.player else SOURCES):
-    bpy.ops.wm.open_mainfile(filepath=str(HERE/SOURCES[identity]))
+    bpy.ops.wm.open_mainfile(filepath=str(args.source_root/SOURCES[identity]))
     head = bpy.data.objects['Skin_Head']
     if args.expression != 'neutral':
         head.data.shape_keys.key_blocks['Blink' if args.expression == 'blink' else 'Smile'].value = 1.0
     if not args.clay:
         build_groom(head, bpy.data.objects['YBot_Armature'], identity)
+    else:
+        for obj in bpy.context.scene.objects:
+            if obj.name.startswith('Hair_'): obj.hide_render=True
     out = (args.output if args.output else ROOT/'games/beechlawn_rovers/docs/art_briefs/four_head_finish'/('clay_final' if args.clay else 'blender'))/identity
     render(head, out, clay=args.clay, views=args.views)
     print('SAVED_HEAD_REVIEW', identity, args.views, flush=True)

@@ -16,14 +16,15 @@ func setup(game: Node3D, requested: StringName) -> void:
 		rain = null
 	weather_id = valid_id(requested)
 	var config: Dictionary = PRESETS[str(weather_id)]
-	surface = load("res://data/presentation/kilmore_surface.tres") as WetPitchSurface
+	surface = load("res://data/presentation/kilmore_surface.tres" if game.venue.worn_surface else "res://data/presentation/arena_surface.tres") as WetPitchSurface
 	target = game.get_node("Ball")
 	var ball := target as FootballBall
 	ball.wet_surface = surface if game.terrain_enabled else null
 	ball.surface_wetness = float(config.wetness)
 	var turf := game.get_node("Pitch/SundayLeagueTurf") as MeshInstance3D
 	var grass := turf.material_override as ShaderMaterial
-	configure_surface(grass, game.terrain_enabled, float(config.wetness))
+	configure_surface(grass, game.terrain_enabled and game.venue.worn_surface, float(config.wetness))
+	grass.set_shader_parameter("arena_wetness",float(config.wetness) if not game.venue.worn_surface else 0.0)
 	var world := game.get_node("WorldEnvironment") as WorldEnvironment
 	var environment := world.environment.duplicate(true) as Environment
 	world.environment = environment

@@ -1,0 +1,59 @@
+{
+  "result": "PASS",
+  "protected_assets": 21,
+  "clip_times": {
+    "AN_Beechlawn_BallRollLeft": {
+      "first_key": 0,
+      "last_key": 0.7
+    },
+    "AN_Beechlawn_BallRollRight": {
+      "first_key": 0,
+      "last_key": 0.7
+    },
+    "AN_Beechlawn_BodyFeintLeft": {
+      "first_key": 0,
+      "last_key": 0.7
+    },
+    "AN_Beechlawn_BodyFeintRight": {
+      "first_key": 0,
+      "last_key": 0.7
+    },
+    "AN_Beechlawn_DragBackLeft": {
+      "first_key": 0,
+      "last_key": 0.7
+    },
+    "AN_Beechlawn_DragBackRight": {
+      "first_key": 0,
+      "last_key": 0.7
+    },
+    "AN_Beechlawn_FakeShotLeft": {
+      "first_key": 0,
+      "last_key": 0.7
+    },
+    "AN_Beechlawn_FakeShotRight": {
+      "first_key": 0,
+      "last_key": 0.7
+    },
+    "AN_Beechlawn_Shield": {
+      "first_key": 0,
+      "last_key": 1
+    },
+    "AN_Beechlawn_SkillTurnLeft": {
+      "first_key": 0,
+      "last_key": 0.7
+    },
+    "AN_Beechlawn_SkillTurnRight": {
+      "first_key": 0,
+      "last_key": 0.7
+    },
+    "AN_Beechlawn_StepOverLeft": {
+      "first_key": 0,
+      "last_key": 0.7
+    },
+    "AN_Beechlawn_StepOverRight": {
+      "first_key": 0,
+      "last_key": 0.7
+    }
+  },
+  "glb_sha256": "15b1733bf6e12c8b6d2c1f639e6b7d79b468b2822b9f7d89a5cdc9436d3ec61b"
+}

@@ -10,6 +10,52 @@ items, use the archived references and skill workflow in
 [`art_reference_implementation_plan.md`](art_reference_implementation_plan.md)
 and [`../references/README.md`](../references/README.md) before implementation.
 
+## Match HUD, assisted control and second venue — 24 October 2026
+
+BR-006 (6/27): the missing automatic-selection acceptance was reopened and
+implemented. Real pass markers hand over to ground/through/loft/cross receivers;
+defensive interception scoring has hysteresis and a manual override. Goalkeepers,
+including home goal kicks, remain automatic. Receiving-run assistance is scoped
+to cursor handovers and yields to fresh input, preserving first-time shots.
+
+BR-014 (14/27, in progress): compact black/white scorebug, timer below, two real
+identity/stamina strips, distinct shot power and central radar follow archived
+`70060.jpg`. F1 opens controls; the original blue intro graphics are independent.
+
+BR-023 (23/27, in progress): Options selects Kilmore Drive or Rovers Arena.
+The original Blender arena has 49,370 seat positions, section LOD and instanced
+crowd, a maintained striped field, functional shared goals/net impacts and four
+corner flags. Venue-owned surface profiles keep park relief/puddles exclusive
+to Kilmore. The free BlendSwap model was account-gated; the approved original
+modular fallback was used. Native evidence and validation logs are in
+[the production brief](art_briefs/match_presentation_2026_10_24/brief.md).
+
+BR-025 (25/27, in progress) is the delivery/acceptance stage: build and verify a
+fresh universal Mac package with this work plus the pending heads, skills,
+foot plants and keeper saves. Native Mac input/appearance and sustained 1080p60
+remain hardware gates. No Web game is built or restored.
+
+## Latest completed gameplay scope — 24 October 2026
+
+BR-021 (21/27, in progress) now has five original shared gameplay gaits with
+calibrated foot plants, contralateral arm motion and stepping through fast
+braking. Seven steady paces measure 0.023–0.104 m/s low/flat-foot slip. Moving
+kick preparation follows carrier velocity while retaining physical contact
+guards. Fourteen relevant smoke checks and native 30 fps moving review pass;
+see [stride evidence](art_briefs/br021_stride_2026_10_24/brief.md). The latest
+six-match chance gate passes at 26/42 shots, both teams qualifying in 6/6.
+
+BR-020 (20/27) retains its completed shielding/skills scope. BR-009 (9/27)
+retains the tested high saves and full-stretch dives, with distribution motion
+and native Mac acceptance still open. Broader turn/start/intro footwork under
+BR-021, match consistency under BR-008 (8/27), and individual likeness under
+BR-022 (22/27) remain open.
+
+Next: BR-025 (25/27, in progress), validate the combined movement, contacts,
+keeper saves, assisted controls and both venues in the v0.3.0 universal Mac
+package. Package metadata identifies its exact source/update time. Native M1
+appearance, input feel and 1080p60 still require hardware acceptance.
+
 ## Approved Mac playtest improvement pass — 23 October 2026
 
 27 primary items retain their original IDs. The five delivery bundles, evidence
@@ -424,6 +470,10 @@ playtest has no stuck bodies or unreported frame-rate failure on the target Mac.
     bases, and defaults. The 4v4 scene now instantiates these profiles as
     blockout actors; the remaining BR-006 work is match gameplay and flow.
 - [x] **BR-006 — Build a 4v4 vertical slice**
+  - 2026-10-24: reopened and completed the missing auto-selection implementation
+    for the 11v11 match: actual-release recipients, stable defensive interception
+    choice, Tab override, keeper exclusion, dismissal repair and Play/Watch
+    isolation. Assisted/Manual is persisted. Native Mac feel remains BR-025.
   Add two sides with three outfield players and a goalkeeper each. Use the
   supplied Beechlawn roster and the Des Feeney visual base for all four
   Boardeaux slots. Start the first playable as a short match, with the human in
@@ -458,6 +508,28 @@ playtest has no stuck bodies or unreported frame-rate failure on the target Mac.
     arrows, E ground pass, Q
     through-ball.
 - [ ] **BR-008 — Small-sided attacking/defending AI**
+  - 2026-10-24 stride/contact follow-up: the latest six full matches pass the
+    existing chance gate at 26/42 shots, both teams qualifying in 6/6 with
+    contested attempts in every fixture. Aggregate share is 38.2%/61.8%.
+    Fixture variation remains visible (home-0 is 2/13 shots); retain human,
+    cross-machine and tactical-variety acceptance rather than calling this
+    universal balance. See `art_briefs/br021_stride_2026_10_24/ai_chances/summary.json`.
+  - 2026-10-24 full-dive follow-up: the latest six complete matches qualify
+    both teams in 6/6 fixtures, with 26/23 shots, contested attempts in every
+    match and a 53.1%/46.9% shot share. Keep native/human acceptance open.
+    See `art_briefs/br009_dives_2026_10_24/ai_chances/summary.json`.
+  - 2026-10-24 BR-009 follow-up: all six full matches qualify both teams,
+    with 34/24 physical shots and a 58.6%/41.4% shot share. Both teams create
+    contested attempts in every fixture; the earlier away-2 zero-shot result
+    does not recur. No AI quotas, rating changes or weakened keeper contact
+    guards were introduced. This is one cloud run, leaving cross-machine
+    repeatability and human match quality open. See
+    `art_briefs/br009_high_shots_2026_10_24/ai_chances/summary.json`.
+  - 2026-10-24 BR-020 follow-up: the final six-match chance gate passes at
+    34/19 physical shots, qualifying 6/6 home and 5/6 away. The away-2
+    fixture leaves Boardeaux without a shot; investigate its buildup/turnovers
+    next while preserving honest contacts and the other five scenarios.
+    See `art_briefs/br020_skills_2026_10_24/ai_chances_verified/summary.json`.
   - 2026-10-22: read-only tactical possession, committed AI pass recipients,
     role-based outlet/run/cover support, shared decision timing, neutral
     opposing dribble ties and carrying through trailing pressure now pass
@@ -580,6 +652,31 @@ playtest has no stuck bodies or unreported frame-rate failure on the target Mac.
     deterministic action choice/execution remains covered by
     `ai_carrier_decision_smoke.gd`.
 - [ ] **BR-009 — First goalkeeper**
+  - 2026-10-24 full-stretch dives (9/27, in progress): six original shared-rig
+    clips add bilateral low/mid/high dives with 60–80-degree whole-body roll,
+    physical sideways take-off and staged landing, brace, kneel and rise.
+    Twelve reachable travelling shots and four late/unreachable controls pass
+    across both keepers; recovery restores the standing collision shape.
+    Near-body saves and central overhead tips remain; all seven selected
+    regression checks pass. Native footage records six real glove contacts
+    through complete dive/get-up sequences. The six-match chance gate passes
+    at 26/23 physical shots, both teams qualifying in 6/6 fixtures. See
+    [motion/contact evidence](art_briefs/br009_dives_2026_10_24/brief.md).
+    Distribution motion and native Mac match acceptance keep this item open.
+  - 2026-10-24 high-shot fix (9/27, in progress): the red fixture saved only
+    2/8 reachable high shots. A cutoff-only probe did not fix insufficient
+    overhead reach, central-only high selection or frozen lateral commitment.
+    Three original shared-rig clips now pair with physical jump/lateral launch
+    and arrival-synchronized preparation. Longer flights also have delayed
+    take-off. The final mirrored cases pass 12 reachable saves and six genuine
+    unreachable/late/over-bar misses, natural landing, collider restoration
+    and tips physically clearing the bar. Low saves, high crosses, handling,
+    skills and shot-contact regressions pass; four native real-ball saves
+    show the new glove poses. Reach/reaction/ratings and shooting are unchanged.
+    The six-match chance gate also passes with 34/24 shots, both teams
+    qualifying in 6/6 fixtures.
+    See [diagnosis and evidence](art_briefs/br009_high_shots_2026_10_24/brief.md).
+    Distribution animation and native Mac match acceptance keep this item open.
   - 2026-10-22 handling/recovery pass: mirrored regressions reproduce and fix
     speed-only catches at full lateral stretch, handling outside the keeper's
     own area, instant second saves during recovery and failed own-rebound
@@ -642,6 +739,9 @@ without AI stalls. Validate the same actions with human-vs-AI and AI-vs-AI.
   tactical decisions, use primitive collisions and shared resources, and
   measure physics, animation, draw calls and memory before adding detail.
 - [ ] **BR-014 — Broadcast camera, HUD and radar**
+  - 2026-10-24: native vector black/white match HUD follows `70060.jpg`;
+    real identities/stamina/charge, team crests, camera-oriented radar, responsive
+    safe margins and F1 help. Existing blue intro graphics remain separate.
   - 2026-10-22: Added the eighteen-second asset/player montage before walkout and fixed the horizontal active-player torus. Native sequence review supplements the existing intro checks.
   - Walkout lineup graphics: home first, then Boardeaux, with eleven reference
     portraits in a 4-4-2, club crests and player-managers Robbie Roden/Des Feeney.
@@ -736,11 +836,34 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
     Next acceptance: final native/M1 input and motion review; dedicated high
     keeper claims depend on BR-009 (9/25). Left-foot variants, broader aerial
     duels and source stride/plant polish remain open under BR-019/BR-021.
-- [ ] **BR-020 — Defending and skill moves**
+- [x] **BR-020 — Defending and skill moves**
+  - 2026-10-24 completed keyboard scope (20/27): retained F standing / G slide tackle, Ctrl jockey,
+    J contain and H pressure; added K shielding and U/I/O/P/L/B possession
+    skills, including charge-Space then E fake-shot cancellation. Thirteen
+    original 60 Hz shared-rig clips preserve current body/head assets. Bilateral
+    live-toe contacts, missed/lost possession, collision restoration, shield
+    upper-body isolation, clean-tackle counterplay and moving skills pass.
+    Native motion and the six-match chance gate pass; Boardeaux qualifies in
+    5/6 fixtures, with one zero-shot fixture remaining under BR-008. See
+    `art_briefs/br020_skills_2026_10_24/brief.md`; Mac feel remains under BR-025.
   Add jockeying, shielding, teammate pressure, ball roll, step-over, body feint,
   fake shot, drag-back and directional skill turn. Each move must affect control
   or ball position, not just play a cosmetic clip.
 - [ ] **BR-021 — Animation contact and blending pass**
+  - 2026-10-24 stride/plant pass (21/27, in progress): five original normalized
+    shared-rig walk/slow-jog/jog/sprint/close-control loops match stance travel
+    to world movement, with phase-aligned blending, lifted recovery, gait-specific
+    arm swing and neutral wrists. Seven steady cases measure 0.023–0.104 m/s
+    low/flat-foot slip; the earlier 3/6/8.6 m/s cases slid roughly with the root.
+    Walking/slow-jog points also prevent below-turf interpolation. Fast braking
+    keeps stepping until the final stop pose near rest. Kick preparation now
+    damps velocity relative to its carrier, retaining the force cap, arbitration,
+    marker and boot-contact guard. All 13 moving strike cases pass, with the
+    off-axis miss preserved. Fourteen unique smoke checks, native moving
+    evidence and the six-match chance gate pass. The 65-bone rest and all 28
+    protected body/head/motion assets survive. See
+    [source, native review and results](art_briefs/br021_stride_2026_10_24/brief.md).
+    Broader turn/start/intro footwork and native Mac acceptance remain open.
   - 2026-10-23 realism follow-up: render-time skeleton interpolation retains
     authoritative tick poses for live contact and replay capture; staged
     presentation clips evaluate each drawn frame. Contact/replay invariance,
@@ -789,6 +912,17 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
 ### P5 — Art direction, presentation and shipping
 
 - [ ] **BR-022 — Character and kit production**
+  - 2026-10-24 Shane/John refinement (22/27): corrected portrait roll
+    measurements guide individual cheek/jaw/brow/nose/lip forms, larger fitted
+    irises, skin relief/roughness and matching scalp/beard boundaries. Shane's
+    separate smile uses original fitted upper teeth on the existing head bind;
+    neutral occlusion, exposed smile, closure and substitution/replay checks
+    accompany native pitch-side views. John's reattached original also exposed
+    missing lateral beard coverage: corrected cheek/jaw/sideburn fields and
+    surface-normal strand visibility now wrap both sides, with feathered
+    density, unchanged warm palette and bilateral native/profile audits. See
+    `art_briefs/shane_john_refinement/brief.md`. Individual AAA likeness,
+    inherited kit interfaces and target-Mac appearance remain open.
   - 2026-10-23 current pass (22/27): saved individual anatomy/surfaces, shared
     body/garment Fullness (John 0.42, player Des 0.58), matching head/groom
     deformation and close-up geometry reuse the live rig and atlases.
@@ -968,7 +1102,12 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
     Follow `docs/art_briefs/br022_shane_likeness_and_kit_plan.md`; the next
     acceptance check is the reference-matched face/hair and full-clip garment
     review, before roster integration or duplicating the process to others.
-- [ ] **BR-023 — Kilmore Drive park environment**
+- [ ] **BR-023 — Kilmore Drive and selectable Rovers Arena**
+  - 2026-10-24: owner-approved large second venue, original modular Blender
+    source and GLBs; instanced seating/crowd LOD; maintained field and flags;
+    shared functional goals/nets. Persisted venue selection and match-owned
+    physics/surface/camera metadata preserve Kilmore. Further arena art polish
+    and target-Mac performance remain open.
   - 2026-10-23 field-detail follow-up (23/27): curved 12–24 mm near blades
     and intermediate fins are selected across the field using projected size
     and frustum-prioritised chunks, with shared mud/puddle/paint masks. Default
@@ -1068,6 +1207,13 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
   timing, priority, cooldowns, and mix behavior with test clips before content
   production.
 - [ ] **BR-025 — M1 performance and Mac delivery**
+  - 2026-10-24 (25/27, in progress): v0.3.0 combines the tested heads, skills,
+    keeper/stride work, assisted controls, monochrome HUD and selectable arena.
+    Twelve complete matches (six/venue) pass the chance gate; native Forward+
+    screenshots cover both grounds/options/intro. Verify the exported universal
+    package and both packaged venue startups, then check input feel, moving
+    appearance and sustained 1080p60 on the target Mac. Cloud evidence does not
+    close hardware acceptance.
   - 2026-10-18: separate football universal Mac/Web exports and release workflow
     added, preserving the wrestling Pages root and its Mac release. Package
     structure checks do not substitute for native playtesting or 60 fps profiling.

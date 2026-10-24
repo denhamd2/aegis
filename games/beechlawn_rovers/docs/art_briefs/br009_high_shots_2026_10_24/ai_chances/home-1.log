@@ -1,0 +1,16 @@
+
+[smoke] eleven_v_eleven_match_soak.gd (timeout 120s)
+[replay] fixed render cadence 60 Hz; gameplay dt 1/60 s
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+SOAK_PROGRESS ticks=1800 remaining=156.083333333314 phase=0 elapsed=1.0 host_ms=14914
+SOAK_PROGRESS ticks=3600 remaining=131.133333333294 phase=0 elapsed=1.0 host_ms=24902
+SOAK_PROGRESS ticks=5400 remaining=102.133333333293 phase=0 elapsed=1.0 host_ms=35012
+SOAK_PROGRESS ticks=7200 remaining=73.8499999999617 phase=1 elapsed=0.71666666666667 host_ms=45336
+SOAK_PROGRESS ticks=9000 remaining=48.4333333332965 phase=0 elapsed=1.0 host_ms=54849
+SOAK_PROGRESS ticks=10800 remaining=21.483333333298 phase=0 elapsed=1.0 host_ms=65457
+PRESENTATION_SOAK complete=false auto_skips=10 pose_data_bytes=40482496
+11v11 SOAK match_seconds=180.0 physics_ticks=12272 ball_travel_m=1705.4 shots=5/7 contested_shots=3/6 saves=2/2 shot_status={ "Shot fired": 10 } sampled_options={ &"Beechlawn Rovers": { &"none": 287, &"carry": 190, &"short_pass": 10, &"through_pass": 6, &"shoot": 2 }, &"Boardeaux": { &"none": 340, &"carry": 171, &"short_pass": 7, &"through_pass": 3, &"shoot": 2, &"cross": 4 } } sampled_shot_options=2/2 sampled_max_attack_x=54.0/53.8 closest_goal_xz_m=1.8/1.9 at_lateral=-1.8/-1.9 goals=3/4 longest_stationary_samples_s=0
+AI_MATCH_METRICS {"ball_travel_m":1705.39276828279,"goals":[3,4],"kickoff":"Beechlawn Rovers","longest_stationary_s":0,"statuses":{"Shot fired":10},"teams":{"Beechlawn Rovers":{"action_decisions":{"cross":1,"shoot":5,"short_pass":10,"through_pass":7},"cancelled_contacts":2,"chest_controls":0,"completed_passes":9,"contested_shots":3,"controls":24,"cross_styles":{"standard":1},"crosses":1,"final_third_entries":5,"headers":0,"intercepted_passes":7,"lofted_passes":0,"passes":18,"sampled_decisions":{"carry":190,"none":287,"shoot":2,"short_pass":10,"through_pass":6},"saves":2,"shot_styles":{"finesse":1,"power":4},"shots":5},"Boardeaux":{"action_decisions":{"cross":5,"shoot":5,"short_pass":13,"through_pass":5},"cancelled_contacts":0,"chest_controls":0,"completed_passes":17,"contested_shots":6,"controls":29,"cross_styles":{"early_cross":2,"standard":2},"crosses":4,"final_third_entries":6,"headers":2,"intercepted_passes":5,"lofted_passes":1,"passes":25,"sampled_decisions":{"carry":171,"cross":4,"none":340,"shoot":2,"short_pass":7,"through_pass":3},"saves":2,"shot_styles":{"finesse":1,"header":2,"power":4},"shots":7}},"variation":1,"weather":"sunny"}
+[passed] eleven_v_eleven_match_soak.gd (73.5s)

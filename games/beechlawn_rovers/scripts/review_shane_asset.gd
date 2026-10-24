@@ -195,6 +195,16 @@ func _apply_ablation() -> void:
 	if ablation == "near_heads": visual._near_head_parts = {}
 	if ablation == "pose" and is_instance_valid(visual.pose_presentation): visual.pose_presentation.enabled = false
 	visual._update_detail_level()
+	if ablation=="sun_shadows": $Sun.shadow_enabled=false
+	if ablation=="shadow_bias": $Sun.shadow_bias=.10
+	if ablation=="close_shadows": $Sun.directional_shadow_max_distance=48.0
+	if ablation=="normal_maps":
+		review_normal_maps=false
+		var face := player.find_child("Skin_Head",true,false) as MeshInstance3D
+		for surface in face.mesh.get_surface_count():
+			var material := face.get_active_material(surface).duplicate() as StandardMaterial3D
+			material.normal_enabled=false
+			face.set_surface_override_material(surface,material)
 	if ablation == "morphs":
 		for node in player.find_children("*", "MeshInstance3D",true,false):
 			var part := node as MeshInstance3D
@@ -242,6 +252,7 @@ func _capture_native(profile: FootballerProfile, view: String) -> void:
 		"display_server":DisplayServer.get_name(), "godot":Engine.get_version_info().string,
 		"resolution":[image.get_width(),image.get_height()],
 		"msaa_3d":get_viewport().msaa_3d, "sun_shadows":$Sun.shadow_enabled,
+		"shadow_bias":$Sun.shadow_bias,"normal_bias":$Sun.shadow_normal_bias,"shadow_distance":$Sun.directional_shadow_max_distance,
 		"sky":"match" if str(_option("sky")) == "match" else "review",
 		"lighting":review_lighting, "pose":str(_option("pose")),
 		"expression":str(_option("expression")),
@@ -301,10 +312,18 @@ func _set_view(view: String) -> void:
 			camera.fov = 25.0
 			camera.position = REVIEW_SPOT + Vector3(0, 1.67, 1.20)
 			target = REVIEW_SPOT + Vector3(0, 1.67, 0)
-		"threequarter_portrait", "profile_portrait", "rear_portrait":
+		"head_detail":
+			# Skin/lid inspection uses the actual roster mesh and unchanged
+			# pitch daylight, with a longer lens instead of a wide close camera.
+			camera.fov = 16.0
+			camera.position = REVIEW_SPOT + Vector3(0, 1.67, 1.12)
+			target = REVIEW_SPOT + Vector3(0, 1.67, 0)
+		"threequarter_portrait", "threequarter_opposite", "profile_portrait", "profile_opposite", "rear_portrait":
 			camera.projection = Camera3D.PROJECTION_PERSPECTIVE
 			camera.fov = 25.0
-			camera.position = REVIEW_SPOT + (Vector3(.78, 1.67, .95) if view == "threequarter_portrait" else Vector3(1.20, 1.67, 0))
+			var turned := view.begins_with("threequarter")
+			var side := -1.0 if view.ends_with("opposite") else 1.0
+			camera.position = REVIEW_SPOT + (Vector3(.78 * side, 1.67, .95) if turned else Vector3(1.20 * side, 1.67, 0))
 			if view == "rear_portrait":
 				camera.position = REVIEW_SPOT + Vector3(.65, 1.70, -1.05)
 			target = REVIEW_SPOT + Vector3(0, 1.67, 0)

@@ -1,0 +1,83 @@
+[
+  {
+    "step": "native_kilmore",
+    "result": "PASS",
+    "seconds": 31.44,
+    "command": [
+      "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+      "/workspace/aegis-checkout/games/beechlawn_rovers/tools/capture_native.py",
+      "/workspace/aegis-checkout/games/beechlawn_rovers/docs/art_briefs/match_presentation_2026_10_24/native_kilmore",
+      "--match",
+      "--venue",
+      "kilmore_drive",
+      "--resolution",
+      "1280x720",
+      "--deadline",
+      "150"
+    ]
+  },
+  {
+    "step": "native_presentation",
+    "result": "PASS",
+    "seconds": 97.83,
+    "command": [
+      "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+      "/workspace/aegis-checkout/games/beechlawn_rovers/tools/capture_native.py",
+      "/workspace/aegis-checkout/games/beechlawn_rovers/docs/art_briefs/match_presentation_2026_10_24/native_presentation",
+      "--match",
+      "--review-mode",
+      "presentation",
+      "--venue",
+      "rovers_arena",
+      "--resolution",
+      "1280x720",
+      "--deadline",
+      "180"
+    ]
+  },
+  {
+    "step": "release_regressions",
+    "result": "PASS",
+    "seconds": 141.28,
+    "command": [
+      "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+      "/workspace/aegis-checkout/games/beechlawn_rovers/tools/run_smoke_tests.py",
+      "title_screen_smoke.gd",
+      "pre_match_intro_smoke.gd",
+      "eleven_v_eleven_smoke.gd",
+      "shared_head_roster_smoke.gd",
+      "shared_roster_resources_smoke.gd",
+      "shared_pose_safety_smoke.gd",
+      "shared_gait_integrity_smoke.gd",
+      "skill_control_smoke.gd",
+      "skill_moving_smoke.gd",
+      "braking_gait_smoke.gd",
+      "aerial_flight_smoke.gd",
+      "cross_to_header_smoke.gd"
+    ]
+  },
+  {
+    "step": "ai_kilmore",
+    "result": "PASS",
+    "seconds": 532.8,
+    "command": [
+      "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+      "/workspace/aegis-checkout/games/beechlawn_rovers/tools/check_ai_chances.py",
+      "/workspace/aegis-checkout/games/beechlawn_rovers/docs/art_briefs/match_presentation_2026_10_24/ai_kilmore",
+      "--venue",
+      "kilmore_drive"
+    ]
+  },
+  {
+    "step": "ai_arena",
+    "result": "PASS",
+    "seconds": 598.35,
+    "command": [
+      "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+      "/workspace/aegis-checkout/games/beechlawn_rovers/tools/check_ai_chances.py",
+      "/workspace/aegis-checkout/games/beechlawn_rovers/docs/art_briefs/match_presentation_2026_10_24/ai_arena",
+      "--venue",
+      "rovers_arena"
+    ]
+  }
+]

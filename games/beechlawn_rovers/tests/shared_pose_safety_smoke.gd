@@ -41,7 +41,7 @@ func _run() -> void:
 			failures.append("live idle %s elbow drop %.3f m" % [actor.name, drops.x])
 	var visual := game.get_node("Player/Visual") as FootballerVisual
 	visual.animation_tree.active = false
-	for clip in [&"AN_Beechlawn_Idle", &"AN_Beechlawn_Jog", &"AN_Beechlawn_Sprint",
+	for clip in [&"AN_Beechlawn_Idle", &"AN_Beechlawn_Walk", &"AN_Beechlawn_SlowJog", &"AN_Beechlawn_Jog", &"AN_Beechlawn_Sprint",
 			FootballerVisual.STOP_CLIP, FootballerVisual.PASS_CLIP, FootballerVisual.RECEIVE_CLIP,
 			FootballerVisual.SHOT_CLIP, &"AN_Beechlawn_CloseControl",
 			&"AN_Beechlawn_WalkOn", &"AN_Beechlawn_WarmupJog"]:

@@ -1,3 +1,24 @@
+# Beechlawn Rovers 27 — v0.3.0
+
+Assisted player switching follows real passes and selects appropriate defenders,
+with a stable Tab override and automatic goalkeepers. Options can retain manual
+switching. A compact black-and-white match HUD adds player identity/stamina,
+shot charge, a clearer radar and F1 keyboard help; blue intro graphics stay intact.
+
+Select Kilmore Drive or the new large Rovers Arena in Options. The original
+Blender stadium has blue seating, crowd/seat LOD, maintained striped turf,
+regulation markings and corner flags. Both venues use the existing live goals,
+animated nets and football rules. Kilmore keeps its uneven ground and puddles.
+
+This package also includes the pending shared possession skills, calibrated
+foot-plant locomotion, high/full-stretch goalkeeper saves and Shane/John head
+refinements. No paid or extracted PES/FIFA assets are included. Mac-only.
+
+Cloud logic/package checks and native Forward+ captures do not establish native
+Mac performance or final character/stadium likeness acceptance.
+
+---
+
 # Beechlawn Rovers 27 — v0.2.3
 
 Player Des Feeney now has short dark hair around the sides and back with a

@@ -1,0 +1,46 @@
+{
+  "result": "PASS",
+  "captures": [
+    {
+      "image": "match_broadcast.png",
+      "report": "match_broadcast.json",
+      "sha256": "8c173d0d0bd89278a364fd967944222e83e680b4dd6cd2f6011386d42146ea52",
+      "process_cleanup": "normal",
+      "capture_seconds": 97.66,
+      "command": [
+        "/usr/local/bin/godot",
+        "--path",
+        "/workspace/aegis-checkout/games/beechlawn_rovers",
+        "--rendering-method",
+        "forward_plus",
+        "--resolution",
+        "1280x720",
+        "--fixed-fps",
+        "60",
+        "--disable-vsync",
+        "--audio-driver",
+        "Dummy",
+        "--display-driver",
+        "x11",
+        "--rendering-driver",
+        "vulkan",
+        "--script",
+        "res://scripts/review_broadcast_ui.gd",
+        "--",
+        "--capture-dir=/workspace/aegis-checkout/games/beechlawn_rovers/docs/art_briefs/match_presentation_2026_10_24/native_presentation",
+        "--player=match",
+        "--view=broadcast",
+        "--lighting=match",
+        "--sky=match",
+        "--clean=1",
+        "--venue=rovers_arena",
+        "--venue-view=broadcast",
+        "--ablation=none",
+        "--expression=neutral",
+        "--review-mode=presentation"
+      ]
+    }
+  ],
+  "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+  "scope": "Forward+ appearance stills; software Vulkan does not measure Mac performance."
+}

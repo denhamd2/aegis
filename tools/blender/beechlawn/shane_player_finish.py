@@ -185,7 +185,7 @@ def reference_skin_relief(points,eyes):
     return height
 
 
-def bake_skin(head, body, material, eyes, *, head_only=False, image_prefix="shane", color_overlay=None, neutral_base=False, detail_only=False, retained_neck_albedo=None, roughness_callback=None):
+def bake_skin(head, body, material, eyes, *, head_only=False, image_prefix="shane", color_overlay=None, neutral_base=False, detail_only=False, retained_neck_albedo=None, roughness_callback=None, pore_amplitude=.00055):
     """Rasterize anatomical pigment onto the original licensed body UVs."""
     size = 2048 if head_only else 512
     from shane_skin_source import sample_skin,skin_tint
@@ -286,7 +286,7 @@ def bake_skin(head, body, material, eyes, *, head_only=False, image_prefix="shan
     if head_only:
         # Downsample the sculpt-relief bake to 1K, then add restrained pores.
         height=relief.reshape(1024,2,1024,2).mean(axis=(1,3))
-        noise=rng.normal(0,.00055,height.shape)
+        noise=rng.normal(0,pore_amplitude,height.shape)
         noise=(noise+np.roll(noise,1,0)+np.roll(noise,1,1))/3
         height+=noise
         dy,dx=np.gradient(height,25/1024)

@@ -1,0 +1,324 @@
+{
+  "cases": [
+    {
+      "airborne": true,
+      "case": "low",
+      "closest_m": 0.0930499508976936,
+      "committed_travel_m": 0.813712163595483,
+      "detail": {
+        "ball": "(-48.92828, 0.562241, -1.991485)",
+        "clip": "AN_Beechlawn_KeeperDiveFullLowLeft",
+        "hand": "(-49.09706, 0.523496, -1.896288)",
+        "roll": 79.7391642725708,
+        "tick": 33
+      },
+      "expected": true,
+      "motion_ok": true,
+      "restored": true,
+      "roll_degrees": 79.7391642725708,
+      "saved": true,
+      "side": -2.0,
+      "team": "Beechlawn Rovers"
+    },
+    {
+      "airborne": true,
+      "case": "low",
+      "closest_m": 0.093016728758812,
+      "committed_travel_m": 0.813859453657642,
+      "detail": {
+        "ball": "(-48.92828, 0.562241, 1.991485)",
+        "clip": "AN_Beechlawn_KeeperDiveFullLowRight",
+        "hand": "(-49.09706, 0.523624, 1.896429)",
+        "roll": 79.7476020558741,
+        "tick": 33
+      },
+      "expected": true,
+      "motion_ok": true,
+      "restored": true,
+      "roll_degrees": 79.7476020558741,
+      "saved": true,
+      "side": 2.0,
+      "team": "Beechlawn Rovers"
+    },
+    {
+      "airborne": true,
+      "case": "mid",
+      "closest_m": 0.115033090114594,
+      "committed_travel_m": 0.949224069016054,
+      "detail": {
+        "ball": "(-49.00668, 1.239008, -1.901336)",
+        "clip": "AN_Beechlawn_KeeperDiveFullMidLeft",
+        "hand": "(-49.11001, 1.28867, -1.910712)",
+        "roll": 72.434078091724,
+        "tick": 32
+      },
+      "expected": true,
+      "motion_ok": true,
+      "restored": true,
+      "roll_degrees": 74.7609675917753,
+      "saved": true,
+      "side": -2.0,
+      "team": "Beechlawn Rovers"
+    },
+    {
+      "airborne": true,
+      "case": "mid",
+      "closest_m": 0.115080863237381,
+      "committed_travel_m": 0.949333718279377,
+      "detail": {
+        "ball": "(-49.00668, 1.239008, 1.901336)",
+        "clip": "AN_Beechlawn_KeeperDiveFullMidRight",
+        "hand": "(-49.11002, 1.288746, 1.910807)",
+        "roll": 72.4425191795286,
+        "tick": 32
+      },
+      "expected": true,
+      "motion_ok": true,
+      "restored": true,
+      "roll_degrees": 74.7694304941636,
+      "saved": true,
+      "side": 2.0,
+      "team": "Beechlawn Rovers"
+    },
+    {
+      "airborne": true,
+      "case": "high",
+      "closest_m": 0.195034950971603,
+      "committed_travel_m": 1.1040167354513,
+      "detail": {
+        "ball": "(-49.00668, 2.291474, -1.901336)",
+        "clip": "AN_Beechlawn_KeeperHighDiveFullLeft",
+        "hand": "(-49.14608, 2.34566, -2.026512)",
+        "roll": 57.7497617312913,
+        "tick": 32
+      },
+      "expected": true,
+      "motion_ok": true,
+      "restored": true,
+      "roll_degrees": 59.8220475113293,
+      "saved": true,
+      "side": -2.0,
+      "team": "Beechlawn Rovers"
+    },
+    {
+      "airborne": true,
+      "case": "high",
+      "closest_m": 0.195116370916367,
+      "committed_travel_m": 1.10409169481136,
+      "detail": {
+        "ball": "(-49.00668, 2.291474, 1.901336)",
+        "clip": "AN_Beechlawn_KeeperHighDiveFullRight",
+        "hand": "(-49.14609, 2.345769, 2.026583)",
+        "roll": 57.758208969489,
+        "tick": 32
+      },
+      "expected": true,
+      "motion_ok": true,
+      "restored": true,
+      "roll_degrees": 59.8304814989228,
+      "saved": true,
+      "side": 2.0,
+      "team": "Beechlawn Rovers"
+    },
+    {
+      "airborne": false,
+      "case": "unreachable",
+      "closest_m": 2.50473594665527,
+      "committed_travel_m": 0.290320187807083,
+      "detail": {
+        "ball": "(-48.51707, 1.283431, 2.843003)",
+        "clip": "",
+        "hand": "(-49.3483, 1.177327, 0.436709)",
+        "roll": 0.171320161749095,
+        "tick": 11
+      },
+      "expected": false,
+      "motion_ok": true,
+      "restored": true,
+      "roll_degrees": 0.324454948697965,
+      "saved": false,
+      "side": 3.4,
+      "team": "Beechlawn Rovers"
+    },
+    {
+      "airborne": false,
+      "case": "late",
+      "closest_m": 1.28705561161041,
+      "committed_travel_m": 0.0595084689557552,
+      "detail": {
+        "ball": "(-49.00433, 1.169875, 1.66955)",
+        "clip": "",
+        "hand": "(-49.27356, 1.20735, 0.306353)",
+        "roll": 0.182384248687004,
+        "tick": 5
+      },
+      "expected": false,
+      "motion_ok": true,
+      "restored": true,
+      "roll_degrees": 0.324454948697965,
+      "saved": false,
+      "side": 2.0,
+      "team": "Beechlawn Rovers"
+    },
+    {
+      "airborne": true,
+      "case": "low",
+      "closest_m": 0.0934024080634117,
+      "committed_travel_m": 0.813385099638253,
+      "detail": {
+        "ball": "(48.92828, 0.519354, 1.991485)",
+        "clip": "AN_Beechlawn_KeeperDiveFullLowLeft",
+        "hand": "(49.09706, 0.479207, 1.895961)",
+        "roll": 79.7391651402207,
+        "tick": 33
+      },
+      "expected": true,
+      "motion_ok": true,
+      "restored": true,
+      "roll_degrees": 79.7391651402207,
+      "saved": true,
+      "side": -2.0,
+      "team": "Boardeaux"
+    },
+    {
+      "airborne": true,
+      "case": "low",
+      "closest_m": 0.0934145301580429,
+      "committed_travel_m": 0.813325107796118,
+      "detail": {
+        "ball": "(48.92828, 0.519354, -1.991485)",
+        "clip": "AN_Beechlawn_KeeperDiveFullLowRight",
+        "hand": "(49.09706, 0.479189, -1.895894)",
+        "roll": 79.7475994529936,
+        "tick": 33
+      },
+      "expected": true,
+      "motion_ok": true,
+      "restored": true,
+      "roll_degrees": 79.7475994529936,
+      "saved": true,
+      "side": 2.0,
+      "team": "Boardeaux"
+    },
+    {
+      "airborne": true,
+      "case": "mid",
+      "closest_m": 0.114383667707443,
+      "committed_travel_m": 0.94889552751556,
+      "detail": {
+        "ball": "(49.00668, 1.196121, 1.901336)",
+        "clip": "AN_Beechlawn_KeeperDiveFullMidLeft",
+        "hand": "(49.11001, 1.244322, 1.910384)",
+        "roll": 72.434078091724,
+        "tick": 32
+      },
+      "expected": true,
+      "motion_ok": true,
+      "restored": true,
+      "roll_degrees": 74.7609675917753,
+      "saved": true,
+      "side": -2.0,
+      "team": "Boardeaux"
+    },
+    {
+      "airborne": true,
+      "case": "mid",
+      "closest_m": 0.114332877099514,
+      "committed_travel_m": 0.948788047535345,
+      "detail": {
+        "ball": "(49.00668, 1.196121, -1.901336)",
+        "clip": "AN_Beechlawn_KeeperDiveFullMidRight",
+        "hand": "(49.11002, 1.244208, -1.910262)",
+        "roll": 72.4425263434504,
+        "tick": 32
+      },
+      "expected": true,
+      "motion_ok": true,
+      "restored": true,
+      "roll_degrees": 74.7694375729859,
+      "saved": true,
+      "side": 2.0,
+      "team": "Boardeaux"
+    },
+    {
+      "airborne": true,
+      "case": "high",
+      "closest_m": 0.194674462080002,
+      "committed_travel_m": 1.10370011487976,
+      "detail": {
+        "ball": "(49.00668, 2.248588, 1.901336)",
+        "clip": "AN_Beechlawn_KeeperHighDiveFullLeft",
+        "hand": "(49.14608, 2.302202, 2.026196)",
+        "roll": 57.7497819216118,
+        "tick": 32
+      },
+      "expected": true,
+      "motion_ok": true,
+      "restored": true,
+      "roll_degrees": 59.8220672638999,
+      "saved": true,
+      "side": -2.0,
+      "team": "Boardeaux"
+    },
+    {
+      "airborne": true,
+      "case": "high",
+      "closest_m": 0.194584041833878,
+      "committed_travel_m": 1.10362720559351,
+      "detail": {
+        "ball": "(49.00668, 2.248588, -1.901336)",
+        "clip": "AN_Beechlawn_KeeperHighDiveFullRight",
+        "hand": "(49.14608, 2.302044, -2.026119)",
+        "roll": 57.7582412709953,
+        "tick": 32
+      },
+      "expected": true,
+      "motion_ok": true,
+      "restored": true,
+      "roll_degrees": 59.8305051999787,
+      "saved": true,
+      "side": 2.0,
+      "team": "Boardeaux"
+    },
+    {
+      "airborne": false,
+      "case": "unreachable",
+      "closest_m": 2.50474429130554,
+      "committed_travel_m": 0.290265768766403,
+      "detail": {
+        "ball": "(48.51707, 1.240544, -2.843003)",
+        "clip": "",
+        "hand": "(49.3483, 1.134439, -0.436697)",
+        "roll": 0.171320161749095,
+        "tick": 11
+      },
+      "expected": false,
+      "motion_ok": true,
+      "restored": true,
+      "roll_degrees": 0.324454948697965,
+      "saved": false,
+      "side": 3.4,
+      "team": "Boardeaux"
+    },
+    {
+      "airborne": false,
+      "case": "late",
+      "closest_m": 1.28704226016998,
+      "committed_travel_m": 0.0594778656959534,
+      "detail": {
+        "ball": "(49.00433, 1.126988, -1.66955)",
+        "clip": "",
+        "hand": "(49.27351, 1.164463, -0.306337)",
+        "roll": 0.182384248687004,
+        "tick": 5
+      },
+      "expected": false,
+      "motion_ok": true,
+      "restored": true,
+      "roll_degrees": 0.324454948697965,
+      "saved": false,
+      "side": 2.0,
+      "team": "Boardeaux"
+    }
+  ]
+}

@@ -4,6 +4,7 @@ class_name WetPitchSurface
 @export var masks: Texture2D
 @export_range(0.0, 8.0) var puddle_drag := 2.6
 @export_range(0.0, 2.0) var mud_drag := 0.22
+@export var uniform_drag := 0.0
 var _pixels: Image
 
 func sample_at(position: Vector3) -> Vector2:
@@ -26,7 +27,7 @@ func _pixel(x: int, y: int) -> Vector2:
 
 func resistance(position: Vector3, wetness: float) -> float:
 	var surface := sample_at(position)
-	return clampf(wetness,0.0,1.0)*(surface.x*mud_drag+surface.y*puddle_drag)
+	return clampf(wetness,0.0,1.0)*(uniform_drag+surface.x*mud_drag+surface.y*puddle_drag)
 
 func drag_force(position: Vector3, velocity: Vector3, ball_mass: float,
 		wetness: float, delta: float) -> Vector3:

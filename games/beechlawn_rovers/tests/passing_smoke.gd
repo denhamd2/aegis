@@ -5,6 +5,7 @@ func _initialize() -> void:
 	call_deferred("_run_checks")
 
 func _run_checks() -> void:
+	root.get_node("MatchSession").switch_mode = &"manual"
 	var scene := load("res://scenes/training_ground.tscn") as PackedScene
 	assert(scene != null, "Sunday-league match scene failed to load")
 	var game := scene.instantiate()

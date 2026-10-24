@@ -32,7 +32,7 @@ func _run() -> void:
 	visual.play_presentation(&"AN_Beechlawn_Jog")
 	for frame in 210:
 		actor.position=Vector3(30+float(frame)*.06,0,-2)
-		actor.position.y=PitchSurface.height_at(actor.position.x,actor.position.z)
+		actor.position.y=game.surface_height(actor.position.x,actor.position.z)
 		visual.animation_player.seek(fmod(float(frame)/30,.8),true)
 		game.ball.position=actor.position+Vector3(.6,.15,0)
 		if frame >= 180:

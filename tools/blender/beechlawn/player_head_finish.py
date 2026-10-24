@@ -250,7 +250,7 @@ def hair_regions(points, identity):
         line = 172.65-6.3*side-3.0*rear+.10*np.sin(x*1.9)
         scalp = _smooth(line-.15, line+.25, y)
     elif identity == 'john_orourke':
-        line = 170.75+.55*_smooth(0, 3, -x)-.28*_smooth(0, 3, x)-3.1*side-2.5*rear+.09*np.sin(x*2.8)
+        line = 171.85+.55*_smooth(0, 3, -x)-.28*_smooth(0, 3, x)-3.7*side-2.5*rear+.09*np.sin(x*2.8)
         scalp = _smooth(line-.17, line+.22, y)
     elif identity == 'bordeaux_09':
         # Original side views 69911/69910: a high temporal wedge joins the
@@ -281,16 +281,35 @@ def hair_regions(points, identity):
         soul = np.exp(-(x/.8)**6-((y-158.85)/.45)**4)*face*.6
         facial = np.maximum.reduce((beard, moustache*.28, connectors*.55, soul))
     elif identity == 'john_orourke':
-        jaw = _smooth(154.5, 155.3, y)*(1-_smooth(159.8, 160.8, y))
-        cheeks = _smooth(158.0, 159.0, y)*(1-_smooth(162.1, 163.1, y))*_smooth(2.7, 3.5, ax)
-        width = 5.25+1.25*_smooth(158., 162., y)
-        beard = np.maximum(jaw, cheeks*.85)*(1-_smooth(width-.3, width+.4, ax))*front
-        facial = np.maximum(beard, moustache)
+        # John's original portrait shows a full cheek/jaw beard connected to
+        # the sideburns. A front-Z mask left an isolated bib in profile. Use
+        # the head's angular surface instead, stopping in front of the ears.
+        cheek_edge = 160.45+3.10*_smooth(.25, 1.15, angle)
+        cheek_edge += .065*np.sin(x*4.9+y*3.1)
+        neckline = 154.65+3.40*_smooth(.50, 1.40, angle)
+        jaw = _smooth(neckline-.25, neckline+.65, y)
+        jaw *= 1-_smooth(cheek_edge-.70, cheek_edge+.65, y)
+        lateral = (1-_smooth(1.24, 1.46, angle))*_smooth(.40, 1.45, z)
+        # Leave the lips, oral cavity and projecting nasal tissue bare.
+        mouth_gap = np.exp(-(x/3.05)**6-((y-159.85)/.50)**4)*front
+        jaw *= (1-mouth_gap)*(1-_smooth(10.9, 11.65, z))
+        # Lighter, broken cheek growth transitions to the denser lower jaw;
+        # a uniformly opaque mask looked like a cut-out side panel in-game.
+        lower_growth = 1-_smooth(157.9, 160.8, y)
+        density = .58+.30*lower_growth
+        density *= .86+.14*np.sin(x*2.15+z*.70)*np.sin(y*2.6-z*1.3)
+        beard = jaw*lateral*density
+        sideburn = _smooth(.83, 1.05, angle)*(1-_smooth(1.25, 1.43, angle))
+        sideburn *= _smooth(2.25, 3.1, z)*(1-_smooth(5.0, 6.2, z))
+        sideburn *= _smooth(160.4, 162.1, y)
+        sideburn *= 1-_smooth(line+.10, line+.55, p[:, 1])
+        facial = np.maximum.reduce((beard, moustache, sideburn*.62))
     elif identity == 'des_feeney_sr':
         facial = moustache
     else:
         facial = np.zeros_like(x)
     brow_y = 167.95+.10*np.exp(-((ax-3.45)/1.45)**2)-.06*(ax-3.45)
+    if identity=='shane_denham': brow_y -= .16
     brow = np.exp(-((ax-3.45)/1.75)**6-((y-brow_y)/.23)**2)*_smooth(7.4, 8.6, z)
     return np.stack((scalp, facial, brow), axis=1)
 
@@ -338,6 +357,16 @@ def finish_head(head, identity):
         # Low-amplitude vascular/pigment variation; no baked directional light.
         mottling = (np.sin(x*2.1+y*1.7)*np.sin(z*2.9-y*.8)) * front
         result += mottling[:, None]*np.array([.009, -.003, -.002])
+        if identity in ('shane_denham', 'john_orourke'):
+            # Restrained pigment is separate from shape/shadow: retain the
+            # fair complexion, lip vermilion and local capillary variation.
+            # The former uniformly pale face hid the individual facial planes.
+            blend = _smooth(154., 158., points[:, 1])
+            result += blend[:, None] * np.array([-.012, -.023, -.025])
+            flush = np.exp(-((ax-4.0)/2.1)**4-((y-162.2)/1.65)**4)*front
+            result += flush[:, None]*np.array([.018, -.012, -.009])
+            rim = np.exp(-((ax-3.45)/1.45)**6-((y-166.1)/.42)**2)*front
+            result += rim[:, None]*np.array([.007, -.011, -.009])
         return np.clip(result, 0, 1)
 
     def relief(points, eye_centres):
@@ -355,6 +384,14 @@ def finish_head(head, identity):
             fold = 2.1+.45*(162-y)
             value -= .023*np.exp(-((abs(x)-fold)/.16)**2-((y-160.3)/1.6)**4)*front
             value -= .014*np.exp(-((y-165.05)/.12)**2-((abs(x)-3.5)/1.7)**4)*front
+        elif identity in ('shane_denham', 'john_orourke'):
+            # Fine lid/alar/philtrum relief follows anatomy; no directionally
+            # lit portrait is baked into pigment. Millimetre-scale folds.
+            brow = 167.10 + .08*np.cos(x*.7)
+            value -= .006*np.exp(-((y-brow)/.075)**2-((abs(x)-3.45)/1.4)**6)*front
+            fold = 1.85+.43*(162.25-y)
+            value -= .008*np.exp(-((abs(x)-fold)/.13)**2-((y-160.9)/1.5)**4)*front
+            value -= .004*np.exp(-((y-164.95)/.08)**2-((abs(x)-3.6)/1.45)**6)*front
         return value
 
     def roughness(points):
@@ -364,7 +401,13 @@ def finish_head(head, identity):
         forehead = np.exp(-(x/5.0)**6-((y-170.0)/2.1)**4)*front
         cheeks = np.exp(-((abs(x)-4.3)/2.0)**4-((y-162.4)/2.0)**4)*front
         fine = np.sin(x*53+y*31)*np.sin(y*47-z*59)*.008
-        return np.clip(.58-.13*nose-.055*forehead+.045*cheeks+fine,.43,.68)
+        value = .58-.13*nose-.055*forehead+.045*cheeks+fine
+        if identity in ('shane_denham','john_orourke'):
+            # Real skin has an oilier T-zone and broken cheek response, not a
+            # single wax-like lobe. Keep restrained variation at pore scale.
+            value -= .025*nose
+            value += .009*np.sin(x*117+y*83)*np.cos(y*109-z*59)*front
+        return np.clip(value,.40,.68)
 
     previous = (skin.SKIN_PIGMENT.copy(), skin.skin_colour, skin.reference_skin_relief)
     skin.SKIN_PIGMENT = pigment
@@ -373,13 +416,14 @@ def finish_head(head, identity):
     try:
         skin.bake_skin(head, None, mat, eyes, head_only=True, image_prefix=identity+'_finish',
                        detail_only=True, retained_neck_albedo=shared_neck,
-                       roughness_callback=roughness)
+                       roughness_callback=roughness,
+                       pore_amplitude=.0022 if identity in ('shane_denham','john_orourke') else .00055)
     finally:
         skin.SKIN_PIGMENT, skin.skin_colour, skin.reference_skin_relief = previous
     bsdf = mat.node_tree.nodes['Principled BSDF']
     bsdf.inputs['Roughness'].default_value = .60
     bsdf.inputs['Specular IOR Level'].default_value = .30
-    mat.node_tree.nodes['Normal Map'].inputs['Strength'].default_value = .55 if identity == 'des_feeney_sr' else .34
+    mat.node_tree.nodes['Normal Map'].inputs['Strength'].default_value = .55 if identity == 'des_feeney_sr' else .46 if identity in ('shane_denham','john_orourke') else .34
     # A smaller anatomical iris leaves sclera visible. Des's old oversized
     # iris filled the whole lid aperture and read as a black oval.
     yy, xx = np.mgrid[0:512, 0:512]
@@ -390,12 +434,13 @@ def finish_head(head, identity):
     rgb = np.tile(np.array([.72, .715, .69]), (512, 512, 1))
     iris_colour = {'shane_denham': (.245, .165, .085), 'john_orourke': (.16, .27, .30),
                    'bordeaux_09': (.18, .115, .065), 'des_feeney_sr': (.25, .20, .12)}[identity]
-    iris = r < .172
+    iris_radius = .208 if identity == 'shane_denham' else .212 if identity == 'john_orourke' else .172
+    iris = r < iris_radius
     grain = (np.sin(angle*83+r*179)+np.sin(angle*47-r*131))*.018
     for channel, base in enumerate(iris_colour):
         rgb[:, :, channel][iris] = base+grain[iris]
-    rgb[(r>.158)&iris] *= .55
-    rgb[r<.057] = (.009, .010, .009)
+    rgb[(r>iris_radius-.014)&iris] *= .65
+    rgb[r<(.067 if identity in ('shane_denham','john_orourke') else .057)] = (.009, .010, .009)
     eye_image = skin.image_from_array(identity+'_finish_eyes_albedo', np.clip(rgb, 0, 1))
     for side in ('l', 'r'):
         eye = bpy.data.objects['Eye_'+side]
@@ -408,6 +453,9 @@ def finish_head(head, identity):
         eye_bsdf.inputs['Specular IOR Level'].default_value = .48
     head['finish_revision'] = 'four-head-reference-v2'
     head['pigment_policy'] = 'anatomical UV pigment and original groom; no projected portrait'
+    if identity=='shane_denham':
+        from player_oral_geometry import build_upper_teeth
+        build_upper_teeth(bpy.data.objects['YBot_Armature'])
     return mat
 
 
@@ -425,6 +473,10 @@ def facial_shapes(head):
     from mathutils.bvhtree import BVHTree
     globes={side:BVHTree.FromPolygons([v.co for v in bpy.data.objects['Eye_'+side].data.vertices],
             [list(p.vertices) for p in bpy.data.objects['Eye_'+side].data.polygons]) for side in centres}
+    oral_weights={}
+    if bpy.context.scene.get('head_player_id')=='shane_denham':
+        from player_oral_geometry import upper_lip_weights
+        oral_weights=upper_lip_weights(head)
     for index, point in enumerate(basis.data):
         x, y, z = point.co
         smile.data[index].co = point.co
@@ -438,6 +490,12 @@ def facial_shapes(head):
         corner = field(x, y, 2.8, 159.9, 1.2, .85) * front
         cheek = field(x, y, 4.0, 161.7, 2.0, 1.5) * front
         smile.data[index].co += Vector((math.copysign(.11*corner, x), .23*corner+.09*cheek, .08*cheek))
+        if bpy.context.scene.get('head_player_id')=='shane_denham':
+            # Separate the original tooth-showing reference smile from neutral
+            # identity. Smooth jaw/lip support avoids crossing the lip loops.
+            oral=math.exp(-(x/3.45)**6-((y-159.8)/1.35)**4)*front
+            upper=oral_weights.get(index,.5)
+            smile.data[index].co += Vector((math.copysign(.11*corner,x),.27*corner+.11*cheek+(.60*upper-.28*(1-upper))*oral,.025*cheek))
         # Choose the nearer globe rather than depending on rig-side naming.
         side=min(centres,key=lambda side:abs(centres[side].x-x))
         centre=centres[side]

@@ -109,7 +109,7 @@ func before_move(delta: float) -> void:
 			_jump_started = true
 		return
 	facing = Vector3.ZERO
-	var surface := PitchSurface.height_at(ball.position.x, ball.position.z) if ball.use_terrain else 0.0
+	var surface := ball.surface_height(ball.position.x, ball.position.z) if ball.use_terrain else 0.0
 	if ball.position.y <= surface + FootballBall.RADIUS + .05 and absf(ball.linear_velocity.y) < .75 and ball.seconds_since_bounce > .30:
 		# A rut can put the actor root below the adjacent ball. Ground/air
 		# classification belongs to the ball's turf, not that root-height gap.

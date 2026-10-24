@@ -1,0 +1,16 @@
+
+[smoke] stride_plant_smoke.gd (timeout 45s)
+[failed] stride_plant_smoke.gd exited 1
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+STRIDE_PLANT 1.5 stance_slip=0.14760573578659m/s stance_samples=37 toe_height=-0.03105401487641..0.13716518797792
+STRIDE_PLANT 3.0 stance_slip=0.05655915770484m/s stance_samples=76 toe_height=0.04180926335454..0.26270409463127
+STRIDE_PLANT 4.5 stance_slip=0.09438919723331m/s stance_samples=47 toe_height=0.03096874277812..0.3152915754248
+STRIDE_PLANT 6.0 stance_slip=0.04891236088812m/s stance_samples=52 toe_height=0.03790236800743..0.3670636626525
+STRIDE_PLANT 7.3 stance_slip=0.05534440331536m/s stance_samples=41 toe_height=0.03576972611626..0.40923023923005
+STRIDE_PLANT 8.6 stance_slip=0.05460447575751m/s stance_samples=40 toe_height=0.03753912222583..0.42559931531399
+ERROR: Planted boots slide against the pitch; inspect STRIDE_PLANT
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _run (res://tests/stride_plant_smoke.gd:79)

@@ -1,0 +1,10 @@
+
+[smoke] stride_plant_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+STRIDE_PLANT 3.0 stance_slip=0.73276579106117m/s stance_samples=17 toe_height=-0.05157283842067..0.1682804072781
+STRIDE_PLANT 6.0 stance_slip=0.03746604201627m/s stance_samples=33 toe_height=0.03474812188963..0.36346098018385
+STRIDE_PLANT 8.6 stance_slip=0.04822483201679m/s stance_samples=48 toe_height=0.0367063536004..0.45835786390267
+STRIDE_PLANT PASS
+[passed] stride_plant_smoke.gd (10.8s)

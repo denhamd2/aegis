@@ -1,0 +1,54 @@
+
+[smoke] braking_gait_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+BRAKING_GAIT fast_steps=21 kept_gait=true final_stop_pose=true
+BRAKING_GAIT PASS
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] braking_gait_smoke.gd (9.1s)
+
+[smoke] football_stop_runtime_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=8 officials=0
+Beechlawn match actor: braking/resume works; a running direction change preserves the moving gait
+[passed] football_stop_runtime_smoke.gd (3.0s)
+
+[smoke] turn_dribble_control_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+REVERSAL human=false touch_heading_gap_degrees=0.0
+REVERSAL human=true touch_heading_gap_degrees=0.0
+Turn/dribble control PASS: weighted reversals for human and AI, nearest-actor ownership, no competing force or airborne foot claim
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+[passed] turn_dribble_control_smoke.gd (8.7s)
+
+[smoke] moving_kick_contact_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+MOVING_CONTACT kind=pass speed=0.0 human=false off_axis=false markers=1 impulses=1 toe_gap_m=0.166 marker_gap_m=0.166 case_ms=320
+MOVING_CONTACT kind=pass speed=6.0 human=false off_axis=false markers=1 impulses=1 toe_gap_m=0.084 marker_gap_m=0.084 case_ms=445
+MOVING_CONTACT kind=pass speed=8.6 human=false off_axis=false markers=1 impulses=1 toe_gap_m=0.082 marker_gap_m=0.082 case_ms=504
+MOVING_CONTACT kind=shot speed=0.0 human=false off_axis=false markers=1 impulses=1 toe_gap_m=0.134 marker_gap_m=0.134 case_ms=298
+MOVING_CONTACT kind=shot speed=6.0 human=false off_axis=false markers=1 impulses=1 toe_gap_m=0.079 marker_gap_m=0.079 case_ms=352
+MOVING_CONTACT kind=shot speed=8.6 human=false off_axis=false markers=1 impulses=1 toe_gap_m=0.084 marker_gap_m=0.084 case_ms=345
+MOVING_CONTACT kind=pass speed=0.0 human=true off_axis=false markers=1 impulses=1 toe_gap_m=0.166 marker_gap_m=0.166 case_ms=455
+MOVING_CONTACT kind=pass speed=6.0 human=true off_axis=false markers=1 impulses=1 toe_gap_m=0.084 marker_gap_m=0.084 case_ms=470
+MOVING_CONTACT kind=pass speed=8.6 human=true off_axis=false markers=1 impulses=1 toe_gap_m=0.082 marker_gap_m=0.082 case_ms=430
+MOVING_CONTACT kind=shot speed=0.0 human=true off_axis=false markers=1 impulses=1 toe_gap_m=0.134 marker_gap_m=0.134 case_ms=345
+MOVING_CONTACT kind=shot speed=6.0 human=true off_axis=false markers=1 impulses=1 toe_gap_m=0.08 marker_gap_m=0.08 case_ms=352
+MOVING_CONTACT kind=shot speed=8.6 human=true off_axis=false markers=1 impulses=1 toe_gap_m=0.084 marker_gap_m=0.084 case_ms=352
+MOVING_CONTACT kind=shot speed=0.0 human=true off_axis=true markers=1 impulses=0 toe_gap_m=inf marker_gap_m=0.838 case_ms=1200
+MOVING_CONTACT failures=0
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+[passed] moving_kick_contact_smoke.gd (13.1s)

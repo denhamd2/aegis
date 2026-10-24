@@ -1,0 +1,17 @@
+
+[smoke] moving_kick_contact_smoke.gd (timeout 45s)
+[timeout] moving_kick_contact_smoke.gd exceeded 45s; process group terminated
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+MOVING_CONTACT kind=pass speed=0.0 human=false off_axis=false markers=1 impulses=1 toe_gap_m=0.166
+BEECHLAWN_MATCH_READY actors=22 officials=1
+MOVING_CONTACT kind=pass speed=6.0 human=false off_axis=false markers=1 impulses=1 toe_gap_m=0.123
+BEECHLAWN_MATCH_READY actors=22 officials=1
+MOVING_CONTACT kind=pass speed=8.6 human=false off_axis=false markers=1 impulses=1 toe_gap_m=0.244
+BEECHLAWN_MATCH_READY actors=22 officials=1
+MOVING_CONTACT kind=shot speed=0.0 human=false off_axis=false markers=1 impulses=1 toe_gap_m=0.135
+BEECHLAWN_MATCH_READY actors=22 officials=1
+MOVING_CONTACT kind=shot speed=6.0 human=false off_axis=false markers=1 impulses=1 toe_gap_m=0.139
+BEECHLAWN_MATCH_READY actors=22 officials=1
+MOVING_CONTACT kind=shot speed=8.6 human=false off_axis=false markers=1 impulses=1 toe_gap_m=0.275

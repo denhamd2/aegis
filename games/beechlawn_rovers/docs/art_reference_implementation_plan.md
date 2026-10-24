@@ -1,5 +1,28 @@
 # Beechlawn Rovers — Reference Art Implementation Plan
 
+Current gameplay motion follow-up: [stride/foot plants](art_briefs/br021_stride_2026_10_24/brief.md),
+BR-021 (21/27, in progress), adds five original shared gaits with measured
+stance travel, natural arm/wrist motion and stepping through deceleration.
+All body/head/kit sources remain intact. Native pitch-side motion and live-ball
+checks pass; broader motion and M1 acceptance remain open. Next delivery action
+is BR-025 (25/27), a fresh Mac package for combined playtesting.
+
+Current keeper motion follow-up: [high-shot saves](art_briefs/br009_high_shots_2026_10_24/brief.md),
+BR-009 (9/27, in progress), adds three original shared-rig overhead/high-dive
+clips with measured glove contact, physical take-off and arrival timing.
+Both keeper appearance references and the existing body/head/kit assets are
+preserved. Distribution motion and native Mac match acceptance remain open.
+The [full-stretch follow-up](art_briefs/br009_dives_2026_10_24/brief.md) adds
+bilateral low/mid/high dives, physical lateral flight and staged landing/get-up.
+Native footage and travelling-ball checks cover both existing keeper visuals.
+
+Current Shane/John follow-up: [portrait refinement](art_briefs/shane_john_refinement/brief.md),
+BR-022 (22/27), using the original photos, corrected roll measurements and
+matched native portraits. Preserve the separate Des sources and John’s warm
+beard. John's reattached portrait also guides continuous cheek/jaw/sideburn
+coverage, checked from both native profiles with unchanged beard colours.
+This does not close the AAA likeness or target-Mac acceptance gates.
+
 Current finishing work: [23 October realism pass](art_briefs/realism_finish/brief.md),
 BR-022 (22/27), with shared-body fullness, individual heads and cinematic/turf
 presentation. Player Des now has additional original side/back photographs
@@ -348,3 +371,20 @@ goal, replay and full-time coverage uses deliberate camera stations and cuts.
 Shane/John/player Des/referee Des retain separate portraits, sculpts and grooms.
 New form/roughness/expression work is an improvement pass, not owner approval
 of AAA likeness. Native M1 graphics and performance remain unmeasured.
+
+## Match HUD and second venue — 24 October 2026
+
+BR-006 (6/27) closes the previously missing automatic-cursor acceptance with
+real-release receiver handover and stable defensive interception selection.
+BR-014 (14/27) uses archived `70060.jpg` for the compact monochrome gameplay
+HUD; blue intro graphics are deliberately independent. BR-023 (23/27) now
+includes the owner-approved large Rovers Arena beside Kilmore Drive. The
+Blender director/environment/LOD/Godot-export workflow produced an original
+modular source after the free BlendSwap download was account-gated.
+
+Use the shared functional field/goals/net impacts in either venue. A match-owned
+venue profile carries terrain, wear, display identity and camera anchors; never
+apply arena stripes/flat ground to Kilmore or copy Kilmore puddles into the arena.
+Retain source `.blend`, generator, GLB audit, reference, licences and native
+comparison evidence in the owning football project. M1 performance remains
+BR-025 acceptance. See `art_briefs/match_presentation_2026_10_24/brief.md`.

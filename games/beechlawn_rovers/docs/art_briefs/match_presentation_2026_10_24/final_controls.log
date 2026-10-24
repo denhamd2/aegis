@@ -1,0 +1,43 @@
+
+[smoke] player_selection_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive
+PLAYER_SELECTION PASS: defender, hysteresis, manual hold/mode, intro, real pass release, run continuity, held input, committed action, dismissal, AI keepers/watch
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] player_selection_smoke.gd (8.5s)
+
+[smoke] receiver_selection_pass_types_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive
+RECEIVER_SELECTION PASS: real ground/loft/cross markers, no windup or failed-preparation handover
+[passed] receiver_selection_pass_types_smoke.gd (8.1s)
+
+[smoke] hud_layout_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive
+HUD PASS: monochrome replacement, clock, responsive radar at 3 aspects, carrier identity, distinct power, help and presentation visibility
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] hud_layout_smoke.gd (7.5s)
+
+[smoke] venue_selection_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=rovers_arena
+BEECHLAWN_MENU_READY
+VENUE_SELECTION PASS: persistence, invalid fallback, both grounds, flat/uneven physics, goals/nets/flags, section LOD, independent wet surfaces and menu bindings
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] venue_selection_smoke.gd (12.9s)
+
+[smoke] pitch_audio_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive
+PITCH_AUDIO PASS: tufts <=40k, terrain/water probes=624, typed events, bounded real players, music policy and saved buses
+[passed] pitch_audio_smoke.gd (7.4s)

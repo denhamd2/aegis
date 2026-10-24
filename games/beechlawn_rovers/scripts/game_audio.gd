@@ -49,6 +49,7 @@ func bind_match(match_scene: Node3D, events: FootballMatchEvents) -> void:
 	game = match_scene
 	_step_times.clear(); _cooldowns.clear()
 	events.occurred.connect(_on_event)
+	crowd.volume_db = -9 if match_scene.venue.id == &"rovers_arena" else -15
 	crowd.play()
 	if MatchSession.weather_preset == &"rain": rain.play()
 	else: rain.stop()

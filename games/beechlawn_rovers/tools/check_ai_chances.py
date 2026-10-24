@@ -13,6 +13,7 @@ TEAMS = ['Beechlawn Rovers', 'Boardeaux']
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('output', type=Path)
+    parser.add_argument('--venue', choices=['kilmore_drive','rovers_arena'], default='kilmore_drive')
     parser.add_argument('--observe-only', action='store_true')
     parser.add_argument('--reuse-logs', action='store_true')
     args = parser.parse_args()
@@ -24,7 +25,7 @@ def main():
             path = args.output / (label + '.log')
             if not (args.reuse_logs and path.is_file() and 'AI_MATCH_METRICS ' in path.read_text()):
                 env = dict(os.environ, BEECHLAWN_KICKOFF_TEAM=kickoff,
-                           BEECHLAWN_START_VARIATION=str(variation))
+                           BEECHLAWN_START_VARIATION=str(variation), BEECHLAWN_TEST_VENUE=args.venue)
                 with path.open('w') as log:
                     result = subprocess.run([sys.executable, str(PROJECT/'tools/run_smoke_tests.py'),
                                              'eleven_v_eleven_match_soak.gd'], env=env,
@@ -43,7 +44,7 @@ def main():
     total = sum(totals.values())
     shares = {team: totals[team]/total if total else 0 for team in TEAMS}
     accepted = all(passes[t] >= 5 and .35 <= shares[t] <= .65 for t in TEAMS)
-    report = dict(scenarios=results, total_shots=totals, qualifying_scenarios=passes,
+    report = dict(venue=args.venue, scenarios=results, total_shots=totals, qualifying_scenarios=passes,
                   shot_share=shares, accepted=accepted,
                   criteria='Each team: >=2 physical shots + >=1 contested in >=5/6; aggregate share 35–65%.')
     (args.output/'summary.json').write_text(json.dumps(report, indent=2)+'\n')

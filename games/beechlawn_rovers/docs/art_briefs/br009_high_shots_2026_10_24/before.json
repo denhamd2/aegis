@@ -1,0 +1,184 @@
+{
+  "cases": [
+    {
+      "case": "central_high",
+      "closest_hand_m": 0.316740959882736,
+      "detail": {
+        "ball": "(-49.12067, 2.074255, 0.0)",
+        "clip": "AN_Beechlawn_KeeperHigh",
+        "hand": "(-49.37636, 1.928213, 0.116706)",
+        "keeper": "(-49.5, 0.02186, 0.0)",
+        "tick": 23
+      },
+      "expected_save": true,
+      "peak_root_y": 0.026443587616086,
+      "saved": true,
+      "team": "Beechlawn Rovers"
+    },
+    {
+      "case": "under_bar",
+      "closest_hand_m": 0.378843039274216,
+      "detail": {
+        "ball": "(-49.42708, 2.294262, 0.0)",
+        "clip": "AN_Beechlawn_KeeperHigh",
+        "hand": "(-49.39521, 1.931189, 0.103362)",
+        "keeper": "(-49.5, 0.021756, 0.0)",
+        "tick": 24
+      },
+      "expected_save": true,
+      "peak_root_y": 0.026443587616086,
+      "saved": false,
+      "team": "Beechlawn Rovers"
+    },
+    {
+      "case": "high_left",
+      "closest_hand_m": 1.11217510700226,
+      "detail": {
+        "ball": "(-48.7399, 2.259084, -1.085985)",
+        "clip": "AN_Beechlawn_KeeperHigh",
+        "hand": "(-49.23563, 1.876695, -0.166769)",
+        "keeper": "(-49.5, 0.021756, 0.0)",
+        "tick": 25
+      },
+      "expected_save": true,
+      "peak_root_y": 0.026443587616086,
+      "saved": false,
+      "team": "Beechlawn Rovers"
+    },
+    {
+      "case": "high_right",
+      "closest_hand_m": 1.11216199398041,
+      "detail": {
+        "ball": "(-48.7399, 2.259084, 1.085985)",
+        "clip": "AN_Beechlawn_KeeperHigh",
+        "hand": "(-49.23561, 1.876702, 0.166769)",
+        "keeper": "(-49.5, 0.021756, 0.0)",
+        "tick": 25
+      },
+      "expected_save": true,
+      "peak_root_y": 0.026443587616086,
+      "saved": false,
+      "team": "Beechlawn Rovers"
+    },
+    {
+      "case": "unreachable_corner",
+      "closest_hand_m": 2.63519859313965,
+      "detail": {
+        "ball": "(-48.3774, 2.31974, 2.682573)",
+        "clip": "",
+        "hand": "(-49.43211, 1.162798, 0.562821)",
+        "keeper": "(-49.56147, 0.021756, 0.239289)",
+        "tick": 16
+      },
+      "expected_save": false,
+      "peak_root_y": 0.026443587616086,
+      "saved": false,
+      "team": "Beechlawn Rovers"
+    },
+    {
+      "case": "too_late",
+      "closest_hand_m": 1.33874309062958,
+      "detail": {
+        "ball": "(-49.35698, 2.211068, 1.428492)",
+        "clip": "AN_Beechlawn_KeeperHigh",
+        "hand": "(-49.43589, 1.594499, 0.242807)",
+        "keeper": "(-49.90656, 0.01824, 0.108364)",
+        "tick": 19
+      },
+      "expected_save": false,
+      "peak_root_y": 0.026443587616086,
+      "saved": false,
+      "team": "Beechlawn Rovers"
+    },
+    {
+      "case": "central_high",
+      "closest_hand_m": 0.316740959882736,
+      "detail": {
+        "ball": "(49.12067, 2.031368, 0.0)",
+        "clip": "AN_Beechlawn_KeeperHigh",
+        "hand": "(49.37636, 1.885326, -0.116706)",
+        "keeper": "(49.5, -0.021027, 0.0)",
+        "tick": 23
+      },
+      "expected_save": true,
+      "peak_root_y": -0.0164435878396034,
+      "saved": true,
+      "team": "Boardeaux"
+    },
+    {
+      "case": "under_bar",
+      "closest_hand_m": 0.378843605518341,
+      "detail": {
+        "ball": "(49.42708, 2.251376, 0.0)",
+        "clip": "AN_Beechlawn_KeeperHigh",
+        "hand": "(49.39521, 1.888301, -0.103362)",
+        "keeper": "(49.5, -0.021131, 0.0)",
+        "tick": 24
+      },
+      "expected_save": true,
+      "peak_root_y": -0.0164435878396034,
+      "saved": false,
+      "team": "Boardeaux"
+    },
+    {
+      "case": "high_left",
+      "closest_hand_m": 1.11217522621155,
+      "detail": {
+        "ball": "(48.7399, 2.216197, 1.085985)",
+        "clip": "AN_Beechlawn_KeeperHigh",
+        "hand": "(49.23563, 1.833808, 0.166769)",
+        "keeper": "(49.5, -0.021131, 0.0)",
+        "tick": 25
+      },
+      "expected_save": true,
+      "peak_root_y": -0.0164435878396034,
+      "saved": false,
+      "team": "Boardeaux"
+    },
+    {
+      "case": "high_right",
+      "closest_hand_m": 1.1121621131897,
+      "detail": {
+        "ball": "(48.7399, 2.216197, -1.085985)",
+        "clip": "AN_Beechlawn_KeeperHigh",
+        "hand": "(49.23561, 1.833815, -0.166769)",
+        "keeper": "(49.5, -0.021131, 0.0)",
+        "tick": 25
+      },
+      "expected_save": true,
+      "peak_root_y": -0.0164435878396034,
+      "saved": false,
+      "team": "Boardeaux"
+    },
+    {
+      "case": "unreachable_corner",
+      "closest_hand_m": 2.6352117061615,
+      "detail": {
+        "ball": "(48.3774, 2.276853, -2.682573)",
+        "clip": "",
+        "hand": "(49.43211, 1.119911, -0.562802)",
+        "keeper": "(49.56146, -0.021131, -0.239271)",
+        "tick": 16
+      },
+      "expected_save": false,
+      "peak_root_y": -0.0164435878396034,
+      "saved": false,
+      "team": "Boardeaux"
+    },
+    {
+      "case": "too_late",
+      "closest_hand_m": 1.33510255813599,
+      "detail": {
+        "ball": "(49.35698, 2.168181, -1.428492)",
+        "clip": "AN_Beechlawn_KeeperHigh",
+        "hand": "(49.43568, 1.559581, -0.242781)",
+        "keeper": "(49.90634, -0.016888, -0.108319)",
+        "tick": 19
+      },
+      "expected_save": false,
+      "peak_root_y": -0.0164435878396034,
+      "saved": false,
+      "team": "Boardeaux"
+    }
+  ]
+}

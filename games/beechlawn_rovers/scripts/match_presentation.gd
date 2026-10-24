@@ -208,7 +208,7 @@ func _walk(actor: FootballPlayer,target: Vector3,delta: float) -> bool:
 	var offset:=target-actor.position;offset.y=0
 	if offset.length()<.015:return true
 	actor.position+=offset.normalized()*minf(offset.length(),delta*1.35)
-	actor.position.y=PitchSurface.height_at(actor.position.x,actor.position.z) if game.terrain_enabled else 0
+	actor.position.y=game.surface_height(actor.position.x,actor.position.z) if game.terrain_enabled else 0
 	actor.rotation.y=lerp_angle(actor.rotation.y,atan2(-offset.x,-offset.z),1-exp(-delta*8))
 	var visual:=actor.get_node("Visual") as FootballerVisual
 	if visual.animation_player.current_animation!=&"AN_Beechlawn_WalkOn":visual.play_presentation(&"AN_Beechlawn_WalkOn")

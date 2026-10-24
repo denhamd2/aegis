@@ -1,0 +1,32 @@
+
+[smoke] skill_control_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+SKILL_PASS ball_roll side=-1.0 contact=0.06307368725538
+SKILL_PASS ball_roll side=1.0 contact=0.06470592319965
+SKILL_PASS step_over side=-1.0 contact=0.06308498978615
+SKILL_PASS step_over side=1.0 contact=0.06470566987991
+SKILL_PASS body_feint side=-1.0 contact=0.06308491528034
+SKILL_PASS body_feint side=1.0 contact=0.06470585614443
+SKILL_PASS drag_back side=-1.0 contact=0.06308476626873
+SKILL_PASS drag_back side=1.0 contact=0.06470573693514
+SKILL_PASS skill_turn side=-1.0 contact=0.06308487057686
+SKILL_PASS skill_turn side=1.0 contact=0.06470583379269
+SKILL_PASS fake_shot side=-1.0 contact=0.06308472901583
+SKILL_PASS fake_shot side=1.0 contact=0.06470584869385
+SKILL_CONTROL PASS: 12 bilateral boot contacts, misses/loss/reset, fake-shot cancellation, shielding speed/pose
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] skill_control_smoke.gd (20.5s)
+
+[smoke] skill_moving_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+MOVING_SKILL speed=3.36 contacts=[{ "gap": 0.19397763907909 }]
+MOVING_SKILL speed=6.0 contacts=[{ "gap": 0.14577978849411 }]
+SKILL_MOVING PASS
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] skill_moving_smoke.gd (8.9s)

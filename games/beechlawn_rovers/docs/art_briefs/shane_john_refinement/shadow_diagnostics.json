@@ -1,0 +1,42 @@
+{
+  "method": "Fixed under-eye ROI luminance high-frequency RMS; interpret alongside matched native images",
+  "rois": [
+    [
+      397,
+      282,
+      450,
+      308
+    ],
+    [
+      513,
+      282,
+      566,
+      308
+    ]
+  ],
+  "rms": {
+    "default": [
+      0.0066377361520755605,
+      0.006049610583359506
+    ],
+    "normal_maps": [
+      0.006440738871947182,
+      0.005822881992719217
+    ],
+    "sun_shadows": [
+      0.0018947823916490435,
+      0.0018860057572603589
+    ],
+    "shadow_bias": [
+      0.0018947823916490435,
+      0.0018860057572603589
+    ],
+    "close_shadows": [
+      0.003640249678861949,
+      0.0024507068675515614
+    ]
+  },
+  "chosen_shadow_bias": 0.1,
+  "normal_bias_retained": 1.8,
+  "distance_retained_m": 150
+}

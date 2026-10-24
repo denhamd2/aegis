@@ -1,9 +1,11 @@
 extends CharacterBody3D
 class_name FootballPlayer
+const LOCOMOTION_GRAVITY := 24.0
 ## Responsive 60 Hz locomotion and buffered ball actions for the M1 prototype.
 
 signal status_changed(message: String)
 signal shot_charge_changed(amount: float)
+signal pass_released(receiver: FootballPlayer, serial: int)
 signal foul_committed(player: FootballPlayer, opponent: FootballPlayer)
 
 @export var tuning: FootballTuning
@@ -44,6 +46,7 @@ var _balance_stagger_direction := Vector3.ZERO
 var _save_pose_time := 0.0
 var _goalkeeper_controller: GoalkeeperController
 var _aerial_controller: PlayerAerialController
+var skills: PlayerSkillController
 var ai_move_direction := Vector3.ZERO
 var ai_sprinting := false
 var ai_action_cooldown := 0.0
@@ -51,6 +54,8 @@ var receive_target := Vector3.ZERO
 var receive_target_time := 0.0
 var receive_target_kind: StringName = &"ground"
 var _ignore_pass_until_released := false
+var _handover_input_guard := false
+var _cursor_receive_assist := false
 var _footballer_visual: FootballerVisual
 var _visual_pass_pending := false
 var _visual_pass_through := false
@@ -79,6 +84,8 @@ func _ready() -> void:
 		tuning = FootballTuning.new()
 	_aerial_controller = PlayerAerialController.new()
 	_aerial_controller.configure(self, ball)
+	skills = PlayerSkillController.new()
+	skills.configure(self, ball)
 	if profile == null:
 		rotation.y = -PI * 0.5 * attack_sign
 	elif profile.role == "goalkeeper":
@@ -120,6 +127,7 @@ func _physics_process(delta: float) -> void:
 			if step_version!=_stoppage_version: return
 	_save_pose_time = maxf(0.0, _save_pose_time - delta)
 	_sample_input()
+	skills.before_move(delta)
 	if _goalkeeper_controller != null:
 		_goalkeeper_controller.update_before_move(delta)
 		if ball.goalkeeper_is_holding(self):
@@ -127,6 +135,7 @@ func _physics_process(delta: float) -> void:
 	_aerial_controller.before_move(delta)
 	_update_locomotion(delta)
 	_aerial_controller.after_locomotion()
+	if _goalkeeper_controller != null: _goalkeeper_controller.after_locomotion(delta)
 	move_and_slide()
 	if ball.use_terrain:
 		global_position.x=clampf(global_position.x,-55.0,55.0)
@@ -137,6 +146,7 @@ func _physics_process(delta: float) -> void:
 	if _goalkeeper_controller != null:
 		_goalkeeper_controller.try_save()
 	_aerial_controller.resolve_contact(delta)
+	skills.resolve_contact(delta)
 	_update_dribble(delta)
 	_resolve_pending_kick_contact(delta)
 	_try_shoulder_challenge()
@@ -154,6 +164,9 @@ func _sample_input() -> void:
 		_aim = Vector2.ZERO
 		return
 	_stick = Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	if _stick.length_squared() > .01: _cursor_receive_assist = false
+	for action in ["shoot","pass","through_pass","lofted_pass","cross"]:
+		if InputMap.has_action(action) and Input.is_action_just_pressed(action): _cursor_receive_assist = false
 	_aim = Input.get_vector("aim_left", "aim_right", "aim_up", "aim_down")
 	if _aim.length_squared() < 0.02:
 		_aim = _stick
@@ -174,6 +187,16 @@ func _update_locomotion(delta: float) -> void:
 	var contain := controlled_by_human and defending and Input.is_action_pressed("contain")
 	var sliding := _slide_tackle_time > 0.0
 	var desired := Vector3.ZERO if recovering else (_slide_tackle_direction if sliding else (ai_move_direction if not controlled_by_human else (camera_right * _stick.x - camera_forward * _stick.y)))
+	# Preserve the intended receiving run after cursor handover until the user
+	# moves, or the live pass arrives. The independent ball is never attached.
+	if controlled_by_human and _cursor_receive_assist and receive_target_time > 0 and _stick.length() < .05 \
+			and ball.last_touch == team_name and ball.last_action in [&"pass",&"through_pass",&"lofted_pass",&"cross",&"goalkeeper_distribution"]:
+		var run := receive_target-global_position
+		run.y = 0
+		if run.length() > .25 and global_position.distance_to(ball.global_position) > 1.2:
+			desired = run.normalized()
+			_stick = Vector2.RIGHT
+	if skills.active != &"": desired = Vector3.ZERO
 	if contain:
 		var offset := ball.global_position - global_position
 		offset.y = 0
@@ -192,6 +215,8 @@ func _update_locomotion(delta: float) -> void:
 	var sprint_input := sprint_requested
 	var close_control := Input.is_action_pressed("close_control") if controlled_by_human else false
 	var speed_scale := .52 if jockey or contain else (.56 if close_control else 1.0)
+	if skills.shielding: speed_scale = tuning.shield_speed_scale
+	if skills.active != &"": speed_scale = 0
 	var is_ai_goalkeeper := not controlled_by_human and profile != null and profile.role == "goalkeeper"
 	var target_speed := 0.0 if recovering else (4.8 if sliding else (tuning.goalkeeper_move_speed if is_ai_goalkeeper else (tuning.sprint_speed if sprint_input else tuning.jog_speed)))
 	if _balance_stagger_time > 0.0:
@@ -211,7 +236,7 @@ func _update_locomotion(delta: float) -> void:
 	velocity.x = horizontal.x
 	velocity.z = horizontal.z
 	if not is_on_floor():
-		velocity.y -= 24.0 * delta
+		velocity.y -= LOCOMOTION_GRAVITY * delta
 	else:
 		velocity.y = 0.0
 	if sprint_requested:
@@ -219,6 +244,7 @@ func _update_locomotion(delta: float) -> void:
 	else:
 		stamina = minf(tuning.stamina_max, stamina + tuning.stamina_recovery * delta)
 	var facing_intent := desired
+	if skills.facing.length_squared() > .01: facing_intent = skills.facing
 	if _aerial_controller.facing.length_squared() > .01:
 		facing_intent = _aerial_controller.facing
 	if not recovering and (is_ai_goalkeeper or jockey or contain):
@@ -272,6 +298,13 @@ func _keeper_is_recovering() -> bool:
 func _update_dribble(delta: float) -> void:
 	if ball == null or _keeper_is_recovering() or _aerial_controller.committed():
 		return
+	if skills.active != &"":
+		skills.control_setup()
+		return
+	if skills.shielding:
+		ball.dribble_touch(self, _flat_direction, false, true, tuning.dribble_touch_interval,
+			tuning.close_touch_distance, tuning.sprint_touch_distance)
+		return
 	var flat_distance := Vector2(ball.global_position.x - global_position.x,
 		ball.global_position.z - global_position.z).length()
 	var control_touch := false
@@ -279,10 +312,10 @@ func _update_dribble(delta: float) -> void:
 		var preparing_kick := _visual_pass_pending or _visual_shot_pending
 		control_touch = ball.dribble_touch(self, _flat_direction,
 			bool(get_meta("sprinting", false)) and not preparing_kick,
-			bool(get_meta("close_control", false)) or preparing_kick,
+			bool(get_meta("close_control", false)) or preparing_kick or skills.shielding,
 			tuning.dribble_touch_interval,
 			tuning.kick_setup_touch_distance if preparing_kick else tuning.close_touch_distance,
-			tuning.sprint_touch_distance)
+			tuning.sprint_touch_distance,preparing_kick)
 	elif flat_distance <= tuning.control_radius and velocity.length() < 0.45 and ball.linear_velocity.length() < 0.7:
 		# Gentle recovery to a playable foot distance, still applied as force.
 		control_touch = ball.dribble_touch(self, _flat_direction, false, true,
@@ -303,6 +336,13 @@ func _update_actions(delta: float) -> void:
 		if not Input.is_action_pressed("pass") and not Input.is_action_pressed("through_pass"):
 			_ignore_pass_until_released = false
 		return
+	if _handover_input_guard:
+		var held := false
+		for action in ["pass","through_pass","shoot","lofted_pass","cross","tackle","slide_tackle","ball_roll","step_over","body_feint","drag_back","skill_turn","fake_shot"]:
+			if InputMap.has_action(action) and Input.is_action_pressed(action): held = true
+		_handover_input_guard = held
+		if held: return
+	if skills.handle_input(): return
 	if _aerial_controller.handle_input(delta):
 		return
 	if Input.is_action_just_pressed("pass"):
@@ -566,6 +606,8 @@ func _resolve_shoulder_contact(opponent: FootballPlayer, own_velocity: Vector3,
 	var opponent_advantage := -own_advantage
 	var own_impact := clampf(0.16 + contact_energy * 0.12 - own_balance * 0.0015 + opponent_advantage * 0.3, 0.06, 0.32)
 	var opponent_impact := clampf(0.16 + contact_energy * 0.12 - opponent_balance * 0.0015 + own_advantage * 0.3, 0.06, 0.32)
+	if skills.shielding: own_impact *= .7
+	if opponent.skills.shielding: opponent_impact *= .7
 	# Both players absorb some contact; the less balanced/stronger-opponent side
 	# gets the larger readable loss of stride without ragdoll or physics chains.
 	_apply_balance_reaction(-side, own_impact * 0.55)
@@ -698,6 +740,7 @@ func _do_pass(through: bool, requested_direction := Vector3.ZERO,
 			return
 		if ball.kick_velocity(aerial.velocity, pass_kind, team_name, self, &"foot", variant):
 			LoftedPassPlanner.assign_runs(self, aerial)
+			pass_released.emit(aerial.get("receiver") as FootballPlayer, ball.action_serial)
 			status_changed.emit("Cross" if pass_kind == &"cross" else "Lofted pass")
 		return
 	var option := _pass_option_for_receiver(requested_receiver, through) if requested_receiver != null else _choose_pass_target(intended_direction, through)
@@ -720,6 +763,7 @@ func _do_pass(through: bool, requested_direction := Vector3.ZERO,
 			target.receive_target = target_position
 			target.receive_target_kind = &"ground"
 			target.receive_target_time = clampf(distance / maxf(speed, 1.0) + 0.75, 1.0, 3.5)
+		pass_released.emit(target, ball.action_serial)
 		status_changed.emit(("Through ball to " if through else "Pass to ") +
 			(target.profile.display_name if is_instance_valid(target) and target.profile != null else "space"))
 		if not is_instance_valid(_footballer_visual):
@@ -727,6 +771,9 @@ func _do_pass(through: bool, requested_direction := Vector3.ZERO,
 
 
 func _on_visual_action_contact(action: StringName) -> void:
+	if action == &"skill":
+		skills.on_marker()
+		return
 	if action in [&"header", &"chest_control", &"volley", &"half_volley"]:
 		_aerial_controller.on_marker(action)
 		return
@@ -777,6 +824,7 @@ func _resolve_pending_kick_contact(delta: float) -> void:
 
 
 func _on_visual_action_finished(action: StringName) -> void:
+	if action == &"skill": skills.on_finished()
 	_aerial_controller.on_finished(action)
 	if action == &"standing_tackle": _standing_pending = false
 	if _contact_wait_action == action:
@@ -1017,9 +1065,23 @@ func _update_visual_pose(delta: float) -> void:
 		body.rotation.x = -_balance_stagger_direction.z * 0.12 * balance_pose
 	visual.position.y = -0.38 * clampf(_slide_tackle_time / 0.24, 0.0, 1.0)
 
+func prepare_control_handover(receiving: bool) -> void:
+	_pending_pass = 0
+	_pending_shot = 0
+	_shot_charge = -1
+	_stick = Vector2.ZERO
+	_aim = Vector2.ZERO
+	_aerial_controller.cancel_input()
+	skills.shielding = false
+	_handover_input_guard = receiving
+	_cursor_receive_assist = receiving and receive_target_time > 0
+	shot_charge_changed.emit(0)
+
 func reset_for_stoppage() -> void:
+	_cursor_receive_assist = false
 	_stoppage_version+=1
 	_aerial_controller.reset()
+	skills.reset()
 	if _goalkeeper_controller != null:
 		_goalkeeper_controller.reset_for_stoppage()
 	_save_pose_time=0.0

@@ -1,0 +1,8 @@
+{
+  "clip": "AN_Beechlawn_BodyFeintRight",
+  "event": "ball_contact",
+  "frame": 18,
+  "fps": 60,
+  "time_seconds": 0.3,
+  "bone": "mixamorig_RightToe_End"
+}

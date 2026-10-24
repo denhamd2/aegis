@@ -29,3 +29,10 @@ vec3 br_pitch_colour(vec2 p, vec2 field_size, vec3 turf) {
 	base = mix(base,vec3(0.24,0.205,0.12),clamp(goal_wear*(0.36+fine*0.26)+central_wear+traffic,0.0,0.72));
 	return base;
 }
+
+// Maintained arena turf shares one pigment response across surface and blades.
+vec3 br_arena_colour(vec2 p, vec3 turf) {
+ float band = mod(floor(p.x/7.0),2.0);
+ float grain = dot(turf,vec3(.299,.587,.114));
+ return mix(vec3(.115,.18,.055),vec3(.15,.25,.08),band)*(.86+grain*.9);
+}

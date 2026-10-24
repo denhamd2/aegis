@@ -1,0 +1,42 @@
+{
+  "bones": 65,
+  "rest_transforms_unchanged": true,
+  "meshes": 0,
+  "source_fps": 60,
+  "normalized_cycle_seconds": 1.0,
+  "actions": {
+    "AN_Beechlawn_CloseControl_Footwork": {
+      "start": 0,
+      "end": 1,
+      "channels": 195
+    },
+    "AN_Beechlawn_Jog_Footwork": {
+      "start": 0,
+      "end": 1,
+      "channels": 195
+    },
+    "AN_Beechlawn_SlowJog_Footwork": {
+      "start": 0,
+      "end": 1,
+      "channels": 195
+    },
+    "AN_Beechlawn_Sprint_Footwork": {
+      "start": 0,
+      "end": 1,
+      "channels": 195
+    },
+    "AN_Beechlawn_Walk_Footwork": {
+      "start": 0,
+      "end": 1,
+      "channels": 195
+    }
+  },
+  "source_stance_target_error_m": {
+    "AN_Beechlawn_Walk_Footwork": 6.391000887827774e-06,
+    "AN_Beechlawn_SlowJog_Footwork": 6.282221178663687e-06,
+    "AN_Beechlawn_Jog_Footwork": 6.3537332138786145e-06,
+    "AN_Beechlawn_Sprint_Footwork": 6.247840634984111e-06,
+    "AN_Beechlawn_CloseControl_Footwork": 6.271742445010659e-06
+  },
+  "protected_assets_unchanged": 28
+}

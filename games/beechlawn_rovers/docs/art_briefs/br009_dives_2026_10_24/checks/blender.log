@@ -1,0 +1,34 @@
+15:43:40 | INFO: Data are loaded, start creating Blender stuff
+15:43:40 | INFO: Blender create Mesh node Eye_l
+15:43:40 | INFO: Blender create Mesh node Eye_r
+15:43:40 | INFO: Blender create Mesh node Hair_Shane_ShortCropCards
+15:43:40 | INFO: Blender create Mesh node Hair_Shane_ShortCropRoots
+15:43:40 | INFO: Blender create Mesh node Kit_Boots
+15:43:40 | INFO: Blender create Mesh node Shared_Fitted_VBinding_And_Raglan
+15:43:40 | INFO: Blender create Mesh node Kit_shirt_BoundHems
+15:43:40 | INFO: Blender create Mesh node YBot_Surface.002
+15:43:40 | INFO: Blender create Mesh node Kit_Shorts.001
+15:43:40 | INFO: Blender create Mesh node Kit_Shorts_FoldedHems
+15:43:40 | INFO: Blender create Mesh node Kit_Socks.001
+15:43:40 | INFO: Blender create Mesh node Kit_socks_BoundHems
+15:43:40 | INFO: Blender create Mesh node YBot_Joints.001
+15:43:40 | INFO: Blender create Mesh node Skin_Head
+15:43:40 | INFO: Blender create Mesh node Shared_Skin_With_Continuous_Arms
+15:43:40 | INFO: Blender create Mesh node YBot_Surface.001
+15:43:40 | INFO: glTF import finished in 0.67s
+DIVE_EXTENSION KeeperDiveFullLowLeft [113.32255554199219, 24.9531192779541, 18.245342254638672] [103.27323150634766, 38.77307891845703, 19.9461727142334] 80.0
+DIVE_EXTENSION KeeperDiveFullLowRight [-103.27650451660156, 38.77119064331055, 19.94765853881836] [-113.3217544555664, 24.952259063720703, 18.24498748779297] 80.0
+DIVE_EXTENSION KeeperDiveFullMidLeft [109.82101440429688, 84.82695007324219, 16.75523567199707] [103.76439666748047, 99.63060760498047, 20.411022186279297] 75.0
+DIVE_EXTENSION KeeperDiveFullMidRight [-103.76677703857422, 99.62997436523438, 20.412017822265625] [-109.81935119628906, 84.82498931884766, 16.754497528076172] 75.0
+DIVE_EXTENSION KeeperHighDiveFullLeft [103.72123718261719, 130.97329711914062, 14.305519104003906] [92.9293212890625, 147.57150268554688, 16.825363159179688] 60.0
+DIVE_EXTENSION KeeperHighDiveFullRight [-92.9319076538086, 147.57095336914062, 16.826017379760742] [-103.72048950195312, 130.9706268310547, 14.304967880249023] 60.0
+Info: Saved "football_keeper_dives.blend"
+INFO Draco mesh compression is available, use library at /home/agent/.local/opt/blender-draco/4.3.2/libextern_draco.so
+15:43:44 | INFO: Starting glTF 2.0 export
+15:43:47 | INFO: Finished glTF 2.0 export in 2.3658251762390137 s
+
+KEEPER_FULL_DIVES_EXPORTED 6
+Blender 4.3.2
+Read blend: "/workspace/aegis-checkout/tools/blender/beechlawn/footballer_shared.blend"
+
+Blender quit

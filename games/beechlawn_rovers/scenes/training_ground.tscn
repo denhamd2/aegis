@@ -33,7 +33,7 @@ light_color = Color(1.0, 0.975, 0.93, 1)
 light_energy = 0.8
 shadow_enabled = true
 directional_shadow_max_distance = 150.0
-shadow_bias = 0.04
+shadow_bias = 0.1
 shadow_normal_bias = 1.8
 angular_distance = 0.8
 

@@ -1,0 +1,22 @@
+{
+  "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+  "away_players": 11,
+  "display_server": "X11",
+  "home_players": 11,
+  "officials": 1,
+  "rendering_method": "forward_plus",
+  "scope": "Actual title/intro/HUD; software Vulkan stills do not certify M1 performance",
+  "turf": {
+    "active_chunks": 12,
+    "active_crowns": 19200,
+    "active_triangles": 205568,
+    "blade_height_m": [
+      0.0119,
+      0.0242
+    ],
+    "cell_m": 0.75,
+    "intermediate_chunks": 16,
+    "prepared_chunks": 8,
+    "triangle_budget": 240000
+  }
+}

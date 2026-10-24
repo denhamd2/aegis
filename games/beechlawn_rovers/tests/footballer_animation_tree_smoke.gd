@@ -39,7 +39,9 @@ func _run() -> void:
 		var new_length := player.get_animation(clip_name).length
 		var old_length := previous_player.get_animation(clip_name).length
 		print("Animation duration %s: old=%.3f new=%.3f" % [clip_name, old_length, new_length])
-		if absf(new_length - old_length) >= 0.02:
+		if clip_name in ["AN_Beechlawn_Jog","AN_Beechlawn_Sprint"]:
+			assert(absf(new_length-1.0)<.001,"Gameplay gait uses a normalized one-second phase")
+		elif absf(new_length - old_length) >= 0.02:
 			push_error("60 fps combined library changed clip duration: %s" % clip_name)
 			quit(1)
 			return

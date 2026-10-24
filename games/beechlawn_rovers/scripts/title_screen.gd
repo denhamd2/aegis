@@ -124,7 +124,8 @@ func _build_main() -> void:
 	canvas.add_child(crest)
 	_label(canvas,"BEECHLAWN ROVERS",Vector2(150,53),23,BOLD)
 	_rect(canvas,Rect2(1224,52,312,40),Color(0.025,0.025,0.03,0.7))
-	_label(canvas,"KILMORE DRIVE  /  DUBLIN",Vector2(1240,60),19,BOLD)
+	var venue_label := _label(canvas,FootballMatchVenue.from_id(MatchSession.venue_id).display_name.to_upper()+"  /  DUBLIN",Vector2(1240,60),19,BOLD)
+	venue_label.name = "SelectedVenue"
 	var title_logo := TextureRect.new()
 	title_logo.name = "TitleLogo"
 	var title_atlas := AtlasTexture.new()
@@ -250,8 +251,31 @@ func _build_options() -> void:
 	_graphics_toggle("CINEMATIC FOCUS", "cinematic_depth_of_field", Vector2(820,568), Vector2(325,36))
 	_graphics_toggle("CINEMATIC MOTION BLUR", "cinematic_motion_blur", Vector2(1150,568), Vector2(355,36))
 	_rect(options_layer,Rect2(100,610,1400,1),Color(1,1,1,0.20))
-	_label(options_layer,"KEYBOARD CONTROLS",Vector2(100,638),19,BOLD,RED)
-	_label(options_layer,"WASD Move · Shift Sprint · Ctrl Close control / Jockey\nE Pass · Q Through · R Loft · T Cross · Space Shoot\nF Tackle · G Slide · J Contain · H Pressure · Tab Switch\nC Camera · Esc Title · F3 Debug",Vector2(100,674),18,BODY,PAPER)
+	_label(options_layer,"MATCH SETUP",Vector2(100,616),18,BOLD,RED)
+	var venue_select := OptionButton.new()
+	venue_select.name = "VenueSelect"
+	venue_select.position = Vector2(100,650)
+	venue_select.size = Vector2(610,44)
+	venue_select.add_theme_font_override("font",BOLD)
+	venue_select.add_theme_font_size_override("font_size",22)
+	for id in FootballMatchVenue.IDS: venue_select.add_item(FootballMatchVenue.from_id(id).display_name)
+	venue_select.select(FootballMatchVenue.IDS.find(MatchSession.venue_id))
+	venue_select.item_selected.connect(func(index: int):
+		MatchSession.venue_id = FootballMatchVenue.IDS[index]
+		canvas.get_node("SelectedVenue").text = FootballMatchVenue.from_id(MatchSession.venue_id).display_name.to_upper()+"  /  DUBLIN")
+	options_layer.add_child(venue_select)
+	var switching := OptionButton.new()
+	switching.name = "PlayerSwitching"
+	switching.position = Vector2(100,714)
+	switching.size = Vector2(610,44)
+	switching.add_theme_font_override("font",BOLD)
+	switching.add_theme_font_size_override("font_size",22)
+	switching.add_item("Player switching: Assisted")
+	switching.add_item("Player switching: Manual (Tab)")
+	switching.select(1 if MatchSession.switch_mode == &"manual" else 0)
+	switching.item_selected.connect(func(index: int): MatchSession.switch_mode = &"manual" if index == 1 else &"assisted")
+	options_layer.add_child(switching)
+	_label(options_layer,"F1 in match: full keyboard controls",Vector2(820,744),18,BODY,MUTED)
 	for index in 3:
 		var bus: String = ["Music","Match","UI"][index]
 		var field := bus.to_lower()+"_volume"

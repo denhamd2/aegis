@@ -46,7 +46,7 @@ func begin(restart_kind: String, awarded_team: StringName, position: Vector3) ->
 		for actor in players:
 			if actor.profile.role == "goalkeeper": taker = actor
 	if taker == null: taker = players[0]
-	if team == &"Beechlawn Rovers" and not game._spectator_mode: game._set_controlled_player(taker)
+	if team == &"Beechlawn Rovers" and not game._spectator_mode and taker.profile.role != "goalkeeper": game._set_controlled_player(taker)
 	game.ball.release_for_restart()
 	game.ball.freeze = true
 	for actor in game._home_players + game._away_players:
@@ -55,7 +55,7 @@ func begin(restart_kind: String, awarded_team: StringName, position: Vector3) ->
 	if kind == "PENALTY":
 		spot = Vector3(taker.attack_sign*41.5,0,0)
 		direction = Vector3(taker.attack_sign,0,0)
-	spot.y = PitchSurface.height_at(spot.x,spot.z) if game.terrain_enabled else 0
+	spot.y = game.surface_height(spot.x,spot.z) if game.terrain_enabled else 0
 	game.ball.global_position = spot + Vector3.UP*(FootballBall.RADIUS+0.015)
 	taker.global_position = spot - direction*0.58
 	if kind == "THROW-IN": taker.global_position = Vector3(spot.x,spot.y,signf(spot.z)*34.18)
@@ -106,7 +106,7 @@ func _place_players() -> void:
 			actor.global_position = spot + offset.normalized()*separation
 		actor.global_position.x = clampf(actor.global_position.x,-52.5,52.5)
 		actor.global_position.z = clampf(actor.global_position.z,-33,33)
-		actor.global_position.y = PitchSurface.height_at(actor.global_position.x,actor.global_position.z) if game.terrain_enabled else 0
+		actor.global_position.y = game.surface_height(actor.global_position.x,actor.global_position.z) if game.terrain_enabled else 0
 
 func update(delta: float) -> void:
 	if not active(): return
@@ -121,7 +121,7 @@ func update(delta: float) -> void:
 			phase = Phase.INACTIVE
 			begin(kind,team,spot)
 		return
-	if team != &"Beechlawn Rovers" or game._spectator_mode:
+	if team != &"Beechlawn Rovers" or game._spectator_mode or taker.profile.role == "goalkeeper":
 		if elapsed >= 1.6:
 			_choose_ai_target()
 			take(charge, _delivery == &"shot")
@@ -147,7 +147,7 @@ func update(delta: float) -> void:
 		taker.rotation.y = atan2(-direction.x,-direction.z)
 		if kind != "THROW-IN":
 			taker.global_position = spot-direction*.58
-			taker.global_position.y = PitchSurface.height_at(taker.global_position.x,taker.global_position.z) if game.terrain_enabled else 0
+			taker.global_position.y = game.surface_height(taker.global_position.x,taker.global_position.z) if game.terrain_enabled else 0
 	_draw_aim()
 	if charge < 0 and (Input.is_action_pressed("pass") or (kind != "THROW-IN" and Input.is_action_pressed("shoot"))):
 		shot = Input.is_action_pressed("shoot")
@@ -267,7 +267,7 @@ func _draw_aim() -> void:
 	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
 	for point in [start-right,start+right,tip-right,start+right,tip+right,tip-right,tip-arrow,tip+arrow,tip+direction*.4]:
 		var vertex: Vector3=point
-		vertex.y=(PitchSurface.height_at(vertex.x,vertex.z) if game.terrain_enabled else 0)+.055
+		vertex.y=(game.surface_height(vertex.x,vertex.z) if game.terrain_enabled else 0)+.055
 		tool.add_vertex(vertex)
 	_aim_visual.mesh=tool.commit()
 	if _aim_visual.material_override==null:
@@ -290,7 +290,7 @@ func _place_wall() -> void:
 	for index in count:
 		var actor: FootballPlayer = candidates[index]
 		actor.position = spot + line*9.4 + across*(float(index)-(count-1)*.5)*.65
-		actor.position.y = PitchSurface.height_at(actor.position.x,actor.position.z) if game.terrain_enabled else 0
+		actor.position.y = game.surface_height(actor.position.x,actor.position.z) if game.terrain_enabled else 0
 		actor.rotation.y = atan2(line.x,line.z)
 		wall.append(actor)
 

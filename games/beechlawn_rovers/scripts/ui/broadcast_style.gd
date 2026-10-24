@@ -1,5 +1,5 @@
 extends RefCounted
-## Shared original blue campaign plate used by intro captions and match HUD.
+## Shared original blue campaign plate used by intro captions and lineup graphics.
 const BOLD := preload("res://assets/ui/fonts/BarlowSemiCondensed-SemiBold.ttf")
 const CYAN := Color(0.60, 0.83, 1.0)
 

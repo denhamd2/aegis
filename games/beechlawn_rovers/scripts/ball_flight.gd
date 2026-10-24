@@ -86,7 +86,7 @@ static func after_bounce_contact(ball: FootballBall, height: float, horizon := .
 	for i in range(1, int(horizon / step) + 1):
 		v = (v - Vector3.UP * g * step) * maxf(0, 1.0 - drag * step)
 		p += v * step
-		var ground := PitchSurface.height_at(p.x, p.z) if ball.use_terrain else 0.0
+		var ground := ball.surface_height(p.x, p.z) if ball.use_terrain else 0.0
 		if p.y <= ground + FootballBall.RADIUS:
 			if bounced: return {}
 			p.y = ground + FootballBall.RADIUS

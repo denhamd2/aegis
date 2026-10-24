@@ -14,6 +14,13 @@ ear projection. Compare ratios in a matched view; allow for camera yaw,
 perspective and expression instead of copying image pixels as dimensions.
 List uncertain side/rear anatomy explicitly.
 
+Verify portrait roll removal before fitting: the two normalized pupil centres
+must be `(-0.5, 0)` and `(0.5, 0)` at every tested image rotation. Use
+`portrait_coordinates.py` and its rotation regression. The former measurement
+matrix doubled roll and distorted John's fit. Keep historical fit constants
+with their original sculpt revision; measure the current saved cage anew rather
+than applying new ratios to an already fitted source.
+
 Work on the current master plus this player's captured delta. Keep the mouth
 at a clean neutral rest and expressions separate. Move fitted curved eyeballs
 and lids together; reduce exposed sclera through aperture/eye fit, not a
@@ -45,6 +52,13 @@ Relax broad cheek planes with apertures and the neck protected; rerun lip
 winding and turned-view checks after mouth/nose corrections. Assess a neutral
 face separately from the photographed smile.
 
+For a tooth-showing expression, inspect a lip cross-section and classify folded
+upper/lower contact loops by topology; their heights can overlap. Measure that
+the dental surface is hidden in neutral and exposed in the smile, then review
+both in-engine. Optional oral parts share the existing head bind and must be
+removed when the actor changes identity. Use the expression-fit audit as a
+source check, alongside the native appearance check.
+
 ## 2. Bake individual pigment with a continuous neck
 
 Use `tools/blender/beechlawn/skin_palette.py` for the owner's fair, untanned
@@ -68,6 +82,11 @@ factors, runtime tints and legacy vertex-colour multiplication; remove an
 unintended tint from the affected head. Keep normal/roughness data linear,
 and compare saved/reloaded sRGB PNGs with embedded GLB images. Preserve local
 lip and pore variation without painting lighting into albedo.
+
+Keep linear material factors separate from sRGB PNG pigment. Reusing a dark
+linear hair factor as PNG values made the imported undercoat almost black.
+Reload the saved texture and verify its pixel values and GLB appearance before
+compensating with lights or replacing the groom.
 
 Retain common master pigment at the protected neck and blend above it into
 the individual face. Matching positions/normals alone leaves a visible collar
@@ -111,6 +130,12 @@ anatomically placed boundaries and their own pigment/roughness. A rectangular
 beard patch or dark mark across the nose is a failed mask, not finished hair.
 Refit roots after every relevant face/skull edit. Reuse compatible rig/mesh
 contracts, not another player's hairline or reference-specific mask constants.
+
+For a full beard, verify continuous sideburn/cheek/jaw coverage in both profiles.
+A front-facing pigment field and front-Z visibility rays can silently remove
+the lateral beard. Fit coverage around the head, use surface-normal visibility
+for side roots, and exclude ears, lips and nostrils. Feather cheek density into
+the stronger jaw growth; compare turned native views before increasing fibres.
 
 Keep scalp, beard and brows on independent colour controls. John's scalp uses
 dark-blonde roots and wheat highlights; his approved warm beard is unchanged.
@@ -201,6 +226,13 @@ after captures in separate paths, with asset hash, identity/profile, pose,
 camera, lighting and renderer recorded. Diagnostic ablations have their own
 folders. Keep current player previews grounded on the Kilmore Drive pitch;
 isolated wide material-fixture views do not establish actual broadcast framing.
+
+The Shane/John follow-up isolates regular under-eye lines to self-shadowing:
+normal-map removal retains them; shadow removal clears them. A depth-bias
+change clears the measured pattern with cast shadows enabled; a shorter
+shadow distance only partly helps. Preserve this comparison rather than
+sculpting around a lighting artifact, and recheck posts/ball/feet with the
+chosen match setting. Its numeric bias remains renderer/scene-specific.
 
 Evidence: [Des player](../../../docs/art_briefs/des_feeney_player_likeness/brief.md),
 [fair skin](../../../docs/art_briefs/fair_skin_review/brief.md),

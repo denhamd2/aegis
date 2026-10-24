@@ -1,0 +1,31 @@
+{
+  "ablation": "sun_shadows",
+  "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+  "api": "1.4.305",
+  "body_fullness": 0.0,
+  "closeup_detail": true,
+  "display_server": "X11",
+  "expression": "neutral",
+  "godot": "4.6.3-stable (official)",
+  "lighting": "default",
+  "msaa_3d": 2,
+  "name": "Shane Denham",
+  "normal_maps": true,
+  "player_id": "shane_denham",
+  "pose": "<null>",
+  "rendering_method": "forward_plus",
+  "resolution": [
+    960,
+    540
+  ],
+  "runtime_head_mesh": "res://assets/characters/shared/heads/near/shane_denham.glb::ArrayMesh_ta36l",
+  "scope": "Native Forward+ still; hardware-specific Mac appearance and performance remain unmeasured.",
+  "skin_scattering": true,
+  "skin_transmittance": false,
+  "sky": "match",
+  "sun_shadows": false,
+  "temporal_aa": false,
+  "vendor": "Unknown",
+  "view": "head_detail",
+  "warmup_frames": 4
+}

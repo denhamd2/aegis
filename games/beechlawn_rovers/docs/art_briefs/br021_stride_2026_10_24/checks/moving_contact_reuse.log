@@ -1,0 +1,24 @@
+
+[smoke] moving_kick_contact_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+MOVING_CONTACT kind=pass speed=0.0 human=false off_axis=false markers=1 impulses=1 toe_gap_m=0.166 marker_gap_m=0.166 case_ms=329
+MOVING_CONTACT kind=pass speed=6.0 human=false off_axis=false markers=1 impulses=1 toe_gap_m=0.084 marker_gap_m=0.084 case_ms=448
+MOVING_CONTACT kind=pass speed=8.6 human=false off_axis=false markers=1 impulses=1 toe_gap_m=0.082 marker_gap_m=0.082 case_ms=449
+MOVING_CONTACT kind=shot speed=0.0 human=false off_axis=false markers=1 impulses=1 toe_gap_m=0.134 marker_gap_m=0.134 case_ms=352
+MOVING_CONTACT kind=shot speed=6.0 human=false off_axis=false markers=1 impulses=1 toe_gap_m=0.079 marker_gap_m=0.079 case_ms=352
+MOVING_CONTACT kind=shot speed=8.6 human=false off_axis=false markers=1 impulses=1 toe_gap_m=0.084 marker_gap_m=0.084 case_ms=345
+MOVING_CONTACT kind=pass speed=0.0 human=true off_axis=false markers=1 impulses=1 toe_gap_m=0.166 marker_gap_m=0.166 case_ms=455
+MOVING_CONTACT kind=pass speed=6.0 human=true off_axis=false markers=1 impulses=1 toe_gap_m=0.084 marker_gap_m=0.084 case_ms=449
+MOVING_CONTACT kind=pass speed=8.6 human=true off_axis=false markers=1 impulses=1 toe_gap_m=0.082 marker_gap_m=0.082 case_ms=448
+MOVING_CONTACT kind=shot speed=0.0 human=true off_axis=false markers=1 impulses=1 toe_gap_m=0.134 marker_gap_m=0.134 case_ms=352
+MOVING_CONTACT kind=shot speed=6.0 human=true off_axis=false markers=1 impulses=1 toe_gap_m=0.08 marker_gap_m=0.08 case_ms=352
+MOVING_CONTACT kind=shot speed=8.6 human=true off_axis=false markers=1 impulses=1 toe_gap_m=0.084 marker_gap_m=0.084 case_ms=345
+MOVING_CONTACT kind=shot speed=0.0 human=true off_axis=true markers=1 impulses=0 toe_gap_m=inf marker_gap_m=0.838 case_ms=1200
+MOVING_CONTACT failures=0
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+[passed] moving_kick_contact_smoke.gd (14.6s)

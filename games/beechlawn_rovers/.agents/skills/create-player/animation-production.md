@@ -59,6 +59,13 @@ release the independent rigid body at the authored throw marker.
 
 ## 4. Contact belongs to gameplay
 
+For partial upper-body layers, inspect the imported tracks before building a
+bone filter: glTF forced sampling can expand an unkeyed lower body into baked
+tracks. Retain only the intended upper-body bones. At the same animation time,
+compare shield blend 0/1 to prove leg poses stay equal; advance the running
+clip with the overlay active to prove the legs still cycle. A blend parameter
+reaching 1 does not establish correct filtering.
+
 Store authored contact markers in the existing metadata contract and verify its clip name, time origin, frame and FPS against the export. Install the Godot event once on an appropriate clip copy. Repeated setup must not add duplicate markers, and cancellation/interruptions must not leave a stale pending action.
 
 The marker signals contact; the fixed-tick gameplay code validates reach and applies the independent ball impulse. Preserve aim/power, input buffering and action-priority behavior. Check no early impulse, exactly one valid impulse, correct cancellation and locomotion recovery. Keep raw ball-physics fixtures separate from marker-gated action tests.
@@ -140,10 +147,48 @@ Evidence: `games/beechlawn_rovers/docs/art_briefs/advanced_shots_2026_10_23/brie
 
 ### Runtime assets, keeper motion and presentation
 
+For new skill clips, preserve the shipping neutral pose at both endpoints,
+but fit contact soles from bind-foot orientation and actual toe offsets. An
+idle foot can point sideways or backward; its current toe offset is not a
+safe contact target. Solve the crouch before planting either leg and verify
+the exported left/right toe positions on the actual actor.
+
+Moving setup forces must damp velocity relative to the carrier. Route them
+through the ball's controller arbitration and one-force-per-tick guard, then
+recheck the claim at the strike marker. Test a rolling ball at controlled and
+jogging speeds alongside stationary contacts. Unfreeze the fixture before
+launching a real impulse: a cached velocity assigned while frozen can be
+discarded on the first physics-server step. Keep spin and observed physical
+velocity in the evidence. BR-020's skill tests and native moving review cover
+these cases; full-sprint entries currently require slowing to controlled pace.
+
 For a partial gait edit, compare the imported shipping clip with the Blender
 source first. Runtime leg-retarget corrections may be absent from an older
 source action. Merge only changed arm tracks and assert untouched leg/root keys
 are equal; a moving-but-tiny leg rotation does not prove a useful stride.
+
+For stride edits, measure world-space boot motion while the normal controller
+moves the actual player. Define stance from low height and low vertical speed;
+the lowest point of a swinging foot alone is insufficient. Author backward
+stance travel to cancel carrier speed, lifted recovery and stable foot axes.
+Dense 60 Hz baked samples preserve constant stance velocity. Check intermediate
+paces for feet sinking below turf when rotations blend; dedicated walk/slow-jog
+poses fixed this where idle-to-jog interpolation failed. Normalize gait phase
+and scale only the locomotion branch, preserving one-shot action/marker clocks.
+Review the whole body too: steady-foot metrics missed stiff walking arms.
+Use a gait-specific contralateral swing and neutral wrists. Keep the running
+gait through fast deceleration; enter a planted stop only near rest and recheck
+resume/interruption. This avoids translating a nearly fixed stop pose.
+Immutable merged gait clips can be cached per rig import while each actor keeps
+independent AnimationTree state; verify actual staggered poses after sharing.
+
+During a kick preparation touch, velocity damping must follow the carrier.
+A fixed close-control target braked a sprinting ball behind the strike foot.
+Retain the force cap, ownership arbitration and boot-contact radius. Measure
+contact at the physical kick through the existing marker-opened window.
+Reuse a heavy match fixture with complete player/ball/input/stamina resets;
+reloading all 23 actors for every case hid useful assertions behind a deadline.
+Evidence: `games/beechlawn_rovers/docs/art_briefs/br021_stride_2026_10_24/brief.md`.
 
 Keeper motion needs travelling-ball tests after reaction delay. Adapt preparation
 to observed arrival time, then restore ordinary follow-through speed. Validate
@@ -152,6 +197,33 @@ and collider restoration. A standing body-radius save or frozen contact pose is
 insufficient. Held balls should follow the evaluated hands physically, including
 gravity compensation; a fixed chest offset can leave a high catch floating away
 from the gloves. Rebounds need a lowering/glove contact before a claim.
+
+High-shot saves need separate coverage from slow high crosses. Measure wrist
+height in the exported extension pose, then align both that pose and the
+physical jump apex with the predicted arrival. Longer flights exposed early
+take-off even after short-range saves passed. Preserve the recovery movement
+lock while a bounded launch velocity drives real vertical/lateral flight;
+verify landing and standing-collider restoration. Keep the anatomical hand
+window and reaction delay rather than boosting reach to pass a test.
+
+Test high central, under-bar and both lateral shots on each keeper, including
+longer arrivals, unreachable corners, late reaction and over-bar misses. A tip
+must physically clear the crossbar. For a short-arrival fixture, use the
+physics-calibrated launch and measure its crossing tick: the generic flight
+helper clamps duration to 0.35 s and can turn a late shot into a saveable one.
+Evidence: `games/beechlawn_rovers/docs/art_briefs/br009_high_shots_2026_10_24/brief.md`.
+
+For full-stretch saves, author low/mid/high silhouettes separately from near-body
+reaches. Pair whole-body roll with real sideways flight; a horizontal pose on
+a stationary root cannot reach a wide shot. Include side landing, hand brace,
+kneel and rise phases rather than reversing the extension directly to idle.
+Calibrate take-off and lateral travel from the exported glove positions while
+preserving the existing reaction/contact guards. The full-dive add-on leaves
+central high tips and near-body actions intact. Measure torso lean in world
+space: GLB skeleton-local axes can make an upright pose falsely read as a
+90-degree dive. Require bilateral low/mid/high ball contacts, committed travel,
+flight, recovery/collider restoration and genuine late/unreachable misses.
+Evidence: `games/beechlawn_rovers/docs/art_briefs/br009_dives_2026_10_24/brief.md`.
 
 For pose replays, copy the runtime visual tree without scene reconstruction or
 scripts (`duplicate(0)`), freeze animation evaluation and apply recorded bone
@@ -172,10 +244,12 @@ Run bounded, serial checks with `games/beechlawn_rovers/tools/run_smoke_tests.py
 | --- | --- |
 | Startup, shared playback, relaxed poses | `shared_pose_safety_smoke.gd`, `shared_roster_resources_smoke.gd`, `shared_head_roster_smoke.gd` |
 | Gait, braking, pivots, reversal | `footballer_animation_tree_smoke.gd`, `football_stop_runtime_smoke.gd`, `shared_pivot_pose_smoke.gd`, `turn_dribble_control_smoke.gd` |
+| Stride calibration and shared phase | `stride_plant_smoke.gd`, `braking_gait_smoke.gd`, `shared_gait_integrity_smoke.gd`, `shared_roster_resources_smoke.gd`; native `--review-mode stride_review` / `stride_brake` |
 | Marker-gated contact | `football_kick_contact_integration_smoke.gd`, `football_receive_contact_smoke.gd`, `football_shot_contact_integration_smoke.gd`; select the actual 11v11 fixture where supported |
-| Keeper contact and recovery | `keeper_live_contact_smoke.gd`, `keeper_diving_high_smoke.gd`, `goalkeeper_outcomes_smoke.gd` |
+| Keeper contact and recovery | `keeper_live_contact_smoke.gd`, `keeper_diving_high_smoke.gd`, `keeper_high_shots_smoke.gd`, `keeper_full_dive_smoke.gd`, `goalkeeper_outcomes_smoke.gd`; native `--review-mode keeper_high_shots` / `keeper_full_dives` |
 | Replay appearance and state | `replay_results_smoke.gd`, native `--review-mode outro` |
 | Moving contact and combinations | `moving_kick_contact_smoke.gd`, `first_time_pass_timing_smoke.gd`, `first_time_shot_smoke.gd`, `ai_shot_approach_smoke.gd` |
+| Shielding and possession skills | `skill_control_smoke.gd`, `skill_moving_smoke.gd`; native `--review-mode skills` and `skills_moving` |
 
 Sample whole changed clips, not only beginning/middle/end. Use a fixed nine-pose garment sheet as an additional deformation check, then inspect moving close and broadcast playback. Stills and skeleton proxies cannot establish animation smoothness or final-mesh quality. Preserve the main skill's logic/native-appearance/hardware distinction and report unmeasured hardware performance.
 

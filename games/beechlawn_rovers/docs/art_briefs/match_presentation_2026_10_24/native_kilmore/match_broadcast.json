@@ -1,0 +1,28 @@
+{
+  "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+  "api": "1.4.305",
+  "away_players": 11,
+  "camera": "close_broadcast",
+  "display_server": "X11",
+  "draw_calls": 923,
+  "extra_views": [],
+  "godot": "4.6.3-stable (official)",
+  "home_players": 11,
+  "msaa_3d": 2,
+  "officials": 1,
+  "phase": "stationary kickoff",
+  "primitives": 627788,
+  "rendering_method": "forward_plus",
+  "resolution": [
+    1280,
+    720
+  ],
+  "scene": "res://scenes/match_11v11.tscn",
+  "scope": "Actual Forward+ match still; no native Mac timing or graphics parity claim.",
+  "sun_shadows": true,
+  "vendor": "Unknown",
+  "venue": "kilmore_drive",
+  "venue_view": "broadcast",
+  "warmup_frames": 3,
+  "weather": "sunny"
+}

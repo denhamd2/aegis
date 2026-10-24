@@ -1,0 +1,43 @@
+{
+  "bones": 65,
+  "rest_transforms_unchanged": true,
+  "meshes": 0,
+  "actions": {
+    "AN_Beechlawn_KeeperDiveFullLowLeft": {
+      "start": 0,
+      "end": 1.8,
+      "channels": 195
+    },
+    "AN_Beechlawn_KeeperDiveFullLowRight": {
+      "start": 0,
+      "end": 1.8,
+      "channels": 195
+    },
+    "AN_Beechlawn_KeeperDiveFullMidLeft": {
+      "start": 0,
+      "end": 1.8,
+      "channels": 195
+    },
+    "AN_Beechlawn_KeeperDiveFullMidRight": {
+      "start": 0,
+      "end": 1.8,
+      "channels": 195
+    },
+    "AN_Beechlawn_KeeperHighDiveFullLeft": {
+      "start": 0,
+      "end": 1.8,
+      "channels": 195
+    },
+    "AN_Beechlawn_KeeperHighDiveFullRight": {
+      "start": 0,
+      "end": 1.8,
+      "channels": 195
+    }
+  },
+  "ready_endpoints_match_within_export_precision": true,
+  "max_endpoint_translation_error_cm": 2.09808349609375e-05,
+  "max_endpoint_quaternion_dot_error": 1.251540844293686e-07,
+  "exporter_sampled_scale_tracks": 390,
+  "max_scale_variation": 2.384185791015625e-07,
+  "max_deviation_from_unit_scale": 5.960464477539062e-07
+}

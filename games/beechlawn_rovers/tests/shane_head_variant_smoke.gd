@@ -29,7 +29,7 @@ func _run() -> void:
 	var base_head := _part(other_rig, "Skin_Head").mesh
 	assert(_part(rig, "Skin_Head").mesh != base_head, "Shane's finished sculpt must remain independent of the common starting head")
 	assert(_part(rig, "YBot_Surface").mesh == _part(other_rig, "YBot_Surface").mesh, "Body remains shared")
-	var part_names := ["Skin_Head", "Eye_l", "Eye_r", "Hair_Shane_ShortCropRoots", "Hair_Shane_ShortCropCards"]
+	var part_names := ["Skin_Head", "Eye_l", "Eye_r", "Hair_Shane_ShortCropRoots", "Hair_Shane_ShortCropCards", "Mouth_UpperTeeth"]
 	for name in part_names:
 		var live := _part(rig, name)
 		var source := _part(hair_package if name.begins_with("Hair_") else package, name)
@@ -44,6 +44,10 @@ func _run() -> void:
 	assert(head.mesh.get_blend_shape_name(1) == &"Blink")
 	assert(head.mesh.get_blend_shape_name(0) == &"Smile")
 	assert(is_zero_approx(head.get_blend_shape_value(0)), "Neutral identity is independent of smile")
+	var teeth := _part(rig,"Mouth_UpperTeeth")
+	assert(teeth.get_parent()==head.get_parent() and teeth.transform.is_equal_approx(head.transform))
+	assert(teeth.mesh.get_aabb().size.x>.045 and teeth.mesh.get_aabb().size.x<.075,"Teeth must retain real head scale")
+	assert(teeth.mesh.get_faces().size()/3<1000,"Small original dental geometry must remain bounded")
 	for actor in game._home_players + game._away_players:
 		assert(actor.get_node("Visual/Rig").find_children("*", "Skeleton3D", true, false).size() == 1)
 	visual.animation_tree.active = false
@@ -59,8 +63,10 @@ func _run() -> void:
 	# Reconfiguration/substitution must restore the original identity resources.
 	visual.configure_appearance(other.profile)
 	assert(head.mesh == base_head)
+	assert(rig.find_children("Mouth_*","MeshInstance3D",true,false).is_empty(),"Previous identity's teeth survived a substitution")
 	visual.configure_appearance(shane.profile)
 	assert(head.mesh == _part(package, "Skin_Head").mesh)
+	assert(rig.find_children("Mouth_*","MeshInstance3D",true,false).size()==1,"Reconfiguration duplicated oral geometry")
 	assert(_part(other_rig, "Skin_Head").mesh == base_head, "A teammate's identity changed")
 	var fixture := load("res://data/players/shane_denham.tres") as FootballerProfile
 	assert(fixture.appearance.head_variant == packed, "Retained 4v4 profile must use the same head")

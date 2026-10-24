@@ -1,0 +1,51 @@
+{
+  "result": "PASS",
+  "source_sha256": "4639d023ae27a30a53cf7410a335e3915828d545d565c360688c40ddee6b6458",
+  "groom_sha256": "3671f02ba1d311436ec9f7dd892989d1d5e07dc9ee17145a2671fd604b29ce7d",
+  "source_coverage": {
+    "left": {
+      "cheek_vertices": 2039,
+      "sideburn_vertices": 748,
+      "jaw_vertices": 9195
+    },
+    "right": {
+      "cheek_vertices": 2393,
+      "sideburn_vertices": 736,
+      "jaw_vertices": 9352
+    }
+  },
+  "export_coverage": {
+    "left": {
+      "cheek_vertices": 2708,
+      "sideburn_vertices": 998,
+      "jaw_vertices": 12255
+    },
+    "right": {
+      "cheek_vertices": 3193,
+      "sideburn_vertices": 982,
+      "jaw_vertices": 12471
+    }
+  },
+  "max_fibre_surface_distance_cm": 0.11404132097959518,
+  "preserved_warm_beard_palette": {
+    "MAT_FittedHair_john_orourke_0": [
+      0.06499999761581421,
+      0.029999999329447746,
+      0.013000000268220901,
+      1
+    ],
+    "MAT_FittedHair_john_orourke_1": [
+      0.0949999988079071,
+      0.04800000041723251,
+      0.02199999988079071,
+      1
+    ],
+    "MAT_FittedHair_john_orourke_2": [
+      0.13500000536441803,
+      0.07500000298023224,
+      0.03799999877810478,
+      1
+    ]
+  },
+  "scope": "Bilateral facial-fibre coverage, ear exclusion, fitted surface distance and unchanged beard colour. Native turned views required for visual acceptance."
+}

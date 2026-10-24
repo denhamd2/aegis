@@ -1,22 +1,27 @@
 extends Control
-## One lightweight draw pass for all active players, official and independent ball.
-
-func _process(_delta: float) -> void:
-	queue_redraw()
-
+## One draw pass; orientation follows the side of the live gameplay camera.
+var game: Node3D
+func _process(_delta: float) -> void: queue_redraw()
 func _draw() -> void:
-	var bounds := Rect2(Vector2.ZERO,size)
-	draw_rect(bounds, Color(0.02,0.04,0.03,0.65))
-	var pitch := Rect2(Vector2(8,8),size-Vector2(16,16))
-	draw_rect(pitch, Color(0.8,0.83,0.76,0.65),false,1.0)
-	draw_line(Vector2(size.x/2,8),Vector2(size.x/2,size.y-8),Color(0.8,0.83,0.76,0.6))
-	for actor in get_tree().get_nodes_in_group("football_players"):
-		var player := actor as FootballPlayer
-		var color := Color(0.2,0.45,0.95) if player.attack_sign>0 else Color(0.55,0.84,1.0)
-		if player.controlled_by_human:color=Color(1.0,0.85,0.15)
-		draw_circle(_map(player.global_position,pitch),3.5 if player.controlled_by_human else 2.5,color)
-	var ball := get_node_or_null("../../Ball") as FootballBall
-	if ball != null:draw_circle(_map(ball.global_position,pitch),2.1,Color.WHITE)
-
+ if not is_instance_valid(game): return
+ var line := Color(.85,.87,.89,.40)
+ draw_rect(Rect2(Vector2.ZERO,size),Color(.015,.02,.025,.55))
+ var pitch := Rect2(Vector2(9,9),size-Vector2(18,18))
+ draw_rect(pitch,line,false,1)
+ draw_line(Vector2(size.x/2,9),Vector2(size.x/2,size.y-9),line)
+ draw_arc(size/2,8,0,TAU,32,line,1)
+ for sign in [-1,1]:
+  var x := pitch.position.x if sign == -1 else pitch.end.x-26
+  draw_rect(Rect2(x,size.y/2-25,26,50),line,false,1)
+  x = pitch.position.x-3 if sign == -1 else pitch.end.x
+  draw_rect(Rect2(x,size.y/2-5,3,10),line,false,1)
+ for actor in game._home_players+game._away_players:
+  if not actor.visible or bool(actor.get_meta("sent_off",false)):continue
+  var colour := Color("3268e6") if actor.attack_sign > 0 else Color("83d2f0")
+  var point := _map(actor.position,pitch)
+  if actor.controlled_by_human: draw_arc(point,4.5,0,TAU,16,Color.WHITE,1.2)
+  draw_circle(point,2.5,colour)
+ draw_circle(_map(game.ball.position,pitch),2,Color.WHITE)
 func _map(point: Vector3, rect: Rect2) -> Vector2:
-	return rect.position+Vector2(clampf(point.x/105.0+0.5,0,1),clampf(point.z/68.0+0.5,0,1))*rect.size
+ var flip := 1.0 if game.camera_rig.get_node("Camera3D").global_position.z > 0 else -1.0
+ return rect.position+Vector2(clampf(point.x/105*flip+.5,0,1),clampf(point.z/68*flip+.5,0,1))*rect.size

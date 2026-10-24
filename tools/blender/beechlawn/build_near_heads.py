@@ -4,6 +4,7 @@ Subdivision is evaluated identically for Basis and each expression. Bindings,
 UVs and materials come from the current saved sources; no body/actions change.
 """
 import json
+import argparse
 from pathlib import Path
 import sys
 import bpy
@@ -55,8 +56,13 @@ def smooth_part(obj):
     return len(neutral.vertices)
 
 
-report={}
+parser=argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--players',nargs='+',choices=tuple(SOURCES))
+args=parser.parse_args(sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else [])
+report_path=PROJECT/'docs/art_briefs/realism_finish/near_heads.json'
+report=json.loads(report_path.read_text()) if args.players and report_path.exists() else {}
 for identity,filename in SOURCES.items():
+    if args.players and identity not in args.players:continue
     bpy.ops.wm.open_mainfile(filepath=str(HERE/filename))
     rig=bpy.data.objects['YBot_Armature']
     rig.animation_data_clear()
@@ -73,4 +79,4 @@ for identity,filename in SOURCES.items():
         obj.data.materials.append(bpy.data.materials.new('SharedRuntimeHeadMaterial'))
     export(PROJECT/f'assets/characters/shared/heads/near/{identity}.glb',PARTS)
     print('CLOSEUP_HEAD',identity,report[identity],flush=True)
-(PROJECT/'docs/art_briefs/realism_finish/near_heads.json').write_text(json.dumps(report,indent=2)+'\n')
+report_path.write_text(json.dumps(report,indent=2)+'\n')

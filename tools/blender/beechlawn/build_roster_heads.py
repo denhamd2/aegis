@@ -180,10 +180,10 @@ def saved_finish(identity):
     if not source.exists():
         from player_head_finish import finish_head
         finish_head(bpy.data.objects['Skin_Head'],identity)
-        return
-    with bpy.data.libraries.load(str(source),link=False) as (_,target):
-        target.objects=list(PARTS)
-    for name,original in zip(PARTS,target.objects):
+        return [obj.name for obj in bpy.context.scene.objects if obj.name.startswith('Mouth_')]
+    with bpy.data.libraries.load(str(source),link=False) as (available,target):
+        target.objects=list(PARTS)+[name for name in available.objects if name.startswith('Mouth_')]
+    for name,original in zip(PARTS,target.objects[:len(PARTS)]):
         obj=bpy.data.objects[name]
         assert layout_fingerprint(obj.data)==layout_fingerprint(original.data), 'Capture/transfer source layout before export: '+identity
         assert len(obj.data.vertices)==len(original.data.vertices)
@@ -196,7 +196,14 @@ def saved_finish(identity):
                 key=obj.data.shape_keys.key_blocks.get(shape.name) or obj.shape_key_add(name=shape.name)
                 for point,value in zip(key.data,shape.data): point.co=value.co
                 key.value=0
-    for obj in target.objects: bpy.data.objects.remove(obj,do_unlink=True)
+    supplemental=[]
+    from shane_anatomical_foundation import attach
+    for obj in target.objects[len(PARTS):]:
+        attach(obj,bpy.data.objects['YBot_Armature'])
+        bpy.context.collection.objects.link(obj)
+        supplemental.append(obj.name)
+    for obj in target.objects[:len(PARTS)]: bpy.data.objects.remove(obj,do_unlink=True)
+    return supplemental
 
 
 def export(path, names):
@@ -257,6 +264,7 @@ def main():
     parser.add_argument('--edit-player')
     parser.add_argument('--capture-player')
     parser.add_argument('--sculpt', type=Path)
+    parser.add_argument('--only-player', nargs='+', help='Export only these individual packages on the unchanged common master')
     args = parser.parse_args(sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else [])
     if args.promote:
         promote()
@@ -278,6 +286,9 @@ def main():
     roster = bootstrap(current)
     entries = roster['players']
     sculpts = {identity: resolve_sculpt(entry, current) for identity, entry in entries.items() if 'sculpt' in entry}
+    if args.only_player:
+        assert set(args.only_player) <= set(sculpts), 'Unknown individual sculpt'
+        assert previous.exists() and json.loads(previous.read_text())['revision']==current['revision'], 'A changed common master requires a complete roster build'
     assert snapshot()['revision'] == current['revision'], 'Resolving deltas mutated the common master'
     if args.capture_player:
         assert args.sculpt and args.capture_player in sculpts
@@ -310,18 +321,23 @@ def main():
         print('EDIT_PLAYER_HEAD', path)
         return
     # All recipes were validated before overwriting any runtime export.
-    export(ASSETS / 'master.glb', PARTS)
+    if not args.only_player:
+        export(ASSETS / 'master.glb', PARTS)
     outputs = {}
     for identity, data in sculpts.items():
         changed = any(part['offsets'] for part in data['parts'].values())
         outputs[identity] = ASSETS / 'master.glb'
         if changed:
-            open_master();apply_sculpt(data)
-            from player_head_finish import IDENTITIES
-            if identity in IDENTITIES:
-                saved_finish(identity)
             outputs[identity] = ASSETS / 'players' / (identity + '.glb')
-            export(outputs[identity], PARTS)
+            if not args.only_player or identity in args.only_player:
+                open_master();apply_sculpt(data)
+                from player_head_finish import IDENTITIES
+                supplemental=[]
+                if identity in IDENTITIES:
+                    supplemental=saved_finish(identity)
+                export(outputs[identity], (*PARTS,*supplemental))
+            else:
+                assert outputs[identity].exists(), 'Unselected package is missing; run a full build'
         write_json(PIPE / entries[identity]['sculpt'], data)
     # Hair uses the same master/identity build, but remains a separate selection.
     from player_head_groom import build_groom
@@ -329,6 +345,8 @@ def main():
                                ('bordeaux_09', 'des_side_hair.glb'),
                                ('john_orourke', 'john_swept.glb'),
                                ('des_feeney_sr', 'referee_grey.glb')):
+        if args.only_player and identity not in args.only_player:
+            continue
         open_master();apply_sculpt(sculpts[identity])
         build_groom(bpy.data.objects['Skin_Head'], bpy.data.objects['YBot_Armature'], identity)
         export(ASSETS / filename, ('Hair_Shane_ShortCropRoots', 'Hair_Shane_ShortCropCards'))

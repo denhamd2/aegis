@@ -14,6 +14,48 @@ from mathutils.bvhtree import BVHTree
 from player_head_finish import hair_regions
 
 
+def portrait_root_material(identity):
+    """Feathered directional undergrowth beneath the two fitted hero grooms."""
+    width, height = 1024, 512
+    u = (np.arange(width)+.5)/width
+    y = 155.+24.*(np.arange(height)+.5)/height
+    angle = np.tile(u*2*math.pi-math.pi, height)
+    points = np.stack((8*np.sin(angle),np.repeat(y,width),8*np.cos(angle)-1),axis=1)
+    coverage = hair_regions(points,identity)[:,0]
+    rng = np.random.default_rng(69012 if identity=='shane_denham' else 69010)
+    columns = rng.random(width)
+    shifts = (3*np.sin(y*.7)).astype(int)
+    grain = columns[(np.arange(width)[None,:]+shifts[:,None])%width].ravel()
+    if identity=='john_orourke':
+        # Crown undergrowth follows the side sweep. Vertical cylindrical
+        # columns at the part made a visibly striped cap under the fibres.
+        rows=rng.random(height)
+        diagonal=(np.sin(u*math.pi*2)*6).astype(int)
+        swept=rows[(np.arange(height)[:,None]+diagonal[None,:])%height]
+        top=np.clip((y-169.8)/2.2,0,1)[:,None]
+        grain=(grain.reshape(height,width)*(1-top)+swept*top).ravel()
+    # PNG pigment is sRGB. Reusing a linear material factor here made the
+    # imported undercoat nearly black (9/5/3 and 21/14/7 in the saved PNG).
+    pigment = (.23,.16,.105) if identity=='shane_denham' else (.37,.285,.175)
+    rgba = np.ones((width*height,4),dtype=np.float32)
+    rgba[:,:3] = np.array(pigment)*(.8+.45*grain[:,None])
+    rgba[:,3] = coverage
+    name=identity+'_scalp_roots'
+    from shane_player_finish import image_from_array
+    image=image_from_array(name,rgba.reshape(height,width,4))
+    material=bpy.data.materials.new('MAT_PortraitScalpRoots_'+identity)
+    material.use_nodes=True
+    material.surface_render_method='DITHERED'
+    nodes=material.node_tree.nodes
+    texture=nodes.new('ShaderNodeTexImage');texture.image=image
+    shader=nodes['Principled BSDF']
+    material.node_tree.links.new(texture.outputs['Color'],shader.inputs['Base Color'])
+    material.node_tree.links.new(texture.outputs['Alpha'],shader.inputs['Alpha'])
+    shader.inputs['Roughness'].default_value=.72
+    shader.inputs['Specular IOR Level'].default_value=.20
+    return material
+
+
 def des_root_material():
     """Original directional undergrowth, feathered through a cylindrical UV map.
 
@@ -107,7 +149,7 @@ def build_groom(head, rig, identity):
     root_points, root_faces, root_indices, root_tones = [], [], {}, []
     def root_region(kind):
         for tri in triangles:
-            boundary=.025 if identity=='bordeaux_09' and kind==0 else .5
+            boundary=.025 if identity in ('bordeaux_09','shane_denham','john_orourke') and kind==0 else .5
             poly = [(mesh.vertices[i].co.copy(),float(vertex_masks[i,kind])-boundary) for i in tri.vertices]
             clipped = []
             for (start,a), (end,b) in zip(poly, poly[1:]+poly[:1]):
@@ -140,8 +182,8 @@ def build_groom(head, rig, identity):
     root_uvs=[((math.atan2(p.x,p.z+1)+math.pi)/(2*math.pi),(p.y-155.)/24.) for p in root_points]
     roots = bound_mesh(names[0], root_points, root_faces, rig, materials[3] if identity == 'john_orourke' else materials[0],uvs=root_uvs)
     roots.data.materials.clear()
-    if identity=='bordeaux_09':
-        roots.data.materials.append(des_root_material())
+    if identity in ('bordeaux_09','shane_denham','john_orourke'):
+        roots.data.materials.append(des_root_material() if identity=='bordeaux_09' else portrait_root_material(identity))
         for polygon in roots.data.polygons: polygon.material_index=0
     else:
         for mat in materials: roots.data.materials.append(mat)
@@ -160,13 +202,14 @@ def build_groom(head, rig, identity):
         centre = (a+b+c)/3
         weights = centre_masks[triangle_index]
         for kind, weight in enumerate(weights):
-            if weight < .015 or (kind > 0 and n.z <= 0):
+            lateral_beard = identity == 'john_orourke' and kind == 1
+            if weight < .015 or (kind > 0 and not lateral_beard and n.z <= 0):
                 continue
             totals[kind] += area*weight
             cumulative[kind].append(totals[kind])
             distributions[kind].append((a.copy(), b.copy(), c.copy(), *[float(vertex_masks[i,kind]) for i in tri.vertices]))
     counts = {
-        'shane_denham': (3600, 0, 720), 'john_orourke': (3800, 16000, 680),
+        'shane_denham': (6000, 0, 720), 'john_orourke': (5200, 12000, 680),
         'bordeaux_09': (5200, 13000, 680), 'des_feeney_sr': (1400, 6500, 640),
     }[identity]
     vertices, faces, face_materials, emitted_counts = [], [], [], []
@@ -181,18 +224,34 @@ def build_groom(head, rig, identity):
             root = a*(1-r)+b*r*(1-t)+c*r*t
             if rng.random() > ma*(1-r)+mb*r*(1-t)+mc*r*t:
                 continue
-            if kind > 0:
+            lateral_beard = identity == 'john_orourke' and kind == 1
+            if kind > 0 and not lateral_beard:
                 hit, _, _, _ = surface.ray_cast(Vector((root.x, root.y, 30)), Vector((0, 0, -1)))
                 if hit is None or abs(hit.z-root.z) > .14:
                     continue
             near, normal, _, _ = surface.find_nearest(root)
             if normal is None:
                 continue
+            if lateral_beard:
+                # A frontal visibility ray cannot validate the sides of a
+                # curved jaw. Check outward locally, excluding hidden folds.
+                radial = Vector((root.x, 0, root.z+1))
+                if normal.dot(radial) <= 0:
+                    continue
+                hit, _, _, _ = surface.ray_cast(root+normal*.70, -normal, .90)
+                if hit is None or (hit-root).length > .14:
+                    continue
             if kind == 0:
                 top = root.y > 170.7
                 flow = Vector((-.85, -.10, -.32+.035*root.x)) if top else Vector((-.08*root.x, -1, -.22))
                 if identity == 'john_orourke' and top:
-                    flow = Vector((-1., -.06, -.48+.045*root.x))
+                    # A true side part, with a short opposite sweep and
+                    # curved fringe groups; a single direction made a helmet.
+                    part = root.x-3.0
+                    sweep = -.95 if part < 0 else .70
+                    fringe = max(0,min(1,(root.z-3.5)/5))
+                    flow = Vector((sweep, -.10-.22*fringe, -.55+.75*fringe))
+                    flow += Vector((.10*math.sin(root.z*1.3),0,.12*math.sin(root.x*.85)))
                 if identity == 'bordeaux_09':
                     flow = Vector((-.08*root.x, -.90, -.40))
                     length, width, lift, rows = rng.uniform(.55, 1.05), rng.uniform(.014, .027), .075, 4
@@ -208,19 +267,33 @@ def build_groom(head, rig, identity):
                     lift = rng.uniform(.34, .70) if top else rng.uniform(.04, .12)
                     if identity == 'shane_denham' and top:
                         lift = rng.uniform(.14, .30)
+                    if identity == 'shane_denham':
+                        width = rng.uniform(.020,.045) if top else rng.uniform(.012,.025)
+                        # Short irregular crop, without a uniform opaque cap.
+                        flow += Vector((.16*math.sin(root.z*1.7),0,.12*math.sin(root.x*1.4)))
                     if identity == 'john_orourke' and top:
                         lift *= 1.65
+                        width = rng.uniform(.030,.065)
+                        if root.z>7.8: length *= .65
                     rows = 5
             elif kind == 1:
                 # Moustache flows away from the philtrum, beard toward the jaw.
                 mustache = root.y > 160.0
+                if identity == 'john_orourke':
+                    mustache = mustache and abs(root.x) < 3.2 and root.z > 8
                 flow = Vector((math.copysign(.75, root.x), -.45, 0)) if mustache else Vector((-.045*root.x, -1, -.12))
+                if lateral_beard and not mustache:
+                    flow = Vector((-.10*root.x+.18*math.sin(root.y*2.4+root.z), -1,
+                                   .20+.16*math.sin(root.x*1.5+root.y)))
                 length = rng.uniform(.26, .52) if identity != 'des_feeney_sr' else rng.uniform(.35, .65)
                 if identity == 'john_orourke':
-                    length *= 1.8
+                    # A clipped beard has a soft edge of shorter hairs; long
+                    # equally dense fibres formed a rigid chin curtain.
+                    coverage=ma*(1-r)+mb*r*(1-t)+mc*r*t
+                    length *= .75+min(1.,coverage)*.65
                 width, lift, rows = rng.uniform(.009, .019), rng.uniform(.015, .045), 3
                 if identity == 'john_orourke':
-                    lift = rng.uniform(.07, .20)
+                    lift = rng.uniform(.025, .10)
             else:
                 flow = Vector((math.copysign(1, root.x), .12, 0))
                 length, width, lift, rows = rng.uniform(.19, .36), rng.uniform(.011, .020), .018, 3

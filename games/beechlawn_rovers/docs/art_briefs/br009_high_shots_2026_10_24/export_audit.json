@@ -1,0 +1,24 @@
+{
+  "meshes": 0,
+  "animations": {
+    "AN_Beechlawn_KeeperHighDiveLeft": {
+      "first_seconds": 0,
+      "last_seconds": 1.3,
+      "channels": 195
+    },
+    "AN_Beechlawn_KeeperHighDiveRight": {
+      "first_seconds": 0,
+      "last_seconds": 1.3,
+      "channels": 195
+    },
+    "AN_Beechlawn_KeeperHighReach": {
+      "first_seconds": 0,
+      "last_seconds": 1.3,
+      "channels": 195
+    }
+  },
+  "protected_assets_unchanged": 24,
+  "nodes": 66,
+  "bones": 65,
+  "rest_transform_differences": []
+}

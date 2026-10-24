@@ -15,6 +15,8 @@ func _run() -> void:
 	root.add_child(menu)
 	current_scene = menu
 	await save_frame("title.png")
+	menu.open_options()
+	await save_frame("options.png")
 	menu.free()
 	var session := root.get_node("MatchSession")
 	session.launched_from_menu = true

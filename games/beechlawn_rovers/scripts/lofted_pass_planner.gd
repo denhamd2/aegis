@@ -48,7 +48,7 @@ static func plan(passer: FootballPlayer, kind: StringName, direction: Vector3,
 	if early: target.x += passer.attack_sign * minf(2.5, maxf(0, 48.0 - target.x * passer.attack_sign))
 	target.x = clampf(target.x, -50.0, 50.0)
 	target.z = clampf(target.z, -32.0, 32.0)
-	var ground := PitchSurface.height_at(target.x, target.z) if ball.use_terrain else 0.0
+	var ground := ball.surface_height(target.x, target.z) if ball.use_terrain else 0.0
 	var contact_height := passer.tuning.header_contact_height
 	if variant == &"driven_cross": contact_height = passer.tuning.volley_contact_height
 	target.y = ground + (contact_height if crossing else FootballBall.RADIUS)

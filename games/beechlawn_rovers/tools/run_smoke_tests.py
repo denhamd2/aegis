@@ -57,7 +57,7 @@ def stop_process_group(process: subprocess.Popen[str]) -> None:
         pass
 
 
-def monitor_process(process, timeout):
+def monitor_process(process, timeout, live=False):
     """Detect a failed GDScript immediately: assert() need not exit SceneTree."""
     selector = selectors.DefaultSelector()
     selector.register(process.stdout, selectors.EVENT_READ)
@@ -79,6 +79,8 @@ def monitor_process(process, timeout):
             if not chunk:
                 break
             output.extend(chunk)
+            if live:
+                print(chunk.decode(errors="replace"), end="", flush=True)
             if status == 'complete' and any(marker in output for marker in fatal):
                 status = 'error'
                 stop_process_group(process)
@@ -105,6 +107,10 @@ def main() -> int:
             # Replay with six 60 Hz simulation steps per draw, independent of
             # host wall-clock throughput. Keep gameplay dt and chance gates.
             command[2:2] = ["--fixed-fps", "60"]
+        venue = os.environ.get("BEECHLAWN_TEST_VENUE", "kilmore_drive")
+        if venue not in {"kilmore_drive", "rovers_arena"}:
+            raise ValueError("Unknown test venue: " + venue)
+        command += ["--", "--venue=" + venue]
         timeout = TIMEOUT if "BEECHLAWN_TEST_TIMEOUT_SECONDS" in os.environ else LONG_TEST_TIMEOUTS.get(name, TIMEOUT)
         print(f"\n[smoke] {name} (timeout {timeout:g}s)", flush=True)
         if name in {"eleven_v_eleven_match_soak.gd", "full_presentation_match_soak.gd"}:
@@ -119,7 +125,8 @@ def main() -> int:
             text=True,
             errors="replace",
         )
-        output, state = monitor_process(process, timeout)
+        live = name in LONG_TEST_TIMEOUTS
+        output, state = monitor_process(process, timeout, live=live)
         if state == 'timeout':
             if output:
                 print("\n".join(output.splitlines()[-60:]))
@@ -129,7 +136,7 @@ def main() -> int:
             print(output[-8000:])
             print(f"[failed] {name} reported a script/assertion failure; stopped immediately", file=sys.stderr)
             return 1
-        if output:
+        if output and not live:
             print(output, end="" if output.endswith("\n") else "\n")
         result = process.returncode
         if result != 0:

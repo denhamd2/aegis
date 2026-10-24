@@ -1,0 +1,42 @@
+{
+  "result": "PASS",
+  "captures": [
+    {
+      "image": "shane_head_detail.png",
+      "report": "shane_head_detail.json",
+      "sha256": "ce067182ac23fadbdfbcd08cab460a7159f96d12857953d3548320dd98e4cfa4",
+      "process_cleanup": "terminated_after_saved_capture",
+      "capture_seconds": 36.25,
+      "command": [
+        "/usr/local/bin/godot",
+        "--path",
+        "/workspace/aegis-checkout/games/beechlawn_rovers",
+        "--rendering-method",
+        "forward_plus",
+        "--resolution",
+        "960x540",
+        "--fixed-fps",
+        "60",
+        "--disable-vsync",
+        "--audio-driver",
+        "Dummy",
+        "--display-driver",
+        "x11",
+        "--rendering-driver",
+        "vulkan",
+        "res://scenes/review/shane_asset_review.tscn",
+        "--",
+        "--capture-dir=/workspace/aegis-checkout/games/beechlawn_rovers/docs/art_briefs/shane_john_refinement/shading_diagnostics/shadow_bias",
+        "--player=shane",
+        "--view=head_detail",
+        "--lighting=match",
+        "--sky=match",
+        "--clean=1",
+        "--ablation=shadow_bias",
+        "--expression=neutral"
+      ]
+    }
+  ],
+  "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+  "scope": "Forward+ appearance stills; software Vulkan does not measure Mac performance."
+}

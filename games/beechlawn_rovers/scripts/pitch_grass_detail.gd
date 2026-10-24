@@ -32,12 +32,14 @@ func setup(match_scene: Node3D) -> void:
 	game = match_scene
 	settings = load("res://data/presentation/turf_detail.tres")
 	triangle_budget = mini(triangle_budget, settings.triangle_budget)
-	surface = load("res://data/presentation/kilmore_surface.tres")
+	surface = load("res://data/presentation/kilmore_surface.tres" if game.venue.worn_surface else "res://data/presentation/arena_surface.tres")
 	material = ShaderMaterial.new()
 	material.shader = load("res://shaders/grass_blades.gdshader")
+	material.set_shader_parameter("stadium_mowing",not game.venue.worn_surface)
 	material.set_shader_parameter("grass_albedo",load("res://assets/environment/surfaces/ambientcg/Grass005/Grass005_1K-JPG_Color.jpg"))
 	mid_material = ShaderMaterial.new()
 	mid_material.shader = load("res://shaders/grass_fins.gdshader")
+	mid_material.set_shader_parameter("stadium_mowing",not game.venue.worn_surface)
 	mid_material.set_shader_parameter("grass_albedo",material.get_shader_parameter("grass_albedo"))
 	tuft = _make_turf_ribbon()
 	mid_tuft = _make_mid_fin()
@@ -95,7 +97,7 @@ func _keys_for(location: Vector3, camera: Camera3D = null) -> Array[Vector2i]:
 		for x in range(-3,4):
 			var key := centre+Vector2i(x,z)
 			var point := Vector3((key.x+.5)*CELL,0,(key.y+.5)*CELL)
-			point.y = PitchSurface.height_at(point.x,point.z)
+			point.y = game.surface_height(point.x,point.z)
 			if absf(point.x)>52.5 or absf(point.z)>34: continue
 			if camera != null and (_pixels(camera,location,point)<settings.near_pixels or not _in_view(camera,location,point,.6)): continue
 			desired.append(key)
@@ -119,7 +121,7 @@ func _mid_keys(location: Vector3, camera: Camera3D = null) -> Array[Vector2i]:
 	for z in range(-9,9):
 		for x in range(-14,14):
 			var point := Vector3((x+.5)*MID_CELL,0,(z+.5)*MID_CELL)
-			point.y=PitchSurface.height_at(point.x,point.z)
+			point.y=game.surface_height(point.x,point.z)
 			if absf(point.x)>52.5 or absf(point.z)>34: continue
 			if camera != null and (_pixels(camera,location,point)<settings.intermediate_pixels or not _in_view(camera,location,point,2.9)): continue
 			desired.append(Vector2i(x,z))
@@ -190,8 +192,8 @@ func _build_cell(key: Vector2i, staging := false, mid := false) -> void:
 		if absf(x)>52.5 or absf(z)>34: continue
 		var wet := surface.sample_at(Vector3(x,0,z))
 		if wet.y>.15 or random.randf()<wet.x*.9: continue
-		var height := PitchSurface.height_at(x,z)
-		var normal := Vector3((height-PitchSurface.height_at(x+.05,z))/.05,1,(height-PitchSurface.height_at(x,z+.05))/.05).normalized()
+		var height: float = game.surface_height(x,z)
+		var normal := Vector3((height-game.surface_height(x+.05,z))/.05,1,(height-game.surface_height(x,z+.05))/.05).normalized()
 		var basis := Basis(Quaternion(Vector3.UP,normal))*Basis(Vector3.UP,random.randf()*TAU)
 		basis=basis.scaled(Vector3(1,random.randf_range(.85,1.15),1))
 		mm.set_instance_transform(count,Transform3D(basis,Vector3(x,height-.001,z)))

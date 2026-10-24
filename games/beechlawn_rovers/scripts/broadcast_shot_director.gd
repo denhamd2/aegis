@@ -20,7 +20,7 @@ func frame(camera: Camera3D, id: StringName, target: Vector3, station: Vector3,
 		fov: float, delta: float, game: Node3D, subject: Node3D = null) -> void:
 	station.x = clampf(station.x, -57, 57)
 	station.z = clampf(station.z, -40, 40)
-	station.y = maxf(station.y, PitchSurface.height_at(station.x, station.z) + .18)
+	station.y = maxf(station.y, game.surface_height(station.x, station.z) + .18)
 	if id != _requested_shot:
 		_requested_shot = id
 		_alternate_side = false

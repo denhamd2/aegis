@@ -1,0 +1,62 @@
+
+[smoke] stride_plant_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+STRIDE_PLANT 1.5 stance_slip=0.03784506248495m/s stance_samples=149 toe_height=0.03938890044348..0.18117035245969
+STRIDE_PLANT 3.0 stance_slip=0.05410274551001m/s stance_samples=84 toe_height=0.04459413614351..0.26576320735701
+STRIDE_PLANT 4.5 stance_slip=0.09327433775476m/s stance_samples=47 toe_height=0.0322433632776..0.31652199856199
+STRIDE_PLANT 6.0 stance_slip=0.04844464775969m/s stance_samples=51 toe_height=0.03895241269306..0.36894726629092
+STRIDE_PLANT 7.3 stance_slip=0.04862873036473m/s stance_samples=43 toe_height=0.03618898172266..0.40820414043277
+STRIDE_PLANT 8.6 stance_slip=0.05635618362448m/s stance_samples=41 toe_height=0.03866202913628..0.42639265868293
+STRIDE_PLANT PASS
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] stride_plant_smoke.gd (16.2s)
+
+[smoke] shared_gait_integrity_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+GAIT_INTEGRITY authored/preserved leg/root tracks=43
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] shared_gait_integrity_smoke.gd (12.9s)
+
+[smoke] footballer_animation_tree_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+Animation duration AN_Beechlawn_Idle: old=1.500 new=1.500
+Animation duration AN_Beechlawn_Jog: old=0.833 new=1.000
+Animation duration AN_Beechlawn_Sprint: old=0.567 new=1.000
+Animation duration AN_Beechlawn_SlideTackle: old=1.000 new=1.000
+Animation duration AN_Beechlawn_ShoulderImpactSell: old=0.733 new=0.733
+Beechlawn Y-Bot: locomotion, close-control loop, ball-action events, braking stop, mirrored turns, grounded slide-to-get-up playback and locomotion resume verified
+[passed] footballer_animation_tree_smoke.gd (10.4s)
+
+[smoke] locomotion_physics_clock_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+LOCOMOTION_CLOCK longest_stale_physics_ticks=0
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] locomotion_physics_clock_smoke.gd (10.5s)
+
+[smoke] moving_kick_contact_smoke.gd (timeout 45s)
+[timeout] moving_kick_contact_smoke.gd exceeded 45s; process group terminated
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+MOVING_CONTACT kind=pass speed=0.0 human=false off_axis=false markers=1 impulses=1 toe_gap_m=0.166
+BEECHLAWN_MATCH_READY actors=22 officials=1
+MOVING_CONTACT kind=pass speed=6.0 human=false off_axis=false markers=1 impulses=1 toe_gap_m=0.123
+BEECHLAWN_MATCH_READY actors=22 officials=1
+MOVING_CONTACT kind=pass speed=8.6 human=false off_axis=false markers=1 impulses=1 toe_gap_m=0.244
+BEECHLAWN_MATCH_READY actors=22 officials=1
+MOVING_CONTACT kind=shot speed=0.0 human=false off_axis=false markers=1 impulses=1 toe_gap_m=0.135
+BEECHLAWN_MATCH_READY actors=22 officials=1
+MOVING_CONTACT kind=shot speed=6.0 human=false off_axis=false markers=1 impulses=1 toe_gap_m=0.139
+BEECHLAWN_MATCH_READY actors=22 officials=1
+MOVING_CONTACT kind=shot speed=8.6 human=false off_axis=false markers=1 impulses=1 toe_gap_m=0.275
+BEECHLAWN_MATCH_READY actors=22 officials=1

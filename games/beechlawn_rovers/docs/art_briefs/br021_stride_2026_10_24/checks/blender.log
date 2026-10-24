@@ -1,0 +1,28 @@
+17:42:59 | INFO: Data are loaded, start creating Blender stuff
+17:42:59 | INFO: Blender create Mesh node Eye_l
+17:42:59 | INFO: Blender create Mesh node Eye_r
+17:42:59 | INFO: Blender create Mesh node Hair_Shane_ShortCropCards
+17:42:59 | INFO: Blender create Mesh node Hair_Shane_ShortCropRoots
+17:42:59 | INFO: Blender create Mesh node Kit_Boots
+17:42:59 | INFO: Blender create Mesh node Shared_Fitted_VBinding_And_Raglan
+17:42:59 | INFO: Blender create Mesh node Kit_shirt_BoundHems
+17:42:59 | INFO: Blender create Mesh node YBot_Surface.002
+17:42:59 | INFO: Blender create Mesh node Kit_Shorts.001
+17:42:59 | INFO: Blender create Mesh node Kit_Shorts_FoldedHems
+17:42:59 | INFO: Blender create Mesh node Kit_Socks.001
+17:43:00 | INFO: Blender create Mesh node Kit_socks_BoundHems
+17:43:00 | INFO: Blender create Mesh node YBot_Joints.001
+17:43:00 | INFO: Blender create Mesh node Skin_Head
+17:43:00 | INFO: Blender create Mesh node Shared_Skin_With_Continuous_Arms
+17:43:00 | INFO: Blender create Mesh node YBot_Surface.001
+17:43:00 | INFO: glTF import finished in 0.77s
+Info: Saved "football_stride_gaits.blend"
+INFO Draco mesh compression is available, use library at /home/agent/.local/opt/blender-draco/4.3.2/libextern_draco.so
+17:43:15 | INFO: Starting glTF 2.0 export
+17:43:16 | INFO: Finished glTF 2.0 export in 1.3527798652648926 s
+
+STRIDE_GAITS_EXPORTED 5
+Blender 4.3.2
+Read blend: "/workspace/aegis-checkout/tools/blender/beechlawn/footballer_shared.blend"
+
+Blender quit

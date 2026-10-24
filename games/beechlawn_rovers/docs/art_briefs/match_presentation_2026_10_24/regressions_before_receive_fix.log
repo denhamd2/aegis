@@ -1,0 +1,101 @@
+
+[smoke] player_selection_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive
+PLAYER_SELECTION PASS: defender, hysteresis, manual hold/mode, intro, real pass release, run continuity, held input, committed action, dismissal, AI keepers/watch
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] player_selection_smoke.gd (8.5s)
+
+[smoke] receiver_selection_pass_types_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive
+RECEIVER_SELECTION PASS: real ground/loft/cross markers, no windup or failed-preparation handover
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] receiver_selection_pass_types_smoke.gd (7.7s)
+
+[smoke] venue_selection_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=rovers_arena
+BEECHLAWN_MENU_READY
+VENUE_SELECTION PASS: persistence, invalid fallback, both grounds, flat/uneven physics, goals/nets/flags, section LOD, independent wet surfaces and menu bindings
+[passed] venue_selection_smoke.gd (16.3s)
+
+[smoke] hud_layout_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive
+HUD PASS: monochrome replacement, clock, responsive radar at 3 aspects, carrier identity, distinct power, help and presentation visibility
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] hud_layout_smoke.gd (7.7s)
+
+[smoke] passing_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=8 officials=0 venue=kilmore_drive
+Beechlawn passing and receiving checks passed
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+[passed] passing_smoke.gd (5.2s)
+
+[smoke] four_v_four_setup_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=8 officials=0 venue=kilmore_drive
+Beechlawn 4v4 assembly and switching checks passed
+[passed] four_v_four_setup_smoke.gd (4.2s)
+
+[smoke] moving_kick_contact_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive
+MOVING_CONTACT kind=pass speed=0.0 human=false off_axis=false markers=1 impulses=1 toe_gap_m=0.166 marker_gap_m=0.166 case_ms=334
+MOVING_CONTACT kind=pass speed=6.0 human=false off_axis=false markers=1 impulses=1 toe_gap_m=0.084 marker_gap_m=0.084 case_ms=447
+MOVING_CONTACT kind=pass speed=8.6 human=false off_axis=false markers=1 impulses=1 toe_gap_m=0.082 marker_gap_m=0.082 case_ms=448
+MOVING_CONTACT kind=shot speed=0.0 human=false off_axis=false markers=1 impulses=1 toe_gap_m=0.134 marker_gap_m=0.134 case_ms=356
+MOVING_CONTACT kind=shot speed=6.0 human=false off_axis=false markers=1 impulses=1 toe_gap_m=0.079 marker_gap_m=0.079 case_ms=349
+MOVING_CONTACT kind=shot speed=8.6 human=false off_axis=false markers=1 impulses=1 toe_gap_m=0.084 marker_gap_m=0.084 case_ms=350
+MOVING_CONTACT kind=pass speed=0.0 human=true off_axis=false markers=1 impulses=1 toe_gap_m=0.166 marker_gap_m=0.166 case_ms=448
+MOVING_CONTACT kind=pass speed=6.0 human=true off_axis=false markers=1 impulses=1 toe_gap_m=0.084 marker_gap_m=0.084 case_ms=445
+MOVING_CONTACT kind=pass speed=8.6 human=true off_axis=false markers=1 impulses=1 toe_gap_m=0.082 marker_gap_m=0.082 case_ms=453
+MOVING_CONTACT kind=shot speed=0.0 human=true off_axis=false markers=1 impulses=1 toe_gap_m=0.134 marker_gap_m=0.134 case_ms=351
+MOVING_CONTACT kind=shot speed=6.0 human=true off_axis=false markers=1 impulses=1 toe_gap_m=0.08 marker_gap_m=0.08 case_ms=345
+MOVING_CONTACT kind=shot speed=8.6 human=true off_axis=false markers=1 impulses=1 toe_gap_m=0.084 marker_gap_m=0.084 case_ms=352
+MOVING_CONTACT kind=shot speed=0.0 human=true off_axis=true markers=1 impulses=0 toe_gap_m=inf marker_gap_m=0.838 case_ms=1201
+MOVING_CONTACT failures=0
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+[passed] moving_kick_contact_smoke.gd (15.6s)
+
+[smoke] first_time_pass_timing_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=8 officials=0 venue=kilmore_drive
+First-time 8.5 m/s pass contact: physics frame 7 (0.117 s), one impulse, gap 0.033 m
+First-time 18.0 m/s pass contact: physics frame 3 (0.050 s), one impulse, gap 0.059 m
+[passed] first_time_pass_timing_smoke.gd (4.9s)
+
+[smoke] first_time_shot_smoke.gd (timeout 45s)
+[failed] first_time_shot_smoke.gd exited 1
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive
+ERROR: Buffered first-time shot: shots=0 traps=0 contact_gap=inf
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _run (res://tests/first_time_shot_smoke.gd:68)
+FIRST_TIME_SHOT shots=0 traps=0 toe_gap_m=inf failures=1
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)

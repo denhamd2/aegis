@@ -20,6 +20,8 @@ var weather_preset: StringName = &"sunny"
 var cinematic_depth_of_field := true
 var cinematic_motion_blur := true
 var temporal_aa := false
+var venue_id: StringName = &"kilmore_drive"
+var switch_mode: StringName = &"assisted"
 
 func _ready() -> void:
 	if "--print-build-info" in OS.get_cmdline_user_args():
@@ -32,6 +34,8 @@ func _ready() -> void:
 			get_tree().quit()
 		return
 	load_preferences()
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--venue="): venue_id = FootballMatchVenue.valid_id(StringName(arg.trim_prefix("--venue=")))
 	apply_preferences()
 
 func load_preferences(path: String = SETTINGS_PATH) -> void:
@@ -46,6 +50,8 @@ func load_preferences(path: String = SETTINGS_PATH) -> void:
 	camera_height = clampf(float(config.get_value("camera", "height", 0.0)), -4.0, 12.0)
 	camera_zoom = clampf(float(config.get_value("camera", "zoom", 0.0)), -1.0, 1.0)
 	camera_angle = clampf(float(config.get_value("camera", "angle", 0.0)), -20.0, 20.0)
+	venue_id = FootballMatchVenue.valid_id(StringName(str(config.get_value("match", "venue", "kilmore_drive"))))
+	switch_mode = &"manual" if str(config.get_value("match", "switching", "assisted")) == "manual" else &"assisted"
 	show_intro = bool(config.get_value("presentation", "intro", true))
 	weather_preset = MatchWeather.valid_id(StringName(str(config.get_value("presentation", "weather", "sunny"))))
 	cinematic_depth_of_field = bool(config.get_value("graphics", "cinematic_depth_of_field", true))
@@ -61,6 +67,8 @@ func save_preferences(path: String = SETTINGS_PATH) -> Error:
 	config.set_value("camera", "height", camera_height)
 	config.set_value("camera", "zoom", camera_zoom)
 	config.set_value("camera", "angle", camera_angle)
+	config.set_value("match", "venue", str(venue_id))
+	config.set_value("match", "switching", str(switch_mode))
 	config.set_value("presentation", "intro", show_intro)
 	config.set_value("presentation", "weather", str(weather_preset))
 	for field in ["cinematic_depth_of_field", "cinematic_motion_blur", "temporal_aa"]:

@@ -1,0 +1,12 @@
+
+[smoke] eleven_v_eleven_match_soak.gd (timeout 120s)
+[replay] fixed render cadence 60 Hz; gameplay dt 1/60 s
+[failed] eleven_v_eleven_match_soak.gd exited -15
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+SOAK_PROGRESS ticks=1800 remaining=156.083333333314 phase=0 elapsed=1.0 host_ms=15130
+SOAK_PROGRESS ticks=3600 remaining=127.083333333292 phase=0 elapsed=1.0 host_ms=24600
+SOAK_PROGRESS ticks=5400 remaining=97.0833333332937 phase=0 elapsed=1.0 host_ms=34717
+SOAK_PROGRESS ticks=7200 remaining=72.9499999999618 phase=0 elapsed=1.0 host_ms=50635
+SOAK_PROGRESS ticks=9000 remaining=48.4833333332965 phase=0 elapsed=1.0 host_ms=61217

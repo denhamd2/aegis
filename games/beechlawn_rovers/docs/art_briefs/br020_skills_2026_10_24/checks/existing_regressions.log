@@ -1,0 +1,57 @@
+
+[smoke] skill_control_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+SKILL_PASS ball_roll side=-1.0 contact=0.06307368725538
+SKILL_PASS ball_roll side=1.0 contact=0.06470586359501
+SKILL_PASS step_over side=-1.0 contact=0.06308498978615
+SKILL_PASS step_over side=1.0 contact=0.06470566987991
+SKILL_PASS body_feint side=-1.0 contact=0.06308492273092
+SKILL_PASS body_feint side=1.0 contact=0.06470588594675
+SKILL_PASS drag_back side=-1.0 contact=0.06308474391699
+SKILL_PASS drag_back side=1.0 contact=0.06470568478107
+SKILL_PASS skill_turn side=-1.0 contact=0.06308486312628
+SKILL_PASS skill_turn side=1.0 contact=0.06470578163862
+SKILL_PASS fake_shot side=-1.0 contact=0.06308471411467
+SKILL_PASS fake_shot side=1.0 contact=0.06470587849617
+SKILL_CONTROL PASS: 12 bilateral boot contacts, misses/loss/reset, fake-shot cancellation, shielding speed/pose
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] skill_control_smoke.gd (19.9s)
+
+[smoke] defensive_controls_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+DEFENSIVE_CONTROLS PASS: contain, helper, independent selection, seven shared keeper poses
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] defensive_controls_smoke.gd (7.7s)
+
+[smoke] tackle_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=8 officials=0
+Beechlawn standing, sliding and foul-risk tackle checks passed
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+[passed] tackle_smoke.gd (2.7s)
+
+[smoke] football_kick_contact_integration_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=8 officials=0
+Beechlawn pass integration: toe tip is 0.057m from ball center at 0.4 s (horizontal 0.057m, vertical 0.001m); one physical kick, locomotion restored
+[passed] football_kick_contact_integration_smoke.gd (5.3s)
+
+[smoke] recorded_face_replay_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+RECORDED_FACES PASS: recorded blink interpolation and exact live weight restoration
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] recorded_face_replay_smoke.gd (9.1s)

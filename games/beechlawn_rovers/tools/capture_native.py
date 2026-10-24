@@ -88,14 +88,18 @@ def main():
     from PIL import Image, ImageStat
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('output', type=Path)
-    parser.add_argument('--review-mode', choices=['keeper_dive_home','keeper_dive_away','keeper_high_home','outro','audio','free_kick','presentation','movement','throw','net','montage','attack_home','attack_away','keeper_home','keeper_away','cross_home','cross_away','header_close','chest_close','volley_close','half_volley_close','cross_driven_home','cross_driven_away','cross_lofted_home','cross_early_home','shot_finesse','shot_power','shot_low'], help='Capture a native moving repair review')
+    parser.add_argument('--review-mode', choices=['stride_brake','stride_review','keeper_full_dives','keeper_high_shots','skills','skills_moving','keeper_dive_home','keeper_dive_away','keeper_high_home','outro','audio','free_kick','presentation','movement','throw','net','montage','attack_home','attack_away','keeper_home','keeper_away','cross_home','cross_away','header_close','chest_close','volley_close','half_volley_close','cross_driven_home','cross_driven_away','cross_lofted_home','cross_early_home','shot_finesse','shot_power','shot_low'], help='Capture a native moving repair review')
     parser.add_argument('--verbose', action='store_true', help='Include engine resource diagnostics')
-    parser.add_argument('--ablation', choices=['none','scattering','transmittance','near_heads','pose','morphs'], default='none', help='Explicit portrait-only diagnostic; recorded in evidence')
+    parser.add_argument('--ablation', choices=['none','scattering','transmittance','near_heads','pose','morphs','normal_maps','sun_shadows','shadow_bias','close_shadows'], default='none', help='Explicit portrait-only diagnostic; recorded in evidence')
+    parser.add_argument('--setup-preview', action='store_true', help='Also capture the actual venue/control options')
+    parser.add_argument('--venue', choices=['kilmore_drive','rovers_arena'], default='kilmore_drive')
+    parser.add_argument('--venue-view', choices=['broadcast','wide','detail','all'], default='broadcast')
     parser.add_argument('--match',action='store_true',help='Capture the actual 22-player match and broadcast camera')
     parser.add_argument('--players', nargs='+', choices=['shane','john','des','referee','away_keeper','paddy'],
                         default=['shane','john','des','referee'])
     parser.add_argument('--views', nargs='+', default=['portrait'], choices=[
-        'portrait','threequarter_portrait','profile_portrait','rear_portrait','front','back','profile','kit'])
+        'portrait','head_detail','threequarter_portrait','threequarter_opposite',
+        'profile_portrait','profile_opposite','rear_portrait','front','back','profile','kit'])
     parser.add_argument('--pose', choices=['idle','sprint','pass','shot','turn','slide','get_up','keeper_set','keeper_save'])
     parser.add_argument('--expression',choices=['neutral','blink','smile'],default='neutral')
     parser.add_argument('--frame', type=int, default=1)
@@ -161,7 +165,8 @@ def main():
             command += ['--',
                 '--capture-dir='+str(args.output),'--player='+player,'--view='+view,
                 '--lighting='+args.lighting,'--sky='+args.sky,'--clean=1']
-            command += ['--ablation='+args.ablation]
+            command += ['--setup-preview='+('1' if args.setup_preview else '0')]
+            command += ['--venue='+args.venue,'--venue-view='+args.venue_view,'--ablation='+args.ablation]
             command += ['--expression='+args.expression]
             if args.pose and not args.match:
                 command += ['--pose='+args.pose,'--frame='+str(args.frame)]

@@ -36,6 +36,10 @@ class_name FootballTuning
 @export_range(0.0, 0.1, 0.005) var kick_contact_grace_seconds := 0.065
 @export_range(1.5, 2.8, 0.1) var slide_tackle_reach := 2.2
 
+@export_group("Shielding and skills")
+@export_range(.8, 3.0, .1) var skill_cooldown := 1.4
+@export_range(.2, .6, .05) var shield_speed_scale := .35
+
 @export_group("Advanced strikes")
 @export_range(1.0, 1.25, .01) var power_shot_multiplier := 1.12
 @export_range(10.0, 45.0, 1.0) var finesse_spin := 30.0

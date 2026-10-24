@@ -1,0 +1,84 @@
+{
+  "date_utc": "2026-10-24T07:47:49.938938+00:00",
+  "backlog": "BR-022, item 22 of 27, in progress",
+  "technical_result": "PASS",
+  "visual_result": "Side beard coverage corrected; overall AAA likeness remains open",
+  "assets_sha256": {
+    "tools/blender/beechlawn/shane_denham_head.blend": "2ff29b8614e8f902a514d13c7248edd52faaee1271ecc7e20179d84b2ff60d36",
+    "tools/blender/beechlawn/john_orourke_head.blend": "4639d023ae27a30a53cf7410a335e3915828d545d565c360688c40ddee6b6458",
+    "tools/blender/beechlawn/head_pipeline/deltas/shane_denham.json": "64bf92d8882cf8265bf08b6ac5ad22c88b496e44cb12a0743d5c225e8c09a531",
+    "tools/blender/beechlawn/head_pipeline/deltas/john_orourke.json": "10225fb0515f1cd96554e694edfd0c37fbd89e4843bcc2e6f0f4c9171c5de00d",
+    "games/beechlawn_rovers/assets/characters/shared/heads/players/shane_denham.glb": "5854b3b5b937c059c02338748d6cd7fbb64710f8909963103f847f064be2f87f",
+    "games/beechlawn_rovers/assets/characters/shared/heads/players/john_orourke.glb": "4041e33b6dadab03da05d71c2c5a537c6d8a6186b32c2efe077ab00382caad98",
+    "games/beechlawn_rovers/assets/characters/shared/heads/near/shane_denham.glb": "78522cbbe7237ffc75dabc9aeaf495a1a92e2e1c72b887cf3a95da7b8e8fff4b",
+    "games/beechlawn_rovers/assets/characters/shared/heads/near/john_orourke.glb": "046b45e13382c321c1c644341f0ea09c676da4021d3ca0506e8b19bd96e29aed",
+    "games/beechlawn_rovers/assets/characters/shared/heads/shane_crop.glb": "47b9ade984060ad817da9867f0eee551e00e2cc8c256b1a7fffdfb65777e1856",
+    "games/beechlawn_rovers/assets/characters/shared/heads/john_swept.glb": "3671f02ba1d311436ec9f7dd892989d1d5e07dc9ee17145a2671fd604b29ce7d"
+  },
+  "reference_sha256": "114bc417c7e1fb29945a2664a7a95189f63b83bc4011168255313a8c967a8d2d",
+  "evidence": {
+    "final_native": {
+      "manifest_sha256": "664b5dc555de8a9e3d8ec81ff6c78a7d4b1b8bd98a4386bd6a940903220baec3",
+      "captures": 8
+    },
+    "final_smile": {
+      "manifest_sha256": "0ef4c09ba7f00fb4ddf2cbc8566d05c5be9bb75e2706fbd7c5fe24b12e682a02",
+      "captures": 1
+    },
+    "final_blink": {
+      "manifest_sha256": "b4fa1f0a9440290224e4b605af7722dee89df535a47f0c557c995090e2f33945",
+      "captures": 2
+    },
+    "final_match": {
+      "manifest_sha256": "b6fa2874a0774308d356162a83ea0a9320b1a5aec4b026ddfbecde3649a80336",
+      "captures": 1
+    },
+    "final_presentation": {
+      "manifest_sha256": "69c7edfdadf9a216ca8e595c7ac99e5dae1d16ba41d54ab69a29e38c6a64e42a",
+      "captures": 1
+    },
+    "john_beard": {
+      "manifest_sha256": "bb06f2705246665ba2f00d343f3dfa5527e9e8b2478e3a6cc21481f3639c00d4",
+      "captures": 6
+    },
+    "john_beard_final": {
+      "manifest_sha256": "1863ee0d72eba5028b7e59ffd8b15b25bfb5e85602b37ea803e2306116cabc47",
+      "captures": 6
+    }
+  },
+  "audits": [
+    "export_audit.json",
+    "expression_fit.json",
+    "john_beard_audit.json",
+    "protected_after.json"
+  ],
+  "headless_tests": [
+    "shane_head_variant_smoke.gd",
+    "shared_head_roster_smoke.gd",
+    "realism_systems_smoke.gd",
+    "recorded_face_replay_smoke.gd"
+  ],
+  "python_tests": {
+    "portrait_coordinates": 2,
+    "capture_deadline": 1
+  },
+  "native_scope": "Godot 4.6.3 Forward+, X11/Vulkan llvmpipe, 960x540; Mac hardware appearance and 1080p/60 fps unmeasured.",
+  "john_beard_budget": {
+    "scalp_guides": 5200,
+    "facial_guides": 12000,
+    "brow_guides": 680,
+    "fibre_triangles": 92320
+  },
+  "remaining": [
+    "Individual orbital/muzzle anatomy and skin finish",
+    "Scalp clump silhouette and root transitions",
+    "Inherited kit/neck interface",
+    "Owner likeness and native Mac acceptance"
+  ],
+  "release_status": "Uncommitted project refinement; not included in existing Mac v0.2.3 download.",
+  "notes": [
+    "Expression/match/presentation captures precede the final side-beard surface-only correction. John final beard folder is authoritative for current beard appearance.",
+    "Some inherited headless ObjectDB shutdown warnings remain.",
+    "Native llvmpipe processes used bounded teardown after successful readback; captures and manifests validated."
+  ]
+}

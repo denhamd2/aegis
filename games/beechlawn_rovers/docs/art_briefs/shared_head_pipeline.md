@@ -20,6 +20,13 @@ Every roster identity has a separate editable recipe/delta slot.
 Unchanged heads share the same runtime mesh; create unique exports only when
 individual offsets exist. Keep expressions independent from identity.
 
+The [Shane/John refinement](shane_john_refinement/brief.md) keeps the same
+master/cage contract. Shane has optional original `Mouth_*` geometry, exported
+with his head and bound to the existing runtime skeleton. Reconfiguration
+removes those parts for other identities. Head LODs retain that small dental
+part and copy the face's expression weights. Individual exports can be scoped
+with `--only-player` only when the common master revision is unchanged.
+
 Hair is selected separately: Shane's crop, John's swept blonde-highlighted
 hair, player Des's side/back horseshoe and the referee's sparse grey hair and
 moustache. The eleven away aliases deliberately share player Des. Other crop

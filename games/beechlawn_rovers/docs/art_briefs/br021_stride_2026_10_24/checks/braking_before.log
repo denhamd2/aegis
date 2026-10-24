@@ -1,0 +1,13 @@
+
+[smoke] braking_gait_smoke.gd (timeout 45s)
+[failed] braking_gait_smoke.gd exited 1
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+BRAKING_GAIT fast_steps=21 kept_gait=false final_stop_pose=true
+ERROR: Fast braking played a planted stop while the body was still translating
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _run (res://tests/braking_gait_smoke.gd:37)
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)

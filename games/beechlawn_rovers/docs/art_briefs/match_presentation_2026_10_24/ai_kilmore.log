@@ -1,0 +1,23 @@
+home-0 Beechlawn Rovers: shots=2 contested=2 Boardeaux: shots=13 contested=10
+home-1 Beechlawn Rovers: shots=4 contested=4 Boardeaux: shots=4 contested=3
+home-2 Beechlawn Rovers: shots=7 contested=6 Boardeaux: shots=6 contested=4
+away-0 Beechlawn Rovers: shots=7 contested=5 Boardeaux: shots=8 contested=7
+away-1 Beechlawn Rovers: shots=4 contested=3 Boardeaux: shots=6 contested=4
+away-2 Beechlawn Rovers: shots=2 contested=2 Boardeaux: shots=5 contested=5
+{
+  "venue": "kilmore_drive",
+  "total_shots": {
+    "Beechlawn Rovers": 26,
+    "Boardeaux": 42
+  },
+  "qualifying_scenarios": {
+    "Beechlawn Rovers": 6,
+    "Boardeaux": 6
+  },
+  "shot_share": {
+    "Beechlawn Rovers": 0.38235294117647056,
+    "Boardeaux": 0.6176470588235294
+  },
+  "accepted": true,
+  "criteria": "Each team: >=2 physical shots + >=1 contested in >=5/6; aggregate share 35\u201365%."
+}

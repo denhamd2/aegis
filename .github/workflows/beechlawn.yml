@@ -32,6 +32,7 @@ jobs:
           python3 games/beechlawn_rovers/tools/test_smoke_monitor.py
           python3 games/beechlawn_rovers/tools/test_capture_native.py
           timeout --kill-after=5s 180s godot --headless --editor --path games/beechlawn_rovers --import
+          python3 games/beechlawn_rovers/tools/run_smoke_tests.py player_selection_smoke.gd receiver_selection_pass_types_smoke.gd venue_selection_smoke.gd
           python3 games/beechlawn_rovers/tools/run_smoke_tests.py realism_systems_smoke.gd shane_head_variant_smoke.gd shared_head_roster_smoke.gd
           python3 games/beechlawn_rovers/tools/run_smoke_tests.py shared_gait_integrity_smoke.gd defensive_controls_smoke.gd keeper_live_contact_smoke.gd set_piece_variety_smoke.gd pitch_audio_smoke.gd keeper_diving_high_smoke.gd replay_results_smoke.gd broadcast_direction_smoke.gd handshake_contact_smoke.gd unready_scene_cleanup_smoke.gd recorded_face_replay_smoke.gd
           python3 games/beechlawn_rovers/tools/run_smoke_tests.py moving_kick_contact_smoke.gd first_time_pass_timing_smoke.gd first_time_shot_smoke.gd contested_shot_smoke.gd goalkeeper_response_smoke.gd goalkeeper_smoke.gd goalkeeper_outcomes_smoke.gd

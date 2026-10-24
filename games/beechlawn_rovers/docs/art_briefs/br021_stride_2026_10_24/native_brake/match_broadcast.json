@@ -1,0 +1,1227 @@
+{
+  "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+  "aerial_events": [],
+  "api": "1.4.305",
+  "away_players": 11,
+  "display_server": "X11",
+  "fixture_setup": "stride_brake",
+  "frames": [
+    {
+      "aerial_actor": "(-7.989995, -0.028366, 0.000002)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_000.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(-7.989995, -0.028366, 0.000002)",
+      "player_id": "shane_denham",
+      "player_velocity": "(0.4, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 2
+    },
+    {
+      "aerial_actor": "(-7.966661, -0.028366, 0.000002)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_001.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(-7.966661, -0.028366, 0.000002)",
+      "player_id": "shane_denham",
+      "player_velocity": "(0.8, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 4
+    },
+    {
+      "aerial_actor": "(-7.929995, -0.028366, 0.000002)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_002.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(-7.929995, -0.028366, 0.000002)",
+      "player_id": "shane_denham",
+      "player_velocity": "(1.2, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 6
+    },
+    {
+      "aerial_actor": "(-7.879994, -0.029538, 0.000002)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_003.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(-7.879994, -0.029538, 0.000002)",
+      "player_id": "shane_denham",
+      "player_velocity": "(1.6, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 8
+    },
+    {
+      "aerial_actor": "(-7.816658, -0.029538, 0.000002)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_004.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(-7.816658, -0.029538, 0.000002)",
+      "player_id": "shane_denham",
+      "player_velocity": "(2.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 10
+    },
+    {
+      "aerial_actor": "(-7.739988, -0.029538, 0.000002)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_005.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(-7.739988, -0.029538, 0.000002)",
+      "player_id": "shane_denham",
+      "player_velocity": "(2.4, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 12
+    },
+    {
+      "aerial_actor": "(-7.649986, -0.029538, 0.000002)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_006.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(-7.649986, -0.029538, 0.000002)",
+      "player_id": "shane_denham",
+      "player_velocity": "(2.8, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 14
+    },
+    {
+      "aerial_actor": "(-7.54665, -0.029538, 0.000002)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_007.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(-7.54665, -0.029538, 0.000002)",
+      "player_id": "shane_denham",
+      "player_velocity": "(3.200001, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 16
+    },
+    {
+      "aerial_actor": "(-7.429983, -0.029538, 0.000002)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_008.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(-7.429983, -0.029538, 0.000002)",
+      "player_id": "shane_denham",
+      "player_velocity": "(3.600001, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 18
+    },
+    {
+      "aerial_actor": "(-7.299982, -0.029538, 0.000002)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_009.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(-7.299982, -0.029538, 0.000002)",
+      "player_id": "shane_denham",
+      "player_velocity": "(4.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 20
+    },
+    {
+      "aerial_actor": "(-7.156649, -0.029538, 0.000002)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_010.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(-7.156649, -0.029538, 0.000002)",
+      "player_id": "shane_denham",
+      "player_velocity": "(4.4, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 22
+    },
+    {
+      "aerial_actor": "(-6.99998, -0.03071, 0.000002)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_011.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(-6.99998, -0.03071, 0.000002)",
+      "player_id": "shane_denham",
+      "player_velocity": "(4.8, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 24
+    },
+    {
+      "aerial_actor": "(-6.829978, -0.03071, 0.000002)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_012.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(-6.829978, -0.03071, 0.000002)",
+      "player_id": "shane_denham",
+      "player_velocity": "(5.199999, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 26
+    },
+    {
+      "aerial_actor": "(-6.646644, -0.03071, 0.000002)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_013.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(-6.646644, -0.03071, 0.000002)",
+      "player_id": "shane_denham",
+      "player_velocity": "(5.599999, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 28
+    },
+    {
+      "aerial_actor": "(-6.449976, -0.03071, 0.000002)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_014.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(-6.449976, -0.03071, 0.000002)",
+      "player_id": "shane_denham",
+      "player_velocity": "(5.999999, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 30
+    },
+    {
+      "aerial_actor": "(-6.249977, -0.03071, 0.000002)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_015.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(-6.249977, -0.03071, 0.000002)",
+      "player_id": "shane_denham",
+      "player_velocity": "(6.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 32
+    },
+    {
+      "aerial_actor": "(-6.049977, -0.03071, 0.000002)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_016.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(-6.049977, -0.03071, 0.000002)",
+      "player_id": "shane_denham",
+      "player_velocity": "(6.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 34
+    },
+    {
+      "aerial_actor": "(-5.849977, -0.03071, 0.000002)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_017.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(-5.849977, -0.03071, 0.000002)",
+      "player_id": "shane_denham",
+      "player_velocity": "(6.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 36
+    },
+    {
+      "aerial_actor": "(-5.649977, -0.03071, 0.000002)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_018.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(-5.649977, -0.03071, 0.000002)",
+      "player_id": "shane_denham",
+      "player_velocity": "(6.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 38
+    },
+    {
+      "aerial_actor": "(-5.449977, -0.03071, 0.000002)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_019.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(-5.449977, -0.03071, 0.000002)",
+      "player_id": "shane_denham",
+      "player_velocity": "(6.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 40
+    },
+    {
+      "aerial_actor": "(-5.239977, -0.03071, 0.000002)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_020.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(-5.239977, -0.03071, 0.000002)",
+      "player_id": "shane_denham",
+      "player_velocity": "(6.4, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 42
+    },
+    {
+      "aerial_actor": "(-5.016645, -0.03071, 0.000002)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_021.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(-5.016645, -0.03071, 0.000002)",
+      "player_id": "shane_denham",
+      "player_velocity": "(6.799999, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 44
+    },
+    {
+      "aerial_actor": "(-4.779981, -0.03071, 0.000002)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_022.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(-4.779981, -0.03071, 0.000002)",
+      "player_id": "shane_denham",
+      "player_velocity": "(7.199999, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 46
+    },
+    {
+      "aerial_actor": "(-4.529985, -0.03071, 0.000002)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_023.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(-4.529985, -0.03071, 0.000002)",
+      "player_id": "shane_denham",
+      "player_velocity": "(7.599998, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 48
+    },
+    {
+      "aerial_actor": "(-4.266661, -0.03071, 0.000002)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_024.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(-4.266661, -0.03071, 0.000002)",
+      "player_id": "shane_denham",
+      "player_velocity": "(7.999998, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 50
+    },
+    {
+      "aerial_actor": "(-3.990005, -0.028399, 0.000002)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_025.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(-3.990005, -0.028399, 0.000002)",
+      "player_id": "shane_denham",
+      "player_velocity": "(8.399998, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 52
+    },
+    {
+      "aerial_actor": "(-3.705019, -0.028399, 0.000002)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_026.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(-3.705019, -0.028399, 0.000002)",
+      "player_id": "shane_denham",
+      "player_velocity": "(8.547827, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 54
+    },
+    {
+      "aerial_actor": "(-3.420302, -0.026355, 0.000001)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_027.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(-3.420302, -0.026355, 0.000001)",
+      "player_id": "shane_denham",
+      "player_velocity": "(8.5398, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 56
+    },
+    {
+      "aerial_actor": "(-3.135861, -0.024334, 0.000001)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_028.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(-3.135861, -0.024334, 0.000001)",
+      "player_id": "shane_denham",
+      "player_velocity": "(8.531774, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 58
+    },
+    {
+      "aerial_actor": "(-2.851684, -0.024334, 0.000001)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_029.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(-2.851684, -0.024334, 0.000001)",
+      "player_id": "shane_denham",
+      "player_velocity": "(8.523746, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 60
+    },
+    {
+      "aerial_actor": "(-2.567778, -0.021897, -0.0)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_030.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(-2.567778, -0.021897, -0.0)",
+      "player_id": "shane_denham",
+      "player_velocity": "(8.51572, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 62
+    },
+    {
+      "aerial_actor": "(-2.284157, -0.018386, -0.000004)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_031.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(-2.284157, -0.018386, -0.000004)",
+      "player_id": "shane_denham",
+      "player_velocity": "(8.507693, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 64
+    },
+    {
+      "aerial_actor": "(-2.000785, -0.016173, -0.000006)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_032.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(-2.000785, -0.016173, -0.000006)",
+      "player_id": "shane_denham",
+      "player_velocity": "(8.499666, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 66
+    },
+    {
+      "aerial_actor": "(-1.717679, -0.014041, -0.000008)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_033.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(-1.717679, -0.014041, -0.000008)",
+      "player_id": "shane_denham",
+      "player_velocity": "(8.49164, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 68
+    },
+    {
+      "aerial_actor": "(-1.434843, -0.011901, -0.00001)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_034.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(-1.434843, -0.011901, -0.00001)",
+      "player_id": "shane_denham",
+      "player_velocity": "(8.483613, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 70
+    },
+    {
+      "aerial_actor": "(-1.152277, -0.009536, -0.000013)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_035.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(-1.152277, -0.009536, -0.000013)",
+      "player_id": "shane_denham",
+      "player_velocity": "(8.475587, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 72
+    },
+    {
+      "aerial_actor": "(-0.869979, -0.00707, -0.000016)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_036.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(-0.869979, -0.00707, -0.000016)",
+      "player_id": "shane_denham",
+      "player_velocity": "(8.46756, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 74
+    },
+    {
+      "aerial_actor": "(-0.587949, -0.004607, -0.000019)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_037.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(-0.587949, -0.004607, -0.000019)",
+      "player_id": "shane_denham",
+      "player_velocity": "(8.459534, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 76
+    },
+    {
+      "aerial_actor": "(-0.306188, -0.002119, -0.000023)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_038.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(-0.306188, -0.002119, -0.000023)",
+      "player_id": "shane_denham",
+      "player_velocity": "(8.451507, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 78
+    },
+    {
+      "aerial_actor": "(-0.024696, 0.000458, -0.000027)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_039.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(-0.024696, 0.000458, -0.000027)",
+      "player_id": "shane_denham",
+      "player_velocity": "(8.44348, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 80
+    },
+    {
+      "aerial_actor": "(0.24423, 0.002997, -0.000031)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_040.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(0.24423, 0.002997, -0.000031)",
+      "player_id": "shane_denham",
+      "player_velocity": "(7.94348, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 82
+    },
+    {
+      "aerial_actor": "(0.496491, 0.00539, -0.000034)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_041.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(0.496491, 0.00539, -0.000034)",
+      "player_id": "shane_denham",
+      "player_velocity": "(7.44348, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 84
+    },
+    {
+      "aerial_actor": "(0.732088, 0.007585, -0.000037)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_042.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(0.732088, 0.007585, -0.000037)",
+      "player_id": "shane_denham",
+      "player_velocity": "(6.94348, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 86
+    },
+    {
+      "aerial_actor": "(0.951028, 0.007585, -0.000037)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_043.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(0.951028, 0.007585, -0.000037)",
+      "player_id": "shane_denham",
+      "player_velocity": "(6.44348, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 88
+    },
+    {
+      "aerial_actor": "(1.153286, 0.010385, -0.000041)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_044.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(1.153286, 0.010385, -0.000041)",
+      "player_id": "shane_denham",
+      "player_velocity": "(5.94348, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 90
+    },
+    {
+      "aerial_actor": "(1.338872, 0.012877, -0.000045)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_045.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(1.338872, 0.012877, -0.000045)",
+      "player_id": "shane_denham",
+      "player_velocity": "(5.44348, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 92
+    },
+    {
+      "aerial_actor": "(1.507814, 0.012877, -0.000045)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_046.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(1.507814, 0.012877, -0.000045)",
+      "player_id": "shane_denham",
+      "player_velocity": "(4.94348, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 94
+    },
+    {
+      "aerial_actor": "(1.660081, 0.014936, -0.000047)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_047.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(1.660081, 0.014936, -0.000047)",
+      "player_id": "shane_denham",
+      "player_velocity": "(4.44348, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 96
+    },
+    {
+      "aerial_actor": "(1.795685, 0.014936, -0.000047)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_048.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(1.795685, 0.014936, -0.000047)",
+      "player_id": "shane_denham",
+      "player_velocity": "(3.94348, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 98
+    },
+    {
+      "aerial_actor": "(1.914618, 0.016978, -0.00005)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_049.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(1.914618, 0.016978, -0.00005)",
+      "player_id": "shane_denham",
+      "player_velocity": "(3.44348, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 100
+    },
+    {
+      "aerial_actor": "(2.016891, 0.016978, -0.00005)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_050.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(2.016891, 0.016978, -0.00005)",
+      "player_id": "shane_denham",
+      "player_velocity": "(2.94348, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 102
+    },
+    {
+      "aerial_actor": "(2.102484, 0.018828, -0.000052)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_051.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(2.102484, 0.018828, -0.000052)",
+      "player_id": "shane_denham",
+      "player_velocity": "(2.44348, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 104
+    },
+    {
+      "aerial_actor": "(2.171431, 0.018828, -0.000052)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_052.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(2.171431, 0.018828, -0.000052)",
+      "player_id": "shane_denham",
+      "player_velocity": "(1.94348, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 106
+    },
+    {
+      "aerial_actor": "(2.223704, 0.018828, -0.000052)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_053.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(2.223704, 0.018828, -0.000052)",
+      "player_id": "shane_denham",
+      "player_velocity": "(1.44348, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 108
+    },
+    {
+      "aerial_actor": "(2.259305, 0.018828, -0.000052)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_054.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(2.259305, 0.018828, -0.000052)",
+      "player_id": "shane_denham",
+      "player_velocity": "(0.94348, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 110
+    },
+    {
+      "aerial_actor": "(2.278235, 0.018828, -0.000052)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_055.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(2.278235, 0.018828, -0.000052)",
+      "player_id": "shane_denham",
+      "player_velocity": "(0.44348, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 112
+    },
+    {
+      "aerial_actor": "(2.28145, 0.020184, -0.000053)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_056.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(2.28145, 0.020184, -0.000053)",
+      "player_id": "shane_denham",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 114
+    },
+    {
+      "aerial_actor": "(2.28145, 0.020184, -0.000053)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_057.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(2.28145, 0.020184, -0.000053)",
+      "player_id": "shane_denham",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 116
+    },
+    {
+      "aerial_actor": "(2.28145, 0.020184, -0.000053)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_058.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(2.28145, 0.020184, -0.000053)",
+      "player_id": "shane_denham",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 118
+    },
+    {
+      "aerial_actor": "(2.28145, 0.020184, -0.000053)",
+      "ball": "(140.0, 0.3, 140.0)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_059.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "stride_brake",
+      "player": "(2.28145, 0.020184, -0.000053)",
+      "player_id": "shane_denham",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "stride_case": "accelerate / sprint / brake",
+      "tick": 120
+    }
+  ],
+  "godot": "4.6.3-stable (official)",
+  "home_players": 11,
+  "keeper_contacts": [],
+  "msaa_3d": 2,
+  "officials": 1,
+  "physics_steps_per_draw": 2,
+  "rendering_method": "forward_plus",
+  "resolution": [
+    640,
+    360
+  ],
+  "review_mode": "stride_brake",
+  "scope": "Actual native Forward+ controllers and assets; accelerated simulated time, software GPU, no Mac performance claim.",
+  "sequence_fps": 30.0,
+  "shot_contacts": [],
+  "skill_events": [],
+  "vendor": "Unknown"
+}

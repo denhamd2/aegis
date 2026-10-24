@@ -137,6 +137,11 @@ Godot preview is a work in progress and does not yet meet the requested AAA
 likeness standard. The original and provenance/hash are preserved unchanged.
 See `../docs/art_briefs/john_orourke_likeness/brief.md`.
 
+The owner reattached this identical original on 24 October to correct the
+side beard. Check its continuous cheek/jaw/sideburn coverage in both profiles;
+keep the warm beard colour and blonde scalp highlights separate. The follow-up
+evidence is in `../docs/art_briefs/shane_john_refinement/brief.md`.
+
 ## Supplied landing-screen wordmark, 21 October 2026
 
 `source_uploads/chat_attachments/title_logo/69668.jpg` is the authoritative
@@ -158,3 +163,18 @@ high temporal wedge, short sideburns and a largely bare top/crown. The chin
 goatee is stronger than the upper-lip stubble. Use these alongside 69016 for
 player Des; do not transfer this groom to referee Des Feeney Sr. Originals
 are unchanged; provenance and SHA256 are recorded beside them.
+
+## Match HUD and stadium reference — 24 October 2026
+
+`source_uploads/chat_attachments/match_hud_stadium/70060.jpg` is the unchanged
+owner screenshot for the compact scorebug, timer, two identity/stamina strips,
+central radar and blue-seated large stadium. Its provenance JSON preserves the
+original upload path and SHA256. Follow its layout and stadium proportions; do
+not copy third-party logos or assets. The owner chose black/white match panels,
+assisted outfield switching with Tab override, and a large second venue. Blue
+intro/team graphics remain unchanged. Free stadium research and the original
+Blender fallback are recorded in `../docs/art_briefs/match_presentation_2026_10_24/brief.md`.
+
+The archive has `.gdignore` so Godot does not import duplicate source photos and
+boards as game textures. Originals remain available through the filesystem;
+shipping derivatives belong in `assets/`.

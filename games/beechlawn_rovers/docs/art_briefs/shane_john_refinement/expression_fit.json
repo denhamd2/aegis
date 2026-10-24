@@ -1,0 +1,74 @@
+{
+  "result": "PASS",
+  "players": {
+    "shane_denham": {
+      "eyes": {
+        "l": {
+          "open": {
+            "width_cm": 2.43,
+            "height_cm": 0.84,
+            "height_width": 0.3457,
+            "visible_samples": 1729
+          },
+          "closed": {
+            "width_cm": 0.33,
+            "height_cm": 0.12,
+            "height_width": 0.3636,
+            "visible_samples": 37
+          }
+        },
+        "r": {
+          "open": {
+            "width_cm": 2.43,
+            "height_cm": 0.84,
+            "height_width": 0.3457,
+            "visible_samples": 1731
+          },
+          "closed": {
+            "width_cm": 0.33,
+            "height_cm": 0.12,
+            "height_width": 0.3636,
+            "visible_samples": 37
+          }
+        }
+      },
+      "dental_visibility_samples": {
+        "Basis": 0,
+        "Smile": 1781
+      }
+    },
+    "john_orourke": {
+      "eyes": {
+        "l": {
+          "open": {
+            "width_cm": 2.4,
+            "height_cm": 0.84,
+            "height_width": 0.35,
+            "visible_samples": 1682
+          },
+          "closed": {
+            "width_cm": 0.3,
+            "height_cm": 0.09,
+            "height_width": 0.3,
+            "visible_samples": 33
+          }
+        },
+        "r": {
+          "open": {
+            "width_cm": 2.4,
+            "height_cm": 0.84,
+            "height_width": 0.35,
+            "visible_samples": 1683
+          },
+          "closed": {
+            "width_cm": 0.3,
+            "height_cm": 0.09,
+            "height_width": 0.3,
+            "visible_samples": 33
+          }
+        }
+      }
+    }
+  },
+  "scope": "Source geometry visibility; native expression appearance remains separate"
+}

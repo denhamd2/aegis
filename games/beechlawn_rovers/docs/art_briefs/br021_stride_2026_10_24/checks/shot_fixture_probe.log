@@ -1,0 +1,10 @@
+
+[smoke] moving_kick_contact_smoke.gd (timeout 45s)
+[failed] moving_kick_contact_smoke.gd exited 1
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+MOVING_CONTACT kind=shot speed=8.6 human=false off_axis=false markers=1 impulses=0 toe_gap_m=inf marker_gap_m=0.306 case_ms=275
+BR021_CONTACT_FAILURE { "ball": "(12.44287, 0.133512, 0.008074)", "toe": "(12.74439, 0.083628, -0.013353)", "root": "(12.13823, 0.029954, 0.041887)", "ball_velocity": "(4.99956, 0.013952, 0.036561)", "velocity": "(4.950348, 0.0, 0.178059)" }
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)

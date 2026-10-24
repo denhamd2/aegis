@@ -39,7 +39,6 @@ var _home_team: FootballTeam
 var _away_team: FootballTeam
 var _home_players: Array[FootballPlayer] = []
 var _away_players: Array[FootballPlayer] = []
-var _home_control_index := 0
 var _possession_team: StringName = &"none"
 var _transition_team: StringName = &"none"
 var _transition_time_left := 0.0
@@ -64,23 +63,17 @@ var presentation: FootballMatchPresentation
 var _presentation_active := false
 var events: FootballMatchEvents
 var grass_detail: PitchGrassDetail
+signal controlled_player_changed(actor: FootballPlayer)
+var selection := FootballPlayerSelection.new()
+var venue: FootballMatchVenue
+var match_hud: Control
 var rules = preload("res://scripts/football_rules_controller.gd").new()
 
 func _ready() -> void:
-	var broadcast := preload("res://scripts/ui/broadcast_style.gd")
-	$HUD/Panel.hide()
-	var plate := TextureRect.new()
-	plate.name = "BlueScoreboard"
-	plate.texture = broadcast.plate()
-	plate.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	plate.position = Vector2(26, 24)
-	plate.size = Vector2(479, 94)
-	$HUD.add_child(plate)
-	$HUD.move_child(plate, 0)
-	broadcast.label(score_label)
-	broadcast.label(clock_label, true)
-	broadcast.label($HUD/League, true)
+	venue = FootballMatchVenue.from_id(MatchSession.venue_id)
+	ball.surface_profile = venue
+	for legacy in ["Panel","League","Score","Clock","Controls","Message","Power"]:
+		get_node("HUD/"+legacy).hide()
 	_spectator_mode = MatchSession.is_spectator()
 	if OS.has_feature("web") and OS.has_feature("debug"):
 		var software_capture = JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('software')")
@@ -117,7 +110,7 @@ func _ready() -> void:
 		_kickoff_ai_delay = 1.0
 		$HUD/Controls.text = "WATCHING AI vs AI\nC  Camera   Esc  Title screen"
 	else:
-		$HUD/Controls.text += "\nCtrl Jockey   J Contain   H Teammate pressure\nC  Camera   Esc  Title screen"
+		$HUD/Controls.text += "\nCtrl Jockey   J Contain   H Pressure   K Shield\nU Roll  I Step-over  O Feint  P Drag-back  L Turn  B Fake shot\nC Camera   Esc Title screen"
 	build_pitch()
 	build_goals()
 	build_park_edge()
@@ -136,14 +129,10 @@ func _ready() -> void:
 		grass_detail.name = "PitchGrassDetail"
 		add_child(grass_detail)
 		grass_detail.setup(self)
-	if use_human_visual:
-		var radar := Control.new()
-		radar.set_script(load("res://scripts/tactical_radar.gd"))
-		radar.name = "TacticalRadar"
-		radar.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
-		radar.position = Vector2(-112,-152)
-		radar.size = Vector2(224,132)
-		$HUD.add_child(radar)
+	match_hud = preload("res://scripts/ui/match_hud.gd").new()
+	$HUD.add_child(match_hud)
+	match_hud.setup(self)
+	selection.setup(self)
 	if referee_enabled:
 		var official := load("res://scenes/referee.tscn").instantiate() as CharacterBody3D
 		official.name = "Referee"
@@ -158,7 +147,7 @@ func _ready() -> void:
 	if OS.has_feature("web") and OS.has_feature("debug"):
 		# Explicit stationary inspection fixture; never used by normal matches.
 		if str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('surface_review')")) == "1":
-			ball.position = Vector3(50.9,PitchSurface.height_at(50.9,-1.5)+FootballBall.RADIUS,-1.5)
+			ball.position = Vector3(50.9,surface_height(50.9,-1.5)+FootballBall.RADIUS,-1.5)
 	ball.freeze = true
 	_set_players_physics_enabled(false)
 	_bind_controlled_player()
@@ -182,7 +171,7 @@ func _ready() -> void:
 				humans += 1
 		JavaScriptBridge.eval("window.BEECHLAWN_MATCH_MODE = '%s'; window.BEECHLAWN_HUMAN_PLAYERS = %d; window.BEECHLAWN_PLAYER_RIGS = %d" % ["watch" if _spectator_mode else "play",humans,rigs])
 		JavaScriptBridge.eval("window.BEECHLAWN_MATCH_READY = true")
-	print("BEECHLAWN_MATCH_READY actors=",_home_players.size()+_away_players.size()," officials=",get_tree().get_nodes_in_group("match_officials").size())
+	print("BEECHLAWN_MATCH_READY actors=",_home_players.size()+_away_players.size()," officials=",get_tree().get_nodes_in_group("match_officials").size()," venue=",venue.id)
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	if event is InputEventKey and presentation != null and presentation.handle_key(event):
@@ -207,6 +196,7 @@ func _freeze_capture(_arguments: Array) -> void:
 	Engine.max_fps=1
 
 func _physics_process(delta: float) -> void:
+	selection.update(delta)
 	if _intro_active:
 		return
 	if presentation != null and presentation.replaying():
@@ -328,7 +318,7 @@ func _setup_full_kickoff(kicking: Array[FootballPlayer], defending: Array[Footba
 		elif kicking.has(actor) and actor.profile.tactical_role == "striker":
 			local_position = Vector2(-2.0, 4.0)
 		actor.position = Vector3(local_position.x * actor.attack_sign, 0.0, local_position.y)
-		actor.position.y = PitchSurface.height_at(actor.position.x, actor.position.z) + 0.015 if terrain_enabled else 0.0
+		actor.position.y = surface_height(actor.position.x, actor.position.z) + 0.015 if terrain_enabled else 0.0
 		actor.velocity = Vector3.ZERO
 		actor.receive_target_time = 0.0
 		actor.ai_move_direction = Vector3.ZERO
@@ -409,24 +399,28 @@ func _set_players_physics_enabled(enabled: bool) -> void:
 		actor.set_physics_process(enabled)
 
 func _set_controlled_player(next_player: FootballPlayer) -> void:
-	if _spectator_mode or next_player == null or next_player == player:
+	if _spectator_mode or not is_instance_valid(next_player) or next_player == player \
+			or next_player.profile == null or next_player.profile.role == "goalkeeper":
 		return
 	var old_player := player
-	old_player._aerial_controller.cancel_input()
-	if old_player.status_changed.is_connected(_set_message):
-		old_player.status_changed.disconnect(_set_message)
-	if old_player.shot_charge_changed.is_connected(_set_power):
-		old_player.shot_charge_changed.disconnect(_set_power)
-	old_player.controlled_by_human = false
+	if is_instance_valid(old_player):
+		old_player.prepare_control_handover(false)
+		if old_player.status_changed.is_connected(_set_message):
+			old_player.status_changed.disconnect(_set_message)
+		if old_player.shot_charge_changed.is_connected(_set_power):
+			old_player.shot_charge_changed.disconnect(_set_power)
+		old_player.controlled_by_human = false
+	next_player.prepare_control_handover(true)
 	player = next_player
 	player.controlled_by_human = true
 	player.ai_move_direction = Vector3.ZERO
 	player.ai_sprinting = false
 	_set_power(0.0)
-	_set_marker_visibility(old_player, false)
+	if is_instance_valid(old_player): _set_marker_visibility(old_player, false)
 	_set_marker_visibility(player, true)
 	camera_rig.set("player", player)
 	_bind_controlled_player()
+	controlled_player_changed.emit(player)
 
 func _assemble_teams() -> void:
 	if _home_team == null or _away_team == null:
@@ -441,7 +435,6 @@ func _assemble_teams() -> void:
 	for profile in _away_team.roster:
 		_away_players.append(_spawn_player(profile, _away_team, -1.0))
 	_create_control_marker(player, true)
-	_home_control_index = _home_players.find(player)
 	camera_rig.set("player", player)
 
 func _profile_for_slot(team: FootballTeam, slot: String) -> FootballerProfile:
@@ -639,9 +632,7 @@ func _create_control_marker(actor: FootballPlayer, enabled: bool) -> void:
 	# TorusMesh already lies in the XZ plane. Rotating it buried half the ring.
 	var material := StandardMaterial3D.new()
 	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	material.albedo_color = Color(0.95, 0.82, 0.18, 1.0)
-	material.emission_enabled = true
-	material.emission = Color(0.8, 0.55, 0.05)
+	material.albedo_color = Color(.13,.40,1.0)
 	marker.material_override = material
 	marker.visible = enabled
 	actor.add_child(marker)
@@ -655,17 +646,7 @@ func _bind_controlled_player() -> void:
 		player.shot_charge_changed.connect(_set_power)
 
 func _cycle_controlled_player() -> void:
-	if _spectator_mode:
-		return
-	var outfield: Array[FootballPlayer] = []
-	for teammate in _home_players:
-		if teammate.profile != null and (teammate.profile.role == "outfield" or use_human_visual):
-			outfield.append(teammate)
-	if outfield.size() < 2:
-		return
-	_home_control_index = (outfield.find(player) + 1) % outfield.size()
-	_set_controlled_player(outfield[_home_control_index])
-	_set_message("Selected %s  ·  %d" % [player.profile.display_name, player.profile.jersey_number])
+	selection.manual_switch()
 
 func _set_marker_visibility(actor: FootballPlayer, enabled: bool) -> void:
 	var marker := actor.get_node_or_null("ControlMarker") as MeshInstance3D
@@ -803,6 +784,7 @@ func _update_team_ai(team_players: Array[FootballPlayer], chaser: FootballPlayer
 
 func _apply_carrier_action(carrier: FootballPlayer, team_players: Array[FootballPlayer],
 		opponents: Array[FootballPlayer]) -> void:
+	if carrier.skills.active != &"": return
 	var action: Dictionary = _player_decisions.choose_carrier_action(carrier,
 		team_players, opponents, ball)
 	var previous_serial := ball.action_serial
@@ -830,6 +812,8 @@ func _apply_carrier_action(carrier: FootballPlayer, team_players: Array[Football
 				action_type, float(action.get("power", .65)), action.get("variant", &"standard"))
 			if carrier._visual_pass_pending or ball.action_serial != previous_serial:
 				carrier.ai_action_cooldown = 1.0
+		&"carry":
+			carrier.skills.try_ai_skill()
 
 func _apply_ai_movement_decisions(team_players: Array[FootballPlayer], decisions: Dictionary) -> void:
 	for actor in team_players:
@@ -999,7 +983,7 @@ func _on_foul_committed(tackler: FootballPlayer, opponent: FootballPlayer) -> vo
 
 func _set_power(value: float) -> void:
 	power_bar.value = value * 100.0
-	power_bar.visible = value > 0.0
+	power_bar.visible = false # MatchHUD draws charge separately from stamina.
 
 func _mat(color: Color, roughness := 0.86) -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()
@@ -1027,7 +1011,7 @@ func _add_line_segment(tool: SurfaceTool, a: Vector2, b: Vector2, width: float) 
 		return
 	var direction := (b - a).normalized()
 	var normal := Vector2(-direction.y, direction.x) * width * 0.5
-	if terrain_enabled:
+	if terrain_enabled and venue.worn_surface:
 		a += normal.normalized()*sin(a.x*2.3+a.y*1.7)*0.009
 		b += normal.normalized()*sin(b.x*2.3+b.y*1.7)*0.009
 		normal *= 0.91+0.13*sin((a.x+a.y)*4.1)
@@ -1036,10 +1020,10 @@ func _add_line_segment(tool: SurfaceTool, a: Vector2, b: Vector2, width: float) 
 	var b1 := Vector3(b.x - normal.x, 0.014, b.y - normal.y)
 	var b2 := Vector3(b.x + normal.x, 0.014, b.y + normal.y)
 	if terrain_enabled:
-		a1.y = PitchSurface.height_at(a1.x,a1.z)+0.008
-		a2.y = PitchSurface.height_at(a2.x,a2.z)+0.008
-		b1.y = PitchSurface.height_at(b1.x,b1.z)+0.008
-		b2.y = PitchSurface.height_at(b2.x,b2.z)+0.008
+		a1.y = surface_height(a1.x,a1.z)+0.008
+		a2.y = surface_height(a2.x,a2.z)+0.008
+		b1.y = surface_height(b1.x,b1.z)+0.008
+		b2.y = surface_height(b2.x,b2.z)+0.008
 	tool.add_vertex(a1)
 	tool.add_vertex(a2)
 	tool.add_vertex(b1)
@@ -1079,6 +1063,19 @@ func _build_line_mesh() -> ArrayMesh:
 			var a1 := -half_angle + 2.0 * half_angle * float(j+1) / 32.0
 			_add_line_segment(tool, centre + Vector2(-end_sign*cos(a0), sin(a0))*9.15,
 				centre + Vector2(-end_sign*cos(a1), sin(a1))*9.15, width)
+	# Regulation spots and inward corner arcs share the venue's paint profile.
+	for spot in [Vector2.ZERO,Vector2(-hx+11,0),Vector2(hx-11,0)]:
+		for index in 12:
+			var a := TAU*index/12.0
+			var b := TAU*(index+1)/12.0
+			_add_line_segment(tool,spot+Vector2(cos(a),sin(a))*.055,spot+Vector2(cos(b),sin(b))*.055,.11)
+	for end in [-1.0,1.0]:
+		for side in [-1.0,1.0]:
+			var corner := Vector2(end*hx,side*FIELD_WIDTH*.5)
+			for index in 12:
+				var a := PI*.5*index/12.0
+				var b := PI*.5*(index+1)/12.0
+				_add_line_segment(tool,corner+Vector2(-end*cos(a),-side*sin(a)),corner+Vector2(-end*cos(b),-side*sin(b)),width)
 	tool.generate_normals()
 	return tool.commit()
 
@@ -1086,6 +1083,7 @@ func build_pitch() -> void:
 	var turf_shader := load("res://shaders/park_grass.gdshader") as Shader
 	var grass := ShaderMaterial.new()
 	grass.shader = turf_shader
+	grass.set_shader_parameter("stadium_mowing", not venue.worn_surface)
 	grass.set_shader_parameter("field_length", FIELD_LENGTH)
 	grass.set_shader_parameter("field_width", FIELD_WIDTH)
 	grass.set_shader_parameter("grass_albedo",
@@ -1100,7 +1098,7 @@ func build_pitch() -> void:
 	plane.subdivide_depth = 4
 	pitch.mesh = plane
 	if terrain_enabled:
-		pitch.mesh = PitchSurface.make_mesh()
+		pitch.mesh = PitchSurface.make_mesh(venue)
 	pitch.material_override = grass
 	pitch.position.y = -0.06
 	if terrain_enabled:
@@ -1109,8 +1107,8 @@ func build_pitch() -> void:
 	var lines := MeshInstance3D.new()
 	lines.name = "FadedChalk"
 	lines.mesh = _build_line_mesh()
-	lines.material_override = _mat(Color(0.72, 0.72, 0.64, 0.78))
-	if terrain_enabled:
+	lines.material_override = _mat(Color(0.72, 0.72, 0.64, 0.78) if venue.worn_surface else Color(.89,.9,.87))
+	if terrain_enabled and venue.worn_surface:
 		var paint := ShaderMaterial.new()
 		paint.shader = load("res://shaders/chalk_paint.gdshader")
 		lines.material_override = paint
@@ -1123,7 +1121,7 @@ func build_pitch() -> void:
 	shape.shape = box_shape
 	shape.position.y = -0.14
 	if terrain_enabled:
-		shape.shape = PitchSurface.make_collision()
+		shape.shape = PitchSurface.make_collision(venue)
 		shape.position.y = 0.0
 	ground.add_child(shape)
 	$Pitch.add_child(ground)
@@ -1146,6 +1144,9 @@ func _build_goal(goal_name: String, end_sign: float) -> void:
 		visual.rotation.y = -PI * 0.5 if terrain_enabled else PI * 0.5 * end_sign
 		root.add_child(visual)
 		if terrain_enabled:
+			if not venue.worn_surface:
+				for frame_node in visual.find_children("*", "MeshInstance3D", true, false):
+					if frame_node.name != "SaggingNet": frame_node.material_override = _mat(Color(.91,.92,.9),.38)
 			for node in visual.find_children("SaggingNet", "MeshInstance3D", true, false):
 				var net := node as MeshInstance3D
 				var original := net.mesh.surface_get_material(0) as StandardMaterial3D
@@ -1192,8 +1193,14 @@ func _add_goal_collider(body: StaticBody3D, at: Vector3, size: Vector3) -> void:
 	collision.position = at
 	body.add_child(collision)
 
+func surface_height(x: float, z: float) -> float:
+	return PitchSurface.height_at(x,z,venue) if terrain_enabled else 0.0
+
 func build_park_edge() -> void:
-	KilmoreDriveVenue.build($ParkEdge, FIELD_LENGTH, FIELD_WIDTH, use_human_visual)
+	if venue.id == &"rovers_arena":
+		preload("res://scripts/rovers_arena.gd").build($ParkEdge)
+	else:
+		KilmoreDriveVenue.build($ParkEdge, FIELD_LENGTH, FIELD_WIDTH, use_human_visual)
 
 func _on_net_contact(body: Node3D, point: Vector3, impact_velocity: Vector3) -> void:
 	var end_sign: int = body.get_meta("goal_net_end",0)

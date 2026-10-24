@@ -1,0 +1,28 @@
+
+[smoke] shared_gait_integrity_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+GAIT_INTEGRITY authored/preserved leg/root tracks=43
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] shared_gait_integrity_smoke.gd (9.4s)
+
+[smoke] shared_pose_safety_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+POSE_SAFETY clip=AN_Beechlawn_Idle horizontal_samples=0/9 min_elbow_drop_m=0.27
+POSE_SAFETY clip=AN_Beechlawn_Jog horizontal_samples=0/9 min_elbow_drop_m=0.214
+POSE_SAFETY clip=AN_Beechlawn_Sprint horizontal_samples=0/9 min_elbow_drop_m=0.191
+POSE_SAFETY clip=AN_Beechlawn_StopFromRun horizontal_samples=0/9 min_elbow_drop_m=0.264
+POSE_SAFETY clip=AN_Beechlawn_PassRight horizontal_samples=0/9 min_elbow_drop_m=0.154
+POSE_SAFETY clip=AN_Beechlawn_ReceiveRight horizontal_samples=0/9 min_elbow_drop_m=0.162
+POSE_SAFETY clip=AN_Beechlawn_ShotRight horizontal_samples=0/9 min_elbow_drop_m=0.085
+POSE_SAFETY clip=AN_Beechlawn_CloseControl horizontal_samples=0/9 min_elbow_drop_m=0.235
+POSE_SAFETY clip=AN_Beechlawn_WalkOn horizontal_samples=0/9 min_elbow_drop_m=0.264
+POSE_SAFETY clip=AN_Beechlawn_WarmupJog horizontal_samples=0/9 min_elbow_drop_m=0.189
+PASS: all live outfield idle poses and standing action silhouettes avoid sustained T poses
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] shared_pose_safety_smoke.gd (10.3s)

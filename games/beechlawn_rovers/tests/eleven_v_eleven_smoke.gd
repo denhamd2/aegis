@@ -34,11 +34,12 @@ func _run() -> void:
 	var mesh_b := home[3].get_node("Visual/Rig").find_children("Skin_Head","MeshInstance3D",true,false)[0] as MeshInstance3D
 	assert(mesh_a.mesh==mesh_b.mesh,"Default heads must reuse the common base resource")
 	assert(home[2].get_node("Visual/Rig/AnimationPlayer") != home[3].get_node("Visual/Rig/AnimationPlayer"),"Playback state must be independent")
-	var seen := {}
+	# Keeper remains automatic; manual override selects a relevant outfielder.
+	match_scene._kickoff_pending = false
 	for index in 11:
-		seen[match_scene.player.profile.player_id]=true
 		match_scene._cycle_controlled_player()
-	assert(seen.size()==11 and seen.has(&"john_orourke"),"Manual switching must reach all eleven, including keeper")
+		assert(match_scene.player.profile.role == "outfield")
+	assert(match_scene.selection.best_candidate() != null)
 	match_scene._set_controlled_player(match_scene._kickoff_taker(home))
 	match_scene._start_kickoff(false)
 	for frame in 90:
@@ -59,6 +60,6 @@ func _run() -> void:
 	goal_skip.keycode=KEY_SPACE;goal_skip.pressed=true
 	match_scene.presentation.handle_key(goal_skip)
 	assert(match_scene._kickoff_team==&"Boardeaux" and match_scene._kickoff_pending)
-	print("11v11 PASS: 22 humans, 2 keepers, separate referee, shared head, independent playback, all-player switching, terrain and restart")
+	print("11v11 PASS: 22 humans, 2 keepers, separate referee, shared head, independent playback, outfield switching, terrain and restart")
 	match_scene.free()
 	quit(0)

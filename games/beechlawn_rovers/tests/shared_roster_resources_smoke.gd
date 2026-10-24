@@ -66,5 +66,13 @@ func _run() -> void:
 	tree_b.set("parameters/Locomotion/blend_position",0.8)
 	assert(is_equal_approx(float(tree_a.get("parameters/Locomotion/blend_position")),0.2))
 	assert(is_equal_approx(float(tree_b.get("parameters/Locomotion/blend_position")),0.8),"Playback parameters must remain independent")
+	tree_a.set("parameters/Locomotion/blend_position",.55)
+	tree_b.set("parameters/Locomotion/blend_position",.55)
+	tree_a.advance(.13)
+	tree_b.advance(.34)
+	var skeleton_a:=home[2].get_node("Visual/Rig/YBot_Armature/Skeleton3D") as Skeleton3D
+	var skeleton_b:=home[3].get_node("Visual/Rig/YBot_Armature/Skeleton3D") as Skeleton3D
+	var bone:=skeleton_a.find_bone("mixamorig_LeftUpLeg")
+	assert(skeleton_a.get_bone_pose_rotation(bone).angle_to(skeleton_b.get_bone_pose_rotation(bone))>.02,"Shared immutable clips must retain independent actor phase")
 	print("Shared roster resources PASS: kit edits propagate, opposing kit isolated, playback independent")
 	game.free();quit(0)
