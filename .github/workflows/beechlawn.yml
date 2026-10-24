@@ -7,6 +7,16 @@ on:
       - 'games/beechlawn_rovers/**'
       - '.github/workflows/beechlawn.yml'
   workflow_dispatch:
+    inputs:
+      validation:
+        description: Full validation, or package an already locally validated game tree
+        type: choice
+        default: full
+        options: [full, package]
+      verified_source:
+        description: Exact previously validated source commit (package mode only)
+        type: string
+        default: ''
 
 permissions:
   contents: write
@@ -21,12 +31,32 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
       - uses: chickensoft-games/setup-godot@v2
         with:
           version: 4.6.3-stable
           use-dotnet: false
           include-templates: true
+      - name: Verify previously validated game tree and package preflight
+        if: github.event_name == 'workflow_dispatch' && inputs.validation == 'package'
+        env:
+          VERIFIED_SOURCE: ${{ inputs.verified_source }}
+        run: |
+          python3 - <<'PYCODE'
+          import os, re, subprocess
+          source = os.environ['VERIFIED_SOURCE']
+          if not re.fullmatch('[0-9a-f]{40}', source):
+              raise SystemExit('Package mode requires the full validated commit SHA')
+          subprocess.run(['git','cat-file','-e',source+'^{commit}'],check=True)
+          subprocess.run(['git','diff','--exit-code',source,'HEAD','--',
+              'games/beechlawn_rovers','tools/blender/beechlawn'],check=True)
+          print('Game and Blender source trees exactly match validated commit',source)
+          PYCODE
+          timeout --kill-after=5s 180s godot --headless --editor --path games/beechlawn_rovers --import
+          python3 games/beechlawn_rovers/tools/run_smoke_tests.py player_selection_smoke.gd receiver_selection_pass_types_smoke.gd venue_selection_smoke.gd hud_layout_smoke.gd
       - name: Import and verify football project
+        if: github.event_name != 'workflow_dispatch' || inputs.validation != 'package'
         run: |
           python3 games/beechlawn_rovers/tools/test_native_display_pipe.py
           python3 games/beechlawn_rovers/tools/test_smoke_monitor.py
