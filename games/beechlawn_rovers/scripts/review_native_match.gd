@@ -65,8 +65,17 @@ func _capture() -> void:
 	var primary_primitives := RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_PRIMITIVES_IN_FRAME)
 	var primary_turf: int = game.grass_detail.draw_triangle_count() if game.grass_detail != null else 0
 	var extra_views: Array = []
-	var view_groups := {"all":["wide","detail","north_end","south_end","grass"],"corners":["corner_ne","corner_nw","corner_se","corner_sw"],"exterior":["exterior_east","exterior_west","exterior_north","exterior_south"],"pitch":["grass","paint","puddle"]}
+	var view_groups := {"all":["wide","detail","north_end","south_end","grass"],"corners":["corner_ne","corner_nw","corner_se","corner_sw"],"exterior":["exterior_east","exterior_west","exterior_north","exterior_south"],"pitch":["grass","paint","puddle"],"ball":["ball_hero","ball_quarter","ball_reverse","ball_side","ball_emboss"]}
 	if view_groups.has(view):
+		if view == "ball":
+			# Explicit stationary prop inspection, after the unchanged match still.
+			# Keep grass rather than centre-circle paint beneath the ball and clear
+			# the HUD/selection ring from the macro. Do not alter normal match views.
+			game.get_node("HUD").hide()
+			game.ball.position = Vector3(9,game.surface_height(9,14)+FootballBall.RADIUS,14)
+			game.ball.reset_physics_interpolation()
+			for actor in game._home_players+game._away_players:
+				actor.get_node("ControlMarker").hide()
 		var shots := {
 		 "wide":[Vector3(-42,29,52),Vector3(0,2,0),65],
 		 "detail":[Vector3(47,.38,3.5),Vector3(53,1.1,0),48],
@@ -84,6 +93,12 @@ func _capture() -> void:
 		 "exterior_north":[Vector3(157,21,45),Vector3(92,18,0),58],
 		 "exterior_south":[Vector3(-157,21,-45),Vector3(-92,18,0),58]}
 		for extra in view_groups[view]:
+			if extra.begins_with("ball_"):
+				var angles := {"ball_hero":0.0,"ball_quarter":PI*.5,"ball_reverse":PI,"ball_side":PI*1.5,"ball_emboss":0.0}
+				game.ball.rotation = Vector3(0,angles[extra],0)
+				game.ball.reset_physics_interpolation()
+				var close: bool = extra == "ball_emboss"
+				shots[extra] = [game.ball.global_position+Vector3(.02,.20 if close else .24,.28 if close else .65),game.ball.global_position+Vector3(0,.02,0),35]
 			var shot: Array = shots[extra]
 			camera.global_position = shot[0]
 			camera.look_at(shot[1])
@@ -95,7 +110,7 @@ func _capture() -> void:
 			assert(root.get_texture().get_image().save_png(output.path_join(filename)) == OK)
 			var turf_triangles: int = game.grass_detail.draw_triangle_count() if game.grass_detail != null else 0
 			assert(turf_triangles<=240000,"Turf exceeded its visible geometry budget")
-			extra_views.append({"image":filename,"camera_position":str(camera.global_position),"fov":camera.fov,"turf_triangles":turf_triangles,"draw_calls":RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME),"primitives":RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_PRIMITIVES_IN_FRAME)})
+			extra_views.append({"image":filename,"camera_position":str(camera.global_position),"fov":camera.fov,"ball_rotation":str(game.ball.rotation),"ball_position":str(game.ball.global_position),"turf_triangles":turf_triangles,"draw_calls":RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME),"primitives":RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_PRIMITIVES_IN_FRAME)})
 	# The team's arrays are the authoritative actor inventory, independent of groups.
 	var home: Array = game.get("_home_players")
 	var away: Array = game.get("_away_players")
@@ -109,6 +124,7 @@ func _capture() -> void:
 		"resolution":[image.get_width(),image.get_height()], "msaa_3d":root.msaa_3d,
 		"scene":"res://scenes/match_11v11.tscn", "camera":"close_broadcast",
 		"weather":str(session.weather_preset), "sun_shadows":game.get_node("Sun").shadow_enabled,
+		"ball_id":str(game.ball.get_node("BallVisual").get_meta("appearance_id")),
 		"home_players":home.size(), "away_players":away.size(), "officials":official_count,
 		"seating_audit":seating_audit, "venue":str(game.venue.id), "venue_view":view, "extra_views":extra_views, "phase":"stationary kickoff",
 		"draw_calls":primary_draw_calls,

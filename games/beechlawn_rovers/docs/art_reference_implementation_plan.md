@@ -1,5 +1,7 @@
 # Beechlawn Rovers — Reference Art Implementation Plan
 
+Current sports-prop follow-up: [UCL 26/27 League ball](art_briefs/ucl_ball_2026_10_25/brief.md), BR-023 (23/27, in progress). The owner approved the latest **League size-5** photographs (70119/70118/70117/70116), with black branding, as the new default. Earlier mini photos are supplementary only; do not substitute their pink logos/MINI label or the Pro variant. Retrieve `references/source_uploads/chat_attachments/ucl_26_27_ball/`; use Blender director → prop artist → UV/texturing → PBR → optimization/export, then matched studio and native Forward+ ball rotations. The original worn ball remains a saved option; gameplay physics are shared. Delivery/target-Mac acceptance stays BR-025 (25/27).
+
 Current gameplay motion follow-up: [stride/foot plants](art_briefs/br021_stride_2026_10_24/brief.md),
 BR-021 (21/27, in progress), adds five original shared gaits with measured
 stance travel, natural arm/wrist motion and stepping through deceleration.

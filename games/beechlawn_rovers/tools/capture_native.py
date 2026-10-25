@@ -93,7 +93,8 @@ def main():
     parser.add_argument('--ablation', choices=['none','scattering','transmittance','near_heads','pose','morphs','normal_maps','sun_shadows','shadow_bias','close_shadows'], default='none', help='Explicit portrait-only diagnostic; recorded in evidence')
     parser.add_argument('--setup-preview', action='store_true', help='Also capture the actual venue/control options')
     parser.add_argument('--venue', choices=['kilmore_drive','rovers_arena'], default='kilmore_drive')
-    parser.add_argument('--venue-view', choices=['broadcast','wide','detail','all','corners','exterior','pitch'], default='broadcast')
+    parser.add_argument('--venue-view', choices=['broadcast','wide','detail','all','corners','exterior','pitch','ball'], default='broadcast')
+    parser.add_argument('--ball', choices=['ucl_26_27_league','worn_sunday_league'], default='ucl_26_27_league')
     parser.add_argument('--weather', choices=['sunny','cloudy','rain','mist'], default='sunny')
     parser.add_argument('--match',action='store_true',help='Capture the actual 22-player match and broadcast camera')
     parser.add_argument('--players', nargs='+', choices=['shane','john','des','referee','away_keeper','paddy'],
@@ -169,6 +170,7 @@ def main():
             command += ['--setup-preview='+('1' if args.setup_preview else '0')]
             command += ['--venue='+args.venue,'--venue-view='+args.venue_view,'--ablation='+args.ablation]
             command += ['--weather='+args.weather]
+            command += ['--ball='+args.ball]
             command += ['--expression='+args.expression]
             if args.pose and not args.match:
                 command += ['--pose='+args.pose,'--frame='+str(args.frame)]

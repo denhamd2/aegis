@@ -4,7 +4,7 @@
 [ext_resource type="Script" path="res://scripts/football_player.gd" id="2_player"]
 [ext_resource type="Script" path="res://scripts/football_ball.gd" id="3_ball"]
 [ext_resource type="Script" path="res://scripts/broadcast_camera.gd" id="4_camera"]
-[ext_resource type="PackedScene" path="res://assets/environment/old_used_ball.glb" id="5_ball_visual"]
+[ext_resource type="PackedScene" path="res://assets/environment/ucl_26_27_league.glb" id="5_ball_visual"]
 [ext_resource type="PackedScene" path="res://scenes/footballer_visual.tscn" id="6_footballer_visual"]
 
 [ext_resource type="Environment" path="res://data/presentation/kilmore_daylight.tres" id="7_environment"]
@@ -51,7 +51,10 @@ can_sleep = false
 script = ExtResource("3_ball")
 physics_material_override = SubResource("Material_ball_physics")
 
-[node name="BallVisual" parent="Ball" instance=ExtResource("5_ball_visual")]
+[node name="BallVisual" type="Node3D" parent="Ball"]
+metadata/appearance_id = &"ucl_26_27_league"
+
+[node name="Model" parent="Ball/BallVisual" instance=ExtResource("5_ball_visual")]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Ball"]
 shape = SubResource("SphereShape_ball")

@@ -255,15 +255,27 @@ func _build_options() -> void:
 	var venue_select := OptionButton.new()
 	venue_select.name = "VenueSelect"
 	venue_select.position = Vector2(100,650)
-	venue_select.size = Vector2(610,44)
+	venue_select.size = Vector2(285,44)
 	venue_select.add_theme_font_override("font",BOLD)
-	venue_select.add_theme_font_size_override("font_size",22)
+	venue_select.add_theme_font_size_override("font_size",20)
+	venue_select.tooltip_text = "Match venue"
 	for id in FootballMatchVenue.IDS: venue_select.add_item(FootballMatchVenue.from_id(id).display_name)
 	venue_select.select(FootballMatchVenue.IDS.find(MatchSession.venue_id))
 	venue_select.item_selected.connect(func(index: int):
 		MatchSession.venue_id = FootballMatchVenue.IDS[index]
 		canvas.get_node("SelectedVenue").text = FootballMatchVenue.from_id(MatchSession.venue_id).display_name.to_upper()+"  /  DUBLIN")
 	options_layer.add_child(venue_select)
+	var ball_select := OptionButton.new()
+	ball_select.name = "BallSelect"
+	ball_select.position = Vector2(405,650)
+	ball_select.size = Vector2(305,44)
+	ball_select.add_theme_font_override("font",BOLD)
+	ball_select.add_theme_font_size_override("font_size",20)
+	ball_select.tooltip_text = "Match ball — applies to Play and Watch at either venue"
+	for label in FootballBallCatalog.LABELS: ball_select.add_item(label)
+	ball_select.select(FootballBallCatalog.IDS.find(FootballBallCatalog.valid_id(MatchSession.ball_id)))
+	ball_select.item_selected.connect(func(index: int): MatchSession.ball_id = FootballBallCatalog.IDS[index])
+	options_layer.add_child(ball_select)
 	var switching := OptionButton.new()
 	switching.name = "PlayerSwitching"
 	switching.position = Vector2(100,714)

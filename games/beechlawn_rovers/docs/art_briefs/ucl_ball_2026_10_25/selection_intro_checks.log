@@ -1,0 +1,76 @@
+
+[smoke] ball_selection_smoke.gd (timeout 90s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+BALL_COMBINATION PASS ucl_26_27_league kilmore_drive mode=0
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+BALL_COMBINATION PASS ucl_26_27_league kilmore_drive mode=1
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=rovers_arena ball=ucl_26_27_league
+BALL_COMBINATION PASS ucl_26_27_league rovers_arena mode=0
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=rovers_arena ball=ucl_26_27_league
+BALL_COMBINATION PASS ucl_26_27_league rovers_arena mode=1
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=worn_sunday_league
+BALL_COMBINATION PASS worn_sunday_league kilmore_drive mode=0
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=worn_sunday_league
+BALL_COMBINATION PASS worn_sunday_league kilmore_drive mode=1
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=rovers_arena ball=worn_sunday_league
+BALL_COMBINATION PASS worn_sunday_league rovers_arena mode=0
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=rovers_arena ball=worn_sunday_league
+BALL_COMBINATION PASS worn_sunday_league rovers_arena mode=1
+BEECHLAWN_MENU_READY
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=rovers_arena ball=worn_sunday_league
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=rovers_arena ball=worn_sunday_league
+BEECHLAWN_MENU_READY
+BALL_SELECTION PASS: legacy/invalid/missing settings, persistence, 8 mode/venue/ball combinations, intro/replay, scale and physics; failures=0
+[passed] ball_selection_smoke.gd (57.9s)
+
+[smoke] venue_selection_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=rovers_arena ball=ucl_26_27_league
+BEECHLAWN_MENU_READY
+VENUE_SELECTION PASS: persistence, invalid fallback, both grounds, flat/uneven physics, goals/nets/flags, section LOD, independent wet surfaces and menu bindings
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] venue_selection_smoke.gd (14.1s)
+
+[smoke] pre_match_intro_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+INTRO_SHOT montage_goal at=(49.55, 0.575, 4.2)
+INTRO_SHOT montage_net at=(54.9, 0.85, 1.35)
+INTRO_SHOT montage_ball at=(0.575, 0.275, 0.6)
+INTRO_SHOT montage_john at=(-46.75, 1.68, 1.275)
+INTRO_SHOT montage_des at=(5.75, 1.67, 12.275)
+INTRO_SHOT montage_puddles at=(46.55, 0.19697, 2.45)
+INTRO_SHOT venue at=(9.5, 5.1, 39.0)
+INTRO_SHOT walk at=(10.8, 1.65, 12.8)
+INTRO_SHOT referee at=(0.53, 1.73, 7.625)
+INTRO_SHOT fans at=(-18.9, 1.6, -32.0)
+INTRO_SHOT lineup at=(-0.5, 1.65, 10.0)
+INTRO_SHOT portrait at=(-5.305, 1.56, 7.3)
+INTRO_SHOT warmup at=(0.1, 1.5, 1.2)
+INTRO_SHOT handoff at=(0.0, 8.5, -20.8)
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+INTRO_SHOT montage_goal at=(49.55, 0.575, 4.2)
+INTRO_SHOT montage_net at=(54.9, 0.85, 1.35)
+INTRO_SHOT montage_ball at=(0.575, 0.275, 0.6)
+INTRO_SHOT montage_john at=(-46.75, 1.68, 1.275)
+INTRO_SHOT montage_des at=(5.75, 1.67, 12.275)
+INTRO_SHOT montage_puddles at=(46.55, 0.19697, 2.45)
+INTRO_SHOT venue at=(9.5, 5.1, 39.0)
+INTRO_SHOT walk at=(10.8, 1.65, 12.8)
+INTRO_SHOT referee at=(0.53, 1.73, 7.625)
+INTRO_SHOT fans at=(-18.9, 1.6, -32.0)
+INTRO_SHOT lineup at=(-0.5, 1.65, 10.0)
+INTRO_SHOT portrait at=(-5.305, 1.56, 7.3)
+INTRO_SHOT warmup at=(0.1, 1.5, 1.2)
+INTRO_SHOT handoff at=(0.0, 8.5, -20.8)
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+Intro natural/skip, staging, original clips, freeze, cleanup, Play/Watch kickoff failures=0
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] pre_match_intro_smoke.gd (18.3s)

@@ -1,0 +1,15 @@
+{
+  "triangles": 7040,
+  "materials": 1,
+  "mesh_objects": 1,
+  "diameter_m": [
+    0.22,
+    0.22,
+    0.22
+  ],
+  "closed_manifold": true,
+  "identity_transform": true,
+  "texture_size": 2048,
+  "renderer": "Blender Cycles CPU 32 samples, AgX, denoising off",
+  "glb_bytes": 3126656
+}

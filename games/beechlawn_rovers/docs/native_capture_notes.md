@@ -145,3 +145,7 @@ MultiMesh readback as visual evidence.
 Native chair readback now uses the descriptive section/row manifest and actual block world transforms. Blocks have local origins at their centres so HLOD distance selection is meaningful. Overlapping Forward+ self-fades avoid empty seat patches at initial threshold distances; near/far seats share the imported blue material. See Godot's GeometryInstance3D visibility-range documentation: https://docs.godotengine.org/en/stable/classes/class_geometryinstance3d.html .
 
 Turf has a bounded dense near footprint and intermediate hash-faded fins. Fade only exposed intermediate residency boundaries and preserve an upward average normal: scissor-only fades plus dark downward normals exposed rectangular chunk edges. Check low moving/cut views as well as geometry budgets. The smoke runner now fails shader compilation errors immediately instead of accepting a nominal SceneTree exit.
+
+## Ball appearance review
+
+`--ball ucl_26_27_league|worn_sunday_league` explicitly chooses the production appearance. `--match --venue-view ball` saves the unchanged broadcast view plus four rotations and an emboss macro on the actual pitch. The JSON records the ball ID and each rotation. `--setup-preview` also captures Options. Combine with either venue and sunny/cloudy/rain; these are native Forward+ stills, not Mac frame-rate measurements.

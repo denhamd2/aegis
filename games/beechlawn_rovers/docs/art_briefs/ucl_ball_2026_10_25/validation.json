@@ -1,0 +1,185 @@
+{
+  "native_result": "PASS",
+  "groups": [
+    {
+      "folder": "native_arena_cloudy",
+      "venue": "rovers_arena",
+      "weather": "cloudy",
+      "ball_id": "ucl_26_27_league",
+      "images": [
+        {
+          "image": "native_arena_cloudy/match_ball_emboss.png",
+          "sha256": "47e3edde764a883d7e6b1f5d1b54d5ad7b7c252d3a6ea60563bbb4823b00bcfd"
+        },
+        {
+          "image": "native_arena_cloudy/match_ball_hero.png",
+          "sha256": "7455393c68b2986a21febfeabdef2a27fb54e0a2c1b952a67c4e3877ea7c3040"
+        },
+        {
+          "image": "native_arena_cloudy/match_ball_quarter.png",
+          "sha256": "15f163bc5d8c6d86d74cb34851a2649924479c4006ca03ffdced674cc8062d04"
+        },
+        {
+          "image": "native_arena_cloudy/match_ball_reverse.png",
+          "sha256": "291d9e3df5054260481a38fb56cf790e0d8b6993fe7547d8c0d9268538a9c9ac"
+        },
+        {
+          "image": "native_arena_cloudy/match_ball_side.png",
+          "sha256": "24e4ba2e776b359ceefb93a451fb582587c0f32cc09d2a8a9eada10bd39b2179"
+        },
+        {
+          "image": "native_arena_cloudy/match_broadcast.png",
+          "sha256": "f56482d8c1f0aea5f9c4b54bacc84ce7ec81dd4d42f3fe77fc54c6d2852a7c00"
+        }
+      ]
+    },
+    {
+      "folder": "native_kilmore_rain",
+      "venue": "kilmore_drive",
+      "weather": "rain",
+      "ball_id": "ucl_26_27_league",
+      "images": [
+        {
+          "image": "native_kilmore_rain/match_ball_emboss.png",
+          "sha256": "07d6be730b983d1036dc59f38f7f1b011502132ee0d36f444874382aa7c7faca"
+        },
+        {
+          "image": "native_kilmore_rain/match_ball_hero.png",
+          "sha256": "e4cc25b74755165a69d613fe2aef9d927aad51d747ab3be93fa37bb3a7e256fc"
+        },
+        {
+          "image": "native_kilmore_rain/match_ball_quarter.png",
+          "sha256": "698c1fea5a8941421f8fe2820b4fcecacca6447ec8a93cd28c91c7f46d0d89c5"
+        },
+        {
+          "image": "native_kilmore_rain/match_ball_reverse.png",
+          "sha256": "2981bca246b971de93f9462130f946d1488eea71b201127be916d10d5dd50482"
+        },
+        {
+          "image": "native_kilmore_rain/match_ball_side.png",
+          "sha256": "206b9f1858780c418d4d18f84e6d21487e1d2e0910a068d7a619db215868f1a3"
+        },
+        {
+          "image": "native_kilmore_rain/match_broadcast.png",
+          "sha256": "c578fa283b34e3b3ae40d7c7c537e89e536d97ac3f243b450f4b92855480c5f9"
+        }
+      ]
+    },
+    {
+      "folder": "native_kilmore_sunny",
+      "venue": "kilmore_drive",
+      "weather": "sunny",
+      "ball_id": "ucl_26_27_league",
+      "images": [
+        {
+          "image": "native_kilmore_sunny/match_ball_emboss.png",
+          "sha256": "3d8d9edd37f2ed226e3a1a5a36a21106e30d43230f2ce31e006b600925cbd410"
+        },
+        {
+          "image": "native_kilmore_sunny/match_ball_hero.png",
+          "sha256": "0b629d7b150e1334fdcb83f050579ea517461273ed47f0e8c8b1ac4766131de4"
+        },
+        {
+          "image": "native_kilmore_sunny/match_ball_quarter.png",
+          "sha256": "e6d5035cebc34e3ee09ea24a64e30af12f14356ad99b43a769591aaf96a0f75d"
+        },
+        {
+          "image": "native_kilmore_sunny/match_ball_reverse.png",
+          "sha256": "4fce8cbcb8753295cf657e80784c5a5c942005c3d15f5604df71b602be32a2f0"
+        },
+        {
+          "image": "native_kilmore_sunny/match_ball_side.png",
+          "sha256": "7c3d26b48208175649e5e24828168b4cea18e0c556bdf142aef47f656c6f3b77"
+        },
+        {
+          "image": "native_kilmore_sunny/match_broadcast.png",
+          "sha256": "333275eeb3e2a41c1e0c64fbc132528bf18ac0bfd3087e92a7fcd28ff7b9e6e5"
+        },
+        {
+          "image": "native_kilmore_sunny/options.png",
+          "sha256": "27da613e1520aad3b61d4e9570142bb3020a6b11836b3668f2befed1b0c8b4c8"
+        }
+      ]
+    },
+    {
+      "folder": "native_worn_arena",
+      "venue": "rovers_arena",
+      "weather": "sunny",
+      "ball_id": "worn_sunday_league",
+      "images": [
+        {
+          "image": "native_worn_arena/match_broadcast.png",
+          "sha256": "f513eaed72c662b286e26395315a2bfe16dd94512475872d87eecac32ff32f46"
+        }
+      ]
+    },
+    {
+      "folder": "native_worn_kilmore",
+      "venue": "kilmore_drive",
+      "weather": "sunny",
+      "ball_id": "worn_sunday_league",
+      "images": [
+        {
+          "image": "native_worn_kilmore/match_ball_emboss.png",
+          "sha256": "e9b7dc8daf5dcb2072fdb6add3b5bb7d0fec1eef049a639b19db7583e1222dcc"
+        },
+        {
+          "image": "native_worn_kilmore/match_ball_hero.png",
+          "sha256": "c85999f4e6966b7e894a9e4244cf22a1af580b3b4ac533447ac4abc2aabbf858"
+        },
+        {
+          "image": "native_worn_kilmore/match_ball_quarter.png",
+          "sha256": "66e2cc7b5fa7c99fa9d249a276825b837162a7a8ccfbf4bba3ef05e68c22e133"
+        },
+        {
+          "image": "native_worn_kilmore/match_ball_reverse.png",
+          "sha256": "5d740dbd71680e1fea0ee7bc264a53bbfbdf5b510022ce9bedb7532236efe4d8"
+        },
+        {
+          "image": "native_worn_kilmore/match_ball_side.png",
+          "sha256": "4d44972cb317476cd511f766d05bd55487b9b3dca96e416adf6f7f9e22f8a8c8"
+        },
+        {
+          "image": "native_worn_kilmore/match_broadcast.png",
+          "sha256": "6c253e682aacbcadfe971f3beb0e27076c803d3dbc86015c0460b3cb89721435"
+        }
+      ]
+    }
+  ],
+  "asset": {
+    "triangles": 7040,
+    "materials": 1,
+    "mesh_objects": 1,
+    "diameter_m": [
+      0.22,
+      0.22,
+      0.22
+    ],
+    "closed_manifold": true,
+    "identity_transform": true,
+    "texture_size": 2048,
+    "renderer": "Blender Cycles CPU 32 samples, AgX, denoising off",
+    "glb_bytes": 3126656
+  },
+  "hardware_acceptance": "M1 Pro 16GB 1080p60 and exact appearance remain open. Linux llvmpipe Forward+ 960x540 is software appearance evidence, not performance.",
+  "original_worn_glb_sha256": "e5b8643d261940b322f76c6ce1bdd352a17dce0ab8674d4d23ad421ac8868841",
+  "visual_scope": "Primary broadcast is the untouched kickoff camera; extra close-ups relocate the stationary ball to unmarked pitch grass and hide HUD/selection markers. Neutral Blender evidence uses the same model and PBR images.",
+  "logic_result": "PASS",
+  "checks": [
+    "ball_selection_smoke (10 full assemblies; 8 combinations + real menu/rematch/title retention)",
+    "title_screen_smoke",
+    "replay_results_smoke",
+    "ball_fundamentals_smoke",
+    "passing_smoke",
+    "wet_weather_smoke",
+    "goalkeeper_response_smoke",
+    "football_shot_contact_integration_smoke",
+    "venue_selection_smoke",
+    "pre_match_intro_smoke",
+    "test_capture_native.py",
+    "test_smoke_monitor.py",
+    "new reference SHA256 archive check",
+    "git diff --check"
+  ],
+  "exit_warnings": "Historic ObjectDB exit warnings appear in some scene smoke checks; no assertions, script errors or shader errors in passing logs."
+}

@@ -312,7 +312,8 @@ func start_replay(entry: Dictionary, after: StringName = &"incident") -> bool:
 		var found:=visual.find_children("*","Skeleton3D",true,false)
 		ghost_skeletons.append(found[0] as Skeleton3D if not found.is_empty() else null)
 	ghost_ball=Node3D.new();ghost_world.add_child(ghost_ball)
-	ghost_ball.add_child(game.ball.get_node("BallVisual").duplicate())
+	# Clone the selected runtime appearance, with no scene/script reinitialization.
+	ghost_ball.add_child(game.ball.get_node("BallVisual").duplicate(0))
 	buffer.apply_frame(_entry,_replay_start,ghosts,ghost_ball,ghost_skeletons)
 	game.camera_rig.presentation_override=true;camera.position=ghost_ball.position+Vector3(-8,4.2,12);camera.look_at(ghost_ball.position);camera.make_current()
 	_set_caption("REPLAY · "+String(entry.kind).replace("_"," ").to_upper())

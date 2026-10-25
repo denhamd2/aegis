@@ -1,0 +1,89 @@
+
+[smoke] ball_selection_smoke.gd (timeout 90s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+BALL_COMBINATION PASS ucl_26_27_league kilmore_drive mode=0
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+BALL_COMBINATION PASS ucl_26_27_league kilmore_drive mode=1
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=rovers_arena ball=ucl_26_27_league
+BALL_COMBINATION PASS ucl_26_27_league rovers_arena mode=0
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=rovers_arena ball=ucl_26_27_league
+BALL_COMBINATION PASS ucl_26_27_league rovers_arena mode=1
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=worn_sunday_league
+BALL_COMBINATION PASS worn_sunday_league kilmore_drive mode=0
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=worn_sunday_league
+BALL_COMBINATION PASS worn_sunday_league kilmore_drive mode=1
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=rovers_arena ball=worn_sunday_league
+BALL_COMBINATION PASS worn_sunday_league rovers_arena mode=0
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=rovers_arena ball=worn_sunday_league
+BALL_COMBINATION PASS worn_sunday_league rovers_arena mode=1
+BEECHLAWN_MENU_READY
+BALL_SELECTION PASS: legacy/invalid/missing settings, persistence, 8 mode/venue/ball combinations, intro/replay, scale and physics; failures=0
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] ball_selection_smoke.gd (44.5s)
+
+[smoke] title_screen_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MENU_READY
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+BEECHLAWN_MENU_READY
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+Title/menu PASS: focus, saved mix, full 11v11 Watch/Play launches, automatic AI restarts, human input, title return; failures=0
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] title_screen_smoke.gd (15.4s)
+
+[smoke] replay_results_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+BEECHLAWN_MENU_READY
+REPLAY_RESULTS failures=0
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] replay_results_smoke.gd (13.8s)
+
+[smoke] ball_fundamentals_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=8 officials=0 venue=kilmore_drive ball=ucl_26_27_league
+Dribble spacing close/normal/sprint: 0.78 / 0.89 / 1.10 m
+Ball ground pass 6 m/s: 8.30 m in 2 s
+Ball ground pass 12 m/s: 17.76 m in 2 s
+Ball ground pass 18 m/s: 27.89 m in 2 s
+Shot speed tap/full: 18.22 / 31.30 m/s; lateral aim retained forward component 12.30 m/s
+Beechlawn ball fundamentals checks passed
+[passed] ball_fundamentals_smoke.gd (9.5s)
+
+[smoke] passing_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=8 officials=0 venue=kilmore_drive ball=ucl_26_27_league
+Beechlawn passing and receiving checks passed
+[passed] passing_smoke.gd (4.6s)
+
+[smoke] wet_weather_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+Wet/weather checks: physical ground slowdown, airborne exclusion, mirrored masks, 60/120 Hz, preferences, four presets; failures=0
+[passed] wet_weather_smoke.gd (8.2s)
+
+[smoke] goalkeeper_response_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+KEEPER_RESPONSE team=Beechlawn Rovers parry_velocity=(4.932845, 1.033267, -5.672771)
+KEEPER_RESPONSE team=Boardeaux parry_velocity=(-4.932845, 1.033267, -5.672771)
+[passed] goalkeeper_response_smoke.gd (12.6s)
+
+[smoke] football_shot_contact_integration_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=8 officials=0 venue=kilmore_drive ball=ucl_26_27_league
+Beechlawn shot integration: Blender toe contact at 0.300 s (gap 0.006 m), one physical shot, no early impulse
+[passed] football_shot_contact_integration_smoke.gd (4.8s)

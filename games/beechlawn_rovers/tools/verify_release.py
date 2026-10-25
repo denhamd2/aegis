@@ -43,12 +43,13 @@ with zipfile.ZipFile(root / 'mac/Beechlawn-Rovers-Mac.zip') as archive:
         (root/'mac/build-info.json').write_text(json.dumps(actual,indent=2)+'\n')
         print('Exported pack identity PASS:',json.dumps(actual))
         for venue in ['kilmore_drive', 'rovers_arena']:
-            startup = subprocess.run(['godot','--headless','--main-pack',str(path),
-                'res://scenes/match_11v11.tscn','--quit-after','3','--','--venue='+venue],
-                capture_output=True,text=True,timeout=45)
-            output = startup.stdout+startup.stderr
-            assert startup.returncode == 0 and 'ERROR:' not in output, output
-            assert 'BEECHLAWN_MATCH_READY actors=22 officials=1 venue='+venue in output, output
-            print('Packaged match startup PASS:', venue, '(22 players + referee)')
+            for ball in ['ucl_26_27_league', 'worn_sunday_league']:
+                startup = subprocess.run(['godot','--headless','--main-pack',str(path),
+                    'res://scenes/match_11v11.tscn','--quit-after','3','--','--venue='+venue,'--ball='+ball],
+                    capture_output=True,text=True,timeout=45)
+                output = startup.stdout+startup.stderr
+                assert startup.returncode == 0 and 'ERROR:' not in output, output
+                assert 'BEECHLAWN_MATCH_READY actors=22 officials=1 venue='+venue+' ball='+ball in output, output
+                print('Packaged match startup PASS:', venue, ball, '(22 players + referee)')
     print('Mac bundle PASS: universal arm64/x86_64, football identifier, resources, ZIP CRC')
 print('Scope: package checks only; no native Mac execution or performance acceptance.')

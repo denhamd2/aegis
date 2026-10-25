@@ -21,6 +21,7 @@ var cinematic_depth_of_field := true
 var cinematic_motion_blur := true
 var temporal_aa := false
 var venue_id: StringName = &"kilmore_drive"
+var ball_id: StringName = FootballBallCatalog.DEFAULT
 var switch_mode: StringName = &"assisted"
 
 func _ready() -> void:
@@ -36,9 +37,12 @@ func _ready() -> void:
 	load_preferences()
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--venue="): venue_id = FootballMatchVenue.valid_id(StringName(arg.trim_prefix("--venue=")))
+		if arg.begins_with("--ball="): ball_id = FootballBallCatalog.valid_id(StringName(arg.trim_prefix("--ball=")))
 	apply_preferences()
 
 func load_preferences(path: String = SETTINGS_PATH) -> void:
+	# Re-reading absent/legacy settings also restores the migration default.
+	ball_id = FootballBallCatalog.DEFAULT
 	var config := ConfigFile.new()
 	if config.load(path) != OK:
 		return
@@ -51,6 +55,7 @@ func load_preferences(path: String = SETTINGS_PATH) -> void:
 	camera_zoom = clampf(float(config.get_value("camera", "zoom", 0.0)), -1.0, 1.0)
 	camera_angle = clampf(float(config.get_value("camera", "angle", 0.0)), -20.0, 20.0)
 	venue_id = FootballMatchVenue.valid_id(StringName(str(config.get_value("match", "venue", "kilmore_drive"))))
+	ball_id = FootballBallCatalog.valid_id(StringName(str(config.get_value("match", "ball", FootballBallCatalog.DEFAULT))))
 	switch_mode = &"manual" if str(config.get_value("match", "switching", "assisted")) == "manual" else &"assisted"
 	show_intro = bool(config.get_value("presentation", "intro", true))
 	weather_preset = MatchWeather.valid_id(StringName(str(config.get_value("presentation", "weather", "sunny"))))
@@ -68,6 +73,7 @@ func save_preferences(path: String = SETTINGS_PATH) -> Error:
 	config.set_value("camera", "zoom", camera_zoom)
 	config.set_value("camera", "angle", camera_angle)
 	config.set_value("match", "venue", str(venue_id))
+	config.set_value("match", "ball", str(ball_id))
 	config.set_value("match", "switching", str(switch_mode))
 	config.set_value("presentation", "intro", show_intro)
 	config.set_value("presentation", "weather", str(weather_preset))

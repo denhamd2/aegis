@@ -70,6 +70,7 @@ var match_hud: Control
 var rules = preload("res://scripts/football_rules_controller.gd").new()
 
 func _ready() -> void:
+	FootballBallCatalog.configure(ball.get_node("BallVisual"), MatchSession.ball_id)
 	venue = FootballMatchVenue.from_id(MatchSession.venue_id)
 	ball.surface_profile = venue
 	for legacy in ["Panel","League","Score","Clock","Controls","Message","Power"]:
@@ -171,7 +172,7 @@ func _ready() -> void:
 				humans += 1
 		JavaScriptBridge.eval("window.BEECHLAWN_MATCH_MODE = '%s'; window.BEECHLAWN_HUMAN_PLAYERS = %d; window.BEECHLAWN_PLAYER_RIGS = %d" % ["watch" if _spectator_mode else "play",humans,rigs])
 		JavaScriptBridge.eval("window.BEECHLAWN_MATCH_READY = true")
-	print("BEECHLAWN_MATCH_READY actors=",_home_players.size()+_away_players.size()," officials=",get_tree().get_nodes_in_group("match_officials").size()," venue=",venue.id)
+	print("BEECHLAWN_MATCH_READY actors=",_home_players.size()+_away_players.size()," officials=",get_tree().get_nodes_in_group("match_officials").size()," venue=",venue.id," ball=",ball.get_node("BallVisual").get_meta("appearance_id"))
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	if event is InputEventKey and presentation != null and presentation.handle_key(event):

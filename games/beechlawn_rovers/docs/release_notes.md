@@ -1,3 +1,13 @@
+# Beechlawn Rovers 27 — v0.4.1
+
+The adidas UCL 2026/27 League size-5 ball is now the default for Play and Watch at both venues. Its new Blender model and continuous spherical artwork follow the supplied League photos: black branding, multicolour star outlines, pearl-white TPU, fine embossing and shallow panel seams. This is the pictured League replica, not the Pro or mini variant.
+
+Choose the original worn Sunday-league ball in Options → Match Setup, beside Venue. The choice is saved across launches and rematches and retained in intros, celebrations and recorded replays. Existing settings start with the new ball. Both choices retain the same authoritative size, mass and gameplay physics.
+
+Universal Apple Silicon/Intel Mac package. Native Forward+ cloud captures and packaged-resource checks do not establish M1 1080p60 or hardware appearance acceptance.
+
+---
+
 # Beechlawn Rovers 27 — v0.4.0
 
 Rovers Arena now uses a complete Hill Dickinson reference-led building: a continuous home end, tiered side/North stands, fanned corner seating, curved canopy and main steel trusses, glazed ends, brick/metal external shell, entrances, dugouts and Rovers boards. Seating is grounded on actual terrace meshes; spatially centred chair/crowd LODs follow a descriptive layout manifest.

@@ -10,6 +10,12 @@ items, use the archived references and skill workflow in
 [`art_reference_implementation_plan.md`](art_reference_implementation_plan.md)
 and [`../references/README.md`](../references/README.md) before implementation.
 
+## Default ball and saved selection — 25 October 2026
+
+BR-023 (23/27, in progress): v0.4.1 adds the reference-led adidas UCL 2026/27 League size-5 ball as default at both venues. The original worn model remains selectable in Options beside Venue; selection persists through Play/Watch, intros, celebrations and recorded replays. Absent/invalid settings migrate to the new ball. The appearance catalogue leaves authoritative physics unchanged. Source references, Blender/PBR construction and native comparisons are in [the ball brief](art_briefs/ucl_ball_2026_10_25/brief.md).
+
+BR-025 (25/27, in progress) is the next acceptance step: validate the v0.4.1 universal Mac package and review the ball, fuller stadium and combined gameplay at 1080p on the M1 Pro. Target hardware frame timing and owner likeness approval remain open.
+
 ## Stadium remodel and pitch realism — 25 October 2026
 
 BR-023 (23/27, in progress) now has a complete Hill Dickinson reference-led Rovers building, curved/tapered corner seating, a continuous home end, barrel roof/trusses, glazed/brick/metal exterior and improved turf in both venues. All 25 final native views and actual seating/tread support checks pass. See [the production evidence](art_briefs/hill_dickinson_remodel_2026_10_25/brief.md).
@@ -1109,6 +1115,7 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
     acceptance check is the reference-matched face/hair and full-clip garment
     review, before roster integration or duplicating the process to others.
 - [ ] **BR-023 — Kilmore Drive and selectable Rovers Arena**
+  - 2026-10-25, v0.4.1: reference-led UCL 26/27 League size-5 ball, editable Blender/continuous UV/PBR source, default for both venues and Play/Watch; saved worn-ball option; intro/replay continuity. Cosmetic selection preserves the existing collider and all ball tuning. See `art_briefs/ucl_ball_2026_10_25/brief.md`. Wider venue likeness/M1 remain open.
   - 2026-10-25, v0.4.0: owner-approved complete Hill Dickinson reference-led building replaces the octagonal arena. Distinct stands, tapered/fanned corners, a continuous home end, true-normal terraces, brick/metal/glass exterior, barrel roof/trusses and Rovers signage are authored in Blender. A section/row manifest replaces fixed banks and records actual-mesh seat support. Both venues receive short-turf/material refinement; Kilmore's original terrain, wear, markings and wet physics remain. Reference archive and native evidence: `art_briefs/hill_dickinson_remodel_2026_10_25/`. Exact photographic likeness and native M1 timing remain open.
   - 2026-10-24, v0.3.1: fixed the slanted seat/aisle appearance in the opposing
     stand. Bank-centred columns and continuous stair aisles replace row-relative
@@ -1220,6 +1227,7 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
   timing, priority, cooldowns, and mix behavior with test clips before content
   production.
 - [ ] **BR-025 — M1 performance and Mac delivery**
+  - 2026-10-25 (25/27, in progress): v0.4.1 packages both ball choices and venues. Release verification now boots each ball/venue pair from the actual PCK. Native M1 appearance, input feel and sustained 1080p60 remain hardware acceptance checks.
   - 2026-10-24 (25/27, in progress): v0.3.0 combines the tested heads, skills,
     keeper/stride work, assisted controls, monochrome HUD and selectable arena.
     Twelve complete matches (six/venue) pass the chance gate; native Forward+

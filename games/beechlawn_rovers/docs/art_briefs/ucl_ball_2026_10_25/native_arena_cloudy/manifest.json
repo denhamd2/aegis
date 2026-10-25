@@ -1,0 +1,48 @@
+{
+  "result": "PASS",
+  "captures": [
+    {
+      "image": "match_broadcast.png",
+      "report": "match_broadcast.json",
+      "sha256": "f56482d8c1f0aea5f9c4b54bacc84ce7ec81dd4d42f3fe77fc54c6d2852a7c00",
+      "process_cleanup": "normal",
+      "capture_seconds": 59.25,
+      "command": [
+        "/usr/local/bin/godot",
+        "--path",
+        "/workspace/aegis-checkout/games/beechlawn_rovers",
+        "--rendering-method",
+        "forward_plus",
+        "--resolution",
+        "960x540",
+        "--fixed-fps",
+        "60",
+        "--disable-vsync",
+        "--audio-driver",
+        "Dummy",
+        "--display-driver",
+        "x11",
+        "--rendering-driver",
+        "vulkan",
+        "--script",
+        "res://scripts/review_native_match.gd",
+        "--",
+        "--capture-dir=/workspace/aegis-checkout/games/beechlawn_rovers/docs/art_briefs/ucl_ball_2026_10_25/native_arena_cloudy",
+        "--player=match",
+        "--view=broadcast",
+        "--lighting=match",
+        "--sky=match",
+        "--clean=1",
+        "--setup-preview=0",
+        "--venue=rovers_arena",
+        "--venue-view=ball",
+        "--ablation=none",
+        "--weather=cloudy",
+        "--ball=ucl_26_27_league",
+        "--expression=neutral"
+      ]
+    }
+  ],
+  "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+  "scope": "Forward+ appearance stills; software Vulkan does not measure Mac performance."
+}

@@ -27,7 +27,8 @@ TIMEOUT = float(os.environ.get("BEECHLAWN_TEST_TIMEOUT_SECONDS", "45"))
 # Full 23-actor pose evaluation takes about 64 s on this cloud CPU before
 # cold-start/host-load variation. These remain hard deadlines; progress logs
 # distinguish simulation stalls from a healthy slower-than-real-time run.
-LONG_TEST_TIMEOUTS = {"eleven_v_eleven_match_soak.gd": 120.0, "full_presentation_match_soak.gd": 180.0}
+LONG_TEST_TIMEOUTS = {"eleven_v_eleven_match_soak.gd": 120.0, "full_presentation_match_soak.gd": 180.0,
+                     "ball_selection_smoke.gd": 90.0}  # Eight full match/intro/replay assemblies.
 DEFAULT_TESTS = [
     "wet_weather_smoke.gd",
     "footballer_animation_tree_smoke.gd",

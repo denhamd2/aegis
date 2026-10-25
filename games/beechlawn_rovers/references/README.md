@@ -2,6 +2,12 @@
 
 This is the durable, project-local archive for the reference material reviewed for Beechlawn Rovers. Keep it in this project; do not mix these files into Aegis wrestling assets. The source images are preserved unedited. `SHA256SUMS` records file checksums.
 
+## UCL 26/27 ball — approved 25 October 2026
+
+`source_uploads/chat_attachments/ucl_26_27_ball/league_size5/` preserves the four primary original screenshots: 70119 black UCL logo/surface macro; 70118 LGE replica/branding angle; 70117 opposite star pattern; 70116 adidas/FIFA Quality/front. The owner explicitly selected this **League size-5 replica**, not the Pro ball. Match the black logos and visible 1017531 marking. `mini_supplementary/` preserves the earlier five mini screenshots; use only for supplementary pattern detail, never pink logos or MINI labelling. `product_views/` has three higher-resolution Pro:Direct product views of KE9765; URLs/hashes and authority are in `provenance.json`. Reference-only research views stay out of the Mac export. Original/reconstructed artwork is for the owner's personal game; no trademark or asset licence is implied.
+
+The default ball is authored in `tools/blender/beechlawn/ucl_26_27_league.blend`; its repeatable builder and native proof are described in `docs/art_briefs/ucl_ball_2026_10_25/brief.md`. Preserve the supplied worn-ball source and shipped model as the alternate option.
+
 ## Contents
 
 - `source_uploads/drive_folder/` — all 27 files downloaded from the owner's shared Drive folder, retaining their original downloaded filenames: 26 PNG reference boards and the satellite-map screenshot.

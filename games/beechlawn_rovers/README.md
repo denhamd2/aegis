@@ -156,3 +156,7 @@ See [advanced-shot evidence](docs/art_briefs/advanced_shots_2026_10_23/brief.md)
 and the [earlier aerial pass](docs/art_briefs/aerial_play_2026_10_22/brief.md).
 Dedicated goalkeeper high claims, left-foot strike variants, richer aerial
 contests, action/foot-plant polish and M1 play-feel/performance remain open.
+
+### Match ball
+
+Options → Match Setup selects the adidas UCL 2026/27 League size-5 ball (default) or the original worn Sunday-league ball, beside Venue. The saved choice applies to Play/Watch, both venues and rematches. The appearance changes; the regulation collider/mass and ball physics are shared.
