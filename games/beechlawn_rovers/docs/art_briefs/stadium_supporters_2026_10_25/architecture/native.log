@@ -1,0 +1,41 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Vulkan 1.4.305 - Forward+ - Using Device #0: Unknown - llvmpipe (LLVM 19.1.7, 256 bits)
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=rovers_arena ball=ucl_26_27_league
+PRODUCTION_REVIEW_BEGIN stadium_waterfront
+PRODUCTION_REVIEW_ENTERED stadium_waterfront
+PRODUCTION_REVIEW_CAMERA stadium_waterfront
+PRODUCTION_REVIEW_CROWD stadium_waterfront
+PRODUCTION_REVIEW_DRAW stadium_waterfront 0
+PRODUCTION_REVIEW_DRAW stadium_waterfront 1
+PRODUCTION_REVIEW_DRAW stadium_waterfront 2
+STADIUM_PRODUCTION_SAVED stadium_waterfront
+PRODUCTION_REVIEW_BEGIN stadium_facade
+PRODUCTION_REVIEW_ENTERED stadium_facade
+PRODUCTION_REVIEW_CAMERA stadium_facade
+PRODUCTION_REVIEW_CROWD stadium_facade
+PRODUCTION_REVIEW_DRAW stadium_facade 0
+PRODUCTION_REVIEW_DRAW stadium_facade 1
+PRODUCTION_REVIEW_DRAW stadium_facade 2
+STADIUM_PRODUCTION_SAVED stadium_facade
+PRODUCTION_REVIEW_BEGIN stadium_bowl
+PRODUCTION_REVIEW_ENTERED stadium_bowl
+PRODUCTION_REVIEW_CAMERA stadium_bowl
+PRODUCTION_REVIEW_CROWD stadium_bowl
+PRODUCTION_REVIEW_DRAW stadium_bowl 0
+PRODUCTION_REVIEW_DRAW stadium_bowl 1
+PRODUCTION_REVIEW_DRAW stadium_bowl 2
+STADIUM_PRODUCTION_SAVED stadium_bowl
+PRODUCTION_REVIEW_BEGIN montage_goal
+PRODUCTION_REVIEW_ENTERED montage_goal
+PRODUCTION_REVIEW_CAMERA montage_goal
+PRODUCTION_REVIEW_CROWD montage_goal
+PRODUCTION_REVIEW_DRAW montage_goal 0
+PRODUCTION_REVIEW_DRAW montage_goal 1
+PRODUCTION_REVIEW_DRAW montage_goal 2
+STADIUM_PRODUCTION_SAVED montage_goal
+STADIUM_PRODUCTION_COMPLETE architecture
+WARNING: 7 RIDs of type "Texture" were leaked.
+   at: finalize (servers/rendering/rendering_device.cpp:7505)
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)

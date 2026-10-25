@@ -20,6 +20,8 @@ var weather_preset: StringName = &"sunny"
 var cinematic_depth_of_field := true
 var cinematic_motion_blur := true
 var temporal_aa := false
+var graphics_profile: StringName = &"balanced_60"
+var graphics: FootballGraphicsController
 var venue_id: StringName = &"kilmore_drive"
 var ball_id: StringName = FootballBallCatalog.DEFAULT
 var switch_mode: StringName = &"assisted"
@@ -38,11 +40,16 @@ func _ready() -> void:
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--venue="): venue_id = FootballMatchVenue.valid_id(StringName(arg.trim_prefix("--venue=")))
 		if arg.begins_with("--ball="): ball_id = FootballBallCatalog.valid_id(StringName(arg.trim_prefix("--ball=")))
+		if arg.begins_with("--graphics="): graphics_profile = FootballGraphicsProfile.valid_id(StringName(arg.trim_prefix("--graphics=")))
+	graphics=FootballGraphicsController.new()
+	graphics.name="GraphicsBudget"
+	add_child(graphics)
 	apply_preferences()
 
 func load_preferences(path: String = SETTINGS_PATH) -> void:
 	# Re-reading absent/legacy settings also restores the migration default.
 	ball_id = FootballBallCatalog.DEFAULT
+	graphics_profile = &"balanced_60"
 	var config := ConfigFile.new()
 	if config.load(path) != OK:
 		return
@@ -62,6 +69,7 @@ func load_preferences(path: String = SETTINGS_PATH) -> void:
 	cinematic_depth_of_field = bool(config.get_value("graphics", "cinematic_depth_of_field", true))
 	cinematic_motion_blur = bool(config.get_value("graphics", "cinematic_motion_blur", true))
 	temporal_aa = bool(config.get_value("graphics", "temporal_aa", false))
+	graphics_profile = FootballGraphicsProfile.valid_id(StringName(str(config.get_value("graphics","profile","balanced_60"))))
 
 func save_preferences(path: String = SETTINGS_PATH) -> Error:
 	var config := ConfigFile.new()
@@ -79,11 +87,11 @@ func save_preferences(path: String = SETTINGS_PATH) -> Error:
 	config.set_value("presentation", "weather", str(weather_preset))
 	for field in ["cinematic_depth_of_field", "cinematic_motion_blur", "temporal_aa"]:
 		config.set_value("graphics", field, get(field))
+	config.set_value("graphics","profile",str(graphics_profile))
 	return config.save(path)
 
 func apply_preferences() -> void:
-	get_viewport().use_taa = temporal_aa and RenderingServer.get_current_rendering_method() == "forward_plus"
-	get_viewport().msaa_3d = Viewport.MSAA_2X if get_viewport().use_taa else Viewport.MSAA_4X
+	if is_instance_valid(graphics): graphics.configure()
 	AudioServer.set_bus_volume_linear(0, master_volume)
 	for bus in ["Music","Match","UI"]:
 		AudioServer.set_bus_volume_linear(AudioServer.get_bus_index(bus),float(get(bus.to_lower()+"_volume")))

@@ -1,0 +1,10 @@
+{
+  "source": "Shipped cool_rock.ogg decoded by ffmpeg loudnorm",
+  "integrated_lufs": -18.99,
+  "true_peak_dbfs": -1.88,
+  "lra_lu": 2.3,
+  "length_seconds": 209.4,
+  "sample_rate": 44100,
+  "channels": 2,
+  "scope": "Decoded encoded asset; native AudioServer mix measured separately"
+}

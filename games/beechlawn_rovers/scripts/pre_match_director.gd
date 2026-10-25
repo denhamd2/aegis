@@ -35,9 +35,15 @@ var _lower_third: Panel
 var _referee_lower_third: Control
 var _referee_name: Label
 var _referee_role: Label
+var _tifo:FootballStadiumTifo
+var _original_haze:Dictionary={}
 
 func start(game: Node3D) -> void:
 	match_scene = game
+	_tifo=game.find_child("HomeEndTifo",true,false) as FootballStadiumTifo
+	var environment:Environment=game.get_node("WorldEnvironment").environment
+	for property in ["fog_enabled","fog_mode","fog_density","fog_aerial_perspective","fog_sky_affect","fog_light_energy","fog_depth_begin","fog_depth_end","fog_depth_curve"]:
+		_original_haze[property]=environment.get(property)
 	_actors.assign(game._home_players + game._away_players)
 	_hud_visible = game.get_node("HUD").visible
 	game.get_node("HUD").hide()
@@ -136,6 +142,45 @@ func _build_shots() -> void:
 	_add_shot("handoff", "BEECHLAWN ROVERS  vs  BOARDEAUX", "Three minutes. All to play for.", 2.0,
 		Vector3(0, 5, 16), Vector3(0, 12, 26), Vector3.ZERO, Vector3.ZERO, 50)
 
+	if match_scene.venue.kind=="stadium":_adapt_stadium_shots()
+
+func _adapt_stadium_shots() -> void:
+	# Venue resources supply architectural landmarks for this and future grounds.
+	var opening:Array[Dictionary]=[]
+	if match_scene.venue.presentation!=null:opening=match_scene.venue.presentation.resolved_shots()
+	if opening.is_empty():
+		opening.append({"id":"stadium_bowl","duration":15.0,"from":match_scene.venue.camera_anchor(&"wide"),"to":match_scene.venue.camera_anchor(&"wide_end"),"look_from":Vector3(0,1,0),"look_to":Vector3(0,1,0),"fov":53.0})
+	for shot:Dictionary in opening:
+		shot["title"]=match_scene.venue.display_name.to_upper();shot["subtitle"]=""
+	var reordered:Array[Dictionary]=opening
+	for id in ["montage_goal","montage_ball","montage_puddles","montage_john","montage_des"]:
+		for shot:Dictionary in shots:
+			if shot.id!=id:continue
+			if id=="montage_goal":
+				shot["from"]=Vector3(58.2,.62,9.0);shot["to"]=Vector3(57.8,.68,8.7)
+				shot["look_from"]=Vector3(53.7,1.35,0);shot["look_to"]=Vector3(53.7,1.35,0);shot["fov"]=48
+			if id in ["montage_ball","montage_puddles"]:shot["duration"]=2.5
+			reordered.append(shot)
+	for shot:Dictionary in shots:
+		if shot.id in ["venue","montage_goal","montage_net","montage_ball","montage_puddles","montage_john","montage_des"]:continue
+		if shot.id=="fans":
+			shot["id"]="stadium_roof";shot["from"]=match_scene.venue.camera_anchor(&"roof");shot["to"]=shot["from"]+Vector3(1,0,0)
+			shot["look_from"]=match_scene.venue.camera_anchor(&"truss");shot["look_to"]=shot["look_from"];shot["fov"]=43
+		reordered.append(shot)
+	shots=reordered
+
+func _exterior_atmosphere(enabled:bool) -> void:
+	var environment:Environment=match_scene.get_node("WorldEnvironment").environment
+	var profile:FootballVenuePresentation=match_scene.venue.presentation
+	if enabled and profile!=null and profile.exterior_haze_begin>0:
+		# Built-in far-only aerial perspective; no volumetric pass or pitch haze.
+		environment.fog_enabled=true;environment.fog_mode=Environment.FOG_MODE_DEPTH
+		environment.fog_depth_begin=profile.exterior_haze_begin;environment.fog_depth_end=profile.exterior_haze_end
+		environment.fog_depth_curve=.8;environment.fog_density=1.0
+		environment.fog_aerial_perspective=1.0;environment.fog_sky_affect=0;environment.fog_light_energy=1.0
+	else:
+		for property in _original_haze:environment.set(property,_original_haze[property])
+
 func _add_shot(id: String, title: String, subtitle: String, duration: float,
 		from: Vector3, to: Vector3, look_from: Vector3, look_to: Vector3, fov: float) -> void:
 	shots.append({"id": id, "title": title, "subtitle": subtitle, "duration": duration,
@@ -162,14 +207,16 @@ func _enter_shot(index: int) -> void:
 	var shot := shots[index]
 	_lineup_graphic.hide()
 	match_scene.ball.visible = shot["id"] != "referee"
-	_lower_third.visible = shot["id"] in ["venue", "lineup"]
+	_lower_third.visible = shot["id"] in ["venue", "lineup", "stadium_waterfront"]
 	_referee_lower_third.visible = shot["id"] == "referee"
-	title_label.text = match_scene.venue.display_name.to_upper() if shot["id"] == "venue" else "BEECHLAWN ROVERS"
+	title_label.text = match_scene.venue.display_name.to_upper() if shot["id"] in ["venue","stadium_waterfront"] else "BEECHLAWN ROVERS"
 	subtitle_label.hide()
 	camera.projection = Camera3D.PROJECTION_PERSPECTIVE
 	camera.fov = float(shot["fov"])
+	camera.far=30000 if String(shot["id"]) in ["stadium_waterfront","stadium_facade"] else 350
+	_exterior_atmosphere(String(shot["id"]) in ["stadium_waterfront","stadium_facade"])
 	match str(shot["id"]):
-		"montage_goal", "montage_net", "montage_ball", "montage_john", "montage_des", "montage_puddles":
+		"montage_goal", "montage_net", "montage_ball", "montage_john", "montage_des", "montage_puddles", "stadium_waterfront", "stadium_facade", "stadium_bowl", "stadium_crowd", "stadium_roof", "stadium_tifo_unfurl", "stadium_tifo_close", "stadium_tifo_angle":
 			for actor in _actors: actor.hide()
 			if _referee!=null: _referee.hide()
 			if shot["id"]=="montage_john":
@@ -228,6 +275,9 @@ func _enter_shot(index: int) -> void:
 	if match_scene.grass_detail != null:
 		match_scene.grass_detail.prewarm(shot["from"])
 		if index + 1 < shots.size(): match_scene.grass_detail.prepare(shots[index + 1]["from"])
+	if _tifo!=null:
+		if shot["id"]=="stadium_tifo_unfurl":_tifo.show();_tifo.set_reveal(0)
+		elif shot["id"] in ["stadium_tifo_close","stadium_tifo_angle"]:_tifo.show();_tifo.set_reveal(1)
 	_update_shot(0.0)
 	if OS.has_feature("web"):
 		JavaScriptBridge.eval("window.BEECHLAWN_INTRO_SHOT_ID = '%s'" % str(shot["id"]))
@@ -245,6 +295,8 @@ func _process(delta: float) -> void:
 
 func _update_shot(time: float) -> void:
 	var shot := shots[shot_index]
+	if _tifo!=null and shot.id=="stadium_tifo_unfurl":
+		_tifo.set_reveal(smoothstep(.5,float(shot.duration)-.5,time))
 	if _lower_third.visible:
 		var caption_time := time
 		var caption_duration := float(shot["duration"])
@@ -302,6 +354,8 @@ func _restore_kickoff() -> void:
 		_referee.reset_physics_interpolation()
 
 func finish() -> void:
+	_exterior_atmosphere(false)
+	if _tifo!=null:_tifo.hide();_tifo.set_reveal(0)
 	if not active:
 		return
 	active = false
@@ -360,7 +414,7 @@ func _build_overlay() -> void:
 	top.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	screen.add_child(top)
 	var station := Label.new()
-	station.text = "LIVE   /   SUNDAY LEAGUE                                       "+match_scene.venue.display_name.to_upper()+" · DUBLIN"
+	station.text = "LIVE   /   SUNDAY LEAGUE                                       "+match_scene.venue.display_name.to_upper()+" · "+match_scene.venue.location.to_upper()
 	station.position = Vector2(73, 11)
 	station.add_theme_font_override("font", BOLD)
 	station.add_theme_font_size_override("font_size", 17)

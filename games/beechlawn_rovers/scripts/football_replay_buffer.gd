@@ -18,6 +18,7 @@ var stride := 21
 var clock := 0.0
 var accumulator := 0.0
 var incidents: Array[Dictionary] = []
+var crowd:FootballSupporterCrowd
 
 func mark_incident(event: FootballMatchEvent) -> void:
 	incidents.append({"time":clock, "actor_index":actors.find(event.actor),
@@ -25,6 +26,7 @@ func mark_incident(event: FootballMatchEvent) -> void:
 	while incidents.size() > 16: incidents.pop_front()
 func setup(match_scene: Node3D) -> void:
 	game=match_scene
+	crowd=game.find_child("AnimatedSupporters",true,false) as FootballSupporterCrowd
 	for actor in game._home_players+game._away_players: actors.append(actor)
 	var official := game.get_node_or_null("Referee") as Node3D
 	if official != null:
@@ -72,7 +74,7 @@ func sample(delta: float, recording: bool) -> void:
 		for shape in morph_counts[index]:
 			data[offset] = heads[index].get_blend_shape_value(shape); offset += 1
 	assert(offset==stride)
-	history.append({"time":clock,"pose":data})
+	history.append({"time":clock,"pose":data,"crowd":crowd.snapshot() if crowd!=null else PackedFloat32Array()})
 	if history.size()>HISTORY_FRAMES: history.pop_front()
 static func vector_parameter(material: ShaderMaterial,name: StringName) -> Vector3:
 	var value = material.get_shader_parameter(name)
@@ -97,7 +99,7 @@ func bookmark(kind: StringName) -> Dictionary:
 func data_bytes() -> int:
 	var count := history.size()
 	for entry in bookmarks: count+=entry.frames.size()
-	return count*stride*4
+	return count*(stride*4+FootballSupporterCrowd.SNAPSHOT_FLOATS*4)
 func clear_history() -> void:
 	history.clear();incidents.clear();accumulator=0
 static func position(data: PackedFloat32Array, offset: int) -> Vector3:
@@ -117,16 +119,14 @@ func apply_frame(entry: Dictionary, seconds: float, ghosts: Array[Node3D], ghost
 	index=low
 	var next := mini(index+1,frames.size()-1)
 	var factor := clampf((at-float(frames[index].time))/maxf(.001,float(frames[next].time)-float(frames[index].time)),0,1)
+	if crowd!=null:crowd.apply_snapshot(frames[index].get("crowd",PackedFloat32Array()))
 	var a: PackedFloat32Array=frames[index].pose
 	var b: PackedFloat32Array=frames[next].pose
 	ghost_ball.transform=Transform3D(Basis(rotation(a,0).slerp(rotation(b,0),factor)),position(a,0).lerp(position(b,0),factor))
 	var offset := 7
 	for side in [-1,1]:
 		if game._net_impacts.has(side):
-			var material: ShaderMaterial=game._net_impacts[side].material
-			material.set_shader_parameter("impact_age",lerpf(a[offset],b[offset],factor))
-			material.set_shader_parameter("impact_point",position(a,offset+1))
-			material.set_shader_parameter("impact_vector",position(a,offset+4))
+			game.set_net_presentation(side,lerpf(a[offset],b[offset],factor),position(a,offset+1),position(a,offset+4))
 		offset+=7
 	for actor_index in ghosts.size():
 		ghosts[actor_index].visible=a[offset]>.5;offset+=1

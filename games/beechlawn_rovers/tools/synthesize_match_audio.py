@@ -1,8 +1,14 @@
 #!/usr/bin/env python3
-"""Original deterministic football Foley, ambience and menu music (no samples)."""
+"""Historical original synthesized audio source, retained for reproducibility.
+
+Writes to a scratch output directory; never replaces the shipped licensed music
+or provenance. See assets/audio/README.md for the current asset catalogue.
+"""
 from pathlib import Path
-import math,random,struct,wave,json
-OUT=Path(__file__).resolve().parents[1]/'assets/audio';OUT.mkdir(exist_ok=True)
+import math,random,struct,wave,json,argparse
+parser=argparse.ArgumentParser(description=__doc__)
+parser.add_argument('output',type=Path)
+OUT=parser.parse_args().output;OUT.mkdir(parents=True,exist_ok=True)
 RATE=22050;rng=random.Random(2704)
 def save(name,samples):
  peak=max(abs(v) for v in samples) or 1

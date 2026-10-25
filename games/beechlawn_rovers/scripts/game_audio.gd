@@ -1,5 +1,5 @@
 extends Node
-## Original audio only. Music is confined to menus and the pre-match intro.
+## Licensed recorded music and original Foley. Music stays in menus/intro.
 const VOICE_LIMIT := 12
 var music: AudioStreamPlayer
 var crowd: AudioStreamPlayer
@@ -21,13 +21,14 @@ func _ready() -> void:
 	limiter.ceiling_db = -1
 	limiter.threshold_db = -3
 	AudioServer.add_bus_effect(0,limiter)
-	for name in ["pass","kick","header","post","net","step","whistle","ui","crowd","cheer","rain","menu_music"]:
+	for name in ["pass","kick","header","post","net","step","whistle","ui","crowd","cheer","rain"]:
 		streams[name] = load("res://assets/audio/"+name+".wav")
+	streams["menu_music"] = preload("res://assets/audio/cool_rock.ogg")
 	for index in 4:
 		var voice := AudioStreamPlayer.new()
 		voice.bus = &"UI"; voice.stream = streams.ui; voice.volume_db = -7
 		add_child(voice); ui_voices.append(voice)
-	music = _loop("menu_music","Music",-7)
+	music = _loop("menu_music","Music",-8)
 	crowd = _loop("crowd","Match",-15)
 	rain = _loop("rain","Match",-9)
 	for index in VOICE_LIMIT:
@@ -36,9 +37,13 @@ func _ready() -> void:
 		add_child(voice); voices.append(voice)
 func _loop(name: String, bus: String, volume: float) -> AudioStreamPlayer:
 	var player := AudioStreamPlayer.new()
-	var stream := streams[name].duplicate() as AudioStreamWAV
-	stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
-	stream.loop_begin = 0; stream.loop_end = roundi(stream.get_length()*stream.mix_rate)
+	var stream := streams[name].duplicate() as AudioStream
+	if stream is AudioStreamWAV:
+		stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
+		stream.loop_begin = 0
+		stream.loop_end = roundi(stream.get_length()*stream.mix_rate)
+	elif stream is AudioStreamOggVorbis:
+		stream.loop = true
 	player.stream = stream; player.bus = StringName(bus); player.volume_db = volume
 	add_child(player)
 	return player

@@ -1,0 +1,49 @@
+{
+  "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+  "diagnostic_no_crowd": false,
+  "renderer": "forward_plus",
+  "resolution": "(960, 540)",
+  "scope": "Actual Forward+ assets; Linux software adapter; Mac graphics/timing acceptance pending",
+  "views": [
+    {
+      "active_hero_fans": 0,
+      "attendance": 44685,
+      "camera": "(-8.001213, 10.00012, 11.99939)",
+      "draw_calls": 530,
+      "image": "stadium_tifo_unfurl_start.png",
+      "primitives": 1417342
+    },
+    {
+      "active_hero_fans": 0,
+      "attendance": 44685,
+      "camera": "(-8.957154, 10.09572, 11.52142)",
+      "draw_calls": 515,
+      "image": "stadium_tifo_unfurl_half.png",
+      "primitives": 1386975
+    },
+    {
+      "active_hero_fans": 0,
+      "attendance": 44685,
+      "camera": "(-9.995195, 10.19952, 11.0024)",
+      "draw_calls": 514,
+      "image": "stadium_tifo_unfurl.png",
+      "primitives": 1395851
+    },
+    {
+      "active_hero_fans": 0,
+      "attendance": 44685,
+      "camera": "(-24.3, 18.0, 0.0)",
+      "draw_calls": 387,
+      "image": "stadium_tifo_close.png",
+      "primitives": 1352114
+    },
+    {
+      "active_hero_fans": 0,
+      "attendance": 44685,
+      "camera": "(-31.5, 9.0, -23.5)",
+      "draw_calls": 580,
+      "image": "stadium_tifo_angle.png",
+      "primitives": 1461309
+    }
+  ]
+}

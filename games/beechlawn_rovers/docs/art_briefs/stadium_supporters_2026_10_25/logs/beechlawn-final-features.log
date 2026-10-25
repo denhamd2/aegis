@@ -1,0 +1,29 @@
+
+[smoke] graphics_budget_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+GRAPHICS_BUDGET PASS: Retina cap, adaptive floor/hysteresis, unavailable timers, migration and persistence
+[passed] graphics_budget_smoke.gd (1.0s)
+
+[smoke] frame_profiler_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+FRAME_PROFILER PASS: monotonic pacing despite time scale, inspectable telemetry and no false hardware pass
+[passed] frame_profiler_smoke.gd (1.0s)
+
+[smoke] supporter_crowd_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=rovers_arena ball=ucl_26_27_league
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+SUPPORTER_CROWD PASS: signed VAT, 12 human variants, budgets, attendance, flags, event/replay isolation and eight park fans
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] supporter_crowd_smoke.gd (17.8s)
+
+[smoke] stadium_presentation_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=rovers_arena ball=ucl_26_27_league
+STADIUM_PRESENTATION PASS: 93s resource-driven opening, limited captions, skip isolation, dual net LODs, profile isolation
+[passed] stadium_presentation_smoke.gd (9.7s)

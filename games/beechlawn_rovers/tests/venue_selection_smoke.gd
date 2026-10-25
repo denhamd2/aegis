@@ -35,6 +35,7 @@ func _run() -> void:
    assert(is_equal_approx(game.surface_height(point.x,point.y),game.ball.surface_height(point.x,point.y)))
   if id == &"rovers_arena":
    assert(game.surface_height(17,11) == 0)
+   assert(game.get_node("Pitch/StadiumRunoffTurf").material_override==turf,"Goals need continuous turf behind the goal line")
    var arena: Node3D = game.get_node("ParkEdge/RoversArena")
    assert(arena.get_meta("seat_count") > 45000)
    assert(arena.find_children("CornerFlag*","MeshInstance3D",true,false).size() == 4)

@@ -1,0 +1,72 @@
+{
+  "date": "2026-10-25",
+  "version": "0.5.0",
+  "logic_validation": {
+    "passed_smoke_scripts": [
+      "advanced_shots_smoke.gd",
+      "aerial_controls_smoke.gd",
+      "ball_selection_smoke.gd",
+      "braking_gait_smoke.gd",
+      "broadcast_camera_smoke.gd",
+      "broadcast_direction_smoke.gd",
+      "contextual_receive_smoke.gd",
+      "cross_to_header_smoke.gd",
+      "first_time_pass_timing_smoke.gd",
+      "first_time_shot_smoke.gd",
+      "four_v_four_setup_smoke.gd",
+      "frame_profiler_smoke.gd",
+      "goal_net_contact_smoke.gd",
+      "goalkeeper_smoke.gd",
+      "graphics_budget_smoke.gd",
+      "handshake_contact_smoke.gd",
+      "hud_layout_smoke.gd",
+      "keeper_diving_high_smoke.gd",
+      "moving_receive_smoke.gd",
+      "pitch_audio_smoke.gd",
+      "player_selection_smoke.gd",
+      "pre_match_intro_smoke.gd",
+      "realism_systems_smoke.gd",
+      "receive_edge_cases_smoke.gd",
+      "recorded_face_replay_smoke.gd",
+      "replay_results_smoke.gd",
+      "shared_gait_integrity_smoke.gd",
+      "shared_pose_safety_smoke.gd",
+      "stadium_presentation_smoke.gd",
+      "stadium_seating_smoke.gd",
+      "stride_plant_smoke.gd",
+      "supporter_crowd_smoke.gd",
+      "title_screen_smoke.gd",
+      "unready_scene_cleanup_smoke.gd",
+      "venue_selection_smoke.gd",
+      "volley_contact_smoke.gd",
+      "wet_weather_smoke.gd"
+    ],
+    "unique_count": 37,
+    "full_matches_per_venue": 6,
+    "kilmore_chance_gate": "PASS",
+    "arena_chance_gate": "PASS",
+    "full_presentation_soak": "PASS",
+    "benchmark_boot": "PASS; unavailable GPU timing does not pass target hardware"
+  },
+  "native_evidence": {
+    "renderer": "Forward+",
+    "adapter": "llvmpipe (software Vulkan)",
+    "folders": [
+      "crowd",
+      "tifo",
+      "architecture",
+      "exterior_final",
+      "match_arena",
+      "blender"
+    ],
+    "scope": "Actual player/crowd/stadium rendering and Blender source views; not Mac performance"
+  },
+  "protected_original_player_assets": 190,
+  "asset_hashes_unchanged": true,
+  "limitations": [
+    "Sustained native M1 Pro 16 GB 1080p60 and actual resident memory still unmeasured",
+    "Final architecture and face likeness approval remains open",
+    "Godot teardown occasionally reports known resource/ObjectDB warnings; no leak-free claim",
+    "Recorded match SFX/chant shortlist researched but not installed; Cool Rock is installed with attribution"
+  ]
+}

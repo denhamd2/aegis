@@ -10,6 +10,47 @@ items, use the archived references and skill workflow in
 [`art_reference_implementation_plan.md`](art_reference_implementation_plan.md)
 and [`../references/README.md`](../references/README.md) before implementation.
 
+## Animated supporters, dockside and steady 60 target — 25 October 2026
+
+BR-021 (21/27, in progress): preserve player bodies, likenesses, kits and existing
+contact/gait work; reuse the wrestling Rocketbox import principles read-only for
+football-owned crowd production. Twelve textured 80-bone adults have nine authored
+clips, fitted seated/rise/sit footwork, three animated 3D body LODs and a bounded
+16/32-rig near pool. Kilmore has eight animated standing casual spectators.
+
+BR-023 (23/27, in progress): retain 49,554 aligned chairs and add 44,685 supporters
+(95% home, 90% side/corner, 85% away), 64 hand-following flags, score-aware reactions
+and replay-state restoration. Original dockside public realm includes quay walls,
+water/channel/crossings, steps, railings, bollards, heritage tower/engine house,
+retained rails, eastern plaza, Regent Road and simpler industrial context. The
+stadium has a dedicated 7.32 × 2.44 m goal, square box net, separate rear poles and
+tension wires; near rope/far grid share live and recorded impact deformation.
+Kilmore retains its original weathered goal and environmental profile.
+
+Venue resources own builders, camera landmarks, goals and optional tifo. Stadium
+cold open covers exterior/wide/crowd/detail views before the existing walkout and
+team/referee presentation. Owner's later tifo addition extends the stadium intro
+from 79 to 93 seconds: painted silhouette portrait, white contrast outline,
+transparent surround and exact quoted wording, with 7/3.5/3.5-second unfurl/close/
+oblique coverage. It clears on skip/finish. Kilmore retains its 70.8-second intro.
+No extra generic lower thirds. Exact architecture and owner visual acceptance
+remain open; photographic dimensions are estimates.
+
+BR-024 (24/27, in progress): typed match events drive crowd attention and scoring
+reactions without changing rules or outcomes. Existing match audio remains; a
+native M1 Pro listening/input playtest is still required.
+
+BR-025 (25/27, in progress): Balanced 60 defaults to native Metal, MSAA 2×, a
+physical-pixel 1080p 3D ceiling and 80–100% adaptive resolution, leaving the HUD
+sharp. Custom retains full resolution/optional TAA and cinematic blur. Existing
+physics interpolation and fixed 60 Hz authority remain. A native 15-minute
+benchmark records CPU/GPU/frame timing and actual resident memory. Missing GPU
+telemetry and Linux software rendering cannot pass hardware acceptance.
+
+Production/source/probe evidence: [brief](art_briefs/stadium_supporters_2026_10_25/brief.md).
+Next acceptance: BR-025 (25/27), measure the packaged combined workload on the
+M1 Pro 16 GB at 1080p; retain 60 fps as a target until that run passes.
+
 ## Contextual first touch and receiving motion — 25 October 2026
 
 BR-002 (2/27) and BR-021 (21/27), both in progress: reception is scheduled before generic dribble assistance, with a serial-bound selected-boot contact and carrier-relative cushioning. Move directs the outlet; Ctrl keeps it close and Shift pushes into space. Four original 60 Hz shared actions cover standing/moving left/right contacts. A selected animation layer preserves the support gait and avoids dormant 22-player branch overhead. First-time combinations, misses, ownership loss and reentrant whistle cleanup remain physical and bounded. Sources, native before/after motion and checks: [production evidence](art_briefs/contextual_control_2026_10_25/brief.md).
@@ -1204,6 +1245,12 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
     A 4v4 scene smoke test checks module loading, inward-facing facades, licensed
     surface maps, site dressing and kit variants.
 - [ ] **BR-024 — Audio and match feedback**
+  - 2026-10-25 (24/27, in progress): owner-selected **Cool Rock** by Kevin
+    MacLeod replaces the synthesized menu/intro loop, with CC BY 4.0 credits
+    accessible in Options and shipped source/license notices. Recorded kicks,
+    referee, net, stadium crowd/chant and goal reaction sources researched;
+    match effects remain synthesized pending listening/edit/mix approval.
+    See `art_briefs/audio_replacement_2026_10_25/research.md`.
   - 2026-10-23: original CC0 menu/intro music and eleven Foley/ambience/UI clips, typed match events, bounded voices and saved Music/Match/UI buses. Native Movie Maker verifies nonzero unclipped output and bus mute. Blue HUD/intro cleanup and title build identity shipped; native M1 mix/feel approval remains open.
   - 2026-10-18 pre-match slice: approximately 40-second original TV-style intro
     with walk-on, lineup, roster-labelled player/keeper portraits, venue,

@@ -1,0 +1,48 @@
+{
+  "result": "PASS",
+  "captures": [
+    {
+      "image": "match_broadcast.png",
+      "report": "match_broadcast.json",
+      "sha256": "5b696c689af457c757dcfd66aa131333a06b2783e5d634d3924200bd5a51416b",
+      "process_cleanup": "normal",
+      "capture_seconds": 175.67,
+      "command": [
+        "/usr/local/bin/godot",
+        "--path",
+        "/workspace/aegis-checkout/games/beechlawn_rovers",
+        "--rendering-method",
+        "forward_plus",
+        "--resolution",
+        "960x540",
+        "--fixed-fps",
+        "60",
+        "--disable-vsync",
+        "--audio-driver",
+        "Dummy",
+        "--display-driver",
+        "x11",
+        "--rendering-driver",
+        "vulkan",
+        "--script",
+        "res://scripts/review_native_match.gd",
+        "--",
+        "--capture-dir=/workspace/aegis-checkout/games/beechlawn_rovers/docs/art_briefs/stadium_supporters_2026_10_25/match_arena",
+        "--player=match",
+        "--view=broadcast",
+        "--lighting=match",
+        "--sky=match",
+        "--clean=1",
+        "--setup-preview=0",
+        "--venue=rovers_arena",
+        "--venue-view=broadcast",
+        "--ablation=none",
+        "--weather=sunny",
+        "--ball=ucl_26_27_league",
+        "--expression=neutral"
+      ]
+    }
+  ],
+  "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+  "scope": "Forward+ appearance stills; software Vulkan does not measure Mac performance."
+}

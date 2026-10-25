@@ -52,6 +52,17 @@ with zipfile.ZipFile(root / 'mac/Beechlawn-Rovers-Mac.zip') as archive:
                 assert startup.returncode == 0 and 'ERROR:' not in output, output
                 assert 'BEECHLAWN_MATCH_READY actors=22 officials=1 venue='+venue+' ball='+ball in output, output
                 print('Packaged match startup PASS:', venue, ball, '(22 players + referee)')
+        # Validate the new resources through the actual pack, including JSON,
+        # signed EXRs, the supporter MIT license and transparent tifo texture.
+        for name in ['graphics_budget_smoke.gd','frame_profiler_smoke.gd',
+                     'supporter_crowd_smoke.gd','stadium_presentation_smoke.gd','pitch_audio_smoke.gd']:
+            source_probe=Path(__file__).resolve().parents[1]/'tests'/name
+            result=subprocess.run(['godot','--headless','--main-pack',str(path),
+                '--script',str(source_probe)],capture_output=True,text=True,timeout=60)
+            text=result.stdout+result.stderr
+            clean='\n'.join(line for line in text.splitlines() if not re.match(r'^ERROR: \d+ resources? still in use at exit',line))
+            assert result.returncode==0 and 'ERROR:' not in clean,text
+            print('Packaged stadium/graphics probe PASS:',name)
         # The probe stays outside the shipped game. Its res:// scene/classes
         # resolve through the actual exported PCK, including receive JSON/GLB.
         probe = Path(__file__).resolve().parents[1]/'tests/moving_receive_smoke.gd'

@@ -9,7 +9,7 @@ static func layout() -> Dictionary:
  if _layout.is_empty(): _layout = JSON.parse_string(FileAccess.get_file_as_string(ROOT+"seating_layout.json"))
  return _layout
 
-static func build(parent: Node3D) -> void:
+static func build(parent: Node3D,presentation:FootballVenuePresentation=null) -> void:
  var root := Node3D.new()
  root.name = "RoversArena"
  parent.add_child(root)
@@ -17,6 +17,7 @@ static func build(parent: Node3D) -> void:
  shell.name = "StadiumShell"
  root.add_child(shell)
  for node in shell.find_children("*","MeshInstance3D",true,false):
+  if node.name.begins_with("ExteriorPlaza") or node.name.begins_with("Apron_"):node.hide()
   # Exterior masonry has outward faces: cull it from pitch-level cameras.
   if node.name.begins_with("Exterior"):
    for surface in node.mesh.get_surface_count():
@@ -40,12 +41,6 @@ static func build(parent: Node3D) -> void:
  var blue := seat_mesh.surface_get_material(0).duplicate() as StandardMaterial3D
  blue.cull_mode = BaseMaterial3D.CULL_DISABLED
  far_seat.surface_set_material(0,blue)
- var fan_mesh := QuadMesh.new()
- fan_mesh.size = Vector2(.5,.89)
- fan_mesh.center_offset = Vector3(0,.78,0)
- var crowd := ShaderMaterial.new()
- crowd.shader = preload("res://shaders/arena_crowd.gdshader")
- fan_mesh.material = crowd
  var groups: Array[Array] = []
  var sections: Array = layout().sections
  for index in sections.size(): groups.append([])
@@ -54,11 +49,13 @@ static func build(parent: Node3D) -> void:
   var entries: Array = groups[section]
   _instances(root,"SeatsNear%02d"%section,seat_mesh,entries,false,0,35,sections[section])
   _instances(root,"SeatsFar%02d"%section,far_seat,entries,false,35,290,sections[section])
-  _instances(root,"Crowd%02d"%section,fan_mesh,entries,true,0,260,sections[section])
+
  root.set_meta("seat_count",_positions.size())
- root.set_meta("crowd_style","section-instanced seated crowd cards; no crowd skeletons")
- # Hero touchline spectators keep existing readable close-up characters.
- KilmoreDriveVenue._add_spectators(root,68.0)
+ var supporters:=FootballSupporterCrowd.new();root.add_child(supporters);supporters.build(_positions,sections)
+ root.set_meta("crowd_style",supporters.get_meta("crowd_style"))
+ FootballStadiumDockside.build(root)
+ if presentation!=null and presentation.tifo!=null:
+  var tifo:=FootballStadiumTifo.new();root.add_child(tifo);tifo.setup(presentation.tifo)
  for x in [-52.5,52.5]:
   for z in [-34.0,34.0]: _flag(root,Vector3(x,0,z))
 

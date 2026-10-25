@@ -1,0 +1,27 @@
+{
+  "mouth": [
+    7.32,
+    2.44
+  ],
+  "frame_radius": 0.06,
+  "depth": 2.15,
+  "net_height": 2.46,
+  "rear_poles": [
+    [
+      -4.12,
+      3.05,
+      -2.68
+    ],
+    [
+      4.12,
+      3.05,
+      -2.68
+    ]
+  ],
+  "net_cell_metres": 0.1,
+  "reference": "goal-reference-70150.jpg",
+  "inferred": [
+    "rear depth and unseen fittings"
+  ],
+  "axes": "X across, Y up, negative Z behind"
+}

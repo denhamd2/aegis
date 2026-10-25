@@ -20,7 +20,7 @@ static func for_camera(target: Camera3D) -> FootballCameraOptics:
 	target.add_child(optics)
 	optics._original_attributes = target.attributes
 	optics._original_compositor = target.compositor
-	if FootballMotionBlur.supported(RenderingServer.get_current_rendering_method()) and RenderingServer.get_rendering_device() != null:
+	if target.get_node("/root/MatchSession").graphics_profile==&"custom" and FootballMotionBlur.supported(RenderingServer.get_current_rendering_method()) and RenderingServer.get_rendering_device() != null:
 		optics.blur = FootballMotionBlur.new()
 		optics._cinematic_compositor = Compositor.new()
 		if target.compositor != null:
@@ -46,7 +46,7 @@ func shot(id: StringName, target: Vector3, lens: float, delta: float) -> void:
 	else:
 		camera.attributes = _original_attributes
 	if _cinematic_compositor != null:
-		camera.compositor = _cinematic_compositor if bool(preferences.get("cinematic_motion_blur")) else _original_compositor
+		camera.compositor = _cinematic_compositor if bool(preferences.get("cinematic_motion_blur")) and preferences.graphics_profile==&"custom" else _original_compositor
 
 func clear() -> void:
 	_cinematic = false; _shot = &""
@@ -61,4 +61,4 @@ static func shutter_fraction(delta: float) -> float:
 func _process(delta: float) -> void:
 	if blur != null:
 		var preferences := camera.get_node("/root/MatchSession")
-		blur.intensity = shutter_fraction(delta) if _cinematic and camera.current and bool(preferences.get("cinematic_motion_blur")) and Engine.get_process_frames()-_cut_frame>1 else 0.0
+		blur.intensity = shutter_fraction(delta) if _cinematic and camera.current and bool(preferences.get("cinematic_motion_blur")) and preferences.graphics_profile==&"custom" and Engine.get_process_frames()-_cut_frame>1 else 0.0

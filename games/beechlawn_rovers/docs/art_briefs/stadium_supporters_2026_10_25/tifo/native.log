@@ -1,0 +1,47 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Vulkan 1.4.305 - Forward+ - Using Device #0: Unknown - llvmpipe (LLVM 19.1.7, 256 bits)
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=rovers_arena ball=ucl_26_27_league
+PRODUCTION_REVIEW_BEGIN stadium_tifo_unfurl_start
+PRODUCTION_REVIEW_ENTERED stadium_tifo_unfurl_start
+PRODUCTION_REVIEW_CAMERA stadium_tifo_unfurl_start
+PRODUCTION_REVIEW_CROWD stadium_tifo_unfurl_start
+PRODUCTION_REVIEW_DRAW stadium_tifo_unfurl_start 0
+PRODUCTION_REVIEW_DRAW stadium_tifo_unfurl_start 1
+PRODUCTION_REVIEW_DRAW stadium_tifo_unfurl_start 2
+STADIUM_PRODUCTION_SAVED stadium_tifo_unfurl_start
+PRODUCTION_REVIEW_BEGIN stadium_tifo_unfurl_half
+PRODUCTION_REVIEW_ENTERED stadium_tifo_unfurl_half
+PRODUCTION_REVIEW_CAMERA stadium_tifo_unfurl_half
+PRODUCTION_REVIEW_CROWD stadium_tifo_unfurl_half
+PRODUCTION_REVIEW_DRAW stadium_tifo_unfurl_half 0
+PRODUCTION_REVIEW_DRAW stadium_tifo_unfurl_half 1
+PRODUCTION_REVIEW_DRAW stadium_tifo_unfurl_half 2
+STADIUM_PRODUCTION_SAVED stadium_tifo_unfurl_half
+PRODUCTION_REVIEW_BEGIN stadium_tifo_unfurl
+PRODUCTION_REVIEW_ENTERED stadium_tifo_unfurl
+PRODUCTION_REVIEW_CAMERA stadium_tifo_unfurl
+PRODUCTION_REVIEW_CROWD stadium_tifo_unfurl
+PRODUCTION_REVIEW_DRAW stadium_tifo_unfurl 0
+PRODUCTION_REVIEW_DRAW stadium_tifo_unfurl 1
+PRODUCTION_REVIEW_DRAW stadium_tifo_unfurl 2
+STADIUM_PRODUCTION_SAVED stadium_tifo_unfurl
+PRODUCTION_REVIEW_BEGIN stadium_tifo_close
+PRODUCTION_REVIEW_ENTERED stadium_tifo_close
+PRODUCTION_REVIEW_CAMERA stadium_tifo_close
+PRODUCTION_REVIEW_CROWD stadium_tifo_close
+PRODUCTION_REVIEW_DRAW stadium_tifo_close 0
+PRODUCTION_REVIEW_DRAW stadium_tifo_close 1
+PRODUCTION_REVIEW_DRAW stadium_tifo_close 2
+STADIUM_PRODUCTION_SAVED stadium_tifo_close
+PRODUCTION_REVIEW_BEGIN stadium_tifo_angle
+PRODUCTION_REVIEW_ENTERED stadium_tifo_angle
+PRODUCTION_REVIEW_CAMERA stadium_tifo_angle
+PRODUCTION_REVIEW_CROWD stadium_tifo_angle
+PRODUCTION_REVIEW_DRAW stadium_tifo_angle 0
+PRODUCTION_REVIEW_DRAW stadium_tifo_angle 1
+PRODUCTION_REVIEW_DRAW stadium_tifo_angle 2
+STADIUM_PRODUCTION_SAVED stadium_tifo_angle
+STADIUM_PRODUCTION_COMPLETE tifo
+WARNING: 7 RIDs of type "Texture" were leaked.
+   at: finalize (servers/rendering/rendering_device.cpp:7505)

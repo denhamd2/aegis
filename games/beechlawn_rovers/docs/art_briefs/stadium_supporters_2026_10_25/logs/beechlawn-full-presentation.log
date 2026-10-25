@@ -1,0 +1,20 @@
+
+[smoke] full_presentation_match_soak.gd (timeout 180s)
+[replay] fixed render cadence 60 Hz; gameplay dt 1/60 s
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+[ready] startup=7.1s; simulation deadline 180s
+SOAK_PROGRESS ticks=1800 remaining=159.916666666651 phase=2 elapsed=3.88333333333332 host_ms=16542
+SOAK_PROGRESS ticks=3600 remaining=145.199999999972 phase=0 elapsed=9.00000000000003 host_ms=24985
+SOAK_PROGRESS ticks=5400 remaining=124.266666666626 phase=0 elapsed=7.01666666666665 host_ms=34195
+SOAK_PROGRESS ticks=7200 remaining=112.966666666626 phase=2 elapsed=1.68333333333333 host_ms=41522
+SOAK_PROGRESS ticks=9000 remaining=84.1833333332945 phase=0 elapsed=2.89999999999999 host_ms=52394
+SOAK_PROGRESS ticks=10800 remaining=69.199999999962 phase=0 elapsed=9.00000000000003 host_ms=61048
+SOAK_PROGRESS ticks=12600 remaining=45.5999999999633 phase=1 elapsed=4.36666666666666 host_ms=71276
+SOAK_PROGRESS ticks=14400 remaining=26.2499999999644 phase=0 elapsed=9.00000000000003 host_ms=80847
+SOAK_PROGRESS ticks=16200 remaining=5.68333333329794 phase=1 elapsed=0.46666666666667 host_ms=91035
+PRESENTATION_SOAK complete=true auto_skips=0 pose_data_bytes=29564736
+11v11 SOAK match_seconds=180.0 physics_ticks=17028 ball_travel_m=1575.4 shots=3/8 contested_shots=1/8 saves=2/2 shot_status={ "Shot cancelled: ball left the contact window": 1, "Shot fired": 6 } sampled_options={ &"Beechlawn Rovers": { &"none": 501, &"carry": 169, &"short_pass": 10, &"through_pass": 3, &"shoot": 2, &"cross": 1 }, &"Boardeaux": { &"none": 466, &"carry": 254, &"short_pass": 7, &"through_pass": 2, &"shoot": 4 } } sampled_shot_options=2/4 sampled_max_attack_x=53.9/54.0 closest_goal_xz_m=2.2/0.8 at_lateral=-2.1/-0.4 goals=1/4 longest_stationary_samples_s=1
+AI_MATCH_METRICS {"ball_travel_m":1575.44321693285,"goals":[1,4],"kickoff":"Beechlawn Rovers","longest_stationary_s":1,"statuses":{"Shot cancelled: ball left the contact window":1,"Shot fired":6},"teams":{"Beechlawn Rovers":{"action_decisions":{"cross":1,"shoot":2,"short_pass":12,"through_pass":3},"cancelled_contacts":0,"chest_controls":0,"completed_passes":11,"contested_shots":1,"controls":26,"cross_styles":{"early_cross":1},"crosses":1,"final_third_entries":3,"headers":0,"intercepted_passes":8,"lofted_passes":0,"passes":22,"sampled_decisions":{"carry":169,"cross":1,"none":501,"shoot":2,"short_pass":10,"through_pass":3},"saves":2,"shot_styles":{"finesse":1,"power":2},"shots":3},"Boardeaux":{"action_decisions":{"cross":3,"shoot":6,"short_pass":12,"through_pass":5},"cancelled_contacts":1,"chest_controls":0,"completed_passes":15,"contested_shots":8,"controls":29,"cross_styles":{"early_cross":3,"standard":1},"crosses":4,"final_third_entries":5,"headers":3,"intercepted_passes":4,"lofted_passes":0,"passes":20,"sampled_decisions":{"carry":254,"none":466,"shoot":4,"short_pass":7,"through_pass":2},"saves":2,"shot_styles":{"finesse":3,"header":3,"power":1,"standard":1},"shots":8}},"variation":1,"weather":"sunny"}
+[passed] full_presentation_match_soak.gd (96.3s)

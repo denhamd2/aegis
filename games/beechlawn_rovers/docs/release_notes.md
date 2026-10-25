@@ -1,3 +1,32 @@
+# Beechlawn Rovers 27 — v0.5.0
+
+Rovers Arena now has animated full-body supporters, seated play and standing
+reactions, hand-following flags, a dockside exterior and a dedicated stadium
+box goal with rear tension poles. Close fans use textured rigs; distant people
+use animated 3D meshes. Kilmore retains its eight casual touchline spectators.
+
+The stadium intro adds exterior, bowl, crowd and architectural coverage, then
+a giant illustrated home-end tifo unfurls. Its cutout portrait has a white
+outline, transparent surround and the owner's exact quotation. Wide, close and
+oblique cameras show it before the existing team walkout and referee reveal.
+The tifo clears before kickoff. Venue resources support future stadiums.
+
+Balanced 60 is the default graphics profile: native Metal on Mac, MSAA 2×,
+1080p 3D budget and adaptive 80–100% quality, with a sharp HUD. Custom retains
+optional temporal AA/cinematic blur. A 15-minute native benchmark records frame
+pacing, CPU/GPU work and process memory; sustained M1 Pro 16 GB 1080p60 is still
+an open hardware acceptance check. Cloud captures establish integration only.
+
+The title/options and intro now use the selected “Cool Rock” recording by
+Kevin MacLeod (CC BY 4.0), with an Audio Credits button in Options. Music stays
+out of live play. Match effects remain the existing originals; recorded football
+sounds and crowd/chant replacements are researched for the next audio pass.
+
+Player likenesses, shared player rigs, kits, gaits, authoritative ball/rules and
+both ball options are preserved. Universal Apple Silicon/Intel Mac package.
+
+---
+
 # Beechlawn Rovers 27 — v0.4.2
 
 Ground receptions now reach an authored left/right boot contact before automatic dribble assistance takes over. Move to direct the outlet, hold Ctrl to cushion close, or Shift to push into space with more possession risk. Cushioning follows the carrier's velocity, with incoming speed and existing ball-control ratings affecting retention.

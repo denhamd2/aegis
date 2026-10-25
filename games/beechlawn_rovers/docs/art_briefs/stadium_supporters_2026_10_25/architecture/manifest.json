@@ -1,0 +1,41 @@
+{
+  "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+  "diagnostic_no_crowd": false,
+  "renderer": "forward_plus",
+  "resolution": "(960, 540)",
+  "scope": "Actual Forward+ assets; Linux software adapter; Mac graphics/timing acceptance pending",
+  "views": [
+    {
+      "active_hero_fans": 0,
+      "attendance": 44685,
+      "camera": "(-205.5, 101.0, -266.0)",
+      "draw_calls": 515,
+      "image": "stadium_waterfront.png",
+      "primitives": 937052
+    },
+    {
+      "active_hero_fans": 0,
+      "attendance": 44685,
+      "camera": "(0.75, 7.0, -128.5)",
+      "draw_calls": 1137,
+      "image": "stadium_facade.png",
+      "primitives": 2339867
+    },
+    {
+      "active_hero_fans": 32,
+      "attendance": 44685,
+      "camera": "(-70.5, 28.0, 66.0)",
+      "draw_calls": 1258,
+      "image": "stadium_bowl.png",
+      "primitives": 3703704
+    },
+    {
+      "active_hero_fans": 32,
+      "attendance": 44685,
+      "camera": "(58.0, 0.65, 8.85)",
+      "draw_calls": 677,
+      "image": "montage_goal.png",
+      "primitives": 2112031
+    }
+  ]
+}

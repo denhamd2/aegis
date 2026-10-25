@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="FootballMatchVenue" load_steps=4 format=3]
+[ext_resource type="Script" path="res://scripts/match_venue.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/goal_profile.gd" id="2"]
+[sub_resource type="Resource" id="Goal"]
+script = ExtResource("2")
+[resource]
+script = ExtResource("1")
+id = &"kilmore_drive"
+display_name = "Kilmore Drive"
+goal = SubResource("Goal")

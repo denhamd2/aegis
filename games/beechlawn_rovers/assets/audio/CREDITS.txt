@@ -1,0 +1,11 @@
+MUSIC
+
+"Cool Rock" — Kevin MacLeod (incompetech.com)
+https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100279
+Licensed under Creative Commons: By Attribution 4.0
+https://creativecommons.org/licenses/by/4.0/
+Changes: loudness normalization and Ogg Vorbis transcoding.
+
+MATCH SOUND EFFECTS
+Original Beechlawn Rovers project synthesized audio — CC0-1.0.
+These have not yet been replaced by the recorded-sound research shortlist.

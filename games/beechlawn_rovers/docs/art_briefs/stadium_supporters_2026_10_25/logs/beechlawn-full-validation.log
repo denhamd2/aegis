@@ -1,0 +1,421 @@
+
+[smoke] graphics_budget_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+GRAPHICS_BUDGET PASS: Retina cap, adaptive floor/hysteresis, unavailable timers, migration and persistence
+[passed] graphics_budget_smoke.gd (1.0s)
+
+[smoke] supporter_crowd_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=rovers_arena ball=ucl_26_27_league
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+SUPPORTER_CROWD PASS: signed VAT, 12 human variants, budgets, attendance, flags, event/replay isolation and eight park fans
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] supporter_crowd_smoke.gd (13.8s)
+
+[smoke] stadium_presentation_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=rovers_arena ball=ucl_26_27_league
+STADIUM_PRESENTATION PASS: 93s resource-driven opening, limited captions, skip isolation, dual net LODs, profile isolation
+[passed] stadium_presentation_smoke.gd (9.5s)
+
+[smoke] venue_selection_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=rovers_arena ball=ucl_26_27_league
+BEECHLAWN_MENU_READY
+VENUE_SELECTION PASS: persistence, invalid fallback, both grounds, flat/uneven physics, goals/nets/flags, section LOD, independent wet surfaces and menu bindings
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] venue_selection_smoke.gd (12.8s)
+
+[smoke] stadium_seating_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+STADIUM_REMODEL PASS: 49554 supported/facing seats; 71 spatial blocks; four curved corners and distinct stand profiles
+[passed] stadium_seating_smoke.gd (2.6s)
+
+[smoke] ball_selection_smoke.gd (timeout 90s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+BALL_COMBINATION PASS ucl_26_27_league kilmore_drive mode=0
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+BALL_COMBINATION PASS ucl_26_27_league kilmore_drive mode=1
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=rovers_arena ball=ucl_26_27_league
+BALL_COMBINATION PASS ucl_26_27_league rovers_arena mode=0
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=rovers_arena ball=ucl_26_27_league
+BALL_COMBINATION PASS ucl_26_27_league rovers_arena mode=1
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=worn_sunday_league
+BALL_COMBINATION PASS worn_sunday_league kilmore_drive mode=0
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=worn_sunday_league
+BALL_COMBINATION PASS worn_sunday_league kilmore_drive mode=1
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=rovers_arena ball=worn_sunday_league
+BALL_COMBINATION PASS worn_sunday_league rovers_arena mode=0
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=rovers_arena ball=worn_sunday_league
+BALL_COMBINATION PASS worn_sunday_league rovers_arena mode=1
+BEECHLAWN_MENU_READY
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=rovers_arena ball=worn_sunday_league
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=rovers_arena ball=worn_sunday_league
+BEECHLAWN_MENU_READY
+BALL_SELECTION PASS: legacy/invalid/missing settings, persistence, 8 mode/venue/ball combinations, intro/replay, scale and physics; failures=0
+[passed] ball_selection_smoke.gd (62.0s)
+
+[smoke] pre_match_intro_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+INTRO_SHOT montage_goal at=(49.55, 0.575, 4.2)
+INTRO_SHOT montage_net at=(54.9, 0.85, 1.35)
+INTRO_SHOT montage_ball at=(0.575, 0.275, 0.6)
+INTRO_SHOT montage_john at=(-46.75, 1.68, 1.275)
+INTRO_SHOT montage_des at=(5.75, 1.67, 12.275)
+INTRO_SHOT montage_puddles at=(46.55, 0.19697, 2.45)
+INTRO_SHOT venue at=(9.5, 5.1, 39.0)
+INTRO_SHOT walk at=(10.8, 1.65, 12.8)
+INTRO_SHOT referee at=(0.53, 1.73, 7.625)
+INTRO_SHOT fans at=(-18.9, 1.6, -32.0)
+INTRO_SHOT lineup at=(-0.5, 1.65, 10.0)
+INTRO_SHOT portrait at=(-5.305, 1.56, 7.3)
+INTRO_SHOT warmup at=(0.1, 1.5, 1.2)
+INTRO_SHOT handoff at=(0.0, 8.5, -20.8)
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+INTRO_SHOT montage_goal at=(49.55, 0.575, 4.2)
+INTRO_SHOT montage_net at=(54.9, 0.85, 1.35)
+INTRO_SHOT montage_ball at=(0.575, 0.275, 0.6)
+INTRO_SHOT montage_john at=(-46.75, 1.68, 1.275)
+INTRO_SHOT montage_des at=(5.75, 1.67, 12.275)
+INTRO_SHOT montage_puddles at=(46.55, 0.19697, 2.45)
+INTRO_SHOT venue at=(9.5, 5.1, 39.0)
+INTRO_SHOT walk at=(10.8, 1.65, 12.8)
+INTRO_SHOT referee at=(0.53, 1.73, 7.625)
+INTRO_SHOT fans at=(-18.9, 1.6, -32.0)
+INTRO_SHOT lineup at=(-0.5, 1.65, 10.0)
+INTRO_SHOT portrait at=(-5.305, 1.56, 7.3)
+INTRO_SHOT warmup at=(0.1, 1.5, 1.2)
+INTRO_SHOT handoff at=(0.0, 8.5, -20.8)
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+Intro natural/skip, staging, original clips, freeze, cleanup, Play/Watch kickoff failures=0
+[passed] pre_match_intro_smoke.gd (17.3s)
+
+[smoke] goal_net_contact_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+NET_CONTACT end=-1 point=(0.0, 0.817646, -1.739998) vector=(0.0, -0.049391, -0.380578)
+NET_CONTACT end=1 point=(0.0, 0.817646, -1.739998) vector=(-0.0, -0.049391, -0.380578)
+GOAL_NET actual ball impacts, bulge parameters, continued flight and one score at both ends PASS
+[passed] goal_net_contact_smoke.gd (9.6s)
+
+[smoke] wet_weather_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+Wet/weather checks: physical ground slowdown, airborne exclusion, mirrored masks, 60/120 Hz, preferences, four presets; failures=0
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] wet_weather_smoke.gd (8.6s)
+
+[smoke] hud_layout_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+HUD PASS: monochrome replacement, clock, responsive radar at 3 aspects, carrier identity, distinct power, help and presentation visibility
+[passed] hud_layout_smoke.gd (9.8s)
+
+[smoke] title_screen_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MENU_READY
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+BEECHLAWN_MENU_READY
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+Title/menu PASS: focus, saved mix, full 11v11 Watch/Play launches, automatic AI restarts, human input, title return; failures=0
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] title_screen_smoke.gd (15.9s)
+
+[smoke] realism_systems_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+REALISM_SYSTEMS PASS: shared physique/binds, render/contact/replay isolation, optics restoration, graphics preferences and field-wide bounded turf
+[passed] realism_systems_smoke.gd (8.0s)
+
+[smoke] shared_gait_integrity_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+GAIT_INTEGRITY authored/preserved leg/root tracks=65
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] shared_gait_integrity_smoke.gd (6.8s)
+
+[smoke] stride_plant_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+STRIDE_PLANT 1.5 stance_slip=0.05224962557118m/s stance_samples=155 toe_height=0.03864363125886..0.18064014929126
+STRIDE_PLANT 3.0 stance_slip=0.06363185070638m/s stance_samples=84 toe_height=0.04418037299243..0.26569778620998
+STRIDE_PLANT 4.5 stance_slip=0.10379031250652m/s stance_samples=49 toe_height=0.03225665709623..0.31587354146013
+STRIDE_PLANT 6.0 stance_slip=0.04608554914739m/s stance_samples=48 toe_height=0.03751350817589..0.36779125015172
+STRIDE_PLANT 7.3 stance_slip=0.05035848869219m/s stance_samples=42 toe_height=0.03758636600336..0.40851318354266
+STRIDE_PLANT 8.6 stance_slip=0.0531982564183m/s stance_samples=45 toe_height=0.04097723881051..0.42513699594244
+STRIDE_PLANT 3.36 stance_slip=0.02323529857676m/s stance_samples=63 toe_height=0.04500136485887..0.2603447591868
+STRIDE_PLANT PASS
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] stride_plant_smoke.gd (13.7s)
+
+[smoke] braking_gait_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+BRAKING_GAIT fast_steps=21 kept_gait=true final_stop_pose=true
+BRAKING_GAIT PASS
+[passed] braking_gait_smoke.gd (9.3s)
+
+[smoke] shared_pose_safety_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+POSE_SAFETY clip=AN_Beechlawn_Idle horizontal_samples=0/9 min_elbow_drop_m=0.27
+POSE_SAFETY clip=AN_Beechlawn_Walk horizontal_samples=0/9 min_elbow_drop_m=0.264
+POSE_SAFETY clip=AN_Beechlawn_SlowJog horizontal_samples=0/9 min_elbow_drop_m=0.248
+POSE_SAFETY clip=AN_Beechlawn_Jog horizontal_samples=0/9 min_elbow_drop_m=0.214
+POSE_SAFETY clip=AN_Beechlawn_Sprint horizontal_samples=0/9 min_elbow_drop_m=0.191
+POSE_SAFETY clip=AN_Beechlawn_StopFromRun horizontal_samples=0/9 min_elbow_drop_m=0.264
+POSE_SAFETY clip=AN_Beechlawn_PassRight horizontal_samples=0/9 min_elbow_drop_m=0.154
+POSE_SAFETY clip=AN_Beechlawn_ReceiveRight horizontal_samples=0/9 min_elbow_drop_m=0.162
+POSE_SAFETY clip=AN_Beechlawn_ShotRight horizontal_samples=0/9 min_elbow_drop_m=0.085
+POSE_SAFETY clip=AN_Beechlawn_CloseControl horizontal_samples=0/9 min_elbow_drop_m=0.235
+POSE_SAFETY clip=AN_Beechlawn_WalkOn horizontal_samples=0/9 min_elbow_drop_m=0.264
+POSE_SAFETY clip=AN_Beechlawn_WarmupJog horizontal_samples=0/9 min_elbow_drop_m=0.189
+PASS: all live outfield idle poses and standing action silhouettes avoid sustained T poses
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] shared_pose_safety_smoke.gd (8.9s)
+
+[smoke] broadcast_camera_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+CAMERA_CHECK close_broadcast position=(0.0, 12.0, -26.0) fov=50.0
+CAMERA_CHECK dynamic_wide position=(0.0, 16.0, -32.0) fov=52.0
+CAMERA_CHECK stadium position=(0.0, 19.0, -43.0) fov=55.0
+CAMERA_CHECK live_broadcast position=(0.0, 11.0, -37.0) fov=42.0
+CAMERA_CHECK fan_view position=(0.0, 22.0, -40.0) fov=58.0
+CAMERA_CHECK blimp position=(0.0, 65.0, 0.05) fov=60.0
+CAMERA_CHECK vertical position=(-24.0, 16.0, 0.0) fov=55.0
+CAMERA_CHECK player position=(-7.0, 4.5, 0.0) fov=64.0
+CAMERA_CHECK field_side position=(0.0, 4.5, -22.0) fov=60.0
+Camera presets/settings/movement checks failures=0
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] broadcast_camera_smoke.gd (7.0s)
+
+[smoke] replay_results_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+BEECHLAWN_MENU_READY
+REPLAY_RESULTS failures=0
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] replay_results_smoke.gd (12.3s)
+
+[smoke] recorded_face_replay_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+RECORDED_FACES PASS: recorded blink interpolation and exact live weight restoration
+[passed] recorded_face_replay_smoke.gd (8.0s)
+
+[smoke] broadcast_direction_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+BROADCAST_DIRECTION PASS: centered safe layouts, mirrored cuts, incident metadata, half-speed poses, exact restart
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] broadcast_direction_smoke.gd (7.5s)
+
+[smoke] handshake_contact_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+HANDSHAKE_POSE {"a":"(0.78, 0.007104, 0.0)","a_clip":"AN_Beechlawn_Handshake","a_hands":"[(0.827309, 0.981446, -0.197956), (1.120465, 1.060383, 0.001661)]","b":"(1.634999, 0.014417, 0.0)","b_clip":"AN_Beechlawn_Handshake","b_hands":"[(1.58769, 0.988759, 0.197956), (1.294534, 1.067696, -0.001661)]"}
+HANDSHAKE_WRIST_GAP 0.17425402998924
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] handshake_contact_smoke.gd (7.1s)
+
+[smoke] unready_scene_cleanup_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+UNREADY_SCENE_ORPHANS before=0 after=0
+[passed] unready_scene_cleanup_smoke.gd (2.0s)
+
+[smoke] moving_receive_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+MOVING_RECEIVE_FIRST_EVENT [&"first_touch"]
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+[passed] moving_receive_smoke.gd (7.3s)
+
+[smoke] contextual_receive_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+RECEIVE_CASE away=false foot=right speed=0.00 mode=carry events=[{ "foot": &"right", "mode": &"carry", "gap": 0.11156085133553, "incoming_velocity": (-5.205903, -0.030302, 0.005926), "clock": 0.20694599689932 }] last_gap=0.11156085133553 last_foot=right
+RECEIVE_CASE away=false foot=right speed=6.00 mode=carry events=[{ "foot": &"right", "mode": &"carry", "gap": 0.16446740925312, "incoming_velocity": (-5.195405, -0.018178, 0.011323), "clock": 0.20320474300067 }] last_gap=0.16446740925312 last_foot=right
+RECEIVE_CASE away=false foot=left speed=0.00 mode=carry events=[{ "foot": &"left", "mode": &"carry", "gap": 0.11151570826769, "incoming_velocity": (-5.20621, -0.030308, 0.005923), "clock": 0.20695622288544 }] last_gap=0.11151570826769 last_foot=left
+RECEIVE_CASE away=false foot=left speed=6.00 mode=carry events=[{ "foot": &"left", "mode": &"carry", "gap": 0.16131438314915, "incoming_velocity": (-5.196181, -0.018185, 0.011645), "clock": 0.20321799532839 }] last_gap=0.16131438314915 last_foot=left
+RECEIVE_CASE away=true foot=right speed=0.00 mode=carry events=[{ "foot": &"right", "mode": &"carry", "gap": 0.11190619319677, "incoming_velocity": (5.199937, -0.016852, -0.005331), "clock": 0.20689721186106 }] last_gap=0.11190619319677 last_foot=right
+RECEIVE_CASE away=true foot=right speed=6.00 mode=carry events=[{ "foot": &"right", "mode": &"carry", "gap": 0.15964289009571, "incoming_velocity": (5.200801, -0.02105, -0.007091), "clock": 0.20329972744698 }] last_gap=0.15964289009571 last_foot=right
+RECEIVE_CASE away=true foot=left speed=0.00 mode=carry events=[{ "foot": &"left", "mode": &"carry", "gap": 0.11189961433411, "incoming_velocity": (5.199949, -0.016853, -0.006137), "clock": 0.20690064920855 }] last_gap=0.11189961433411 last_foot=left
+RECEIVE_CASE away=true foot=left speed=6.00 mode=carry events=[{ "foot": &"left", "mode": &"carry", "gap": 0.15946246683598, "incoming_velocity": (5.201365, -0.021057, -0.008551), "clock": 0.2033105585598 }] last_gap=0.15946246683598 last_foot=left
+RECEIVE_CASE away=false foot=left speed=3.36 mode=close events=[{ "foot": &"left", "mode": &"close", "gap": 0.13938561081886, "incoming_velocity": (-4.941325, -0.024773, 0.013835), "clock": 0.20504898498297 }] last_gap=0.13938561081886 last_foot=left
+RECEIVE_CASE away=false foot=left speed=8.60 mode=sprint events=[{ "foot": &"left", "mode": &"sprint", "gap": 0.17909707129002, "incoming_velocity": (-5.344875, -0.0187, 0.010004), "clock": 0.20444458071403 }] last_gap=0.17909707129002 last_foot=left
+RECEIVE_CASE away=false foot=right speed=3.36 mode=both events=[{ "foot": &"right", "mode": &"close", "gap": 0.17510569095612, "incoming_velocity": (-5.084994, -0.017801, 0.012374), "clock": 0.20167718307535 }] last_gap=0.17510569095612 last_foot=right
+CONTEXTUAL_RECEIVE failures=0
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] contextual_receive_smoke.gd (13.4s)
+
+[smoke] receive_edge_cases_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+ANGLED_RECEIVE radians=-0.5235987755983 contacts=[{ "foot": &"left", "mode": &"carry", "gap": 0.1405149102211, "incoming_velocity": (-5.74882, 0.003303, -3.298755), "clock": 0.2125 }]
+ANGLED_RECEIVE radians=0.5235987755983 contacts=[{ "foot": &"left", "mode": &"carry", "gap": 0.1243120059371, "incoming_velocity": (-5.75931, -0.021898, 3.346149), "clock": 0.2125 }]
+RECEIVE_EDGE_CASES failures=0
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+[passed] receive_edge_cases_smoke.gd (11.0s)
+
+[smoke] first_time_pass_timing_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=8 officials=0 venue=kilmore_drive ball=ucl_26_27_league
+First-time 8.5 m/s pass contact: physics frame 7 (0.117 s), one impulse, gap 0.033 m
+First-time 18.0 m/s pass contact: physics frame 3 (0.050 s), one impulse, gap 0.059 m
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+[passed] first_time_pass_timing_smoke.gd (5.9s)
+
+[smoke] first_time_shot_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+FIRST_TIME_SHOT shots=1 traps=0 toe_gap_m=0.26 failures=0
+[passed] first_time_shot_smoke.gd (7.8s)
+
+[smoke] goalkeeper_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=8 officials=0 venue=kilmore_drive ball=ucl_26_27_league
+Beechlawn goalkeeper reaction, catch and distribution checks passed
+[passed] goalkeeper_smoke.gd (3.1s)
+
+[smoke] keeper_diving_high_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+KEEPER_ADVANCED team=Beechlawn Rovers high=false contact=(-48.96942, 1.202868, 1.670005) clip=AN_Beechlawn_KeeperDiveFullMidRight
+KEEPER_ADVANCED team=Beechlawn Rovers high=true contact=(-48.99156, 2.013271, 0.0) clip=AN_Beechlawn_KeeperHighReach
+KEEPER_ADVANCED team=Boardeaux high=false contact=(49.18935, 1.178697, 1.669895) clip=AN_Beechlawn_KeeperDiveLeft
+KEEPER_ADVANCED team=Boardeaux high=true contact=(48.99156, 2.013271, 0.0) clip=AN_Beechlawn_KeeperHighReach
+KEEPER_DIVING_HIGH PASS
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+[passed] keeper_diving_high_smoke.gd (9.3s)
+
+[smoke] player_selection_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+PLAYER_SELECTION PASS: defender, hysteresis, manual hold/mode, intro, real pass release, run continuity, held input, committed action, dismissal, AI keepers/watch
+[passed] player_selection_smoke.gd (8.3s)
+
+[smoke] aerial_controls_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+AERIAL_CONTROLS launches={ &"lofted_pass": 1, &"cross": 1 } failures=0
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+[passed] aerial_controls_smoke.gd (9.7s)
+
+[smoke] cross_to_header_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+CROSS_RECEPTION variant=standard side=1.0 contested=false contacts=[{ "kind": &"cross", "part": &"foot", "style": &"standard", "team": &"Beechlawn Rovers", "opponent_gap": 160.265594482422, "tick": 33 }, { "kind": &"shot", "part": &"head", "style": &"header", "team": &"Beechlawn Rovers", "opponent_gap": 165.891555786133, "tick": 129 }] receiver=(47.76652, -0.030175, 2.261075) ball=(54.04428, 0.137237, -1.940606)
+CROSS_RECEPTION variant=standard side=1.0 contested=true contacts=[{ "kind": &"cross", "part": &"foot", "style": &"standard", "team": &"Beechlawn Rovers", "opponent_gap": 2.46075487136841, "tick": 189 }, { "kind": &"shot", "part": &"head", "style": &"header", "team": &"Beechlawn Rovers", "opponent_gap": 1.76963698863983, "tick": 278 }] receiver=(43.48371, -0.042121, 2.252652) ball=(52.16101, 0.138952, -0.545027)
+CROSS_RECEPTION variant=standard side=-1.0 contested=false contacts=[{ "kind": &"cross", "part": &"foot", "style": &"standard", "team": &"Boardeaux", "opponent_gap": 210.493667602539, "tick": 345 }, { "kind": &"shot", "part": &"head", "style": &"header", "team": &"Boardeaux", "opponent_gap": 229.600387573242, "tick": 434 }] receiver=(-43.5434, 0.049249, 2.171301) ball=(-52.12724, 0.111435, -0.536407)
+CROSS_RECEPTION variant=standard side=-1.0 contested=true contacts=[{ "kind": &"cross", "part": &"foot", "style": &"standard", "team": &"Boardeaux", "opponent_gap": 2.45879983901978, "tick": 501 }, { "kind": &"shot", "part": &"head", "style": &"header", "team": &"Boardeaux", "opponent_gap": 1.79322731494904, "tick": 590 }] receiver=(-43.48202, 0.049454, 2.252671) ball=(-52.13062, 0.111421, -0.526287)
+CROSS_HEADER failures=0
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+[passed] cross_to_header_smoke.gd (9.7s)
+
+[smoke] advanced_shots_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+FINESSE_CURVE side=1.0 deviation=(-0.031696, -0.006917, -0.277114)
+FINESSE_CURVE side=-1.0 deviation=(0.031521, -0.036073, -0.27971)
+ADVANCED_SHOTS failures=0
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+[passed] advanced_shots_smoke.gd (8.1s)
+
+[smoke] volley_contact_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+VOLLEY_CONTACT side=1.0 context=volley action=volley contacts=[{ "style": &"volley", "gap": 0.10883922129869, "bounce_age": 99.0 }] rise=0.0
+VOLLEY_CONTACT side=1.0 context=half_volley action=half_volley contacts=[{ "style": &"half_volley", "gap": 0.1250147074461, "bounce_age": 0.01666666666667 }] rise=0.0
+VOLLEY_CONTACT side=1.0 context=ai_half_volley action=half_volley contacts=[{ "style": &"half_volley", "gap": 0.12503211200237, "bounce_age": 0.01666666666667 }] rise=0.0
+VOLLEY_CONTACT side=-1.0 context=volley action=volley contacts=[{ "style": &"volley", "gap": 0.10275502502918, "bounce_age": 99.0 }] rise=0.0
+VOLLEY_CONTACT side=-1.0 context=half_volley action=half_volley contacts=[{ "style": &"half_volley", "gap": 0.03711184859276, "bounce_age": 0.01666666666667 }] rise=0.0
+VOLLEY_CONTACT side=-1.0 context=ai_half_volley action=half_volley contacts=[{ "style": &"half_volley", "gap": 0.04135055467486, "bounce_age": 0.01666666666667 }] rise=0.0
+VOLLEY_CONTACT failures=0
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+[passed] volley_contact_smoke.gd (8.9s)
+
+[smoke] four_v_four_setup_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=8 officials=0 venue=kilmore_drive ball=ucl_26_27_league
+Beechlawn 4v4 assembly and switching checks passed
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 2 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+[passed] four_v_four_setup_smoke.gd (4.5s)

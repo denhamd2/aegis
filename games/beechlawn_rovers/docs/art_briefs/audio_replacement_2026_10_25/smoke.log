@@ -1,0 +1,17 @@
+
+[smoke] pitch_audio_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+PITCH_AUDIO PASS: tufts <=40k, terrain/water probes=624, typed events, bounded real players, music policy and saved buses
+[passed] pitch_audio_smoke.gd (9.2s)
+
+[smoke] title_screen_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MENU_READY
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+BEECHLAWN_MENU_READY
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+Title/menu PASS: focus, saved mix, full 11v11 Watch/Play launches, automatic AI restarts, human input, title return; failures=0
+[passed] title_screen_smoke.gd (14.1s)

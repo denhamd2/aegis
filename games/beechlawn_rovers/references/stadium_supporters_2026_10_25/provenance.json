@@ -1,0 +1,47 @@
+{
+  "captured_utc": "2026-10-25",
+  "items": [
+    {
+      "file": "1-70145.jpg",
+      "source": "/tmp/codex-remote-attachments/01a13b9d-131c-7348-b4e2-2d07a6b17042/7cfd7dd5-e309-4e0f-ad80-e007a0248f64/1-70145.jpg",
+      "sha256": "11e4d139a3540becd00308c21d4137275a93542ca5ff0e2ecbc553424a1af78d",
+      "use": "Owner visual reference; not shipped as texture"
+    },
+    {
+      "file": "2-70149.jpg",
+      "source": "/tmp/codex-remote-attachments/01a13b9d-131c-7348-b4e2-2d07a6b17042/7cfd7dd5-e309-4e0f-ad80-e007a0248f64/2-70149.jpg",
+      "sha256": "306186c7bfd540769c34044997f4a006024c97b8b35174a7a9d78bd6d987d646",
+      "use": "Owner visual reference; not shipped as texture"
+    },
+    {
+      "file": "3-70150.jpg",
+      "source": "/tmp/codex-remote-attachments/01a13b9d-131c-7348-b4e2-2d07a6b17042/7cfd7dd5-e309-4e0f-ad80-e007a0248f64/3-70150.jpg",
+      "sha256": "e831ba983a08b0ac91750caacbad2dc8ca718b2f5b3fd62efe3b3efbe4e9c6dc",
+      "use": "Owner visual reference; not shipped as texture"
+    },
+    {
+      "file": "goal-reference-70150.jpg",
+      "source": "/tmp/codex-remote-attachments/01a13b9d-131c-7348-b4e2-2d07a6b17042/81ee685c-36e1-4314-a479-9d6a5ef50aae/1-70150.jpg",
+      "sha256": "e831ba983a08b0ac91750caacbad2dc8ca718b2f5b3fd62efe3b3efbe4e9c6dc",
+      "use": "Owner visual reference; not shipped as texture"
+    },
+    {
+      "file": "aerial.webp",
+      "source": "https://www.leedsunited.com/en/news/preview-everton-vs-leeds-united2026",
+      "sha256": "7c481226a8150c974343a201e96620d76d1bb2cbd7ceaeac01cc6df696b993b7",
+      "use": "Architectural study only; photographer rights retained; excluded from export"
+    },
+    {
+      "file": "wharf.webp",
+      "source": "https://stories.evertonstadium.com/untitled-story/",
+      "sha256": "e5359b4ec1e5072398731ffb248cdf1f39531274d60d7ea2b88e45c83b563136",
+      "use": "Architectural study only; photographer rights retained; excluded from export"
+    },
+    {
+      "file": "south_dock.webp",
+      "source": "https://stories.evertonstadium.com/untitled-story/",
+      "sha256": "bd733f1f88c84db7f3fc5eaf853a87600f6a58ce4dc6f47f022a972adfc18e8e",
+      "use": "Architectural study only; photographer rights retained; excluded from export"
+    }
+  ]
+}

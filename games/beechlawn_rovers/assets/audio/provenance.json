@@ -1,80 +1,89 @@
 {
-  "author": "Beechlawn Rovers project",
-  "license": "CC0-1.0",
-  "source": "tools/synthesize_match_audio.py",
-  "description": "Original procedurally synthesized audio; no sampled commercial recordings or melodies.",
-  "clips": [
-    {
-      "file": "pass.wav",
-      "seconds": 0.24,
-      "peak": 0.85,
-      "rms": 0.13940218588286502
-    },
-    {
-      "file": "kick.wav",
-      "seconds": 0.4,
-      "peak": 0.85,
-      "rms": 0.12390698523652277
-    },
-    {
-      "file": "header.wav",
-      "seconds": 0.2,
-      "peak": 0.6996360954716332,
-      "rms": 0.1259552891895549
-    },
-    {
-      "file": "post.wav",
-      "seconds": 0.8499773242630385,
-      "peak": 0.5855187245232163,
-      "rms": 0.059241447964980536
-    },
-    {
-      "file": "net.wav",
-      "seconds": 0.5499773242630386,
-      "peak": 0.25346589235765743,
-      "rms": 0.05194982308257266
-    },
-    {
-      "file": "step.wav",
-      "seconds": 0.12997732426303854,
-      "peak": 0.2786282808365044,
-      "rms": 0.048629408855139854
-    },
-    {
-      "file": "whistle.wav",
-      "seconds": 0.8,
-      "peak": 0.6092537033339844,
-      "rms": 0.3487284559532267
-    },
-    {
-      "file": "ui.wav",
-      "seconds": 0.1,
-      "peak": 0.177991605128453,
-      "rms": 0.05189580666136423
-    },
-    {
-      "file": "crowd.wav",
-      "seconds": 8.0,
-      "peak": 0.09454470418061639,
-      "rms": 0.022832257512959035
-    },
-    {
-      "file": "cheer.wav",
-      "seconds": 2.6,
-      "peak": 0.3553945343895448,
-      "rms": 0.12142718510084312
-    },
-    {
-      "file": "rain.wav",
-      "seconds": 4.0,
-      "peak": 0.03999971598018586,
-      "rms": 0.023068145221884863
-    },
-    {
-      "file": "menu_music.wav",
-      "seconds": 16.0,
-      "peak": 0.3324885666347205,
-      "rms": 0.06662272054058482
-    }
-  ]
+  "original_effects": {
+    "author": "Beechlawn Rovers project",
+    "license": "CC0-1.0",
+    "source": "tools/synthesize_match_audio.py",
+    "description": "Original synthesized match Foley/ambience/UI retained pending the recorded-sound pass. Menu music has separate recorded-source provenance.",
+    "clips": [
+      {
+        "file": "pass.wav",
+        "seconds": 0.24,
+        "peak": 0.85,
+        "rms": 0.13940218588286502
+      },
+      {
+        "file": "kick.wav",
+        "seconds": 0.4,
+        "peak": 0.85,
+        "rms": 0.12390698523652277
+      },
+      {
+        "file": "header.wav",
+        "seconds": 0.2,
+        "peak": 0.6996360954716332,
+        "rms": 0.1259552891895549
+      },
+      {
+        "file": "post.wav",
+        "seconds": 0.8499773242630385,
+        "peak": 0.5855187245232163,
+        "rms": 0.059241447964980536
+      },
+      {
+        "file": "net.wav",
+        "seconds": 0.5499773242630386,
+        "peak": 0.25346589235765743,
+        "rms": 0.05194982308257266
+      },
+      {
+        "file": "step.wav",
+        "seconds": 0.12997732426303854,
+        "peak": 0.2786282808365044,
+        "rms": 0.048629408855139854
+      },
+      {
+        "file": "whistle.wav",
+        "seconds": 0.8,
+        "peak": 0.6092537033339844,
+        "rms": 0.3487284559532267
+      },
+      {
+        "file": "ui.wav",
+        "seconds": 0.1,
+        "peak": 0.177991605128453,
+        "rms": 0.05189580666136423
+      },
+      {
+        "file": "crowd.wav",
+        "seconds": 8.0,
+        "peak": 0.09454470418061639,
+        "rms": 0.022832257512959035
+      },
+      {
+        "file": "cheer.wav",
+        "seconds": 2.6,
+        "peak": 0.3553945343895448,
+        "rms": 0.12142718510084312
+      },
+      {
+        "file": "rain.wav",
+        "seconds": 4.0,
+        "peak": 0.03999971598018586,
+        "rms": 0.023068145221884863
+      }
+    ]
+  },
+  "music": {
+    "file": "cool_rock.ogg",
+    "title": "Cool Rock",
+    "author": "Kevin MacLeod",
+    "source": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100279",
+    "download": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Cool%20Rock.mp3",
+    "source_sha256": "a28bd6ce887f637543c05671d17c31ad521390766503f9236bdcf33c9cf692bc",
+    "license": "CC-BY-4.0",
+    "license_url": "https://creativecommons.org/licenses/by/4.0/",
+    "modifications": "Loudness normalized to -19 LUFS / -2 dBTP and transcoded to Ogg Vorbis; composition unchanged.",
+    "shipped_sha256": "f47eeb2f469a66333134ca60f9854820ba6fb1298570f47b4ac2154b799b1f8b",
+    "selected_by_owner": "2026-10-25"
+  }
 }

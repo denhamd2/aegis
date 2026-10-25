@@ -256,7 +256,19 @@ one state restore on finish/skip. Check a native view with both team kits.
 Run Blender with `--python-exit-code 1` and make dependent shell steps fail fast;
 a later successful import/test must never hide a failed asset generation. Helpers
 written for child bones may not handle Hips without a parent; use the root bone's
-local-to-pose conversion and validate exported full-body joint positions.
+local-to-pose conversion and validate exported full-body joint positions. Root
+translation keys are expressed in the root bone's rest basis: subtracting the
+rest translation alone can rotate a vertical pelvis offset into a horizontal
+one. Convert the target point through the full inverse rest matrix, then check
+hips, knees and ankles in the exported clip before producing more variants.
+
+For crowd/NPC imports, use the football-owned supporter recipe described in
+`assets/characters/supporters/README.md`. Its 80-bone Rocketbox rig is separate
+from the shared 65-bone player template. Validate signed VAT channels, image-row
+orientation and UV V conversion against the rigged export; headless source
+checks alone miss grey atlas faces and overly coarse front-row LODs. Compare
+seated, rise, cheer and sit in the actual native shot. Preserve garment colour,
+clip phase and stable identity when promoting a GPU fan into a rigged model.
 
 ## 5. Select verification by change
 

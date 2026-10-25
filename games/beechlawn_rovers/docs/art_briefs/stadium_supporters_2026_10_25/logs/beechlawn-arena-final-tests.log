@@ -1,0 +1,22 @@
+
+[smoke] goal_net_contact_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=rovers_arena ball=ucl_26_27_league
+NET_CONTACT end=-1 point=(0.0, 0.765615, -2.09) vector=(0.0, -0.052844, -0.3795)
+NET_CONTACT end=1 point=(-0.0, 0.765615, -2.09) vector=(-0.0, -0.052844, -0.3795)
+GOAL_NET actual ball impacts, bulge parameters, continued flight and one score at both ends PASS
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 2 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+[passed] goal_net_contact_smoke.gd (9.7s)
+
+[smoke] stadium_presentation_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=rovers_arena ball=ucl_26_27_league
+STADIUM_PRESENTATION PASS: 93s resource-driven opening, limited captions, skip isolation, dual net LODs, profile isolation
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] stadium_presentation_smoke.gd (8.1s)

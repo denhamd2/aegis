@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="FootballMatchVenue" load_steps=9 format=3]
+[ext_resource type="Script" path="res://scripts/match_venue.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/goal_profile.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/venue_presentation_profile.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/rovers_arena.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/tifo_profile.gd" id="5"]
+[sub_resource type="Resource" id="Tifo"]
+script = ExtResource("5")
+[sub_resource type="Resource" id="Goal"]
+script = ExtResource("2")
+model_path = "res://assets/environment/stadium_goal/stadium_goal.glb"
+depth = 2.15
+net_height = 2.5
+stadium_box = true
+net_meshes = PackedStringArray("StadiumNet", "StadiumNetNear")
+rear_poles = Array[Vector3]([Vector3(-4.12,3.05,-2.68),Vector3(4.12,3.05,-2.68)])
+[sub_resource type="Resource" id="Presentation"]
+script = ExtResource("3")
+tifo = SubResource("Tifo")
+exterior_haze_begin = 450.0
+exterior_haze_end = 1600.0
+anchors = {"wide":Vector3(-25,16,39),"wide_end":Vector3(-21,15.8,38),"waterfront":Vector3(-210,102,-270),"stadium":Vector3(0,18,0),"facade":Vector3(0,7,-129),"facade_detail":Vector3(2,8.5,-93),"bowl":Vector3(-72,28,66),"pitch":Vector3(0,1,0),"crowd":Vector3(-57.5,3.0,19.8),"supporters":Vector3(-64.31,3.1,19.8),"roof":Vector3(-25,27,46),"truss":Vector3(-18,33,36),"tifo_wide":Vector3(-8,10,12),"tifo_face":Vector3(-24,18,0),"tifo_oblique":Vector3(-32,9,-24),"tifo_target":Vector3(-60.2,17,0),"ball":Vector3(0,0.11,0)}
+opening_shots = Array[Dictionary]([
+{"id":"stadium_waterfront","anchor":"waterfront","target":"stadium","duration":5.0,"fov":48.0,"dolly":Vector3(9,-2,8)},
+{"id":"stadium_facade","anchor":"facade","target":"facade_detail","duration":3.0,"fov":42.0,"dolly":Vector3(1.5,0,1)},
+{"id":"stadium_bowl","anchor":"bowl","target":"pitch","duration":4.0,"fov":60.0,"dolly":Vector3(3,0,0)},
+{"id":"stadium_crowd","anchor":"crowd","target":"supporters","duration":3.0,"fov":44.0,"dolly":Vector3(0.6,0,0)},
+{"id":"stadium_tifo_unfurl","anchor":"tifo_wide","target":"tifo_target","duration":7.0,"fov":48.0,"dolly":Vector3(-2,0.2,-1)},
+{"id":"stadium_tifo_close","anchor":"tifo_face","target":"tifo_target","duration":3.5,"fov":48.0,"dolly":Vector3(-0.6,0,0)},
+{"id":"stadium_tifo_angle","anchor":"tifo_oblique","target":"tifo_target","duration":3.5,"fov":62.0,"dolly":Vector3(1,0,1)}])
+[resource]
+script = ExtResource("1")
+id = &"rovers_arena"
+display_name = "Rovers Arena"
+location = "Bramley-Moore waterfront"
+kind = "stadium"
+uneven_ground = false
+worn_surface = false
+builder = ExtResource("4")
+goal = SubResource("Goal")
+presentation = SubResource("Presentation")

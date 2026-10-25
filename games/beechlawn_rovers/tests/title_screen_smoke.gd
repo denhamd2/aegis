@@ -26,6 +26,10 @@ func _run() -> void:
 	check(menu.start_button.has_focus(),"Start Game needs initial keyboard focus")
 	menu.open_options()
 	check(menu.options_layer.visible and menu.volume_slider.has_focus(),"Options should open and receive keyboard focus")
+	menu.options_layer.get_node("AudioCredits").pressed.emit()
+	var credits := menu.get_node("AudioCreditsDialog") as AcceptDialog
+	check(credits.visible and credits.dialog_text.contains("Kevin MacLeod") and credits.dialog_text.contains("https://creativecommons.org/licenses/by/4.0/"),"Shipped music attribution must be accessible from Options")
+	credits.hide()
 	check(menu.start_button.focus_mode == Control.FOCUS_NONE,"Modal options must keep focus out of the background menu")
 	menu.camera_select.select(1)
 	menu.camera_select.item_selected.emit(1)

@@ -1,0 +1,15 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Vulkan 1.4.305 - Forward+ - Using Device #0: Unknown - llvmpipe (LLVM 19.1.7, 256 bits)
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=rovers_arena ball=ucl_26_27_league
+PRODUCTION_REVIEW_BEGIN stadium_waterfront
+PRODUCTION_REVIEW_ENTERED stadium_waterfront
+PRODUCTION_REVIEW_CAMERA stadium_waterfront
+PRODUCTION_REVIEW_CROWD stadium_waterfront
+PRODUCTION_REVIEW_DRAW stadium_waterfront 0
+PRODUCTION_REVIEW_DRAW stadium_waterfront 1
+PRODUCTION_REVIEW_DRAW stadium_waterfront 2
+STADIUM_PRODUCTION_SAVED stadium_waterfront
+STADIUM_PRODUCTION_COMPLETE single
+WARNING: 7 RIDs of type "Texture" were leaked.
+   at: finalize (servers/rendering/rendering_device.cpp:7505)

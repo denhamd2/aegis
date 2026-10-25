@@ -2,6 +2,16 @@
 
 This is the durable, project-local archive for the reference material reviewed for Beechlawn Rovers. Keep it in this project; do not mix these files into Aegis wrestling assets. The source images are preserved unedited. `SHA256SUMS` records file checksums.
 
+## Stadium supporters, docks and tifo — 25 October 2026
+
+`stadium_supporters_2026_10_25/` archives the owner gameplay/goal references and
+public stadium/dock study photographs, with URLs and SHA256 in `provenance.json`.
+`tifo_2026_10_25/` preserves the five later uploads: Everton display scale and
+the supplied man's likeness. Study photos stay out of the game package; the
+tifo is a generated painted silhouette print, white outline and quoted wording.
+The crowd source is pinned MIT Microsoft Rocketbox, not a paid/extracted game
+asset. See the production brief and shipped supporter license for source scope.
+
 ## UCL 26/27 ball — approved 25 October 2026
 
 `source_uploads/chat_attachments/ucl_26_27_ball/league_size5/` preserves the four primary original screenshots: 70119 black UCL logo/surface macro; 70118 LGE replica/branding angle; 70117 opposite star pattern; 70116 adidas/FIFA Quality/front. The owner explicitly selected this **League size-5 replica**, not the Pro ball. Match the black logos and visible 1017531 marking. `mini_supplementary/` preserves the earlier five mini screenshots; use only for supplementary pattern detail, never pink logos or MINI labelling. `product_views/` has three higher-resolution Pro:Direct product views of KE9765; URLs/hashes and authority are in `provenance.json`. Reference-only research views stay out of the Mac export. Original/reconstructed artwork is for the owner's personal game; no trademark or asset licence is implied.

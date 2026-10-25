@@ -1,0 +1,90 @@
+[
+  {
+    "id": "kick",
+    "use": "Boot impacts",
+    "author": "musita182",
+    "title": "Soccer Kick.wav",
+    "page": "https://freesound.org/people/musita182/sounds/261267/",
+    "license": "CC0-1.0",
+    "recording": "0.778 s, mono, Zoom H4N",
+    "status": "Research candidate only; not installed or listening-approved",
+    "retrieved": "2026-10-25"
+  },
+  {
+    "id": "kick_alt",
+    "use": "Alternative kick",
+    "author": "bittermelonheart",
+    "title": "Soccer Ball Kick",
+    "page": "https://freesound.org/people/bittermelonheart/sounds/555042/",
+    "license": "CC0-1.0",
+    "recording": "0.738 s, Tascam DR-100 MkIII",
+    "status": "Research candidate only; not installed or listening-approved",
+    "retrieved": "2026-10-25"
+  },
+  {
+    "id": "net",
+    "use": "Net impact",
+    "author": "Luisa_Sanchez",
+    "title": "Soccer net",
+    "page": "https://freesound.org/people/Luisa_Sanchez/sounds/813410/",
+    "license": "CC0-1.0",
+    "recording": "1.961 s, stereo",
+    "status": "Research candidate only; not installed or listening-approved",
+    "retrieved": "2026-10-25"
+  },
+  {
+    "id": "whistle",
+    "use": "Referee",
+    "author": "Rosa-Orenes256",
+    "title": "Referee whistle sound.wav",
+    "page": "https://freesound.org/people/Rosa-Orenes256/sounds/538422/",
+    "license": "CC0-1.0",
+    "recording": "0.535 s, mono",
+    "status": "Research candidate only; not installed or listening-approved",
+    "retrieved": "2026-10-25"
+  },
+  {
+    "id": "crowd",
+    "use": "Distant stadium bed",
+    "author": "BeeProductive",
+    "title": "Football stadium.wav",
+    "page": "https://freesound.org/people/BeeProductive/sounds/395592/",
+    "license": "CC0-1.0",
+    "recording": "42.162 s, stereo; recorded a few streets from stadium",
+    "status": "Research candidate only; not installed or listening-approved",
+    "retrieved": "2026-10-25"
+  },
+  {
+    "id": "chant",
+    "use": "Close crowd / chanting",
+    "author": "Dan_AudioFile",
+    "title": "Football-match_Chanting-crowd_Ambience .stereo.wav",
+    "page": "https://freesound.org/people/Dan_AudioFile/sounds/654084/",
+    "license": "CC-BY-4.0",
+    "recording": "14.830 s, stereo omni pair at Wimbledon",
+    "status": "Research candidate only; not installed or listening-approved",
+    "retrieved": "2026-10-25"
+  },
+  {
+    "id": "goal",
+    "use": "Goal reaction",
+    "author": "D.jones",
+    "title": "19 Football Crowd - Reaction To Goal.flac",
+    "page": "https://freesound.org/people/D.jones/sounds/528799/",
+    "license": "CC0-1.0",
+    "recording": "93.173 s, stereo; trim actual reaction after audition",
+    "status": "Research candidate only; not installed or listening-approved",
+    "retrieved": "2026-10-25"
+  },
+  {
+    "id": "park_cheer",
+    "use": "Small crowd reaction",
+    "author": "HowardV",
+    "title": "small crowd cheering",
+    "page": "https://freesound.org/people/HowardV/sounds/264377/",
+    "license": "CC0-1.0",
+    "recording": "24.583 s; about 20 people, indoor hall so reverb may rule it out",
+    "status": "Research candidate only; not installed or listening-approved",
+    "retrieved": "2026-10-25"
+  }
+]

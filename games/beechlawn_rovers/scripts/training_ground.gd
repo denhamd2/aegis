@@ -207,7 +207,8 @@ func _physics_process(delta: float) -> void:
 	_update_teammate_pressure()
 	for entry in _net_impacts.values():
 		entry["age"] = minf(2.0,float(entry["age"])+delta)
-		(entry["material"] as ShaderMaterial).set_shader_parameter("impact_age",entry["age"])
+		for material:ShaderMaterial in entry.get("materials",[entry.material]):
+			material.set_shader_parameter("impact_age",entry["age"])
 	if presentation != null and presentation.update(delta):
 		_update_clock()
 		return
@@ -1105,6 +1106,7 @@ func build_pitch() -> void:
 	if terrain_enabled:
 		pitch.position.y = 0.0
 	$Pitch.add_child(pitch)
+	if venue.kind=="stadium":_build_stadium_runoff(grass)
 	var lines := MeshInstance3D.new()
 	lines.name = "FadedChalk"
 	lines.mesh = _build_line_mesh()
@@ -1127,6 +1129,18 @@ func build_pitch() -> void:
 	ground.add_child(shape)
 	$Pitch.add_child(ground)
 
+func _build_stadium_runoff(grass:ShaderMaterial) -> void:
+	# Grass reaches behind both nets and outside touchlines, up to the boards.
+	# Ring UVs extend the field's world scale; no duplicate playing-area surface.
+	var tool:=SurfaceTool.new();tool.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for rect:Rect2 in [Rect2(52.5,-39.5,7.5,79),Rect2(-60,-39.5,7.5,79),Rect2(-52.5,34,105,5.5),Rect2(-52.5,-39.5,105,5.5)]:
+		for corner:Vector2 in [Vector2.ZERO,Vector2(1,0),Vector2.ONE,Vector2.ZERO,Vector2.ONE,Vector2(0,1)]:
+			var p:=rect.position+corner*rect.size
+			tool.set_uv((p+Vector2(52.5,34))/Vector2(105,68));tool.add_vertex(Vector3(p.x,0,p.y))
+	tool.generate_normals();tool.generate_tangents()
+	var runoff:=MeshInstance3D.new();runoff.name="StadiumRunoffTurf";runoff.mesh=tool.commit();runoff.material_override=grass
+	$Pitch.add_child(runoff)
+
 func build_goals() -> void:
 	_build_goal("PositiveEnd", 1.0)
 	_build_goal("NegativeEnd", -1.0)
@@ -1137,25 +1151,37 @@ func _build_goal(goal_name: String, end_sign: float) -> void:
 	root.position.x = end_sign * FIELD_LENGTH * 0.5
 	root.rotation.y = 0.0 if end_sign > 0.0 else PI
 	$Goals.add_child(root)
-	var goal_path := "res://assets/environment/kilmore/park_goal.glb" if terrain_enabled else "res://assets/environment/football_goal.glb"
+	var goal_path := venue.goal.model_path
 	var goal_asset := load(goal_path) as PackedScene
 	if goal_asset:
 		var visual := goal_asset.instantiate() as Node3D
 		visual.name = "BlenderGoalModel"
-		visual.rotation.y = -PI * 0.5 if terrain_enabled else PI * 0.5 * end_sign
+		visual.rotation.y = -PI * 0.5
 		root.add_child(visual)
-		if terrain_enabled:
-			if not venue.worn_surface:
+		if terrain_enabled or venue.goal.stadium_box:
+			if not venue.worn_surface and not venue.goal.stadium_box:
 				for frame_node in visual.find_children("*", "MeshInstance3D", true, false):
 					if frame_node.name != "SaggingNet": frame_node.material_override = _mat(Color(.91,.92,.9),.38)
-			for node in visual.find_children("SaggingNet", "MeshInstance3D", true, false):
+			var net_materials: Array[ShaderMaterial]=[]
+			for node in visual.find_children("*", "MeshInstance3D", true, false):
+				if not node.name in venue.goal.net_meshes: continue
 				var net := node as MeshInstance3D
 				var original := net.mesh.surface_get_material(0) as StandardMaterial3D
 				var net_material := ShaderMaterial.new()
 				net_material.shader=load("res://shaders/goal_net.gdshader")
 				net_material.set_shader_parameter("net_texture",original.albedo_texture)
+				net_material.set_shader_parameter("stadium_box",venue.goal.stadium_box)
+				var near_net:=node.name==&"StadiumNetNear"
+				net_material.set_shader_parameter("dimensional_rope",near_net)
 				net.material_override=net_material
-				_net_impacts[int(end_sign)]={"mesh":net,"material":net_material,"age":2.0}
+				net_materials.append(net_material)
+				if venue.goal.stadium_box:
+					net.visibility_range_begin=0 if near_net else 12
+					net.visibility_range_end=14 if near_net else 350
+					net.visibility_range_fade_mode=GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
+					net.visibility_range_begin_margin=1;net.visibility_range_end_margin=1
+				if not near_net:_net_impacts[int(end_sign)]={"mesh":net,"material":net_material,"age":2.0}
+			_net_impacts[int(end_sign)]["materials"]=net_materials
 	var frame := StaticBody3D.new()
 	frame.name = "FrameCollision"
 	frame.set_meta("goal_frame",int(end_sign))
@@ -1164,15 +1190,19 @@ func _build_goal(goal_name: String, end_sign: float) -> void:
 	_add_goal_collider(frame,Vector3(0,(GOAL_HEIGHT+0.06)*0.5,-post_half_span),Vector3(.15,GOAL_HEIGHT+0.06,.12))
 	_add_goal_collider(frame,Vector3(0,(GOAL_HEIGHT+0.06)*0.5,post_half_span),Vector3(.15,GOAL_HEIGHT+0.06,.12))
 	_add_goal_collider(frame,Vector3(0,GOAL_HEIGHT+0.06,0),Vector3(.15,.12,GOAL_WIDTH+0.12))
+	# Rear tension poles stand outside the scoring opening.
+	for pole:Vector3 in venue.goal.rear_poles:
+		_add_goal_collider(frame,Vector3(-pole.z,pole.y*.5,pole.x),Vector3(.09,pole.y,.09))
 	# Net surfaces have their own bodies and contact identity, separate from posts.
 	var net_body := StaticBody3D.new()
 	net_body.name="NetCollision"
 	net_body.set_meta("goal_net_end",int(end_sign))
 	root.add_child(net_body)
-	_add_goal_collider(net_body,Vector3(GOAL_DEPTH,GOAL_HEIGHT*0.5,0),Vector3(.12,GOAL_HEIGHT,GOAL_WIDTH))
-	_add_goal_collider(net_body,Vector3(GOAL_DEPTH*0.5,GOAL_HEIGHT+0.06,0),Vector3(GOAL_DEPTH,.08,GOAL_WIDTH+0.12))
+	var net_depth:float=venue.goal.depth
+	_add_goal_collider(net_body,Vector3(net_depth,GOAL_HEIGHT*0.5,0),Vector3(.12,GOAL_HEIGHT,GOAL_WIDTH))
+	_add_goal_collider(net_body,Vector3(net_depth*0.5,GOAL_HEIGHT+0.06,0),Vector3(net_depth,.08,GOAL_WIDTH+0.12))
 	for side in [-1.0,1.0]:
-		_add_goal_collider(net_body,Vector3(GOAL_DEPTH*.5,GOAL_HEIGHT*.5,side*GOAL_WIDTH*.5),Vector3(GOAL_DEPTH,GOAL_HEIGHT,.06))
+		_add_goal_collider(net_body,Vector3(net_depth*.5,GOAL_HEIGHT*.5,side*GOAL_WIDTH*.5),Vector3(net_depth,GOAL_HEIGHT,.06))
 	var net_physics := PhysicsMaterial.new()
 	net_physics.bounce=.05
 	net_physics.friction=.75
@@ -1198,8 +1228,8 @@ func surface_height(x: float, z: float) -> float:
 	return PitchSurface.height_at(x,z,venue) if terrain_enabled else 0.0
 
 func build_park_edge() -> void:
-	if venue.id == &"rovers_arena":
-		preload("res://scripts/rovers_arena.gd").build($ParkEdge)
+	if venue.builder!=null:
+		venue.builder.build($ParkEdge,venue.presentation)
 	else:
 		KilmoreDriveVenue.build($ParkEdge, FIELD_LENGTH, FIELD_WIDTH, use_human_visual)
 
@@ -1209,8 +1239,13 @@ func _on_net_contact(body: Node3D, point: Vector3, impact_velocity: Vector3) -> 
 	var impact: Dictionary = _net_impacts[end_sign]
 	var mesh := impact.mesh as MeshInstance3D
 	impact.age=0.0
-	var material := impact.material as ShaderMaterial
-	material.set_shader_parameter("impact_point",mesh.to_local(point))
-	material.set_shader_parameter("impact_vector",mesh.global_basis.inverse()*impact_velocity.normalized()*clampf(impact_velocity.length()*.022,.05,.42))
-	material.set_shader_parameter("impact_age",0.0)
+	set_net_presentation(end_sign,0.0,mesh.to_local(point),mesh.global_basis.inverse()*impact_velocity.normalized()*clampf(impact_velocity.length()*.022,.05,.42))
 	ball.touched.emit(&"net",impact_velocity.length())
+
+func set_net_presentation(end_sign:int,age:float,point:Vector3,force:Vector3) -> void:
+	if not _net_impacts.has(end_sign):return
+	var impact:Dictionary=_net_impacts[end_sign]
+	for material:ShaderMaterial in impact.get("materials",[impact.material]):
+		material.set_shader_parameter("impact_age",age)
+		material.set_shader_parameter("impact_point",point)
+		material.set_shader_parameter("impact_vector",force)

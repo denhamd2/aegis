@@ -1,0 +1,13 @@
+{
+  "sample_rate": 22050,
+  "duration": 2.016689342403628,
+  "audible_rms": 0.022320744479712377,
+  "muted_tail_rms": 0.0,
+  "peak": 0.1018676832318306,
+  "source": "Actual native Godot Movie Maker AudioServer mix",
+  "result": "PASS",
+  "renderer": "Forward+",
+  "adapter": "llvmpipe software Vulkan",
+  "scope": "Actual GameAudio music mix and bus mute; no target Mac performance or subjective headphone approval",
+  "teardown": "Known one-resource/ObjectDB exit warning after complete recording"
+}

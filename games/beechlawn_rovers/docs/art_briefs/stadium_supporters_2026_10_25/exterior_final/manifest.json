@@ -1,0 +1,17 @@
+{
+  "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+  "diagnostic_no_crowd": false,
+  "renderer": "forward_plus",
+  "resolution": "(960, 540)",
+  "scope": "Actual Forward+ assets; Linux software adapter; Mac graphics/timing acceptance pending",
+  "views": [
+    {
+      "active_hero_fans": 0,
+      "attendance": 44685,
+      "camera": "(-205.5, 101.0, -266.0)",
+      "draw_calls": 515,
+      "image": "stadium_waterfront.png",
+      "primitives": 937052
+    }
+  ]
+}

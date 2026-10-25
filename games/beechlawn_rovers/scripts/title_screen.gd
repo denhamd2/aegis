@@ -181,6 +181,17 @@ func _build_options() -> void:
 	canvas.add_child(options_layer)
 	_label(options_layer,"MAKE IT YOUR MATCH",Vector2(100,52),18,BOLD,RED)
 	_label(options_layer,"OPTIONS",Vector2(96,80),62,DISPLAY)
+	var audio_credits := _button(options_layer,"AUDIO CREDITS",Rect2(1180,94,320,48))
+	audio_credits.name = "AudioCredits"
+	var credits_dialog := AcceptDialog.new()
+	credits_dialog.name = "AudioCreditsDialog"
+	credits_dialog.title = "Audio credits"
+	credits_dialog.dialog_text = FileAccess.get_file_as_string("res://assets/audio/CREDITS.txt")
+	credits_dialog.dialog_autowrap = true
+	credits_dialog.min_size = Vector2i(900,460)
+	credits_dialog.exclusive = true
+	add_child(credits_dialog)
+	audio_credits.pressed.connect(func(): credits_dialog.popup_centered())
 	_label(options_layer,"SOUND & PRESENTATION",Vector2(100,194),20,BOLD,RED)
 	_label(options_layer,"MASTER VOLUME",Vector2(100,244),23,BOLD)
 	volume_label = _label(options_layer,"80%",Vector2(640,244),23,BOLD,RED)
@@ -287,7 +298,18 @@ func _build_options() -> void:
 	switching.select(1 if MatchSession.switch_mode == &"manual" else 0)
 	switching.item_selected.connect(func(index: int): MatchSession.switch_mode = &"manual" if index == 1 else &"assisted")
 	options_layer.add_child(switching)
-	_label(options_layer,"F1 in match: full keyboard controls",Vector2(820,744),18,BODY,MUTED)
+	var graphics_select := OptionButton.new()
+	graphics_select.name="GraphicsProfile"
+	graphics_select.position=Vector2(820,727);graphics_select.size=Vector2(680,36)
+	graphics_select.add_theme_font_override("font",BOLD)
+	graphics_select.add_theme_font_size_override("font_size",20)
+	for label in FootballGraphicsProfile.LABELS: graphics_select.add_item(label)
+	graphics_select.select(FootballGraphicsProfile.IDS.find(MatchSession.graphics_profile))
+	graphics_select.tooltip_text="Balanced 60 prioritizes smooth play with adaptive 3D detail and a sharp HUD. F1 shows controls."
+	graphics_select.item_selected.connect(func(index: int):
+		MatchSession.graphics_profile=FootballGraphicsProfile.IDS[index]
+		MatchSession.apply_preferences())
+	options_layer.add_child(graphics_select)
 	for index in 3:
 		var bus: String = ["Music","Match","UI"][index]
 		var field := bus.to_lower()+"_volume"
@@ -394,6 +416,10 @@ func _graphics_toggle(text: String, field: String, position: Vector2, size: Vect
 	toggle.button_pressed = bool(MatchSession.get(field))
 	toggle.toggled.connect(func(value: bool):
 		MatchSession.set(field,value)
+		if field in ["temporal_aa","cinematic_motion_blur"]:
+			MatchSession.graphics_profile=&"custom"
+			var choice:=options_layer.get_node_or_null("GraphicsProfile") as OptionButton
+			if choice!=null:choice.select(1)
 		MatchSession.apply_preferences())
 	options_layer.add_child(toggle)
 

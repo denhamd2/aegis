@@ -385,11 +385,11 @@ func _restore_replay() -> void:
 	game.ball.reset_physics_interpolation()
 	for side in _saved.nets:
 		var saved: Dictionary=_saved.nets[side];var impact: Dictionary=game._net_impacts[side]
-		impact.age=saved.age;impact.material.set_shader_parameter("impact_age",saved.age)
-		impact.material.set_shader_parameter("impact_point",saved.point);impact.material.set_shader_parameter("impact_vector",saved.force)
+		impact.age=saved.age;game.set_net_presentation(side,saved.age,saved.point,saved.force)
 	game.camera_rig.presentation_override=_saved.camera_override
 	FootballCameraOptics.for_camera(camera).clear()
 	game.camera_rig.camera.global_transform=_saved.camera_transform;game.camera_rig.camera.make_current()
+	if buffer.crowd!=null:buffer.crowd.restore_live()
 	game.restart._ignore_buttons=true
 	_entry={};_saved={};_actor_states.clear();_detector_states.clear()
 func _finish_replay() -> void:

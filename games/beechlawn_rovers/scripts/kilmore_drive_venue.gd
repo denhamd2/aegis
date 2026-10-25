@@ -194,23 +194,11 @@ static func build(parent: Node3D, field_length: float, field_width: float, detai
 			(wall as MeshInstance3D).material_override = wall_material
 
 static func _add_spectators(parent: Node3D, width: float) -> void:
-	var scene := load("res://scenes/footballer_visual.tscn") as PackedScene
+	var crowd:=FootballSupporterCrowd.new();parent.add_child(crowd)
+	var entries:Array=[]
 	for index in 8:
-		var visual := scene.instantiate() as FootballerVisual
-		visual.name = "Spectator_%02d" % index
-		parent.add_child(visual)
-		var profile := FootballerProfile.new()
-		profile.appearance = FootballAppearance.new()
-		profile.appearance.kit = "spectator"
-		profile.appearance.height_scale = 0.96 + float(index%3)*0.025
-		profile.appearance.build_scale = 0.94 + float(index%4)*0.035
-		visual.configure_appearance(profile)
-		visual.position = Vector3(-28.0+float(index)*8.0,0.0,-width*0.5-2.0-float(index%2)*0.7)
-		visual.rotation.y = PI
-		visual.animation_tree.active = false
-		visual.animation_player.play(&"AN_Beechlawn_Idle")
-		visual.animation_player.seek(float(index%4)*0.18,true)
-		visual.animation_player.pause()
+		entries.append([-28.0+float(index)*8.0,0.0,-width*0.5-2.0-float(index%2)*.7,PI,0])
+	crowd.build(entries,[{"role":"home","centre":[0,0,-width*.5-2]}],true)
 
 static func _material(color: Color, roughness: float) -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()
