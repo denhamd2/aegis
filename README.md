@@ -10295,3 +10295,11 @@ This is the second step of `kenny_aaa_plan.md` (gaps 3, 5 and 7).
 - **Determinism.** Byte-identical on a second run.
 - **Guard.** `test_the_hair_cap_is_matte_roots`.
 - **Review.** `gauntlet/refs/characters/review/kenny_hairline_pass4.png`.
+
+## 25 Oct — Kenny pass 5: skin tone and flush
+
+- **Tone.** `SKIN_GRADE` goes from (0.94, 0.64, 0.50) to (0.95, 0.65, 0.57). Blue comes up, so his warmth reads ruddy rather than orange. The sheet is ruddy pink; in game he read orange and waxy.
+- **Flush.** `FLUSH` adds Gaussian spots on his nose, the apples of his cheeks and his ears, multiplied toward `FLUSH_TINT` (1.05, 0.84, 0.82). They are placed from 3D position relative to his eyes, as the beard is.
+- **Pores.** He already had them (`SkinLook.add_pores` in `KennyModel`).
+- **Determinism.** Byte-identical on a second run.
+- **Review.** `gauntlet/refs/characters/review/kenny_skin_pass5.png`.

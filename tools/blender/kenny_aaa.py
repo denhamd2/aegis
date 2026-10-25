@@ -232,7 +232,17 @@ CARD_TEXTURES = {
 SKIN_SOURCE = (MPFB_ASSETS / "unpacked_skins02/skins/jartur69_middleage_slavic_male_with_genitals_and_beard"
                / "Jartur_mid_old_Slavic_Male_with_Genitals_and_Beard_lsdif_lighter.png")
 SKIN_OUT = ROOT / "game/assets/characters/kenny_aaa_skin.jpg"
-SKIN_GRADE = (0.94, 0.64, 0.50)
+## (Pass 5, 25 Oct: at (0.94, 0.64, 0.50) he read orange and waxy in game; the
+## sheet is ruddy pink. Blue comes up, so the warmth reads as red, not orange.)
+SKIN_GRADE = (0.95, 0.65, 0.57)
+## The flush the sheet shows on a man who has been working: his nose, the
+## apples of his cheeks and his ears redden. Gaussian spots placed relative
+## to his eyes (m: across, back, up -- across is mirrored), each with a
+## radius and a strength; the skin under them is multiplied toward FLUSH_TINT.
+FLUSH_TINT = (1.05, 0.84, 0.82)
+FLUSH = [((0.0, -0.060, -0.035), 0.016, 0.8),     # nose (its tip: paint_skin's nose box)
+         ((0.040, -0.025, -0.035), 0.022, 0.7),   # cheeks
+         ((0.072, 0.050, -0.020), 0.020, 0.6)]    # ears
 SKIN_QUALITY = 92
 ## His beard (the sheet's head references): a short, full, blond-ginger
 ## beard and moustache, painted from 3D position relative to his eyes (m):
@@ -560,6 +570,11 @@ def paint_skin(body, eyes) -> None:
     beard *= ~nose
     beard *= 1.0 - _smooth(0.55, 0.85, lips)
     beard = np.clip(beard, 0.0, 1.0)
+    flush = np.zeros(hit.shape, np.float32)
+    for (fx, fy, fz), radius, strength in FLUSH:
+        r2 = (x - fx) ** 2 + (y - fy) ** 2 + (z - fz) ** 2
+        flush = np.maximum(flush, strength * np.exp(-r2 / (2.0 * radius * radius)) * hit)
+    base = base * (1.0 + (np.array(FLUSH_TINT, np.float32) - 1.0) * flush[..., None])
     # His own cheek tone: the median of the face just above the beard line.
     cheek = hit & (z > cheek_line + 0.012) & (z < cheek_line + 0.04) & (x > 0.03) & (x < 0.055) & (y < 0.0)
     tone = np.median(base[cheek], axis=0) if cheek.any() else base[hit].mean(axis=0)
