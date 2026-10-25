@@ -275,6 +275,8 @@ CAP_AXIS = Vector((0.0, -0.75, 0.66)).normalized()
 CAP_E1 = Vector((0.0, 0.66, 0.75)).normalized()
 CAP_E2 = CAP_AXIS.cross(CAP_E1)
 CAP_U_TILES = 5
+## The cap's painted coils (paint_hair_textures).
+CAP_COILS = 5200
 ## (Polished in game: they hung close to his face, where the sheet's mass
 ## stands well out from it, so wider cards, more standoff, more flare and an
 ## upper layer reaching round to the sides.)
@@ -319,7 +321,8 @@ HAIR_BODY_SHARE = 0.7
 ## it (m, front to back of the head centre); CROWN_OFF: how far out from it.
 PART_X = 0.016
 CROWN_COUNT = 140
-CROWN_SPAN = (-0.10, 0.07)
+## (Pass 4: from -0.10 to -0.115, so the first clumps start at the hairline.)
+CROWN_SPAN = (-0.115, 0.07)
 CROWN_OFF = (0.004, 0.08)
 ## The heading each starts on: back over the crown near the part, turning out
 ## to the side with distance from it (CROWN_SWEEP: sideways at the edge,
@@ -1185,22 +1188,26 @@ def paint_hair_textures() -> None:
     rgba = np.concatenate([np.broadcast_to(rgb, (CURL_TEX[1], CURL_TEX[0], 3)),
                            np.asarray(mask, np.float32)[..., None]], -1)
     Image.fromarray(np.clip(np.round(rgba), 0, 255).astype(np.uint8), "RGBA").save(HAIR_TEX, optimize=True)
-    # The cap: wavy strands combed back (v), colour only, darker at the
-    # roots over the front.
+    # The cap: tight curls, colour only, dark at the roots. (Pass 4, 20 Oct:
+    # it was strands combed straight back, and at his hairline -- the one
+    # place the curls leave it bare -- it read as a slicked helmet.) Small
+    # coils, darker than the curl cards, so the cap reads as the shadowed
+    # roots of the mass above it.
     size = 1024
-    img = Image.new("RGB", (size, size), tuple(int(c * 0.9) for c in HAIR_ROOT))
+    img = Image.new("RGB", (size, size), tuple(int(c * 0.75) for c in HAIR_ROOT))
     draw = ImageDraw.Draw(img)
-    for _ in range(1500):
+    for _ in range(CAP_COILS):
         x0 = float(rng.uniform(0, size))
-        y0 = float(rng.uniform(-0.2, 0.9)) * size
-        length = float(rng.uniform(0.15, 0.5)) * size
-        amp = float(rng.uniform(2.0, 7.0))
-        freq = float(rng.uniform(3.0, 7.0))
+        y0 = float(rng.uniform(-0.1, 1.0)) * size
+        length = float(rng.uniform(0.04, 0.12)) * size
+        radius = float(rng.uniform(3.0, 7.0))
+        turns = float(rng.uniform(1.5, 3.0))
         phase = float(rng.uniform(0, 6.28))
-        mix = float(rng.beta(1.6, 2.6))
-        colr = tuple(int(HAIR_ROOT[k] + (HAIR_TIP[k] - HAIR_ROOT[k]) * mix) for k in range(3))
-        pts = [((x0 + amp * math.sin(phase + freq * 6.28 * t)) % size, y0 + t * length)
-               for t in np.linspace(0, 1, 40)]
+        mix = float(rng.beta(1.4, 3.2))
+        colr = tuple(int(HAIR_ROOT[k] + (HAIR_MID[k] - HAIR_ROOT[k]) * mix) for k in range(3))
+        pts = [((x0 + radius * math.sin(phase + turns * 6.28 * t)) % size,
+                y0 + t * length + radius * 0.6 * math.cos(phase + turns * 6.28 * t))
+               for t in np.linspace(0, 1, 36)]
         for a_, b_ in zip(pts, pts[1:]):
             if abs(a_[0] - b_[0]) < size / 2:
                 draw.line([a_, b_], fill=colr, width=2)

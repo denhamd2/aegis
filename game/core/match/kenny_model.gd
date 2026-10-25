@@ -103,6 +103,14 @@ func _dress_eyes() -> void:
 const HAIR_MATERIALS := {"M_KennyHair": 0.4, "M_KennyHairCap": 0.5}
 const HAIR_ROUGHNESS := 0.6
 const HAIR_SPECULAR := 0.25
+## The cap is the shadowed roots under the curls, so it is matte, with no
+## stretched hair highlight. With HairLook's anisotropy on a smooth
+## skull-shaped surface, the overhead key drew one broad pale band across
+## his hairline that read as slicked-back hair whatever was painted there
+## (the owner, 20 Oct: his model "doesn't look good or realistic"; kenny
+## pass 4).
+const CAP_ROUGHNESS := 0.9
+const CAP_SPECULAR := 0.05
 
 
 func _dress_hair() -> void:
@@ -114,16 +122,18 @@ func _dress_hair() -> void:
 			if source == null or not HAIR_MATERIALS.has(source.resource_name):
 				continue
 			var material := source.duplicate() as BaseMaterial3D
-			if source.resource_name == "M_KennyHairCap":
+			var cap := source.resource_name == "M_KennyHairCap"
+			if cap:
 				material.vertex_color_use_as_albedo = true
-			material.roughness = HAIR_ROUGHNESS
-			material.metallic_specular = HAIR_SPECULAR
+			material.roughness = CAP_ROUGHNESS if cap else HAIR_ROUGHNESS
+			material.metallic_specular = CAP_SPECULAR if cap else HAIR_SPECULAR
 			material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
 			material.alpha_scissor_threshold = HAIR_MATERIALS[source.resource_name]
 			material.alpha_antialiasing_mode = BaseMaterial3D.ALPHA_ANTIALIASING_ALPHA_TO_COVERAGE_AND_TO_ONE
 			material.alpha_antialiasing_edge = 0.35
 			material.cull_mode = BaseMaterial3D.CULL_DISABLED
-			HairLook.apply(material)
+			if not cap:
+				HairLook.apply(material)
 			mi.set_surface_override_material(surface, material)
 
 

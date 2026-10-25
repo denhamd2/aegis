@@ -143,3 +143,17 @@ func test_curls_cover_the_crown() -> void:
 				right += 1
 	assert_int(left).is_greater(200)
 	assert_int(right).is_greater(200)
+
+
+## The cap is the shadowed roots under the curls: matte, with no stretched
+## hair highlight. With HairLook's anisotropy the overhead key drew a pale
+## band across his hairline that read as slicked-back hair (kenny pass 4).
+func test_the_hair_cap_is_matte_roots() -> void:
+	var model := _model()
+	add_child(model)
+	var cap := model.find_child("Kenny_HairCap", true, false) as MeshInstance3D
+	var mat := cap.get_surface_override_material(0) as BaseMaterial3D
+	assert_object(mat).is_not_null()
+	assert_bool(mat.anisotropy_enabled).is_false()
+	assert_float(mat.metallic_specular).is_less_equal(0.1)
+	assert_float(mat.roughness).is_greater_equal(0.85)

@@ -10285,3 +10285,13 @@ This is the second step of `kenny_aaa_plan.md` (gaps 3, 5 and 7).
   - `head-fat-incr` 0.35 → 0.2. The face read soft and smooth.
 - **Determinism.** Byte-identical on a second run.
 - **Review.** `gauntlet/refs/characters/review/kenny_face_pass3.png`.
+
+## 25 Oct — Kenny pass 4: the hairline
+
+- **What it was.** The pale band over his hairline read as slicked-back hair. It was the shine, not the paint. `KennyModel` gave the cap the curls' stretched hair highlight (`HairLook`), and on a smooth skull-shaped surface under an overhead key that draws one broad pale sheen.
+- **The fix.** The cap is now matte roots: `CAP_ROUGHNESS` 0.9, `CAP_SPECULAR` 0.05, no anisotropy. The curls keep theirs.
+- **The cap texture.** It is tight dark-rooted coils (`CAP_COILS` 5200) instead of combed-back strands. That alone changed nothing visible until the shine came off.
+- **Crown curls.** They now start right at the hairline (`CROWN_SPAN` -0.115).
+- **Determinism.** Byte-identical on a second run.
+- **Guard.** `test_the_hair_cap_is_matte_roots`.
+- **Review.** `gauntlet/refs/characters/review/kenny_hairline_pass4.png`.
