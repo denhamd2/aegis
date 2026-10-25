@@ -29,6 +29,14 @@ func setup(game: Node3D, requested: StringName) -> void:
 	var environment := world.environment.duplicate(true) as Environment
 	world.environment = environment
 	environment.ambient_light_energy = float(config.ambient)
+	if game.venue.id == &"rovers_arena":
+		# Match-owned light response: the canopy shades the seating/pitch while
+		# sky fill keeps the roof structure and players readable in the shadows.
+		environment.ambient_light_energy *= .92
+		environment.ssao_enabled = true
+		environment.ssao_radius = .8
+		environment.ssao_intensity = .65
+		environment.ssao_power = 1.25
 	environment.fog_density = float(config.fog)
 	# Depth haze works in native and Web. Volumetric fog is deliberately absent
 	# from the clear broadcast and unsupported in the Compatibility renderer.

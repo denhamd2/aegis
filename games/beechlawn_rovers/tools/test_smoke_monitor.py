@@ -15,6 +15,8 @@ def run(source, timeout):
 
 output, status, elapsed = run("import time;print('SCRIPT ERROR: Assertion failed.');time.sleep(30)", 10)
 assert status == 'error' and elapsed < 3 and 'Assertion failed' in output
+output, status, elapsed = run("import time;print('SHADER ERROR: Unknown identifier');time.sleep(30)", 10)
+assert status == 'error' and elapsed < 3 and 'SHADER ERROR:' in output
 output, status, elapsed = run("import time;time.sleep(30)", .25)
 assert status == 'timeout' and elapsed < 3
 output, status, elapsed = run("print('PASS')", 2)

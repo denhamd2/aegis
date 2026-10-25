@@ -30,7 +30,7 @@ func _capture() -> void:
 	session.camera_height = 0.0
 	session.camera_zoom = 0.0
 	session.camera_angle = 0.0
-	session.weather_preset = &"sunny"
+	session.weather_preset = MatchWeather.valid_id(StringName(options.get("weather","sunny")))
 	root.get_node("MatchSession").venue_id = FootballMatchVenue.valid_id(StringName(options.get("venue","kilmore_drive")))
 	var game := load("res://scenes/match_11v11.tscn").instantiate() as Node3D
 	root.add_child(game)
@@ -63,18 +63,39 @@ func _capture() -> void:
 		return
 	var primary_draw_calls := RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME)
 	var primary_primitives := RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_PRIMITIVES_IN_FRAME)
+	var primary_turf: int = game.grass_detail.draw_triangle_count() if game.grass_detail != null else 0
 	var extra_views: Array = []
-	if view == "all":
-		for extra in ["wide","detail"]:
-			camera.global_position = Vector3(-42,29,52) if extra == "wide" else Vector3(47,.38,3.5)
-			camera.look_at(Vector3(0,2,0) if extra == "wide" else Vector3(53,1.1,0))
-			camera.fov = 65 if extra == "wide" else 48
+	var view_groups := {"all":["wide","detail","north_end","south_end","grass"],"corners":["corner_ne","corner_nw","corner_se","corner_sw"],"exterior":["exterior_east","exterior_west","exterior_north","exterior_south"],"pitch":["grass","paint","puddle"]}
+	if view_groups.has(view):
+		var shots := {
+		 "wide":[Vector3(-42,29,52),Vector3(0,2,0),65],
+		 "detail":[Vector3(47,.38,3.5),Vector3(53,1.1,0),48],
+		 "north_end":[Vector3(-38,2.0,4),Vector3(74,15,0),58],
+		 "south_end":[Vector3(38,2.0,-4),Vector3(-74,15,0),58],
+		 "grass":[Vector3(9,.16,14),Vector3(9.8,.02,12.7),48],
+		 "paint":[Vector3(1,.17,8),Vector3(0,.02,6.8),48],
+		 "puddle":[Vector3(46,.24,3),Vector3(50.7,.01,.5),45],
+		 "corner_ne":[Vector3(38,2.0,16),Vector3(67,13,46),58],
+		 "corner_nw":[Vector3(38,2.0,-16),Vector3(67,13,-46),58],
+		 "corner_se":[Vector3(-38,2.0,16),Vector3(-67,13,46),58],
+		 "corner_sw":[Vector3(-38,2.0,-16),Vector3(-67,13,-46),58],
+		 "exterior_east":[Vector3(-55,17,140),Vector3(0,18,72),58],
+		 "exterior_west":[Vector3(55,17,-140),Vector3(0,18,-72),58],
+		 "exterior_north":[Vector3(157,21,45),Vector3(92,18,0),58],
+		 "exterior_south":[Vector3(-157,21,-45),Vector3(-92,18,0),58]}
+		for extra in view_groups[view]:
+			var shot: Array = shots[extra]
+			camera.global_position = shot[0]
+			camera.look_at(shot[1])
+			camera.fov = shot[2]
 			camera.reset_physics_interpolation()
 			if game.grass_detail != null: game.grass_detail.prewarm(camera.global_position)
 			for frame in 3: await RenderingServer.frame_post_draw
 			var filename: String = "match_"+extra+".png"
 			assert(root.get_texture().get_image().save_png(output.path_join(filename)) == OK)
-			extra_views.append({"image":filename,"camera_position":str(camera.global_position),"fov":camera.fov,"draw_calls":RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME),"primitives":RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_PRIMITIVES_IN_FRAME)})
+			var turf_triangles: int = game.grass_detail.draw_triangle_count() if game.grass_detail != null else 0
+			assert(turf_triangles<=240000,"Turf exceeded its visible geometry budget")
+			extra_views.append({"image":filename,"camera_position":str(camera.global_position),"fov":camera.fov,"turf_triangles":turf_triangles,"draw_calls":RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME),"primitives":RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_PRIMITIVES_IN_FRAME)})
 	# The team's arrays are the authoritative actor inventory, independent of groups.
 	var home: Array = game.get("_home_players")
 	var away: Array = game.get("_away_players")
@@ -87,11 +108,12 @@ func _capture() -> void:
 		"display_server":DisplayServer.get_name(), "godot":Engine.get_version_info().string,
 		"resolution":[image.get_width(),image.get_height()], "msaa_3d":root.msaa_3d,
 		"scene":"res://scenes/match_11v11.tscn", "camera":"close_broadcast",
-		"weather":"sunny", "sun_shadows":game.get_node("Sun").shadow_enabled,
+		"weather":str(session.weather_preset), "sun_shadows":game.get_node("Sun").shadow_enabled,
 		"home_players":home.size(), "away_players":away.size(), "officials":official_count,
 		"seating_audit":seating_audit, "venue":str(game.venue.id), "venue_view":view, "extra_views":extra_views, "phase":"stationary kickoff",
 		"draw_calls":primary_draw_calls,
 		"primitives":primary_primitives, "warmup_frames":3,
+		"turf_triangles":primary_turf,
 		"scope":"Actual Forward+ match still; no native Mac timing or graphics parity claim.",
 	}
 	assert(home.size() == 11 and away.size() == 11 and official_count == 1)
@@ -105,25 +127,16 @@ func _capture() -> void:
 
 func _audit_stadium_seating(game: Node3D) -> Dictionary:
 	var arena := game.get_node("ParkEdge/RoversArena")
-	var diagonal := sqrt(.5)
-	var outward: Array[Vector3] = [Vector3(diagonal,0,diagonal),Vector3.RIGHT,
-		Vector3(diagonal,0,-diagonal),Vector3.FORWARD,Vector3(-diagonal,0,-diagonal),
-		Vector3.LEFT,Vector3(-diagonal,0,diagonal),Vector3.BACK]
+	var layout := RoversArena.layout()
 	var checked := 0
 	var errors := 0
-	for section in 24:
-		var near := (arena.get_node("SeatsNear%02d"%section) as MultiMeshInstance3D).multimesh
-		var far := (arena.get_node("SeatsFar%02d"%section) as MultiMeshInstance3D).multimesh
-		var side := section%8
-		for index in range(0,near.instance_count,13):
-			var pose := near.get_instance_transform(index)
-			var aligned := pose.basis.y.dot(Vector3.UP) > .9999 \
-				and (-pose.basis.z).dot(-outward[side]) > .999 \
-				and pose.is_equal_approx(far.get_instance_transform(index))
-			if side in [1,3,5,7]:
-				var lateral := pose.origin.z if side in [1,5] else pose.origin.x
-				aligned = aligned and absf(lateral-roundf(lateral/.6)*.6) < .002 \
-					and absf(lateral-roundf(lateral/13.2)*13.2) > 1.15
-			if not aligned: errors += 1
+	for section: Dictionary in layout.sections:
+		var id := int(section.id)
+		var near := arena.get_node("SeatsNear%02d"%id) as MultiMeshInstance3D
+		var far := arena.get_node("SeatsFar%02d"%id) as MultiMeshInstance3D
+		for index in range(0,near.multimesh.instance_count,13):
+			var pose := near.global_transform*near.multimesh.get_instance_transform(index)
+			var other := far.global_transform*far.multimesh.get_instance_transform(index)
+			if not pose.is_equal_approx(other) or not StadiumGeometryAudit.check_pose(pose,section,layout): errors += 1
 			checked += 1
-	return {"sampled_seats":checked,"errors":errors,"scope":"Native GPU MultiMesh readback: upright, inward, fixed columns/aisles, identical LOD transforms"}
+	return {"sampled_seats":checked,"errors":errors,"scope":"Actual GPU buffers: centred blocks, supported level rows, inward chairs, straight/radial aisles, identical near/far transforms"}

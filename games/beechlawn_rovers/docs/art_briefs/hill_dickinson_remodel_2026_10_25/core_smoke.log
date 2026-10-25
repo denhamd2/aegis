@@ -1,0 +1,89 @@
+
+[smoke] stadium_seating_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+STADIUM_REMODEL PASS: 49554 supported/facing seats; 71 spatial blocks; four curved corners and distinct stand profiles
+[passed] stadium_seating_smoke.gd (1.9s)
+
+[smoke] venue_selection_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=rovers_arena
+BEECHLAWN_MENU_READY
+VENUE_SELECTION PASS: persistence, invalid fallback, both grounds, flat/uneven physics, goals/nets/flags, section LOD, independent wet surfaces and menu bindings
+[passed] venue_selection_smoke.gd (13.4s)
+
+[smoke] wet_weather_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive
+Wet/weather checks: physical ground slowdown, airborne exclusion, mirrored masks, 60/120 Hz, preferences, four presets; failures=0
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] wet_weather_smoke.gd (7.3s)
+
+[smoke] pitch_presentation_repairs_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive
+PITCH_REPAIRS horizontal complete indicator and mirrored exterior penalty arcs PASS
+[passed] pitch_presentation_repairs_smoke.gd (7.8s)
+
+[smoke] goal_net_contact_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive
+NET_CONTACT end=-1 point=(0.0, 0.817646, -1.739998) vector=(0.0, -0.049391, -0.380578)
+NET_CONTACT end=1 point=(0.0, 0.817646, -1.739998) vector=(-0.0, -0.049391, -0.380578)
+GOAL_NET actual ball impacts, bulge parameters, continued flight and one score at both ends PASS
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 2 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+[passed] goal_net_contact_smoke.gd (8.0s)
+
+[smoke] broadcast_camera_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive
+CAMERA_CHECK close_broadcast position=(0.0, 12.0, -26.0) fov=50.0
+CAMERA_CHECK dynamic_wide position=(0.0, 16.0, -32.0) fov=52.0
+CAMERA_CHECK stadium position=(0.0, 19.0, -43.0) fov=55.0
+CAMERA_CHECK live_broadcast position=(0.0, 11.0, -37.0) fov=42.0
+CAMERA_CHECK fan_view position=(0.0, 22.0, -40.0) fov=58.0
+CAMERA_CHECK blimp position=(0.0, 65.0, 0.05) fov=60.0
+CAMERA_CHECK vertical position=(-24.0, 16.0, 0.0) fov=55.0
+CAMERA_CHECK player position=(-7.0, 4.5, 0.0) fov=64.0
+CAMERA_CHECK field_side position=(0.0, 4.5, -22.0) fov=60.0
+Camera presets/settings/movement checks failures=0
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] broadcast_camera_smoke.gd (10.4s)
+
+[smoke] player_selection_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive
+PLAYER_SELECTION PASS: defender, hysteresis, manual hold/mode, intro, real pass release, run continuity, held input, committed action, dismissal, AI keepers/watch
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] player_selection_smoke.gd (7.8s)
+
+[smoke] receiver_selection_pass_types_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive
+RECEIVER_SELECTION PASS: real ground/loft/cross markers, no windup or failed-preparation handover
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] receiver_selection_pass_types_smoke.gd (7.9s)
+
+[smoke] hud_layout_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive
+HUD PASS: monochrome replacement, clock, responsive radar at 3 aspects, carrier identity, distinct power, help and presentation visibility
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] hud_layout_smoke.gd (8.1s)

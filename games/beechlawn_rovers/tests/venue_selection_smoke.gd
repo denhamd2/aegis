@@ -19,6 +19,12 @@ func _run() -> void:
   assert(game.venue.id == id and game.ball.surface_profile == game.venue)
   assert(game._home_players.size() == 11 and game._away_players.size() == 11)
   assert(game._net_impacts.size() == 2,"Both functional nets must keep impact animation")
+  var turf: ShaderMaterial = game.get_node("Pitch/SundayLeagueTurf").material_override
+  assert(turf.get_shader_parameter("stadium_mowing")== (not game.venue.worn_surface))
+  assert(game.grass_detail.material.get_shader_parameter("stadium_mowing")== (not game.venue.worn_surface))
+  assert(game.grass_detail.mid_material.get_shader_parameter("stadium_mowing")== (not game.venue.worn_surface))
+  assert(game.grass_detail.triangle_budget<=240000)
+  assert(game.get_node("WorldEnvironment").environment.ssao_enabled==(id==&"rovers_arena"),"Arena lighting leaked to Kilmore")
   assert(game.get_node("Goals").find_children("GoalDetector","Node3D",true,false).size() == 2)
   var space: PhysicsDirectSpaceState3D = game.get_world_3d().direct_space_state
   for point in [Vector2(17,11),Vector2(-30,-18),Vector2(36,20)]:
@@ -32,8 +38,8 @@ func _run() -> void:
    var arena: Node3D = game.get_node("ParkEdge/RoversArena")
    assert(arena.get_meta("seat_count") > 45000)
    assert(arena.find_children("CornerFlag*","MeshInstance3D",true,false).size() == 4)
-   assert(arena.find_children("SeatsNear*","MultiMeshInstance3D",true,false).size() == 24)
-   assert(arena.find_children("SeatsFar*","MultiMeshInstance3D",true,false).size() == 24)
+   assert(arena.find_children("SeatsNear*","MultiMeshInstance3D",true,false).size() == RoversArena.layout().sections.size())
+   assert(arena.find_children("SeatsFar*","MultiMeshInstance3D",true,false).size() == RoversArena.layout().sections.size())
    assert(game.ball.wet_surface.sample_at(Vector3(50.9,0,-1.5)) == Vector2.ZERO,"Arena inherited Kilmore puddles")
   else:
    assert(absf(game.surface_height(17,11)) > .001)

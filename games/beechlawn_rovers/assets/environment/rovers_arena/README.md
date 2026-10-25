@@ -1,25 +1,13 @@
-# Rovers Arena
+# Rovers Arena — Hill Dickinson reference-led remodel
 
-Original procedural Blender geometry for Beechlawn Rovers, authored 2026-10-24.
-No third-party stadium model or bundled external textures were used.
-Source: `tools/blender/beechlawn/author_rovers_arena.py` and `rovers_arena.blend`.
+Original Blender geometry and procedural PBR texture maps, authored 25 October 2026. The entire building is reconstructed from public photographs with Rovers branding. Photographic proportions are inferred, not construction-survey measurements. No third-party stadium mesh or research photograph is shipped as a texture.
 
-The BlendSwap CC0 candidate (https://blendswap.com/blend/10567, MrChimp2313)
-requires sign-in and returned HTTP 403 in this environment. The approved original
-modular-arena fallback was used. The smaller CC0 candidate is
-https://blendswap.com/blend/7488. These are research links, not incorporated assets.
+Source: `tools/blender/beechlawn/author_rovers_arena.py`, pure layout parameters in `arena_layout.py`, editable `rovers_arena.blend`. The source includes a preview-only collection excluded from GLB. `asset_audit.json` records actual geometry totals.
 
-The GLB contains the structure/apron only. Godot uses the shared functional pitch,
-goals and animated nets. `seating.json` contains 50,032 reusable seat transforms,
-partitioned into 24 spatial sections. Chair meshes use near/far visibility LOD;
-crowd cards have no skeletons or shadows. The source .blend also contains a
-preview-only collection for framing which is deliberately excluded from GLB.
+The bowl has a continuous 63-row South bank, tiered sides, a 50-row North end, and fanned corners with tapered northern upper wings. True-normal tread depth is 0.78 m throughout; chair pitch 0.55 m. Openings, half-step stairs, hospitality fascias, trusses, barrel canopy, end glazing, brick podium and external entrances are modelled. The building has a paved base and original boards/signage.
 
-Turf uses the project's already credited ambientCG CC0 Grass005 material; the
-existing park mud masks remain exclusive to Kilmore Drive. Stadium materials and
-crowd shader are original. No paid or extracted PES/FIFA assets are included.
+`seating.json` keeps `[x,y,z,yaw,section]` in Godot space. `seating_layout.json` version 1 describes banks, row levels/spans, spatial block centres, roles, counts and an actual-mesh support audit. Runtime groups derive from metadata, not fixed section counts/modulo facing. Section-local MultiMeshes have meaningful culling/LOD origins. Near chairs and folded distant silhouettes use the same imported blue material. Crowd occupancy retains 70% home end, 15% away end, 40% elsewhere, without skeletons or crowd shadows. Roof microstructure has a 230 m visibility limit; imported meshes retain generated LODs.
 
-Seating alignment correction (v0.3.1): straight-bank columns share a fixed
-0.6 m lateral grid and continuous perpendicular stair aisles. Rows retain their
-normal rise; inward chair orientation explicitly accounts for Blender XY to
-Godot XZ conversion. Both LODs use the same upright placement function.
+Godot owns the live field, markings, functional clean-frame goals, animated nets and corner flags. Cross-cut turf shares world coordinates/material response between distant surface, fins and near short blades. Existing credited ambientCG Grass005/Poly Haven sky and Kilmore mud remain CC0 assets. New concrete/brick maps and geometry are original project work. Grass detail remains capped at 240k triangles.
+
+References and credits: `references/hill_dickinson_2026_10_25/provenance.json`. Native evidence, limitations and Mac acceptance status are in `docs/art_briefs/hill_dickinson_remodel_2026_10_25/`. Mac-only delivery.

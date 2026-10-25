@@ -1,0 +1,203 @@
+{
+  "version": "0.4.0",
+  "backlog": "BR-023 (23/27, in progress: architectural likeness and native M1 acceptance open)",
+  "result": "PASS",
+  "assets": {
+    "author": "Original reference-led Beechlawn project geometry",
+    "reference": "Hill Dickinson Stadium",
+    "source": "tools/blender/beechlawn/author_rovers_arena.py",
+    "units": "metres",
+    "shell_triangles": 204080,
+    "seat_positions": 49554,
+    "seating_sections": 71,
+    "materials": 12,
+    "inferred_dimensions": true,
+    "imported_third_party_models": false
+  },
+  "support_audit": {
+    "sampled": 2915,
+    "errors": 0,
+    "indices": []
+  },
+  "captures": [
+    {
+      "folder": "native_arena",
+      "venue": "rovers_arena",
+      "weather": "sunny",
+      "draw_calls": 1020,
+      "primitives": 943476,
+      "views": 6,
+      "gpu_audit": {
+        "errors": 0,
+        "sampled_seats": 3837,
+        "scope": "Actual GPU buffers: centred blocks, supported level rows, inward chairs, straight/radial aisles, identical near/far transforms"
+      }
+    },
+    {
+      "folder": "native_corners",
+      "venue": "rovers_arena",
+      "weather": "sunny",
+      "draw_calls": 1020,
+      "primitives": 943476,
+      "views": 5,
+      "gpu_audit": {
+        "errors": 0,
+        "sampled_seats": 3837,
+        "scope": "Actual GPU buffers: centred blocks, supported level rows, inward chairs, straight/radial aisles, identical near/far transforms"
+      }
+    },
+    {
+      "folder": "native_exterior",
+      "venue": "rovers_arena",
+      "weather": "sunny",
+      "draw_calls": 1020,
+      "primitives": 943476,
+      "views": 5,
+      "gpu_audit": {
+        "errors": 0,
+        "sampled_seats": 3837,
+        "scope": "Actual GPU buffers: centred blocks, supported level rows, inward chairs, straight/radial aisles, identical near/far transforms"
+      }
+    },
+    {
+      "folder": "native_cloudy",
+      "venue": "rovers_arena",
+      "weather": "cloudy",
+      "draw_calls": 1115,
+      "primitives": 991387,
+      "views": 1,
+      "gpu_audit": {
+        "errors": 0,
+        "sampled_seats": 3837,
+        "scope": "Actual GPU buffers: centred blocks, supported level rows, inward chairs, straight/radial aisles, identical near/far transforms"
+      }
+    },
+    {
+      "folder": "native_kilmore",
+      "venue": "kilmore_drive",
+      "weather": "sunny",
+      "draw_calls": 913,
+      "primitives": 627788,
+      "views": 4,
+      "gpu_audit": {}
+    },
+    {
+      "folder": "native_kilmore_rain",
+      "venue": "kilmore_drive",
+      "weather": "rain",
+      "draw_calls": 1006,
+      "primitives": 677525,
+      "views": 4,
+      "gpu_audit": {}
+    }
+  ],
+  "total_final_views": 25,
+  "baseline": {
+    "draw_calls": 908,
+    "primitives": 500176
+  },
+  "current": {
+    "draw_calls": 1020,
+    "primitives": 943476
+  },
+  "scope": "Native Forward+ via Linux llvmpipe. Structural, visibility, budget and package checks do not establish Mac 1080p60 or exact architectural likeness.",
+  "unmodified_systems": [
+    "ball/player physics",
+    "Kilmore terrain, wear masks, puddle drag and markings",
+    "player body/head/kit/animation assets",
+    "normal gameplay camera",
+    "wrestling project"
+  ],
+  "full_match": {
+    "seconds": 180,
+    "complete": true,
+    "auto_skips": 0,
+    "goals": [
+      2,
+      2
+    ],
+    "teams": {
+      "Beechlawn Rovers": {
+        "action_decisions": {
+          "cross": 2,
+          "shoot": 6,
+          "short_pass": 6,
+          "through_pass": 1
+        },
+        "cancelled_contacts": 2,
+        "chest_controls": 0,
+        "completed_passes": 7,
+        "contested_shots": 5,
+        "controls": 26,
+        "cross_styles": {
+          "early_cross": 1,
+          "standard": 1
+        },
+        "crosses": 2,
+        "final_third_entries": 4,
+        "headers": 1,
+        "intercepted_passes": 3,
+        "lofted_passes": 1,
+        "passes": 13,
+        "sampled_decisions": {
+          "carry": 168,
+          "cross": 9,
+          "none": 406,
+          "shoot": 5,
+          "short_pass": 4,
+          "through_pass": 1
+        },
+        "saves": 3,
+        "shot_styles": {
+          "finesse": 4,
+          "power": 2,
+          "standard": 2
+        },
+        "shots": 8
+      },
+      "Boardeaux": {
+        "action_decisions": {
+          "cross": 4,
+          "shoot": 5,
+          "short_pass": 12,
+          "through_pass": 5
+        },
+        "cancelled_contacts": 1,
+        "chest_controls": 0,
+        "completed_passes": 12,
+        "contested_shots": 3,
+        "controls": 33,
+        "cross_styles": {
+          "driven_cross": 1,
+          "early_cross": 1
+        },
+        "crosses": 2,
+        "final_third_entries": 6,
+        "headers": 0,
+        "intercepted_passes": 9,
+        "lofted_passes": 0,
+        "passes": 23,
+        "sampled_decisions": {
+          "carry": 200,
+          "cross": 2,
+          "none": 612,
+          "shoot": 4,
+          "short_pass": 5,
+          "through_pass": 2
+        },
+        "saves": 3,
+        "shot_styles": {
+          "finesse": 1,
+          "power": 4,
+          "standard": 1
+        },
+        "shots": 6
+      }
+    }
+  },
+  "source_portability": "Blender image paths are relative to the source .blend directory",
+  "remaining_acceptance": [
+    "Owner comparison against reference architecture",
+    "Native M1 Pro moving appearance and sustained 1080p60"
+  ]
+}

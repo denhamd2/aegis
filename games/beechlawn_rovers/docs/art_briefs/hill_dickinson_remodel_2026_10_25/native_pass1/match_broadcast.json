@@ -1,0 +1,69 @@
+{
+  "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+  "api": "1.4.305",
+  "away_players": 11,
+  "camera": "close_broadcast",
+  "display_server": "X11",
+  "draw_calls": 1014,
+  "extra_views": [
+    {
+      "camera_position": "(-42.0, 29.0, 52.0)",
+      "draw_calls": 1735,
+      "fov": 65.0,
+      "image": "match_wide.png",
+      "primitives": 1087375
+    },
+    {
+      "camera_position": "(47.0, 0.38, 3.5)",
+      "draw_calls": 317,
+      "fov": 48.0,
+      "image": "match_detail.png",
+      "primitives": 686575
+    },
+    {
+      "camera_position": "(-38.0, 2.0, 4.0)",
+      "draw_calls": 1605,
+      "fov": 58.0,
+      "image": "match_north_end.png",
+      "primitives": 1022455
+    },
+    {
+      "camera_position": "(38.0, 2.0, -4.0)",
+      "draw_calls": 1548,
+      "fov": 58.0,
+      "image": "match_south_end.png",
+      "primitives": 1012006
+    },
+    {
+      "camera_position": "(12.0, 0.13, 8.0)",
+      "draw_calls": 876,
+      "fov": 48.0,
+      "image": "match_grass.png",
+      "primitives": 956009
+    }
+  ],
+  "godot": "4.6.3-stable (official)",
+  "home_players": 11,
+  "msaa_3d": 2,
+  "officials": 1,
+  "phase": "stationary kickoff",
+  "primitives": 717764,
+  "rendering_method": "forward_plus",
+  "resolution": [
+    1280,
+    720
+  ],
+  "scene": "res://scenes/match_11v11.tscn",
+  "scope": "Actual Forward+ match still; no native Mac timing or graphics parity claim.",
+  "seating_audit": {
+    "errors": 0,
+    "sampled_seats": 3837,
+    "scope": "Actual GPU buffers: centred blocks, supported level rows, inward chairs, straight/radial aisles, identical near/far transforms"
+  },
+  "sun_shadows": true,
+  "vendor": "Unknown",
+  "venue": "rovers_arena",
+  "venue_view": "all",
+  "warmup_frames": 3,
+  "weather": "sunny"
+}

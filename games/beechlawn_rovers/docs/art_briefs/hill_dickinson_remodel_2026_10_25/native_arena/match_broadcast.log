@@ -1,0 +1,10 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Vulkan 1.4.305 - Forward+ - Using Device #0: Unknown - llvmpipe (LLVM 19.1.7, 256 bits)
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=rovers_arena
+NATIVE_MATCH_DRAW 1
+NATIVE_MATCH_DRAW 2
+NATIVE_MATCH_DRAW 3
+BEECHLAWN_NATIVE_CAPTURE {"adapter":"llvmpipe (LLVM 19.1.7, 256 bits)","api":"1.4.305","away_players":11,"camera":"close_broadcast","display_server":"X11","draw_calls":1020,"extra_views":[{"camera_position":"(-42.0, 29.0, 52.0)","draw_calls":1761,"fov":65.0,"image":"match_wide.png","primitives":1338483,"turf_triangles":0},{"camera_position":"(47.0, 0.38, 3.5)","draw_calls":312,"fov":48.0,"image":"match_detail.png","primitives":865827,"turf_triangles":187136},{"camera_position":"(-38.0, 2.0, 4.0)","draw_calls":1610,"fov":58.0,"image":"match_north_end.png","primitives":1263859,"turf_triangles":32768},{"camera_position":"(38.0, 2.0, -4.0)","draw_calls":1550,"fov":58.0,"image":"match_south_end.png","primitives":1251046,"turf_triangles":32768},{"camera_position":"(9.0, 0.16, 14.0)","draw_calls":1027,"fov":48.0,"image":"match_grass.png","primitives":1198571,"turf_triangles":205568}],"godot":"4.6.3-stable (official)","home_players":11,"msaa_3d":2,"officials":1,"phase":"stationary kickoff","primitives":943476,"rendering_method":"forward_plus","resolution":[1280,720],"scene":"res://scenes/match_11v11.tscn","scope":"Actual Forward+ match still; no native Mac timing or graphics parity claim.","seating_audit":{"errors":0,"sampled_seats":3837,"scope":"Actual GPU buffers: centred blocks, supported level rows, inward chairs, straight/radial aisles, identical near/far transforms"},"sun_shadows":true,"turf_triangles":32768,"vendor":"Unknown","venue":"rovers_arena","venue_view":"all","warmup_frames":3,"weather":"sunny"}
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)

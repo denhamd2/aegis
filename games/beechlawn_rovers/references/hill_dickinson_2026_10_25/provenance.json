@@ -1,0 +1,40 @@
+{
+  "captured_utc": "2026-10-25",
+  "items": [
+    {
+      "file": "bdp_pitch.jpg",
+      "url": "https://www.bdp.com/us/design-stories/everton-stadium",
+      "sha256": "c08717024bae6ee455c28a19a291da24059a68d22e16c047c48c6cd45a352503",
+      "use": "Visual study only; excluded from game export",
+      "rights": "Original photographer/publisher; no texture or geometry redistribution license assumed"
+    },
+    {
+      "file": "stand.jpg",
+      "url": "https://stories.evertonstadium.com/untitled-story/assets/00tCcGDpZM/feb-06-2025-016-4096x2304.jpg",
+      "sha256": "7a42858fec72910cf2a06c774d27414dd527bf816223161b2beda3c8c4d9a327",
+      "use": "Visual study only; excluded from game export",
+      "rights": "Original photographer/publisher; no texture or geometry redistribution license assumed"
+    },
+    {
+      "file": "detail.jpg",
+      "url": "https://stories.evertonstadium.com/untitled-story/assets/PNBSLUrJdq/evertonstadium2025.04.02-12-4096x2729.jpg",
+      "sha256": "504fdcb717f044ff7aff64342d4feef77fa5be3d234978931bb82cacc589be85",
+      "use": "Visual study only; excluded from game export",
+      "rights": "Original photographer/publisher; no texture or geometry redistribution license assumed"
+    },
+    {
+      "file": "empty_bowl.jpg",
+      "url": "https://www.bbc.co.uk/sport/football/articles/c5y8j0rn2dzo",
+      "sha256": "4488a15ecb6dddb4187f0115470f5ccf6393565d432545f9abc7b3ca4cc60be2",
+      "use": "Visual study only; excluded from game export",
+      "rights": "Original photographer/publisher; no texture or geometry redistribution license assumed"
+    },
+    {
+      "file": "empty_corner_view.jpg",
+      "url": "https://www.where-to-sit.co.uk/stadiums/everton-fc.html",
+      "sha256": "996e843e18b132fd148c21a06169a91eed117c77d24802a3f398bf4388c489ee",
+      "use": "Visual study only; excluded from game export",
+      "rights": "Original photographer/publisher; no texture or geometry redistribution license assumed"
+    }
+  ]
+}

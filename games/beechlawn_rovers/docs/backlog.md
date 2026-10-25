@@ -10,6 +10,12 @@ items, use the archived references and skill workflow in
 [`art_reference_implementation_plan.md`](art_reference_implementation_plan.md)
 and [`../references/README.md`](../references/README.md) before implementation.
 
+## Stadium remodel and pitch realism — 25 October 2026
+
+BR-023 (23/27, in progress) now has a complete Hill Dickinson reference-led Rovers building, curved/tapered corner seating, a continuous home end, barrel roof/trusses, glazed/brick/metal exterior and improved turf in both venues. All 25 final native views and actual seating/tread support checks pass. See [the production evidence](art_briefs/hill_dickinson_remodel_2026_10_25/brief.md).
+
+BR-025 (25/27, in progress) is next: verify the v0.4.0 universal Mac package, then profile and visually review the fuller stadium on the M1 Pro at 1080p. Building geometry/shadow work increased; native Mac 60 fps and exact reference likeness remain open acceptance checks.
+
 ## Match HUD, assisted control and second venue — 24 October 2026
 
 BR-006 (6/27): the missing automatic-selection acceptance was reopened and
@@ -23,7 +29,7 @@ identity/stamina strips, distinct shot power and central radar follow archived
 `70060.jpg`. F1 opens controls; the original blue intro graphics are independent.
 
 BR-023 (23/27, in progress): Options selects Kilmore Drive or Rovers Arena.
-The original Blender arena has 50,032 seat positions, section LOD and instanced
+The reference-led Blender arena has 49,554 seat positions, section LOD and instanced
 crowd, a maintained striped field, functional shared goals/net impacts and four
 corner flags. Venue-owned surface profiles keep park relief/puddles exclusive
 to Kilmore. The free BlendSwap model was account-gated; the approved original
@@ -52,7 +58,7 @@ BR-021, match consistency under BR-008 (8/27), and individual likeness under
 BR-022 (22/27) remain open.
 
 Next: BR-025 (25/27, in progress), validate the combined movement, contacts,
-keeper saves, assisted controls and both venues in the v0.3.0 universal Mac
+keeper saves, assisted controls and both venues in the v0.4.0 universal Mac
 package. Package metadata identifies its exact source/update time. Native M1
 appearance, input feel and 1080p60 still require hardware acceptance.
 
@@ -1103,6 +1109,7 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
     acceptance check is the reference-matched face/hair and full-clip garment
     review, before roster integration or duplicating the process to others.
 - [ ] **BR-023 — Kilmore Drive and selectable Rovers Arena**
+  - 2026-10-25, v0.4.0: owner-approved complete Hill Dickinson reference-led building replaces the octagonal arena. Distinct stands, tapered/fanned corners, a continuous home end, true-normal terraces, brick/metal/glass exterior, barrel roof/trusses and Rovers signage are authored in Blender. A section/row manifest replaces fixed banks and records actual-mesh seat support. Both venues receive short-turf/material refinement; Kilmore's original terrain, wear, markings and wet physics remain. Reference archive and native evidence: `art_briefs/hill_dickinson_remodel_2026_10_25/`. Exact photographic likeness and native M1 timing remain open.
   - 2026-10-24, v0.3.1: fixed the slanted seat/aisle appearance in the opposing
     stand. Bank-centred columns and continuous stair aisles replace row-relative
     drift; Blender/Godot conversion and inward bank-normal yaw correct all

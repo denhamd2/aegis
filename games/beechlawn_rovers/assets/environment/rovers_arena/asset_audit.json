@@ -1,10 +1,12 @@
 {
-  "author": "Original Beechlawn project geometry",
+  "author": "Original reference-led Beechlawn project geometry",
+  "reference": "Hill Dickinson Stadium",
   "source": "tools/blender/beechlawn/author_rovers_arena.py",
   "units": "metres",
-  "shell_triangles": 6764,
-  "seat_positions": 50032,
-  "seating_sections": 24,
-  "materials": 10,
+  "shell_triangles": 204080,
+  "seat_positions": 49554,
+  "seating_sections": 71,
+  "materials": 12,
+  "inferred_dimensions": true,
   "imported_third_party_models": false
 }

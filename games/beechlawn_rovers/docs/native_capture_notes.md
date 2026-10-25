@@ -137,3 +137,11 @@ placement. The seating smoke check exercises the production placement function;
 native Forward+ readback separately checks actual near/far transforms, upright
 chairs, inward facing, aligned columns and clear aisles. Do not treat dummy
 MultiMesh readback as visual evidence.
+
+## Stadium/grass review — v0.4.0
+
+`capture_native.py --match --venue rovers_arena --venue-view all` now includes both goal ends and low grass. `--venue-view corners` captures all four joins; `--venue-view exterior` captures four building elevations; `--venue-view pitch` captures turf, paint and a goalmouth. `--weather sunny|cloudy|rain|mist` selects the actual match weather. The normal close broadcast camera remains the primary image. All secondary shots are grounded camera positions with the actual match actors/settings. Turf triangle counts are recorded and bounded at 240k.
+
+Native chair readback now uses the descriptive section/row manifest and actual block world transforms. Blocks have local origins at their centres so HLOD distance selection is meaningful. Overlapping Forward+ self-fades avoid empty seat patches at initial threshold distances; near/far seats share the imported blue material. See Godot's GeometryInstance3D visibility-range documentation: https://docs.godotengine.org/en/stable/classes/class_geometryinstance3d.html .
+
+Turf has a bounded dense near footprint and intermediate hash-faded fins. Fade only exposed intermediate residency boundaries and preserve an upward average normal: scissor-only fades plus dark downward normals exposed rectangular chunk edges. Check low moving/cut views as well as geometry budgets. The smoke runner now fails shader compilation errors immediately instead of accepting a nominal SceneTree exit.

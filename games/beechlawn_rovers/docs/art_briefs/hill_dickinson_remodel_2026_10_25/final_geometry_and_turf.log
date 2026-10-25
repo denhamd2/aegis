@@ -1,0 +1,26 @@
+
+[smoke] stadium_seating_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+STADIUM_REMODEL PASS: 49554 supported/facing seats; 71 spatial blocks; four curved corners and distinct stand profiles
+[passed] stadium_seating_smoke.gd (1.9s)
+
+[smoke] venue_selection_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=rovers_arena
+BEECHLAWN_MENU_READY
+VENUE_SELECTION PASS: persistence, invalid fallback, both grounds, flat/uneven physics, goals/nets/flags, section LOD, independent wet surfaces and menu bindings
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] venue_selection_smoke.gd (13.9s)
+
+[smoke] realism_systems_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive
+REALISM_SYSTEMS PASS: shared physique/binds, render/contact/replay isolation, optics restoration, graphics preferences and field-wide bounded turf
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] realism_systems_smoke.gd (8.4s)

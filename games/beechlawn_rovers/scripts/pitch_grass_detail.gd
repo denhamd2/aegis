@@ -2,9 +2,9 @@ extends Node3D
 class_name PitchGrassDetail
 ## Field-wide deterministic turf, drawn by projected size and visible chunks.
 ## A curved near crown and cheap intermediate fins share the distant surface.
-const CELL := .75
-const TUFTS_PER_CELL := 1600
-const MAX_CELLS := 12
+const CELL := .6
+const TUFTS_PER_CELL := 2400
+const MAX_CELLS := 8
 const MAX_TUFTS := TUFTS_PER_CELL * MAX_CELLS
 const MID_CELL := 4.0
 const MID_PER_CELL := 512
@@ -52,7 +52,7 @@ func _make_turf_ribbon() -> ArrayMesh:
 		var angle := float(blade)*2.4
 		var across := Vector3(cos(angle),0,sin(angle))*.0011
 		var lean := Vector3(sin(angle),0,cos(angle))
-		var height := .014+blade*.0035
+		var height := .012+blade*.0025
 		var base := lean*.001
 		var middle := base+Vector3.UP*height*.62+lean*.0017
 		var tip := base+Vector3.UP*height+lean*.005
@@ -153,6 +153,7 @@ func _queue_mid(location: Vector3, camera: Camera3D = null) -> void:
 		if prepared_mid.has(key):
 			mid_chunks[key]=prepared_mid[key]; mid_chunks[key].show(); prepared_mid.erase(key)
 		else: _build_cell(key,false,true)
+	_update_mid_edges()
 
 func prepare(location: Vector3) -> void:
 	if DisplayServer.get_name()=="headless": return
@@ -194,7 +195,10 @@ func _build_cell(key: Vector2i, staging := false, mid := false) -> void:
 		if wet.y>.15 or random.randf()<wet.x*.9: continue
 		var height: float = game.surface_height(x,z)
 		var normal := Vector3((height-game.surface_height(x+.05,z))/.05,1,(height-game.surface_height(x,z+.05))/.05).normalized()
-		var basis := Basis(Quaternion(Vector3.UP,normal))*Basis(Vector3.UP,random.randf()*TAU)
+		var angle := random.randf()*TAU
+		if not game.venue.worn_surface:
+			angle = (PI if floori((x+52.5)/7.5)%2 else 0.0)+random.randf_range(-.45,.45)
+		var basis := Basis(Quaternion(Vector3.UP,normal))*Basis(Vector3.UP,angle)
 		basis=basis.scaled(Vector3(1,random.randf_range(.85,1.15),1))
 		mm.set_instance_transform(count,Transform3D(basis,Vector3(x,height-.001,z)))
 		mm.set_instance_color(count,Color(random.randf_range(.92,1.02),random.randf_range(.90,1.02),random.randf_range(.88,1.02),1))
@@ -212,6 +216,14 @@ func _build_cell(key: Vector2i, staging := false, mid := false) -> void:
 		else: prepared[key]=instance
 	elif mid: mid_chunks[key]=instance
 	else: chunks[key]=instance
+
+func _update_mid_edges() -> void:
+	for key: Vector2i in mid_chunks:
+		mid_chunks[key].set_instance_shader_parameter("exposed_edges",Vector4(
+			0.0 if mid_chunks.has(key+Vector2i.LEFT) else 1.0,
+			0.0 if mid_chunks.has(key+Vector2i.RIGHT) else 1.0,
+			0.0 if mid_chunks.has(key+Vector2i.UP) else 1.0,
+			0.0 if mid_chunks.has(key+Vector2i.DOWN) else 1.0))
 
 static func _painted(p: Vector2) -> bool:
 	var x := absf(p.x);var z := absf(p.y)

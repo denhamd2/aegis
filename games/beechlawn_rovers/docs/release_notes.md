@@ -1,3 +1,13 @@
+# Beechlawn Rovers 27 — v0.4.0
+
+Rovers Arena now uses a complete Hill Dickinson reference-led building: a continuous home end, tiered side/North stands, fanned corner seating, curved canopy and main steel trusses, glazed ends, brick/metal external shell, entrances, dugouts and Rovers boards. Seating is grounded on actual terrace meshes; spatially centred chair/crowd LODs follow a descriptive layout manifest.
+
+Both pitches have refined short grass, physical-scale texture detail and smoother transitions. The arena uses directional cross-cut mowing and roof shade; Kilmore retains its rough markings, terrain, wear, mud/puddles and existing ball resistance. Native Forward+ checks cover actual match views.
+
+The building follows photographs with inferred dimensions; exact architectural likeness and native M1 Pro 1080p60 remain acceptance checks. Mac-only, with universal Apple Silicon/Intel packaging. No paid/extracted game assets or research photos are used as textures.
+
+---
+
 # Beechlawn Rovers 27 — v0.3.1
 
 Corrected the diagonal seat/aisle drift in Rovers Arena's stands. Seats now

@@ -23,7 +23,7 @@ The radar rotates with the broadcast side and hides with live player strips
 during incident presentation. F1 toggles keyboard help. Blue pre-match lineups,
 venue/referee graphics and lower thirds keep their existing presentation style.
 
-Rovers Arena uses original Blender geometry with 50,032 seat positions and
+Rovers Arena uses original Blender geometry with 49,554 seat positions and
 spatially grouped seat/crowd LOD. It reuses the live 105×68m field dimensions,
 regulation markings, goal collisions/detectors and animated nets; imported
 static copies do not compete with the match systems. Kilmore's relief, wear,

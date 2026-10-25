@@ -17,7 +17,10 @@ vec3 br_pitch_colour(vec2 p, vec2 field_size, vec3 turf) {
 	float mowing = 0.5 + 0.5 * sin((p.x + field_size.x * 0.5) * 0.72);
 	vec3 tint = mix(vec3(0.73, 0.82, 0.62), vec3(0.96, 1.0, 0.84),
 		clamp(broad * 0.5 + fine * 0.5, 0.0, 1.0));
-	vec3 base = turf * tint * (0.63 + mowing * 0.018);
+	// Pigment at physical scale, with low-frequency growth and fine leaf variation.
+	float leaf = clamp(dot(turf,vec3(.25,.6,.15))*2.4,0.0,1.0);
+	vec3 base = mix(vec3(.048,.112,.021),vec3(.075,.171,.035),broad*.45+leaf*.55);
+	base *= tint * (0.94 + fine*.12 + mowing*.018);
 	vec2 centre=p-field_size*0.5;
 	float goal_wear=exp(-pow((abs(centre.x)-field_size.x*0.5+2.0)/6.0,2.0)-pow(centre.y/5.0,2.0));
 	float central_wear=exp(-dot(centre/vec2(12.0,9.0),centre/vec2(12.0,9.0)))*0.25;
@@ -31,8 +34,14 @@ vec3 br_pitch_colour(vec2 p, vec2 field_size, vec3 turf) {
 }
 
 // Maintained arena turf shares one pigment response across surface and blades.
-vec3 br_arena_colour(vec2 p, vec3 turf) {
- float band = mod(floor(p.x/7.0),2.0);
- float grain = dot(turf,vec3(.299,.587,.114));
- return mix(vec3(.115,.18,.055),vec3(.15,.25,.08),band)*(.86+grain*.9);
+vec3 br_arena_colour(vec2 p, vec3 turf, vec2 camera_position) {
+ // Cross-cut professional mowing. A small pigment difference and directional
+ // sheen replace the old hard alternating colours; camera reversal swaps sheen.
+ float length_cut=tanh(sin((p.x-52.5)*3.14159265/7.5)*8.0);
+ float cross_cut=tanh(sin((p.y-34.0)*3.14159265/8.5)*8.0);
+ vec2 toward=normalize(camera_position-(p-vec2(52.5,34.0))+vec2(.001));
+ float grain=clamp(dot(turf,vec3(.25,.6,.15))*2.4,0.0,1.0);
+ float growth=br_noise(p*.13)*.5+br_noise(p*1.7)*.5;
+ vec3 base=mix(vec3(.026,.110,.012),vec3(.040,.150,.019),grain*.55+growth*.45);
+ return base*(1.0+length_cut*(.070+toward.x*.090)+cross_cut*(.045+toward.y*.045));
 }

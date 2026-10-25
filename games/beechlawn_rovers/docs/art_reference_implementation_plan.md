@@ -388,3 +388,7 @@ apply arena stripes/flat ground to Kilmore or copy Kilmore puddles into the aren
 Retain source `.blend`, generator, GLB audit, reference, licences and native
 comparison evidence in the owning football project. M1 performance remains
 BR-025 acceptance. See `art_briefs/match_presentation_2026_10_24/brief.md`.
+
+## Approved Hill Dickinson remodel — 25 October 2026
+
+BR-023 (23/27, in progress) now replaces the whole Rovers building rather than polishing the earlier octagonal arena. Reference archive: `references/hill_dickinson_2026_10_25/`; production brief and staged native evidence: `docs/art_briefs/hill_dickinson_remodel_2026_10_25/`. Preserve Rovers branding and crowd occupancy. Match the continuous South stand, tiered sides/North, fanned/tapered corners, barrel roof, trusses, masonry/glass/metal shell and maintained pitch. Exterior building included; dockside landscape excluded. Shared grass improvements preserve Kilmore's paint, bumps, wear, mud and puddle physics. Use Blender director/environment/procedural/material/texture/LOD/Godot-export routing. Mac appearance and 1080p60 remain BR-025 (25/27).

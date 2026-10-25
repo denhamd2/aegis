@@ -178,3 +178,9 @@ Blender fallback are recorded in `../docs/art_briefs/match_presentation_2026_10_
 The archive has `.gdignore` so Godot does not import duplicate source photos and
 boards as game textures. Originals remain available through the filesystem;
 shipping derivatives belong in `assets/`.
+
+## Hill Dickinson building and turf — 25 October 2026
+
+The owner approved a complete reference-led remodel of the Rovers Arena building: interior, all four corners, roof and exterior shell, with Rovers branding, current crowd distribution and no Liverpool dockside recreation. Both venues receive turf improvements with separate maintained/worn profiles.
+
+Selected original photos, URLs, rights notes and SHA256 are archived in `hill_dickinson_2026_10_25/provenance.json`. The empty bowl/corner views and low pitch view expose row paths, stairs, glazed ends, steel trusses and grass/paint scale; BDP provides architectural context. These photographs are research references, excluded from export and never used as game textures. The owner upload `70060.jpg` remains the broadcast composition reference.

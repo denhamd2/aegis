@@ -23,10 +23,11 @@ void vertex() { world_point=(MODEL_MATRIX*vec4(VERTEX,1.0)).xyz; }
 void fragment() {
 	vec2 p = UV * vec2(field_length, field_width);
 	float close = 1.0-smoothstep(1.8,5.0,distance(world_point,CAMERA_POSITION_WORLD));
-	vec3 turf = mix(texture(grass_albedo,p/8.0).rgb,texture(grass_albedo,p/1.4).rgb,close*.65);
+	vec2 rotated=mat2(vec2(.8,.6),vec2(-.6,.8))*p;
+	vec3 turf = mix(texture(grass_albedo,rotated/2.8).rgb,texture(grass_albedo,p/.85).rgb,.38+close*.27);
 	ALBEDO = br_pitch_colour(p,vec2(field_length,field_width),turf);
 	if (stadium_mowing) {
-		ALBEDO = br_arena_colour(p,turf);
+		ALBEDO = br_arena_colour(p,turf,CAMERA_POSITION_WORLD.xz);
 	}
 	vec2 surface = texture(surface_masks, UV).rg * wear_strength;
 	float mud = surface.r;
@@ -36,12 +37,16 @@ void fragment() {
 	ALBEDO = mix(ALBEDO, soil * (0.88 + grain * 0.18), mud * 0.94);
 	ALBEDO = mix(ALBEDO, vec3(0.045,0.052,0.036), water * 0.75);
 	ROUGHNESS = mix(mix(clamp(texture(grass_roughness,p/1.4).r,.72,.98),texture(mud_roughness,p/1.3).r*0.65+0.22,mud*wetness),0.13,water);
-	ROUGHNESS = mix(ROUGHNESS,.47,arena_wetness);
+	ROUGHNESS = mix(ROUGHNESS,.62,arena_wetness*.65);
 	SPECULAR = mix(0.24,0.5,max(water,arena_wetness*.35));
 	// Small capillary ripples; wet mud stays rougher than standing water.
 	vec3 ripples = normalize(vec3(0.025*sin(p.x*27.0+p.y*13.0+TIME*1.8),
 		0.025*cos(p.y*31.0-p.x*9.0+TIME*1.4),1.0))*0.5+0.5;
-	vec3 turf_normal = mix(vec3(.5,.5,1.0),texture(grass_normal,p/1.4).rgb,.25+close*.40);
+	vec3 turf_normal = mix(vec3(.5,.5,1.0),texture(grass_normal,p/.85).rgb,.22+close*.40);
+	if (stadium_mowing) {
+	 turf_normal.xy += vec2(sin((p.x-52.5)*3.14159265/7.5),sin((p.y-34.0)*3.14159265/8.5))*.045;
+	}
 	NORMAL_MAP = mix(mix(turf_normal,texture(mud_normal,p/1.3).rgb,mud*0.7),ripples,water);
 	METALLIC = 0.0;
+	BACKLIGHT=ALBEDO*.12*(1.0-water);
 }

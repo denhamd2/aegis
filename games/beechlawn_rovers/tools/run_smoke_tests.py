@@ -64,7 +64,7 @@ def monitor_process(process, timeout, live=False):
     deadline = time.monotonic() + timeout
     output = bytearray()
     status = 'complete'
-    fatal = (b'SCRIPT ERROR:', b'Assertion failed', b'ERROR: Failed to load')
+    fatal = (b'SCRIPT ERROR:', b'Assertion failed', b'ERROR: Failed to load', b'SHADER ERROR:', b'ERROR: Shader compilation failed')
     try:
         while True:
             if time.monotonic() >= deadline:
@@ -142,7 +142,7 @@ def main() -> int:
         if result != 0:
             print(f"[failed] {name} exited {result}", file=sys.stderr)
             return result or 1
-        failure_markers = ("SCRIPT ERROR:", "Assertion failed", "ERROR: Failed to load")
+        failure_markers = ("SCRIPT ERROR:", "Assertion failed", "ERROR: Failed to load", "SHADER ERROR:", "ERROR: Shader compilation failed")
         if any(marker in output for marker in failure_markers):
             print(f"[failed] {name} reported a Godot script/load error", file=sys.stderr)
             return 1
