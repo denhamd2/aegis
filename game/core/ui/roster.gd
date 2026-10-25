@@ -195,11 +195,19 @@ static func entries() -> Array:
 		"corner": [M + "running_corner_spear.tres"],
 		# And at a man hanging in the corner, the lariat over and over.
 		"corner_strike": [M + "strike_corner_clothesline.tres"],
+		# At a man he whipped into the ropes, coming back off them: the
+		# spinebuster, the Samoan drop and the powerslam of a big man.
+		"rebound": [M + "ff/spinebuster_5.tres", M + "power_samoan_drop.tres",
+				M + "power_powerslam.tres"],
 		# From the mat: sweeps the legs of a man standing over him (PossumSpot).
 		"possum": [M + "possum_sweep.tres"],
 		# Beside the Spear: the Superman Punch into it, his 2K26 "super"
 		# (gauntlet/refs/moveset_audit_2k26.md).
 		"finisher": [M + "finisher_superman_spear.tres"],
+		# The Spear as he really builds to it, with the man down: the set-up
+		# (pounding the mat, the roar, the coil) and the run in as he gets up
+		# (WrestlerAI's Spear stalk; ff_moves_and_gameplay_plan.md, staples 6).
+		"finisher_run": [M + "finisher_running_spear.tres"],
 	}
 	# Cody's own moveset (gauntlet/refs/cody_moveset.md): the moves he hits in
 	# nearly every match, in place of the shared draw.
@@ -224,6 +232,13 @@ static func entries() -> Array:
 		"running": [M + "running_attack_clothesline.tres",
 				M + "running_single_leg_dropkick.tres"],
 		"submission": [M + "submission_figure_four.tres"],
+		# Whipped into the corner, chopped there Flair-style (a knife-edge
+		# chop; ff_moves_and_gameplay_plan.md, staples 4).
+		"corner_strike": [M + "strike_chop.tres"],
+		# At a man he whipped into the ropes: the dropdown uppercut ("drops
+		# under a charging man, pops up into the chin", cody_moveset.md) and
+		# the powerslam.
+		"rebound": [M + "strike_dropdown_uppercut.tres", M + "power_powerslam.tres"],
 		# The Cross Rhodes as Fight Forever does it (the owner, 19 Oct): the
 		# hold, the spin and the spike, 0.83 s to impact. It replaces the
 		# 2K26 from-behind set-up, which ran 2.5 s.

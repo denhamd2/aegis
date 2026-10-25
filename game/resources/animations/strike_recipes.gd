@@ -255,6 +255,14 @@ const RECIPES := {
 	# 24 frames, contact on frame 9 = tick 18.
 	"strike_corner_clothesline": {"kind": "retime", "source": "Strike_Corner_Clothesline",
 		"seconds": 0.800, "file": AUTHORED},
+	# Cody's knife-edge chop in the corner (wrestling_clips.py "Strike_Chop"):
+	# 24 frames, contact on frame 9 = tick 18, strike_chop.tres's startup.
+	"strike_chop": {"kind": "retime", "source": "Strike_Chop",
+		"seconds": 0.800, "file": AUTHORED},
+	# Roman's build to the Spear (wrestling_clips.py "Spear_Setup"): pounding
+	# the canvas, the roar, the coil -- held until the man is up.
+	"spear_setup": {"kind": "retime", "source": "Spear_Setup",
+		"seconds": 2.400, "file": AUTHORED},
 	# Roman's body shot (wrestling_clips.py "Strike_Gut_Punch"): 22 frames,
 	# contact on frame 7 = tick 14, strike_gut_punch.tres's startup.
 	"strike_gut_punch": {"kind": "retime", "source": "Strike_Gut_Punch",
@@ -474,6 +482,10 @@ const RECIPES := {
 	# Travelling clips keyed in world space; played once, not looped.
 	"roll_out_ropes": {"kind": "retime", "source": "Roll_Out_Ropes",
 		"seconds": 1.533, "file": AUTHORED},
+	# Out over the ropes and down off the apron by choice: 80 frames at 30,
+	# WrestlerController.RING_EXIT_TICKS.
+	"ring_exit": {"kind": "retime", "source": "Ring_Exit",
+		"seconds": 2.667, "file": AUTHORED},
 	"tope_attacker": {"kind": "retime", "source": "Tope_Attacker",
 		"seconds": 2.000, "file": AUTHORED},
 	"tope_defender": {"kind": "retime", "source": "Tope_Defender",

@@ -5,11 +5,16 @@ extends Node
 ##
 ##   xvfb-run -a godot4 --path game --rendering-driver vulkan \
 ##       --resolution 960x540 --fixed-fps 60 tools/probe/nhb_outside_shot.tscn \
-##       -- --out /tmp/nhb --every 30 --ticks 600
+##       -- --out /tmp/nhb --every 30 --ticks 600 [--side]
+##
+## --side: a fixed camera level with the apron, side-on to the rope he goes
+## out through, instead of the match camera -- for the climb out itself
+## (WrestlerController.RING_EXIT_PATH).
 
 var _out := "/tmp/nhb"
 var _every := 30
 var _ticks := 600
+var _side := false
 
 
 func _ready() -> void:
@@ -21,6 +26,7 @@ func _ready() -> void:
 			_every = int(args[i + 1])
 		elif args[i] == "--ticks" and i + 1 < args.size():
 			_ticks = int(args[i + 1])
+	_side = args.has("--side")
 	DirAccess.make_dir_recursive_absolute(_out)
 	var scene: Node = load("res://scenes/match.tscn").instantiate()
 	TitleScreen.configure_match(scene, Roster.by_id("roman"), Roster.by_id("cody"), 7)
@@ -38,6 +44,13 @@ func _ready() -> void:
 	roman.is_ai = false
 	roman.global_position = Vector3(0.4, 0, -2.5)
 	cody.global_position = Vector3(0.2, 0, -0.6)
+	if _side:
+		var cam := Camera3D.new()
+		scene.add_child(cam)
+		cam.fov = 45.0
+		# Three-quarters from outside, clear of the ring post at (3.1, -3.1).
+		cam.look_at_from_position(Vector3(4.0, 0.9, -4.6), Vector3(0.4, -0.1, -3.3))
+		cam.make_current()
 	await get_tree().physics_frame
 	print("NHB cross started: %s" % roman.begin_rope_cross())
 	var last := ""

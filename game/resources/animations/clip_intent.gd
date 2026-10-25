@@ -29,7 +29,7 @@ const LEAN := {
 ## below_mat check skips them; every other check still applies.
 const OFF_MAT := ["Climb_Steps", "Rope_Step_Through", "Rope_Step_Through_Apron",
 	"Apron_Step", "Roll_Out_Ropes", "Tope_Attacker", "Roll_In", "Apron_Climb",
-	"Springboard_DK_Attacker", "Rope_Rebound"]
+	"Springboard_DK_Attacker", "Rope_Rebound", "Ring_Exit"]
 
 ## A half of a two-man move. The pair's root trajectory places and lifts
 ## these at play time (GrappleRig), so their bodies cannot be judged against

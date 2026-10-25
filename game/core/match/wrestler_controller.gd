@@ -287,6 +287,15 @@ var _own_signature_thrown: bool = false
 ## His strike at a man trapped in the corner, in place of his ordinary draw
 ## (Roman's corner clotheslines, gauntlet/refs/moveset_audit_2k26.md).
 @export var corner_strike_move: MoveDef
+## His move on a man he has whipped into the ropes, coming back off them
+## (Roster's "rebound" tier): Roman's spinebuster, Samoan drop and powerslam;
+## Cody's dropdown uppercut and powerslam. The first is the tier's own, the
+## rest its draw. See try_rebound_move().
+@export var rebound_moves: Array[MoveDef] = []
+## His finisher run into a man just up off the mat after his set-up (Roster's
+## "finisher_run": Roman's Spear). A finisher by tier_of(), drawn by nothing:
+## try_running_finisher() is the one way in.
+@export var finisher_run_move: MoveDef
 ## His own submission hold, if he has one (Cody's Figure-Four; Roster's
 ## "submission" tier). MatchReferee has him take it once a match on a man he
 ## has knocked down mid-match -- see _check_for_downed_opponent_action().
@@ -518,9 +527,10 @@ const STATE_ANIMATIONS := {
 	# Replaced per man by begin_taunt() with his own gesture (TAUNTS); this is
 	# the one a man with none of his own throws.
 	WrestlerFSM.State.TAUNT: "strikes/air_punch",
-	# Out through the ropes; begin_rope_cross() swaps in "strikes/roll_in"
-	# for the way back. The same two clips DiveSpot plays, on its own path.
-	WrestlerFSM.State.ROPE_CROSS: "strikes/roll_out_ropes",
+	# Out over the ropes and down off the apron (RING_EXIT_PATH);
+	# begin_rope_cross() swaps in "strikes/roll_in", DiveSpot's, for the way
+	# back in under the bottom rope.
+	WrestlerFSM.State.ROPE_CROSS: "strikes/ring_exit",
 	# Replaced per action by begin_weapon_action(); the kneel is the fallback.
 	WrestlerFSM.State.WEAPON_ACTION: "strikes/getup_rise",
 	WrestlerFSM.State.LADDER_CLIMB: "strikes/ladder_climb",
@@ -1616,6 +1626,12 @@ func _on_fsm_state_changed(_previous: WrestlerFSM.State, current: WrestlerFSM.St
 	if current != WrestlerFSM.State.STUNNED and _corner_trapped:
 		_corner_trapped = false
 		_corner_lockout = CORNER_LOCKOUT_TICKS
+	if current != WrestlerFSM.State.RUN:
+		# Caught, hit or stopped: the run back off the ropes is over.
+		_irish_whip_return_ticks_remaining = 0
+		_whip_meet_ticks = -1
+	if current != WrestlerFSM.State.TAUNT:
+		_stalking = false
 	if not _anim_playback:
 		return
 	var state_machine := anim_tree.tree_root as AnimationNodeStateMachine
@@ -1722,6 +1738,9 @@ func _physics_process(delta: float) -> void:
 				begin_light(table_to_light())
 			elif input.get("taunt", false) and can_taunt():
 				begin_taunt()
+			elif input.get("spear_setup", false) and finisher_run_move != null \
+					and fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION]):
+				begin_spear_setup()
 			elif _pushing_through_ropes(input):
 				begin_rope_cross()
 			elif input.get("climb_ladder", false):
@@ -1739,6 +1758,8 @@ func _physics_process(delta: float) -> void:
 		WrestlerFSM.State.ROPE_CROSS:
 			_tick_rope_cross()
 		WrestlerFSM.State.TAUNT:
+			if _stalking:
+				_tick_spear_setup()
 			_process_timed_state(input, WrestlerFSM.State.IDLE)
 		WrestlerFSM.State.STRIKE:
 			_process_active_move(input)
@@ -2051,6 +2072,9 @@ func _process_free_movement(delta: float, input: Dictionary) -> void:
 			fsm.transition_to(WrestlerFSM.State.IDLE)
 
 	_wants_tie_up_this_tick = false
+	if not _guarding and (input.get("rebound", false) or input.get("grapple", false)) \
+			and try_rebound_move():
+		return
 	if fsm.current_state == WrestlerFSM.State.RUN and not _guarding:
 		_maybe_start_running_attack(input)
 	elif not _guarding and input.get("strike", false) and has_weapon() and held_weapon.def.swing == WeaponDef.Swing.POUR:
@@ -2181,7 +2205,38 @@ const ROPE_CROSS_LANE := 2.0
 ## The rope walls hold a walking man at 2.55, the deck at DECK_KEEP_OUT.
 const ROPE_PUSH_REACH := 0.25
 
+## Out over the ropes by choice (the owner, 20 Oct: going out mid-match "looks
+## like they teleport from the ring to the outside"): Ring_Exit
+## (tools/blender/wrestling_clips.py) -- to the ropes, over the middle one onto
+## the apron, a crouch and down to the floor. Its root walks this path, frame
+## and (out, up) from where he starts, at the clip's 30 fps: the clip keys the
+## body in the room against exactly this, so the two must agree
+## (wrestling_clips.py RING_EXIT_PATH).
+const RING_EXIT_FRAMES := 80
+const RING_EXIT_PATH := [[0, 0.0, 0.0], [50, 0.57, -0.10], [68, 1.10, -1.094], [80, 1.10, -1.094]]
+const RING_EXIT_TICKS := RING_EXIT_FRAMES * 2
+## The clip starts him at the keep-in line, 0.50 m short of the ropes. He can
+## go from up to ROPE_PUSH_REACH further in, so the walk to the ropes (clip
+## frames 0..14) takes up the difference and the climb itself always lands
+## on the apron and the floor where the clip keys them.
+const RING_EXIT_FROM := RING_KEEP_IN
+const RING_EXIT_WALK_FRAMES := 14.0
+## The rope work while he goes through, on clip frames: [in, full, out, gone]
+## (EntranceDirector.hold_weight). The left hand lifts the top rope; the
+## middle rope goes down under his hips -- RingRopes bends round the body, so
+## without these he would pass through rope that never moved.
+const RING_EXIT_GRIP := [12.0, 18.0, 40.0, 46.0]
+const RING_EXIT_PRESS := [18.0, 24.0, 40.0, 46.0]
+const RING_EXIT_PRESS_M := 0.16
+
 var _rope_push := 0
+## Ticks since he started through the ropes, counted here once a tick. Not
+## fsm.ticks_in_state: that advances twice a physics tick (the FSM is a child
+## node with its own _physics_process, and _physics_process() also ticks it
+## by hand), so a cross timed on it put his root on the floor at half the
+## clip's length -- the owner's "teleport" out of the ring.
+var _cross_elapsed := 0
+var _ropes_out: RingRopes
 var _cross_from := Vector3.ZERO
 var _cross_to := Vector3.ZERO
 var _cross_ticks := 1
@@ -2245,12 +2300,13 @@ func begin_rope_cross() -> bool:
 	var lane := clampf(p.dot(lat), -ROPE_CROSS_LANE, ROPE_CROSS_LANE)
 	var reach := p.dot(axis)
 	_crossing_out = not outside_ring
-	var clip := "strikes/roll_out_ropes"
+	var clip := "strikes/ring_exit"
 	if _crossing_out:
 		_cross_from = axis * reach + lat * lane + Vector3.UP * global_position.y
-		_cross_to = axis * (reach + DiveSpot.FLOOR_AT - DiveSpot.TUMBLE_FROM) \
-				+ lat * lane + Vector3.UP * FLOOR_LEVEL
-		_cross_ticks = DiveSpot.ROLL_OUT_TICKS
+		var last: Array = RING_EXIT_PATH[RING_EXIT_PATH.size() - 1]
+		_cross_to = axis * (maxf(reach, RING_EXIT_FROM) + float(last[1])) + lat * lane \
+				+ Vector3.UP * FLOOR_LEVEL
+		_cross_ticks = RING_EXIT_TICKS
 		_cross_facing = axis
 	else:
 		clip = "strikes/roll_in"
@@ -2260,6 +2316,7 @@ func begin_rope_cross() -> bool:
 		_cross_ticks = DiveSpot.ROLL_IN_TICKS
 		_cross_facing = -axis
 	_rope_push = 0
+	_cross_elapsed = 0
 	velocity = Vector3.ZERO
 	_set_state_clip(WrestlerFSM.State.ROPE_CROSS, clip)
 	fsm.transition_to(WrestlerFSM.State.ROPE_CROSS)
@@ -2268,13 +2325,68 @@ func begin_rope_cross() -> bool:
 
 func _tick_rope_cross() -> void:
 	velocity = Vector3.ZERO
-	var t := clampf(float(fsm.ticks_in_state) / float(_cross_ticks), 0.0, 1.0)
-	global_position = _cross_from.lerp(_cross_to, t)
+	_cross_elapsed += 1
+	var t := clampf(float(_cross_elapsed) / float(_cross_ticks), 0.0, 1.0)
+	if _crossing_out:
+		global_position = ring_exit_point(_cross_from, _cross_facing, t, _cross_to.y,
+				RING_EXIT_FROM - _cross_from.dot(_cross_facing))
+		_part_ropes_out(t * RING_EXIT_FRAMES)
+	else:
+		global_position = _cross_from.lerp(_cross_to, t)
 	rotation.y = rotate_toward(rotation.y, atan2(-_cross_facing.x, -_cross_facing.z),
 			DiveSpot.TURN_RATE / float(Engine.physics_ticks_per_second))
-	if fsm.ticks_in_state >= _cross_ticks:
+	if _cross_elapsed >= _cross_ticks:
 		outside_ring = _crossing_out
+		_release_ropes_out()
 		fsm.transition_to(WrestlerFSM.State.IDLE)
+
+
+## Where Ring_Exit has him at `t` (0..1) of the clip: RING_EXIT_PATH from
+## `from`, out along `axis`, the last leg landing at `floor_y`. `short` is how
+## far inside RING_EXIT_FROM he set off: the walk to the ropes covers it.
+static func ring_exit_point(from: Vector3, axis: Vector3, t: float, floor_y: float,
+		short := 0.0) -> Vector3:
+	var f := clampf(t, 0.0, 1.0) * RING_EXIT_FRAMES
+	var i := 0
+	while i + 1 < RING_EXIT_PATH.size() - 1 and float(RING_EXIT_PATH[i + 1][0]) <= f:
+		i += 1
+	var a: Array = RING_EXIT_PATH[i]
+	var b: Array = RING_EXIT_PATH[i + 1]
+	var u := 0.0 if b[0] == a[0] else clampf((f - float(a[0])) / float(b[0] - a[0]), 0.0, 1.0)
+	var out := lerpf(a[1], b[1], u)
+	var up := lerpf(a[2], b[2], u)
+	# The clip's drop is the mat to the floor; land on this floor exactly.
+	var last: Array = RING_EXIT_PATH[RING_EXIT_PATH.size() - 1]
+	var drop := up / float(last[2])
+	out += maxf(short, 0.0) * smoothstep(0.0, RING_EXIT_WALK_FRAMES, f)
+	return from + axis * out + Vector3(0.0, (floor_y - from.y) * drop, 0.0)
+
+
+## The top rope lifted by his left hand and the middle one pressed under his
+## hips while he goes through them (RING_EXIT_GRIP / _PRESS), as the
+## entrance's step-through does (EntranceDirector._part_ropes).
+func _part_ropes_out(f: float) -> void:
+	if _ropes_out == null:
+		_ropes_out = get_tree().root.find_child("LiveRopes", true, false) as RingRopes
+		if _ropes_out == null:
+			return
+	var hand := _bone_world("hand_l")
+	if hand != Vector3.INF:
+		_ropes_out.hold("exit_grip_%d" % get_instance_id(), hand, RingBuilder.ROPE_HEIGHT_TOP,
+				EntranceDirector.hold_weight(f, RING_EXIT_GRIP))
+	var hips := _bone_world("pelvis")
+	if hips != Vector3.INF:
+		var n := Vector3(_cross_facing.x, 0.0, _cross_facing.z).normalized()
+		var on_line := hips + n * (RingBuilder.ROPE_SPAN - hips.dot(n))
+		on_line.y = _ropes_out.global_position.y + RingBuilder.ROPE_HEIGHT_MIDDLE - RING_EXIT_PRESS_M
+		_ropes_out.hold("exit_press_%d" % get_instance_id(), on_line, RingBuilder.ROPE_HEIGHT_MIDDLE,
+				EntranceDirector.hold_weight(f, RING_EXIT_PRESS), false)
+
+
+func _release_ropes_out() -> void:
+	if _ropes_out:
+		_ropes_out.release("exit_grip_%d" % get_instance_id())
+		_ropes_out.release("exit_press_%d" % get_instance_id())
 
 
 ## True while he is going through the ropes: nobody can reach him.
@@ -2495,6 +2607,119 @@ func _begin_running_paired(move: MoveDef) -> void:
 	grapple_rig.begin(self, opponent, move)
 	grapple_rig.grapple_finished.connect(_on_grapple_finished, CONNECT_ONE_SHOT)
 
+
+# --- off the ropes: the whipper's move (the owner, 25 Oct: "AI staples:
+# Irish whips") ------------------------------------------------------------
+#
+# A man sent into the ropes comes back to be hit. On television, and in Fight
+# Forever, the whipper meets him: the spinebuster, the powerslam, the
+# dropdown uppercut. Here the runner used to be the one swinging -- his
+# autopilot back off the ropes ran into _maybe_start_running_attack(), so a
+# whip handed the man it was thrown at a free running attack on the man who
+# threw it.
+
+## A paired catch takes him this close: the running attacks' own reach, and a
+## little, since he is coming to meet it.
+const REBOUND_CATCH_RANGE := STRIKE_HIT_RANGE + 0.15
+
+## The rebound move picked for this whip (once, so the draw is not rolled
+## again every tick he is on his way back), or null.
+var _rebound_pick: MoveDef
+## Whipped into a corner rather than the ropes: he is trapped against the
+## turnbuckle when he reaches it (_reached_whip_corner()).
+var _irish_whip_corner := false
+
+
+## Coming back off the ropes from a whip, on the autopilot.
+func is_whip_returning() -> bool:
+	return fsm.current_state == WrestlerFSM.State.RUN and _irish_whip_return_ticks_remaining > 0
+
+
+## Meets the man coming back off the ropes with his rebound move, if it is
+## time: a paired move once he is in REBOUND_CATCH_RANGE, a strike as soon as
+## its contact frame would meet him. Returns whether it started.
+func try_rebound_move() -> bool:
+	if rebound_moves.is_empty() or opponent == null or not opponent.is_whip_returning():
+		return false
+	if not fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION]):
+		return false
+	if _rebound_pick == null:
+		_rebound_pick = _pick_tier_move(rebound_moves[0], rebound_moves.slice(1))
+	var move := _rebound_pick
+	var to_him := opponent.global_position - global_position
+	to_him.y = 0.0
+	var gap := to_him.length()
+	if PairedRecipes.RECIPES.has(String(move.animation_pair_id)) and grapple_rig != null:
+		if gap > REBOUND_CATCH_RANGE:
+			return false
+		_rebound_pick = null
+		_begin_running_paired(move)
+		return true
+	# A strike: thrown while he can still run into it, and he arrives on its
+	# contact frame. Its startup (the uppercut's is 22 ticks) is longer than
+	# his run back from the ropes, so he is paced to the meeting point rather
+	# than left standing in front of the drop for a dozen ticks waiting to be
+	# hit (_whip_meet()).
+	var startup := float(move.startup_frames) / float(Engine.physics_ticks_per_second)
+	if gap > REBOUND_STRIKE_MEET + RUN_SPEED * startup or gap < REBOUND_STRIKE_MEET:
+		return false
+	_rebound_pick = null
+	_turn_toward_opponent()
+	_play_strike_clip(move)
+	_start_move(WrestlerFSM.State.STRIKE, move)
+	combat.spend_stamina(CombatSystem.STAMINA_PER_STRIKE_TICK * move.total_frames())
+	opponent._whip_meet(global_position + to_him.normalized() * REBOUND_STRIKE_MEET,
+			move.startup_frames)
+	return true
+
+
+## Where a man coming off the ropes meets a rebound strike: in front of the
+## whipper by this much, inside the uppercut's 0.62 m contact point plus a
+## body's radius.
+const REBOUND_STRIKE_MEET := 0.8
+## The point he is paced to and the ticks left to get there, or -1.
+var _whip_meet_at := Vector3.ZERO
+var _whip_meet_ticks := -1
+
+
+## Runs him back off the ropes to `at` in exactly `ticks`, then holds him
+## there: the strike thrown at him lands on arrival.
+func _whip_meet(at: Vector3, ticks: int) -> void:
+	_whip_meet_at = Vector3(at.x, global_position.y, at.z)
+	_whip_meet_ticks = maxi(ticks, 1)
+	_irish_whip_return_ticks_remaining = maxi(_irish_whip_return_ticks_remaining, ticks + 30)
+
+
+## Into the corner instead of the ropes: from `from`, the way that heads for
+## the turnbuckle nearest the line he was going to be thrown along.
+static func corner_whip_dir(from: Vector3, along: Vector3) -> Vector3:
+	var best := along
+	var best_dot := -2.0
+	for sx: float in [-1.0, 1.0]:
+		for sz: float in [-1.0, 1.0]:
+			var to := Vector3(sx * CORNER_SPOT, 0.0, sz * CORNER_SPOT) - Vector3(from.x, 0.0, from.z)
+			if to.length() < 0.5:
+				continue
+			var d := to.normalized().dot(along)
+			if d > best_dot:
+				best_dot = d
+				best = to.normalized()
+	return best
+
+
+## Whipped into a corner and there: trapped against the turnbuckle, as a blow
+## that drives him into it traps him (_try_corner_trap()). Returns whether he
+## got there.
+func _reached_whip_corner() -> bool:
+	var p := global_position
+	if absf(p.x) < CORNER_ZONE or absf(p.z) < CORNER_ZONE:
+		return false
+	_irish_whip_corner = false
+	_irish_whip_rebounded = true
+	velocity = Vector3.ZERO
+	_trap_in_corner(Vector3(signf(p.x) * CORNER_SPOT, p.y, signf(p.z) * CORNER_SPOT))
+	return true
+
 ## The AI with the better of a tie-up on the stage, the other man's back to a
 ## side LED wall: whip him into it. Rolled once a tie-up (SCREEN_WHIP_CHANCE,
 ## the heel's higher), on the match's seed.
@@ -2533,14 +2758,18 @@ func wants_screen_whip() -> bool:
 ## reach into it below) toward the ropes with real velocity -- the actual
 ## flight and rebound are handled by _process_irish_whip() once physics
 ## carries the body into a rope collider, not scripted here.
-func _begin_irish_whip() -> void:
+func _begin_irish_whip(into_corner := false) -> void:
 	var launch_dir := opponent.global_position - global_position
 	launch_dir.y = 0.0
 	launch_dir = launch_dir.normalized() if launch_dir.length() > 0.01 else Vector3.FORWARD
+	if into_corner:
+		launch_dir = corner_whip_dir(opponent.global_position, launch_dir)
 	opponent.velocity = launch_dir * IRISH_WHIP_LAUNCH_SPEED
 	opponent._irish_whip_launch_velocity = opponent.velocity
 	opponent._irish_whip_target = self
 	opponent._irish_whip_rebounded = false
+	opponent._irish_whip_corner = into_corner
+	_rebound_pick = null
 	# The hold ends here too -- the whip replaces the grapple move.
 	_clear_grapple_roles()
 	fsm.transition_to(WrestlerFSM.State.IDLE)
@@ -2562,6 +2791,8 @@ func _process_irish_whip() -> void:
 		return
 	if _rope_load_tick >= 0:
 		_tick_rope_load()
+		return
+	if _irish_whip_corner and _reached_whip_corner():
 		return
 	for i in get_slide_collision_count():
 		var collision := get_slide_collision(i)
@@ -2736,6 +2967,21 @@ func _end_rope_load_when_clear() -> void:
 ## still allowing a running attack the moment it's in range.
 func _process_irish_whip_return(input: Dictionary) -> void:
 	_irish_whip_return_ticks_remaining -= 1
+	if _whip_meet_ticks >= 0:
+		# Paced into a rebound strike (_whip_meet()): there on its contact
+		# frame, and held there until it lands.
+		var to := _whip_meet_at - global_position
+		to.y = 0.0
+		var step := to / (maxi(_whip_meet_ticks, 1) / float(Engine.physics_ticks_per_second))
+		velocity.x = step.limit_length(RUN_SPEED).x if _whip_meet_ticks > 0 else 0.0
+		velocity.z = step.limit_length(RUN_SPEED).z if _whip_meet_ticks > 0 else 0.0
+		_whip_meet_ticks = maxi(_whip_meet_ticks - 1, 0)
+		if _irish_whip_target and is_instance_valid(_irish_whip_target):
+			var face := _irish_whip_target.global_position - global_position
+			face.y = 0.0
+			if face.length() > 0.1:
+				look_at(global_position + face, Vector3.UP)
+		return
 	if _irish_whip_target and is_instance_valid(_irish_whip_target):
 		var dir := _irish_whip_target.global_position - global_position
 		dir.y = 0.0
@@ -2974,6 +3220,55 @@ func taunt_ticks() -> int:
 func can_taunt() -> bool:
 	return taunts_used < TAUNTS_MAX and fsm.is_in([WrestlerFSM.State.IDLE,
 			WrestlerFSM.State.LOCOMOTION])
+
+
+## Roman's build to the Spear (gauntlet/refs/ff_moves_and_gameplay_plan.md, AI
+## staples 6): with it in hand and the man down, he drops into his set-up --
+## pounding the canvas, the roar, the coil (Spear_Setup) -- and holds the coil
+## until the man is back on his feet; then the Spear is run into him
+## (try_running_finisher()). Played to the crowd like a taunt.
+const SPEAR_SETUP_CLIP := "strikes/spear_setup"
+## The clip's 2.4 s; he rises out of the coil no sooner.
+const SPEAR_SETUP_TICKS := 144
+## However long the man stays down, the coil is not held past this.
+const SPEAR_SETUP_MAX_TICKS := 600
+var _stalking := false
+
+
+func begin_spear_setup() -> void:
+	if combat:
+		combat.taunted()
+	_set_state_clip(WrestlerFSM.State.TAUNT, SPEAR_SETUP_CLIP)
+	_start_move(WrestlerFSM.State.TAUNT, _timed_stub(SPEAR_SETUP_MAX_TICKS))
+	_stalking = true
+	taunted.emit(self)
+
+
+## In the set-up: eyes on the man, and out of the coil once the clip has
+## played and he is up.
+func _tick_spear_setup() -> void:
+	_turn_toward_opponent()
+	var held := SPEAR_SETUP_MAX_TICKS - _move_ticks_remaining
+	var up := opponent == null or opponent.fsm.is_in([WrestlerFSM.State.IDLE,
+			WrestlerFSM.State.LOCOMOTION, WrestlerFSM.State.RUN])
+	if held >= SPEAR_SETUP_TICKS and up:
+		_move_ticks_remaining = 1
+
+
+## His finisher, run into a man on his feet (Roster's "finisher_run": Roman's
+## Spear from the set-up). Returns whether it started.
+func try_running_finisher() -> bool:
+	if finisher_run_move == null or opponent == null or grapple_rig == null:
+		return false
+	if not RUNNING_PAIRED_TARGET_STATES.has(fsm.current_state) \
+			or not RUNNING_PAIRED_TARGET_STATES.has(opponent.fsm.current_state):
+		return false
+	if not PairedRecipes.RECIPES.has(String(finisher_run_move.animation_pair_id)):
+		return false
+	if not _in_range(STRIKE_HIT_RANGE + 0.2):
+		return false
+	_begin_running_paired(finisher_run_move)
+	return true
 
 
 func begin_taunt() -> void:
@@ -3274,13 +3569,18 @@ func _try_corner_trap() -> bool:
 	var spot := corner_behind(global_position, opponent.global_position)
 	if not spot.is_finite():
 		return false
+	_trap_in_corner(spot)
+	return true
+
+
+## Trapped against the turnbuckle at `spot`: slumped into it, and held there.
+func _trap_in_corner(spot: Vector3) -> void:
 	_corner_spot = spot
 	_corner_hits = 0
 	_corner_slide = CORNER_SLIDE_TICKS
 	_set_state_clip(WrestlerFSM.State.STUNNED, "strikes/corner_slump")
 	_start_move(WrestlerFSM.State.STUNNED, _timed_stub(CORNER_TRAP_TICKS))
 	_corner_trapped = true
-	return true
 
 
 ## Each tick trapped: driven back into the buckle, then held there facing out.
@@ -4049,7 +4349,7 @@ func _process_grapple_hold(input: Dictionary) -> void:
 	if grapple_rig and grapple_rig.is_active():
 		return
 	if input.get("run", false) or (is_ai and wants_screen_whip()):
-		_begin_irish_whip()
+		_begin_irish_whip(input.get("corner", false))
 		return
 	# Chain wrestling first: the read, and the holds it strings together.
 	if _tick_chain_read(input):
@@ -4098,7 +4398,7 @@ func _process_grapple_hold(input: Dictionary) -> void:
 func tier_of(move: MoveDef) -> int:
 	if move == null:
 		return -1
-	if move == finisher_move or finisher_move_pool.has(move):
+	if move == finisher_move or finisher_move_pool.has(move) or move == finisher_run_move:
 		return CombatSystem.Tier.FINISHER
 	if move == signature_move or signature_move_pool.has(move):
 		return CombatSystem.Tier.SIGNATURE

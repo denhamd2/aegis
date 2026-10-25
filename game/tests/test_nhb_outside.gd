@@ -49,7 +49,7 @@ func test_he_rolls_out_to_the_floor_and_back_in() -> void:
 	await _ticks(2)
 	assert_bool(w.begin_rope_cross()).is_true()
 	assert_bool(w.is_crossing_ropes()).is_true()
-	await _ticks(DiveSpot.ROLL_OUT_TICKS + 5)
+	await _ticks(WrestlerController.RING_EXIT_TICKS + 5)
 	assert_bool(w.is_crossing_ropes()).is_false()
 	assert_bool(w.outside_ring).is_true()
 	assert_float(w.global_position.y).is_equal_approx(WrestlerController.FLOOR_LEVEL, 0.05)
@@ -61,6 +61,34 @@ func test_he_rolls_out_to_the_floor_and_back_in() -> void:
 	assert_bool(w.outside_ring).is_false()
 	assert_float(w.global_position.y).is_equal_approx(0.0, 0.05)
 	assert_float(absf(w.global_position.z)).is_less_equal(WrestlerController.RING_KEEP_IN)
+
+
+## The owner, 25 Oct: wrestlers should climb out of the ring, "not teleport
+## to the floor". He steps through the ropes onto the apron and drops off
+## it, so his root never jumps: no step over 5 cm in a tick, the whole way
+## down to the floor, and the clip is the climb, not the old roll.
+func test_he_climbs_out_without_a_jump() -> void:
+	var w := _wrestler(true)
+	w.global_position = Vector3(0.4, 0.0, -2.5)
+	await _ticks(2)
+	assert_str(WrestlerController.clip_for_state(WrestlerFSM.State.ROPE_CROSS, true)) \
+		.is_equal("strikes/ring_exit")
+	assert_bool(w.anim_player.has_animation("strikes/ring_exit")).is_true()
+	assert_bool(w.begin_rope_cross()).is_true()
+	var last := w.global_position
+	var biggest := 0.0
+	var lowest_on_apron := 0.0
+	for i in WrestlerController.RING_EXIT_TICKS + 5:
+		await get_tree().physics_frame
+		biggest = maxf(biggest, w.global_position.distance_to(last))
+		last = w.global_position
+		# Still over the deck: he is on the apron, not through it.
+		if -w.global_position.z < RingBuilder.APRON_OUT:
+			lowest_on_apron = minf(lowest_on_apron, w.global_position.y)
+	assert_float(biggest).is_less(0.05)
+	assert_float(lowest_on_apron).is_greater(-0.2)
+	assert_float(w.global_position.y).is_equal_approx(WrestlerController.FLOOR_LEVEL, 0.05)
+	assert_float(-w.global_position.z).is_greater_equal(WrestlerController.DECK_KEEP_OUT - 0.01)
 
 
 func test_he_can_carry_a_weapon_back_through_the_ropes() -> void:

@@ -10,6 +10,7 @@ const MATCH_SCENE := "res://scenes/match.tscn"
 
 var _seeds: Array[int] = []
 var _wrestlers := ""
+var _max_ticks := 30000
 
 
 func _ready() -> void:
@@ -20,6 +21,8 @@ func _ready() -> void:
 				_seeds.append(int(t))
 		elif args[i] == "--wrestlers" and i + 1 < args.size():
 			_wrestlers = args[i + 1]
+		elif args[i] == "--ticks" and i + 1 < args.size():
+			_max_ticks = int(args[i + 1])
 	if _seeds.is_empty():
 		_seeds = [1, 2, 3]
 	var pair := Roster.pair_from_spec(_wrestlers)
@@ -36,7 +39,7 @@ func _ready() -> void:
 		var last := {}
 		var ticks := 0
 		var dived := false
-		while not done[0] and ticks < 30000:
+		while not done[0] and ticks < _max_ticks:
 			await get_tree().physics_frame
 			ticks += 1
 			if not dived and scene.has_node("DiveSpot"):
@@ -50,7 +53,17 @@ func _ready() -> void:
 				if m != last.get(n) and m != null:
 					var key := "%s %s" % [pair[0 if n == "WrestlerA" else 1].id, m.animation_pair_id]
 					tally[key] = tally.get(key, 0) + 1
+					print("  seed %d tick %d: %s" % [seed_value, ticks, key])
 				last[n] = m
+				# The staples: whipped, trapped in a corner, set for the Spear.
+				var who: String = pair[0 if n == "WrestlerA" else 1].id
+				for flag: Array in [["whipped", w.fsm.current_state == WrestlerFSM.State.IRISH_WHIP],
+						["corner trapped", w.is_corner_trapped()], ["spear set-up", w._stalking]]:
+					var was := "%s %s" % [n, flag[0]]
+					if flag[1] and not last.get(was, false):
+						tally["%s %s" % [who, flag[0]]] = tally.get("%s %s" % [who, flag[0]], 0) + 1
+						print("  seed %d tick %d: %s %s" % [seed_value, ticks, who, flag[0]])
+					last[was] = flag[1]
 		print("seed %d: %d ticks, done=%s by %s" % [seed_value, ticks, done[0], how[0]])
 		scene.queue_free()
 		await get_tree().process_frame

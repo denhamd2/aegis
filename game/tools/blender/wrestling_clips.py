@@ -5564,6 +5564,134 @@ CLIPS["Apron_Climb"] = _world_clip(36, (0.45, FLOOR_DROP), _unified([
                     fist_r=0.8, fist_l=0.8), 0.45, FLOOR_DROP)),
 ]))
 
+
+def _world_clip_path(frames, root_keys, keys):
+    """_world_clip with the root on a piecewise-linear path instead of one
+    straight line: `root_keys` is [(frame, (fwd, up))], first at 0 and last
+    at `frames`. Whatever drives the root in game must walk the same path
+    (WrestlerController.RING_EXIT_PATH)."""
+    out = []
+    for f, pose_now in _world_clip(frames, (0.0, 0.0), keys):
+        i = 0
+        while i + 1 < len(root_keys) - 1 and root_keys[i + 1][0] <= f:
+            i += 1
+        (f0, (a0, u0)), (f1, (a1, u1)) = root_keys[i], root_keys[i + 1]
+        t = 0.0 if f1 == f0 else min(max((f - f0) / float(f1 - f0), 0.0), 1.0)
+        rf, ru = a0 + (a1 - a0) * t, u0 + (u1 - u0) * t
+        pose_now = dict(pose_now)
+        for field in _TRAVEL_FIELDS:
+            x, y, z = pose_now[field]
+            pose_now[field] = (x, y - rf, z - ru)
+        out.append((f, pose_now))
+    return out
+
+
+# Out of the ring the way a man actually leaves it (the owner, 20 Oct: "it
+# looks like they teleport from the ring to the outside ... fix this so they
+# properly climb out of the ring"). It was Roll_Out_Ropes -- a hurt man's
+# tumble, sliding 1.55 m out and 1.09 m down in a second and a half, played
+# for a fresh man walking out by choice.
+#
+# Facing out, from RING_KEEP_IN (2.6 m; the rope line is 0.50 ahead): two
+# steps to the ropes, both hands on the top rope; the left lifts it as the
+# right leg goes over the middle rope onto the apron (a 0.1 m strip outside
+# the rope line, 0.10 below the mat); he folds down and out under the top
+# rope, weight onto the apron foot, the left leg comes over; on the apron,
+# a crouch, and he hops down, landing knees bent on the floor 0.5 m clear of
+# the apron, and stands. The mirror of Rope_Step_Through_Apron (in from the
+# apron) for the rope work: RingRopes.hold lifts the top rope on frames
+# RING_EXIT_GRIP and presses the middle under him on RING_EXIT_PRESS
+# (WrestlerController._part_ropes_out). 80 frames.
+RING_EXIT_ROPE = 0.50          # the rope line, fwd of his start
+RING_EXIT_APRON = 0.57         # his boots on the apron
+RING_EXIT_LAND = 1.10          # on the floor, 3.70 m out
+APRON_UP = -0.10               # the apron below the mat
+RING_EXIT_PATH = [(0, (0.0, 0.0)), (50, (RING_EXIT_APRON, APRON_UP)),
+                  (68, (RING_EXIT_LAND, -FLOOR_DROP)), (80, (RING_EXIT_LAND, -FLOOR_DROP))]
+
+
+def _ring_exit_keys():
+    L, A, F = RING_EXIT_ROPE, RING_EXIT_APRON, RING_EXIT_LAND
+    top, mid = 1.20, 0.85
+    apron_foot = APRON_UP + _ANKLE
+    floor_foot = -FLOOR_DROP + _ANKLE
+    lift = dict(fist_r=0.8, fist_l=0.9)
+    stand = pose(STANCE, pelvis=(0.0, 0.0, 0.86), hips=(-2, 0, 0), spine=(-4, 0, 0),
+                 head=(2, 0, 0),
+                 hand_r=(0.25, 0.02, 0.86), hand_l=(-0.23, 0.02, 0.86),
+                 foot_r=(0.14, 0.0, _ANKLE), foot_l=(-0.13, 0.0, _ANKLE),
+                 knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0), fist_r=0.5, fist_l=0.5)
+    return [
+        (0, stand),
+        # Two steps to the ropes, the hands coming up to the top one.
+        (8, pose(stand, pelvis=(0.0, 0.18, 0.85),
+                 hand_r=(0.24, 0.38, 1.10), hand_l=(-0.22, 0.38, 1.12),
+                 foot_r=(0.14, 0.30, _ANKLE), foot_l=(-0.13, 0.04, _ANKLE + 0.06),
+                 knee_l=(-0.1, 1.0, 0.3))),
+        (14, pose(stand, pelvis=(0.0, 0.26, 0.84), hips=(-6, 0, 0), spine=(-6, 0, 0),
+                  head=(6, 0, 0),
+                  hand_r=(0.22, L - 0.02, top + 0.02), hand_l=(-0.22, L - 0.02, top + 0.02),
+                  foot_r=(0.14, 0.32, _ANKLE), foot_l=(-0.13, 0.18, _ANKLE), **lift)),
+        # The left hand lifts the top rope; the right leg up and over the
+        # middle rope while he is still upright, hips back.
+        (20, pose(stand, pelvis=(0.0, 0.24, 0.82), hips=(-8, 0, 0), spine=(-6, 0, 0),
+                  head=(8, 0, 0),
+                  hand_r=(0.20, L - 0.01, top + 0.04), hand_l=(-0.18, L + 0.04, top + 0.14),
+                  foot_r=(0.16, L + 0.04, mid + 0.12), foot_l=(-0.13, 0.18, _ANKLE),
+                  knee_r=(0.1, 0.8, 0.6), **lift)),
+        # Right boot down on the apron: astride the middle rope.
+        (26, pose(stand, pelvis=(0.0, L - 0.12, 0.74), hips=(-16, 0, 0), spine=(-8, 0, 0),
+                  head=(10, 0, 0),
+                  hand_r=(0.18, L, top + 0.04), hand_l=(-0.16, L + 0.04, top + 0.14),
+                  foot_r=(0.07, A, apron_foot), foot_l=(-0.13, 0.18, _ANKLE), **lift)),
+        # The duck: folded flat over the middle rope, head and shoulders out
+        # under the lifted top rope.
+        (32, pose(stand, pelvis=(0.0, L - 0.06, 0.62), hips=(-68, 0, 0), spine=(-28, 0, 0),
+                  head=(34, 0, 0),
+                  hand_r=(0.20, L + 0.20, 0.50), hand_l=(-0.16, L + 0.02, top + 0.14),
+                  foot_r=(0.07, A, apron_foot), foot_l=(-0.13, 0.18, _ANKLE), **lift)),
+        # Weight onto the apron foot, shoulders well out; the left boot lifts.
+        (38, pose(stand, pelvis=(0.0, L + 0.01, 0.62), hips=(-56, 0, 0), spine=(-26, 0, 0),
+                  head=(30, 0, 0),
+                  hand_r=(0.22, L + 0.24, 0.62), hand_l=(-0.18, L + 0.02, top + 0.14),
+                  foot_r=(0.07, A, apron_foot), foot_l=(-0.13, 0.26, _ANKLE + 0.08),
+                  knee_l=(-0.1, 1.0, 0.4), **lift)),
+        # The trail leg comes over the middle rope; the hand lets the top rope
+        # down behind him.
+        (44, pose(stand, pelvis=(0.0, A - 0.03, 0.68), hips=(-30, 0, 0), spine=(-16, 0, 0),
+                  head=(10, 0, 0),
+                  hand_r=(0.24, L - 0.02, top - 0.10), hand_l=(-0.22, L - 0.02, top - 0.02),
+                  foot_r=(0.07, A, apron_foot), foot_l=(-0.10, L + 0.02, mid + 0.10),
+                  knee_l=(-0.1, 0.4, -1.0), fist_r=0.7, fist_l=0.8)),
+        # Both boots on the apron, crouched to go down.
+        (50, pose(CROUCH, pelvis=(0.0, A + 0.06, apron_foot + 0.40), hips=(-30, 0, 0),
+                  spine=(-14, 0, 0), head=(10, 0, 0),
+                  hand_r=(0.22, A + 0.26, apron_foot + 0.50),
+                  hand_l=(-0.22, A + 0.24, apron_foot + 0.50),
+                  foot_r=(0.07, A + 0.01, apron_foot), foot_l=(-0.07, A, apron_foot),
+                  knee_r=(0.2, 1.0, 0.2), knee_l=(-0.2, 1.0, 0.2))),
+        # Off the edge.
+        (56, _body((-12, 0, 0), (0.0, A + 0.24, apron_foot + 0.62),
+                   hand_r=(0.30, 0.18, 0.12), hand_l=(-0.30, 0.16, 0.12),
+                   foot_r=(0.13, 0.04, -0.70), foot_l=(-0.13, -0.02, -0.72),
+                   knee_r=(0.1, 1.0, 0.2), knee_l=(-0.1, 1.0, 0.2), free_feet=True,
+                   fist_r=0.4, fist_l=0.4)),
+        (62, _body((-14, 0, 0), (0.0, (A + F) * 0.5 + 0.12, -0.20),
+                   hand_r=(0.32, 0.20, 0.20), hand_l=(-0.32, 0.18, 0.20),
+                   foot_r=(0.14, 0.08, -0.62), foot_l=(-0.14, 0.02, -0.64),
+                   knee_r=(0.1, 1.0, 0.3), knee_l=(-0.1, 1.0, 0.3), free_feet=True,
+                   fist_r=0.4, fist_l=0.4)),
+        # Landed on the floor, knees bent, hands out for balance.
+        (68, pose(CROUCH, pelvis=(0.0, F + 0.06, floor_foot + 0.40), hips=(-30, 0, 0),
+                  hand_r=(0.26, F + 0.30, floor_foot + 0.46),
+                  hand_l=(-0.26, F + 0.28, floor_foot + 0.46),
+                  foot_r=(0.18, F + 0.04, floor_foot), foot_l=(-0.18, F + 0.10, floor_foot))),
+        (80, _on_floor(pose(STANCE), F)),
+    ]
+
+
+CLIPS["Ring_Exit"] = _world_clip_path(80, RING_EXIT_PATH, _unified(_ring_exit_keys()))
+
 # The springboard Disaster Kick: from the apron facing in, a foot up onto the
 # middle rope, springing off it, spinning a full turn in the air, the right
 # leg sweeping round into the head of the man standing inside at 1.95 m out
@@ -6392,6 +6520,96 @@ CLIPS["Strike_Corner_Clothesline"] = [
            head=(8, 4, 0), hand_r=(0.14, 0.40, 1.12),
            foot_l=(-0.22, 0.34, 0.104))),
     (24, R()),
+]
+
+
+# --- the knife-edge chop (Cody's corner strike) ---------------------------------
+#
+# gauntlet/refs/ff_moves_and_gameplay_plan.md, AI staples: with a man whipped
+# into the corner, Cody chops him, Flair-style -- the crowd's "WOO" on every
+# one. 24 frames / 0.8 s, contact on frame 9 (= tick 18 of strike_chop.tres):
+# the right hand drawn back OPEN, high and wide behind the shoulder, the
+# chest turned away with it; then a step in on the left foot and the flat of
+# the hand whipped across the man's chest at 1.35 m, the arm long, the palm
+# down and out the far side -- a slap with the whole body turned into it, not
+# a punch -- and back to the stance.
+CLIPS["Strike_Chop"] = [
+    (0,  R()),
+    (4,  R(pelvis=(0.03, -0.08, 0.800), hips=(-6, 16, 0), spine=(-8, 26, 0),
+           head=(8, -20, 0), clav_r=(0, 14, 0),
+           hand_r=(0.52, -0.16, 1.52), elbow_r=(0.9, -0.5, 0.3),
+           hand_l=(-0.24, 0.42, 1.24), fist_r=0.0, fist_l=0.3,
+           foot_r=(0.27, -0.28, 0.104), foot_l=(-0.23, 0.14, 0.116))),
+    # Contact: the flat of the hand across his chest.
+    (9,  R(pelvis=(-0.02, 0.16, 0.820), hips=(-8, -16, 0), spine=(-12, -28, 0),
+           head=(8, 18, 0), clav_r=(0, -16, 0),
+           hand_r=(-0.02, 0.62, 1.36), elbow_r=(0.4, -0.3, -0.9),
+           hand_l=(-0.26, 0.22, 1.16), fist_r=0.0, fist_l=0.3,
+           foot_l=(-0.21, 0.40, 0.104), foot_r=(0.27, -0.18, 0.124),
+           ankle_r=(18, 0, 0))),
+    # Out the far side of him.
+    (13, R(pelvis=(-0.03, 0.16, 0.810), hips=(-8, -24, 0), spine=(-14, -36, 0),
+           head=(8, 22, 0), clav_r=(0, -8, 0),
+           hand_r=(-0.30, 0.40, 1.18), elbow_r=(0.4, -0.3, -0.9),
+           hand_l=(-0.26, 0.20, 1.12), fist_r=0.1, fist_l=0.3,
+           foot_l=(-0.21, 0.40, 0.104), foot_r=(0.27, -0.18, 0.120),
+           ankle_r=(12, 0, 0))),
+    (18, R(pelvis=(0.0, 0.08, 0.790), hips=(-8, -6, 0), spine=(-18, -8, 0),
+           head=(8, 4, 0), hand_r=(0.16, 0.38, 1.10), fist_r=0.2,
+           foot_l=(-0.22, 0.30, 0.104))),
+    (24, R()),
+]
+
+
+# --- Roman's build to the Spear -------------------------------------------------
+#
+# gauntlet/refs/ff_moves_and_gameplay_plan.md, AI staples 6: with the Spear
+# ready and the man down, Roman backs off, drops into his crouch and waits for
+# him to get up -- pounding the canvas, then the roar to the crowd, then the
+# coil the Spear explodes from. 72 frames / 2.4 s, and the last pose is
+# Spear_Attacker's coil (its frame 12), held until the man is up: the run in
+# (running_spear, Run_Spear_Attacker) starts from it.
+_SPEAR_COIL = P(pelvis=(0.0, -0.09, 0.565), hips=(-32, 0, 0), spine=(-34, 0, 0),
+                head=(30, 0, 0),
+                hand_r=(0.34, 0.20, 0.48), hand_l=(-0.34, 0.20, 0.48),
+                elbow_r=(0.6, -0.2, -0.7), elbow_l=(-0.6, -0.2, -0.7),
+                fist_r=0.45, fist_l=0.45,
+                foot_r=(0.28, -0.32, 0.104), foot_l=(-0.26, 0.20, 0.104))
+# Down in the crouch, the right fist up by his shoulder to hit the mat.
+_SPEAR_POUND_UP = P(pelvis=(0.0, -0.02, 0.520), hips=(-40, 0, 0), spine=(-30, 0, 0),
+                    head=(26, 0, 0),
+                    hand_r=(0.28, 0.24, 0.86), elbow_r=(0.7, -0.3, 0.4),
+                    hand_l=(-0.30, 0.36, 0.40), fist_r=1.0, fist_l=0.3,
+                    foot_r=(0.28, -0.24, 0.104), foot_l=(-0.26, 0.24, 0.104),
+                    knee_r=(0.3, 1.0, 0.2), knee_l=(-0.3, 1.0, 0.2))
+_SPEAR_POUND = pose(_SPEAR_POUND_UP, pelvis=(0.0, 0.0, 0.500), spine=(-36, 0, 0),
+                    head=(20, 0, 0), hand_r=(0.24, 0.44, 0.10),
+                    elbow_r=(0.6, -0.2, -0.4))
+CLIPS["Spear_Setup"] = [
+    (0,  P()),
+    (10, pose(_SPEAR_POUND_UP, pelvis=(0.0, 0.0, 0.600), hand_r=(0.28, 0.20, 1.00))),
+    (16, _SPEAR_POUND),
+    (22, _SPEAR_POUND_UP),
+    (28, _SPEAR_POUND),
+    # The roar: chest up and open to the crowd, still low on his haunches,
+    # fists down by his hips.
+    (38, P(pelvis=(0.0, -0.06, 0.580), hips=(-22, 0, 0), spine=(4, 0, 0),
+           head=(-22, 0, 0),
+           hand_r=(0.40, 0.04, 0.70), hand_l=(-0.40, 0.04, 0.70),
+           elbow_r=(0.8, -0.6, 0.0), elbow_l=(-0.8, -0.6, 0.0),
+           fist_r=1.0, fist_l=1.0,
+           foot_r=(0.28, -0.28, 0.104), foot_l=(-0.26, 0.22, 0.104),
+           knee_r=(0.3, 1.0, 0.2), knee_l=(-0.3, 1.0, 0.2))),
+    (48, P(pelvis=(0.0, -0.07, 0.585), hips=(-20, 0, 0), spine=(8, 0, 0),
+           head=(-26, 0, 0),
+           hand_r=(0.42, 0.02, 0.72), hand_l=(-0.42, 0.02, 0.72),
+           elbow_r=(0.8, -0.6, 0.0), elbow_l=(-0.8, -0.6, 0.0),
+           fist_r=1.0, fist_l=1.0,
+           foot_r=(0.28, -0.30, 0.104), foot_l=(-0.26, 0.20, 0.104),
+           knee_r=(0.3, 1.0, 0.2), knee_l=(-0.3, 1.0, 0.2))),
+    # Into the coil, eyes on the man.
+    (60, _SPEAR_COIL),
+    (72, pose(_SPEAR_COIL, pelvis=(0.0, -0.10, 0.560))),
 ]
 
 

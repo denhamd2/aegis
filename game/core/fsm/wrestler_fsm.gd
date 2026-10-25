@@ -63,7 +63,8 @@ const LEGAL_TRANSITIONS := {
 	State.HIT_REACT: [State.IDLE, State.DOWN, State.STUNNED, State.VICTORY],
 	State.DOWN: [State.GETUP, State.GRAPPLE_HOLD, State.PIN_DEFENDER, State.SUBMISSION_DEFENDER, State.VICTORY],
 	State.GETUP: [State.IDLE, State.HIT_REACT, State.VICTORY],
-	State.IRISH_WHIP: [State.RUN, State.HIT_REACT, State.VICTORY],
+	# STUNNED: whipped into a corner, he is trapped against the turnbuckle.
+	State.IRISH_WHIP: [State.RUN, State.HIT_REACT, State.STUNNED, State.VICTORY],
 	State.RUNNING_ATTACK: [State.IDLE, State.HIT_REACT, State.DOWN, State.VICTORY],
 	State.STUNNED: [State.IDLE, State.HIT_REACT, State.DOWN, State.VICTORY],
 	State.PIN_ATTACKER: [State.IDLE, State.GETUP, State.FINISHER, State.VICTORY],

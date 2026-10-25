@@ -328,6 +328,17 @@ const CHAIN_READ_TICK := 8
 const CHAIN_REVERSAL_CHANCE := 0.3
 ## How often a hold the AI has the better of ends in an Irish whip.
 const WHIP_CHANCE := 0.18
+## Of those whips, the share sent into a corner rather than the ropes, by a
+## man with something to do to him there (a corner strike or a corner move).
+const CORNER_WHIP_SHARE := 0.4
+
+
+func _wants_corner_whip() -> bool:
+	if controller.corner_strike_move == null and controller.corner_move == null:
+		return false
+	if controller.outside_ring or target.outside_ring:
+		return false
+	return _chain_rng().randf() < CORNER_WHIP_SHARE
 ## How often the heel in control turns a lock-up into a rest hold: a
 ## headlock held two or three links (MatchFlow.wants_stall).
 const REST_HOLD_CHANCE := 0.45
@@ -373,7 +384,7 @@ func _chain_input() -> Dictionary:
 		# into the ropes instead (the Irish whip) -- and is waiting when he
 		# comes off them. Seeded, like every other roll.
 		elif _opening_grapple_done() and _chain_rng().randf() < WHIP_CHANCE:
-			return {"run": true}
+			return {"run": true, "corner": _wants_corner_whip()}
 		if not _opening_grapple_done():
 			var roll := _chain_rng().randi_range(1, 5)
 			_chain_plan = 1 if roll <= CHAIN_LINK_WEIGHTS[0] else (
@@ -497,6 +508,91 @@ func _wants_taunt() -> bool:
 	return false
 
 
+## Roman's build to the Spear (gauntlet/refs/ff_moves_and_gameplay_plan.md, AI
+## staples 6). With the finish his to take and the man down, he does not lock
+## him up for it: he backs off SPEAR_STALK_DISTANCE, drops into his set-up
+## (WrestlerController.begin_spear_setup: the canvas pounded, the roar, the
+## coil) and waits there; the man gets up into the Spear
+## (WrestlerController.try_running_finisher).
+const SPEAR_STALK_DISTANCE := 3.0
+## Inside the ropes with room to spare, as the strut.
+const SPEAR_STALK_LIMIT := 2.3
+## The walk back to the spot and the charge are each given this long.
+const SPEAR_STALK_TICKS := 240
+enum { STALK_OFF, STALK_BACK, STALK_SET, STALK_CHARGE }
+var _spear_stalk := STALK_OFF
+var _spear_spot := Vector3.INF
+var _spear_ticks := 0
+
+
+## The terms on which he would go for the finish by a lock-up
+## (_wants_signature_tie_up), with a man down in the ring and a Spear to run.
+func _wants_spear_stalk() -> bool:
+	if controller.finisher_run_move == null or target.dead:
+		return false
+	if controller.outside_ring or target.outside_ring:
+		return false
+	if not controller.combat.can_finisher():
+		return false
+	var flow := controller.flow
+	if flow and flow.winner == controller and flow.finish_allowed():
+		return true
+	return _opponent_is_ripe()
+
+
+func _begin_spear_stalk() -> void:
+	_spear_stalk = STALK_BACK
+	_spear_ticks = SPEAR_STALK_TICKS
+	var away := controller.global_position - target.global_position
+	away.y = 0.0
+	if away.length() < 0.1:
+		away = Vector3(-target.global_position.x, 0.0, -target.global_position.z)
+	if away.length() < 0.1:
+		away = Vector3.RIGHT
+	var p := target.global_position + away.normalized() * SPEAR_STALK_DISTANCE
+	_spear_spot = Vector3(clampf(p.x, -SPEAR_STALK_LIMIT, SPEAR_STALK_LIMIT),
+			controller.global_position.y, clampf(p.z, -SPEAR_STALK_LIMIT, SPEAR_STALK_LIMIT))
+
+
+## Empty when the stalk is over and the rest of the brain should decide.
+func _spear_stalk_input(input: Dictionary, to_target: Vector3, distance: float) -> Dictionary:
+	_spear_ticks -= 1
+	if target.dead or target.outside_ring or _spear_ticks <= 0 \
+			or not controller.combat.can_finisher():
+		_spear_stalk = STALK_OFF
+		return {}
+	var up := target.fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION,
+			WrestlerFSM.State.RUN])
+	match _spear_stalk:
+		STALK_BACK:
+			if up:
+				_spear_stalk = STALK_CHARGE
+				_spear_ticks = SPEAR_STALK_TICKS
+			else:
+				var to := _spear_spot - controller.global_position
+				to.y = 0.0
+				if to.length() > 0.2:
+					var dir := to.normalized()
+					input["move"] = Vector2(dir.x, dir.z)
+					return input
+				_spear_stalk = STALK_SET
+				return {"spear_setup": true}
+		STALK_SET:
+			# Out of the set-up (the controller holds it until he is up).
+			_spear_stalk = STALK_CHARGE
+			_spear_ticks = SPEAR_STALK_TICKS
+	# STALK_CHARGE: run it in as he stands.
+	if not up:
+		return input
+	if controller.try_running_finisher():
+		_spear_stalk = STALK_OFF
+		return {}
+	var dir := to_target.normalized() if distance > 0.01 else Vector3.ZERO
+	input["move"] = Vector2(dir.x, dir.z)
+	input["run"] = true
+	return input
+
+
 ## The strut (owner's 2K26 Cody vs Roman, gauntlet/refs/cody_roman_2k26.md):
 ## the man who has just put the other down does not always walk straight in
 ## for the cover. He walks off a couple of metres, turns to the crowd and
@@ -601,6 +697,15 @@ func _poll_input() -> Dictionary:
 		return _rummage_input()
 	if not controller.fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION, WrestlerFSM.State.RUN]):
 		return {}
+	# Coming back off the ropes from a whip: that is the ropes' momentum, not
+	# his choice, and the man who sent him there decides what happens next.
+	if controller.is_whip_returning():
+		return {}
+	# He sent the other man into the ropes: he stands his ground and meets him
+	# coming back with his rebound move (WrestlerController.try_rebound_move()
+	# times it).
+	if target.is_whip_returning() and not controller.rebound_moves.is_empty():
+		return {"rebound": true}
 
 	var to_target := target.global_position - controller.global_position
 	to_target.y = 0.0
@@ -630,6 +735,11 @@ func _poll_input() -> Dictionary:
 		input["move"] = _follow_through_ropes()
 		input["rope_cross"] = true
 		return input
+	# Building to the Spear: backing off, set, or running it in.
+	if _spear_stalk > 0:
+		var stalk := _spear_stalk_input(input, to_target, distance)
+		if not stalk.is_empty():
+			return stalk
 	# Opponent is down: walk in for the cover instead of continuing to
 	# strike/grapple decisions below. MatchReferee triggers the pin once
 	# this wrestler is within its cover range and idle/moving.
@@ -656,6 +766,9 @@ func _poll_input() -> Dictionary:
 		# Roman's Spear in the finish went unpinned while he played to the
 		# crowd, and the match ran out with no winner.
 		var off_finisher := controller.last_landed_tier >= CombatSystem.Tier.FINISHER
+		if _spear_stalk == 0 and not off_finisher and _wants_spear_stalk():
+			_begin_spear_stalk()
+			return _spear_stalk_input(input, to_target, distance)
 		if not target.dead and not off_finisher:
 			if _wants_taunt():
 				input["taunt"] = true

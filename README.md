@@ -10377,3 +10377,33 @@ The top of the hair stays about 3.5 cm over the skull. It still ends at the jaw 
 - **Guard.** `test_the_hair_sits_close_to_his_head` is now under 0.27 m at ear height.
 - **Budget.** Hair is 47.9k triangles.
 - **Review.** `gauntlet/refs/characters/review/kenny_hair_pass7.png`.
+
+## 25 Oct — Out of the ring over the ropes; whips, the corner and Roman's Spear build
+
+The owner: "Wrestlers climbing out of the ring properly, not teleporting to the floor" and "AI staples: Irish whips, corner and top-rope spots, Roman's Spear build-up, knees, chops."
+
+**Out of the ring.** Going out was `Roll_Out_Ropes`, a hurt man's tumble that slid 1.55 m out and 1.09 m down in 1.5 s, and it played in half that, which read as a teleport.
+- **The cause of the speed.** `WrestlerFSM` is a child of the controller (so Godot ticks it) and the controller ticks it as well, so `fsm.ticks_in_state` counts two per physics tick. Every state timed on it runs at half length. The rope cross now keeps its own counter. The global fix needs a retune of everything timed on it, so it is a separate item.
+- **The new clip, `Ring_Exit`** (80 frames, 2.67 s, `wrestling_clips.py`): two steps to the ropes, both hands on the top rope; the left hand lifts it as the right leg goes over the middle rope onto the apron; he folds out under the top rope, brings the trail leg over, crouches on the apron and hops down, landing knees bent 0.5 m clear of it.
+- **The root follows the clip's own path** (`WrestlerController.RING_EXIT_PATH`, the same table as the clip's), so the body and the root never disagree. He may set off up to 0.25 m short of the keep-in line; the walk to the ropes takes that up, so the climb always lands where the clip keys it.
+- **The ropes move.** The top rope is lifted by his left hand and the middle rope pressed under his hips while he goes through (`RingRopes.hold`, as the entrance's step-through does).
+- **Guard.** `test_he_climbs_out_without_a_jump`: no root step over 5 cm in any tick, never below the apron while over it, on the floor and clear of the apron at the end.
+
+**Irish whips.** The man whipped into the ropes used to be the one who attacked: his autopilot back off the ropes ran into his own running attack, on the man who had whipped him. Now the whipper meets him, as on television and in Fight Forever.
+- **Rebound moves**, a new roster tier (`"rebound"`). Roman: spinebuster, Samoan drop, powerslam. Cody: the dropdown uppercut (his "drops under a charging man") and the powerslam.
+- **A paired move** is caught once he is in range. **A strike** is thrown while he is still coming, and he is paced to arrive on its contact frame: the uppercut's 22-tick startup is longer than the run back, and he used to stand in front of it for 12 ticks waiting to be hit.
+- **The runner has no say.** The AI does nothing while it is coming back off the ropes; the whipper's AI stands its ground and throws the rebound move.
+
+**The corner.** A whip can go into a corner (`CORNER_WHIP_SHARE`, 40% of whips, for a man with something to do there). He is trapped against the turnbuckle on arrival, the same trap a blow into the corner gives, so Roman's corner clotheslines and corner Spear follow. Cody's corner strike is a new knife-edge chop (`Strike_Chop`, Flair-style).
+
+**Roman's build to the Spear.** With the finish his and the man down, he no longer locks him up for it:
+- he backs off 3 m;
+- drops into the set-up (`Spear_Setup`, 2.4 s): the canvas pounded twice, the roar, the coil;
+- holds the coil until the man is up;
+- and runs the Spear into him (`finisher_running_spear`: `running_spear`'s clips with the finisher's damage, counted as his finisher for the pin).
+
+**Checks.**
+- **Tests.** `test_irish_whip_rebound.gd` (rebound tiers, the catch, the paced strike, the corner trap), `test_spear_setup.gd` (the hold, the run-in, the AI's stalk), and the ring-exit guard above.
+- **The chop's reach** is measured off the clip (`measure_contact_offsets.gd`): the hand 0.595 m out at 1.37 m, on its contact tick (18 of 48).
+- **Clip gate.** `wrestling_clips.py` re-pinned after the renders below were looked at.
+- **Review sheets.** `gauntlet/refs/nhb/review/ring_exit.png` (the exit in the match, every 0.2 s) and `gauntlet/refs/ff_review/staples_chop_spear_setup.png`.

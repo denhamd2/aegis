@@ -537,6 +537,10 @@ static func configure_match(scene: Node, player: Roster.Entry,
 					wrestler.top_rope_move = moves[0]
 				"corner_strike":
 					wrestler.corner_strike_move = moves[0]
+				"rebound":
+					wrestler.rebound_moves = moves
+				"finisher_run":
+					wrestler.finisher_run_move = moves[0]
 				"finisher":
 					# Variants of his own finisher, drawn beside it.
 					wrestler.finisher_move_pool = moves
