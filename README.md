@@ -10303,3 +10303,42 @@ This is the second step of `kenny_aaa_plan.md` (gaps 3, 5 and 7).
 - **Pores.** He already had them (`SkinLook.add_pores` in `KennyModel`).
 - **Determinism.** Byte-identical on a second run.
 - **Review.** `gauntlet/refs/characters/review/kenny_skin_pass5.png`.
+
+## 25 Oct — Kenny pass 6: hair sized to the reference
+
+The owner: "His hair looks too big. Research Kenny Omega hair and face images for references."
+
+**Reference.** His AEW headshot on Wikimedia Commons ("All Elite Wrestling Executive Vice President - Kenny Omega (headshot)"), with Forbidden Door 2023 ringside photos from the same category. The headshot is not committed; it is reference only. What it shows:
+- the hair sits close to his head, about 1.4× his face's width at the ears
+- it ends near the jaw at the sides and the collar at the back
+- loose wet curls, with dark roots and lengths and blond in the ends and streaks
+
+Ours stood out as a round mass and hung past his shoulders.
+
+**Changes in `kenny_aaa.py`:**
+
+| Setting | Was | Now |
+| --- | --- | --- |
+| `CURL_END` | 1.36–1.50 | 1.45–1.54 |
+| `CURL_STANDOFF` | 22–55 mm | 6–16 mm |
+| `CURL_FLARE` | 0.42 | 0.12 |
+| `CURL_RADIUS` | 5–11 mm | 4–8 mm |
+| `CURL_WIDTH` | 28–44 mm | 22–34 mm |
+| `CROWN_SWEEP` | — | more back, less out |
+| `CROWN_STANDOFF` | 30–48 mm | 21–27 mm |
+| `CROWN_LENGTH` | 0.46 | 0.34 |
+| `CAP_OFF` volume | 28 mm | 16 mm |
+| `HAIR_ROOT` | — | darker |
+| `HAIR_MID` | — | darker |
+
+**Measured on the curl cards** (2nd to 98th percentile):
+
+| | Was | Now |
+| --- | --- | --- |
+| Width at ear height | 0.42 m | 0.31 m |
+| Lowest point | 1.35 m (past the shoulders) | 1.45 m |
+| Hair triangles | 59k | 46.5k |
+
+- **Determinism.** Byte-identical on a second run.
+- **Guard.** `test_the_hair_sits_close_to_his_head`.
+- **Review.** `gauntlet/refs/characters/review/kenny_hair_pass6.png`.

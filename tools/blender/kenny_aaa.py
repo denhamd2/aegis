@@ -278,7 +278,7 @@ HAIRLINE = [(0.0, 0.088), (25.0, 0.084), (42.0, 0.070), (60.0, 0.052),
 HAIRLINE_FEATHER = 0.018
 ## The cap's standoff: its root, and the volume it gains back from the
 ## hairline over the crown and the back (curly hair stands off the skull).
-CAP_OFF = (0.004, 0.028)
+CAP_OFF = (0.004, 0.016)
 CAP_RAMP = 0.035
 ## The cap's strand direction: combed back from a pole over the forehead.
 CAP_AXIS = Vector((0.0, -0.75, 0.66)).normalized()
@@ -300,22 +300,30 @@ CURL_COUNT = 120
 CURL_UPPER = (80, (95.0, 180.0), 0.05)
 CURL_ANGLES = (72.0, 180.0)
 CURL_TOP = [(62.0, 0.035), (90.0, 0.025), (120.0, 0.010), (180.0, -0.010)]
-CURL_END = (1.36, 1.50)
-CURL_STANDOFF = (0.022, 0.055)
-CURL_RADIUS = (0.005, 0.011)
+## (Pass 6, 25 Oct -- the owner: "His hair looks too big." Against his AEW
+## headshot (Wikimedia Commons, "All Elite Wrestling Executive Vice President -
+## Kenny Omega (headshot)") the hair sits close to the head, about 1.4x his
+## face's width at the ears, and ends near the jaw at the sides and the collar
+## at the back; ours stood 2x his head's width and fell past the shoulders.
+## So less standoff and flare, shorter, tighter coils, and less crown height.)
+CURL_END = (1.45, 1.54)
+CURL_STANDOFF = (0.006, 0.016)
+CURL_RADIUS = (0.004, 0.008)
 CURL_PITCH = (0.034, 0.060)
-CURL_WIDTH = ((0.028, 0.044), 0.011)
+CURL_WIDTH = ((0.022, 0.034), 0.010)
 CURL_STEP = 0.006
 ## How far each curl drifts out from the head per metre of fall: the
 ## sheet's hair flares out over the shoulders rather than hanging plumb.
-CURL_FLARE = 0.42
+CURL_FLARE = 0.12
 CURL_SEED = 1012
 CURL_COLUMNS = 4
 CURL_TEX = (512, 2048)
 CURL_STRANDS = 70
 ## Colours (sRGB): roots, lengths, the light ends.
-HAIR_ROOT = (72, 52, 34)
-HAIR_MID = (150, 114, 70)
+## (Pass 6: darker, wetter roots and lengths, as the headshot's -- blond is
+## in the ends and streaks, not the whole mass.)
+HAIR_ROOT = (56, 40, 26)
+HAIR_MID = (126, 94, 58)
 HAIR_TIP = (214, 182, 124)
 ## The curls follow his head down to HAIR_BODY_Z[0], then hand over to his
 ## upper chest (spine_03) by HAIR_BODY_Z[1], up to HAIR_BODY_SHARE of it.
@@ -338,15 +346,15 @@ CROWN_OFF = (0.004, 0.08)
 ## to the side with distance from it (CROWN_SWEEP: sideways at the edge,
 ## back); how quickly it turns down (per metre of strand), where it ends
 ## (world height) and how long it may run, and its standoff off the scalp --
-## clear of the cap's 0.032. A strand slides along the scalp only above
+## clear of the cap's 0.020. A strand slides along the scalp only above
 ## CROWN_SLIDE_Z: below it, on the shoulders, it drapes as the curls do.
-CROWN_SWEEP = (0.75, 0.6)
+CROWN_SWEEP = (0.45, 0.75)
 CROWN_GRAVITY = 7.5
-CROWN_END = (1.46, 1.60)
-CROWN_LENGTH = 0.46
+CROWN_END = (1.50, 1.62)
+CROWN_LENGTH = 0.34
 CROWN_SLIDE_Z = 1.62
-CROWN_STANDOFF = (0.030, 0.048)
-CROWN_WIDTH = (0.024, 0.038)
+CROWN_STANDOFF = (0.021, 0.027)
+CROWN_WIDTH = (0.020, 0.032)
 ## Wet strands framing his face (the sheet: falling at the temples and in
 ## front of the ears): FACE_STRANDS each side, round the head between
 ## FACE_ANGLES (clear of the eyes), ending FACE_END below the eyes.

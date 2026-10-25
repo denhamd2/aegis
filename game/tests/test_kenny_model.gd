@@ -157,3 +157,22 @@ func test_the_hair_cap_is_matte_roots() -> void:
 	assert_bool(mat.anisotropy_enabled).is_false()
 	assert_float(mat.metallic_specular).is_less_equal(0.1)
 	assert_float(mat.roughness).is_greater_equal(0.85)
+
+
+## The owner, 25 Oct: "His hair looks too big." Against his AEW headshot the
+## hair sits close to the head and ends near the jaw at the sides and the
+## collar at the back. Measured on the curl cards (2nd to 98th percentile, so
+## a stray strand does not decide it): no wider than 0.34 m at ear height
+## (it was 0.42), and nothing hangs below his shoulders (it reached 1.35 m).
+func test_the_hair_sits_close_to_his_head() -> void:
+	var curls := _model().find_child("Kenny_Curls", true, false) as MeshInstance3D
+	var xs: Array[float] = []
+	var lowest := INF
+	for v: Vector3 in curls.mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]:
+		lowest = minf(lowest, v.y)
+		if v.y > 1.55 and v.y < 1.65:
+			xs.append(v.x)
+	xs.sort()
+	var width := xs[int(xs.size() * 0.98)] - xs[int(xs.size() * 0.02)]
+	assert_float(width).is_less(0.34)
+	assert_float(lowest).is_greater(1.40)
