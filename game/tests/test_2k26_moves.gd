@@ -56,7 +56,8 @@ func test_every_new_clip_is_on_both_men() -> void:
 func test_roman_clotheslines_a_man_in_the_corner() -> void:
 	await _ticks(2)
 	assert_object(_roman.corner_strike_move).is_not_null()
-	assert_object(_cody.corner_strike_move).is_null()
+	# Cody chops a man in the corner (the AI staples round, 25 Oct).
+	assert_str(String(_cody.corner_strike_move.animation_pair_id)).is_equal("strike_chop")
 	assert_object(_roman._pick_string_strike()).is_not_equal(_roman.corner_strike_move)
 	_cody._corner_trapped = true
 	_cody.fsm.transition_to(WrestlerFSM.State.STUNNED)

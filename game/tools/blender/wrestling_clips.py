@@ -5615,7 +5615,17 @@ def _ring_exit_keys():
     top, mid = 1.20, 0.85
     apron_foot = APRON_UP + _ANKLE
     floor_foot = -FLOOR_DROP + _ANKLE
-    lift = dict(fist_r=0.8, fist_l=0.9)
+    # Elbows out to the sides and the stepping knee out and forward, held the
+    # same the whole way through the ropes. Left to the solver's defaults the
+    # left arm flipped as his shoulder passed under the hand lifting the rope,
+    # and the right thigh turned 179 degrees in one frame where the foot's
+    # path over the middle rope crossed the knee's aim (body-deformation gate).
+    # The rope hand goes high and wide for the same reason: held just above
+    # the shoulder it was passing under, the arm folded shut and flipped.
+    lift = dict(fist_r=0.8, fist_l=0.9, elbow_r=(1.0, -0.3, 0.0), elbow_l=(-1.0, -0.3, 0.0))
+    # Out to his right: the foot's path over the rope runs forward and up,
+    # so an aim out to the side never lines up with it.
+    step_knee = (1.0, 0.2, 0.3)
     stand = pose(STANCE, pelvis=(0.0, 0.0, 0.86), hips=(-2, 0, 0), spine=(-4, 0, 0),
                  head=(2, 0, 0),
                  hand_r=(0.25, 0.02, 0.86), hand_l=(-0.23, 0.02, 0.86),
@@ -5631,43 +5641,58 @@ def _ring_exit_keys():
         (14, pose(stand, pelvis=(0.0, 0.26, 0.84), hips=(-6, 0, 0), spine=(-6, 0, 0),
                   head=(6, 0, 0),
                   hand_r=(0.22, L - 0.02, top + 0.02), hand_l=(-0.22, L - 0.02, top + 0.02),
-                  foot_r=(0.14, 0.32, _ANKLE), foot_l=(-0.13, 0.18, _ANKLE), **lift)),
-        # The left hand lifts the top rope; the right leg up and over the
-        # middle rope while he is still upright, hips back.
+                  foot_r=(0.14, 0.32, _ANKLE), foot_l=(-0.13, 0.18, _ANKLE),
+                  knee_r=step_knee, **lift)),
+        # The left hand lifts the top rope; the right knee comes up and out,
+        # and the boot over the middle rope while he is still upright.
+        (17, pose(stand, pelvis=(0.0, 0.25, 0.83), hips=(-7, 0, 0), spine=(-6, 0, 0),
+                  head=(7, 0, 0),
+                  hand_r=(0.21, L - 0.02, top + 0.03), hand_l=(-0.20, L + 0.01, top + 0.08),
+                  foot_r=(0.18, 0.42, 0.46), foot_l=(-0.13, 0.18, _ANKLE),
+                  knee_r=step_knee, **lift)),
         (20, pose(stand, pelvis=(0.0, 0.24, 0.82), hips=(-8, 0, 0), spine=(-6, 0, 0),
                   head=(8, 0, 0),
-                  hand_r=(0.20, L - 0.01, top + 0.04), hand_l=(-0.18, L + 0.04, top + 0.14),
-                  foot_r=(0.16, L + 0.04, mid + 0.12), foot_l=(-0.13, 0.18, _ANKLE),
-                  knee_r=(0.1, 0.8, 0.6), **lift)),
+                  hand_r=(0.20, L - 0.01, top + 0.04), hand_l=(-0.26, L + 0.04, top + 0.20),
+                  foot_r=(0.18, L + 0.10, mid + 0.08), foot_l=(-0.13, 0.18, _ANKLE),
+                  knee_r=step_knee, **lift)),
+        (23, pose(stand, pelvis=(0.0, L - 0.18, 0.78), hips=(-12, 0, 0), spine=(-7, 0, 0),
+                  head=(9, 0, 0),
+                  hand_r=(0.19, L, top + 0.04), hand_l=(-0.32, L + 0.04, top + 0.26),
+                  foot_r=(0.12, A - 0.02, mid - 0.18), foot_l=(-0.13, 0.18, _ANKLE),
+                  knee_r=step_knee, **lift)),
         # Right boot down on the apron: astride the middle rope.
         (26, pose(stand, pelvis=(0.0, L - 0.12, 0.74), hips=(-16, 0, 0), spine=(-8, 0, 0),
                   head=(10, 0, 0),
-                  hand_r=(0.18, L, top + 0.04), hand_l=(-0.16, L + 0.04, top + 0.14),
-                  foot_r=(0.07, A, apron_foot), foot_l=(-0.13, 0.18, _ANKLE), **lift)),
+                  hand_r=(0.18, L, top + 0.04), hand_l=(-0.32, L + 0.04, top + 0.26),
+                  foot_r=(0.07, A, apron_foot), foot_l=(-0.13, 0.18, _ANKLE),
+                  knee_r=(0.4, 0.9, 0.0), **lift)),
         # The duck: folded flat over the middle rope, head and shoulders out
         # under the lifted top rope.
         (32, pose(stand, pelvis=(0.0, L - 0.06, 0.62), hips=(-68, 0, 0), spine=(-28, 0, 0),
                   head=(34, 0, 0),
                   hand_r=(0.20, L + 0.20, 0.50), hand_l=(-0.16, L + 0.02, top + 0.14),
-                  foot_r=(0.07, A, apron_foot), foot_l=(-0.13, 0.18, _ANKLE), **lift)),
+                  foot_r=(0.07, A, apron_foot), foot_l=(-0.13, 0.18, _ANKLE),
+                  knee_r=(0.4, 0.9, 0.0), **lift)),
         # Weight onto the apron foot, shoulders well out; the left boot lifts.
         (38, pose(stand, pelvis=(0.0, L + 0.01, 0.62), hips=(-56, 0, 0), spine=(-26, 0, 0),
                   head=(30, 0, 0),
                   hand_r=(0.22, L + 0.24, 0.62), hand_l=(-0.18, L + 0.02, top + 0.14),
                   foot_r=(0.07, A, apron_foot), foot_l=(-0.13, 0.26, _ANKLE + 0.08),
-                  knee_l=(-0.1, 1.0, 0.4), **lift)),
+                  knee_r=(0.4, 0.9, 0.0), knee_l=(-0.1, 1.0, 0.4), **lift)),
         # The trail leg comes over the middle rope; the hand lets the top rope
         # down behind him.
         (44, pose(stand, pelvis=(0.0, A - 0.03, 0.68), hips=(-30, 0, 0), spine=(-16, 0, 0),
                   head=(10, 0, 0),
                   hand_r=(0.24, L - 0.02, top - 0.10), hand_l=(-0.22, L - 0.02, top - 0.02),
                   foot_r=(0.07, A, apron_foot), foot_l=(-0.10, L + 0.02, mid + 0.10),
-                  knee_l=(-0.1, 0.4, -1.0), fist_r=0.7, fist_l=0.8)),
+                  knee_r=(0.4, 0.9, 0.0), knee_l=(-0.1, 0.4, -1.0),
+                  fist_r=0.7, fist_l=0.8, elbow_r=lift["elbow_r"], elbow_l=lift["elbow_l"])),
         # Both boots on the apron, crouched to go down.
         (50, pose(CROUCH, pelvis=(0.0, A + 0.06, apron_foot + 0.40), hips=(-30, 0, 0),
                   spine=(-14, 0, 0), head=(10, 0, 0),
                   hand_r=(0.22, A + 0.26, apron_foot + 0.50),
                   hand_l=(-0.22, A + 0.24, apron_foot + 0.50),
+                  elbow_r=lift["elbow_r"], elbow_l=lift["elbow_l"],
                   foot_r=(0.07, A + 0.01, apron_foot), foot_l=(-0.07, A, apron_foot),
                   knee_r=(0.2, 1.0, 0.2), knee_l=(-0.2, 1.0, 0.2))),
         # Off the edge.
