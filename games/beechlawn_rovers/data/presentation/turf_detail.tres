@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="FootballTurfDetailSettings" load_steps=2 format=3]
+[ext_resource type="Script" path="res://scripts/data/turf_detail_settings.gd" id="1"]
+[resource]
+script = ExtResource("1")
+triangle_budget = 240000
+near_pixels = 5.0
+intermediate_pixels = 0.85

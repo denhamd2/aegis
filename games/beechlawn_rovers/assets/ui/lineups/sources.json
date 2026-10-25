@@ -1,0 +1,81 @@
+{
+  "portraits": {
+    "david_denham": {
+      "source": "references/source_uploads/drive_folder/file_000000003f7481f487824e7f0fb8886a.png",
+      "sha256": "a75ab5fa9910f4ee497b3818add2e19ef6be0eb66cc87465c0be14a39b6b5b44",
+      "note": "Unchanged original; UI samples the front-head panel. Source shirt numbers remain historical."
+    },
+    "derek_mitchell": {
+      "source": "references/source_uploads/drive_folder/file_0000000004f082439f566be12cc42988.png",
+      "sha256": "2db2678beba497b2badb9d8e0a36d00e8f3093bcbc62f9047d5db6ba8cdc82f6",
+      "note": "Unchanged original; UI samples the front-head panel. Source shirt numbers remain historical."
+    },
+    "david_murray": {
+      "source": "references/source_uploads/drive_folder/file_0000000028d88246945fe20b8fa961df.png",
+      "sha256": "b30da177dc6a7de793713b6b7c614722aa0359a7e33c734bc4e0f36bd358934d",
+      "note": "Unchanged original; UI samples the front-head panel. Source shirt numbers remain historical."
+    },
+    "paddy_mason": {
+      "source": "references/source_uploads/drive_folder/file_00000000c2fc82469b46083925860e2a.png",
+      "sha256": "5c45eb95a310919faba0e6c0499c2a3937cc482eea047df47001813c4317f154",
+      "note": "Unchanged original; UI samples the front-head panel. Source shirt numbers remain historical."
+    },
+    "damo_murphy": {
+      "source": "references/source_uploads/drive_folder/file_0000000019d881f4abe27718152a0142.png",
+      "sha256": "b8966e6228569517273668be891bd6c1c7378034d7c0704d0232817b7085f313",
+      "note": "Unchanged original; UI samples the front-head panel. Source shirt numbers remain historical."
+    },
+    "michael_mccabe": {
+      "source": "references/source_uploads/drive_folder/file_00000000a50081f48f85963c2b5de8ff.png",
+      "sha256": "03b3b8383ccaab2e0b3bff06082dfa205ccf4e3af0cce9594f798316f9c83734",
+      "note": "Unchanged original; UI samples the front-head panel. Source shirt numbers remain historical."
+    },
+    "john_orourke": {
+      "source": "references/source_uploads/drive_folder/file_0000000061e481f4a2d80607671edf6e.png",
+      "sha256": "c34d93059d03938801004a3f849fae532ebb211eef7389404f9478a1393b85eb",
+      "note": "Unchanged original; UI samples the front-head panel. Source shirt numbers remain historical."
+    },
+    "shane_denham": {
+      "source": "references/source_uploads/drive_folder/file_00000000d76881f48f576ff4249aa3b2.png",
+      "sha256": "3271b93a3526a24019c58a15121e3aed2c667e6da87bacf59f18e060444e37a9",
+      "note": "Unchanged original; UI samples the front-head panel. Source shirt numbers remain historical."
+    },
+    "kev_mullen": {
+      "source": "references/source_uploads/drive_folder/file_00000000e40082469d3b7ade22e92205.png",
+      "sha256": "fc7c817d53ca9ca0bf1c74ee226a46e3a2ce1ec8692187b63b57bb5d83d93e42",
+      "note": "Unchanged original; UI samples the front-head panel. Source shirt numbers remain historical."
+    },
+    "colly_roden": {
+      "source": "references/source_uploads/drive_folder/file_0000000058bc81f4b514e14c6351e0e7.png",
+      "sha256": "0540632655dcb3095c2214c83ef07daf58534f7a780d7bcdb6cbfd9b6074e596",
+      "note": "Unchanged original; UI samples the front-head panel. Source shirt numbers remain historical."
+    },
+    "deco_mccabe": {
+      "source": "references/source_uploads/drive_folder/file_00000000926881f4b118dd18c9670dc4.png",
+      "sha256": "ea9ac5fcf88dc01b588005fa70f8f5a368260a25ec45f1b94ce8d57e93ac7949",
+      "note": "Unchanged original; UI samples the front-head panel. Source shirt numbers remain historical."
+    },
+    "des_feeney": {
+      "source": "references/source_uploads/drive_folder/file_0000000030a88243862e7c5dc9dbd7db.png",
+      "sha256": "fed58800e8d54afc2b15db6f306616e254de4747f93e7c0d95b993812e02d37d",
+      "note": "Unchanged original; UI samples the front-head panel. Source shirt numbers remain historical."
+    },
+    "robbie_roden": {
+      "source": "references/source_uploads/drive_folder/file_0000000019208243908adb237202a940.png",
+      "sha256": "332b6e45ebd07e759440b5f116a85201696dd0de8c83b9e3bd0d20d110dc01ec",
+      "note": "Unchanged original; UI samples the front-head panel. Source shirt numbers remain historical."
+    }
+  },
+  "panel": {
+    "source": "GPT Images",
+    "original": "/workspace/generated_images/exec-08051a5e-d1c2-49a9-8403-8ec8d19c2873.png",
+    "purpose": "Original broadcast panel background; Godot renders text, faces and crests."
+  },
+  "graphics": {
+    "referee_lower_third": {
+      "source": "GPT Image generation, styled from assets/ui/lineups/panel.png",
+      "sha256": "17965bef9e90287fcb6d02c6f9b954a6cb29ca661184c5af82afa3760e79d8b4",
+      "note": "Original transparent geometric navy/blue football lower-third plate; live referee and typeset wording are composed in Godot."
+    }
+  }
+}

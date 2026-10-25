@@ -1,0 +1,216 @@
+{
+  "result": "PASS",
+  "grooms": {
+    "shane_crop": {
+      "bytes": 3573720,
+      "meshes": {
+        "Hair_Shane_ShortCropCards": {
+          "triangles": 31680,
+          "surfaces": 3
+        },
+        "Hair_Shane_ShortCropRoots": {
+          "triangles": 758,
+          "surfaces": 1
+        }
+      },
+      "materials": [
+        {
+          "name": "MAT_FittedHair_shane_denham_0",
+          "base_colour": [
+            0.03799999877810478,
+            0.01899999938905239,
+            0.008999999612569809,
+            1
+          ],
+          "alpha": "OPAQUE"
+        },
+        {
+          "name": "MAT_FittedHair_shane_denham_1",
+          "base_colour": [
+            0.05700000002980232,
+            0.028999999165534973,
+            0.014000000432133675,
+            1
+          ],
+          "alpha": "OPAQUE"
+        },
+        {
+          "name": "MAT_FittedHair_shane_denham_2",
+          "base_colour": [
+            0.07800000160932541,
+            0.0430000014603138,
+            0.02199999988079071,
+            1
+          ],
+          "alpha": "OPAQUE"
+        }
+      ]
+    },
+    "john_swept": {
+      "bytes": 6457124,
+      "meshes": {
+        "Hair_Shane_ShortCropCards": {
+          "triangles": 57920,
+          "surfaces": 6
+        },
+        "Hair_Shane_ShortCropRoots": {
+          "triangles": 669,
+          "surfaces": 1
+        }
+      },
+      "materials": [
+        {
+          "name": "MAT_FittedHair_john_orourke_0",
+          "base_colour": [
+            0.06499999761581421,
+            0.029999999329447746,
+            0.013000000268220901,
+            1
+          ],
+          "alpha": "OPAQUE"
+        },
+        {
+          "name": "MAT_FittedHair_john_orourke_1",
+          "base_colour": [
+            0.0949999988079071,
+            0.04800000041723251,
+            0.02199999988079071,
+            1
+          ],
+          "alpha": "OPAQUE"
+        },
+        {
+          "name": "MAT_FittedHair_john_orourke_2",
+          "base_colour": [
+            0.13500000536441803,
+            0.07500000298023224,
+            0.03799999877810478,
+            1
+          ],
+          "alpha": "OPAQUE"
+        },
+        {
+          "name": "MAT_FittedHair_john_orourke_3",
+          "base_colour": [
+            0.10499999672174454,
+            0.06800000369548798,
+            0.028999999165534973,
+            1
+          ],
+          "alpha": "OPAQUE"
+        },
+        {
+          "name": "MAT_FittedHair_john_orourke_4",
+          "base_colour": [
+            0.22499999403953552,
+            0.15800000727176666,
+            0.07100000232458115,
+            1
+          ],
+          "alpha": "OPAQUE"
+        },
+        {
+          "name": "MAT_FittedHair_john_orourke_5",
+          "base_colour": [
+            0.3799999952316284,
+            0.2849999964237213,
+            0.14000000059604645,
+            1
+          ],
+          "alpha": "OPAQUE"
+        }
+      ]
+    },
+    "des_side_hair": {
+      "bytes": 3185768,
+      "meshes": {
+        "Hair_Shane_ShortCropCards": {
+          "triangles": 28720,
+          "surfaces": 3
+        },
+        "Hair_Shane_ShortCropRoots": {
+          "triangles": 1,
+          "surfaces": 1
+        }
+      },
+      "materials": [
+        {
+          "name": "MAT_FittedHair_bordeaux_09_0",
+          "base_colour": [
+            0.012000000104308128,
+            0.007000000216066837,
+            0.004000000189989805,
+            1
+          ],
+          "alpha": "OPAQUE"
+        },
+        {
+          "name": "MAT_FittedHair_bordeaux_09_1",
+          "base_colour": [
+            0.019999999552965164,
+            0.012000000104308128,
+            0.007000000216066837,
+            1
+          ],
+          "alpha": "OPAQUE"
+        },
+        {
+          "name": "MAT_FittedHair_bordeaux_09_2",
+          "base_colour": [
+            0.03400000184774399,
+            0.02199999988079071,
+            0.013000000268220901,
+            1
+          ],
+          "alpha": "OPAQUE"
+        }
+      ]
+    },
+    "referee_grey": {
+      "bytes": 2024164,
+      "meshes": {
+        "Hair_Shane_ShortCropCards": {
+          "triangles": 18160,
+          "surfaces": 3
+        },
+        "Hair_Shane_ShortCropRoots": {
+          "triangles": 1,
+          "surfaces": 1
+        }
+      },
+      "materials": [
+        {
+          "name": "MAT_FittedHair_des_feeney_sr_0",
+          "base_colour": [
+            0.054999999701976776,
+            0.050999999046325684,
+            0.04600000008940697,
+            1
+          ],
+          "alpha": "OPAQUE"
+        },
+        {
+          "name": "MAT_FittedHair_des_feeney_sr_1",
+          "base_colour": [
+            0.11500000208616257,
+            0.10999999940395355,
+            0.10000000149011612,
+            1
+          ],
+          "alpha": "OPAQUE"
+        },
+        {
+          "name": "MAT_FittedHair_des_feeney_sr_2",
+          "base_colour": [
+            0.23499999940395355,
+            0.22499999403953552,
+            0.20999999344348907,
+            1
+          ],
+          "alpha": "OPAQUE"
+        }
+      ]
+    }
+  },
+  "scope": "Opaque package cost; John scalp palette independent from unchanged beard/brow colours. Full native GPU frame cost remains unmeasured."
+}

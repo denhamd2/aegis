@@ -1,0 +1,49 @@
+
+[smoke] shane_head_variant_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+PASS: independent Shane head/eyes and groom, inverse binds, smile, pose samples and shared body
+[passed] shane_head_variant_smoke.gd
+
+[smoke] shared_head_roster_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+PASS: 22 players + referee, distinct Boardeaux and referee Des heads, independent John keeper head, shared body, local override and reconfiguration
+[passed] shared_head_roster_smoke.gd
+
+[smoke] pre_match_intro_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+INTRO_SHOT venue at=(9.5, 5.1, 39.0)
+INTRO_SHOT walk at=(10.8, 1.65, 12.8)
+INTRO_SHOT referee at=(0.53, 1.73, 7.625)
+INTRO_SHOT goal at=(49.6, 1.95, 4.8)
+INTRO_SHOT net at=(54.95, 1.5, 2.7)
+INTRO_SHOT fans at=(-18.9, 1.6, -32.0)
+INTRO_SHOT lineup at=(-0.5, 1.65, 10.0)
+INTRO_SHOT portrait at=(-5.305, 1.56, 7.3)
+INTRO_SHOT keeper at=(-11.55, 1.375, 7.85)
+INTRO_SHOT pitch at=(1.0, 0.3, 1.45)
+INTRO_SHOT ball at=(0.625, 0.27, 0.55)
+INTRO_SHOT warmup at=(0.1, 1.5, 1.2)
+INTRO_SHOT handoff at=(0.0, 8.5, -20.8)
+BEECHLAWN_MATCH_READY actors=22 officials=1
+INTRO_SHOT venue at=(9.5, 5.1, 39.0)
+INTRO_SHOT walk at=(10.8, 1.65, 12.8)
+INTRO_SHOT referee at=(0.53, 1.73, 7.625)
+INTRO_SHOT goal at=(49.6, 1.95, 4.8)
+INTRO_SHOT net at=(54.95, 1.5, 2.7)
+INTRO_SHOT fans at=(-18.9, 1.6, -32.0)
+INTRO_SHOT lineup at=(-0.5, 1.65, 10.0)
+INTRO_SHOT portrait at=(-5.305, 1.56, 7.3)
+INTRO_SHOT keeper at=(-11.55, 1.375, 7.85)
+INTRO_SHOT pitch at=(1.0, 0.3, 1.45)
+INTRO_SHOT ball at=(0.625, 0.27, 0.55)
+INTRO_SHOT warmup at=(0.1, 1.5, 1.2)
+INTRO_SHOT handoff at=(0.0, 8.5, -20.8)
+BEECHLAWN_MATCH_READY actors=22 officials=1
+Intro natural/skip, staging, original clips, freeze, cleanup, Play/Watch kickoff failures=0
+[passed] pre_match_intro_smoke.gd

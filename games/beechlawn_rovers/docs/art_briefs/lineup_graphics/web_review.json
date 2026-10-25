@@ -1,0 +1,80 @@
+{
+  "result": "PASS",
+  "teams": [
+    {
+      "formation": "4-4-2",
+      "identities": [
+        "Damo Murphy",
+        "Robbie Roden",
+        "Michael McCabe",
+        "Deco McCabe",
+        "Shane Denham",
+        "David Denham",
+        "Derek Mitchell",
+        "David Murray",
+        "Kev Mullen",
+        "Colly Roden",
+        "John O\u2019Rourke"
+      ],
+      "manager": "Robbie Roden",
+      "numbers": [
+        9,
+        10,
+        11,
+        6,
+        8,
+        7,
+        3,
+        5,
+        4,
+        14,
+        1
+      ],
+      "team": "Beechlawn Rovers"
+    },
+    {
+      "formation": "4-4-2",
+      "identities": [
+        "Des Feeney",
+        "Des Feeney",
+        "Des Feeney",
+        "Des Feeney",
+        "Des Feeney",
+        "Des Feeney",
+        "Des Feeney",
+        "Des Feeney",
+        "Des Feeney",
+        "Des Feeney",
+        "Des Feeney"
+      ],
+      "manager": "Des Feeney",
+      "numbers": [
+        9,
+        10,
+        11,
+        6,
+        8,
+        7,
+        3,
+        5,
+        4,
+        2,
+        1
+      ],
+      "team": "Boardeaux"
+    }
+  ],
+  "checks": [
+    "home before away",
+    "eleven portraits per 4-4-2",
+    "player-managers",
+    "retired home #2 replaced by #14",
+    "all away identities Des Feeney",
+    "640x480 review",
+    "skip to opposite-side match kickoff"
+  ],
+  "renderer": "Godot Compatibility / Chromium SwiftShader",
+  "sun_shadows": false,
+  "console_errors": [],
+  "native_M1_performance": "not measured"
+}

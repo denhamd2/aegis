@@ -23,7 +23,12 @@ def main():
                         help="Copy validated import cache; Godot still checks changed source files")
     args=parser.parse_args()
     output=args.output.resolve(); output.mkdir(parents=True,exist_ok=True)
-    scratch=Path(tempfile.mkdtemp(prefix="beechlawn-shane-review-"))
+    # /tmp is a separate small filesystem in the cloud runner. Keep large
+    # import-cache copies on the project volume and hide them from Godot.
+    scratch_parent=PROJECT/"build"/"review-scratch"
+    scratch_parent.mkdir(parents=True,exist_ok=True)
+    (scratch_parent/".gdignore").touch()
+    scratch=Path(tempfile.mkdtemp(prefix="beechlawn-shane-review-",dir=scratch_parent))
     try:
         shutil.copytree(PROJECT,scratch,dirs_exist_ok=True,
                         ignore=shutil.ignore_patterns(".godot",".agents","build","references","docs","tools"))

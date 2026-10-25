@@ -34,7 +34,7 @@ light_energy = 0.8
 shadow_enabled = true
 directional_shadow_max_distance = 150.0
 shadow_bias = 0.04
-shadow_normal_bias = 0.8
+shadow_normal_bias = 1.8
 angular_distance = 0.8
 
 [node name="Pitch" type="Node3D" parent="."]
@@ -95,7 +95,7 @@ offset_top = 55.0
 offset_right = 483.0
 offset_bottom = 84.0
 theme_override_font_sizes/font_size = 19
-text = "BEECHLAWN ROVERS   0     0   BORDEAUX"
+text = "BEECHLAWN ROVERS   0     0   BOARDEAUX"
 
 [node name="Clock" type="Label" parent="HUD"]
 offset_left = 42.0
@@ -142,7 +142,7 @@ anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = -425.0
-offset_top = -96.0
+offset_top = -150.0
 offset_right = -28.0
 offset_bottom = -24.0
 grow_horizontal = 0
@@ -150,4 +150,4 @@ grow_vertical = 0
 horizontal_alignment = 2
 vertical_alignment = 2
 theme_override_font_sizes/font_size = 14
-text = "WASD Move   Shift Sprint   Ctrl Close Control\nE Pass   Q Through Ball\nHold Space Shoot   F Tackle   Tab Switch"
+text = "WASD Move   Shift Sprint   Ctrl Close Control\nE Pass   Q Through   Hold R Loft / T Cross\nSpace Shot/Header/Volley   F Tackle  G Slide\nZ+Space Finesse  X+Space Power  V+Space Low\nT+X Driven  T+Z Lofted  T+V Early\nTab Switch"

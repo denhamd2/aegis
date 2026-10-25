@@ -1,0 +1,22 @@
+{
+  "result": "PASS",
+  "palette_revision": "fair-reference-v2",
+  "runtime_smoke_checks": 4,
+  "godot_browser_captures": 6,
+  "console_errors": [],
+  "matched_before_after_lighting": [
+    "shane",
+    "des"
+  ],
+  "skin_uv_audit": "PASS",
+  "head_band_check": "PASS",
+  "source_refresh": {
+    "unchanged_buffer_views": 3840,
+    "replaced_skin_images": 2,
+    "retained_animations": 19,
+    "asset_sha256": "605440e6f6f6458f4d11c311d2d79583995ca03f313da71177de8000e16e801a",
+    "palette_revision": "fair-reference-v2",
+    "scope": "Source skin only; topology, bind, normals, kit, eyes and hair unchanged"
+  },
+  "limits": "Compatibility/SwiftShader only; final likeness, native Mac appearance and performance remain open; no deployment in this pass"
+}

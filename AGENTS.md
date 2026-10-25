@@ -68,7 +68,7 @@ Project-local workflow guides:
 
 | Guide | Scope |
 | --- | --- |
-| `games/beechlawn_rovers/.agents/skills/create-player/SKILL.md` | Required starting point for creating or substantially refining a Beechlawn footballer from its archived character and kit references. It is football-project-only and routes the shared specialists above; do not use it for Aegis wrestlers. |
+| `games/beechlawn_rovers/.agents/skills/create-player/SKILL.md` | Required starting point for Beechlawn player modeling, kits, animation or retargeting from archived references. It is football-project-only and routes the shared specialists above; do not use it for Aegis wrestlers. |
 | `games/beechlawn_rovers/.agents/skills/grill-me/SKILL.md` and `grilling/SKILL.md` | Optional, explicit design-interview workflow for Beechlawn decisions with costly downstream impact. Use only when the user asks to be grilled/stress-tested; never make it a default blocker for routine implementation or Aegis work. |
 
 Project-specific routing takes precedence over generic routing: Beechlawn

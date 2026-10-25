@@ -1,4 +1,4 @@
-name: Release Beechlawn Rovers
+name: Release Beechlawn Rovers Mac
 
 on:
   push:
@@ -10,18 +10,15 @@ on:
 
 permissions:
   contents: write
-  actions: read
-  pages: write
-  id-token: write
 
 concurrency:
-  group: pages-${{ github.ref }}
+  group: beechlawn-mac-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: chickensoft-games/setup-godot@v2
@@ -31,83 +28,57 @@ jobs:
           include-templates: true
       - name: Import and verify football project
         run: |
+          python3 games/beechlawn_rovers/tools/test_native_display_pipe.py
+          python3 games/beechlawn_rovers/tools/test_smoke_monitor.py
+          python3 games/beechlawn_rovers/tools/test_capture_native.py
           timeout --kill-after=5s 180s godot --headless --editor --path games/beechlawn_rovers --import
-          python3 games/beechlawn_rovers/tools/run_smoke_tests.py shane_head_variant_smoke.gd shared_head_roster_smoke.gd
+          python3 games/beechlawn_rovers/tools/run_smoke_tests.py realism_systems_smoke.gd shane_head_variant_smoke.gd shared_head_roster_smoke.gd
+          python3 games/beechlawn_rovers/tools/run_smoke_tests.py shared_gait_integrity_smoke.gd defensive_controls_smoke.gd keeper_live_contact_smoke.gd set_piece_variety_smoke.gd pitch_audio_smoke.gd keeper_diving_high_smoke.gd replay_results_smoke.gd broadcast_direction_smoke.gd handshake_contact_smoke.gd unready_scene_cleanup_smoke.gd recorded_face_replay_smoke.gd
+          python3 games/beechlawn_rovers/tools/run_smoke_tests.py moving_kick_contact_smoke.gd first_time_pass_timing_smoke.gd first_time_shot_smoke.gd contested_shot_smoke.gd goalkeeper_response_smoke.gd goalkeeper_smoke.gd goalkeeper_outcomes_smoke.gd
+          python3 games/beechlawn_rovers/tools/run_smoke_tests.py aerial_flight_smoke.gd aerial_contact_smoke.gd aerial_safety_smoke.gd aerial_controls_smoke.gd cross_to_header_smoke.gd
+          python3 games/beechlawn_rovers/tools/run_smoke_tests.py advanced_shots_smoke.gd advanced_controls_smoke.gd cross_variants_smoke.gd volley_contact_smoke.gd grounded_aerial_recovery_smoke.gd
+          BEECHLAWN_CROSS_VARIANT=driven_cross python3 games/beechlawn_rovers/tools/run_smoke_tests.py cross_to_header_smoke.gd
+          timeout --kill-after=3s 45s godot --headless --fixed-fps 10 --path games/beechlawn_rovers --script res://tests/locomotion_physics_clock_smoke.gd
+          python3 games/beechlawn_rovers/tools/run_smoke_tests.py dribble_grounding_runtime_smoke.gd discipline_rules_smoke.gd pitch_presentation_repairs_smoke.gd goal_net_contact_smoke.gd match_flow_smoke.gd
           python3 games/beechlawn_rovers/tools/run_smoke_tests.py wet_weather_smoke.gd
+          python3 games/beechlawn_rovers/tools/run_smoke_tests.py lineup_graphic_smoke.gd
           python3 games/beechlawn_rovers/tools/run_smoke_tests.py title_screen_smoke.gd shared_pose_safety_smoke.gd broadcast_camera_smoke.gd pre_match_intro_smoke.gd venue_leaf_uv_smoke.gd park_road_setback_smoke.gd park_site_footprint_smoke.gd eleven_v_eleven_smoke.gd full_match_restarts_smoke.gd shared_roster_resources_smoke.gd hud_layout_smoke.gd football_stop_runtime_smoke.gd shared_pivot_pose_smoke.gd turn_dribble_control_smoke.gd ai_shot_lane_smoke.gd ai_carry_to_shot_smoke.gd ai_midfield_to_shot_smoke.gd loose_ball_recovery_smoke.gd
           BEECHLAWN_FULL_OPPOSITION=1 python3 games/beechlawn_rovers/tools/run_smoke_tests.py ai_midfield_to_shot_smoke.gd
-          BEECHLAWN_ATTACK_TEAM=Bordeaux python3 games/beechlawn_rovers/tools/run_smoke_tests.py ai_midfield_to_shot_smoke.gd
+          BEECHLAWN_ATTACK_TEAM=Boardeaux python3 games/beechlawn_rovers/tools/run_smoke_tests.py ai_midfield_to_shot_smoke.gd
           python3 games/beechlawn_rovers/tools/run_smoke_tests.py pass_lane_selection_smoke.gd ai_carrier_identity_smoke.gd ai_receive_handoff_smoke.gd football_receive_contact_smoke.gd team_tactics_controller_smoke.gd ai_carry_space_smoke.gd ai_wide_attack_smoke.gd ai_shot_approach_smoke.gd transition_ai_smoke.gd
           BEECHLAWN_MATCH_SCENE=res://scenes/match_11v11.tscn python3 games/beechlawn_rovers/tools/run_smoke_tests.py football_kick_contact_integration_smoke.gd
           BEECHLAWN_MATCH_SCENE=res://scenes/match_11v11.tscn BEECHLAWN_AI_CHANCE=1 python3 games/beechlawn_rovers/tools/run_smoke_tests.py football_shot_contact_integration_smoke.gd
-          # Full matches gate stability/progress and report chance frequency.
-          # Physical shots gate above in repeatable, mirrored midfield attacks.
-          python3 games/beechlawn_rovers/tools/run_smoke_tests.py eleven_v_eleven_match_soak.gd
-          BEECHLAWN_KICKOFF_TEAM=Bordeaux python3 games/beechlawn_rovers/tools/run_smoke_tests.py eleven_v_eleven_match_soak.gd
-      - name: Export football only
+          python3 games/beechlawn_rovers/tools/run_smoke_tests.py ball_fundamentals_smoke.gd passing_smoke.gd tackle_smoke.gd shoulder_challenge_smoke.gd defensive_ai_smoke.gd tactical_context_smoke.gd four_v_four_setup_smoke.gd
+          python3 games/beechlawn_rovers/tools/run_smoke_tests.py ai_pass_commitment_smoke.gd ai_loose_possession_smoke.gd tactical_possession_smoke.gd ai_tactical_parity_smoke.gd contested_dribble_order_smoke.gd
+          # Six fixed complete matches gate natural chance frequency for both
+          # teams. These are tests, never runtime quotas or forced goals.
+          python3 games/beechlawn_rovers/tools/check_ai_chances.py build/beechlawn/ai-chances
+          python3 games/beechlawn_rovers/tools/run_smoke_tests.py full_presentation_match_soak.gd
+      - name: Export and verify universal Mac build
         run: |
-          mkdir -p build/beechlawn/web build/beechlawn/mac
-          timeout --kill-after=5s 180s godot --headless --path games/beechlawn_rovers --export-release Web "$PWD/build/beechlawn/web/index.html"
+          python3 games/beechlawn_rovers/tools/stamp_build.py --source "$GITHUB_SHA"
+          mkdir -p build/beechlawn/mac
           timeout --kill-after=5s 180s godot --headless --path games/beechlawn_rovers --export-release macOS "$PWD/build/beechlawn/mac/Beechlawn-Rovers-Mac.zip"
-          mkdir -p build/beechlawn/web/screenshots
-          cp games/beechlawn_rovers/docs/art_briefs/match_11v11_{broadcast,touchline,goal,corner}.png build/beechlawn/web/screenshots/
-          cp games/beechlawn_rovers/docs/art_briefs/kilmore_footprint_evidence/after_broadcast.png build/beechlawn/web/screenshots/current_broadcast.png
-          cp games/beechlawn_rovers/docs/art_briefs/kilmore_footprint_evidence/after_intro_venue.png build/beechlawn/web/screenshots/current_venue.png
-          cp games/beechlawn_rovers/docs/art_briefs/kilmore_footprint_evidence/after_site_overhead.png build/beechlawn/web/screenshots/current_overhead.png
-          cp games/beechlawn_rovers/docs/art_briefs/title_photoreal_evidence/title_screen.png build/beechlawn/web/screenshots/current_title.png
-          cp games/beechlawn_rovers/docs/art_briefs/shared_head_evidence/shane_portrait.png build/beechlawn/web/screenshots/current_shane.png
-          cp games/beechlawn_rovers/docs/art_briefs/shared_head_evidence/des_portrait.png build/beechlawn/web/screenshots/shared_des.png
-          cp games/beechlawn_rovers/docs/art_briefs/shared_head_evidence/john_portrait.png build/beechlawn/web/screenshots/shared_john.png
-          cp games/beechlawn_rovers/docs/art_briefs/shared_head_evidence/match/title_play_match.png build/beechlawn/web/screenshots/current_roster.png
-          cp games/beechlawn_rovers/docs/art_briefs/sky_evidence/sunlit_touchline.png build/beechlawn/web/screenshots/current_daylight_touchline.png
-          cp games/beechlawn_rovers/docs/art_briefs/sky_evidence/sunlit_broadcast.png build/beechlawn/web/screenshots/current_daylight_broadcast.png
-          cp games/beechlawn_rovers/docs/art_briefs/wet_weather_evidence/{sunny_goalmouth,sunny_broadcast,cloudy_broadcast,rain_goalmouth,mist_broadcast,ball_shadow_on,ball_shadow_off}.png build/beechlawn/web/screenshots/
-          cp games/beechlawn_rovers/docs/art_briefs/shared_shoulder_fit/godot_shane.png build/beechlawn/web/screenshots/current_kit.png
-          cp games/beechlawn_rovers/docs/art_briefs/shared_shoulder_fit/pose_sheet.jpg build/beechlawn/web/screenshots/shared_kit_poses.jpg
-          cp games/beechlawn_rovers/docs/art_briefs/shared_shoulder_fit/before_after.jpg build/beechlawn/web/screenshots/shared_kit_comparison.jpg
-          cp games/beechlawn_rovers/docs/screenshot_gallery.html build/beechlawn/web/screenshots/index.html
           python3 games/beechlawn_rovers/tools/verify_release.py build/beechlawn
-          printf '%s\n' "$GITHUB_SHA" > build/beechlawn/web/build.txt
-          (cd build/beechlawn/web && zip -q -r ../Beechlawn-Rovers-Web.zip .)
       - uses: actions/upload-artifact@v4
         with:
-          name: beechlawn-builds
+          name: beechlawn-mac-build
           path: build/beechlawn
           retention-days: 30
+      - name: Preserve failed match diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: beechlawn-failed-match-diagnostics
+          path: build/beechlawn/ai-chances
+          retention-days: 14
       - name: Publish separate football release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           tag="beechlawn-${GITHUB_SHA:0:12}"
           if gh release view "$tag" >/dev/null 2>&1; then
-            gh release upload "$tag" build/beechlawn/Beechlawn-Rovers-Web.zip build/beechlawn/mac/Beechlawn-Rovers-Mac.zip --clobber
+            gh release upload "$tag" build/beechlawn/mac/Beechlawn-Rovers-Mac.zip --clobber
           else
-            gh release create "$tag" build/beechlawn/Beechlawn-Rovers-Web.zip build/beechlawn/mac/Beechlawn-Rovers-Mac.zip --target "$GITHUB_SHA" --title "Beechlawn Rovers — 11v11 (${GITHUB_SHA:0:7})" --notes-file games/beechlawn_rovers/docs/release_notes.md --prerelease
+            gh release create "$tag" build/beechlawn/mac/Beechlawn-Rovers-Mac.zip --target "$GITHUB_SHA" --title "Beechlawn Rovers — 11v11 (${GITHUB_SHA:0:7})" --notes-file games/beechlawn_rovers/docs/release_notes.md --prerelease
           fi
-      - name: Preserve existing wrestling Pages site
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          run_id=$(gh run list --workflow pages.yml --status success --branch main --limit 1 --json databaseId --jq '.[0].databaseId')
-          if ! gh run download "$run_id" --name aegis-web-build --dir build/site; then
-            # Old Actions artifacts expire; rebuild that project only as a fallback.
-            mkdir -p build/site
-            timeout --kill-after=5s 300s godot --headless --editor --path game --import
-            timeout --kill-after=5s 300s godot --headless --path game --export-release Web "$PWD/build/site/index.html"
-          fi
-          test -s build/site/index.html
-          rm -rf build/site/beechlawn-rovers
-          cp -r build/beechlawn/web build/site/beechlawn-rovers
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: build/site
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}beechlawn-rovers/
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4

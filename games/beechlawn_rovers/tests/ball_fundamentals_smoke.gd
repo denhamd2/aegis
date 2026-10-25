@@ -109,7 +109,9 @@ func _run_checks() -> void:
 		player._do_shot(charge)
 		await physics_frame
 		shot_speeds.append(ball.linear_velocity.length())
-	player._aim = Vector2(1.0, 0.0)
+	# Screen-up is across the pitch for either sideline; screen-right is
+	# goalward from only one side and would test a deliberate backward shot.
+	player._aim = Vector2.UP
 	ball.freeze = true
 	ball.global_position = player.global_position + Vector3(0.5, FootballBall.RADIUS, 0.0)
 	ball.linear_velocity = Vector3.ZERO

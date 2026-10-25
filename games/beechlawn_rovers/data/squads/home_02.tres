@@ -17,7 +17,7 @@ hair_style = "legacy_crop"
 script = ExtResource("1")
 player_id = &"colly_roden"
 display_name = "Colly Roden"
-jersey_number = 2
+jersey_number = 14
 role = "outfield"
 visual_base = "Shane base; individual likeness pending"
 starting_slot = "right_back"
@@ -25,3 +25,5 @@ tactical_role = "fullback"
 starting_position = Vector2(-29, 23)
 appearance = SubResource("Appearance")
 attributes = SubResource("Attributes")
+
+lineup_portrait_path = "res://assets/ui/lineups/portraits/colly_roden.png"

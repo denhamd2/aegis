@@ -1,0 +1,178 @@
+
+[smoke] moving_kick_contact_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+MOVING_CONTACT kind=pass speed=0.0 human=false off_axis=false markers=1 impulses=1 toe_gap_m=0.166
+BEECHLAWN_MATCH_READY actors=22 officials=1
+MOVING_CONTACT kind=pass speed=6.0 human=false off_axis=false markers=1 impulses=1 toe_gap_m=0.123
+BEECHLAWN_MATCH_READY actors=22 officials=1
+MOVING_CONTACT kind=pass speed=8.6 human=false off_axis=false markers=1 impulses=1 toe_gap_m=0.244
+BEECHLAWN_MATCH_READY actors=22 officials=1
+MOVING_CONTACT kind=shot speed=0.0 human=false off_axis=false markers=1 impulses=1 toe_gap_m=0.135
+BEECHLAWN_MATCH_READY actors=22 officials=1
+MOVING_CONTACT kind=shot speed=6.0 human=false off_axis=false markers=1 impulses=1 toe_gap_m=0.139
+BEECHLAWN_MATCH_READY actors=22 officials=1
+MOVING_CONTACT kind=shot speed=8.6 human=false off_axis=false markers=1 impulses=1 toe_gap_m=0.275
+BEECHLAWN_MATCH_READY actors=22 officials=1
+MOVING_CONTACT kind=pass speed=0.0 human=true off_axis=false markers=1 impulses=1 toe_gap_m=0.166
+BEECHLAWN_MATCH_READY actors=22 officials=1
+MOVING_CONTACT kind=pass speed=6.0 human=true off_axis=false markers=1 impulses=1 toe_gap_m=0.123
+BEECHLAWN_MATCH_READY actors=22 officials=1
+MOVING_CONTACT kind=pass speed=8.6 human=true off_axis=false markers=1 impulses=1 toe_gap_m=0.239
+BEECHLAWN_MATCH_READY actors=22 officials=1
+MOVING_CONTACT kind=shot speed=0.0 human=true off_axis=false markers=1 impulses=1 toe_gap_m=0.135
+BEECHLAWN_MATCH_READY actors=22 officials=1
+MOVING_CONTACT kind=shot speed=6.0 human=true off_axis=false markers=1 impulses=1 toe_gap_m=0.14
+BEECHLAWN_MATCH_READY actors=22 officials=1
+MOVING_CONTACT kind=shot speed=8.6 human=true off_axis=false markers=1 impulses=1 toe_gap_m=0.271
+BEECHLAWN_MATCH_READY actors=22 officials=1
+MOVING_CONTACT kind=shot speed=0.0 human=true off_axis=true markers=1 impulses=0 toe_gap_m=0.838
+MOVING_CONTACT failures=0
+[passed] moving_kick_contact_smoke.gd
+
+[smoke] first_time_pass_timing_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=8 officials=0
+First-time 8.5 m/s pass contact: physics frame 7 (0.117 s), one impulse, gap 0.033 m
+First-time 18.0 m/s pass contact: physics frame 3 (0.050 s), one impulse, gap 0.059 m
+[passed] first_time_pass_timing_smoke.gd
+
+[smoke] first_time_shot_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+FIRST_TIME_SHOT shots=1 traps=0 toe_gap_m=0.26 failures=0
+[passed] first_time_shot_smoke.gd
+
+[smoke] contested_shot_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+CONTESTED_SHOT team=Beechlawn Rovers choice=shoot direction=(0.98656, 0.0, -0.163399)
+CONTESTED_CONTACT team=Beechlawn Rovers physical_shots=1 gap_m=0.1371336132288
+CONTESTED_SHOT team=Boardeaux choice=shoot direction=(-0.98656, 0.0, -0.163399)
+CONTESTED_CONTACT team=Boardeaux physical_shots=1 gap_m=0.12061679363251
+[passed] contested_shot_smoke.gd
+
+[smoke] goalkeeper_response_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+KEEPER_RESPONSE team=Beechlawn Rovers parry_velocity=(4.932845, 1.033267, -5.672771)
+KEEPER_RESPONSE team=Boardeaux parry_velocity=(-4.932845, 1.033267, -5.672771)
+[passed] goalkeeper_response_smoke.gd
+
+[smoke] goalkeeper_outcomes_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+KEEPER_OUTCOMES failures=0
+[passed] goalkeeper_outcomes_smoke.gd
+
+[smoke] dribble_grounding_runtime_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+DRIBBLE_RUNTIME human=false height=0.00134055133327 late_leg_motion=165
+DRIBBLE_RUNTIME human=true height=0.00135563738566 late_leg_motion=166
+[passed] dribble_grounding_runtime_smoke.gd
+
+[smoke] football_receive_contact_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=8 officials=0
+Beechlawn receive integration: incoming pass auto-triggered receive, toe gap 0.124m at 0.333 s, first touch cushioned the ball, and pass interruption worked
+[passed] football_receive_contact_smoke.gd
+
+[smoke] shared_pose_safety_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+POSE_SAFETY clip=AN_Beechlawn_Idle horizontal_samples=0/9 min_elbow_drop_m=0.27
+POSE_SAFETY clip=AN_Beechlawn_Jog horizontal_samples=0/9 min_elbow_drop_m=0.245
+POSE_SAFETY clip=AN_Beechlawn_Sprint horizontal_samples=0/9 min_elbow_drop_m=0.194
+POSE_SAFETY clip=AN_Beechlawn_StopFromRun horizontal_samples=0/9 min_elbow_drop_m=0.264
+POSE_SAFETY clip=AN_Beechlawn_PassRight horizontal_samples=0/9 min_elbow_drop_m=0.154
+POSE_SAFETY clip=AN_Beechlawn_ReceiveRight horizontal_samples=0/9 min_elbow_drop_m=0.162
+POSE_SAFETY clip=AN_Beechlawn_ShotRight horizontal_samples=0/9 min_elbow_drop_m=0.085
+POSE_SAFETY clip=AN_Beechlawn_CloseControl horizontal_samples=0/9 min_elbow_drop_m=0.26
+POSE_SAFETY clip=AN_Beechlawn_WalkOn horizontal_samples=0/9 min_elbow_drop_m=0.264
+POSE_SAFETY clip=AN_Beechlawn_WarmupJog horizontal_samples=0/9 min_elbow_drop_m=0.264
+PASS: all live outfield idle poses and standing action silhouettes avoid sustained T poses
+[passed] shared_pose_safety_smoke.gd
+
+[smoke] full_match_restarts_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+RESTARTS whole-ball ownership, overhead release, corners, goal kicks, free-kick contact and paused preparation failures=0
+[passed] full_match_restarts_smoke.gd
+
+[smoke] hud_layout_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+HUD_RECT League (42.0, 30.0) (286.0, 24.0)
+HUD_RECT Score (42.0, 55.0) (441.0, 29.0)
+HUD_RECT Clock (42.0, 87.0) (126.0, 24.0)
+HUD layout and three-minute timer PASS
+[passed] hud_layout_smoke.gd
+
+[smoke] ai_shot_lane_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+SHOT_LANE team=Beechlawn Rovers behind_defender_choice=shoot
+SHOT_LANE team=Boardeaux behind_defender_choice=shoot
+AI shooting-lane PASS: open shot under trailing pressure, frontal block, both directions and human control
+[passed] ai_shot_lane_smoke.gd
+
+[smoke] ball_fundamentals_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=8 officials=0
+Dribble spacing close/normal/sprint: 0.78 / 0.89 / 1.10 m
+Ball ground pass 6 m/s: 8.30 m in 2 s
+Ball ground pass 12 m/s: 17.76 m in 2 s
+Ball ground pass 18 m/s: 27.89 m in 2 s
+Shot speed tap/full: 12.97 / 30.00 m/s; lateral aim retained forward component 12.33 m/s
+Beechlawn ball fundamentals checks passed
+[passed] ball_fundamentals_smoke.gd
+
+[smoke] passing_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=8 officials=0
+Beechlawn passing and receiving checks passed
+[passed] passing_smoke.gd
+
+[smoke] tackle_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=8 officials=0
+Beechlawn standing, sliding and foul-risk tackle checks passed
+[passed] tackle_smoke.gd
+
+[smoke] aerial_flight_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+AERIAL_FLIGHT side=1.0 metres=12.0 landing_gap=0.00730602582917 peak=2.49962139129639
+AERIAL_FLIGHT side=1.0 metres=28.0 landing_gap=0.11864966154099 peak=5.12633752822876
+AERIAL_FLIGHT side=1.0 metres=40.0 landing_gap=0.20820747315884 peak=7.74732446670532
+AERIAL_FLIGHT side=-1.0 metres=12.0 landing_gap=0.00957885105163 peak=2.49962139129639
+AERIAL_FLIGHT side=-1.0 metres=28.0 landing_gap=0.08608379215002 peak=5.12633752822876
+AERIAL_FLIGHT side=-1.0 metres=40.0 landing_gap=0.15863798558712 peak=7.74732446670532
+AERIAL_FLIGHT failures=0
+[passed] aerial_flight_smoke.gd
+
+[smoke] aerial_contact_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+AERIAL_HEADER side=1.0 headers=1 jump_m=0.26584844663739 ball=(38.21227, 0.210422, 0.0)
+AERIAL_HEADER side=-1.0 headers=1 jump_m=0.26612541172653 ball=(-38.21227, 0.188675, 0.0)
+AERIAL_CONTACT headers=2 chest=4 gaps=[0.11298102885485, 0.02957006916404, 0.0320535376668, 0.10930045694113, 0.03665671870112, 0.03204690665007] failures=0
+[passed] aerial_contact_smoke.gd

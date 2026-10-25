@@ -1,0 +1,236 @@
+{
+  "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+  "api": "1.4.305",
+  "away_players": 11,
+  "display_server": "X11",
+  "frames": [
+    {
+      "ball": "(0.0, 0.135, 0.0)",
+      "file": "frame_000.png",
+      "label": "montage_goal 0.00",
+      "player": "(-0.65, 0.009063, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "tick": 0
+    },
+    {
+      "ball": "(0.0, 0.135, 0.0)",
+      "file": "frame_001.png",
+      "label": "montage_goal 1.50",
+      "player": "(-0.65, 0.009063, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "tick": 0
+    },
+    {
+      "ball": "(0.0, 0.135, 0.0)",
+      "file": "frame_002.png",
+      "label": "montage_goal 2.95",
+      "player": "(-0.65, 0.009063, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "tick": 0
+    },
+    {
+      "ball": "(0.0, 0.135, 0.0)",
+      "file": "frame_003.png",
+      "label": "montage_net 0.00",
+      "player": "(-0.65, 0.009063, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "tick": 0
+    },
+    {
+      "ball": "(0.0, 0.135, 0.0)",
+      "file": "frame_004.png",
+      "label": "montage_net 1.50",
+      "player": "(-0.65, 0.009063, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "tick": 0
+    },
+    {
+      "ball": "(0.0, 0.135, 0.0)",
+      "file": "frame_005.png",
+      "label": "montage_net 2.95",
+      "player": "(-0.65, 0.009063, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "tick": 0
+    },
+    {
+      "ball": "(0.0, 0.135, 0.0)",
+      "file": "frame_006.png",
+      "label": "montage_ball 0.00",
+      "player": "(-0.65, 0.009063, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "tick": 0
+    },
+    {
+      "ball": "(0.0, 0.135, 0.0)",
+      "file": "frame_007.png",
+      "label": "montage_ball 1.50",
+      "player": "(-0.65, 0.009063, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "tick": 0
+    },
+    {
+      "ball": "(0.0, 0.135, 0.0)",
+      "file": "frame_008.png",
+      "label": "montage_ball 2.95",
+      "player": "(-0.65, 0.009063, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "tick": 0
+    },
+    {
+      "ball": "(0.0, 0.135, 0.0)",
+      "file": "frame_009.png",
+      "label": "montage_john 0.00",
+      "player": "(-0.65, 0.009063, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "tick": 0
+    },
+    {
+      "ball": "(0.0, 0.135, 0.0)",
+      "file": "frame_010.png",
+      "label": "montage_john 1.50",
+      "player": "(-0.65, 0.009063, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "tick": 0
+    },
+    {
+      "ball": "(0.0, 0.135, 0.0)",
+      "file": "frame_011.png",
+      "label": "montage_john 2.95",
+      "player": "(-0.65, 0.009063, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "tick": 0
+    },
+    {
+      "ball": "(0.0, 0.135, 0.0)",
+      "file": "frame_012.png",
+      "label": "montage_des 0.00",
+      "player": "(-0.65, 0.009063, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "tick": 0
+    },
+    {
+      "ball": "(0.0, 0.135, 0.0)",
+      "file": "frame_013.png",
+      "label": "montage_des 1.50",
+      "player": "(-0.65, 0.009063, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "tick": 0
+    },
+    {
+      "ball": "(0.0, 0.135, 0.0)",
+      "file": "frame_014.png",
+      "label": "montage_des 2.95",
+      "player": "(-0.65, 0.009063, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "tick": 0
+    },
+    {
+      "ball": "(0.0, 0.135, 0.0)",
+      "file": "frame_015.png",
+      "label": "montage_puddles 0.00",
+      "player": "(-0.65, 0.009063, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "tick": 0
+    },
+    {
+      "ball": "(0.0, 0.135, 0.0)",
+      "file": "frame_016.png",
+      "label": "montage_puddles 1.50",
+      "player": "(-0.65, 0.009063, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "tick": 0
+    },
+    {
+      "ball": "(0.0, 0.135, 0.0)",
+      "file": "frame_017.png",
+      "label": "montage_puddles 2.95",
+      "player": "(-0.65, 0.009063, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "tick": 0
+    }
+  ],
+  "godot": "4.6.3-stable (official)",
+  "home_players": 11,
+  "msaa_3d": 2,
+  "officials": 1,
+  "rendering_method": "forward_plus",
+  "resolution": [
+    640,
+    360
+  ],
+  "review_mode": "montage",
+  "scope": "Actual native Forward+ controllers and assets; accelerated simulated time, software GPU, no Mac performance claim.",
+  "vendor": "Unknown"
+}

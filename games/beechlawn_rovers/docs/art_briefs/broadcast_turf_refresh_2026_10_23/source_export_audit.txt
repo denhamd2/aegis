@@ -1,0 +1,9 @@
+FOUR_HEAD_EXPORT_AUDIT PASS shane_denham, john_orourke, bordeaux_09, des_feeney_sr
+Blender 4.3.2
+Read blend: "/workspace/aegis-checkout/tools/blender/beechlawn/footballer_head_master.blend"
+Read blend: "/workspace/aegis-checkout/tools/blender/beechlawn/shane_denham_head.blend"
+Read blend: "/workspace/aegis-checkout/tools/blender/beechlawn/john_orourke_head.blend"
+Read blend: "/workspace/aegis-checkout/tools/blender/beechlawn/des_feeney_head.blend"
+Read blend: "/workspace/aegis-checkout/tools/blender/beechlawn/referee_des_feeney_head.blend"
+
+Blender quit

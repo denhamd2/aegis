@@ -1,0 +1,13 @@
+
+[smoke] ai_carry_space_smoke.gd (timeout 45s)
+[failed] ai_carry_space_smoke.gd exited 1
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+CARRY_SPACE team=Beechlawn Rovers defender_distance=-4.0 choice=carry
+CARRY_SPACE team=Beechlawn Rovers defender_distance=4.0 choice=carry
+CARRY_SPACE team=Beechlawn Rovers defender_distance=1.8 choice=short_pass
+ERROR: Tight trailing pressure forced a pass despite an open goalward lane
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _run (res://tests/ai_carry_space_smoke.gd:44)

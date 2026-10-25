@@ -114,3 +114,47 @@ and is excluded from game exports.
 ## Shane original portrait, 19 October 2026
 
 `source_uploads/chat_attachments/shane_face_photo/69012.jpg` is the original smiling Shane Denham photo supplied for the latest likeness pass. Use it for facial identity ahead of the generated character-sheet face; keep the sheet as secondary profile evidence. The photo has indoor lighting, slight yaw and an expression; it is not a neutral scan. Its provenance and hash are recorded alongside the unchanged original. See `../docs/art_briefs/shane_photo_likeness/brief.md`.
+
+## Boardeaux player Des Feeney portrait, 21 October 2026
+
+`source_uploads/chat_attachments/boardeaux_des_photo/69016.jpg` is the
+owner-supplied low-resolution, near-frontal portrait for the Boardeaux player
+Des Feeney (#9). It is a separate identity from Des Feeney Sr., the referee.
+Use this as the primary evidence for the player's face; the earlier Boardeaux
+character sheet is secondary outfit/turnaround evidence. The photo gives no
+reliable profile view and has soft indoor lighting. Its unchanged original,
+provenance and SHA256 are recorded here. See
+`../docs/art_briefs/des_feeney_player_likeness/brief.md`.
+
+## Beechlawn goalkeeper John O’Rourke portrait, 21 October 2026
+
+`source_uploads/chat_attachments/john_orourke_photo/69010.jpg` is the
+owner-supplied close portrait for John O’Rourke (#1). It supplements the
+earlier character sheet, which remains the source for side/back head shape,
+hair and goalkeeper presentation. Use the close portrait to guide the facial
+sculpt and expression; do not project the photo onto the face. The current
+Godot preview is a work in progress and does not yet meet the requested AAA
+likeness standard. The original and provenance/hash are preserved unchanged.
+See `../docs/art_briefs/john_orourke_likeness/brief.md`.
+
+## Supplied landing-screen wordmark, 21 October 2026
+
+`source_uploads/chat_attachments/title_logo/69668.jpg` is the authoritative
+Beechlawn Rovers 27 title wordmark and red/black/white menu direction. Preserve
+the original white italic lettering and red 27. This changes the landing and
+Options theme; the players keep their blue/black kits and the oval club crest
+keeps its authentic colours. See `../docs/art_briefs/title_red_black_evidence/brief.md`.
+
+## Referee likeness
+
+Use the preserved `des_feeney_referee_likeness/69015.jpg` and `69018.jpg` sources for the referee head task. The portrait informs the sculpt and procedural UV pigment only; never paste the photo onto the model. See `../docs/art_briefs/des_feeney_referee_likeness/brief.md` for current status and known likeness gaps.
+
+## Boardeaux player Des: side/back originals, 23 October 2026
+
+`source_uploads/chat_attachments/boardeaux_des_side_back/69911.jpg`,
+`69910.jpg` and `69909.jpg` add side and three-quarter evidence for player
+Des Feeney. They show short dark-brown hair around the sides and back, a
+high temporal wedge, short sideburns and a largely bare top/crown. The chin
+goatee is stronger than the upper-lip stubble. Use these alongside 69016 for
+player Des; do not transfer this groom to referee Des Feeney Sr. Originals
+are unchanged; provenance and SHA256 are recorded beside them.

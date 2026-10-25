@@ -1,0 +1,13 @@
+{
+  "image": "games/beechlawn_rovers/docs/art_briefs/des_feeney_player_likeness/diagnostics/normal_bias_18/des_portrait.png",
+  "forehead_patch": [
+    615,
+    240,
+    665,
+    285
+  ],
+  "band_rms_8bit": 0.803563492024299,
+  "maximum_band_rms_8bit": 1.3,
+  "result": "PASS",
+  "scope": "Fixed Des portrait lighting/camera; repeated forehead-band regression only"
+}

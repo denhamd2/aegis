@@ -1,0 +1,30 @@
+{
+  "focused_regressions_passed": 14,
+  "full_match_scenarios": 6,
+  "chance_gate_accepted": true,
+  "teams": {
+    "Beechlawn Rovers": {
+      "shots": 31,
+      "saves": 28,
+      "contested_shots": 27
+    },
+    "Boardeaux": {
+      "shots": 34,
+      "saves": 24,
+      "contested_shots": 22
+    }
+  },
+  "goals": [
+    3,
+    2
+  ],
+  "longest_stationary_s": 0,
+  "native_fixtures": [
+    "keeper_home",
+    "keeper_away"
+  ],
+  "native_renderer": "Forward+/Vulkan llvmpipe LLVM 19.1.7",
+  "animation_assets_changed": false,
+  "mac_hardware_tested": false,
+  "scope": "Controller handling/recovery pass; existing standing save animation retained. Mac package is gated and published by the separate football CI workflow."
+}

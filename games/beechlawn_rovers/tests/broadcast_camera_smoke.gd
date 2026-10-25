@@ -50,6 +50,8 @@ func _run() -> void:
 		var camera: Camera3D = rig.camera
 		check(camera.global_transform.is_finite(), "Finite camera " + str(id))
 		check(camera.is_position_in_frustum(game.ball.global_position), "Ball visible in " + str(id))
+		if id in [&"close_broadcast", &"dynamic_wide", &"stadium", &"live_broadcast", &"fan_view", &"field_side"]:
+			check(camera.global_position.z < game.ball.global_position.z, "Opposite touchline in " + str(id))
 		var right := camera.global_basis.x
 		right.y = 0.0
 		var forward := -camera.global_basis.z
@@ -66,6 +68,13 @@ func _run() -> void:
 		actor.velocity.y = 0.0
 		check(actor.velocity.normalized().dot(forward.normalized()) > 0.95, "Screen-up movement " + str(id))
 		print("CAMERA_CHECK ", id, " position=", camera.global_position, " fov=", camera.fov)
+	rig.preset_id = Presets.DEFAULT
+	rig.apply_settings()
+	for position in [Vector3(-49, 0.12, -30), Vector3(49, 0.12, 30), Vector3(0, 0.12, 0)]:
+		game.ball.global_position = position
+		rig.reset_tracking()
+		check(rig.camera.is_position_in_frustum(position), "Close framing retains ball at " + str(position))
+		check(rig.camera.global_basis.x.dot(Vector3.LEFT) > 0.99, "Flipped broadcast screen-right follows world-left")
 	rig.preset_id = &"blimp"
 	session.camera_angle = 0.0
 	rig.apply_settings()

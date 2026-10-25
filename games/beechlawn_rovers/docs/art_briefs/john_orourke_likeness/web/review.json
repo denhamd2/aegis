@@ -1,0 +1,13 @@
+{
+  "result": "PASS",
+  "renderer": "Godot Compatibility / Chromium SwiftShader",
+  "source": "john_orourke roster appearance, FootballerVisual on Kilmore Drive review pitch",
+  "views": [
+    "portrait",
+    "threequarter_portrait",
+    "profile_portrait",
+    "keeper_set"
+  ],
+  "console_errors": [],
+  "native_M1": "not measured"
+}

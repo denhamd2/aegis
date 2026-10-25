@@ -18,6 +18,7 @@ config/features=PackedStringArray("4.6", "Forward Plus")
 [autoload]
 
 InputBindings="*res://scripts/game_input.gd"
+GameAudio="*res://scripts/game_audio.gd"
 MatchSession="*res://scripts/match_session.gd"
 
 [display]
@@ -35,7 +36,8 @@ common/physics_interpolation=true
 
 [rendering]
 
+anti_aliasing/quality/msaa_3d=2
+
 textures/vram_compression/import_etc2_astc=true
 environment/defaults/default_clear_color=Color(0.43, 0.57, 0.69, 1)
 renderer/rendering_method.macos="forward_plus"
-renderer/rendering_method.web="gl_compatibility"

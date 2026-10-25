@@ -1,24 +1,27 @@
-[gd_resource type="Resource" script_class="FootballerProfile" load_steps=7 format=3]
+[gd_resource type="Resource" script_class="FootballerProfile" load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/footballer_profile.gd" id="1_profile"]
 [ext_resource type="Script" path="res://scripts/data/football_attributes.gd" id="2_attributes"]
 
 [ext_resource type="Script" path="res://scripts/data/football_appearance.gd" id="head_pipeline_appearance"]
-[ext_resource type="PackedScene" path="res://assets/characters/shared/heads/master.glb" id="head_pipeline_head"]
+[ext_resource type="PackedScene" path="res://assets/characters/shared/heads/players/bordeaux_09.glb" id="head_pipeline_head"]
+[ext_resource type="PackedScene" path="res://assets/characters/shared/heads/des_side_hair.glb" id="head_pipeline_hair"]
 [sub_resource type="Resource" id="NeutralAttributes"]
 script = ExtResource("2_attributes")
 
 [sub_resource type="Resource" id="HeadAppearance"]
 script = ExtResource("head_pipeline_appearance")
 kit = "bordeaux_keeper"
+body_fullness = 0.58
 head_variant = ExtResource("head_pipeline_head")
-hair_style = "bald"
+hair_style = "custom"
+hair_variant = ExtResource("head_pipeline_hair")
 
 
 [resource]
 script = ExtResource("1_profile")
 player_id = &"bordeaux_goalkeeper"
-display_name = "Bordeaux goalkeeper slot"
+display_name = "Boardeaux goalkeeper slot"
 role = "goalkeeper"
 visual_base = "Des Feeney"
 starting_slot = "keeper"

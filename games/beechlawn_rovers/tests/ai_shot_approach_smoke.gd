@@ -23,15 +23,20 @@ func _run() -> void:
 	var queued := player._visual_shot_pending
 	# The next staggered tactical update asks for a different carry lane.
 	player.ai_move_direction = Vector3.BACK
+	var before_yaw := player.rotation.y
 	player._update_locomotion(1.0 / 60.0)
 	var preparation_lateral_speed := absf(player.velocity.z)
+	var preparation_yaw := absf(angle_difference(before_yaw, player.rotation.y))
 	# The real contact callback clears the commitment and applies the kick.
-	player._on_visual_action_contact(&"shot")
+	var visual := player.get_node("Visual") as FootballerVisual
+	visual.animation_player.seek(visual.action_contact_time(&"shot"), true)
+	ball.global_position = player._receive_contact_position() + Vector3.UP * 0.06
+	visual.on_action_contact_marker()
 	var contact := ball.last_action == &"shot"
 	player._update_locomotion(1.0 / 60.0)
 	var released := absf(player.velocity.z) > 0.01
-	print("SHOT_APPROACH queued=",queued," preparation_lateral_speed=",preparation_lateral_speed," contact=",contact," steering_resumed=",released)
-	var passed := queued and preparation_lateral_speed < 0.001 and contact and released
+	print("SHOT_APPROACH queued=",queued," preparation_lateral_speed=",preparation_lateral_speed," yaw_change=",preparation_yaw," contact=",contact," steering_resumed=",released)
+	var passed := queued and preparation_lateral_speed < 0.25 and preparation_yaw < 0.04 and contact and released
 	game.free()
 	if not passed:
 		push_error("Staggered AI steering turns a preparing kicker away before its contact marker")

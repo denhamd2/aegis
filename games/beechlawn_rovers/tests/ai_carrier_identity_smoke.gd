@@ -49,6 +49,8 @@ func _run() -> void:
 		# Once nobody can play the travelling ball, retain the predicted runner.
 		carrier.global_position = Vector3(attack_sign * 30.0, 0.0, 0.0)
 		ball.last_action = &"pass"
+		runner.receive_target = Vector3(predicted.x, 0, predicted.y)
+		runner.receive_target_time = 1.0
 		game._ai_tick = 0.0
 		game._next_home_ai = team == game._home_players
 		game._update_ai(1.0 / 60.0)

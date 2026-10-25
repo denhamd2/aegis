@@ -1,10 +1,11 @@
 extends Control
 ## A static reference-led campaign image with native, keyboard-accessible UI.
-const INK := Color("07101f")
-const PAPER := Color("f5f5ed")
-const MUTED := Color("b5c1d2")
-const BLUE := Color("2159ee")
-const LIME := Color("d5fa74")
+const INK := Color("090a0c")
+const PAPER := Color("ffffff")
+const MUTED := Color("bebfc4")
+const RED := Color("ed1b24")
+const SURFACE := Color("151619")
+const BORDER := Color("45464c")
 const BODY := preload("res://assets/ui/fonts/BarlowSemiCondensed-Regular.ttf")
 const BOLD := preload("res://assets/ui/fonts/BarlowSemiCondensed-SemiBold.ttf")
 const DISPLAY := preload("res://assets/ui/fonts/Anton-Regular.ttf")
@@ -24,7 +25,39 @@ var mode_description: Label
 var loading := false
 var selected_mode := 0
 
+func _build_menu_theme() -> void:
+	# Keep this theme local to the landing/options screen; match broadcast
+	# graphics and the players' reference blue/black kit colours are independent.
+	var menu_theme := Theme.new()
+	menu_theme.default_font = BODY
+	for kind in ["OptionButton", "CheckButton", "PopupMenu"]:
+		for state in ["font_color", "font_hover_color", "font_focus_color", "font_pressed_color"]:
+			menu_theme.set_color(state,kind,PAPER)
+	menu_theme.set_stylebox("normal","OptionButton",_style(SURFACE,BORDER))
+	menu_theme.set_stylebox("hover","OptionButton",_style(Color("292a2f"),RED))
+	menu_theme.set_stylebox("pressed","OptionButton",_style(Color("3b1015"),RED))
+	menu_theme.set_stylebox("focus","OptionButton",_style(Color.TRANSPARENT,PAPER))
+	menu_theme.set_stylebox("panel","PopupMenu",_style(SURFACE,BORDER))
+	menu_theme.set_stylebox("hover","PopupMenu",_style(Color("8b1018"),RED))
+	menu_theme.set_color("font_hover_color","PopupMenu",PAPER)
+	menu_theme.set_color("font_separator_color","PopupMenu",MUTED)
+	menu_theme.set_icon("checked","CheckButton",preload("res://assets/ui/menu/toggle_on.svg"))
+	menu_theme.set_icon("unchecked","CheckButton",preload("res://assets/ui/menu/toggle_off.svg"))
+	menu_theme.set_stylebox("focus","CheckButton",_style(Color.TRANSPARENT,PAPER))
+	var track := _style(Color("292a2f"),BORDER)
+	track.content_margin_top = 3
+	track.content_margin_bottom = 3
+	menu_theme.set_stylebox("slider","HSlider",track)
+	menu_theme.set_stylebox("grabber_area","HSlider",_style(RED,RED))
+	menu_theme.set_stylebox("grabber_area_highlight","HSlider",_style(Color("ff343e"),RED))
+	menu_theme.set_icon("grabber","HSlider",preload("res://assets/ui/menu/slider_handle.svg"))
+	menu_theme.set_icon("grabber_highlight","HSlider",preload("res://assets/ui/menu/slider_handle.svg"))
+	theme = menu_theme
+
 func _ready() -> void:
+	get_node("/root/GameAudio").stop_match()
+	get_node("/root/GameAudio").set_music(true)
+	_build_menu_theme()
 	if OS.has_feature("web") and OS.has_feature("debug"):
 		Engine.max_fps = 0
 	var background := ColorRect.new()
@@ -43,8 +76,8 @@ func _ready() -> void:
 	art.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	# A transparent left-to-right wash protects text on ultra-wide aspect ratios.
 	var gradient := Gradient.new()
-	gradient.colors = PackedColorArray([Color(0.02,0.04,0.09,0.72),Color(0.02,0.04,0.09,0.3),Color(0.02,0.04,0.09,0)])
-	gradient.offsets = PackedFloat32Array([0.0,0.4,0.7])
+	gradient.colors = PackedColorArray([Color(0.025,0.025,0.03,0.98),Color(0.025,0.025,0.03,0.84),Color(0.025,0.025,0.03,0)])
+	gradient.offsets = PackedFloat32Array([0.0,0.32,0.63])
 	var texture := GradientTexture2D.new()
 	texture.gradient = gradient
 	var wash := TextureRect.new()
@@ -90,20 +123,28 @@ func _build_main() -> void:
 	crest.size = Vector2(68,78)
 	canvas.add_child(crest)
 	_label(canvas,"BEECHLAWN ROVERS",Vector2(150,53),23,BOLD)
-	_label(canvas,"ROOTED IN DUBLIN.  READY FOR SUNDAY.",Vector2(150,87),16,BODY,MUTED)
-	_rect(canvas,Rect2(1224,52,312,40),Color(0.02,0.04,0.09,0.7))
+	_rect(canvas,Rect2(1224,52,312,40),Color(0.025,0.025,0.03,0.7))
 	_label(canvas,"KILMORE DRIVE  /  DUBLIN",Vector2(1240,60),19,BOLD)
-	_rect(canvas,Rect2(64,169,46,4),LIME)
-	_label(canvas,"BEECHLAWN",Vector2(59,190),77,DISPLAY)
-	_label(canvas,"ROVERS",Vector2(59,278),105,DISPLAY)
-	var year_lockup := Panel.new()
-	year_lockup.position = Vector2(395,298)
-	year_lockup.size = Vector2(112,70)
-	year_lockup.add_theme_stylebox_override("panel",_style(Color(0.025,0.05,0.1,0.88),LIME))
-	canvas.add_child(year_lockup)
-	var year_label := _label(year_lockup,"27",Vector2(11,-3),68,DISPLAY,LIME)
-	year_label.size = Vector2(94,76)
-	_label(canvas,"Your club. Your pitch. Your match.",Vector2(65,413),26,BODY,MUTED)
+	var title_logo := TextureRect.new()
+	title_logo.name = "TitleLogo"
+	var title_atlas := AtlasTexture.new()
+	title_atlas.atlas = preload("res://assets/ui/title_logo_source.jpg")
+	# Source pixels, cropped only for layout. The shader reveals the supplied
+	# white/red lettering over the menu without recreating or stretching it.
+	title_atlas.region = Rect2(72,450,1137,333)
+	title_atlas.filter_clip = true
+	title_logo.texture = title_atlas
+	title_logo.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	title_logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	title_logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	title_logo.position = Vector2(54,215)
+	title_logo.size = Vector2(550,172)
+	title_logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	title_logo.tooltip_text = "Beechlawn Rovers 27"
+	var logo_material := ShaderMaterial.new()
+	logo_material.shader = preload("res://assets/ui/title_logo_mask.gdshader")
+	title_logo.material = logo_material
+	canvas.add_child(title_logo)
 	_label(canvas,"CHOOSE YOUR MATCH",Vector2(65,477),17,BOLD,MUTED)
 	play_button = _button(canvas,"PLAY",Rect2(64,513,253,66))
 	watch_button = _button(canvas,"WATCH AI vs AI",Rect2(331,513,253,66))
@@ -118,10 +159,11 @@ func _build_main() -> void:
 	options_button = _button(canvas,"OPTIONS",Rect2(64,726,520,48))
 	options_button.name = "Options"
 	options_button.pressed.connect(open_options)
-	_label(canvas,"DAVID MURRAY  /  5",Vector2(1160,766),19,BOLD)
-	_label(canvas,"DEREK MITCHELL  /  3",Vector2(1160,794),17,BODY,MUTED)
-	_rect(canvas,Rect2(64,826,1472,1),Color(0.7,0.8,0.9,0.22))
-	_label(canvas,"BEECHLAWN ROVERS   vs   BORDEAUX",Vector2(64,845),18,BOLD)
+	var build_info: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/build_info.json"))
+	var stamp := _label(canvas,"v%s  ·  %s  ·  %s" % [build_info.version, String(build_info.source_sha).left(7), build_info.packaged_utc],Vector2(65,794),15,BODY,MUTED)
+	stamp.name = "BuildStamp"
+	_rect(canvas,Rect2(64,826,1472,1),Color(1,1,1,0.22))
+	_label(canvas,"BEECHLAWN ROVERS   vs   BOARDEAUX",Vector2(64,845),18,BOLD)
 	_label(canvas,"11 v 11   ·   3 MINUTE MATCH",Vector2(602,845),17,BODY,MUTED)
 	_label(canvas,"ARROWS  Navigate     ENTER  Select",Vector2(1230,845),17,BODY,MUTED)
 	# Explicit keyboard order works independently of directional heuristics.
@@ -133,14 +175,14 @@ func _build_main() -> void:
 func _build_options() -> void:
 	options_layer = ColorRect.new()
 	options_layer.name = "OptionsOverlay"
-	options_layer.color = Color(0.015,0.025,0.05,0.97)
+	options_layer.color = Color(0.025,0.025,0.03,0.98)
 	options_layer.size = Vector2(1600,900)
 	canvas.add_child(options_layer)
-	_label(options_layer,"MAKE IT YOUR MATCH",Vector2(100,52),18,BOLD,LIME)
+	_label(options_layer,"MAKE IT YOUR MATCH",Vector2(100,52),18,BOLD,RED)
 	_label(options_layer,"OPTIONS",Vector2(96,80),62,DISPLAY)
-	_label(options_layer,"SOUND & PRESENTATION",Vector2(100,194),20,BOLD,LIME)
+	_label(options_layer,"SOUND & PRESENTATION",Vector2(100,194),20,BOLD,RED)
 	_label(options_layer,"MASTER VOLUME",Vector2(100,244),23,BOLD)
-	volume_label = _label(options_layer,"80%",Vector2(640,244),23,BOLD,LIME)
+	volume_label = _label(options_layer,"80%",Vector2(640,244),23,BOLD,RED)
 	volume_slider = HSlider.new()
 	volume_slider.name = "MasterVolume"
 	volume_slider.position = Vector2(100,292)
@@ -155,12 +197,13 @@ func _build_options() -> void:
 	fullscreen_toggle = CheckButton.new()
 	fullscreen_toggle.text = "FULLSCREEN"
 	fullscreen_toggle.position = Vector2(100,352)
-	fullscreen_toggle.size = Vector2(610,52)
+	fullscreen_toggle.size = Vector2(290,52)
 	fullscreen_toggle.add_theme_font_override("font",BOLD)
 	fullscreen_toggle.add_theme_font_size_override("font_size",23)
 	fullscreen_toggle.button_pressed = MatchSession.fullscreen
 	options_layer.add_child(fullscreen_toggle)
 	fullscreen_toggle.toggled.connect(_fullscreen_changed)
+	_graphics_toggle("TEMPORAL ANTIALIASING", "temporal_aa", Vector2(420,356), Vector2(300,42))
 	if OS.has_feature("web"):
 		fullscreen_toggle.hide()
 		_label(options_layer,"Use your browser's fullscreen control",Vector2(100,368),21,BODY,MUTED)
@@ -187,7 +230,7 @@ func _build_options() -> void:
 	weather_select.select(weather_ids.find(str(MatchSession.weather_preset)))
 	weather_select.item_selected.connect(func(index: int): MatchSession.weather_preset = StringName(weather_ids[index]))
 	options_layer.add_child(weather_select)
-	_label(options_layer,"GAMEPLAY CAMERA",Vector2(820,194),20,BOLD,LIME)
+	_label(options_layer,"GAMEPLAY CAMERA",Vector2(820,194),20,BOLD,RED)
 	camera_select = OptionButton.new()
 	camera_select.name = "GameplayCamera"
 	camera_select.position = Vector2(820,244)
@@ -204,9 +247,23 @@ func _build_options() -> void:
 	_presentation_slider("HEIGHT", "camera_height", 324, -4.0, 12.0, 0.5, 1.0, " m")
 	_presentation_slider("ZOOM", "camera_zoom", 412, -100.0, 100.0, 5.0, 100.0, "%")
 	_presentation_slider("ANGLE", "camera_angle", 500, -20.0, 20.0, 1.0, 1.0, "°")
-	_rect(options_layer,Rect2(100,610,1400,1),Color(0.5,0.6,0.8,0.25))
-	_label(options_layer,"KEYBOARD CONTROLS",Vector2(100,638),19,BOLD,LIME)
-	_label(options_layer,"W A S D  Move    SHIFT  Sprint    CTRL  Close control    E  Pass    Q  Through ball    SPACE  Shoot\nF  Tackle    G  Slide    TAB  Switch player    C  Camera    ESC  Title    F3  Debug",Vector2(100,676),22,BODY,PAPER)
+	_graphics_toggle("CINEMATIC FOCUS", "cinematic_depth_of_field", Vector2(820,568), Vector2(325,36))
+	_graphics_toggle("CINEMATIC MOTION BLUR", "cinematic_motion_blur", Vector2(1150,568), Vector2(355,36))
+	_rect(options_layer,Rect2(100,610,1400,1),Color(1,1,1,0.20))
+	_label(options_layer,"KEYBOARD CONTROLS",Vector2(100,638),19,BOLD,RED)
+	_label(options_layer,"WASD Move · Shift Sprint · Ctrl Close control / Jockey\nE Pass · Q Through · R Loft · T Cross · Space Shoot\nF Tackle · G Slide · J Contain · H Pressure · Tab Switch\nC Camera · Esc Title · F3 Debug",Vector2(100,674),18,BODY,PAPER)
+	for index in 3:
+		var bus: String = ["Music","Match","UI"][index]
+		var field := bus.to_lower()+"_volume"
+		var x := 820+index*230
+		_label(options_layer,bus.to_upper(),Vector2(x,638),19,BOLD,RED)
+		var slider := HSlider.new()
+		slider.name = bus+"Volume"; slider.position = Vector2(x,680); slider.size = Vector2(200,32)
+		slider.min_value=0; slider.max_value=100; slider.step=5; slider.value=float(MatchSession.get(field))*100
+		slider.value_changed.connect(func(value: float):
+			MatchSession.set(field,value/100)
+			AudioServer.set_bus_volume_linear(AudioServer.get_bus_index(bus),value/100))
+		options_layer.add_child(slider)
 	close_button = _button(options_layer,"SAVE & BACK",Rect2(100,790,1400,62),true)
 	close_button.name = "SaveOptions"
 	close_button.pressed.connect(close_options)
@@ -216,7 +273,7 @@ func _presentation_slider(title: String, field: String, y: float, minimum: float
 		maximum: float, increment: float, scale_value: float, unit: String) -> void:
 	_label(options_layer,title,Vector2(820,y),19,BOLD)
 	var value: float = float(MatchSession.get(field)) * scale_value
-	var value_label := _label(options_layer,"%.1f%s" % [value,unit],Vector2(1400,y),19,BOLD,LIME)
+	var value_label := _label(options_layer,"%.1f%s" % [value,unit],Vector2(1400,y),19,BOLD,RED)
 	var slider := HSlider.new()
 	slider.name = field
 	slider.position = Vector2(820,y+35)
@@ -234,8 +291,8 @@ func _select_mode(value: int) -> void:
 	selected_mode = value
 	for index in 2:
 		var button := play_button if index == 0 else watch_button
-		button.add_theme_stylebox_override("normal",_style(Color("163c9c") if index == value else Color(0.025,0.05,0.1,0.8),LIME if index == value else Color("3c4d69")))
-		button.add_theme_color_override("font_color",LIME if index == value else PAPER)
+		button.add_theme_stylebox_override("normal",_style(Color("3b1015") if index == value else SURFACE,RED if index == value else BORDER))
+		button.add_theme_color_override("font_color",PAPER)
 	mode_description.text = "Take control of Beechlawn Rovers. Keyboard vs AI." if value == 0 else "Sit back. Both teams play a fully AI-controlled match."
 
 func open_options() -> void:
@@ -291,6 +348,20 @@ func _start_match() -> void:
 		for button in [play_button,watch_button,start_button,options_button]:
 			button.disabled = false
 
+func _graphics_toggle(text: String, field: String, position: Vector2, size: Vector2) -> void:
+	var toggle := CheckButton.new()
+	toggle.name = field.to_pascal_case()
+	toggle.text = text
+	toggle.position = position; toggle.size = size
+	toggle.add_theme_font_override("font", BOLD)
+	toggle.add_theme_font_size_override("font_size", 17)
+	toggle.button_pressed = bool(MatchSession.get(field))
+	toggle.toggled.connect(func(value: bool):
+		MatchSession.set(field,value)
+		MatchSession.apply_preferences())
+	options_layer.add_child(toggle)
+
+
 func _button(parent: Node, text: String, rect: Rect2, primary := false) -> Button:
 	var button := Button.new()
 	button.text = text
@@ -298,13 +369,13 @@ func _button(parent: Node, text: String, rect: Rect2, primary := false) -> Butto
 	button.size = rect.size
 	button.add_theme_font_override("font",BOLD)
 	button.add_theme_font_size_override("font_size",25 if primary else 23)
-	button.add_theme_color_override("font_color",INK if primary else PAPER)
-	button.add_theme_color_override("font_focus_color",INK if primary else PAPER)
-	button.add_theme_color_override("font_hover_color",INK if primary else PAPER)
-	button.add_theme_color_override("font_pressed_color",INK if primary else PAPER)
-	button.add_theme_stylebox_override("normal",_style(LIME if primary else Color(0.025,0.05,0.1,0.8),LIME if primary else Color("3c4d69")))
-	button.add_theme_stylebox_override("hover",_style(Color("e4ffad") if primary else Color("1c3673"),LIME))
-	button.add_theme_stylebox_override("pressed",_style(Color("adce59") if primary else Color("2254c8"),PAPER))
+	button.add_theme_color_override("font_color",PAPER)
+	button.add_theme_color_override("font_focus_color",PAPER)
+	button.add_theme_color_override("font_hover_color",PAPER)
+	button.add_theme_color_override("font_pressed_color",PAPER)
+	button.add_theme_stylebox_override("normal",_style(RED if primary else SURFACE,RED if primary else BORDER))
+	button.add_theme_stylebox_override("hover",_style(Color("ff343e") if primary else Color("292a2f"),RED))
+	button.add_theme_stylebox_override("pressed",_style(Color("b70e18") if primary else Color("3b1015"),PAPER))
 	var focus := _style(Color(0,0,0,0),PAPER)
 	focus.set_border_width_all(2)
 	focus.expand_margin_left = 5
@@ -312,6 +383,7 @@ func _button(parent: Node, text: String, rect: Rect2, primary := false) -> Butto
 	focus.expand_margin_top = 5
 	focus.expand_margin_bottom = 5
 	button.add_theme_stylebox_override("focus",focus)
+	button.pressed.connect(get_node("/root/GameAudio").play_ui)
 	parent.add_child(button)
 	return button
 

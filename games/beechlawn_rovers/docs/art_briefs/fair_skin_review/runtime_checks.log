@@ -1,0 +1,39 @@
+
+[smoke] shared_head_roster_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+PASS: 22 players + referee, distinct Boardeaux and referee Des heads, independent John keeper head, shared body, local override and reconfiguration
+[passed] shared_head_roster_smoke.gd
+
+[smoke] shared_roster_resources_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+Shared fabric imported mask: ink=0.60000002384186 cloth=0.78823530673981 sock=0.8941176533699 normal_bytes_with_mips=16777215 role_roughness_bytes_with_mips=1398101
+Shared roster resources PASS: kit edits propagate, opposing kit isolated, playback independent
+[passed] shared_roster_resources_smoke.gd
+
+[smoke] shared_pose_safety_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+POSE_SAFETY clip=AN_Beechlawn_Idle horizontal_samples=0/9 min_elbow_drop_m=0.27
+POSE_SAFETY clip=AN_Beechlawn_Jog horizontal_samples=0/9 min_elbow_drop_m=0.245
+POSE_SAFETY clip=AN_Beechlawn_Sprint horizontal_samples=0/9 min_elbow_drop_m=0.194
+POSE_SAFETY clip=AN_Beechlawn_StopFromRun horizontal_samples=0/9 min_elbow_drop_m=0.264
+POSE_SAFETY clip=AN_Beechlawn_PassRight horizontal_samples=0/9 min_elbow_drop_m=0.154
+POSE_SAFETY clip=AN_Beechlawn_ReceiveRight horizontal_samples=0/9 min_elbow_drop_m=0.162
+POSE_SAFETY clip=AN_Beechlawn_ShotRight horizontal_samples=0/9 min_elbow_drop_m=0.085
+POSE_SAFETY clip=AN_Beechlawn_CloseControl horizontal_samples=0/9 min_elbow_drop_m=0.26
+POSE_SAFETY clip=AN_Beechlawn_WalkOn horizontal_samples=0/9 min_elbow_drop_m=0.264
+POSE_SAFETY clip=AN_Beechlawn_WarmupJog horizontal_samples=0/9 min_elbow_drop_m=0.264
+PASS: all live outfield idle poses and standing action silhouettes avoid sustained T poses
+[passed] shared_pose_safety_smoke.gd
+
+[smoke] shane_head_variant_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+PASS: shared neutral head/eyes, separate Shane hair, inverse binds, smile, pose samples and shared body
+[passed] shane_head_variant_smoke.gd

@@ -4,6 +4,8 @@ class_name FootballTeam
 
 @export var team_id: StringName
 @export var display_name := "Unnamed Team"
+@export var manager_name := ""
+@export var retired_shirt_numbers := PackedInt32Array()
 @export var primary_kit_color := Color.WHITE
 @export var secondary_kit_color := Color.BLACK
 @export var goalkeeper_kit_color := Color(0.7, 0.7, 0.7)
@@ -28,6 +30,8 @@ func validate_roster() -> PackedStringArray:
 			errors.append("%s repeats player_id %s" % [display_name, profile.player_id])
 		else:
 			ids[profile.player_id] = true
+		if profile.jersey_number in retired_shirt_numbers:
+			errors.append("%s uses retired squad number %d" % [profile.display_name, profile.jersey_number])
 		if roster.has(profile):
 			if slots.has(profile.starting_slot):
 				errors.append("%s repeats starting slot %s" % [display_name, profile.starting_slot])

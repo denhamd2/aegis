@@ -1,0 +1,20 @@
+{
+  "source_commit": "19c54585d68664900592147ccb6cfbfeb7b0ee28",
+  "run_url": "https://github.com/denhamd2/aegis/actions/runs/39921098008",
+  "result": "success",
+  "regression_passes": 70,
+  "low_render_pose_stale_ticks": 2,
+  "match_shots": {
+    "Beechlawn Rovers": 27,
+    "Boardeaux": 20
+  },
+  "qualifying_scenarios": {
+    "Beechlawn Rovers": 5,
+    "Boardeaux": 6
+  },
+  "mac_verification": "universal arm64/x86_64, football identifier, resources, ZIP CRC",
+  "mac_download": "https://github.com/denhamd2/aegis/releases/download/beechlawn-19c54585d686/Beechlawn-Rovers-Mac.zip",
+  "asset_bytes": 205075430,
+  "public_download_http": 200,
+  "hardware_acceptance": "M1 playtest/performance pending"
+}

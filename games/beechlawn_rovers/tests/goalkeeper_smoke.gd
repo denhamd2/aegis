@@ -30,11 +30,11 @@ func _run_checks() -> void:
 	home_keeper.global_position = Vector3(-49.5, 0.0, 0.0)
 	ball.global_position = Vector3(-43.5, 1.2, 2.0)
 	ball.linear_velocity = Vector3(-12.0, 0.0, 0.8)
-	ball.last_touch = &"Bordeaux"
+	ball.last_touch = &"Boardeaux"
 	ball.last_action = &"shot"
 	ball.action_serial += 1
 	var original_position := home_keeper.global_position
-	controller.update_before_move(0.35)
+	_prepare(controller, .35)
 	assert(home_keeper.global_position == original_position,
 		"Goalkeeper teleported instead of receiving a movement target")
 	var shot_target: Vector3 = home_keeper.get_meta("goalkeeper_target")
@@ -45,23 +45,25 @@ func _run_checks() -> void:
 	# Shots projected outside the frame retain the standard goal-centre position.
 	ball.global_position = Vector3(-43.5, 1.2, 8.0)
 	ball.linear_velocity = Vector3(-12.0, 0.0, 0.0)
-	ball.last_touch = &"Bordeaux"
+	ball.last_touch = &"Boardeaux"
 	ball.last_action = &"shot"
 	ball.action_serial += 1
-	controller.update_before_move(0.35)
+	_prepare(controller, .35)
 	var wide_target: Vector3 = home_keeper.get_meta("goalkeeper_target")
-	assert(is_equal_approx(wide_target.z, 1.12),
+	assert(is_equal_approx(wide_target.z, controller._goal_line_position().z),
 		"Keeper chased a shot projected outside the goal frame")
 
 	# A save must be close enough to the keeper and must physically parry the ball.
 	home_keeper.global_position = Vector3(-49.5, 0.0, 0.0)
 	ball.global_position = Vector3(-46.8, 1.0, 0.0)
 	ball.linear_velocity = Vector3(-11.0, 0.0, 0.0)
-	ball.last_touch = &"Bordeaux"
+	ball.last_touch = &"Boardeaux"
 	ball.last_action = &"shot"
 	assert(not controller.try_save(), "Keeper made a save from outside contact reach")
-	assert(ball.last_touch == &"Bordeaux", "Out-of-reach save changed the ball touch")
+	assert(ball.last_touch == &"Boardeaux", "Out-of-reach save changed the ball touch")
 	ball.global_position = Vector3(-49.0, 1.0, 0.0)
+	ball.action_serial += 1
+	_prepare(controller, .35)
 	assert(controller.try_save(), "Keeper failed to parry a shot at close contact")
 	assert(ball.last_touch == home_keeper.team_name, "Save did not register keeper possession touch")
 	assert(ball.last_action == &"goalkeeper_save", "Save action was not recorded")
@@ -69,13 +71,15 @@ func _run_checks() -> void:
 	assert(ball.linear_velocity.x > 0.0, "Parry did not redirect the ball into the field")
 	assert(home_keeper._save_pose_time > 0.0, "Save reaction pose was not triggered")
 
+	controller.reset_for_stoppage() # The next fixture is a separate shot; recovery is covered in outcomes.
 	# A slower close-range shot is gathered, briefly held and distributed to a
 	# teammate through the same physical ball impulse used by ordinary passes.
 	ball.global_position = home_keeper.global_position + Vector3(0.45, 1.0, 0.0)
 	ball.linear_velocity = Vector3(-2.0, 0.0, 0.0)
-	ball.last_touch = &"Bordeaux"
+	ball.last_touch = &"Boardeaux"
 	ball.last_action = &"shot"
 	ball.action_serial += 1
+	_prepare(controller, .35)
 	assert(controller.try_save(), "Keeper failed to claim a slow close-range shot")
 	assert(ball.goalkeeper_is_holding(home_keeper), "Claim did not establish keeper possession")
 	assert(ball.last_action == &"goalkeeper_catch", "Claim was not recorded as a catch")
@@ -89,3 +93,9 @@ func _run_checks() -> void:
 
 	print("Beechlawn goalkeeper reaction, catch and distribution checks passed")
 	quit(0)
+
+func _prepare(controller: GoalkeeperController, delta: float) -> void:
+	controller.update_before_move(delta)
+	var visual := controller.keeper.get_node("Visual") as FootballerVisual
+	if controller._save_animation_started:
+		visual.animation_player.advance(.25 / maxf(absf(visual.animation_player.get_playing_speed()), .01))

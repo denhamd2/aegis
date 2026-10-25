@@ -1,0 +1,9 @@
+
+[smoke] cross_to_header_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+CROSS_RECEPTION variant=driven_cross side=1.0 contested=false contacts=[{ "kind": &"cross", "part": &"foot", "style": &"driven_cross", "team": &"Beechlawn Rovers", "opponent_gap": 160.265594482422, "tick": 33 }, { "kind": &"shot", "part": &"foot", "style": &"volley", "team": &"Beechlawn Rovers", "opponent_gap": 168.975555419922, "tick": 75 }] receiver=(42.03075, -0.043916, 1.963609) ball=(51.06227, 0.103668, -3.77463)
+CROSS_RECEPTION variant=driven_cross side=-1.0 contested=false contacts=[{ "kind": &"cross", "part": &"foot", "style": &"driven_cross", "team": &"Boardeaux", "opponent_gap": 210.493667602539, "tick": 189 }, { "kind": &"shot", "part": &"foot", "style": &"volley", "team": &"Boardeaux", "opponent_gap": 229.00373840332, "tick": 231 }] receiver=(-42.05205, 0.04381, 2.119497) ball=(-51.13435, 0.116926, -4.089406)
+CROSS_HEADER failures=0
+[passed] cross_to_header_smoke.gd

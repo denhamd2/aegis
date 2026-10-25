@@ -1,0 +1,7 @@
+{
+  "clip": "AN_Beechlawn_ChestControl",
+  "event": "ball_contact",
+  "frame": 13,
+  "fps": 60,
+  "time_seconds": 0.21666666666666667
+}

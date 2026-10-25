@@ -44,4 +44,6 @@ def skin_tint(target):
     pixels=source_pixels('albedo')[::4,::4].reshape(-1,3)
     skin=(pixels[:,0]>pixels[:,1]*1.12)&(pixels[:,1]>pixels[:,2]*1.05)&(pixels[:,2]>.18)&(pixels[:,0]<.94)
     median=np.median(pixels[skin],axis=0)
-    return np.clip(target/median,.75,1.25)
+    # Normalize the licensed Bronze source to the chosen pigment. The old
+    # 1.25 ceiling retained a brown/orange cast when asking for fair skin.
+    return target/np.maximum(median,.05)

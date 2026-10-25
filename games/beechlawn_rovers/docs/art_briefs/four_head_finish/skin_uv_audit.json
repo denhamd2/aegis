@@ -1,0 +1,72 @@
+{
+  "result": "PASS",
+  "parts": {
+    "shared": {
+      "forehead_uv_samples": 30,
+      "forehead_srgb": [
+        0.6941176470588235,
+        0.5372549019607843,
+        0.4823529411764706
+      ],
+      "neck_uv_samples": 50,
+      "neck_p99_difference": 0.0
+    },
+    "shane": {
+      "forehead_uv_samples": 31,
+      "forehead_srgb": [
+        0.6627450980392157,
+        0.5215686274509804,
+        0.4823529411764706
+      ],
+      "neck_uv_samples": 50,
+      "neck_p99_difference": 0.007843137254901933
+    },
+    "des_player": {
+      "forehead_uv_samples": 28,
+      "forehead_srgb": [
+        0.6509803921568628,
+        0.4980392156862745,
+        0.4588235294117647
+      ],
+      "neck_uv_samples": 50,
+      "neck_p99_difference": 0.007843137254901933
+    },
+    "john": {
+      "forehead_uv_samples": 30,
+      "forehead_srgb": [
+        0.6901960784313725,
+        0.5490196078431373,
+        0.5058823529411764
+      ],
+      "neck_uv_samples": 50,
+      "neck_p99_difference": 0.007843137254901933
+    },
+    "des_referee": {
+      "forehead_uv_samples": 28,
+      "forehead_srgb": [
+        0.6627450980392157,
+        0.5215686274509804,
+        0.4823529411764706
+      ],
+      "neck_uv_samples": 50,
+      "neck_p99_difference": 0.007843137254901933
+    },
+    "YBot_Joints": {
+      "anatomical_uv_samples": 1212,
+      "median_srgb": [
+        0.6509803921568628,
+        0.5019607843137255,
+        0.4627450980392157
+      ]
+    },
+    "Skin_Hands": {
+      "anatomical_uv_samples": 3508,
+      "median_srgb": [
+        0.6235294117647059,
+        0.48627450980392156,
+        0.4549019607843137
+      ]
+    }
+  },
+  "scope": "Shipped skin pigment and common neck join; no artistic or native renderer approval"
+}

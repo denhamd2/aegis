@@ -37,17 +37,21 @@ func _run_checks() -> void:
 	assert(player.is_physics_processing(), "Player movement did not resume after kickoff")
 
 	game._on_goal("Beechlawn Rovers", 1)
-	assert(ball.freeze, "Ball should stop during the goal pause")
+	assert(not ball.freeze, "Scored ball should continue physically into the net")
 	assert(not player.is_physics_processing(), "Players should stop during the goal pause")
-	assert(game.get("_kickoff_team") == &"Bordeaux", "Conceding team was not awarded the restart")
-	game._physics_process(1.2)
+	assert(game.get("_kickoff_team") == &"Boardeaux", "Conceding team was not awarded the restart")
+	game._physics_process(.5)
+	assert(not ball.freeze and not game._kickoff_pending,"Goal follow-through must precede kickoff")
+	var goal_skip := InputEventKey.new()
+	goal_skip.keycode=KEY_SPACE;goal_skip.pressed=true
+	game.presentation.handle_key(goal_skip)
 	assert(bool(game.get("_kickoff_pending")), "Goal pause did not prepare a new kickoff")
 	assert(ball.freeze, "Ball should remain still while AI lines up its kickoff")
 	game._physics_process(1.1)
-	assert(not bool(game.get("_kickoff_pending")), "Bordeaux did not restart after its short setup delay")
+	assert(not bool(game.get("_kickoff_pending")), "Boardeaux did not restart after its short setup delay")
 	for frame in 30:
 		await physics_frame
-	assert(ball.last_touch == &"Bordeaux", "AI kickoff did not register Bordeaux as the kicking team")
+	assert(ball.last_touch == &"Boardeaux", "AI kickoff did not register Boardeaux as the kicking team")
 	assert(player.is_physics_processing(), "Players did not resume after the AI restart")
 	print("Beechlawn kickoff and goal-restart checks passed")
 	quit(0)

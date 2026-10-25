@@ -15,9 +15,11 @@
 [resource]
 script = ExtResource("1")
 team_id = &"bordeaux"
-display_name = "Bordeaux"
+display_name = "Boardeaux"
 primary_kit_color = Color(0.30, 0.61, 0.82, 1)
 formation = "4-4-2"
 kickoff_slot = "striker_left"
 active_player_count = 11
 roster = Array[ExtResource("2")]([ExtResource("2"), ExtResource("3"), ExtResource("4"), ExtResource("5"), ExtResource("6"), ExtResource("7"), ExtResource("8"), ExtResource("9"), ExtResource("10"), ExtResource("11"), ExtResource("12")])
+
+manager_name = "Des Feeney"

@@ -10,28 +10,81 @@ items, use the archived references and skill workflow in
 [`art_reference_implementation_plan.md`](art_reference_implementation_plan.md)
 and [`../references/README.md`](../references/README.md) before implementation.
 
+## Approved Mac playtest improvement pass — 23 October 2026
+
+27 primary items retain their original IDs. The five delivery bundles, evidence
+requirements and remaining hardware gates are tracked in
+[mac_playtest_improvements.md](mac_playtest_improvements.md). Existing mechanical
+smoke passes do not close the owner's visible match-quality findings.
+
+## Approved turf and broadcast follow-up — 23 October 2026
+
+BR-023 (23/27): remove the old sparse weed-like geometry; deliver dense short
+near-camera turf with a matching PBR surface, bounded instancing and puddle/mud
+exclusion. BR-026/027 (26/27 and 27/27): directed celebration/full-time camera
+cuts and alternate slow replay angles; all caption plates share a wider,
+centered blue layout. BR-022 (22/27) follows with individual form, groom,
+roughness and expression work for Shane, John and both Des identities.
+See [the current implementation evidence](art_briefs/broadcast_turf_refresh_2026_10_23/brief.md).
+Character likeness and M1 appearance/performance remain separate acceptance gates.
+
 ## Current state
+
+Delivery is **Mac-only** as of 2026-10-22. The owner retired the football Web
+version, its export preset, release downloads and Pages deployment. Native
+Forward+ captures and headless checks replace ongoing browser validation.
+Historical Web evidence below is retained as a record, not an active backlog
+requirement. The separate wrestling Web game is unaffected.
 
 The standalone Godot 4.6.3 project opens on the Beechlawn Rovers 27 title
 screen, offering Play (keyboard vs AI) or Watch (AI vs AI), then launches a
 three-minute 11v11 match: ten outfield players and one keeper per side, plus a separate
 referee. Shared human body, rig, animation and team/role materials replace the
-proxy in this scene. Individual heads still use the common Shane-derived draft.
+proxy in this scene. Shane, John and both Des identities have independent editable heads; other
+Beechlawn identities retain the common starting head. Final likeness remains open.
 The original 4v4 scene remains the regression fixture.
 
-Role-aware 4-4-2 targets, staggered team decisions, player switching including
+Role-aware 4-4-2 targets, shared-snapshot tactical decisions, player switching including
 keepers, contact-timed passing/shooting, kickoff/goal/full-time behavior and
-basic boundary restarts are implemented. Current paired 180-second AI-vs-AI
-replays produce three shots/two goals and one shot/no goals respectively,
-without a sampled ball stall; attacking frequency and balance remain open.
-Touchlines currently restart with a ground pass; authentic throw-ins, complete
-fouls/offside/cards, substitutions and additional formations remain open.
+basic boundary restarts are implemented. Full 180-second AI-vs-AI replays
+record physical shots, contested attempts, saves, goals and ball stalls;
+the [23 October advanced-action follow-up](art_briefs/advanced_shots_2026_10_23/brief.md)
+passes the six-match chance gate locally (34/27 shots) and in CI (27/20).
+Local qualifiers are 6/6 each; CI qualifiers are 5/6 and 6/6. Counts vary across
+machines, so chance consistency and cross-machine replay determinism remain open.
+Human play-quality and native Mac acceptance remain open.
+The [22 October match repair pass](match_repairs_2026-10-22.md) replaces touchline
+ground passes with overhead throw-ins and adds aim/power restarts, basic
+contact-evaluated fouls, penalties, cards and reduced teams. Full laws,
+advantage/offside, substitutions and additional formations remain open.
 
 The close broadcast camera, scoreboard and radar accompany shallow terrain,
 rough chalk, weathered goals/nets, house/tree/car modules and eight spectators.
 These are reference-led drafts, not exact likeness or venue acceptance. See
 [`11v11_implementation.md`](11v11_implementation.md) and the release evidence.
 Native Mac appearance and M1 Pro/16 GB 1080p/60 fps are not yet measured.
+
+The earlier [contact/chance/keeper pass](art_briefs/gameplay_feel_pass/brief.md)
+adds bounded moving kick setup, live boot-contact windows, buffered first-time
+shots, interruptible follow-through, multiple AI shot lanes and grounded keeper
+prediction/reaction. The brief retains all relevant match counts and limitations;
+sustained attacking balance remains open.
+
+The [keeper handling/recovery pass](art_briefs/keeper_handling_2026_10_22/brief.md)
+fixes legal handling, supported catch selection, committed recovery and slow
+own-rebound collection. BR-009 (9/25) stays in progress: original directional
+low-save/dive/catch motion and measured hand contact are the next acceptance
+check, followed by native Mac play-feel/performance validation.
+
+The [22–23 October aerial-play pass](art_briefs/aerial_play_2026_10_22/brief.md)
+brings forward BR-019 (19/25): keyboard R lofts, T crosses and contextual Space
+headers, with bounded assistance, receiving runs, chest control and original
+shared-rig aerial clips. Contacts validate actual head/chest proximity; the ball
+remains independent. Advanced shot/cross variants and contextual volleys/real-bounce half-volleys
+now have original shared-rig clips and passing contact/keyboard/native checks;
+see the [advanced follow-up](art_briefs/advanced_shots_2026_10_23/brief.md).
+Dedicated keeper cross-claim motion, richer aerial contests, left-foot/body
+polish and native Mac acceptance remain open.
 
 ## Confirmed PES-style direction (2026-10-18)
 
@@ -126,6 +179,14 @@ BR-008; a single shot in the other fixture is a regression floor.
     macOS MetalFX options only if GPU timing shows a need. Do not assume the
     22-player target is already performance-bound while the playable is 4v4.
 - [ ] **BR-002 — Ball action/contact pass**
+  - 2026-10-22: Fixed reproduced rolling-ball capsule launches with collision-layer separation; see the [match repair evidence](match_repairs_2026-10-22.md).
+  - 2026-10-21: standing/jog/sprint pass and shot contacts each execute once
+    within 0.081–0.166 m in the moving regression. Setup touches and approach
+    speed preserve boot reach; the marker opens a bounded 65 ms contact window
+    with a 0.28 m live-toe limit. An off-axis remote kick is rejected. Incoming
+    shots now buffer through arrival and can fire without a trap. See the
+    [gameplay pass](art_briefs/gameplay_feel_pass/brief.md). Feel/stride/native
+    acceptance remain open; this is progress on item 2/25.
   - 2026-10-18 focused follow-up: grounded touches follow eased facing;
     nearest-eligible-player arbitration prevents competing dribble forces;
     height and post-kick release gates preserve independent ball travel.
@@ -350,12 +411,12 @@ playtest has no stuck bodies or unreported frame-rate failure on the target Mac.
   positions as editable Godot resources. Populate Beechlawn with Shane Denham
   (#8), Robbie Roden (#10), David Murray (#5) and John O’Rourke (#1, goalkeeper)
   from their supplied character sheets. Use Des Feeney (#9) as the visual base
-  for Bordeaux’s three outfield slots and goalkeeper because only his sheet is
+  for Boardeaux’s three outfield slots and goalkeeper because only his sheet is
   available; distinguish slots by role/kit details where useful, but do not
   invent names, facial identities or player-specific ratings. Use balanced
   editable defaults until ratings are supplied.
   - Complete: editable player, attributes and team resources now define both
-    four-slot rosters. Beechlawn uses the supplied names/numbers; Bordeaux's
+    four-slot rosters. Beechlawn uses the supplied names/numbers; Boardeaux's
     four slots reference Des Feeney as the visual base and leave unsupported
     identities/numbers blank. Attributes stay at neutral 50 placeholders.
     Starting positions are generic 4v4 slots, not claimed real-world player
@@ -365,7 +426,7 @@ playtest has no stuck bodies or unreported frame-rate failure on the target Mac.
 - [x] **BR-006 — Build a 4v4 vertical slice**
   Add two sides with three outfield players and a goalkeeper each. Use the
   supplied Beechlawn roster and the Des Feeney visual base for all four
-  Bordeaux slots. Start the first playable as a short match, with the human in
+  Boardeaux slots. Start the first playable as a short match, with the human in
   control of one Beechlawn outfielder.
   Implement manual/automatic player switching, a visible controlled-player
   marker, and possession changes.
@@ -397,6 +458,21 @@ playtest has no stuck bodies or unreported frame-rate failure on the target Mac.
     arrows, E ground pass, Q
     through-ball.
 - [ ] **BR-008 — Small-sided attacking/defending AI**
+  - 2026-10-22: read-only tactical possession, committed AI pass recipients,
+    role-based outlet/run/cover support, shared decision timing, neutral
+    opposing dribble ties and carrying through trailing pressure now pass
+    targeted regressions. Six fixed complete matches qualify both teams in
+    6/6 scenarios, with 32/31 physical shots and contested shots for both
+    sides in every match. No runtime quotas, attribute boosts or keeper nerfs.
+    See [full diagnosis and evidence](art_briefs/ai_attacking_flow_2026_10_22/brief.md).
+    Item 8/25 remains in progress for human play-quality/animation acceptance;
+    next gameplay priority is BR-009 (9/25), save/parry/recovery refinement.
+  - 2026-10-21: the carrier evaluates five goal endpoints so a central blocker
+    does not veto a free corner. Immediate full-lane blocks still discourage a
+    shot. Both mirrored controlled scenarios deliver physical contested shots;
+    clear edge-of-area attempts use an editable range and unavailable actions
+    preserve the cooldown. Balanced sustained chance creation remains open
+    under item 8/25. See the gameplay pass above for full-match counts.
   - Release follow-up: a mirrored tactical regression exposed straight-ahead
     wide carriers running to the byline. Full 11v11 carriers now gradually
     turn goalward in the final third, retaining width during build-up. Both
@@ -504,6 +580,22 @@ playtest has no stuck bodies or unreported frame-rate failure on the target Mac.
     deterministic action choice/execution remains covered by
     `ai_carrier_decision_smoke.gd`.
 - [ ] **BR-009 — First goalkeeper**
+  - 2026-10-22 handling/recovery pass: mirrored regressions reproduce and fix
+    speed-only catches at full lateral stretch, handling outside the keeper's
+    own area, instant second saves during recovery and failed own-rebound
+    gathering. Catch width, standing/stretch recovery and slow-gather speed are
+    editable for both teams. Recovery gates locomotion, foot assistance and
+    actions; legal hand contacts run before dribbling. Existing reach/reaction
+    and neutral ratings remain. See [evidence and open motion gates](art_briefs/keeper_handling_2026_10_22/brief.md).
+    This is a mechanics pass using the existing standing-save clip. Directional
+    low/dive/catch motion, measured hand contact, distribution animation and
+    human/M1 acceptance keep BR-009 (9/25) **in progress**.
+  - 2026-10-21: rolling-shot prediction stays above the turf, reaction delays
+    gate real saves, and behind/away/unsupported-high contacts are rejected.
+    Goal-angle positioning, ball-facing shuffles, advance standing-save pose
+    timing and safer parry-side selection pass mirrored 11v11 checks. Existing
+    catch/distribution coverage remains. Low/diving clips and broad match/native
+    validation remain open under item 9/25; see the gameplay pass above.
   Position between ball and goal, predict shot crossing, react with a readable
   delay, move to reachable saves, and catch/parry/deflect without teleporting.
   Add simple distribution after possession.
@@ -550,6 +642,26 @@ without AI stalls. Validate the same actions with human-vs-AI and AI-vs-AI.
   tactical decisions, use primitive collisions and shared resources, and
   measure physics, animation, draw calls and memory before adding detail.
 - [ ] **BR-014 — Broadcast camera, HUD and radar**
+  - 2026-10-22: Added the eighteen-second asset/player montage before walkout and fixed the horizontal active-player torus. Native sequence review supplements the existing intro checks.
+  - Walkout lineup graphics: home first, then Boardeaux, with eleven reference
+    portraits in a 4-4-2, club crests and player-managers Robbie Roden/Des Feeney.
+    The original GPT Images panel sits beside the live walk. Each card has
+    eleven seconds; skip/natural completion restore kickoff normally. See
+    [`art_briefs/lineup_graphics/brief.md`](art_briefs/lineup_graphics/brief.md).
+  - 2026-10-21: added a 4.2-second referee reveal directly after the team
+    cards, with a close-up of the in-game Des Feeney official and a matching
+    GPT-generated blue lower third. It fades in/out and clears correctly on
+    the next shot or intro skip; Web capture is saved at
+    [`art_briefs/referee_intro/`](art_briefs/referee_intro/).
+  - 2026-10-21 follow-up: the starting-lineup camera sweep now lasts 12 seconds
+    instead of 4.2, retaining eased starts/stops. Team text is Boardeaux across
+    title, scoreboard, restarts and roster shirts; canonical match ownership
+    labels and fixtures use that spelling too. Asset filenames/IDs are stable.
+  - 2026-10-21: moved all six sideline presets to the opposite touchline while
+    retaining their height, distance and FOV. Existing camera-relative keyboard
+    control follows the flipped view. Both goal-end/touchline extremes and
+    preset switching are covered by the camera regression; see
+    [`art_briefs/opposite_broadcast/brief.md`](art_briefs/opposite_broadcast/brief.md).
   Tune the elevated sideline camera to the supplied screenshot; predict long
   passes, keep relevant players visible and frame goalmouth action. Add score,
   clock, phase, controlled-player feedback and a team-coloured tactical radar.
@@ -569,6 +681,7 @@ recover on loss, create and defend chances, and remain readable from the camera.
 ### P3 — Complete match rules and team management
 
 - [ ] **BR-015 — Match state machine and boundaries**
+  - 2026-10-22: Added genuine throw-ins and shared aim/power restart preparation, release and recovery; manual and AI paths replace the former ground-pass placeholder.
   - 2026-10-18: whole-ball boundary ownership, goal kicks and corners have
     smoke coverage. A short ground-pass restart substitutes for throw-ins.
     Half-time and complete regulation restart presentation remain open.
@@ -576,12 +689,14 @@ recover on loss, create and defend chances, and remain readable from the camera.
   Detect the whole ball over touchlines and goal lines; award throw-ins, corners
   and goal kicks to the correct side.
 - [ ] **BR-016 — Fouls, offside and referee**
+  - 2026-10-22: Added contact-based free kicks, penalties, yellows, second yellows and straight reds. Advanced advantage/offside remain open.
   - 2026-10-18: a separate black-kit referee follows play diagonally and stays
     outside player selection/possession/tackle groups. Adjudication is still open.
   Judge tackle timing/contact, advantage and cards. Evaluate offside at the
   teammate's ball-play moment and penalize only involvement. Add visible referee
   reactions and restart placement.
 - [ ] **BR-017 — Substitutions and reduced teams**
+  - 2026-10-22: Dismissals now remove active actors, update selection/AI/shape and replace a dismissed keeper in role; substitution menus remain open.
   Select eligible substitutes, replace players, refresh role assignments and
   player switching, and keep playing with a dismissed player removed.
 - [ ] **BR-018 — Tactical controls and match awareness**
@@ -596,11 +711,49 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
 - [ ] **BR-019 — Shooting and aerial actions**
   Add driven, finesse, low, first-time and contextual shots; headers, volleys,
   jumps, aerial contests, crosses, lofted passes and goalkeeper cross claims.
+  - 2026-10-23 **in progress**: R/T charge-release loft/cross, assisted forward
+    recipient selection, near/far-post support, damped airborne prediction,
+    AI deliveries, automatic chest receiving and contextual Space headers.
+    Original 60 fps Blender clips share the unchanged rig/body; physical jump
+    and ≤20 cm anatomical contact checks gate head/chest impulses. Mirrored
+    keyboard, flight, contact, miss/cancellation and contested-cross regressions
+    pass. Native sequences and full-match results are recorded in
+    [aerial-play evidence](art_briefs/aerial_play_2026_10_22/brief.md).
+    Follow-up below adds the shot/cross variants and contextual boot strikes.
+  - 2026-10-23 advanced pass **in progress**: keyboard Z/X/V select finesse,
+    power and low ground shots, or lofted/driven/early T crosses. Independent
+    finesse spin, charged strength and bounded attribute/pressure error affect
+    flight. Original shared-rig volley/half-volley clips validate actual boot
+    proximity; half-volleys require a real ground bounce. AI selects contextual
+    strikes and deliveries. A zero-based export plus imported contact-pose
+    checks align the new clips with their markers. See
+    [implementation/evidence](art_briefs/advanced_shots_2026_10_23/brief.md).
+    Follow-up: low-render gait poses now update on the physics clock. Fixed-
+    cadence six-match tests pass locally at 34/27 shots, both qualifying 6/6;
+    CI passes at 27/20, qualifying 5/6 and 6/6. All 70 regressions, low-render
+    pose testing and universal Mac packaging pass; the Mac release is published.
+    Cross-machine counts vary; bitwise replay determinism remains unproven.
+    Next acceptance: final native/M1 input and motion review; dedicated high
+    keeper claims depend on BR-009 (9/25). Left-foot variants, broader aerial
+    duels and source stride/plant polish remain open under BR-019/BR-021.
 - [ ] **BR-020 — Defending and skill moves**
   Add jockeying, shielding, teammate pressure, ball roll, step-over, body feint,
   fake shot, drag-back and directional skill turn. Each move must affect control
   or ball position, not just play a cosmetic clip.
 - [ ] **BR-021 — Animation contact and blending pass**
+  - 2026-10-23 realism follow-up: render-time skeleton interpolation retains
+    authoritative tick poses for live contact and replay capture; staged
+    presentation clips evaluate each drawn frame. Contact/replay invariance,
+    animation and full-presentation match checks pass. Source gait/contact
+    keys are unchanged. Native stride/plant quality and M1 timing remain open.
+    See `art_briefs/realism_finish/brief.md`.
+  - 2026-10-22: Fixed long-run skating: imported motion resources explicitly loop independently of node settings, with a sustained live-dribble regression.
+  - 2026-10-21: first-time pass/shot starts can skip redundant anticipation
+    while keeping accelerated playback at 1.5×. Shots can interrupt receive
+    settle and new ball actions can interrupt completed contact follow-through.
+    Pending pass state is armed after synchronous prior-action cleanup. The
+    shared rig and all 19 source clips are unchanged; general stride/plant and
+    native final-mesh acceptance remain open under item 21/25.
   - 2026-10-18 T-pose fix: spawning now instantiates a clean player scene;
     duplicating the configured live player reproduced two skeletons per clone.
     Added a one-rig-per-player and immediate startup-pose regression, primed
@@ -636,6 +789,114 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
 ### P5 — Art direction, presentation and shipping
 
 - [ ] **BR-022 — Character and kit production**
+  - 2026-10-23 current pass (22/27): saved individual anatomy/surfaces, shared
+    body/garment Fullness (John 0.42, player Des 0.58), matching head/groom
+    deformation and close-up geometry reuse the live rig and atlases.
+    New original Des side/back photos guide his short horseshoe groom with
+    bare crown; both Feeney identities have rounder lid apertures and fitted
+    closure. Source/export, independent appearance and native checks accompany
+    `art_briefs/realism_finish/`. Individual AAA likeness, collar/shoulder
+    openings and target-Mac acceptance remain open; these are not final heads.
+  - 2026-10-23: four independent form/groom/roughness/blink/smile refinements have source/export and grounded native checks; exact/AAA likeness and M1 approval remain open. See `art_briefs/broadcast_turf_refresh_2026_10_23/brief.md`.
+  - 2026-10-22 native look checks: football now uses its own bounded
+    Forward+/Vulkan/Xvfb still runner for primary appearance evidence, adapting
+    the wrestling capture principle without touching that project. Four native
+    roster portraits and the actual 22-player/referee Close Broadcast scene
+    record adapter, quality settings and hashes in
+    [the native capture brief](art_briefs/native_forward_plus/brief.md).
+    Browser checks remain Web-specific; software Vulkan stills do not close
+    the Mac hardware, likeness or 60 fps gates. BR-022 remains in progress
+    (22/25); next: use these native portraits for the remaining face/hair form
+    corrections, then validate on the Mac when available.
+  - 2026-10-22 four-head finishing pass: Shane now has an independent captured
+    delta alongside John and the two distinct Des identities. Portrait-guided
+    proportions, monotonic lip closure, fitted eyes, separate roughness and
+    directional opaque grooms replace the earlier local variants. John's scalp
+    has blonde highlights while his beard retains its warm brown palette.
+    [Source/export audits and pitch-side review](art_briefs/four_head_finish/brief.md)
+    cover the four heads and protected body/rig/animation payloads. This is
+    BR-022, item 22 of 25, in progress: detailed likeness, expression and native
+    M1 appearance/performance remain acceptance work; the pass is not an AAA
+    certification. Next acceptance: review the actual on-pitch front/turned
+    portraits against the original photos, then address the remaining forms.
+  - 2026-10-22 production workflow review: `create-player` now requires early
+    face-form/runtime comparison, source-to-export agreement, continuous neck
+    pigment, fitted grooms and explicit final-quality evidence. Its detailed
+    head branch records Des/player, referee, skin, shadow and capture lessons;
+    kit checks cover actual PBR/role UVs. [The review](art_briefs/create_player_workflow_review.md)
+    maps recent findings to the skill and prioritizes Des's remaining facial
+    anatomy and hair work. This guidance update does not finish the current
+    heads. BR-022 remains in progress (22/25), with polished final players as
+    the delivery target and native Mac acceptance still open.
+  - 2026-10-22 fair complexion correction: shared body/master and all authored
+    head variants now follow the owner's untanned skin direction, with
+    individual pink undertones and preserved common neck pigment. Editable
+    palette, unchanged body/animation payload audit, anatomical UV checks and
+    fixed-light evidence live in [the skin review](art_briefs/fair_skin_review/brief.md).
+    Four roster/resource/pose checks pass; final likeness and native Mac
+    appearance remain open. BR-022 remains in progress (22/25).
+  - 2026-10-22 Des #9 runtime follow-up: removed Compatibility self-shadow
+    banding by tuning the shared sun normal bias (0.8 → 1.8), retained the head
+    normal map, and preserved common skin texels at the neck interface. The
+    failing/passing fixed-camera band check, source/GLB neck comparison,
+    portrait/profile/full-body views and ball/goal shadow comparison are in
+    `art_briefs/des_feeney_player_likeness/`. Five roster/pose/weather checks
+    pass. Individual likeness and native Mac acceptance remain open (22/25).
+  - 2026-10-21 Boardeaux Des #9 face/head refinement: player-only sculpt,
+    fitted eyes, anatomical UV skin and receded hair/goatee now export together.
+    The source/export audit catches the stale captured-delta problem; runtime
+    roster/resource/pose checks and actual Web captures are recorded in
+    [the Des brief](art_briefs/des_feeney_player_likeness/brief.md). All away
+    slots intentionally share this identity; referee Des Sr. stays separate.
+    Exact/AAA likeness approval and native M1 validation remain open (22/25).
+  - 2026-10-21 pitch-side preview correction: Web and desktop roster reviews
+    now use the Kilmore Drive park, match pitch surface, faded markings and
+    low perspective cameras. The preview sky is locally lifted to a lighter
+    daylight; match weather remains unchanged. Current gallery images show
+    players standing on the pitch; the old fixture is retained only as historical
+    diagnostic evidence. See `art_briefs/pitch_review_stage/brief.md`. This
+    does not close goalkeeper gloves, individual likeness, save motion or
+    native M1 acceptance. BR-022 remains in progress (22/25).
+  - 2026-10-21 keeper graphics pass: the two actual 11v11 goalkeeper roles
+    now use reference-led blue/grey/gold and charcoal shard shirt atlases,
+    archived crest/manufacturer/sponsor lettering, role-correct sock binding,
+    and profile-driven back names/numbers. Fixed front/back/save views and
+    resource/pose/11v11 checks are in `art_briefs/keeper_kit_graphics/`.
+    Pattern details are approximations. Glove geometry/material, John/Feeney
+    facial likeness and a convincing save animation remain open; native M1
+    appearance/performance is still pending. BR-022 remains in progress
+    (22/25). Next: model keeper gloves against the archived hand/wrist sheet,
+    then revisit individual faces and hair.
+  - 2026-10-21 fabric response: original shared knit normal and role roughness
+    masks now distinguish shirt/short cloth, socks and front prints, with mip
+    filtering on pigment/data maps. Supplied graphics, geometry, rig and all
+    19 clips are retained. Matched Blender and real-shadow Web sun/shade checks,
+    roster resource/pose checks and Play/Watch pass; see
+    `art_briefs/shared_fabric_response/brief.md`. This is incremental; bright
+    pale areas, native M1 response and full likeness remain open. The keeper
+    graphic follow-up is recorded above. BR-022 remains in progress (22/25).
+  - 2026-10-21 collar/raglan finish: a smooth V opening and supporting yoke
+    replace the uneven neckline. Narrow fitted raglan strips use the existing
+    role-atlas trim colours, and the Blender default pigment now matches the
+    runtime home atlas. Actual collar skin regressions fail on the previous
+    source and pass in all nine fixed poses; trim inversions are zero.
+    Rig/19 clips/skin/head packages are retained. Both sleeve pose sheets and
+    actual roster Web evidence are in `art_briefs/shared_collar_raglan/`.
+    Fabric/material fidelity, keeper graphics and individual likeness stay open.
+  - 2026-10-21 shared shirt silhouette follow-up: fills the anatomical upper-back
+    hollow on both sleeve variants and modestly tapers the long forearms with
+    skin clearance. Same-cohort fold diagnostics improve overall (994 → 975);
+    no topology, UV, weight, rig, clip, skin or kit-image changes. Fixed clay,
+    both nine-pose sheets and actual roster Web views document the result.
+    Raglan/collar finish, cloth materials and individual likeness remain open.
+    See `art_briefs/shared_sleeve_fit/brief.md`.
+  - 2026-10-21 shared garment construction: restores missing forearm skin
+    beneath short sleeves, replaces the folded lower-shirt strip and separate
+    ribbons with connected quad rows/hem, and reshapes the rear underarm gusset.
+    The same nine-pose fold diagnostic improves in every pose; all 12 bare-arm
+    probes pass. Rig, 19 clips, head packages and supplied kit images remain.
+    Further shoulder/sleeve fit and individual likeness remain open. See
+    `art_briefs/shared_cloth_finish/brief.md`.
   - 2026-10-20 shoulder/underarm pass: smoother shared arm weights, lower raglan
     yoke and continuous chest surface replace the inflated cap/chest tearing.
     A local UV patch keeps stripe registration; neck interfaces, kit images,
@@ -673,7 +934,7 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
   front/profile/three-quarter/broadcast review before accepting the asset.
   Replace the proxy with sheet-matched Beechlawn players: Shane Denham (#8),
   Robbie Roden (#10), David Murray (#5) and goalkeeper John O’Rourke (#1).
-  Create a reusable roster/kit workflow. For Bordeaux, use Des Feeney (#9) as
+  Create a reusable roster/kit workflow. For Boardeaux, use Des Feeney (#9) as
   the supplied visual base for three outfield slots and the goalkeeper; keep
   those slots generic until more references arrive. Match face, proportions,
   hair, number, crest, fabric and skin tone; validate close and broadcast
@@ -708,6 +969,15 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
     acceptance check is the reference-matched face/hair and full-clip garment
     review, before roster integration or duplicating the process to others.
 - [ ] **BR-023 — Kilmore Drive park environment**
+  - 2026-10-23 field-detail follow-up (23/27): curved 12–24 mm near blades
+    and intermediate fins are selected across the field using projected size
+    and frustum-prioritised chunks, with shared mud/puddle/paint masks. Default
+    drawn detail is bounded at 205,568 triangles (240k resource budget), with
+    cut preparation and distant surface detail. Native appearance and M1 frame
+    timing are separate gates; see `art_briefs/realism_finish/brief.md`.
+  - 2026-10-23: the weed-like tufts are replaced by dense short camera-local turf and matching CC0 normal/roughness detail; bounded residency, mud/water masks and native close views checked. Venue likeness/M1 remain open. See `art_briefs/broadcast_turf_refresh_2026_10_23/brief.md`.
+  - 2026-10-23: camera-local curved grass tufts follow terrain and shared mud/water masks, capped at 40k tufts / 240k triangles; native close grass/net views inspected. Exact environment likeness and M1 frame time remain open. See `art_briefs/pitch_audio_2026_10_23/brief.md`.
+  - 2026-10-22: Mirrored the exterior penalty arcs and connected physical net impacts to a visible anchored bulge; scored balls keep moving into the net.
   - 2026-10-20 wet goalmouth/weather pass: shared mud/water masks at both goals,
     physical ground-ball resistance and persisted Sunny/Cloudy/Light rain/Mist
     options. Sunny remains sunlit with damp ground. Depth haze is used across
@@ -767,6 +1037,7 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
     A 4v4 scene smoke test checks module loading, inward-facing facades, licensed
     surface maps, site dressing and kit variants.
 - [ ] **BR-024 — Audio and match feedback**
+  - 2026-10-23: original CC0 menu/intro music and eleven Foley/ambience/UI clips, typed match events, bounded voices and saved Music/Match/UI buses. Native Movie Maker verifies nonzero unclipped output and bus mute. Blue HUD/intro cleanup and title build identity shipped; native M1 mix/feel approval remains open.
   - 2026-10-18 pre-match slice: approximately 40-second original TV-style intro
     with walk-on, lineup, roster-labelled player/keeper portraits, venue,
     goal/net, fan, chalk/grass, ball and warm-up shots. Options toggle and
@@ -780,6 +1051,11 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
     autonomous through either team's goal restart. See
     [`art_briefs/title_screen.md`](art_briefs/title_screen.md). This does not
     complete the remaining audio/event-director work below.
+  - 2026-10-21 title refresh: the supplied white/red wordmark replaces the
+    native title; red/black/white controls also cover Options. Existing player
+    photography and blue/black kits are unchanged. Godot Play/Watch and Web
+    1280×720/640×480 checks pass; see
+    [`art_briefs/title_red_black_evidence/brief.md`](art_briefs/title_red_black_evidence/brief.md).
   Add distinct ball/player contact, referee, crowd, goal and UI sounds; tune the
   mix so key events remain audible without overwhelming play. Route feedback
   from typed match events rather than screen capture or OCR. Give events the
@@ -803,6 +1079,24 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
 **P5 exit check:** the complete match is legible and attractive at broadcast
 distance, stays within the Mac frame-time budget, and can be built/released
 without touching Aegis artifacts.
+
+- [x] **BR-026 — Goal and full-time presentation**
+  - 2026-10-23 optics follow-up: camera-local cinematic depth of field and
+    short motion-vector blur, with cut suppression and exact wide/skip/exit
+    restoration, have logic/native Forward+ checks. Optional TAA stays off by
+    default; crisp live gameplay retains MSAA. Moving/M1 optical polish remains
+    under BR-025; see `art_briefs/realism_finish/validation.json`.
+  - 2026-10-23: wide/medium/scorer close cuts, centered blue captions and directed full-time reactions/handshakes now have mirrored/runtime/native checks. See `art_briefs/broadcast_turf_refresh_2026_10_23/brief.md`.
+  - 2026-10-23: original shared celebrations/handshakes, winners/draws, own-goal handling, reduced teams, automatic results with Rematch/Title and Space/Enter skip pass logic/native checks. M1 feel remains under BR-025.
+  Scorer/teammate reactions, own goals, winner/draw treatment, handshakes and
+  a usable Rematch/Title results screen. Original shared animations; skippable,
+  clock/rules isolated and valid with reduced teams.
+- [x] **BR-027 — Incident replays**
+  - 2026-10-23: recorded incident metadata and facial poses support sideline then slow alternate-angle replay; opaque-obstruction selection, gameplay isolation and exact restart restoration pass. See `art_briefs/broadcast_turf_refresh_2026_10_23/brief.md`.
+  - 2026-10-23: bounded root/bone/ball/net snapshots, actual runtime head/kit ghosts, rule/audio/clock isolation, natural-stoppage autoplay and exact skip/restore checks pass. Full unskipped match reaches results; native fixture evidence is in `art_briefs/match_outro_replays_2026_10_23/`.
+  Collision-free ghost playback from bounded pose/ball snapshots. Goals and
+  major incidents replay automatically at natural stoppages; Space/Enter skips.
+  Restore the exact pending restart without duplicate events or scores.
 
 ## Risks and scope guardrails
 
@@ -837,7 +1131,7 @@ without touching Aegis artifacts.
   motion is relevant; availability of a suitable football action is not
   assumed.
 - The intended final characters remain the supplied-sheet-matched Beechlawn
-  players on a reusable shared rig, with the Bordeaux visual-base approach
+  players on a reusable shared rig, with the Boardeaux visual-base approach
   defined above. Temporary assets must not replace those likeness targets.
 - Import/retarget through Blender and Godot's glTF pipeline, checking bone rest
   poses, scale, root motion, foot sliding and action contact timing. The
@@ -860,8 +1154,8 @@ Research references:
 | Beechlawn Rovers | Outfield 2 | Robbie Roden, #10 | Supplied full character sheet |
 | Beechlawn Rovers | Outfield 3 | David Murray, #5 | Supplied full character sheet |
 | Beechlawn Rovers | Goalkeeper | John O’Rourke, #1 | Supplied goalkeeper sheet |
-| Bordeaux | Three outfield slots | Des Feeney, #9 sheet | Shared visual base; identities/ratings remain generic |
-| Bordeaux | Goalkeeper | Des Feeney sheet | Shared visual base with generic keeper kit/slot data |
+| Boardeaux | Three outfield slots | Des Feeney, #9 sheet | Shared visual base; identities/ratings remain generic |
+| Boardeaux | Goalkeeper | Des Feeney sheet | Shared visual base with generic keeper kit/slot data |
 
 The first team-versus-team gameplay milestone is therefore **4v4**, not a
 full 11v11 match. This keeps the prototype small enough to validate passing,

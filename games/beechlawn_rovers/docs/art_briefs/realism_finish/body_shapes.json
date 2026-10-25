@@ -1,0 +1,31 @@
+{
+  "source_sha256": "5c61518d38f9bd0e9c4aa4e60e2d04719c6487b2dfc13f96e485af860739ebd4",
+  "rig_bones": 65,
+  "neutral_source_unchanged": true,
+  "parts": {
+    "Kit_Shane_ContinuousVBinding": {
+      "vertices": 1008,
+      "max_delta_cm": 2.0156022891162397
+    },
+    "Kit_Shirt_ShortSleeve": {
+      "vertices": 7787,
+      "max_delta_cm": 6.117113602582863
+    },
+    "Kit_Shorts": {
+      "vertices": 1015,
+      "max_delta_cm": 5.793041514314589
+    },
+    "Kit_Shorts_FoldedHems": {
+      "vertices": 320,
+      "max_delta_cm": 0.004998524427757597
+    },
+    "YBot_Joints": {
+      "vertices": 1103,
+      "max_delta_cm": 1.6183700819585531
+    },
+    "YBot_Surface": {
+      "vertices": 10061,
+      "max_delta_cm": 6.117113602582863
+    }
+  }
+}

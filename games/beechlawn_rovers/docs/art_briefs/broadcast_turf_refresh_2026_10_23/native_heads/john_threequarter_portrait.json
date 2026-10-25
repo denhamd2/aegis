@@ -1,0 +1,23 @@
+{
+  "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+  "api": "1.4.305",
+  "display_server": "X11",
+  "godot": "4.6.3-stable (official)",
+  "lighting": "default",
+  "msaa_3d": 2,
+  "name": "John O’Rourke",
+  "normal_maps": true,
+  "player_id": "john_orourke",
+  "pose": "<null>",
+  "rendering_method": "forward_plus",
+  "resolution": [
+    960,
+    540
+  ],
+  "scope": "Native Forward+ still; hardware-specific Mac appearance and performance remain unmeasured.",
+  "sky": "match",
+  "sun_shadows": true,
+  "vendor": "Unknown",
+  "view": "threequarter_portrait",
+  "warmup_frames": 2
+}

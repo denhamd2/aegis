@@ -21,15 +21,16 @@ campaign art. No Blender geometry was required or changed in this 2D UI task.
 See [`../../assets/ui/README.md`](../../assets/ui/README.md) for provenance and
 free font licensing.
 
-Target: native Godot menu titled **Beechlawn Rovers 27**, blue/black club palette
-with ivory type and lime focus/primary accents. Players and worn
+Current target: native Godot menu titled **Beechlawn Rovers 27**, using the
+owner-supplied white/red wordmark and red/black/white controls. Players and worn
 Sunday-league park occupy the right; the dark left side holds the title,
 match-mode selection, Start Game and Options. Native crest/text/buttons remain
 separate from the generated background. The generated chest marks and venue
 are illustrative approximations, not approved 3D kit/venue assets.
 
-The hero title lockup reads BEECHLAWN / ROVERS with a compact outlined lime
-“27” season badge beside ROVERS. This replaces the previous “FC 27” suffix;
+The hero title lockup uses the original `69668.jpg` lettering through an atlas
+crop and dark-background mask. It replaces the former native Anton title and
+lime season badge. The title remains free of the previous “FC 27” suffix;
 the small crest-side wordmark is shortened to “BEECHLAWN ROVERS.” The player
 captions identify David Murray (#5) and Derek Mitchell (#3).
 

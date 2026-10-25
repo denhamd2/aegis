@@ -1,0 +1,55 @@
+{
+  "source": "original analytic knit, existing UV charts and unchanged pigment",
+  "normal_size": [
+    2048,
+    2048
+  ],
+  "normal_scale": 0.35,
+  "roughness_size": [
+    1024,
+    1024
+  ],
+  "roughness_channel": "red",
+  "shirt_stitch_spacing_estimate_mm": 1.7,
+  "roles": {
+    "beechlawn_outfield": {
+      "min": 0.5882353186607361,
+      "max": 0.8980392217636108,
+      "sha256": "d95876e904c336d85fbd53b51a154b79d39d8d5412036bfcab4c0bd1bd2853b2"
+    },
+    "beechlawn_keeper": {
+      "min": 0.5882353186607361,
+      "max": 0.8980392217636108,
+      "sha256": "a3cc14b7b25a4e4ea9aa829a42361c5e1c527bac709c853b04a924a8649bfc8b"
+    },
+    "bordeaux_outfield": {
+      "min": 0.5882353186607361,
+      "max": 0.8980392217636108,
+      "sha256": "4469e961d6e1430d67f5ca88b18e9a573e94122f45de9b4b0d878f2994890a41"
+    },
+    "bordeaux_keeper": {
+      "min": 0.5882353186607361,
+      "max": 0.8980392217636108,
+      "sha256": "d6d9d6ea7073c1380efa7a3e9a1ad276714f1d37a2f58409b2af544cfbfc94d3"
+    },
+    "referee": {
+      "min": 0.5882353186607361,
+      "max": 0.8980392217636108,
+      "sha256": "d1ef88ee73267c845c972105d4fc0513a1f4d1fefd482ba0c2de1c4bfd7512ad"
+    },
+    "spectator": {
+      "min": 0.5882353186607361,
+      "max": 0.8980392217636108,
+      "sha256": "d1ef88ee73267c845c972105d4fc0513a1f4d1fefd482ba0c2de1c4bfd7512ad"
+    }
+  },
+  "normal_sha256": "8c56cde410d12100357f34b831b48b7edcea8180d26b2231e5a333afd03d6ff6",
+  "pigment_sha256": {
+    "beechlawn_outfield": "8293c5558a979dc6ec2218abaf00d44837225effe263f6d2c34f4520046648ee",
+    "beechlawn_keeper": "2f9f8e1054770a44febc76b0253ed57619121528e1103f047ab4bf1a098005e7",
+    "bordeaux_outfield": "8cbb23bc122c6f0966b9755483babc19264d711bebd684c13210973e07554756",
+    "bordeaux_keeper": "c08d05e68a4f715a7e527e8b834eff79111f4743d0ef4d4331bbd1a7dcd01805",
+    "referee": "71c0f264dbb6f2b9e633a80f93fdacd176e98bcf180f84e154f26d7d42e25acd",
+    "spectator": "f98d4cb492b08e610b09f5357970f6aaa73a64c2f3d534f4694b9af7c2c58221"
+  }
+}

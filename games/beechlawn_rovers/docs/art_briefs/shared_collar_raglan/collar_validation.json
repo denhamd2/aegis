@@ -1,0 +1,63 @@
+{
+  "trim_triangles": 1536,
+  "collar_vertices_per_pose": 480,
+  "inverted_trim_triangles": {
+    "Idle": 0,
+    "Sprint": 0,
+    "PassRight": 0,
+    "ShotRight": 0,
+    "GroundedSlideTackle": 0,
+    "GetUpFromProne": 0,
+    "KeeperSet": 0,
+    "KeeperSave": 0,
+    "Turn90Right": 0
+  },
+  "skin": {
+    "Idle": {
+      "penetrating_vertices": 0,
+      "minimum_signed_clearance_cm": 0.22303472319617867,
+      "worst_vertices": []
+    },
+    "Sprint": {
+      "penetrating_vertices": 0,
+      "minimum_signed_clearance_cm": 0.223021456040442,
+      "worst_vertices": []
+    },
+    "PassRight": {
+      "penetrating_vertices": 0,
+      "minimum_signed_clearance_cm": 0.2230569706298411,
+      "worst_vertices": []
+    },
+    "ShotRight": {
+      "penetrating_vertices": 0,
+      "minimum_signed_clearance_cm": 0.22307611163705587,
+      "worst_vertices": []
+    },
+    "GroundedSlideTackle": {
+      "penetrating_vertices": 0,
+      "minimum_signed_clearance_cm": 0.22271651579649188,
+      "worst_vertices": []
+    },
+    "GetUpFromProne": {
+      "penetrating_vertices": 0,
+      "minimum_signed_clearance_cm": 0.22270955797284842,
+      "worst_vertices": []
+    },
+    "KeeperSet": {
+      "penetrating_vertices": 0,
+      "minimum_signed_clearance_cm": 0.22303472319617867,
+      "worst_vertices": []
+    },
+    "KeeperSave": {
+      "penetrating_vertices": 0,
+      "minimum_signed_clearance_cm": 0.22303472319617867,
+      "worst_vertices": []
+    },
+    "Turn90Right": {
+      "penetrating_vertices": 0,
+      "minimum_signed_clearance_cm": 0.2230033869855106,
+      "worst_vertices": []
+    }
+  },
+  "limits": "Vertex samples against evaluated source skin in nine fixed poses; not an all-pose, per-pixel or native M1 acceptance."
+}

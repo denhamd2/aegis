@@ -1,0 +1,10 @@
+
+[smoke] title_screen_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MENU_READY
+BEECHLAWN_MATCH_READY actors=22 officials=1
+BEECHLAWN_MENU_READY
+BEECHLAWN_MATCH_READY actors=22 officials=1
+Title/menu PASS: focus, saved mix, full 11v11 Watch/Play launches, automatic AI restarts, human input, title return; failures=0
+[passed] title_screen_smoke.gd (23.7s)

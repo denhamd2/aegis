@@ -1,0 +1,15 @@
+{
+  "source_sha256": "5c61518d38f9bd0e9c4aa4e60e2d04719c6487b2dfc13f96e485af860739ebd4",
+  "fps": 60,
+  "root_motion": "none",
+  "clips": {
+    "Celebrate": {
+      "duration": 2.0,
+      "in_place": true
+    },
+    "Handshake": {
+      "duration": 1.2,
+      "in_place": true
+    }
+  }
+}

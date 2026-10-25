@@ -1,0 +1,43 @@
+
+[smoke] contested_dribble_order_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+PASS: exact opposing contest waits for physical separation/contact in both call orders
+[passed] contested_dribble_order_smoke.gd
+
+[smoke] ai_carry_space_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+CARRY_SPACE team=Beechlawn Rovers defender_distance=-4.0 choice=carry
+CARRY_SPACE team=Beechlawn Rovers defender_distance=4.0 choice=carry
+CARRY_SPACE team=Beechlawn Rovers defender_distance=1.8 choice=short_pass
+CARRY_SPACE team=Boardeaux defender_distance=-4.0 choice=carry
+CARRY_SPACE team=Boardeaux defender_distance=4.0 choice=carry
+CARRY_SPACE team=Boardeaux defender_distance=1.8 choice=short_pass
+[passed] ai_carry_space_smoke.gd
+
+[smoke] turn_dribble_control_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+REVERSAL human=false touch_heading_gap_degrees=0.0
+REVERSAL human=true touch_heading_gap_degrees=0.0
+Turn/dribble control PASS: weighted reversals for human and AI, nearest-actor ownership, no competing force or airborne foot claim
+[passed] turn_dribble_control_smoke.gd
+
+[smoke] ai_carrier_decision_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=8 officials=0
+Beechlawn AI carrier shot, pressure-pass, carry and human-control checks passed
+[passed] ai_carrier_decision_smoke.gd
+
+[smoke] ai_pass_commitment_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+PASS_COMMITMENT Beechlawn Rovers selected=derek_mitchell
+PASS_COMMITMENT Boardeaux selected=bordeaux_04
+[passed] ai_pass_commitment_smoke.gd

@@ -1,0 +1,118 @@
+{
+  "beechlawn_keeper": {
+    "source_art": "beechlawn_panels.png",
+    "source_sha256": "617ed4f41ab69f8ff87f1f9e461ff5144f48ccc6e03bb40c0ddf049c736beab7",
+    "crops": {
+      "front": [
+        2,
+        2,
+        625,
+        759
+      ],
+      "back": [
+        629,
+        2,
+        1252,
+        759
+      ],
+      "sleeve_l": [
+        2,
+        763,
+        625,
+        1252
+      ],
+      "sleeve_r": [
+        629,
+        763,
+        1252,
+        1252
+      ]
+    },
+    "manufacturer": {
+      "box": [
+        390,
+        195,
+        218,
+        54
+      ],
+      "ink": "dark"
+    },
+    "sponsor": {
+      "box": [
+        162,
+        462,
+        700,
+        242
+      ],
+      "ink": "light"
+    },
+    "crest": {
+      "box": [
+        718,
+        182,
+        122,
+        173
+      ],
+      "shape": "oval"
+    },
+    "atlas_sha256": "2f9f8e1054770a44febc76b0253ed57619121528e1103f047ab4bf1a098005e7"
+  },
+  "bordeaux_keeper": {
+    "source_art": "bordeaux_panels.png",
+    "source_sha256": "4434edf1d9f3cb66a032ea932caf64daad01cd15c3e86702ecf86a2e942ac04b",
+    "crops": {
+      "front": [
+        2,
+        2,
+        625,
+        625
+      ],
+      "back": [
+        629,
+        2,
+        1252,
+        625
+      ],
+      "sleeve_l": [
+        2,
+        629,
+        625,
+        1252
+      ],
+      "sleeve_r": [
+        629,
+        629,
+        1252,
+        1252
+      ]
+    },
+    "manufacturer": {
+      "box": [
+        175,
+        225,
+        205,
+        51
+      ],
+      "ink": "light"
+    },
+    "sponsor": {
+      "box": [
+        182,
+        453,
+        660,
+        123
+      ],
+      "ink": "light"
+    },
+    "crest": {
+      "box": [
+        718,
+        182,
+        122,
+        174
+      ],
+      "shape": "shield"
+    },
+    "atlas_sha256": "c08d05e68a4f715a7e527e8b834eff79111f4743d0ef4d4331bbd1a7dcd01805"
+  }
+}

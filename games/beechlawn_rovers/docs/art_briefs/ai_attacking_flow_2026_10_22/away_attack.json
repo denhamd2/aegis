@@ -1,0 +1,465 @@
+{
+  "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+  "api": "1.4.305",
+  "away_players": 11,
+  "display_server": "X11",
+  "frames": [
+    {
+      "ball": "(-35.6413, 0.109248, 5.99946)",
+      "file": "frame_000.png",
+      "label": "attack_away",
+      "player": "(-3.069952, -0.017188, -6.00258)",
+      "player_velocity": "(-1.199185, 0.0, -0.044226)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 6
+    },
+    {
+      "ball": "(-35.75094, 0.109338, 5.997066)",
+      "file": "frame_001.png",
+      "label": "attack_away",
+      "player": "(-3.259823, -0.017188, -6.009583)",
+      "player_velocity": "(-2.39837, 0.0, -0.088451)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 12
+    },
+    {
+      "ball": "(-35.90384, 0.109462, 5.992945)",
+      "file": "frame_002.png",
+      "label": "attack_away",
+      "player": "(-3.569613, -0.017188, -6.020975)",
+      "player_velocity": "(-3.597578, 0.0, -0.132029)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 18
+    },
+    {
+      "ball": "(-37.43611, 0.183955, 5.236059)",
+      "file": "frame_003.png",
+      "label": "attack_away",
+      "player": "(-3.99932, -0.017188, -6.036712)",
+      "player_velocity": "(-4.796791, 0.0, -0.175476)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [
+        {
+          "ball": "(-35.93237, 0.109485, 5.992172)",
+          "team": "Boardeaux",
+          "tick": 19
+        }
+      ],
+      "tick": 24
+    },
+    {
+      "ball": "(-39.2125, 0.182694, 4.342855)",
+      "file": "frame_004.png",
+      "label": "attack_away",
+      "player": "(-4.548952, -0.017188, -6.056618)",
+      "player_velocity": "(-5.996146, 0.0, -0.21469)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [
+        {
+          "ball": "(-35.93237, 0.109485, 5.992172)",
+          "team": "Boardeaux",
+          "tick": 19
+        }
+      ],
+      "tick": 30
+    },
+    {
+      "ball": "(-40.95182, 0.155201, 3.468253)",
+      "file": "frame_005.png",
+      "label": "attack_away",
+      "player": "(-5.218518, -0.015188, -6.080242)",
+      "player_velocity": "(-7.195573, 0.0, -0.251751)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [
+        {
+          "ball": "(-35.93237, 0.109485, 5.992172)",
+          "team": "Boardeaux",
+          "tick": 19
+        }
+      ],
+      "tick": 36
+    },
+    {
+      "ball": "(-42.64698, 0.155574, 2.615832)",
+      "file": "frame_006.png",
+      "label": "attack_away",
+      "player": "(-6.008024, -0.013092, -6.1063)",
+      "player_velocity": "(-8.394965, 0.0, -0.25058)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [
+        {
+          "ball": "(-35.93237, 0.109485, 5.992172)",
+          "team": "Boardeaux",
+          "tick": 19
+        }
+      ],
+      "tick": 42
+    },
+    {
+      "ball": "(-44.30079, 0.158806, 1.784203)",
+      "file": "frame_007.png",
+      "label": "attack_away",
+      "player": "(-6.849791, -0.013092, -6.131193)",
+      "player_velocity": "(-8.407699, 0.0, -0.248629)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [
+        {
+          "ball": "(-35.93237, 0.109485, 5.992172)",
+          "team": "Boardeaux",
+          "tick": 19
+        }
+      ],
+      "tick": 48
+    },
+    {
+      "ball": "(-45.91511, 0.154431, 0.972438)",
+      "file": "frame_008.png",
+      "label": "attack_away",
+      "player": "(-7.6892, -0.011991, -6.154263)",
+      "player_velocity": "(-8.385016, 0.0, -0.195397)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [
+        {
+          "ball": "(-35.93237, 0.109485, 5.992172)",
+          "team": "Boardeaux",
+          "tick": 19
+        }
+      ],
+      "tick": 54
+    },
+    {
+      "ball": "(-47.48624, 0.147431, 0.182395)",
+      "file": "frame_009.png",
+      "label": "attack_away",
+      "player": "(-8.526298, -0.013163, -6.17377)",
+      "player_velocity": "(-8.360944, 0.0, -0.194836)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [
+        {
+          "ball": "(-35.93237, 0.109485, 5.992172)",
+          "team": "Boardeaux",
+          "tick": 19
+        }
+      ],
+      "tick": 60
+    },
+    {
+      "ball": "(-48.99279, 0.135303, -0.5751)",
+      "file": "frame_010.png",
+      "label": "attack_away",
+      "player": "(-9.361007, -0.015507, -6.192617)",
+      "player_velocity": "(-8.337637, 0.0, -0.157987)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [
+        {
+          "ball": "(-35.93237, 0.109485, 5.992172)",
+          "team": "Boardeaux",
+          "tick": 19
+        }
+      ],
+      "tick": 66
+    },
+    {
+      "ball": "(-50.31918, 0.123388, -1.241653)",
+      "file": "frame_011.png",
+      "label": "attack_away",
+      "player": "(-10.19338, -0.019022, -6.208389)",
+      "player_velocity": "(-8.31356, 0.0, -0.157531)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [
+        {
+          "ball": "(-35.93237, 0.109485, 5.992172)",
+          "team": "Boardeaux",
+          "tick": 19
+        }
+      ],
+      "tick": 72
+    },
+    {
+      "ball": "(-51.56646, 0.113146, -1.868016)",
+      "file": "frame_012.png",
+      "label": "attack_away",
+      "player": "(-11.02334, -0.023241, -6.224115)",
+      "player_velocity": "(-8.289486, 0.0, -0.157074)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [
+        {
+          "ball": "(-35.93237, 0.109485, 5.992172)",
+          "team": "Boardeaux",
+          "tick": 19
+        }
+      ],
+      "tick": 78
+    },
+    {
+      "ball": "(-52.63531, 0.108998, -2.404486)",
+      "file": "frame_013.png",
+      "label": "attack_away",
+      "player": "(-11.71318, -0.026757, -6.234992)",
+      "player_velocity": "(-8.269879, 0.0, -0.13039)",
+      "score": [
+        0,
+        1
+      ],
+      "shot_contacts": [
+        {
+          "ball": "(-35.93237, 0.109485, 5.992172)",
+          "team": "Boardeaux",
+          "tick": 19
+        }
+      ],
+      "tick": 84
+    },
+    {
+      "ball": "(-53.60508, 0.108998, -2.891119)",
+      "file": "frame_014.png",
+      "label": "attack_away",
+      "player": "(-11.71318, -0.026757, -6.234992)",
+      "player_velocity": "(-8.269879, 0.0, -0.13039)",
+      "score": [
+        0,
+        1
+      ],
+      "shot_contacts": [
+        {
+          "ball": "(-35.93237, 0.109485, 5.992172)",
+          "team": "Boardeaux",
+          "tick": 19
+        }
+      ],
+      "tick": 90
+    },
+    {
+      "ball": "(-54.07855, 0.122349, -3.298647)",
+      "file": "frame_015.png",
+      "label": "attack_away",
+      "player": "(-11.71318, -0.026757, -6.234992)",
+      "player_velocity": "(-8.269879, 0.0, -0.13039)",
+      "score": [
+        0,
+        1
+      ],
+      "shot_contacts": [
+        {
+          "ball": "(-35.93237, 0.109485, 5.992172)",
+          "team": "Boardeaux",
+          "tick": 19
+        }
+      ],
+      "tick": 96
+    },
+    {
+      "ball": "(-53.87263, 0.11, -3.532797)",
+      "file": "frame_016.png",
+      "label": "attack_away",
+      "player": "(-11.71318, -0.026757, -6.234992)",
+      "player_velocity": "(-8.269879, 0.0, -0.13039)",
+      "score": [
+        0,
+        1
+      ],
+      "shot_contacts": [
+        {
+          "ball": "(-35.93237, 0.109485, 5.992172)",
+          "team": "Boardeaux",
+          "tick": 19
+        }
+      ],
+      "tick": 102
+    },
+    {
+      "ball": "(-53.68895, 0.11, -3.448788)",
+      "file": "frame_017.png",
+      "label": "attack_away",
+      "player": "(-11.71318, -0.026757, -6.234992)",
+      "player_velocity": "(-8.269879, 0.0, -0.13039)",
+      "score": [
+        0,
+        1
+      ],
+      "shot_contacts": [
+        {
+          "ball": "(-35.93237, 0.109485, 5.992172)",
+          "team": "Boardeaux",
+          "tick": 19
+        }
+      ],
+      "tick": 108
+    },
+    {
+      "ball": "(-53.52058, 0.11, -3.372053)",
+      "file": "frame_018.png",
+      "label": "attack_away",
+      "player": "(-11.71318, -0.026757, -6.234992)",
+      "player_velocity": "(-8.269879, 0.0, -0.13039)",
+      "score": [
+        0,
+        1
+      ],
+      "shot_contacts": [
+        {
+          "ball": "(-35.93237, 0.109485, 5.992172)",
+          "team": "Boardeaux",
+          "tick": 19
+        }
+      ],
+      "tick": 114
+    },
+    {
+      "ball": "(-53.36728, 0.11, -3.302465)",
+      "file": "frame_019.png",
+      "label": "attack_away",
+      "player": "(-11.71318, -0.026757, -6.234992)",
+      "player_velocity": "(-8.269879, 0.0, -0.13039)",
+      "score": [
+        0,
+        1
+      ],
+      "shot_contacts": [
+        {
+          "ball": "(-35.93237, 0.109485, 5.992172)",
+          "team": "Boardeaux",
+          "tick": 19
+        }
+      ],
+      "tick": 120
+    },
+    {
+      "ball": "(-53.22882, 0.110105, -3.239906)",
+      "file": "frame_020.png",
+      "label": "attack_away",
+      "player": "(-11.71318, -0.026757, -6.234992)",
+      "player_velocity": "(-8.269879, 0.0, -0.13039)",
+      "score": [
+        0,
+        1
+      ],
+      "shot_contacts": [
+        {
+          "ball": "(-35.93237, 0.109485, 5.992172)",
+          "team": "Boardeaux",
+          "tick": 19
+        }
+      ],
+      "tick": 126
+    },
+    {
+      "ball": "(-53.1049, 0.11, -3.184243)",
+      "file": "frame_021.png",
+      "label": "attack_away",
+      "player": "(-11.71318, -0.026757, -6.234992)",
+      "player_velocity": "(-8.269879, 0.0, -0.13039)",
+      "score": [
+        0,
+        1
+      ],
+      "shot_contacts": [
+        {
+          "ball": "(-35.93237, 0.109485, 5.992172)",
+          "team": "Boardeaux",
+          "tick": 19
+        }
+      ],
+      "tick": 132
+    },
+    {
+      "ball": "(-52.99495, 0.11, -3.135191)",
+      "file": "frame_022.png",
+      "label": "attack_away",
+      "player": "(-11.71318, -0.026757, -6.234992)",
+      "player_velocity": "(-8.269879, 0.0, -0.13039)",
+      "score": [
+        0,
+        1
+      ],
+      "shot_contacts": [
+        {
+          "ball": "(-35.93237, 0.109485, 5.992172)",
+          "team": "Boardeaux",
+          "tick": 19
+        }
+      ],
+      "tick": 138
+    },
+    {
+      "ball": "(-52.89816, 0.11, -3.092376)",
+      "file": "frame_023.png",
+      "label": "attack_away",
+      "player": "(-11.71318, -0.026757, -6.234992)",
+      "player_velocity": "(-8.269879, 0.0, -0.13039)",
+      "score": [
+        0,
+        1
+      ],
+      "shot_contacts": [
+        {
+          "ball": "(-35.93237, 0.109485, 5.992172)",
+          "team": "Boardeaux",
+          "tick": 19
+        }
+      ],
+      "tick": 144
+    }
+  ],
+  "godot": "4.6.3-stable (official)",
+  "home_players": 11,
+  "msaa_3d": 2,
+  "officials": 1,
+  "rendering_method": "forward_plus",
+  "resolution": [
+    640,
+    360
+  ],
+  "review_mode": "attack_away",
+  "scope": "Actual native Forward+ controllers and assets; accelerated simulated time, software GPU, no Mac performance claim.",
+  "shot_contacts": [
+    {
+      "ball": "(-35.93237, 0.109485, 5.992172)",
+      "team": "Boardeaux",
+      "tick": 19
+    }
+  ],
+  "vendor": "Unknown"
+}

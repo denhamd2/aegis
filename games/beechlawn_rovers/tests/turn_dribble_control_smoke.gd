@@ -20,6 +20,8 @@ func _run() -> void:
 	var player := game.get_node("Player") as FootballPlayer
 	var teammate: FootballPlayer=game._home_players[2]
 	var ball := game.get_node("Ball") as FootballBall
+	# Reverse the world-right run using the current camera's screen direction.
+	var reverse_action: StringName = &"move_left" if player.camera.global_basis.x.x > 0.0 else &"move_right"
 	for human in [false,true]:
 		player.global_position=Vector3.ZERO
 		player.rotation.y=-PI/2
@@ -27,16 +29,27 @@ func _run() -> void:
 		player.velocity=Vector3.RIGHT*6.0
 		player.controlled_by_human=human
 		player.ai_move_direction=Vector3.LEFT
-		if human:Input.action_press("move_left")
+		if human:Input.action_press(reverse_action)
 		player._sample_input()
 		player._update_locomotion(1.0/60.0)
-		Input.action_release("move_left")
+		Input.action_release(reverse_action)
 		var heading_gap := rad_to_deg((-player.global_basis.z).angle_to(player._flat_direction))
 		print("REVERSAL human=",human," touch_heading_gap_degrees=",snappedf(heading_gap,0.01))
 		if heading_gap>35.0:
 			_fail(game,"Touch direction jumped across the body during a reversal");return
 		if player.velocity.x<=0 or player.velocity.x>=6.0:
 			_fail(game,"Reversal must start braking promptly while retaining momentum");return
+	player.global_position = Vector3.ZERO
+	player.rotation.y = -PI / 2.0
+	ball.freeze = true
+	ball.global_position = Vector3(-0.7, FootballBall.RADIUS, 0)
+	ball.last_touch = &"none"
+	ball.last_action = &"none"
+	ball._dribble_cooldowns.clear()
+	ball._dribble_controller = null
+	await physics_frame
+	if ball.dribble_touch(player, Vector3.RIGHT, false, false, 0.23, 0.48, 1.05):
+		_fail(game,"A forward touch pulled a ball from behind the player through the body");return
 	for reverse_order in [false,true]:
 		player.global_position=Vector3(-0.5,0,0)
 		teammate.global_position=Vector3(0.85,0,0)

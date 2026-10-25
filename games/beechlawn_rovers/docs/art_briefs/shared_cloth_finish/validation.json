@@ -1,0 +1,995 @@
+{
+  "baseline": "39ba9fd0d5c48c371ac00c79299df40c48382ff0",
+  "missing_arm_samples_before": [
+    -42,
+    -48,
+    -54,
+    -60,
+    42,
+    48,
+    54,
+    60
+  ],
+  "before": {
+    "Idle": {
+      "inverted_triangles": 116,
+      "sampled_triangles": 11868,
+      "largest_fold_regions": [
+        [
+          "24,136,back",
+          59
+        ],
+        [
+          "24,138,back",
+          22
+        ],
+        [
+          "26,136,back",
+          14
+        ],
+        [
+          "26,138,back",
+          8
+        ],
+        [
+          "24,140,front",
+          4
+        ],
+        [
+          "24,140,back",
+          4
+        ],
+        [
+          "24,138,front",
+          2
+        ],
+        [
+          "16,134,front",
+          1
+        ],
+        [
+          "18,122,front",
+          1
+        ],
+        [
+          "18,120,front",
+          1
+        ]
+      ]
+    },
+    "Sprint": {
+      "inverted_triangles": 122,
+      "sampled_triangles": 11868,
+      "largest_fold_regions": [
+        [
+          "24,136,back",
+          59
+        ],
+        [
+          "24,138,back",
+          22
+        ],
+        [
+          "26,136,back",
+          16
+        ],
+        [
+          "26,138,back",
+          8
+        ],
+        [
+          "24,138,front",
+          4
+        ],
+        [
+          "24,140,front",
+          4
+        ],
+        [
+          "26,140,back",
+          2
+        ],
+        [
+          "22,140,front",
+          2
+        ],
+        [
+          "24,140,back",
+          2
+        ],
+        [
+          "2,132,front",
+          2
+        ],
+        [
+          "16,134,front",
+          1
+        ]
+      ]
+    },
+    "PassRight": {
+      "inverted_triangles": 128,
+      "sampled_triangles": 11868,
+      "largest_fold_regions": [
+        [
+          "20,148,back",
+          24
+        ],
+        [
+          "22,144,front",
+          11
+        ],
+        [
+          "24,142,front",
+          9
+        ],
+        [
+          "24,140,front",
+          8
+        ],
+        [
+          "18,148,back",
+          7
+        ],
+        [
+          "24,136,back",
+          7
+        ],
+        [
+          "22,146,front",
+          6
+        ],
+        [
+          "20,146,front",
+          6
+        ],
+        [
+          "22,142,front",
+          6
+        ],
+        [
+          "20,146,back",
+          5
+        ],
+        [
+          "26,138,back",
+          5
+        ],
+        [
+          "24,138,back",
+          4
+        ]
+      ]
+    },
+    "ShotRight": {
+      "inverted_triangles": 123,
+      "sampled_triangles": 11868,
+      "largest_fold_regions": [
+        [
+          "24,136,back",
+          27
+        ],
+        [
+          "20,148,back",
+          16
+        ],
+        [
+          "24,138,back",
+          12
+        ],
+        [
+          "22,144,front",
+          10
+        ],
+        [
+          "22,146,front",
+          7
+        ],
+        [
+          "26,138,back",
+          6
+        ],
+        [
+          "20,146,back",
+          5
+        ],
+        [
+          "26,136,back",
+          5
+        ],
+        [
+          "2,132,front",
+          4
+        ],
+        [
+          "18,120,front",
+          4
+        ],
+        [
+          "22,146,back",
+          3
+        ],
+        [
+          "22,148,back",
+          3
+        ]
+      ]
+    },
+    "GroundedSlideTackle": {
+      "inverted_triangles": 240,
+      "sampled_triangles": 11868,
+      "largest_fold_regions": [
+        [
+          "24,136,back",
+          38
+        ],
+        [
+          "24,138,back",
+          26
+        ],
+        [
+          "20,148,back",
+          18
+        ],
+        [
+          "24,140,front",
+          16
+        ],
+        [
+          "22,142,front",
+          15
+        ],
+        [
+          "22,144,front",
+          13
+        ],
+        [
+          "22,140,front",
+          13
+        ],
+        [
+          "24,142,front",
+          12
+        ],
+        [
+          "26,138,back",
+          12
+        ],
+        [
+          "24,140,back",
+          8
+        ],
+        [
+          "22,146,front",
+          6
+        ],
+        [
+          "20,146,front",
+          6
+        ]
+      ]
+    },
+    "GetUpFromProne": {
+      "inverted_triangles": 173,
+      "sampled_triangles": 11868,
+      "largest_fold_regions": [
+        [
+          "24,136,back",
+          31
+        ],
+        [
+          "18,148,back",
+          26
+        ],
+        [
+          "20,148,back",
+          19
+        ],
+        [
+          "24,138,back",
+          16
+        ],
+        [
+          "24,140,front",
+          11
+        ],
+        [
+          "20,146,back",
+          9
+        ],
+        [
+          "22,144,front",
+          7
+        ],
+        [
+          "22,140,front",
+          6
+        ],
+        [
+          "26,138,back",
+          6
+        ],
+        [
+          "26,136,back",
+          5
+        ],
+        [
+          "24,140,back",
+          4
+        ],
+        [
+          "10,130,front",
+          4
+        ]
+      ]
+    },
+    "KeeperSet": {
+      "inverted_triangles": 112,
+      "sampled_triangles": 11868,
+      "largest_fold_regions": [
+        [
+          "24,136,back",
+          48
+        ],
+        [
+          "24,138,back",
+          22
+        ],
+        [
+          "26,138,back",
+          12
+        ],
+        [
+          "24,140,front",
+          10
+        ],
+        [
+          "22,140,front",
+          6
+        ],
+        [
+          "24,140,back",
+          4
+        ],
+        [
+          "24,138,front",
+          2
+        ],
+        [
+          "26,136,back",
+          2
+        ],
+        [
+          "26,140,back",
+          2
+        ],
+        [
+          "18,136,front",
+          1
+        ],
+        [
+          "16,134,front",
+          1
+        ],
+        [
+          "18,122,front",
+          1
+        ]
+      ]
+    },
+    "KeeperSave": {
+      "inverted_triangles": 156,
+      "sampled_triangles": 11868,
+      "largest_fold_regions": [
+        [
+          "24,136,back",
+          26
+        ],
+        [
+          "22,142,front",
+          20
+        ],
+        [
+          "22,144,front",
+          18
+        ],
+        [
+          "24,138,back",
+          16
+        ],
+        [
+          "24,140,front",
+          16
+        ],
+        [
+          "22,140,front",
+          14
+        ],
+        [
+          "24,142,front",
+          14
+        ],
+        [
+          "26,138,back",
+          10
+        ],
+        [
+          "20,142,front",
+          7
+        ],
+        [
+          "24,144,front",
+          4
+        ],
+        [
+          "24,138,front",
+          2
+        ],
+        [
+          "24,140,back",
+          2
+        ]
+      ]
+    },
+    "Turn90Right": {
+      "inverted_triangles": 118,
+      "sampled_triangles": 11868,
+      "largest_fold_regions": [
+        [
+          "24,136,back",
+          59
+        ],
+        [
+          "24,138,back",
+          22
+        ],
+        [
+          "26,136,back",
+          14
+        ],
+        [
+          "26,138,back",
+          8
+        ],
+        [
+          "24,140,front",
+          4
+        ],
+        [
+          "24,140,back",
+          4
+        ],
+        [
+          "24,138,front",
+          2
+        ],
+        [
+          "10,130,front",
+          2
+        ],
+        [
+          "18,120,front",
+          1
+        ],
+        [
+          "16,134,front",
+          1
+        ],
+        [
+          "20,126,back",
+          1
+        ]
+      ]
+    }
+  },
+  "protected_sha256": "280e88fa6148d5480ef6689f653f8797ad1e62bdca070121ebe03b8d2919cd70",
+  "skin": {
+    "added_faces": 563,
+    "added_vertices": 563,
+    "preserved_skin_vertices": 540,
+    "maximum_retained_normal_error": 5.192376276156406e-05,
+    "donor_sha256": "8e761e6624b8f54536409135d1636da63b32486a90d4897f84e121d144f6fb4c"
+  },
+  "garments": {
+    "YBot_Surface": {
+      "cut_height_cm": 112,
+      "hem_height_cm": 100.5,
+      "ring_vertices": 98,
+      "new_quads": 686,
+      "waist_clearance_vertices": 221,
+      "maximum_clearance_shift_cm": 2.6849,
+      "rear_gusset": {
+        "vertices": 999,
+        "maximum_displacement_cm": 5.0584
+      }
+    },
+    "Kit_Shirt_ShortSleeve": {
+      "cut_height_cm": 112,
+      "hem_height_cm": 100.5,
+      "ring_vertices": 98,
+      "new_quads": 686,
+      "waist_clearance_vertices": 221,
+      "maximum_clearance_shift_cm": 2.6849,
+      "rear_gusset": {
+        "vertices": 999,
+        "maximum_displacement_cm": 5.0584
+      }
+    }
+  },
+  "removed_hem_ribbons": 100,
+  "after": {
+    "Idle": {
+      "inverted_triangles": 70,
+      "sampled_triangles": 11868,
+      "largest_fold_regions": [
+        [
+          "24,138,back",
+          30
+        ],
+        [
+          "22,140,back",
+          14
+        ],
+        [
+          "24,140,back",
+          11
+        ],
+        [
+          "26,138,back",
+          6
+        ],
+        [
+          "24,140,front",
+          4
+        ],
+        [
+          "24,138,front",
+          2
+        ],
+        [
+          "16,134,front",
+          1
+        ],
+        [
+          "18,122,front",
+          1
+        ],
+        [
+          "18,120,front",
+          1
+        ]
+      ]
+    },
+    "Sprint": {
+      "inverted_triangles": 77,
+      "sampled_triangles": 11868,
+      "largest_fold_regions": [
+        [
+          "24,138,back",
+          31
+        ],
+        [
+          "22,140,back",
+          15
+        ],
+        [
+          "24,140,back",
+          10
+        ],
+        [
+          "24,138,front",
+          4
+        ],
+        [
+          "24,140,front",
+          4
+        ],
+        [
+          "26,138,back",
+          4
+        ],
+        [
+          "26,140,back",
+          2
+        ],
+        [
+          "22,140,front",
+          2
+        ],
+        [
+          "2,132,front",
+          2
+        ],
+        [
+          "24,142,back",
+          2
+        ],
+        [
+          "16,134,front",
+          1
+        ]
+      ]
+    },
+    "PassRight": {
+      "inverted_triangles": 123,
+      "sampled_triangles": 11868,
+      "largest_fold_regions": [
+        [
+          "20,148,back",
+          24
+        ],
+        [
+          "22,144,front",
+          11
+        ],
+        [
+          "24,142,front",
+          9
+        ],
+        [
+          "24,140,front",
+          8
+        ],
+        [
+          "18,148,back",
+          7
+        ],
+        [
+          "22,146,front",
+          6
+        ],
+        [
+          "20,146,front",
+          6
+        ],
+        [
+          "22,142,front",
+          6
+        ],
+        [
+          "20,146,back",
+          5
+        ],
+        [
+          "22,140,back",
+          5
+        ],
+        [
+          "24,138,back",
+          4
+        ],
+        [
+          "24,144,front",
+          4
+        ]
+      ]
+    },
+    "ShotRight": {
+      "inverted_triangles": 99,
+      "sampled_triangles": 11868,
+      "largest_fold_regions": [
+        [
+          "20,148,back",
+          16
+        ],
+        [
+          "22,144,front",
+          10
+        ],
+        [
+          "24,138,back",
+          10
+        ],
+        [
+          "22,140,back",
+          9
+        ],
+        [
+          "22,146,front",
+          7
+        ],
+        [
+          "20,146,back",
+          5
+        ],
+        [
+          "2,132,front",
+          4
+        ],
+        [
+          "18,120,front",
+          4
+        ],
+        [
+          "24,140,back",
+          4
+        ],
+        [
+          "22,146,back",
+          3
+        ],
+        [
+          "22,148,back",
+          3
+        ],
+        [
+          "24,144,front",
+          3
+        ]
+      ]
+    },
+    "GroundedSlideTackle": {
+      "inverted_triangles": 199,
+      "sampled_triangles": 11868,
+      "largest_fold_regions": [
+        [
+          "24,138,back",
+          23
+        ],
+        [
+          "20,148,back",
+          18
+        ],
+        [
+          "24,140,front",
+          16
+        ],
+        [
+          "22,142,front",
+          15
+        ],
+        [
+          "22,144,front",
+          13
+        ],
+        [
+          "22,140,front",
+          13
+        ],
+        [
+          "22,140,back",
+          13
+        ],
+        [
+          "24,142,front",
+          12
+        ],
+        [
+          "24,140,back",
+          12
+        ],
+        [
+          "22,146,front",
+          6
+        ],
+        [
+          "20,146,front",
+          6
+        ],
+        [
+          "26,140,back",
+          6
+        ]
+      ]
+    },
+    "GetUpFromProne": {
+      "inverted_triangles": 147,
+      "sampled_triangles": 11868,
+      "largest_fold_regions": [
+        [
+          "18,148,back",
+          26
+        ],
+        [
+          "20,148,back",
+          19
+        ],
+        [
+          "24,138,back",
+          15
+        ],
+        [
+          "24,140,front",
+          11
+        ],
+        [
+          "24,140,back",
+          10
+        ],
+        [
+          "20,146,back",
+          9
+        ],
+        [
+          "22,144,front",
+          7
+        ],
+        [
+          "22,140,back",
+          7
+        ],
+        [
+          "22,140,front",
+          6
+        ],
+        [
+          "10,130,front",
+          4
+        ],
+        [
+          "18,120,front",
+          4
+        ],
+        [
+          "20,146,front",
+          3
+        ]
+      ]
+    },
+    "KeeperSet": {
+      "inverted_triangles": 60,
+      "sampled_triangles": 11868,
+      "largest_fold_regions": [
+        [
+          "24,138,back",
+          22
+        ],
+        [
+          "24,140,front",
+          10
+        ],
+        [
+          "22,140,front",
+          6
+        ],
+        [
+          "26,138,back",
+          6
+        ],
+        [
+          "24,140,back",
+          4
+        ],
+        [
+          "22,140,back",
+          4
+        ],
+        [
+          "24,138,front",
+          2
+        ],
+        [
+          "26,140,back",
+          2
+        ],
+        [
+          "18,136,front",
+          1
+        ],
+        [
+          "16,134,front",
+          1
+        ],
+        [
+          "18,122,front",
+          1
+        ],
+        [
+          "18,120,front",
+          1
+        ]
+      ]
+    },
+    "KeeperSave": {
+      "inverted_triangles": 129,
+      "sampled_triangles": 11868,
+      "largest_fold_regions": [
+        [
+          "22,142,front",
+          20
+        ],
+        [
+          "22,144,front",
+          18
+        ],
+        [
+          "24,140,front",
+          16
+        ],
+        [
+          "22,140,front",
+          14
+        ],
+        [
+          "24,142,front",
+          14
+        ],
+        [
+          "24,138,back",
+          13
+        ],
+        [
+          "20,142,front",
+          7
+        ],
+        [
+          "26,138,back",
+          6
+        ],
+        [
+          "22,140,back",
+          6
+        ],
+        [
+          "24,144,front",
+          4
+        ],
+        [
+          "24,138,front",
+          2
+        ],
+        [
+          "24,140,back",
+          2
+        ]
+      ]
+    },
+    "Turn90Right": {
+      "inverted_triangles": 72,
+      "sampled_triangles": 11868,
+      "largest_fold_regions": [
+        [
+          "24,138,back",
+          30
+        ],
+        [
+          "22,140,back",
+          14
+        ],
+        [
+          "24,140,back",
+          11
+        ],
+        [
+          "26,138,back",
+          6
+        ],
+        [
+          "24,140,front",
+          4
+        ],
+        [
+          "24,138,front",
+          2
+        ],
+        [
+          "10,130,front",
+          2
+        ],
+        [
+          "18,120,front",
+          1
+        ],
+        [
+          "16,134,front",
+          1
+        ],
+        [
+          "20,126,back",
+          1
+        ]
+      ]
+    }
+  },
+  "missing_arm_samples_after": [],
+  "bones": 65,
+  "clips": 19,
+  "atlas_sha256": {
+    "spectator.png": "f98d4cb492b08e610b09f5357970f6aaa73a64c2f3d534f4694b9af7c2c58221",
+    "bordeaux_outfield.png": "8cbb23bc122c6f0966b9755483babc19264d711bebd684c13210973e07554756",
+    "beechlawn_outfield.png": "8293c5558a979dc6ec2218abaf00d44837225effe263f6d2c34f4520046648ee",
+    "beechlawn_keeper.png": "08581bc5195b7f243fe7b6f22e1616b19c666e49b6b60664007951f7f71423ae",
+    "bordeaux_keeper.png": "865899ef4fc6a593a9a6f0aa0891883c8896a95ac4b3ecd531599e487b4f4cee",
+    "referee.png": "71c0f264dbb6f2b9e633a80f93fdacd176e98bcf180f84e154f26d7d42e25acd"
+  }
+}

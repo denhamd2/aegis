@@ -1,0 +1,10 @@
+
+[smoke] contested_dribble_order_smoke.gd (timeout 45s)
+[failed] contested_dribble_order_smoke.gd exited 1
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+ERROR: Equal opposing reach awarded dribble possession to the first physics caller
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _run (res://tests/contested_dribble_order_smoke.gd:25)

@@ -1,0 +1,71 @@
+
+[smoke] grounded_aerial_recovery_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+GROUNDED_AERIAL_RECOVERY failures=0
+[passed] grounded_aerial_recovery_smoke.gd
+
+[smoke] volley_contact_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+VOLLEY_CONTACT side=1.0 context=volley action=volley contacts=[{ "style": &"volley", "gap": 0.10883922129869, "bounce_age": 99.0 }] rise=0.0
+VOLLEY_CONTACT side=1.0 context=half_volley action=half_volley contacts=[{ "style": &"half_volley", "gap": 0.1250147074461, "bounce_age": 0.01666666666667 }] rise=0.0
+VOLLEY_CONTACT side=1.0 context=ai_half_volley action=half_volley contacts=[{ "style": &"half_volley", "gap": 0.12503211200237, "bounce_age": 0.01666666666667 }] rise=0.0
+VOLLEY_CONTACT side=-1.0 context=volley action=volley contacts=[{ "style": &"volley", "gap": 0.10275502502918, "bounce_age": 99.0 }] rise=0.0
+VOLLEY_CONTACT side=-1.0 context=half_volley action=half_volley contacts=[{ "style": &"half_volley", "gap": 0.03711184859276, "bounce_age": 0.01666666666667 }] rise=0.0
+VOLLEY_CONTACT side=-1.0 context=ai_half_volley action=half_volley contacts=[{ "style": &"half_volley", "gap": 0.04135055467486, "bounce_age": 0.01666666666667 }] rise=0.0
+VOLLEY_CONTACT failures=0
+[passed] volley_contact_smoke.gd
+
+[smoke] aerial_contact_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+AERIAL_HEADER side=1.0 headers=1 jump_m=0.26584844663739 ball=(38.21227, 0.210422, 0.0)
+AERIAL_HEADER side=-1.0 headers=1 jump_m=0.26612541172653 ball=(-38.21227, 0.188675, 0.0)
+AERIAL_CONTACT headers=2 chest=4 gaps=[0.11295213550329, 0.02958155795932, 0.03180427476764, 0.10932576656342, 0.03669422864914, 0.03204690665007] failures=0
+[passed] aerial_contact_smoke.gd
+
+[smoke] cross_to_header_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+CROSS_RECEPTION variant=standard side=1.0 contested=false contacts=[{ "kind": &"cross", "part": &"foot", "style": &"standard", "team": &"Beechlawn Rovers", "opponent_gap": 160.265594482422, "tick": 33 }, { "kind": &"shot", "part": &"head", "style": &"header", "team": &"Beechlawn Rovers", "opponent_gap": 165.891555786133, "tick": 129 }] receiver=(47.76652, -0.030175, 2.261075) ball=(54.04428, 0.137237, -1.940606)
+CROSS_RECEPTION variant=standard side=1.0 contested=true contacts=[{ "kind": &"cross", "part": &"foot", "style": &"standard", "team": &"Beechlawn Rovers", "opponent_gap": 2.46075487136841, "tick": 189 }, { "kind": &"shot", "part": &"head", "style": &"header", "team": &"Beechlawn Rovers", "opponent_gap": 1.76963698863983, "tick": 278 }] receiver=(43.48371, -0.042121, 2.252652) ball=(52.16101, 0.138952, -0.545027)
+CROSS_RECEPTION variant=standard side=-1.0 contested=false contacts=[{ "kind": &"cross", "part": &"foot", "style": &"standard", "team": &"Boardeaux", "opponent_gap": 210.493667602539, "tick": 345 }, { "kind": &"shot", "part": &"head", "style": &"header", "team": &"Boardeaux", "opponent_gap": 229.600387573242, "tick": 434 }] receiver=(-43.5434, 0.049249, 2.171301) ball=(-52.12724, 0.111435, -0.536407)
+CROSS_RECEPTION variant=standard side=-1.0 contested=true contacts=[{ "kind": &"cross", "part": &"foot", "style": &"standard", "team": &"Boardeaux", "opponent_gap": 2.45879983901978, "tick": 501 }, { "kind": &"shot", "part": &"head", "style": &"header", "team": &"Boardeaux", "opponent_gap": 1.79322731494904, "tick": 590 }] receiver=(-43.48202, 0.049454, 2.252671) ball=(-52.13062, 0.111421, -0.526287)
+CROSS_HEADER failures=0
+[passed] cross_to_header_smoke.gd
+
+[smoke] advanced_shots_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+FINESSE_CURVE side=1.0 deviation=(-0.031696, -0.006917, -0.277114)
+FINESSE_CURVE side=-1.0 deviation=(0.031521, -0.036073, -0.27971)
+ADVANCED_SHOTS failures=0
+[passed] advanced_shots_smoke.gd
+
+[smoke] advanced_controls_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+ADVANCED_CONTROLS observed=[{ "kind": &"shot", "style": &"finesse" }, { "kind": &"shot", "style": &"power" }, { "kind": &"shot", "style": &"low" }, { "kind": &"cross", "style": &"lofted_cross" }, { "kind": &"cross", "style": &"driven_cross" }, { "kind": &"cross", "style": &"early_cross" }] failures=0
+[passed] advanced_controls_smoke.gd
+
+[smoke] cross_variants_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+CROSS_VARIANT side=1.0 variant=standard time=1.48766083135837 peak=3.76842403411865 error=0.14347098767757
+CROSS_VARIANT side=1.0 variant=driven_cross time=0.69020125071208 peak=1.06182789802551 error=0.19487370550632
+CROSS_VARIANT side=1.0 variant=lofted_cross time=2.03766083135837 peak=6.09229326248169 error=0.17471577227116
+CROSS_VARIANT side=1.0 variant=early_cross time=1.6225091585549 peak=4.27160739898682 error=0.15617780387402
+CROSS_VARIANT side=-1.0 variant=standard time=1.48766083135837 peak=3.8236517906189 error=0.14377264678478
+CROSS_VARIANT side=-1.0 variant=driven_cross time=0.69020125071208 peak=1.12052893638611 error=0.19480016827583
+CROSS_VARIANT side=-1.0 variant=lofted_cross time=2.03766083135837 peak=6.14441633224487 error=0.17500171065331
+CROSS_VARIANT side=-1.0 variant=early_cross time=1.6225091585549 peak=4.31895446777344 error=0.15645699203014
+CROSS_VARIANTS failures=0
+[passed] cross_variants_smoke.gd

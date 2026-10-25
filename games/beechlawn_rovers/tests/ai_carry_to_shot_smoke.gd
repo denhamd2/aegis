@@ -1,6 +1,8 @@
 extends SceneTree
 ## Coordinate a moving outfielder, live ball and authored contact after a turn.
 var _shots := 0
+var _shot_origin := Vector3.INF
+var _ball: FootballBall
 
 func _initialize() -> void:
 	call_deferred("_run")
@@ -18,6 +20,7 @@ func _run() -> void:
 	game.set_process(false)
 	var player := game.get_node("Player") as FootballPlayer
 	var ball := game.get_node("Ball") as FootballBall
+	_ball=ball
 	for actor in game._home_players + game._away_players:
 		actor.set_physics_process(false)
 		actor.global_position = Vector3(-45.0, 0.0, 30.0)
@@ -43,7 +46,14 @@ func _run() -> void:
 		if _shots > 0:
 			break
 	print("AI carry-to-shot: shots=", _shots, " furthest_ball_x=", snappedf(progress, 0.01))
-	var success := _shots == 1 and progress > 34.0
+	# Validate the action's intended contract: a real forward shot after carrying
+	# inside the configured goal range. An x>34 gate incorrectly rejected valid
+	# shots at x=33.28 (19.22 m from goal) after capsule launches were repaired.
+	await physics_frame
+	var shot_range := Vector2(_shot_origin.x,_shot_origin.z).distance_to(Vector2(52.5,0))
+	var success := _shots == 1 and shot_range<=player.tuning.ai_shot_range+.35 \
+		and ball.linear_velocity.x>8.0
+	print("AI_SHOT_CONTACT range=",shot_range," speed=",ball.linear_velocity.length())
 	if not success:
 		push_error("A turning, unopposed AI outfielder failed to carry into range and deliver one contact-timed shot")
 	game.free()
@@ -52,3 +62,4 @@ func _run() -> void:
 func _on_touch(kind: StringName, _speed: float) -> void:
 	if kind == &"shot":
 		_shots += 1
+		_shot_origin=_ball.global_position

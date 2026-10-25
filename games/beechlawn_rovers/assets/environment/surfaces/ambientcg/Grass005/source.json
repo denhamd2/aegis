@@ -1,0 +1,12 @@
+{
+  "asset": "Grass005",
+  "license": "CC0-1.0",
+  "page": "https://ambientcg.com/a/Grass005",
+  "download": "https://ambientcg.com/get?file=Grass005_1K-JPG.zip",
+  "retrieved_utc": "2026-10-23",
+  "files": {
+    "Grass005_1K-JPG_NormalGL.jpg": "f89e3a1701511d379a9772774ec6b9d7b7ccf3e944fdcc2b98c09dee4cfd804f",
+    "Grass005_1K-JPG_Color.jpg": "5fd8edc1a04e2b9b093229dd0ec41f29668dda9fc698f6610b12cdd83b7690cb",
+    "Grass005_1K-JPG_Roughness.jpg": "04ca3a66eee6105cac9754ac773ffd4ee63ca2222984554c4c04b0cdca80da26"
+  }
+}

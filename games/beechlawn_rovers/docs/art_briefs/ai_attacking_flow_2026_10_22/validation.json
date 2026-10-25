@@ -1,0 +1,28 @@
+{
+  "scope": "Local universal Mac bundle verification; not Mac binary execution.",
+  "archive_bytes": 205001970,
+  "sha256": "2c9b019215b84526dafb0de9100fba401548edb40514b32191280b4dee02008d",
+  "architectures": [
+    "arm64",
+    "x86_64"
+  ],
+  "bundle_identifier": "com.denhamd2.beechlawnrovers",
+  "zip_crc": "pass",
+  "godot": "4.6.3",
+  "regression_invocations": 58,
+  "distinct_regression_scripts": 56,
+  "full_match_scenarios": 6,
+  "chances_gate": "pass",
+  "packaged_resources_mirrored_ai_test": "pass (Linux Godot loading the Mac PCK; not Mac executable)",
+  "native_attack_proofs": {
+    "home_shots": 1,
+    "away_shots": 1,
+    "rendering": "Forward+/Vulkan llvmpipe",
+    "resolution": [
+      640,
+      360
+    ],
+    "simulation_hz": 60,
+    "sampled_video_fps": 10
+  }
+}

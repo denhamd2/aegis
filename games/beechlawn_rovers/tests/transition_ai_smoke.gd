@@ -23,7 +23,7 @@ func _run_checks() -> void:
 	for actor in home:
 		if actor.profile.role == "outfield":
 			match actor.profile.starting_slot:
-				"center": actor.global_position = Vector3(10.0, 0.0, 0.0)
+				"center": actor.global_position = Vector3(8.6, 0.0, 0.0)
 				"left": actor.global_position = Vector3(15.0, 0.0, -4.0)
 				"right": actor.global_position = Vector3(17.0, 0.0, 5.0)
 
@@ -33,10 +33,14 @@ func _run_checks() -> void:
 	game.set("_transition_time_left", 0.0)
 	game.set("_ai_tick", 0.0)
 	ball.global_position = Vector3(10.0, FootballBall.RADIUS, 0.0)
-	ball.last_touch = &"Bordeaux"
+	ball.last_touch = &"Boardeaux"
+	ball.last_action = &"dribble"
+	var new_carrier: FootballPlayer = game._nearest_outfielder(away, Vector2(10,0))
+	new_carrier.position = Vector3(10.4, 0, 0)
+	ball.last_touch_player = new_carrier
 	game._update_ai(0.016)
-	assert(game.get("_possession_team") == &"Bordeaux"
-		and game.get("_transition_team") == &"Bordeaux",
+	assert(game.get("_possession_team") == &"Boardeaux"
+		and game.get("_transition_team") == &"Boardeaux",
 		"Possession change was not recorded")
 	assert(is_equal_approx(float(game.get("_transition_time_left")), 1.35),
 		"Turnover did not start the transition timer")
@@ -70,7 +74,7 @@ func _run_checks() -> void:
 	for actor in home:
 		if actor.profile.role == "outfield":
 			match actor.profile.starting_slot:
-				"center": actor.global_position = Vector3(10.0, 0.0, 0.0)
+				"center": actor.global_position = Vector3(8.6, 0.0, 0.0)
 				"left": actor.global_position = Vector3(15.0, 0.0, -4.0)
 				"right": actor.global_position = Vector3(17.0, 0.0, 5.0)
 
@@ -94,6 +98,7 @@ func _run_checks() -> void:
 	ball.last_touch = &"Beechlawn Rovers"
 	ball.global_position = Vector3(0.0, FootballBall.RADIUS, 0.0)
 	var carrier: FootballPlayer = game.get_node("Player")
+	carrier.position = Vector3(-.6,0,0)
 	var support: FootballPlayer
 	for actor in home:
 		if actor.profile.starting_slot == "left":

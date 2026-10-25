@@ -1,0 +1,22 @@
+
+[smoke] goalkeeper_outcomes_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+KEEPER_OUTCOMES failures=0
+[passed] goalkeeper_outcomes_smoke.gd
+
+[smoke] goalkeeper_response_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+KEEPER_RESPONSE team=Beechlawn Rovers parry_velocity=(4.932845, 1.033267, -5.672771)
+KEEPER_RESPONSE team=Boardeaux parry_velocity=(-4.932845, 1.033267, -5.672771)
+[passed] goalkeeper_response_smoke.gd
+
+[smoke] goalkeeper_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=8 officials=0
+Beechlawn goalkeeper reaction, catch and distribution checks passed
+[passed] goalkeeper_smoke.gd

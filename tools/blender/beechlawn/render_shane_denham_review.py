@@ -19,6 +19,22 @@ output_override = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--
 if output_override:
     OUT = Path(output_override).resolve() / OUT.name
 bpy.ops.wm.open_mainfile(filepath=str(SCENE))
+runtime_kit = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--runtime-kit=")), None)
+if runtime_kit:
+    assert runtime_kit in ("beechlawn_outfield", "beechlawn_keeper", "bordeaux_outfield", "bordeaux_keeper", "referee", "spectator")
+    pigment = bpy.data.images.load(str(ROOT / "games/beechlawn_rovers/assets/characters/textures/shared" / (runtime_kit + ".png")), check_existing=True)
+    for material in bpy.data.materials:
+        if material.use_nodes and material.name.startswith("MAT_Beechlawn_HomeKit"):
+            base = material.node_tree.nodes["Principled BSDF"].inputs["Base Color"]
+            if base.links and base.links[0].from_node.type == "TEX_IMAGE":
+                base.links[0].from_node.image = pigment
+            roughness = material.node_tree.nodes["Principled BSDF"].inputs["Roughness"]
+            if roughness.links and roughness.links[0].from_node.type == "TEX_IMAGE":
+                mask_path = ROOT / "games/beechlawn_rovers/assets/characters/textures/shared" / (runtime_kit + "_roughness.png")
+                if mask_path.is_file():
+                    mask = bpy.data.images.load(str(mask_path), check_existing=True)
+                    mask.colorspace_settings.name = "Non-Color"
+                    roughness.links[0].from_node.image = mask
 variant_path = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--variant=")), None)
 if variant_path:
     # Append head meshes only into this disposable shared-body review session.
@@ -33,7 +49,10 @@ scene = bpy.context.scene
 if shared_preview:
     short = bpy.data.objects.get("Kit_Shirt_ShortSleeve")
     if short:
-        short.hide_render = True
+        short_sleeves = "--short-sleeves" in sys.argv
+        short.hide_render = not short_sleeves
+        bpy.data.objects["YBot_Surface"].hide_render = short_sleeves
+        bpy.data.objects["Kit_shirt_BoundHems"].hide_render = short_sleeves
 armature = bpy.data.objects.get("YBot_Armature")
 idle_preview = "--idle" in sys.argv
 clip = next((arg.split("=", 1)[1] for arg in sys.argv if arg.startswith("--clip=")), None)

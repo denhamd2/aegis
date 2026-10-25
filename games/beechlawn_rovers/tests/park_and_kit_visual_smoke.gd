@@ -89,12 +89,12 @@ func _run_checks() -> void:
 		if actor.profile.role == "outfield":
 			bordeaux_player = actor
 			break
-	assert(bordeaux_player != null, "Bordeaux outfield prototype is missing")
+	assert(bordeaux_player != null, "Boardeaux outfield prototype is missing")
 	var bordeaux_visual := bordeaux_player.get_node("Visual") as FootballerVisual
 	assert(bordeaux_visual != null and bordeaux_visual.animation_tree.active,
-		"Bordeaux actor does not use the rigged visual/animation tree")
+		"Boardeaux actor does not use the rigged visual/animation tree")
 	var bordeaux_surface := bordeaux_visual.get_node("Rig/YBot_Armature/Skeleton3D/YBot_Surface") as MeshInstance3D
 	assert((bordeaux_surface.material_override as StandardMaterial3D).albedo_color.is_equal_approx(
-		game.get("_away_team").primary_kit_color), "Bordeaux team color was not applied")
+		game.get("_away_team").primary_kit_color), "Boardeaux team color was not applied")
 	print("Kilmore park dressing and rigged 4v4 kit-color integration checks passed")
 	quit(0)

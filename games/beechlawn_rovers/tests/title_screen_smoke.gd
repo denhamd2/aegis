@@ -19,6 +19,10 @@ func _run() -> void:
 	current_scene = menu
 	await process_frame
 	check(get_nodes_in_group("football_players").is_empty(),"Title screen must not instantiate the 23 skinned match characters")
+	var build_info: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/build_info.json"))
+	var stamp: String = menu.canvas.get_node("BuildStamp").text
+	check(stamp.contains("v" + String(build_info.version)), "Visible version matches build metadata")
+	check(stamp.contains(String(build_info.source_sha).left(7)) and stamp.contains(String(build_info.packaged_utc)), "Visible source and update time match build metadata")
 	check(menu.start_button.has_focus(),"Start Game needs initial keyboard focus")
 	menu.open_options()
 	check(menu.options_layer.visible and menu.volume_slider.has_focus(),"Options should open and receive keyboard focus")
@@ -67,9 +71,13 @@ func _run() -> void:
 	game._cycle_controlled_player()
 	game._set_controlled_player(actors[3])
 	check(game.player == old_player,"Player-switch routes must not claim a spectator actor")
-	for scoring_team in ["Bordeaux","Beechlawn Rovers"]:
+	for scoring_team in ["Boardeaux","Beechlawn Rovers"]:
 		game._on_goal(scoring_team,1)
-		game._physics_process(1.2)
+		game._physics_process(.5)
+		check(not game.ball.freeze and not game._kickoff_pending,"Scored ball continues into net before restart")
+		var goal_skip := InputEventKey.new()
+		goal_skip.keycode=KEY_SPACE;goal_skip.pressed=true
+		game.presentation.handle_key(goal_skip)
 		check(game._kickoff_pending,"Goal should prepare a restart")
 		game._update_kickoff_input(1.2)
 		check(not game._kickoff_pending,"Either team's spectator restart must be automatic")

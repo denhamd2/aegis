@@ -1,0 +1,187 @@
+
+[smoke] moving_kick_contact_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+MOVING_CONTACT kind=pass speed=0.0 human=false off_axis=false markers=1 impulses=1 toe_gap_m=0.166
+BEECHLAWN_MATCH_READY actors=22 officials=1
+MOVING_CONTACT kind=pass speed=6.0 human=false off_axis=false markers=1 impulses=1 toe_gap_m=0.123
+BEECHLAWN_MATCH_READY actors=22 officials=1
+MOVING_CONTACT kind=pass speed=8.6 human=false off_axis=false markers=1 impulses=1 toe_gap_m=0.244
+BEECHLAWN_MATCH_READY actors=22 officials=1
+MOVING_CONTACT kind=shot speed=0.0 human=false off_axis=false markers=1 impulses=1 toe_gap_m=0.135
+BEECHLAWN_MATCH_READY actors=22 officials=1
+MOVING_CONTACT kind=shot speed=6.0 human=false off_axis=false markers=1 impulses=1 toe_gap_m=0.139
+BEECHLAWN_MATCH_READY actors=22 officials=1
+MOVING_CONTACT kind=shot speed=8.6 human=false off_axis=false markers=1 impulses=1 toe_gap_m=0.275
+BEECHLAWN_MATCH_READY actors=22 officials=1
+MOVING_CONTACT kind=pass speed=0.0 human=true off_axis=false markers=1 impulses=1 toe_gap_m=0.166
+BEECHLAWN_MATCH_READY actors=22 officials=1
+MOVING_CONTACT kind=pass speed=6.0 human=true off_axis=false markers=1 impulses=1 toe_gap_m=0.123
+BEECHLAWN_MATCH_READY actors=22 officials=1
+MOVING_CONTACT kind=pass speed=8.6 human=true off_axis=false markers=1 impulses=1 toe_gap_m=0.239
+BEECHLAWN_MATCH_READY actors=22 officials=1
+MOVING_CONTACT kind=shot speed=0.0 human=true off_axis=false markers=1 impulses=1 toe_gap_m=0.135
+BEECHLAWN_MATCH_READY actors=22 officials=1
+MOVING_CONTACT kind=shot speed=6.0 human=true off_axis=false markers=1 impulses=1 toe_gap_m=0.14
+BEECHLAWN_MATCH_READY actors=22 officials=1
+MOVING_CONTACT kind=shot speed=8.6 human=true off_axis=false markers=1 impulses=1 toe_gap_m=0.271
+BEECHLAWN_MATCH_READY actors=22 officials=1
+MOVING_CONTACT kind=shot speed=0.0 human=true off_axis=true markers=1 impulses=0 toe_gap_m=0.838
+MOVING_CONTACT failures=0
+[passed] moving_kick_contact_smoke.gd
+
+[smoke] first_time_pass_timing_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=8 officials=0
+First-time 8.5 m/s pass contact: physics frame 7 (0.117 s), one impulse, gap 0.033 m
+First-time 18.0 m/s pass contact: physics frame 3 (0.050 s), one impulse, gap 0.059 m
+[passed] first_time_pass_timing_smoke.gd
+
+[smoke] first_time_shot_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+FIRST_TIME_SHOT shots=1 traps=0 toe_gap_m=0.26 failures=0
+[passed] first_time_shot_smoke.gd
+
+[smoke] contested_shot_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+CONTESTED_SHOT team=Beechlawn Rovers choice=shoot direction=(0.98656, 0.0, -0.163399)
+CONTESTED_CONTACT team=Beechlawn Rovers physical_shots=1 gap_m=0.1371336132288
+CONTESTED_SHOT team=Boardeaux choice=shoot direction=(-0.98656, 0.0, -0.163399)
+CONTESTED_CONTACT team=Boardeaux physical_shots=1 gap_m=0.12061679363251
+[passed] contested_shot_smoke.gd
+
+[smoke] goalkeeper_response_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+KEEPER_RESPONSE team=Beechlawn Rovers parry_velocity=(4.932845, 1.033267, -5.672771)
+KEEPER_RESPONSE team=Boardeaux parry_velocity=(-4.932845, 1.033267, -5.672771)
+[passed] goalkeeper_response_smoke.gd
+
+[smoke] goalkeeper_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=8 officials=0
+Beechlawn goalkeeper reaction, catch and distribution checks passed
+[passed] goalkeeper_smoke.gd
+
+[smoke] goalkeeper_outcomes_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+KEEPER_OUTCOMES failures=0
+[passed] goalkeeper_outcomes_smoke.gd
+
+[smoke] dribble_grounding_runtime_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+DRIBBLE_RUNTIME human=false height=0.00134055133327 late_leg_motion=166
+DRIBBLE_RUNTIME human=true height=0.00135195417303 late_leg_motion=164
+[passed] dribble_grounding_runtime_smoke.gd
+
+[smoke] turn_dribble_control_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+REVERSAL human=false touch_heading_gap_degrees=0.0
+REVERSAL human=true touch_heading_gap_degrees=0.0
+Turn/dribble control PASS: weighted reversals for human and AI, nearest-actor ownership, no competing force or airborne foot claim
+[passed] turn_dribble_control_smoke.gd
+
+[smoke] shared_pose_safety_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+POSE_SAFETY clip=AN_Beechlawn_Idle horizontal_samples=0/9 min_elbow_drop_m=0.27
+POSE_SAFETY clip=AN_Beechlawn_Jog horizontal_samples=0/9 min_elbow_drop_m=0.245
+POSE_SAFETY clip=AN_Beechlawn_Sprint horizontal_samples=0/9 min_elbow_drop_m=0.194
+POSE_SAFETY clip=AN_Beechlawn_StopFromRun horizontal_samples=0/9 min_elbow_drop_m=0.264
+POSE_SAFETY clip=AN_Beechlawn_PassRight horizontal_samples=0/9 min_elbow_drop_m=0.154
+POSE_SAFETY clip=AN_Beechlawn_ReceiveRight horizontal_samples=0/9 min_elbow_drop_m=0.162
+POSE_SAFETY clip=AN_Beechlawn_ShotRight horizontal_samples=0/9 min_elbow_drop_m=0.085
+POSE_SAFETY clip=AN_Beechlawn_CloseControl horizontal_samples=0/9 min_elbow_drop_m=0.26
+POSE_SAFETY clip=AN_Beechlawn_WalkOn horizontal_samples=0/9 min_elbow_drop_m=0.264
+POSE_SAFETY clip=AN_Beechlawn_WarmupJog horizontal_samples=0/9 min_elbow_drop_m=0.264
+PASS: all live outfield idle poses and standing action silhouettes avoid sustained T poses
+[passed] shared_pose_safety_smoke.gd
+
+[smoke] match_flow_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=8 officials=0
+Beechlawn kickoff and goal-restart checks passed
+[passed] match_flow_smoke.gd
+
+[smoke] full_match_restarts_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+RESTARTS whole-ball ownership, overhead release, corners, goal kicks, free-kick contact and paused preparation failures=0
+[passed] full_match_restarts_smoke.gd
+
+[smoke] pass_lane_selection_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+PASS_LANE team=Beechlawn Rovers selected=Derek Mitchell decision=through_pass
+PASS_LANE team=Boardeaux selected=Des Feeney decision=through_pass
+PASS: ground and through passes select the open lane in both directions
+[passed] pass_lane_selection_smoke.gd
+
+[smoke] ai_wide_attack_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+WIDE_CARRY team=Beechlawn Rovers ball=(0.0, -23.0) target=(3.0, -23.0) correct=true
+WIDE_CARRY team=Beechlawn Rovers ball=(40.0, -23.0) target=(41.43254, -20.36413) correct=true
+WIDE_CARRY team=Beechlawn Rovers ball=(0.0, -8.0) target=(3.0, -8.0) correct=true
+WIDE_CARRY team=Beechlawn Rovers ball=(40.0, -8.0) target=(43.0, -8.0) correct=true
+WIDE_CARRY team=Beechlawn Rovers ball=(0.0, 0.0) target=(3.0, 0.0) correct=true
+WIDE_CARRY team=Beechlawn Rovers ball=(40.0, 0.0) target=(43.0, 0.0) correct=true
+WIDE_CARRY team=Beechlawn Rovers ball=(0.0, 8.0) target=(3.0, 8.0) correct=true
+WIDE_CARRY team=Beechlawn Rovers ball=(40.0, 8.0) target=(43.0, 8.0) correct=true
+WIDE_CARRY team=Beechlawn Rovers ball=(0.0, 23.0) target=(3.0, 23.0) correct=true
+WIDE_CARRY team=Beechlawn Rovers ball=(40.0, 23.0) target=(41.43254, 20.36413) correct=true
+CARRY_ESCAPE team=Beechlawn Rovers target=(22.38825, 1.815559)
+WIDE_CARRY team=Boardeaux ball=(0.0, -23.0) target=(-3.0, -23.0) correct=true
+WIDE_CARRY team=Boardeaux ball=(-40.0, -23.0) target=(-41.43254, -20.36413) correct=true
+WIDE_CARRY team=Boardeaux ball=(0.0, -8.0) target=(-3.0, -8.0) correct=true
+WIDE_CARRY team=Boardeaux ball=(-40.0, -8.0) target=(-43.0, -8.0) correct=true
+WIDE_CARRY team=Boardeaux ball=(0.0, 0.0) target=(-3.0, 0.0) correct=true
+WIDE_CARRY team=Boardeaux ball=(-40.0, 0.0) target=(-43.0, 0.0) correct=true
+WIDE_CARRY team=Boardeaux ball=(0.0, 8.0) target=(-3.0, 8.0) correct=true
+WIDE_CARRY team=Boardeaux ball=(-40.0, 8.0) target=(-43.0, 8.0) correct=true
+WIDE_CARRY team=Boardeaux ball=(0.0, 23.0) target=(-3.0, 23.0) correct=true
+WIDE_CARRY team=Boardeaux ball=(-40.0, 23.0) target=(-41.43254, 20.36413) correct=true
+CARRY_ESCAPE team=Boardeaux target=(-22.38825, 1.815559)
+[passed] ai_wide_attack_smoke.gd
+
+[smoke] ai_shot_lane_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+SHOT_LANE team=Beechlawn Rovers behind_defender_choice=shoot
+SHOT_LANE team=Boardeaux behind_defender_choice=shoot
+AI shooting-lane PASS: open shot under trailing pressure, frontal block, both directions and human control
+[passed] ai_shot_lane_smoke.gd
+
+[smoke] tactical_possession_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+PASS: mirrored possession states, order-neutral contests, read-only rules and outlet/run/cover roles
+[passed] tactical_possession_smoke.gd
+
+[smoke] contested_dribble_order_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+PASS: exact opposing contest waits for physical separation/contact in both call orders
+[passed] contested_dribble_order_smoke.gd

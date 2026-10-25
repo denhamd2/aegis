@@ -2,7 +2,7 @@
 
 An original 3D association-football game prototype inside the Aegis
 repository. It has its own Godot project, scenes, scripts and assets. Its
-export pipeline publishes independent Web and universal Mac builds. Open this directory as a separate
+export pipeline publishes universal Mac builds. The football Web version is retired. Open this directory as a separate
 Godot project; the Aegis project remains at `game/`.
 
 The supplied gameplay specification is the product target. Development follows
@@ -22,7 +22,8 @@ likeness/environment art and M1 performance acceptance remain in development.
   buffered short and through-pass commands, and a variable-power shot.
 - Nine gameplay cameras with saved height/zoom/angle tuning, match goals and basic scoring/reset.
 - An optional, skippable pre-match broadcast: original walk-on/warm-up clips,
-  lineup and player, keeper, pitch, goal/net, fan and ball detail shots.
+  an eighteen-second object/player montage before walkout, team graphics,
+  referee reveal and a slow lineup pan.
 - A three-minute short-match clock, score display and development telemetry.
 - A worn park-pitch setting with lightweight scene geometry.
 - Eleven shared human actors per side (one keeper each), editable roster data,
@@ -49,8 +50,8 @@ individual head/hair variants. Faces still share the Shane-derived draft. These
 are not accepted individual likenesses or final kit tailoring. Full-team 4-4-2
 support/cover is active; additional formations and complete rules remain open.
 
-Play: https://denhamd2.github.io/aegis/beechlawn-rovers/
-Downloads: https://github.com/denhamd2/aegis/releases (Beechlawn releases).
+Mac downloads: https://github.com/denhamd2/aegis/releases (Beechlawn releases).
+Appearance checks use native Godot Forward+ captures; headless tests cover logic.
 See `docs/11v11_implementation.md` and `docs/art_briefs/11v11_release_evidence.md`
 for measured checks and visual limitations.
 
@@ -66,6 +67,11 @@ for measured checks and visual limitations.
 | Ground pass | E |
 | Through pass | Q |
 | Charge and shoot | Hold/release Space |
+| Finesse / power / low shot in open play | Hold Z / X / V as Space charging begins |
+| Lofted / driven / early cross | Hold Z / X / V as T charging begins |
+| Lofted pass | Hold/release R |
+| Cross into the area | Hold/release T |
+| Header / volley / half-volley | Space near the incoming ball; arrow keys aim |
 | Standing tackle | F |
 | Slide tackle | G |
 | Switch Beechlawn player | Tab |
@@ -83,15 +89,18 @@ interception decisions remain in development.
 
 Sliding tackles commit the player for a short approach before resolving ball
 contact. The AI can slide from longer range; opponent-first contact raises a
-foul call and does not change possession. Free-kick restarts are not implemented
-yet. Running players also have a brief, attribute-weighted shoulder response
+foul call and does not change possession. Opponent-first challenges now feed the referee/free-kick/card system. Running players also have a brief, attribute-weighted shoulder response
 when they contest an opponent-held ball side by side; the ball remains governed
 by the ordinary possession and contact rules.
 
 The first match slice uses keyboard input only. Press E or Q to take
-Beechlawn's kickoff; Bordeaux restarts automatically after a goal pause. The
-clock runs for three minutes of open play and then stops at full time. Goal kicks/corners and boundary ownership have basic restarts; touchlines use a
-ground-pass placeholder. Authentic throw-ins, fouls and full rules remain open.
+Beechlawn's kickoff; Boardeaux restarts automatically after a goal pause. The
+clock runs for three minutes of open play and then stops at full time. Throw-ins use an overhead animation and independent ball release. Free kicks,
+penalties, yellows, second yellows and straight reds stop/restart play; dismissed
+players leave the active team. Manual restarts use WASD aim, hold/release E for
+throw/pass and Space for shooting. Watch takes them automatically. Full laws,
+advantage/offside and substitutions remain open. See
+[the repair pass](docs/match_repairs_2026-10-22.md).
 
 ## Blender workflow
 
@@ -126,3 +135,24 @@ one rigid-body ball, shared rig/material resources and staggered tactical AI.
 See [`docs/roadmap.md`](docs/roadmap.md) for the staged plan and remaining
 acceptance checks, and [`docs/backlog.md`](docs/backlog.md) for the ordered
 development backlog.
+
+### Advanced shots and aerial play (BR-019, in progress)
+
+Hold/release **R** for a lofted pass or **T** for a cross. Hold **Z**, **X** or
+**V** when beginning a ground Space charge for finesse, power or low shots;
+with T they select lofted, driven or early crosses. The chosen variant stays
+with the command when its modifier is released. Aim with movement/arrow keys.
+Crosses without directional input target the central attacking area.
+
+**Space** near an incoming aerial ball requests a contextual header or volley.
+Prepare the command before a low rebound for a half-volley; actual ground
+contact is required. Holding Space during the aerial approach adds power;
+the authored contact timing determines the strike. AI can use these strikes,
+chest-control suitable lobs and prepare near/far-post support. Contact misses
+leave the independent ball loose. Assistance stays bounded by aim/range and
+actual boot/head reach. Finesse uses bounded spin-driven force in the air.
+
+See [advanced-shot evidence](docs/art_briefs/advanced_shots_2026_10_23/brief.md)
+and the [earlier aerial pass](docs/art_briefs/aerial_play_2026_10_22/brief.md).
+Dedicated goalkeeper high claims, left-foot strike variants, richer aerial
+contests, action/foot-plant polish and M1 play-feel/performance remain open.

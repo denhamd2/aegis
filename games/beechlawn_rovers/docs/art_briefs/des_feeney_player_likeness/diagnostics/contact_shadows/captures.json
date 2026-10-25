@@ -1,0 +1,32 @@
+[
+  {
+    "file": "ball_shadow_on.png",
+    "weather": "sunny",
+    "sun_shadows": true,
+    "query": "software=1&weather=sunny&view=ball_shadow&surface_review=1&shadows=1",
+    "width": 960,
+    "height": 540,
+    "browser_errors": false,
+    "staged_ball": true
+  },
+  {
+    "file": "ball_shadow_off.png",
+    "weather": "sunny",
+    "sun_shadows": false,
+    "query": "software=1&weather=sunny&view=ball_shadow&surface_review=1",
+    "width": 960,
+    "height": 540,
+    "browser_errors": false,
+    "staged_ball": true
+  },
+  {
+    "file": "sunny_goalmouth.png",
+    "weather": "sunny",
+    "sun_shadows": true,
+    "query": "software=1&weather=sunny&view=goalmouth&surface_review=1&shadows=1",
+    "width": 960,
+    "height": 540,
+    "browser_errors": false,
+    "staged_ball": true
+  }
+]

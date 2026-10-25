@@ -1,0 +1,22 @@
+home-0 Beechlawn Rovers: shots=6 contested=5 Boardeaux: shots=4 contested=4
+home-1 Beechlawn Rovers: shots=6 contested=3 Boardeaux: shots=3 contested=1
+home-2 Beechlawn Rovers: shots=6 contested=5 Boardeaux: shots=1 contested=1
+away-0 Beechlawn Rovers: shots=4 contested=4 Boardeaux: shots=4 contested=4
+away-1 Beechlawn Rovers: shots=8 contested=7 Boardeaux: shots=2 contested=2
+away-2 Beechlawn Rovers: shots=4 contested=3 Boardeaux: shots=7 contested=7
+{
+  "total_shots": {
+    "Beechlawn Rovers": 34,
+    "Boardeaux": 21
+  },
+  "qualifying_scenarios": {
+    "Beechlawn Rovers": 6,
+    "Boardeaux": 5
+  },
+  "shot_share": {
+    "Beechlawn Rovers": 0.6181818181818182,
+    "Boardeaux": 0.38181818181818183
+  },
+  "accepted": true,
+  "criteria": "Each team: >=2 physical shots + >=1 contested in >=5/6; aggregate share 35\u201365%."
+}

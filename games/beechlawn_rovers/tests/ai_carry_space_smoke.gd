@@ -38,6 +38,11 @@ func _run() -> void:
 		defender.global_position = ball.global_position + Vector3(4.0 * carrier.attack_sign, -0.11, 0)
 		var progressive: Dictionary = game._player_decisions.choose_carrier_action(carrier, team, opposition, ball)
 		passed = passed and progressive.get("type") == &"short_pass"
+		defender.position = ball.position - Vector3(2.5*carrier.attack_sign, .11, 0)
+		var trailing: Dictionary = game._player_decisions.choose_carrier_action(carrier, team, opposition, ball)
+		if trailing.type != &"carry":
+			push_error("Tight trailing pressure forced a pass despite an open goalward lane")
+			game.free();quit(1);return
 	game.free()
 	if not passed:
 		push_error("A carrier with four metres of space and a trailing defender recycles instead of progressing")

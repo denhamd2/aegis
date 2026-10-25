@@ -50,7 +50,7 @@ func _run_checks() -> void:
 	assert(carrier_target.x > left_support.global_position.x + 2.0,
 		"AI ball carrier did not choose a forward dribble target")
 
-	# With Beechlawn in possession, Bordeaux's non-pressing defenders recover
+	# With Beechlawn in possession, Boardeaux's non-pressing defenders recover
 	# behind the ball in their own attacking coordinate frame (goal-side).
 	var away_chaser: FootballPlayer
 	var away_defenders: Array[FootballPlayer] = []

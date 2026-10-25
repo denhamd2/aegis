@@ -72,6 +72,9 @@ def build():
         sock=(30,92,198) if key=='beechlawn_outfield' else (231,234,233) if key in ('beechlawn_keeper','bordeaux_outfield') else (16,17,18)
         d.rectangle(RECTS['socks'],fill=sock)
         atlas.convert('RGB').save(OUT/f'{key}.png')
+    # Keep later keeper art when rebuilding the common role atlas pipeline.
+    from build_keeper_kit_atlases import build as build_keeper_atlases
+    build_keeper_atlases()
     print('Shared kit atlases generated: six team/role materials, no player identity baked in.')
 
 if __name__=='__main__':build()

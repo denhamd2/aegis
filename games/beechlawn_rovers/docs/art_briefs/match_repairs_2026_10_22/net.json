@@ -1,0 +1,308 @@
+{
+  "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+  "api": "1.4.305",
+  "away_players": 11,
+  "display_server": "X11",
+  "frames": [
+    {
+      "ball": "(51.78223, 1.043103, 0.0)",
+      "file": "frame_000.png",
+      "label": "net",
+      "player": "(150.0, 0.0, 150.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "tick": 6
+    },
+    {
+      "ball": "(53.53439, 0.889857, 0.0)",
+      "file": "frame_001.png",
+      "label": "net",
+      "player": "(150.0, 0.0, 150.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        1,
+        0
+      ],
+      "tick": 12
+    },
+    {
+      "ball": "(53.84846, 0.75457, 0.0)",
+      "file": "frame_002.png",
+      "label": "net",
+      "player": "(150.0, 0.0, 150.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        1,
+        0
+      ],
+      "tick": 18
+    },
+    {
+      "ball": "(53.45896, 0.58012, 0.000001)",
+      "file": "frame_003.png",
+      "label": "net",
+      "player": "(150.0, 0.0, 150.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        1,
+        0
+      ],
+      "tick": 24
+    },
+    {
+      "ball": "(53.07603, 0.311306, 0.000001)",
+      "file": "frame_004.png",
+      "label": "net",
+      "player": "(150.0, 0.0, 150.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        1,
+        0
+      ],
+      "tick": 30
+    },
+    {
+      "ball": "(52.72179, 0.103906, 0.000001)",
+      "file": "frame_005.png",
+      "label": "net",
+      "player": "(150.0, 0.0, 150.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        1,
+        0
+      ],
+      "tick": 36
+    },
+    {
+      "ball": "(52.39465, 0.107398, -0.000006)",
+      "file": "frame_006.png",
+      "label": "net",
+      "player": "(150.0, 0.0, 150.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        1,
+        0
+      ],
+      "tick": 42
+    },
+    {
+      "ball": "(52.08939, 0.106285, -0.000044)",
+      "file": "frame_007.png",
+      "label": "net",
+      "player": "(150.0, 0.0, 150.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        1,
+        0
+      ],
+      "tick": 48
+    },
+    {
+      "ball": "(51.80668, 0.105254, -0.00015)",
+      "file": "frame_008.png",
+      "label": "net",
+      "player": "(150.0, 0.0, 150.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        1,
+        0
+      ],
+      "tick": 54
+    },
+    {
+      "ball": "(51.54583, 0.104304, -0.000414)",
+      "file": "frame_009.png",
+      "label": "net",
+      "player": "(150.0, 0.0, 150.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        1,
+        0
+      ],
+      "tick": 60
+    },
+    {
+      "ball": "(51.30599, 0.10273, -0.001059)",
+      "file": "frame_010.png",
+      "label": "net",
+      "player": "(150.0, 0.0, 150.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        1,
+        0
+      ],
+      "tick": 66
+    },
+    {
+      "ball": "(51.08624, 0.100953, -0.002462)",
+      "file": "frame_011.png",
+      "label": "net",
+      "player": "(150.0, 0.0, 150.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        1,
+        0
+      ],
+      "tick": 72
+    },
+    {
+      "ball": "(50.88597, 0.099334, -0.003868)",
+      "file": "frame_012.png",
+      "label": "net",
+      "player": "(150.0, 0.0, 150.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        1,
+        0
+      ],
+      "tick": 78
+    },
+    {
+      "ball": "(50.70413, 0.097864, -0.005041)",
+      "file": "frame_013.png",
+      "label": "net",
+      "player": "(150.0, 0.0, 150.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        1,
+        0
+      ],
+      "tick": 84
+    },
+    {
+      "ball": "(50.53295, 0.09648, -0.006102)",
+      "file": "frame_014.png",
+      "label": "net",
+      "player": "(150.0, 0.0, 150.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        1,
+        0
+      ],
+      "tick": 90
+    },
+    {
+      "ball": "(50.36968, 0.094987, -0.007105)",
+      "file": "frame_015.png",
+      "label": "net",
+      "player": "(150.0, 0.0, 150.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        1,
+        0
+      ],
+      "tick": 96
+    },
+    {
+      "ball": "(50.21405, 0.093475, -0.008042)",
+      "file": "frame_016.png",
+      "label": "net",
+      "player": "(150.0, 0.0, 150.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        1,
+        0
+      ],
+      "tick": 102
+    },
+    {
+      "ball": "(50.06585, 0.092035, -0.008914)",
+      "file": "frame_017.png",
+      "label": "net",
+      "player": "(150.0, 0.0, 150.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        1,
+        0
+      ],
+      "tick": 108
+    },
+    {
+      "ball": "(49.9249, 0.090665, -0.009722)",
+      "file": "frame_018.png",
+      "label": "net",
+      "player": "(150.0, 0.0, 150.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        1,
+        0
+      ],
+      "tick": 114
+    },
+    {
+      "ball": "(49.79097, 0.089365, -0.010469)",
+      "file": "frame_019.png",
+      "label": "net",
+      "player": "(150.0, 0.0, 150.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        1,
+        0
+      ],
+      "tick": 120
+    },
+    {
+      "ball": "(49.66368, 0.088128, -0.011159)",
+      "file": "frame_020.png",
+      "label": "net",
+      "player": "(150.0, 0.0, 150.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        1,
+        0
+      ],
+      "tick": 126
+    },
+    {
+      "ball": "(49.54269, 0.086953, -0.011795)",
+      "file": "frame_021.png",
+      "label": "net",
+      "player": "(150.0, 0.0, 150.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        1,
+        0
+      ],
+      "tick": 132
+    },
+    {
+      "ball": "(49.42764, 0.085846, -0.012386)",
+      "file": "frame_022.png",
+      "label": "net",
+      "player": "(150.0, 0.0, 150.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        1,
+        0
+      ],
+      "tick": 138
+    },
+    {
+      "ball": "(49.31823, 0.084819, -0.012955)",
+      "file": "frame_023.png",
+      "label": "net",
+      "player": "(150.0, 0.0, 150.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        1,
+        0
+      ],
+      "tick": 144
+    }
+  ],
+  "godot": "4.6.3-stable (official)",
+  "home_players": 11,
+  "msaa_3d": 2,
+  "officials": 1,
+  "rendering_method": "forward_plus",
+  "resolution": [
+    640,
+    360
+  ],
+  "review_mode": "net",
+  "scope": "Actual native Forward+ controllers and assets; accelerated simulated time, software GPU, no Mac performance claim.",
+  "vendor": "Unknown"
+}

@@ -16,10 +16,14 @@ signal foul_committed(player: FootballPlayer, opponent: FootballPlayer)
 @onready var camera: Camera3D = get_node("../BroadcastCamera/Camera3D")
 
 var stamina := 100.0
+var _stoppage_version := 0
 var _stick := Vector2.ZERO
 var _aim := Vector2.ZERO
 var _flat_direction := Vector3(1.0, 0.0, 0.0)
 var _shot_charge := -1.0
+var _shot_style: StringName = &"standard"
+var _visual_shot_style: StringName = &"standard"
+var _visual_shot_spin := Vector3.ZERO
 var _pending_pass: float = 0.0
 var _pending_through := false
 var _pending_shot: float = 0.0
@@ -28,6 +32,7 @@ var _debug := false
 var _kick_time := -1.0
 var _kick_duration := 0.0
 var _kick_side := 1.0
+var _standing_pending := false
 var _tackle_cooldown := 0.0
 var _slide_tackle_time := 0.0
 var _slide_contact_time := 0.0
@@ -38,25 +43,42 @@ var _balance_stagger_time := 0.0
 var _balance_stagger_direction := Vector3.ZERO
 var _save_pose_time := 0.0
 var _goalkeeper_controller: GoalkeeperController
+var _aerial_controller: PlayerAerialController
 var ai_move_direction := Vector3.ZERO
 var ai_sprinting := false
 var ai_action_cooldown := 0.0
 var receive_target := Vector3.ZERO
 var receive_target_time := 0.0
+var receive_target_kind: StringName = &"ground"
 var _ignore_pass_until_released := false
 var _footballer_visual: FootballerVisual
 var _visual_pass_pending := false
 var _visual_pass_through := false
 var _visual_pass_direction := Vector3.ZERO
+var _visual_pass_receiver_id := 0
+var _visual_pass_kind: StringName = &"ground"
+var _visual_pass_power := 0.5
+var _visual_pass_variant: StringName = &"standard"
 var _visual_shot_pending := false
 var _visual_shot_direction := Vector3.ZERO
 var _visual_shot_speed := 0.0
 var _visual_shot_lift := 0.0
+var _contact_wait_action: StringName = &""
+var _contact_wait_remaining := 0.0
 var _last_receive_action_serial := -1
 
 func _ready() -> void:
+	# The independent ball collides against players, but is never a floor or
+	# moving platform for their kinematic capsule (rolling contacts launched it).
+	collision_layer = 4
+	collision_mask = 5
+	platform_floor_layers = 1
+	platform_wall_layers = 0
+	floor_snap_length = 0.12
 	if tuning == null:
 		tuning = FootballTuning.new()
+	_aerial_controller = PlayerAerialController.new()
+	_aerial_controller.configure(self, ball)
 	if profile == null:
 		rotation.y = -PI * 0.5 * attack_sign
 	elif profile.role == "goalkeeper":
@@ -81,6 +103,7 @@ func bind_footballer_visual(visual: FootballerVisual) -> void:
 		_footballer_visual.action_finished.connect(_on_visual_action_finished)
 
 func _physics_process(delta: float) -> void:
+	var step_version := _stoppage_version
 	receive_target_time = maxf(0.0, receive_target_time - delta)
 	if receive_target_time > 0.0 and ball != null and ball.last_touch != team_name:
 		receive_target_time = 0.0
@@ -94,24 +117,34 @@ func _physics_process(delta: float) -> void:
 		_slide_contact_time -= delta
 		if _slide_contact_time <= 0.0:
 			_resolve_slide_tackle_contact()
+			if step_version!=_stoppage_version: return
 	_save_pose_time = maxf(0.0, _save_pose_time - delta)
 	_sample_input()
 	if _goalkeeper_controller != null:
 		_goalkeeper_controller.update_before_move(delta)
 		if ball.goalkeeper_is_holding(self):
 			_stick = Vector2.ZERO
+	_aerial_controller.before_move(delta)
 	_update_locomotion(delta)
+	_aerial_controller.after_locomotion()
 	move_and_slide()
 	if ball.use_terrain:
 		global_position.x=clampf(global_position.x,-55.0,55.0)
 		global_position.z=clampf(global_position.z,-36.0,36.0)
-	_update_dribble(delta)
-	_try_shoulder_challenge()
+	set_meta("move_speed", Vector2(velocity.x, velocity.z).length())
+	# Resolve legal hand contacts before foot assistance can relabel a slow
+	# own rebound as a dribble. Both still use the post-movement position.
 	if _goalkeeper_controller != null:
 		_goalkeeper_controller.try_save()
+	_aerial_controller.resolve_contact(delta)
+	_update_dribble(delta)
+	_resolve_pending_kick_contact(delta)
+	_try_shoulder_challenge()
 	if not controlled_by_human:
 		_try_ai_tackle()
+		if step_version!=_stoppage_version: return
 	_update_actions(delta)
+	if step_version!=_stoppage_version: return
 	_try_play_receive_animation(delta)
 	_update_visual_pose(delta)
 
@@ -135,25 +168,32 @@ func _update_locomotion(delta: float) -> void:
 	camera_forward.y = 0.0
 	camera_right = camera_right.normalized()
 	camera_forward = camera_forward.normalized()
-	var recovering := is_instance_valid(_footballer_visual) and _footballer_visual.is_recovery_active()
+	var recovering := Engine.get_physics_frames() < int(get_meta("wall_until_tick",0)) or _keeper_is_recovering() or (is_instance_valid(_footballer_visual) and _footballer_visual.is_recovery_active())
+	var defending := ball != null and ball.last_touch != team_name and not ball.goalkeeper_is_holding(self)
+	var jockey := controlled_by_human and defending and Input.is_action_pressed("close_control")
+	var contain := controlled_by_human and defending and Input.is_action_pressed("contain")
 	var sliding := _slide_tackle_time > 0.0
 	var desired := Vector3.ZERO if recovering else (_slide_tackle_direction if sliding else (ai_move_direction if not controlled_by_human else (camera_right * _stick.x - camera_forward * _stick.y)))
-	var ai_shot_preparing := not controlled_by_human and _visual_shot_pending
-	if ai_shot_preparing:
-		# Keep the established approach until foot contact. A fresh tactical
-		# carry lane must not turn an AI kicker away mid-preparation.
-		desired = Vector3(velocity.x, 0.0, velocity.z).normalized()
+	if contain:
+		var offset := ball.global_position - global_position
+		offset.y = 0
+		desired = offset.normalized() if offset.length() > 1.7 else Vector3.ZERO
+		_stick = Vector2.RIGHT if desired.length_squared() > 0 else Vector2.ZERO
+	if not controlled_by_human and (_visual_pass_pending or _visual_shot_pending):
+		# A staggered tactical lane change must not turn the kicking body away
+		# during its short setup. Ball-relative speed still adjusts every tick.
+		desired = ball.global_position - global_position
+		desired.y = 0.0
+		desired = desired.normalized()
 	desired.y = 0.0
 	if desired.length_squared() > 1.0:
 		desired = desired.normalized()
 	var sprint_requested := not recovering and (Input.is_action_pressed("sprint") if controlled_by_human else ai_sprinting) and _stick.length() > 0.1
 	var sprint_input := sprint_requested
 	var close_control := Input.is_action_pressed("close_control") if controlled_by_human else false
-	var speed_scale := 0.56 if close_control else 1.0
+	var speed_scale := .52 if jockey or contain else (.56 if close_control else 1.0)
 	var is_ai_goalkeeper := not controlled_by_human and profile != null and profile.role == "goalkeeper"
 	var target_speed := 0.0 if recovering else (4.8 if sliding else (tuning.goalkeeper_move_speed if is_ai_goalkeeper else (tuning.sprint_speed if sprint_input else tuning.jog_speed)))
-	if ai_shot_preparing:
-		target_speed = minf(target_speed, Vector3(velocity.x, 0.0, velocity.z).length())
 	if _balance_stagger_time > 0.0:
 		target_speed *= lerpf(0.68, 1.0, 1.0 - _balance_stagger_time / 0.38)
 	if sprint_requested and not is_ai_goalkeeper:
@@ -163,6 +203,8 @@ func _update_locomotion(delta: float) -> void:
 	var horizontal := Vector3(velocity.x, 0.0, velocity.z)
 	var rate := tuning.acceleration if target_speed > horizontal.length() else tuning.braking
 	var target_velocity := desired * target_speed
+	if _visual_pass_pending or _visual_shot_pending:
+		target_velocity = _kick_setup_velocity(target_velocity)
 	if _balance_stagger_time > 0.0:
 		target_velocity += _balance_stagger_direction * 0.75
 	horizontal = horizontal.move_toward(target_velocity, rate * delta)
@@ -176,8 +218,14 @@ func _update_locomotion(delta: float) -> void:
 		stamina = maxf(0.0, stamina - tuning.sprint_drain * delta)
 	else:
 		stamina = minf(tuning.stamina_max, stamina + tuning.stamina_recovery * delta)
-	if desired.length_squared() > 0.015:
-		var intended_direction := desired.normalized()
+	var facing_intent := desired
+	if _aerial_controller.facing.length_squared() > .01:
+		facing_intent = _aerial_controller.facing
+	if not recovering and (is_ai_goalkeeper or jockey or contain):
+		facing_intent = ball.global_position - global_position
+		facing_intent.y = 0.0
+	if facing_intent.length_squared() > 0.015:
+		var intended_direction := facing_intent.normalized()
 		# Keep locomotion cycling through a moving change of direction. The
 		# authored Turn90 clips plant a foot and belong to stationary pivots;
 		# playing them here dragged that planted pose through the moving world.
@@ -195,16 +243,46 @@ func _update_locomotion(delta: float) -> void:
 	set_meta("close_control", close_control)
 	set_meta("move_speed", horizontal.length())
 
+func _kick_setup_velocity(requested_velocity: Vector3) -> Vector3:
+	# Match the final setup stride to the independently rolling ball. Reusing
+	# post-collision speed as a shot speed cap could permanently stop a kicker
+	# after one capsule contact and let the ball roll past the authored marker.
+	if not is_instance_valid(_footballer_visual) or requested_velocity.length_squared() < 0.1:
+		return requested_velocity
+	var action: StringName = &"shot" if _visual_shot_pending else &"pass"
+	var remaining := _footballer_visual.action_contact_time(action) \
+		- _footballer_visual.animation_player.current_animation_position
+	remaining /= maxf(absf(_footballer_visual.animation_player.get_playing_speed()), 0.01)
+	var offset := ball.global_position - global_position
+	offset.y = 0.0
+	var ball_velocity := Vector3(ball.linear_velocity.x, 0.0, ball.linear_velocity.z)
+	# Incoming first-time passes keep their existing arrival timing. Do not
+	# pull a stationary player around, or chase a ball outside physical reach.
+	if remaining <= 0.0 or offset.length() > tuning.kick_assist_radius + 0.2 \
+			or ball.global_position.y - global_position.y > 0.62 \
+			or ball_velocity.dot(offset) < -0.5:
+		return requested_velocity
+	var contact_offset := -global_basis.z * tuning.kick_setup_touch_distance - global_basis.x * 0.032
+	var correction := (offset - contact_offset) / maxf(remaining, 0.12)
+	return (ball_velocity + correction).limit_length(requested_velocity.length())
+
+func _keeper_is_recovering() -> bool:
+	return _goalkeeper_controller != null and _goalkeeper_controller.is_recovering()
+
 func _update_dribble(delta: float) -> void:
-	if ball == null:
+	if ball == null or _keeper_is_recovering() or _aerial_controller.committed():
 		return
 	var flat_distance := Vector2(ball.global_position.x - global_position.x,
 		ball.global_position.z - global_position.z).length()
 	var control_touch := false
 	if flat_distance <= tuning.control_radius and _stick.length() > 0.05:
-		control_touch = ball.dribble_touch(self, _flat_direction, bool(get_meta("sprinting", false)),
-			bool(get_meta("close_control", false)), tuning.dribble_touch_interval,
-			tuning.close_touch_distance, tuning.sprint_touch_distance)
+		var preparing_kick := _visual_pass_pending or _visual_shot_pending
+		control_touch = ball.dribble_touch(self, _flat_direction,
+			bool(get_meta("sprinting", false)) and not preparing_kick,
+			bool(get_meta("close_control", false)) or preparing_kick,
+			tuning.dribble_touch_interval,
+			tuning.kick_setup_touch_distance if preparing_kick else tuning.close_touch_distance,
+			tuning.sprint_touch_distance)
 	elif flat_distance <= tuning.control_radius and velocity.length() < 0.45 and ball.linear_velocity.length() < 0.7:
 		# Gentle recovery to a playable foot distance, still applied as force.
 		control_touch = ball.dribble_touch(self, _flat_direction, false, true,
@@ -216,13 +294,16 @@ func _update_dribble(delta: float) -> void:
 		receive_target_time = 0.0
 
 func _update_actions(delta: float) -> void:
+	var action_version := _stoppage_version
 	if not controlled_by_human:
 		return
-	if _slide_tackle_time > 0.0 or (is_instance_valid(_footballer_visual) and _footballer_visual.is_recovery_active()):
+	if _keeper_is_recovering() or _slide_tackle_time > 0.0 or (is_instance_valid(_footballer_visual) and _footballer_visual.is_recovery_active()):
 		return
 	if _ignore_pass_until_released:
 		if not Input.is_action_pressed("pass") and not Input.is_action_pressed("through_pass"):
 			_ignore_pass_until_released = false
+		return
+	if _aerial_controller.handle_input(delta):
 		return
 	if Input.is_action_just_pressed("pass"):
 		_queue_pass(false)
@@ -230,6 +311,7 @@ func _update_actions(delta: float) -> void:
 		_queue_pass(true)
 	if Input.is_action_just_pressed("tackle"):
 		_attempt_tackle()
+		if action_version!=_stoppage_version: return
 	if Input.is_action_just_pressed("slide_tackle"):
 		_attempt_slide_tackle()
 		if _slide_tackle_time > 0.0:
@@ -246,33 +328,42 @@ func _update_actions(delta: float) -> void:
 	if _pending_pass > 0.0 and (_can_kick() or first_time_contact_ready):
 		var playback_speed := 1.0
 		if first_time_contact_ready:
-			playback_speed = clampf(pass_contact_time / maxf(receive_eta, 0.04), 1.0, 5.0)
+			playback_speed = clampf(pass_contact_time / maxf(receive_eta, 0.04), 1.0, 10.0)
 		_do_pass(_pending_through, Vector3.ZERO, false, playback_speed)
 		_pending_pass = 0.0
 		_pending_through = false
 	elif _pending_pass <= 0.0:
 		_pending_through = false
 	if Input.is_action_just_pressed("shoot"):
-		_pending_shot = tuning.action_input_buffer
+		_shot_style = ShotPlanner.input_style()
+		_pending_shot = tuning.first_time_pass_buffer if _ball_will_reach_kick_window() else tuning.action_input_buffer
 	var shot_buffer_was_active := _pending_shot > 0.0
 	_pending_shot = maxf(0.0, _pending_shot - delta)
-	if _shot_charge < 0.0 and _pending_shot > 0.0 and _can_kick():
+	if _shot_charge < 0.0 and _pending_shot > 0.0 and (_can_kick() or _ball_will_reach_kick_window()):
 		_shot_charge = 0.0
-		_pending_shot = 0.0
+		if _can_kick(): _pending_shot = 0.0
 	elif shot_buffer_was_active and _pending_shot <= 0.0 and _shot_charge < 0.0:
 		status_changed.emit("Shot input expired: get closer to the ball")
 	if _shot_charge >= 0.0:
 		if Input.is_action_pressed("shoot"):
 			_shot_charge = minf(1.0, _shot_charge + delta / tuning.shot_charge_duration)
 			shot_charge_changed.emit(_shot_charge)
-		elif _can_kick():
-			_do_shot(_shot_charge)
-			_shot_charge = -1.0
-			shot_charge_changed.emit(0.0)
 		else:
-			_shot_charge = -1.0
-			shot_charge_changed.emit(0.0)
-			status_changed.emit("Shot lost: ball moved out of reach")
+			var shot_eta := _time_to_kick_window()
+			var shot_contact := _footballer_visual.action_contact_time(&"shot") \
+				if is_instance_valid(_footballer_visual) else -1.0
+			if _can_kick() or (shot_eta > 0.0 and shot_eta <= shot_contact):
+				var playback_speed := clampf(shot_contact / maxf(shot_eta, 0.04), 1.0, 10.0) \
+					if shot_eta > 0.0 else 1.0
+				_do_shot(_shot_charge, playback_speed, Vector3.ZERO, _shot_style)
+				_shot_charge = -1.0
+				_pending_shot = 0.0
+				shot_charge_changed.emit(0.0)
+			elif shot_eta <= 0.0 or _pending_shot <= 0.0:
+				_shot_charge = -1.0
+				_pending_shot = 0.0
+				shot_charge_changed.emit(0.0)
+				status_changed.emit("Shot lost: ball moved out of reach")
 
 func _can_kick() -> bool:
 	if ball == null:
@@ -281,13 +372,18 @@ func _can_kick() -> bool:
 	flat.y = 0.0
 	return flat.length() <= tuning.kick_assist_radius and ball.global_position.y < 0.62
 
+func _can_start_ball_action() -> bool:
+	return _slide_tackle_time <= 0.0 and (not is_instance_valid(_footballer_visual) \
+		or _footballer_visual.can_start_ball_action())
+
 func _ball_will_reach_kick_window() -> bool:
 	return _time_to_kick_window() > 0.0
 
 func _time_to_kick_window() -> float:
 	if ball == null or ball.last_touch != team_name or ball.linear_velocity.length_squared() < 1.0 or ball.global_position.y > 0.62:
 		return -1.0
-	var offset := ball.global_position - global_position
+	var contact_target := global_position - global_basis.z * tuning.kick_setup_touch_distance
+	var offset := ball.global_position - contact_target
 	offset.y = 0.0
 	var relative_velocity := ball.linear_velocity - Vector3(velocity.x, 0.0, velocity.z)
 	relative_velocity.y = 0.0
@@ -306,7 +402,7 @@ func _queue_pass(through: bool) -> void:
 	_pending_through = through
 
 func _try_ai_tackle() -> void:
-	if _tackle_cooldown > 0.0 or ball == null or ball.last_touch == team_name \
+	if _keeper_is_recovering() or _tackle_cooldown > 0.0 or ball == null or ball.last_touch == team_name \
 			or (is_instance_valid(_footballer_visual) and _footballer_visual.is_recovery_active()):
 		return
 	var offset := ball.global_position - global_position
@@ -392,22 +488,7 @@ func _resolve_slide_tackle_contact() -> bool:
 	var ball_offset := ball.global_position - global_position
 	ball_offset.y = 0.0
 	var ball_gap := ball_offset.length()
-	var nearest_opponent: FootballPlayer
-	var opponent_gap := INF
-	for node in get_tree().get_nodes_in_group("football_players"):
-		var candidate := node as FootballPlayer
-		if candidate == null or candidate == self or candidate.team_name == team_name:
-			continue
-		var gap := candidate.global_position.distance_to(global_position)
-		if gap < opponent_gap:
-			opponent_gap = gap
-			nearest_opponent = candidate
-	if nearest_opponent != null and opponent_gap <= 0.95 and ball_gap > 0.9 \
-			and nearest_opponent.global_position.distance_to(ball.global_position) < ball_gap:
-		set_meta("last_tackle_result", &"foul")
-		status_changed.emit("Foul — late slide challenge")
-		foul_committed.emit(self, nearest_opponent)
-		return false
+	if _challenge_foul(true): return false
 	if ball_gap > 1.2 or ball.global_position.y > 0.8:
 		set_meta("last_tackle_result", &"missed")
 		status_changed.emit("Slide missed: ball moved away")
@@ -509,7 +590,7 @@ func _attempt_tackle() -> bool:
 	var to_ball := ball.global_position - global_position
 	to_ball.y = 0.0
 	var distance := to_ball.length()
-	if distance > _tackle_reach() or ball.global_position.y > 0.8:
+	if distance > _tackle_reach() + .45 or ball.global_position.y > 0.8:
 		status_changed.emit("Tackle missed: get closer to the ball")
 		return false
 	if distance > 0.001:
@@ -518,6 +599,20 @@ func _attempt_tackle() -> bool:
 		if forward.normalized().dot(to_ball / distance) < -0.25:
 			status_changed.emit("Tackle missed: turn toward the ball")
 			return false
+	if is_instance_valid(_footballer_visual) and not _standing_pending:
+		if not _footballer_visual.play_standing_tackle(): return false
+		_standing_pending = true
+		_tackle_cooldown = .85
+		status_changed.emit("Standing tackle")
+		return true
+	return _resolve_standing_tackle()
+
+func _resolve_standing_tackle() -> bool:
+	_standing_pending = false
+	if ball == null: return false
+	if _challenge_foul(false): return false
+	if ball.global_position.distance_to(global_position) > _tackle_reach() or ball.position.y > .8: return false
+	if is_instance_valid(_footballer_visual) and ball.global_position.distance_to(_receive_contact_position()) > .48: return false
 	var clearance := _action_direction()
 	if clearance.length_squared() < 0.01:
 		clearance = Vector3(attack_sign, 0.0, 0.0)
@@ -549,9 +644,9 @@ func _start_tackle_pose() -> void:
 	_kick_duration = 0.36
 	_kick_side = -1.0
 
-func _start_goalkeeper_save_pose() -> void:
+func _start_goalkeeper_save_pose(style: StringName = &"KeeperCatch", preparation: float = .25) -> void:
 	if is_instance_valid(_footballer_visual):
-		_footballer_visual.play_keeper_save()
+		_footballer_visual.play_keeper_save(style, preparation)
 	_save_pose_time = 0.36
 
 func _action_direction() -> Vector3:
@@ -567,22 +662,48 @@ func _action_direction() -> Vector3:
 	return direction.normalized()
 
 func _do_pass(through: bool, requested_direction := Vector3.ZERO,
-		at_animation_contact := false, playback_speed := 1.0) -> void:
+		at_animation_contact := false, playback_speed := 1.0,
+		requested_receiver: FootballPlayer = null, pass_kind: StringName = &"ground",
+		power := 0.5, variant: StringName = &"standard") -> void:
 	if not at_animation_contact and is_instance_valid(_footballer_visual):
 		var predicted_first_time_contact := _pending_pass > 0.0 \
 			and _time_to_kick_window() > 0.0
 		if _visual_pass_pending or (not _can_kick() and not predicted_first_time_contact):
 			return
-		_visual_pass_pending = true
 		_visual_pass_through = through
-		_visual_pass_direction = requested_direction
-		if _footballer_visual.play_pass(playback_speed):
+		_visual_pass_direction = requested_direction if requested_direction.length_squared() > 0.01 else _action_direction()
+		# Interrupting a previous pass emits action_finished synchronously.
+		# Arm the new contact afterward so that cleanup cannot erase it.
+		_visual_pass_pending = _footballer_visual.play_pass(playback_speed)
+		if _visual_pass_pending:
+			_visual_pass_receiver_id = requested_receiver.get_instance_id() if is_instance_valid(requested_receiver) else 0
+			_visual_pass_kind = pass_kind
+			_visual_pass_power = power
+			_visual_pass_variant = variant
+			if pass_kind in [&"lofted_pass", &"cross"]:
+				var preparation := LoftedPassPlanner.plan(self, pass_kind, _visual_pass_direction, power, requested_receiver, variant)
+				if not preparation.is_empty():
+					var runner := preparation.get("receiver") as FootballPlayer
+					_visual_pass_receiver_id = runner.get_instance_id() if runner != null else 0
+					LoftedPassPlanner.assign_runs(self, preparation, true)
 			return
 		_visual_pass_pending = false
 		status_changed.emit("Pass action unavailable: animation is busy or missing")
 		return
 	var intended_direction := requested_direction.normalized() if requested_direction.length_squared() > 0.01 else _action_direction()
-	var option := _choose_pass_target(intended_direction, through)
+	if pass_kind in [&"lofted_pass", &"cross"]:
+		var aerial := LoftedPassPlanner.plan(self, pass_kind, intended_direction, power, requested_receiver, variant)
+		if aerial.is_empty():
+			status_changed.emit("Aerial pass cancelled: no reachable target in the aimed lane")
+			return
+		if ball.kick_velocity(aerial.velocity, pass_kind, team_name, self, &"foot", variant):
+			LoftedPassPlanner.assign_runs(self, aerial)
+			status_changed.emit("Cross" if pass_kind == &"cross" else "Lofted pass")
+		return
+	var option := _pass_option_for_receiver(requested_receiver, through) if requested_receiver != null else _choose_pass_target(intended_direction, through)
+	if requested_receiver != null and option.is_empty():
+		status_changed.emit("Pass cancelled: recipient unavailable")
+		return
 	var target: FootballPlayer = option.get("receiver") as FootballPlayer
 	var target_position: Vector3 = option.get("position", ball.global_position + intended_direction * 12.0)
 	var direction := target_position - ball.global_position
@@ -594,9 +715,10 @@ func _do_pass(through: bool, requested_direction := Vector3.ZERO,
 	var speed := clampf(distance * (1.05 if through else 0.88), 7.0,
 		tuning.through_pass_speed if through else tuning.short_pass_speed)
 	var lift := clampf(distance * 0.08, 0.35, 1.45) if through else 0.2
-	if ball.kick(direction, speed, lift, &"through_pass" if through else &"pass", team_name):
+	if ball.kick(direction, speed, lift, &"through_pass" if through else &"pass", team_name, self):
 		if is_instance_valid(target):
 			target.receive_target = target_position
+			target.receive_target_kind = &"ground"
 			target.receive_target_time = clampf(distance / maxf(speed, 1.0) + 0.75, 1.0, 3.5)
 		status_changed.emit(("Through ball to " if through else "Pass to ") +
 			(target.profile.display_name if is_instance_valid(target) and target.profile != null else "space"))
@@ -605,36 +727,65 @@ func _do_pass(through: bool, requested_direction := Vector3.ZERO,
 
 
 func _on_visual_action_contact(action: StringName) -> void:
+	if action in [&"header", &"chest_control", &"volley", &"half_volley"]:
+		_aerial_controller.on_marker(action)
+		return
+	if action == &"standing_tackle":
+		_resolve_standing_tackle()
+		return
 	if action == &"receive":
 		if ball.receive_touch(self, _receive_contact_position(), _flat_direction):
 			receive_target_time = 0.0
 			status_changed.emit("First touch")
 		return
-	if action == &"shot":
-		if not _visual_shot_pending:
-			return
-		_visual_shot_pending = false
-		if not _can_kick():
-			status_changed.emit("Shot cancelled: ball left the contact window")
-			return
-		if ball.kick(_visual_shot_direction, _visual_shot_speed, _visual_shot_lift,
-				&"shot", team_name):
-			status_changed.emit("Shot fired")
+	if (action == &"shot" and _visual_shot_pending) or (action == &"pass" and _visual_pass_pending):
+		_contact_wait_action = action
+		_contact_wait_remaining = tuning.kick_contact_grace_seconds
+		_resolve_pending_kick_contact(0.0)
+
+func _resolve_pending_kick_contact(delta: float) -> void:
+	if _contact_wait_action == &"":
 		return
-	if action != &"pass" or not _visual_pass_pending:
+	var action := _contact_wait_action
+	# A marker opens a short contact window, rather than authorizing a kick
+	# anywhere inside the much wider root/approach radius. The live boot must
+	# actually reach the live ball; neither object is repositioned.
+	var touching := _can_kick() and ball.global_position.distance_to(_receive_contact_position()) <= tuning.kick_foot_contact_radius
+	_contact_wait_remaining -= delta
+	if not touching and _contact_wait_remaining > 0.0:
+		return
+	_contact_wait_action = &""
+	if action == &"shot":
+		_visual_shot_pending = false
+	else:
+		_visual_pass_pending = false
+	if not touching:
+		status_changed.emit(("Shot" if action == &"shot" else "Pass") + " cancelled: ball left the contact window")
+		return
+	if action == &"shot":
+		if ball.kick(_visual_shot_direction, _visual_shot_speed, _visual_shot_lift,
+				&"shot", team_name, self, &"foot", _visual_shot_style, _visual_shot_spin):
+			status_changed.emit("Shot fired")
 		return
 	var through := _visual_pass_through
 	var requested_direction := _visual_pass_direction
-	_visual_pass_pending = false
-	if not _can_kick():
-		status_changed.emit("Pass cancelled: ball left the contact window")
+	var receiver := instance_from_id(_visual_pass_receiver_id) as FootballPlayer if _visual_pass_receiver_id != 0 else null
+	if _visual_pass_receiver_id != 0 and not is_instance_valid(receiver):
+		status_changed.emit("Pass cancelled: recipient unavailable")
 		return
-	_do_pass(through, requested_direction, true)
+	_do_pass(through, requested_direction, true, 1.0, receiver, _visual_pass_kind, _visual_pass_power, _visual_pass_variant)
 
 
 func _on_visual_action_finished(action: StringName) -> void:
+	_aerial_controller.on_finished(action)
+	if action == &"standing_tackle": _standing_pending = false
+	if _contact_wait_action == action:
+		_contact_wait_action = &""
+		_contact_wait_remaining = 0.0
 	if action == &"pass":
 		_visual_pass_pending = false
+		_visual_pass_receiver_id = 0
+		_visual_pass_kind = &"ground"
 	elif action == &"shot":
 		_visual_shot_pending = false
 	elif action == &"slide_tackle":
@@ -645,7 +796,7 @@ func _try_play_receive_animation(delta: float) -> void:
 	if not is_instance_valid(_footballer_visual) or receive_target_time <= 0.0 \
 			or ball == null or ball.action_serial == _last_receive_action_serial \
 			or ball.last_touch != team_name \
-			or ball.last_action not in [&"pass", &"through_pass"] \
+			or ball.last_action not in [&"pass", &"through_pass", &"lofted_pass", &"cross", &"header_clearance"] \
 			or _pending_pass > 0.0 or _pending_shot > 0.0 or _shot_charge >= 0.0 \
 			or _visual_pass_pending or _slide_tackle_time > 0.0:
 		return
@@ -693,7 +844,7 @@ func _receive_contact_position() -> Vector3:
 		if skeleton != null:
 			var toe_index := skeleton.find_bone("mixamorig_RightToe_End")
 			if toe_index >= 0:
-				return skeleton.to_global(skeleton.get_bone_global_pose(toe_index).origin)
+				return _footballer_visual.bone_world_position(&"mixamorig_RightToe_End")
 	var forward := -global_basis.z
 	forward.y = 0.0
 	return global_position + forward.normalized() * 0.55 + Vector3.UP * 0.05
@@ -721,15 +872,7 @@ func _choose_pass_target(intended_direction: Vector3, through: bool) -> Dictiona
 		var alignment := direct.dot(intended)
 		if alignment < 0.30:
 			continue
-		var predicted := candidate.global_position
-		var travel_time := distance / maxf(tuning.through_pass_speed if through else tuning.short_pass_speed, 1.0)
-		if through:
-			var receiver_velocity := candidate.velocity
-			receiver_velocity.y = 0.0
-			var run_direction := receiver_velocity.normalized() if receiver_velocity.length() > 0.5 else Vector3(attack_sign, 0.0, 0.0)
-			predicted += run_direction * minf(travel_time, 0.8) * (2.2 if receiver_velocity.length() < 0.5 else receiver_velocity.length())
-			predicted.x = clampf(predicted.x, -FIELD_LENGTH_LIMIT, FIELD_LENGTH_LIMIT)
-			predicted.z = clampf(predicted.z, -FIELD_WIDTH_LIMIT, FIELD_WIDTH_LIMIT)
+		var predicted: Vector3 = _pass_option_for_receiver(candidate, through).get("position", candidate.global_position)
 		var score := (1.0 - alignment) * 5.0 + distance * (0.055 if through else 0.025)
 		if through:
 			var forward_gain := (predicted.x - global_position.x) * attack_sign
@@ -742,6 +885,23 @@ func _choose_pass_target(intended_direction: Vector3, through: bool) -> Dictiona
 			best = candidate
 			best_position = predicted
 	return {"receiver": best, "position": best_position} if best != null else {}
+
+func _pass_option_for_receiver(receiver: FootballPlayer, through: bool) -> Dictionary:
+	if not is_instance_valid(receiver) or not receiver.is_inside_tree() or receiver == self \
+			or receiver.team_name != team_name or receiver.profile == null or receiver.profile.role == "goalkeeper":
+		return {}
+	var distance := Vector2(receiver.global_position.x - global_position.x, receiver.global_position.z - global_position.z).length()
+	if distance < 2.0 or distance > 34.0:
+		return {}
+	var predicted := receiver.global_position
+	if through:
+		var run_velocity := Vector3(receiver.velocity.x, 0, receiver.velocity.z)
+		var run_direction := run_velocity.normalized() if run_velocity.length() > 0.5 else Vector3(attack_sign,0,0)
+		var travel_time := distance / maxf(tuning.through_pass_speed, 1.0)
+		predicted += run_direction * minf(travel_time, 0.8) * (run_velocity.length() if run_velocity.length() > 0.5 else 2.2)
+		predicted.x = clampf(predicted.x, -FIELD_LENGTH_LIMIT, FIELD_LENGTH_LIMIT)
+		predicted.z = clampf(predicted.z, -FIELD_WIDTH_LIMIT, FIELD_WIDTH_LIMIT)
+	return {"receiver": receiver, "position": predicted}
 
 func _pass_lane_risk(start: Vector3, finish: Vector3) -> float:
 	var segment := finish - start
@@ -765,27 +925,33 @@ func _pass_lane_risk(start: Vector3, finish: Vector3) -> float:
 const FIELD_LENGTH_LIMIT := 51.0
 const FIELD_WIDTH_LIMIT := 32.5
 
-func _do_shot(charge: float) -> void:
+func _do_shot(charge: float, playback_speed := 1.0, requested_direction := Vector3.ZERO,
+		style: StringName = &"standard") -> void:
 	var direction := _action_direction()
 	var target := Vector3(attack_sign * (tuning.field_length * 0.5 + 3.0), 0.7, 0.0)
 	var goal_direction := target - ball.global_position
 	goal_direction.y = 0.0
 	goal_direction = goal_direction.normalized()
 	# Gentle aim help bends intent toward the goal while preserving lateral stick input.
-	direction = (direction * 0.56 + goal_direction * 0.44).normalized()
-	var speed := lerpf(tuning.shot_min_speed, tuning.shot_max_speed, smoothstep(0.0, 1.0, charge))
-	var lift := lerpf(0.55, 2.45, charge)
+	direction = requested_direction.normalized() if requested_direction.length_squared() > 0.01 \
+		else (direction * 0.56 + goal_direction * 0.44).normalized()
+	var strike := ShotPlanner.plan(self, charge, direction, style)
+	direction = strike.direction
+	var speed: float = strike.speed
+	var lift: float = strike.lift
 	if is_instance_valid(_footballer_visual):
 		if _visual_shot_pending:
 			return
+		_visual_shot_style = style
+		_visual_shot_spin = strike.spin
 		_visual_shot_direction = direction
 		_visual_shot_speed = speed
 		_visual_shot_lift = lift
-		_visual_shot_pending = _footballer_visual.play_shot()
+		_visual_shot_pending = _footballer_visual.play_shot(playback_speed)
 		if not _visual_shot_pending:
 			status_changed.emit("Shot action unavailable: animation is busy or missing")
 		return
-	if ball.kick(direction, speed, lift, &"shot", team_name):
+	if ball.kick(direction, speed, lift, &"shot", team_name, self, &"foot", style, strike.spin):
 		status_changed.emit("Shot  %d%%" % roundi(charge * 100.0))
 		_start_kick_pose(true)
 
@@ -850,3 +1016,52 @@ func _update_visual_pose(delta: float) -> void:
 			+ _balance_stagger_direction.x * 0.12 * balance_pose
 		body.rotation.x = -_balance_stagger_direction.z * 0.12 * balance_pose
 	visual.position.y = -0.38 * clampf(_slide_tackle_time / 0.24, 0.0, 1.0)
+
+func reset_for_stoppage() -> void:
+	_stoppage_version+=1
+	_aerial_controller.reset()
+	if _goalkeeper_controller != null:
+		_goalkeeper_controller.reset_for_stoppage()
+	_save_pose_time=0.0
+	velocity=Vector3.ZERO
+	ai_move_direction=Vector3.ZERO
+	ai_sprinting=false
+	receive_target_time=0
+	_pending_pass=0; _pending_shot=0; _shot_charge=-1
+	_visual_pass_pending=false; _visual_shot_pending=false
+	_visual_pass_receiver_id=0
+	_slide_contact_pending=false; _slide_tackle_time=0
+	_standing_pending = false
+	_balance_stagger_time=0
+	set_meta("move_speed",0.0)
+	if is_instance_valid(_footballer_visual):
+		_footballer_visual.reset_to_idle()
+
+func _challenge_foul(sliding: bool) -> bool:
+	var victim: FootballPlayer
+	var gap := .96 if sliding else .82
+	var forward := -global_basis.z
+	for node in get_tree().get_nodes_in_group("football_players"):
+		var other := node as FootballPlayer
+		if other == self or other.team_name == team_name: continue
+		var offset := other.global_position-global_position; offset.y=0
+		if offset.length()<gap and forward.dot(offset.normalized())>-.15:
+			gap=offset.length(); victim=other
+	if victim == null: return false
+	var ball_gap := global_position.distance_to(ball.global_position)
+	var ball_first := ball_gap < minf(.68,gap-.1) and ball.global_position.y-global_position.y<.7
+	var speed := (velocity-victim.velocity).length()
+	var event := {"opponent_contact":true,"ball_first":ball_first,"relative_speed":speed,
+		"from_behind":(-victim.global_basis.z).dot((global_position-victim.global_position).normalized())<-.35,
+		"sliding":sliding,"position":victim.global_position}
+	var verdict: String = preload("res://scripts/football_rules_controller.gd").classify_challenge(event)
+	if verdict == "clean": return false
+	# A reachable opponent must also obstruct this challenge; proximity alone
+	# must not turn an ordinary nearby tackle into a foul.
+	if ball_first and verdict != "red": return false
+	if not ball_first and ball_gap < gap*.85: return false
+	set_meta("last_challenge",event)
+	set_meta("last_tackle_result",&"foul")
+	_tackle_cooldown=1.1
+	foul_committed.emit(self,victim)
+	return true

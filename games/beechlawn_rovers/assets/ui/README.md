@@ -58,3 +58,14 @@ The full license notices accompany the font files. No paid assets were added.
 ## Photorealistic revision, 19 October 2026
 
 The current key art replaces the illustrated treatment with natural-light, photographic styling for David Murray and the owner. Both faces are unobscured and sharp, based on their archived original photos. Skin and kit share the same photographic treatment. Centred uhlsport, THOMAS LOOMES & CO, the oval crest, native title and Play/Watch controls are retained. See `title_key_art.provenance.json` for inputs and hash. This remains generated promotional artwork, separate from playable character likeness.
+
+## Supplied wordmark and local menu theme, 21 October 2026
+
+`title_logo_source.jpg` is a byte-identical runtime copy of the owner's
+`69668.jpg`, archived with provenance under
+`references/source_uploads/chat_attachments/title_logo/`. The landing screen
+uses its white/red lettering via an atlas crop and `title_logo_mask.gdshader`;
+it does not regenerate the title. Red/charcoal/white native controls replace
+the previous lime/navy theme. `menu/*.svg` are original, simple UI primitives
+for white slider handles and red/grey switches. The player key art is unchanged
+(hash in `title_key_art.provenance.json`); all blue/black kits remain intact.

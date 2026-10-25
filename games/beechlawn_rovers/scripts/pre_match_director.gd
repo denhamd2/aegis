@@ -5,6 +5,9 @@ const JOG := &"AN_Beechlawn_WarmupJog"
 const IDLE := &"AN_Beechlawn_Idle"
 const BOLD := preload("res://assets/ui/fonts/BarlowSemiCondensed-SemiBold.ttf")
 const REGULAR := preload("res://assets/ui/fonts/BarlowSemiCondensed-Regular.ttf")
+const LINEUP_GRAPHIC := preload("res://scripts/ui/lineup_graphic.gd")
+const REFEREE_GRAPHIC := preload("res://assets/ui/lineups/referee_lower_third.png")
+const BROADCAST := preload("res://scripts/ui/broadcast_style.gd")
 var match_scene: Node3D
 var camera: Camera3D
 var overlay: CanvasLayer
@@ -25,7 +28,13 @@ var _interpolation_modes: Dictionary = {}
 var _hud_visible := true
 var _shane: FootballPlayer
 var _keeper: FootballPlayer
+var _des: FootballPlayer
 var _review_callback: JavaScriptObject
+var _lineup_graphic: Control
+var _lower_third: Panel
+var _referee_lower_third: Control
+var _referee_name: Label
+var _referee_role: Label
 
 func start(game: Node3D) -> void:
 	match_scene = game
@@ -59,6 +68,9 @@ func start(game: Node3D) -> void:
 				_keeper = actor
 	_shane = home[1] if _shane == null else _shane
 	_keeper = home[0] if _keeper == null else _keeper
+	for actor in away:
+		if actor.profile.jersey_number == 9: _des=actor
+	_des=away[1] if _des==null else _des
 	_warmup = [_shane, away[away.size() - 1]]
 	camera = Camera3D.new()
 	camera.name = "PreMatchCamera"
@@ -78,30 +90,42 @@ func start(game: Node3D) -> void:
 			JavaScriptBridge.get_interface("window").BEECHLAWN_INTRO_SHOT = _review_callback
 
 func _build_shots() -> void:
+	# A directed eighteen-second cold open, before the teams enter the pitch.
+	_add_shot("montage_goal", "KILMORE DRIVE", "Sunday league football", 3.0,
+		Vector3(49.3,.55,4.4), Vector3(49.8,.60,4.0), Vector3(52.5,1.12,2.0), Vector3(52.5,1.12,1.8), 48)
+	_add_shot("montage_net", "MATCHDAY", "Weathered posts. Familiar ground.", 3.0,
+		Vector3(55.0,.8,1.5),Vector3(54.8,.9,1.2),Vector3(53.9,.8,.2),Vector3(53.9,.9,0),38)
+	_add_shot("montage_ball", "BEECHLAWN ROVERS 27", "The match ball", 3.0,
+		Vector3(.65,.3,.65),Vector3(.5,.25,.55),Vector3(0,.11,0),Vector3(0,.11,0),35)
+	var keeper_pos := Vector3(-47,0,-1)
+	var des_pos := Vector3(6,0,10)
+	_add_shot("montage_john", _keeper.profile.display_name.to_upper(), "BEECHLAWN ROVERS · GOALKEEPER", 3.0,
+		keeper_pos+Vector3(.35,1.68,2.35),keeper_pos+Vector3(.15,1.68,2.2),keeper_pos+Vector3(0,1.62,0),keeper_pos+Vector3(0,1.62,0),19)
+	_add_shot("montage_des", _des.profile.display_name.to_upper(), "BOARDEAUX · PLAYER MANAGER", 3.0,
+		des_pos+Vector3(-.35,1.67,2.35),des_pos+Vector3(-.15,1.67,2.2),des_pos+Vector3(0,1.59,0),des_pos+Vector3(0,1.59,0),19)
+	var puddle := _puddle_target()
+	var wet: bool = match_scene.ball.surface_wetness > .05
+	_add_shot("montage_puddles", "THE GOALMOUTH", "Mud, water and Sunday football" if wet else "Worn grass and Sunday football", 3.0,
+		puddle+Vector3(-1.6,.20,1.5),puddle+Vector3(-1.3,.23,1.4),puddle+Vector3(.2,.03,0),puddle+Vector3(.35,.03,0),48)
 	_add_shot("venue", "KILMORE DRIVE", "Dublin  ·  Sunday league football", 2.8,
 		Vector3(12, 5.2, 40), Vector3(7, 5.0, 38), Vector3(0, 0.7, 0), Vector3(0, 0.7, 0), 53)
-	_add_shot("walk", "HERE COME THE TEAMS", "Beechlawn Rovers  /  Boardeaux", 7.5,
-		Vector3(4.8, 1.65, 26), Vector3(4.8, 1.65, 17), Vector3(0, 1.15, 31), Vector3(0, 1.15, 22), 52)
-	_add_shot("goal", "THE FRAME", "Weathered steel. Seven metres of possibility.", 3.0,
-		Vector3(49.2, 2.1, 5), Vector3(50.0, 1.8, 4.6), Vector3(52.5, 1.7, 2.5), Vector3(52.5, 1.7, 2.3), 45)
-	_add_shot("net", "EVERY GOAL STARTS HERE", "Kilmore Drive  ·  Matchday details", 2.8,
-		Vector3(55.1, 1.6, 2.8), Vector3(54.8, 1.4, 2.6), Vector3(53.4, 1.3, 1.3), Vector3(53.4, 1.3, 1.1), 43)
+	# Two readable eleven-second team cards; keep the live walk visible to
+	# their right and retain the authored 1.2 m/s player walking speed.
+	_add_shot("walk", "HERE COME THE TEAMS", "Beechlawn Rovers  /  Boardeaux", 22.0,
+		Vector3(10.8, 1.65, 26), Vector3(10.8, 1.65, -0.4), Vector3(6, 1.15, 31), Vector3(6, 1.15, 4.6), 52)
+	# A close, face-forward official reveal follows the home/away lineup cards.
+	_add_shot("referee", "DES FEENEY", "MATCH OFFICIAL  /  REFEREE", 4.2,
+		Vector3(0.58, 1.73, 7.7), Vector3(0.48, 1.73, 7.55),
+		Vector3(0, 1.62, 5.0), Vector3(0, 1.62, 5.0), 19)
 	_add_shot("fans", "THE TOUCHLINE", "Local football. Familiar faces.", 2.8,
 		Vector3(-18.4, 1.6, -31.8), Vector3(-19.4, 1.6, -32.2), Vector3(-20, 1.3, -36.7), Vector3(-20, 1.3, -36.7), 43)
-	_add_shot("lineup", "BEECHLAWN ROVERS  vs  BOARDEAUX", "Starting elevens  ·  Kilmore Drive", 4.2,
+	# Keep the full team sweep readable instead of racing past the faces.
+	_add_shot("lineup", "BEECHLAWN ROVERS  vs  BOARDEAUX", "Starting elevens  ·  Kilmore Drive", 12.0,
 		Vector3(-9, 1.65, 10), Vector3(8, 1.65, 10), Vector3(-7, 1.35, 5), Vector3(10, 1.35, 5), 52)
 	var shane_pos: Vector3 = _lineup[_shane.get_instance_id()]
 	_add_shot("portrait", _shane.profile.display_name.to_upper(), "BEECHLAWN ROVERS  /  %d" % _shane.profile.jersey_number, 3.0,
 		shane_pos + Vector3(0.6, 1.55, 2.4), shane_pos + Vector3(0.15, 1.57, 2.2),
 		shane_pos + Vector3(0, 1.45, 0), shane_pos + Vector3(0, 1.45, 0), 31)
-	var keeper_pos: Vector3 = _lineup[_keeper.get_instance_id()]
-	_add_shot("keeper", _keeper.profile.display_name.to_upper(), "GOALKEEPER  /  %d" % _keeper.profile.jersey_number, 2.8,
-		keeper_pos + Vector3(-0.6, 1.35, 3), keeper_pos + Vector3(-0.1, 1.4, 2.7),
-		keeper_pos + Vector3(0, 1.1, 0), keeper_pos + Vector3(0, 1.1, 0), 40)
-	_add_shot("pitch", "SUNDAY LEAGUE. PROPER FOOTBALL.", "Grass, chalk and the details that make a home ground.", 2.4,
-		Vector3(1.2, 0.32, 1.6), Vector3(0.8, 0.28, 1.3), Vector3(0, 0.02, 0), Vector3(0, 0.02, 0), 43)
-	_add_shot("ball", "READY TO ROLL", "Beechlawn Rovers 27", 2.4,
-		Vector3(0.7, 0.28, 0.6), Vector3(0.55, 0.26, 0.5), Vector3(0, 0.11, 0), Vector3(0, 0.11, 0), 37)
 	_add_shot("warmup", "FINAL PREPARATIONS", "The short match is about to begin.", 4.0,
 		Vector3(0.1, 1.5, 10), Vector3(0.1, 1.5, 1.2), Vector3(-2.4, 1.0, 14), Vector3(-2.4, 1.0, 5.2), 51)
 	_add_shot("handoff", "BEECHLAWN ROVERS  vs  BOARDEAUX", "Three minutes. All to play for.", 2.0,
@@ -120,6 +144,7 @@ func _place(actor: Node3D, position: Vector3, yaw: float) -> void:
 func _stage_lineup() -> void:
 	for index in _actors.size():
 		var actor := _actors[index]
+		actor.show()
 		_place(actor, _lineup[actor.get_instance_id()], PI)
 		(actor.get_node("Visual") as FootballerVisual).play_presentation(IDLE, float(index % 7) * 0.17)
 	if _referee != null:
@@ -130,12 +155,29 @@ func _enter_shot(index: int) -> void:
 	shot_index = index
 	shot_time = 0.0
 	var shot := shots[index]
-	title_label.text = str(shot["title"])
-	subtitle_label.text = str(shot["subtitle"])
+	_lineup_graphic.hide()
+	match_scene.ball.visible = shot["id"] != "referee"
+	_lower_third.visible = shot["id"] in ["venue", "lineup"]
+	_referee_lower_third.visible = shot["id"] == "referee"
+	title_label.text = "KILMORE DRIVE" if shot["id"] == "venue" else "BEECHLAWN ROVERS"
+	subtitle_label.hide()
 	camera.projection = Camera3D.PROJECTION_PERSPECTIVE
 	camera.fov = float(shot["fov"])
 	match str(shot["id"]):
+		"montage_goal", "montage_net", "montage_ball", "montage_john", "montage_des", "montage_puddles":
+			for actor in _actors: actor.hide()
+			if _referee!=null: _referee.hide()
+			if shot["id"]=="montage_john":
+				_keeper.show()
+				_place(_keeper,Vector3(-47,0,-1),PI)
+				(_keeper.get_node("Visual") as FootballerVisual).play_presentation(&"AN_Beechlawn_KeeperSet")
+			elif shot["id"]=="montage_des":
+				_des.show()
+				_place(_des,Vector3(6,0,10),PI)
+				(_des.get_node("Visual") as FootballerVisual).play_presentation(IDLE)
 		"venue", "walk":
+			for actor in _actors: actor.show()
+			if _referee!=null: _referee.show()
 			for rank in _actors.size():
 				var actor := _actors[rank]
 				_place(actor, _entry[actor.get_instance_id()], 0.0)
@@ -145,6 +187,13 @@ func _enter_shot(index: int) -> void:
 				(_referee.get_node("Visual") as FootballerVisual).play_presentation(WALK if shot["id"] == "walk" else IDLE)
 		"goal", "lineup", "portrait", "keeper":
 			_stage_lineup()
+		"referee":
+			if _referee!=null: _referee.show()
+			for actor in _actors:
+				actor.hide()
+			if _referee != null:
+				_place(_referee, Vector3(0, 0, 5), PI)
+				(_referee.get_node("Visual") as FootballerVisual).play_presentation(IDLE)
 		"warmup":
 			# Clear the running lane before the camera retreats toward kickoff.
 			# The lineup's old z=5 row would intersect the runners at shot end.
@@ -162,11 +211,18 @@ func _enter_shot(index: int) -> void:
 			match_scene.camera_rig.reset_tracking()
 			var gameplay := match_scene.camera_rig.get_node("Camera3D") as Camera3D
 			shots[index]["to"] = gameplay.global_position
-			shots[index]["from"] = gameplay.global_position - Vector3(0, 10, 0) if gameplay.projection == Camera3D.PROJECTION_ORTHOGONAL else Vector3(0, 5, 16)
+			# Approach from the selected camera's side instead of crossing the
+			# whole pitch from the old fixed positive-Z broadcast location.
+			shots[index]["from"] = gameplay.global_position - Vector3(0, 10, 0) \
+				if gameplay.projection == Camera3D.PROJECTION_ORTHOGONAL \
+				else Vector3(gameplay.global_position.x * 0.6, maxf(2.0, gameplay.global_position.y - 7.0), gameplay.global_position.z * 0.6)
 			shots[index]["look_to"] = gameplay.global_position - gameplay.global_basis.z * 20.0
 			camera.projection = gameplay.projection
 			camera.size = gameplay.size
 			camera.fov = gameplay.fov
+	if match_scene.grass_detail != null:
+		match_scene.grass_detail.prewarm(shot["from"])
+		if index + 1 < shots.size(): match_scene.grass_detail.prepare(shots[index + 1]["from"])
 	_update_shot(0.0)
 	if OS.has_feature("web"):
 		JavaScriptBridge.eval("window.BEECHLAWN_INTRO_SHOT_ID = '%s'" % str(shot["id"]))
@@ -184,6 +240,15 @@ func _process(delta: float) -> void:
 
 func _update_shot(time: float) -> void:
 	var shot := shots[shot_index]
+	if _lower_third.visible:
+		var caption_time := time
+		var caption_duration := float(shot["duration"])
+		if shot["id"] == "lineup":
+			caption_duration *= 0.5
+			title_label.text = "BEECHLAWN ROVERS" if time < caption_duration else "BOARDEAUX"
+			caption_time = fmod(time, caption_duration)
+		(_lower_third as FootballLowerThird).reveal(caption_time)
+		_lower_third.modulate.a *= 1.0 - smoothstep(caption_duration - 0.4, caption_duration, caption_time)
 	var linear := clampf(time / float(shot["duration"]), 0.0, 1.0)
 	var eased := smoothstep(0.0, 1.0, linear)
 	camera.global_position = (shot["from"] as Vector3).lerp(shot["to"], eased)
@@ -191,20 +256,32 @@ func _update_shot(time: float) -> void:
 	if shot["id"] == "handoff":
 		up = (match_scene.camera_rig.get_node("Camera3D") as Camera3D).global_basis.y
 	camera.look_at((shot["look_from"] as Vector3).lerp(shot["look_to"], eased), up)
+	FootballCameraOptics.for_camera(camera).shot(StringName(shot["id"]), (shot["look_from"] as Vector3).lerp(shot["look_to"], eased), float(shot["fov"]), 1.0/60)
 	# Walk/jog paths stay linear at their authored nominal speed. Only camera
 	# dollies ease; easing actor translation would introduce visible foot slip.
 	if shot["id"] == "walk":
+		_lineup_graphic.present_walk(time, float(shot["duration"]))
 		for actor in _actors:
 			_place(actor, (_entry[actor.get_instance_id()] as Vector3) + Vector3(0, 0, -1.2 * time), 0.0)
 		if _referee != null:
 			_place(_referee, Vector3(0, 0, 29 - 1.2 * time), 0.0)
+	elif shot["id"] == "referee":
+		var duration := float(shot["duration"])
+		(_referee_lower_third as FootballLowerThird).reveal(time)
+		_referee_lower_third.modulate.a *= 1.0 - smoothstep(duration - 0.38, duration, time)
+		if OS.has_feature("web") and OS.has_feature("debug"):
+			JavaScriptBridge.eval("window.BEECHLAWN_REFEREE_STATE = " + JSON.stringify({
+				"visible": _referee_lower_third.visible, "alpha": _referee_lower_third.modulate.a,
+				"name": _referee_name.text, "role": _referee_role.text}))
 	elif shot["id"] == "warmup":
 		for index in _warmup.size():
 			_place(_warmup[index], Vector3(-2.4 if index == 0 else 3.5, 0, 14 - 2.2 * time), 0.0)
 	fade.color.a = maxf(0.0, 1.0 - time / 0.16)
 
 func _restore_kickoff() -> void:
+	match_scene.ball.show()
 	for actor in _actors:
+		actor.show()
 		(actor.get_node("Visual") as FootballerVisual).end_presentation()
 		actor.velocity = Vector3.ZERO
 		actor.ai_action_cooldown = 0.0
@@ -212,6 +289,7 @@ func _restore_kickoff() -> void:
 	match_scene._setup_kickoff_positions(match_scene._kickoff_team)
 	match_scene._set_players_physics_enabled(false)
 	if _referee != null:
+		_referee.show()
 		(_referee.get_node("Visual") as FootballerVisual).end_presentation()
 		_referee.global_transform = _referee_transform
 		_referee.velocity = Vector3.ZERO
@@ -222,6 +300,8 @@ func finish() -> void:
 	if not active:
 		return
 	active = false
+	FootballCameraOptics.for_camera(camera).clear()
+	get_node("/root/GameAudio").set_music(false)
 	_restore_kickoff()
 	match_scene._intro_active = false
 	match_scene._kickoff_ai_delay = 1.0 if match_scene._spectator_mode else 0.0
@@ -240,10 +320,13 @@ func finish() -> void:
 func _review_shot(arguments: Array) -> void:
 	if arguments.is_empty() or not active:
 		return
+	var requested := str(arguments[0])
+	var fraction := 0.25 if requested == "teams_home" else (0.75 if requested == "teams_away" else 0.5)
+	if requested in ["teams_home", "teams_away"]: requested = "walk"
 	for index in shots.size():
-		if shots[index]["id"] == str(arguments[0]):
+		if shots[index]["id"] == requested:
 			_enter_shot(index)
-			shot_time = float(shots[index]["duration"]) * 0.5
+			shot_time = float(shots[index]["duration"]) * fraction
 			_update_shot(shot_time)
 			# Debug-only composition review. Freeze the director, not the tree:
 			# callbacks can still select another shot and Escape can exit.
@@ -291,29 +374,20 @@ func _build_overlay() -> void:
 	material.shader = preload("res://assets/ui/club_crest_mask.gdshader")
 	crest.material = material
 	top.add_child(crest)
-	var panel := Panel.new()
-	panel.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
-	panel.offset_left = 26
-	panel.offset_right = -26
-	panel.offset_top = -137
-	panel.offset_bottom = -52
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.025, 0.045, 0.085, 0.94)
-	style.border_color = Color(0.35, 0.62, 1.0)
-	style.border_width_left = 5
-	panel.add_theme_stylebox_override("panel", style)
+	var panel := FootballLowerThird.new()
+	_lower_third = panel
 	screen.add_child(panel)
-	title_label = Label.new()
-	title_label.position = Vector2(22, 10)
-	title_label.add_theme_font_override("font", BOLD)
-	title_label.add_theme_font_size_override("font_size", 27)
-	panel.add_child(title_label)
-	subtitle_label = Label.new()
-	subtitle_label.position = Vector2(23, 49)
-	subtitle_label.add_theme_font_override("font", REGULAR)
-	subtitle_label.add_theme_font_size_override("font_size", 18)
-	subtitle_label.modulate = Color(0.76, 0.83, 0.93)
-	panel.add_child(subtitle_label)
+	title_label = panel.title
+	subtitle_label = panel.subtitle
+	var referee_banner := FootballLowerThird.new()
+	referee_banner.name = "RefereeLowerThird"
+	screen.add_child(referee_banner)
+	_referee_lower_third = referee_banner
+	_referee_name = referee_banner.title
+	_referee_name.text = "DES FEENEY"
+	_referee_role = referee_banner.subtitle
+	_referee_role.text = "MATCH OFFICIAL  ·  REFEREE"
+	_referee_lower_third.hide()
 	var skip := Button.new()
 	skip.text = "SKIP INTRO  [SPACE / ENTER]"
 	skip.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
@@ -325,8 +399,24 @@ func _build_overlay() -> void:
 	skip.add_theme_font_override("font", BOLD)
 	skip.pressed.connect(finish)
 	screen.add_child(skip)
+	_lineup_graphic = LINEUP_GRAPHIC.new()
+	_lineup_graphic.name = "StartingElevens"
+	screen.add_child(_lineup_graphic)
+	_lineup_graphic.configure(match_scene._home_team, match_scene._away_team)
 	fade = ColorRect.new()
 	fade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	fade.color = Color.BLACK
 	fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	screen.add_child(fade)
+
+func _puddle_target() -> Vector3:
+	var best := Vector3(49,0,2)
+	var coverage := -1.0
+	if match_scene.ball.wet_surface!=null:
+		for x in range(46,52):
+			for z in range(-5,6):
+				var point := Vector3(x,0,z)
+				var value: float = match_scene.ball.wet_surface.sample_at(point).y
+				if value>coverage: coverage=value; best=point
+	best.y=PitchSurface.height_at(best.x,best.z)+.015 if match_scene.terrain_enabled else .015
+	return best

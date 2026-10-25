@@ -23,9 +23,10 @@ func _run() -> void:
 	for actor in game.get("_home_players") + game.get("_away_players"):
 		if actor != player:
 			actor.global_position = Vector3(30.0, 0.0, 30.0)
-	var touch_result := {"count": 0}
+	var touch_result := {"count": 0, "gap": INF}
 	ball.touched.connect(func(_kind: StringName, _speed: float) -> void:
-		touch_result["count"] = int(touch_result["count"]) + 1)
+		touch_result["count"] = int(touch_result["count"]) + 1
+		touch_result["gap"] = ball.global_position.distance_to(player._receive_contact_position()))
 	var expected_touch_count := 0
 	for launch_speed in [8.5, 18.0]:
 		for _frame in 60:
@@ -53,14 +54,21 @@ func _run() -> void:
 		var contact_frame := -1
 		for frame in 30:
 			await physics_frame
+			# Movement is disabled in this fixture; still tick the real contact
+			# window as FootballPlayer._physics_process does in the match.
+			player._resolve_pending_kick_contact(1.0 / 60.0)
 			if ball.action_serial == 1:
 				contact_frame = frame + 1
 				break
-		assert(contact_frame > 0 and contact_frame <= 20,
-			"First-time pass missed its predicted contact window (frame %d)" % contact_frame)
+		if contact_frame <= 0 or contact_frame > 20:
+			push_error("First-time pass missed its predicted contact window (frame %d)" % contact_frame)
+			quit(1)
+			return
 		expected_touch_count += 1
 		assert(ball.last_action == &"pass" and touch_result["count"] == expected_touch_count,
 			"First-time contact did not produce exactly one pass impulse")
-		print("First-time %.1f m/s pass contact: physics frame %d (%.3f s), one impulse" % [
-			launch_speed, contact_frame, float(contact_frame) / 60.0])
+		assert(float(touch_result["gap"]) <= player.tuning.kick_foot_contact_radius,
+			"First-time pass bypassed the live boot contact window")
+		print("First-time %.1f m/s pass contact: physics frame %d (%.3f s), one impulse, gap %.3f m" % [
+			launch_speed, contact_frame, float(contact_frame) / 60.0, float(touch_result["gap"])])
 	quit(0)

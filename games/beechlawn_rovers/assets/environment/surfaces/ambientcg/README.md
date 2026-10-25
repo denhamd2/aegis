@@ -1,12 +1,12 @@
 # Beechlawn surface texture credits
 
-These original material color maps are bundled for the Kilmore Drive park
-blockout. Only the 1K sRGB color maps are used in-game; the remaining PBR maps
-from the source downloads were not included.
+These CC0 materials are bundled for Kilmore Drive. Grass005 now includes its
+matching OpenGL normal and linear roughness maps for near-camera turf response;
+Asphalt033 retains its colour map. Colour maps use sRGB; data maps stay linear.
 
 | Asset | Use | Source | License |
 |---|---|---|---|
-| Grass005 color | Pitch and park turf | https://ambientcg.com/a/Grass005 | CC0 1.0 Universal |
+| Grass005 color, NormalGL and roughness | Pitch and park turf | https://ambientcg.com/a/Grass005 | CC0 1.0 Universal |
 | Asphalt033 color | Road surface | https://ambientcg.com/a/Asphalt033 | CC0 1.0 Universal |
 
 AmbientCG asset pages: https://ambientcg.com/license. These maps are tiled and

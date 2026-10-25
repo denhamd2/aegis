@@ -1,0 +1,10 @@
+{
+  "original_filename": "69668.jpg",
+  "source": "Owner supplied chat attachment on 2026-10-21",
+  "purpose": "Authoritative Beechlawn Rovers 27 title wordmark and red/black/white menu art direction",
+  "sha256": "8550283ef893456f64b0a55d207b9946c25d82b909f72a135a2f89f101409e20",
+  "original_preserved_unchanged": true,
+  "runtime_copy": "assets/ui/title_logo_source.jpg",
+  "runtime_treatment": "Atlas crop and dark-backdrop alpha mask; original white/red lettering retained",
+  "scope": "Landing and Options UI; player kits retain reference blue/black"
+}

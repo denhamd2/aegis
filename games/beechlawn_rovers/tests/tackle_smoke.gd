@@ -41,6 +41,9 @@ func _run_checks() -> void:
 	ball.linear_velocity = Vector3.ZERO
 	ball.last_touch = defender.team_name
 	assert(home_player._attempt_tackle(), "Human standing tackle failed at close contact")
+	assert(ball.last_touch == defender.team_name, "Tackle must wait for authored contact")
+	home_player._footballer_visual.animation_player.advance(.25)
+	await process_frame
 	assert(ball.last_touch == home_player.team_name, "Successful tackle did not transfer ball touch")
 	await physics_frame
 	assert(ball.linear_velocity.length() > 0.1,
@@ -55,6 +58,8 @@ func _run_checks() -> void:
 	ball.last_touch = home_player.team_name
 	home_player.global_position = Vector3(5.1, 0.0, 0.0)
 	defender._try_ai_tackle()
+	defender._footballer_visual.animation_player.advance(.25)
+	await process_frame
 	assert(ball.last_touch == defender.team_name, "AI standing tackle did not win close ball")
 	assert(defender._tackle_cooldown > 0.0, "AI tackle did not receive a cooldown")
 

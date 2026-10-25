@@ -1,0 +1,14 @@
+{
+  "run": 39916789968,
+  "commit": "cf5f9086bbdcf8bd4aa7ac496bcf3c45930b15f2",
+  "smoke_checks_passed": 70,
+  "shots": {
+    "Beechlawn Rovers": 40,
+    "Boardeaux": 12
+  },
+  "qualifying_scenarios": {
+    "Beechlawn Rovers": 6,
+    "Boardeaux": 4
+  },
+  "accepted": false
+}

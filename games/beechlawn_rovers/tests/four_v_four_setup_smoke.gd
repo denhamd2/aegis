@@ -13,7 +13,7 @@ func _run_checks() -> void:
 	await physics_frame
 
 	var actors := game.find_children("*", "FootballPlayer", true, false)
-	assert(actors.size() == 8, "Expected four Beechlawn and four Bordeaux players")
+	assert(actors.size() == 8, "Expected four Beechlawn and four Boardeaux players")
 	var home_players: Array = game.get("_home_players")
 	var away_players: Array = game.get("_away_players")
 	assert(home_players.size() == 4 and away_players.size() == 4, "Team arrays must assemble as 4v4")
@@ -23,7 +23,7 @@ func _run_checks() -> void:
 	assert((controlled.get_node("ControlMarker") as MeshInstance3D).visible,
 		"Controlled player marker should be visible")
 	for opponent in away_players:
-		assert(opponent.team_name == &"Bordeaux", "Away player is assigned to the wrong team")
+		assert(opponent.team_name == &"Boardeaux", "Away player is assigned to the wrong team")
 		assert(not opponent.controlled_by_human, "Away players must remain AI controlled")
 		assert(not (opponent.get_node("ControlMarker") as MeshInstance3D).visible,
 			"AI players must not show the human control marker")
@@ -46,14 +46,14 @@ func _run_checks() -> void:
 	for _frame in 90:
 		await physics_frame
 	assert(away_chaser.global_position.distance_to(game.get_node("Ball").global_position) < starting_distance,
-		"Nearest Bordeaux outfielder failed to close toward the ball")
+		"Nearest Boardeaux outfielder failed to close toward the ball")
 	var ball := game.get_node("Ball") as FootballBall
 	ball.global_position = Vector3(away_chaser.global_position.x, FootballBall.RADIUS,
 		away_chaser.global_position.z)
 	ball._dribble_cooldowns.clear()
 	assert(ball.dribble_touch(away_chaser, Vector3.LEFT, false, true, 0.23, 0.48, 1.05),
 		"Close opponent contact failed to produce a controlled touch")
-	assert(ball.last_touch == &"Bordeaux", "Opponent contact did not update ball ownership")
+	assert(ball.last_touch == &"Boardeaux", "Opponent contact did not update ball ownership")
 	game.set("_remaining_time", 0.01)
 	await process_frame
 	await physics_frame

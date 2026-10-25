@@ -1,0 +1,252 @@
+{
+  "trim_triangles": 576,
+  "collar_vertices_per_pose": 384,
+  "inverted_trim_triangles": {
+    "Idle": 0,
+    "Sprint": 0,
+    "PassRight": 0,
+    "ShotRight": 0,
+    "GroundedSlideTackle": 0,
+    "GetUpFromProne": 0,
+    "KeeperSet": 0,
+    "KeeperSave": 0,
+    "Turn90Right": 0
+  },
+  "skin": {
+    "Idle": {
+      "penetrating_vertices": 6,
+      "minimum_signed_clearance_cm": -0.2796626719646156,
+      "worst_vertices": [
+        [
+          289,
+          -0.27966
+        ],
+        [
+          321,
+          -0.22822
+        ],
+        [
+          320,
+          -0.16863
+        ],
+        [
+          290,
+          -0.16845
+        ],
+        [
+          291,
+          -0.04784
+        ]
+      ]
+    },
+    "Sprint": {
+      "penetrating_vertices": 6,
+      "minimum_signed_clearance_cm": -0.2796515538357198,
+      "worst_vertices": [
+        [
+          289,
+          -0.27965
+        ],
+        [
+          321,
+          -0.22821
+        ],
+        [
+          320,
+          -0.16863
+        ],
+        [
+          290,
+          -0.16847
+        ],
+        [
+          291,
+          -0.04785
+        ]
+      ]
+    },
+    "PassRight": {
+      "penetrating_vertices": 6,
+      "minimum_signed_clearance_cm": -0.2796514816582203,
+      "worst_vertices": [
+        [
+          289,
+          -0.27965
+        ],
+        [
+          321,
+          -0.2282
+        ],
+        [
+          320,
+          -0.16862
+        ],
+        [
+          290,
+          -0.16844
+        ],
+        [
+          291,
+          -0.04785
+        ]
+      ]
+    },
+    "ShotRight": {
+      "penetrating_vertices": 6,
+      "minimum_signed_clearance_cm": -0.28005747264251113,
+      "worst_vertices": [
+        [
+          289,
+          -0.28006
+        ],
+        [
+          321,
+          -0.22858
+        ],
+        [
+          320,
+          -0.17007
+        ],
+        [
+          290,
+          -0.16988
+        ],
+        [
+          291,
+          -0.04972
+        ]
+      ]
+    },
+    "GroundedSlideTackle": {
+      "penetrating_vertices": 8,
+      "minimum_signed_clearance_cm": -0.2772702216752805,
+      "worst_vertices": [
+        [
+          289,
+          -0.27727
+        ],
+        [
+          321,
+          -0.22631
+        ],
+        [
+          320,
+          -0.16261
+        ],
+        [
+          290,
+          -0.16245
+        ],
+        [
+          291,
+          -0.04015
+        ]
+      ]
+    },
+    "GetUpFromProne": {
+      "penetrating_vertices": 8,
+      "minimum_signed_clearance_cm": -0.2772818235680461,
+      "worst_vertices": [
+        [
+          289,
+          -0.27728
+        ],
+        [
+          321,
+          -0.22632
+        ],
+        [
+          320,
+          -0.16264
+        ],
+        [
+          290,
+          -0.16247
+        ],
+        [
+          291,
+          -0.04016
+        ]
+      ]
+    },
+    "KeeperSet": {
+      "penetrating_vertices": 6,
+      "minimum_signed_clearance_cm": -0.2796626719646156,
+      "worst_vertices": [
+        [
+          289,
+          -0.27966
+        ],
+        [
+          321,
+          -0.22822
+        ],
+        [
+          320,
+          -0.16863
+        ],
+        [
+          290,
+          -0.16845
+        ],
+        [
+          291,
+          -0.04784
+        ]
+      ]
+    },
+    "KeeperSave": {
+      "penetrating_vertices": 6,
+      "minimum_signed_clearance_cm": -0.2796626719646156,
+      "worst_vertices": [
+        [
+          289,
+          -0.27966
+        ],
+        [
+          321,
+          -0.22822
+        ],
+        [
+          320,
+          -0.16863
+        ],
+        [
+          290,
+          -0.16845
+        ],
+        [
+          291,
+          -0.04784
+        ]
+      ]
+    },
+    "Turn90Right": {
+      "penetrating_vertices": 7,
+      "minimum_signed_clearance_cm": -0.27930072136223316,
+      "worst_vertices": [
+        [
+          289,
+          -0.2793
+        ],
+        [
+          321,
+          -0.22793
+        ],
+        [
+          320,
+          -0.16759
+        ],
+        [
+          290,
+          -0.16742
+        ],
+        [
+          291,
+          -0.04647
+        ]
+      ]
+    }
+  },
+  "limits": "Vertex samples against evaluated source skin in nine fixed poses; not an all-pose, per-pixel or native M1 acceptance."
+}

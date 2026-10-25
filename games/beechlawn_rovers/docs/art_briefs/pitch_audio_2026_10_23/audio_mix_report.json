@@ -1,0 +1,9 @@
+{
+  "sample_rate": 22050,
+  "duration": 2.016689342403628,
+  "audible_rms": 0.019508459905738955,
+  "muted_tail_rms": 0.0,
+  "peak": 0.07789779454469681,
+  "source": "Actual native Godot Movie Maker AudioServer mix",
+  "result": "PASS"
+}

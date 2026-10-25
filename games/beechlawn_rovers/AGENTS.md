@@ -8,6 +8,11 @@ requirements do not govern this project.
 
 ## Scope and project state
 
+- Delivery is Mac-only. The owner retired the football Web version on
+  2026-10-22: do not build, deploy or restore its Web export or Pages subsite.
+  Preserve archived references/evidence and leave the separate wrestling Web
+  game intact. Validate through native Forward+ captures and headless tests.
+
 - Open and run `games/beechlawn_rovers/project.godot` as its own Godot 4.6
   project. Keep code, scenes, imported assets, and exports under this project
   unless a genuinely shared Blender utility belongs in `tools/blender/`.
@@ -76,7 +81,7 @@ requirements do not govern this project.
   for park scenery, use environment/scene guides; for Godot assets, read
   `godot-export` before exporting. Do not use `import-wrestler` for football
   characters.
-- For creating or substantially refining a footballer, read
+- For creating or refining a footballer, its kit, animations or retargeting, read
   `.agents/skills/create-player/SKILL.md` first. It is scoped to Beechlawn and
   routes the shared Blender guides while using the archived player and kit
   references; it does not change Aegis wrestling workflows.
@@ -102,6 +107,12 @@ requirements do not govern this project.
   and profiling on the target Mac before reporting performance success.
 
 ## Godot automation
+
+- For appearance approval, use this project's native Forward+ capture runner
+  `tools/capture_native.py` and `docs/native_capture_notes.md`. Archived browser
+  captures are historical evidence; new appearance checks use Forward+.
+  Headless smoke checks cover logic/structure. Record adapter, resolution and
+  software-rendering limits; native M1 graphics/performance still need the Mac.
 
 - The project-scoped `gda` Agent Skill is installed at
   `.agents/skills/gda/SKILL.md`; read it before using the `gda` CLI for project
