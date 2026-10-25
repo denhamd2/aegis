@@ -25,6 +25,13 @@ class_name FootballTuning
 @export var action_input_buffer := 0.20
 @export var first_time_pass_buffer := 0.90
 @export var incoming_pass_prediction_window := 0.90
+@export_group("Receiving")
+@export_range(.2, .8, .05) var receive_close_distance := .45
+@export_range(.4, 1.2, .05) var receive_carry_distance := .75
+@export_range(.9, 1.8, .05) var receive_sprint_distance := 1.35
+@export_range(.15, .4, .01) var receive_settle_seconds := .28
+@export_range(.1, .2, .01) var receive_foot_contact_radius := .20
+@export_group("Ball actions")
 @export var shot_charge_duration := 1.0
 @export var short_pass_speed := 12.0
 @export var through_pass_speed := 18.0

@@ -149,3 +149,9 @@ Turf has a bounded dense near footprint and intermediate hash-faded fins. Fade o
 ## Ball appearance review
 
 `--ball ucl_26_27_league|worn_sunday_league` explicitly chooses the production appearance. `--match --venue-view ball` saves the unchanged broadcast view plus four rotations and an emboss macro on the actual pitch. The JSON records the ball ID and each rotation. `--setup-preview` also captures Options. Combine with either venue and sunny/cloudy/rain; these are native Forward+ stills, not Mac frame-rate measurements.
+
+## Contextual first-touch motion
+
+`--review-mode receive` captures five original live receptions with current Shane: standing right/left, Ctrl close, running carry and Sprint push. `receive_broadcast` uses a broadcast-distance view of those same cases. Input basis is fixed to world X for repeatable before/after trajectories; actor movement, ball physics, contacts and clips remain production code. The JSON records the actual identity, 60 Hz ticks, 20 fps sampling, touching events and each pose/action. Other actors are parked and HUD hidden.
+
+`--project /absolute/path/to/isolated/football/snapshot --receive-baseline` runs the same review driver against a prior snapshot and records its actual first-touch count without requiring the new behaviour. Keep the review driver identical between snapshots. Use the default project for final evidence. These software Forward+ sequences do not establish M1 frame timing.

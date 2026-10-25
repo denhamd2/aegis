@@ -1,0 +1,15 @@
+{
+  "clip": "AN_Beechlawn_ReceiveMoveRight",
+  "event": "ball_contact",
+  "frame": 12,
+  "fps": 60,
+  "time_seconds": 0.2,
+  "duration_seconds": 0.5,
+  "foot": "right",
+  "moving": true,
+  "toe_at_contact_cm": [
+    -10.50001049041748,
+    11.999394416809082,
+    54.00008010864258
+  ]
+}

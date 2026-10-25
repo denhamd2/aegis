@@ -8,6 +8,7 @@ import plistlib
 import struct
 import sys
 import zipfile
+import re
 
 root = Path(sys.argv[1])
 with zipfile.ZipFile(root / 'mac/Beechlawn-Rovers-Mac.zip') as archive:
@@ -51,5 +52,17 @@ with zipfile.ZipFile(root / 'mac/Beechlawn-Rovers-Mac.zip') as archive:
                 assert startup.returncode == 0 and 'ERROR:' not in output, output
                 assert 'BEECHLAWN_MATCH_READY actors=22 officials=1 venue='+venue+' ball='+ball in output, output
                 print('Packaged match startup PASS:', venue, ball, '(22 players + referee)')
+        # The probe stays outside the shipped game. Its res:// scene/classes
+        # resolve through the actual exported PCK, including receive JSON/GLB.
+        probe = Path(__file__).resolve().parents[1]/'tests/moving_receive_smoke.gd'
+        for venue in ['kilmore_drive', 'rovers_arena']:
+            contact = subprocess.run(['godot','--headless','--main-pack',str(path),
+                '--script',str(probe),'--','--venue='+venue],
+                capture_output=True,text=True,timeout=45)
+            output = contact.stdout+contact.stderr
+            clean = '\n'.join(line for line in output.splitlines() if not re.match(r'^ERROR: \d+ resources? still in use at exit',line))
+            assert contact.returncode == 0 and 'ERROR:' not in clean, output
+            assert 'MOVING_RECEIVE_FIRST_EVENT [&"first_touch"]' in output, output
+            print('Packaged live receive PASS:',venue,'(selected boot and physical first touch)')
     print('Mac bundle PASS: universal arm64/x86_64, football identifier, resources, ZIP CRC')
 print('Scope: package checks only; no native Mac execution or performance acceptance.')

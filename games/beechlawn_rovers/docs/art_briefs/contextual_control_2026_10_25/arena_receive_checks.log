@@ -1,0 +1,44 @@
+
+[smoke] contextual_receive_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=rovers_arena ball=ucl_26_27_league
+RECEIVE_CASE away=false foot=right speed=0.00 mode=carry events=[{ "foot": &"right", "mode": &"carry", "gap": 0.127073392272, "incoming_velocity": (-5.113265, 0.0, -0.0), "clock": 0.20514248233025 }] last_gap=0.127073392272 last_foot=right
+RECEIVE_CASE away=false foot=right speed=6.00 mode=carry events=[{ "foot": &"right", "mode": &"carry", "gap": 0.1763366907835, "incoming_velocity": (-5.114478, 0.0, 0.0), "clock": 0.20249592499145 }] last_gap=0.1763366907835 last_foot=right
+RECEIVE_CASE away=false foot=left speed=0.00 mode=carry events=[{ "foot": &"left", "mode": &"carry", "gap": 0.12707482278347, "incoming_velocity": (-5.113264, 0.0, 0.0), "clock": 0.2051423110812 }] last_gap=0.12707482278347 last_foot=left
+RECEIVE_CASE away=false foot=left speed=6.00 mode=carry events=[{ "foot": &"left", "mode": &"carry", "gap": 0.17518553137779, "incoming_velocity": (-5.114478, 0.0, 0.0), "clock": 0.2024958509656 }] last_gap=0.17518553137779 last_foot=left
+RECEIVE_CASE away=true foot=right speed=0.00 mode=carry events=[{ "foot": &"right", "mode": &"carry", "gap": 0.127073392272, "incoming_velocity": (5.113265, 0.0, -0.0), "clock": 0.20514248233025 }] last_gap=0.127073392272 last_foot=right
+RECEIVE_CASE away=true foot=right speed=6.00 mode=carry events=[{ "foot": &"right", "mode": &"carry", "gap": 0.17663955688477, "incoming_velocity": (5.114478, 0.0, -0.0), "clock": 0.20249592499145 }] last_gap=0.17663955688477 last_foot=right
+RECEIVE_CASE away=true foot=left speed=0.00 mode=carry events=[{ "foot": &"left", "mode": &"carry", "gap": 0.12707482278347, "incoming_velocity": (5.113266, 0.0, -0.0), "clock": 0.20514235519895 }] last_gap=0.12707482278347 last_foot=left
+RECEIVE_CASE away=true foot=left speed=6.00 mode=carry events=[{ "foot": &"left", "mode": &"carry", "gap": 0.17663881182671, "incoming_velocity": (5.114478, 0.0, -0.0), "clock": 0.2024958509656 }] last_gap=0.17663881182671 last_foot=left
+RECEIVE_CASE away=false foot=left speed=3.36 mode=close events=[{ "foot": &"left", "mode": &"close", "gap": 0.16236427426338, "incoming_velocity": (-4.833432, 0.0, 0.0), "clock": 0.20288853004897 }] last_gap=0.16236427426338 last_foot=left
+RECEIVE_CASE away=false foot=left speed=8.60 mode=sprint events=[{ "foot": &"left", "mode": &"sprint", "gap": 0.18718685209751, "incoming_velocity": (-5.278185, 0.0, 0.0), "clock": 0.2041894396449 }] last_gap=0.18718685209751 last_foot=left
+RECEIVE_CASE away=false foot=right speed=3.36 mode=both events=[{ "foot": &"right", "mode": &"close", "gap": 0.19192595779896, "incoming_velocity": (-4.993189, 0.0, 0.0), "clock": 0.20050225679358 }] last_gap=0.19192595779896 last_foot=right
+CONTEXTUAL_RECEIVE failures=0
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] contextual_receive_smoke.gd (14.8s)
+
+[smoke] receive_edge_cases_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=rovers_arena ball=ucl_26_27_league
+ANGLED_RECEIVE radians=-0.5235987755983 contacts=[{ "foot": &"right", "mode": &"carry", "gap": 0.11895967274904, "incoming_velocity": (-5.637845, 0.0, -3.255013), "clock": 0.2125 }]
+ANGLED_RECEIVE radians=0.5235987755983 contacts=[{ "foot": &"left", "mode": &"carry", "gap": 0.16250301897526, "incoming_velocity": (-5.637845, 0.0, 3.255013), "clock": 0.20795036523076 }]
+RECEIVE_EDGE_CASES failures=0
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+[passed] receive_edge_cases_smoke.gd (9.6s)
+
+[smoke] receive_layer_physics_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=rovers_arena ball=ucl_26_27_league
+RECEIVE_LAYER_PHYSICS PASS supporting leg/pelvis unchanged, both active feet, integrated close/carry/sprint velocities=[4.88699579238892, 5.50987863540649, 8.23416709899902]
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+[passed] receive_layer_physics_smoke.gd (8.8s)

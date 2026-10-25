@@ -92,6 +92,28 @@ the existing short lease and release rules for established control.
 
 **Gate:** the final mesh reaches a plausible ball contact at the authored event, gameplay impulses occur once at the intended time, and action recovery remains responsive.
 
+### Receiving while moving
+
+Schedule reception and buffered strike intent before generic dribble assistance.
+The spring can otherwise relabel an incoming pass before its authored receive
+marker. Defer only the receiving actor's spring; keep opposing tackles and
+interceptions live. Bind preparation to the incoming serial and restore any
+owned capsule exception on contact, miss, interruption, possession loss or whistle.
+Check the stoppage version after contact signals before rearming recovery state.
+
+Keep the gait/supporting leg active under a moving receive overlay; compare its
+pose with overlay weight zero at the same phase. Use one fixed-tick pose clock
+and exported metadata crossing for seek-driven layers, whose method callbacks
+may be skipped. Measure live selected-boot reach and integrated post-impulse
+velocity. An impulse callback's velocity getter may still show the incoming ball.
+Profile dormant layers across all 22 players: several zero-weight receive branches
+still added measurable graph cost. One selected clip behind a single layer kept
+the supporting gait and actor-local filtering while removing that overhead.
+Use raw movement input or actual carrier travel for the outlet; cursor assistance
+can set an internal placeholder stick that is not the user's intended direction.
+
+Evidence: `games/beechlawn_rovers/docs/art_briefs/contextual_control_2026_10_25/brief.md`.
+
 ### Aerial contact lessons (2026-10-23)
 
 Keep the short physical jump in CharacterBody movement and the authored clip

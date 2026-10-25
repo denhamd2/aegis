@@ -1,3 +1,13 @@
+# Beechlawn Rovers 27 — v0.4.2
+
+Ground receptions now reach an authored left/right boot contact before automatic dribble assistance takes over. Move to direct the outlet, hold Ctrl to cushion close, or Shift to push into space with more possession risk. Cushioning follows the carrier's velocity, with incoming speed and existing ball-control ratings affecting retention.
+
+Four original shared 60 Hz receiving clips cover standing/moving left and right contacts. Moving receptions retain the supporting leg's gait. Buffered first-time passes/shots interrupt receiving cleanly; missed contacts, interceptions, whistles and restarts clear preparation and restore collisions. A single selected animation layer keeps dormant graph cost low across 22 players.
+
+Player bodies, faces, kits, base gaits, movement speeds and ball choices are preserved. Universal Apple Silicon/Intel Mac package. Native Forward+ cloud evidence and package checks are separate from M1 appearance, input feel and sustained 1080p60 acceptance.
+
+---
+
 # Beechlawn Rovers 27 — v0.4.1
 
 The adidas UCL 2026/27 League size-5 ball is now the default for Play and Watch at both venues. Its new Blender model and continuous spherical artwork follow the supplied League photos: black branding, multicolour star outlines, pearl-white TPU, fine embossing and shallow panel seams. This is the pictured League replica, not the Pro or mini variant.

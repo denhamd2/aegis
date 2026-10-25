@@ -1,0 +1,50 @@
+{
+  "result": "PASS",
+  "captures": [
+    {
+      "image": "match_broadcast.png",
+      "report": "match_broadcast.json",
+      "sha256": "748a0d3ec7691c1fcd99c46294c8e465d8ba399723fa08cd56780de70ae02390",
+      "process_cleanup": "normal",
+      "capture_seconds": 267.74,
+      "command": [
+        "/usr/local/bin/godot",
+        "--path",
+        "/workspace/aegis-checkout/games/beechlawn_rovers/build/receive_baseline",
+        "--rendering-method",
+        "forward_plus",
+        "--resolution",
+        "640x360",
+        "--fixed-fps",
+        "60",
+        "--disable-vsync",
+        "--audio-driver",
+        "Dummy",
+        "--display-driver",
+        "x11",
+        "--rendering-driver",
+        "vulkan",
+        "--script",
+        "res://scripts/review_contextual_control.gd",
+        "--",
+        "--capture-dir=/workspace/aegis-checkout/games/beechlawn_rovers/docs/art_briefs/contextual_control_2026_10_25/native_before",
+        "--player=match",
+        "--view=broadcast",
+        "--lighting=match",
+        "--sky=match",
+        "--clean=1",
+        "--setup-preview=0",
+        "--venue=kilmore_drive",
+        "--venue-view=broadcast",
+        "--ablation=none",
+        "--weather=sunny",
+        "--ball=ucl_26_27_league",
+        "--expression=neutral",
+        "--review-mode=receive",
+        "--receive-baseline=1"
+      ]
+    }
+  ],
+  "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+  "scope": "Forward+ appearance stills; software Vulkan does not measure Mac performance."
+}

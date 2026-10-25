@@ -1,0 +1,44 @@
+
+[smoke] receive_layer_physics_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+RECEIVE_LAYER_PHYSICS PASS supporting leg/pelvis unchanged, both active feet, integrated close/carry/sprint velocities=[4.882981300354, 5.50636672973633, 8.23284435272217]
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+[passed] receive_layer_physics_smoke.gd (8.0s)
+
+[smoke] contextual_receive_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+RECEIVE_CASE away=false foot=right speed=0.00 mode=carry events=[{ "foot": &"right", "mode": &"carry", "gap": 0.11156085133553, "velocity": (-5.205903, -0.030302, 0.005926), "clock": 0.20694599689932 }] last_gap=0.11156085133553 last_foot=right
+RECEIVE_CASE away=false foot=right speed=6.00 mode=carry events=[{ "foot": &"right", "mode": &"carry", "gap": 0.16446740925312, "velocity": (-5.195405, -0.018178, 0.011323), "clock": 0.20320474300067 }] last_gap=0.16446740925312 last_foot=right
+RECEIVE_CASE away=false foot=left speed=0.00 mode=carry events=[{ "foot": &"left", "mode": &"carry", "gap": 0.11151570826769, "velocity": (-5.20621, -0.030308, 0.005923), "clock": 0.20695622288544 }] last_gap=0.11151570826769 last_foot=left
+RECEIVE_CASE away=false foot=left speed=6.00 mode=carry events=[{ "foot": &"left", "mode": &"carry", "gap": 0.16131438314915, "velocity": (-5.196181, -0.018185, 0.011645), "clock": 0.20321799532839 }] last_gap=0.16131438314915 last_foot=left
+RECEIVE_CASE away=true foot=right speed=0.00 mode=carry events=[{ "foot": &"right", "mode": &"carry", "gap": 0.11190619319677, "velocity": (5.199937, -0.016852, -0.005331), "clock": 0.20689721186106 }] last_gap=0.11190619319677 last_foot=right
+RECEIVE_CASE away=true foot=right speed=6.00 mode=carry events=[{ "foot": &"right", "mode": &"carry", "gap": 0.15964289009571, "velocity": (5.200801, -0.02105, -0.007091), "clock": 0.20329972744698 }] last_gap=0.15964289009571 last_foot=right
+RECEIVE_CASE away=true foot=left speed=0.00 mode=carry events=[{ "foot": &"left", "mode": &"carry", "gap": 0.11189961433411, "velocity": (5.199949, -0.016853, -0.006137), "clock": 0.20690064920855 }] last_gap=0.11189961433411 last_foot=left
+RECEIVE_CASE away=true foot=left speed=6.00 mode=carry events=[{ "foot": &"left", "mode": &"carry", "gap": 0.15946246683598, "velocity": (5.201365, -0.021057, -0.008551), "clock": 0.2033105585598 }] last_gap=0.15946246683598 last_foot=left
+RECEIVE_CASE away=false foot=left speed=3.36 mode=close events=[{ "foot": &"left", "mode": &"close", "gap": 0.13938561081886, "velocity": (-4.941325, -0.024773, 0.013835), "clock": 0.20504898498297 }] last_gap=0.13938561081886 last_foot=left
+RECEIVE_CASE away=false foot=left speed=8.60 mode=sprint events=[{ "foot": &"left", "mode": &"sprint", "gap": 0.17909707129002, "velocity": (-5.344875, -0.0187, 0.010004), "clock": 0.20444458071403 }] last_gap=0.17909707129002 last_foot=left
+RECEIVE_CASE away=false foot=right speed=3.36 mode=both events=[{ "foot": &"right", "mode": &"close", "gap": 0.17510569095612, "velocity": (-5.084994, -0.017801, 0.012374), "clock": 0.20167718307535 }] last_gap=0.17510569095612 last_foot=right
+CONTEXTUAL_RECEIVE failures=0
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] contextual_receive_smoke.gd (15.4s)
+
+[smoke] receive_edge_cases_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+ANGLED_RECEIVE radians=-0.5235987755983 contacts=[{ "foot": &"left", "mode": &"carry", "gap": 0.1405149102211, "velocity": (-5.74882, 0.003303, -3.298755), "clock": 0.2125 }]
+ANGLED_RECEIVE radians=0.5235987755983 contacts=[{ "foot": &"left", "mode": &"carry", "gap": 0.1243120059371, "velocity": (-5.75931, -0.021898, 3.346149), "clock": 0.2125 }]
+RECEIVE_EDGE_CASES failures=0
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+[passed] receive_edge_cases_smoke.gd (9.4s)

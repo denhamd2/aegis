@@ -1,0 +1,53 @@
+
+[smoke] receive_layer_physics_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+RECEIVE_LAYER_PHYSICS PASS supporting leg/pelvis unchanged, both active feet, integrated close/carry/sprint velocities=[4.882981300354, 5.50636672973633, 8.23284435272217]
+[passed] receive_layer_physics_smoke.gd (11.0s)
+
+[smoke] football_receive_contact_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=8 officials=0 venue=kilmore_drive ball=ucl_26_27_league
+Beechlawn receive integration: incoming pass auto-triggered receive, toe gap 0.130m at 0.206 s, first touch cushioned the ball, and pass interruption worked
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+[passed] football_receive_contact_smoke.gd (4.9s)
+
+[smoke] stride_plant_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+STRIDE_PLANT 1.5 stance_slip=0.05224962557118m/s stance_samples=155 toe_height=0.03864363125886..0.18064014929126
+STRIDE_PLANT 3.0 stance_slip=0.06363185070638m/s stance_samples=84 toe_height=0.04418037299243..0.26569778620998
+STRIDE_PLANT 4.5 stance_slip=0.10379031250652m/s stance_samples=49 toe_height=0.03225665709623..0.31587354146013
+STRIDE_PLANT 6.0 stance_slip=0.04608554914739m/s stance_samples=48 toe_height=0.03751350817589..0.36779125015172
+STRIDE_PLANT 7.3 stance_slip=0.05035848869219m/s stance_samples=42 toe_height=0.03758636600336..0.40851318354266
+STRIDE_PLANT 8.6 stance_slip=0.0531982564183m/s stance_samples=45 toe_height=0.04097723881051..0.42513699594244
+STRIDE_PLANT 3.36 stance_slip=0.02323529857676m/s stance_samples=63 toe_height=0.04500136485887..0.2603447591868
+STRIDE_PLANT PASS
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] stride_plant_smoke.gd (19.1s)
+
+[smoke] braking_gait_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+BRAKING_GAIT fast_steps=21 kept_gait=true final_stop_pose=true
+BRAKING_GAIT PASS
+[passed] braking_gait_smoke.gd (13.9s)
+
+[smoke] turn_dribble_control_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+REVERSAL human=false touch_heading_gap_degrees=0.0
+REVERSAL human=true touch_heading_gap_degrees=0.0
+Turn/dribble control PASS: weighted reversals for human and AI, nearest-actor ownership, no competing force or airborne foot claim
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] turn_dribble_control_smoke.gd (24.4s)

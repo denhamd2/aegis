@@ -10,6 +10,12 @@ items, use the archived references and skill workflow in
 [`art_reference_implementation_plan.md`](art_reference_implementation_plan.md)
 and [`../references/README.md`](../references/README.md) before implementation.
 
+## Contextual first touch and receiving motion — 25 October 2026
+
+BR-002 (2/27) and BR-021 (21/27), both in progress: reception is scheduled before generic dribble assistance, with a serial-bound selected-boot contact and carrier-relative cushioning. Move directs the outlet; Ctrl keeps it close and Shift pushes into space. Four original 60 Hz shared actions cover standing/moving left/right contacts. A selected animation layer preserves the support gait and avoids dormant 22-player branch overhead. First-time combinations, misses, ownership loss and reentrant whistle cleanup remain physical and bounded. Sources, native before/after motion and checks: [production evidence](art_briefs/contextual_control_2026_10_25/brief.md).
+
+Delivery is universal Mac v0.4.2. BR-025 (25/27, in progress) retains native M1 appearance, input feel and 1080p60 acceptance. Further BR-019 (19/27) left-foot strikes/aerial contests and broader BR-021 turn/intro polish remain open.
+
 ## Default ball and saved selection — 25 October 2026
 
 BR-023 (23/27, in progress): v0.4.1 adds the reference-led adidas UCL 2026/27 League size-5 ball as default at both venues. The original worn model remains selectable in Options beside Venue; selection persists through Play/Watch, intros, celebrations and recorded replays. Absent/invalid settings migrate to the new ball. The appearance catalogue leaves authoritative physics unchanged. Source references, Blender/PBR construction and native comparisons are in [the ball brief](art_briefs/ucl_ball_2026_10_25/brief.md).
@@ -237,6 +243,7 @@ BR-008; a single shot in the other fixture is a regression floor.
     macOS MetalFX options only if GPU timing shows a need. Do not assume the
     22-player target is already performance-bound while the playable is 4v4.
 - [ ] **BR-002 — Ball action/contact pass**
+  - 2026-10-25, v0.4.2: contextual selected-foot receptions precede dribble assistance; carrier-relative close/carry/sprint outlets, bounded physical reach and robust first-time/whistle cleanup. Dedicated live-ball tests and native comparisons are in `art_briefs/contextual_control_2026_10_25/`. Mac feel remains open.
   - 2026-10-22: Fixed reproduced rolling-ball capsule launches with collision-layer separation; see the [match repair evidence](match_repairs_2026-10-22.md).
   - 2026-10-21: standing/jog/sprint pass and shot contacts each execute once
     within 0.081–0.166 m in the moving regression. Setup touches and approach
@@ -862,6 +869,7 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
   fake shot, drag-back and directional skill turn. Each move must affect control
   or ball position, not just play a cosmetic clip.
 - [ ] **BR-021 — Animation contact and blending pass**
+  - 2026-10-25, v0.4.2: four original 60 Hz receive add-on clips on the unchanged 65-bone rig; selected leg/upper-body overlay retains supporting gait and phase. One shared-content layer with actor-local selection/filtering replaces costly serial branches. Receive-to-run, both feet, contact and cleanup checks extend the existing stride/turn/brake coverage. Native before/after evidence is retained; broader authored turn/intro motion and M1 acceptance remain open.
   - 2026-10-24 stride/plant pass (21/27, in progress): five original normalized
     shared-rig walk/slow-jog/jog/sprint/close-control loops match stance travel
     to world movement, with phase-aligned blending, lifted recovery, gait-specific

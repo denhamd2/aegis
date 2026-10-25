@@ -1,0 +1,15 @@
+
+[smoke] moving_receive_smoke.gd (timeout 45s)
+[failed] moving_receive_smoke.gd exited 1
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+MOVING_RECEIVE_FIRST_EVENT [&"dribble"]
+ERROR: A moving reception was consumed by dribble assistance before a first touch
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _run (res://tests/moving_receive_smoke.gd:47)
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)

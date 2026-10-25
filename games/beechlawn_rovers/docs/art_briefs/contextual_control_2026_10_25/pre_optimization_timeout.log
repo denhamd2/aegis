@@ -1,0 +1,22 @@
+
+[smoke] eleven_v_eleven_match_soak.gd (timeout 120s)
+[replay] fixed render cadence 60 Hz; gameplay dt 1/60 s
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+SOAK_PROGRESS ticks=1800 remaining=155.333333333314 phase=0 elapsed=1.0 host_ms=26872
+SOAK_PROGRESS ticks=3600 remaining=128.266666666625 phase=0 elapsed=1.0 host_ms=41641
+SOAK_PROGRESS ticks=5400 remaining=101.316666666627 phase=0 elapsed=1.0 host_ms=58024
+SOAK_PROGRESS ticks=7200 remaining=73.3499999999617 phase=0 elapsed=1.0 host_ms=72087
+SOAK_PROGRESS ticks=9000 remaining=48.2999999999632 phase=0 elapsed=1.0 host_ms=87680
+SOAK_PROGRESS ticks=10800 remaining=23.6166666666312 phase=0 elapsed=1.0 host_ms=108085
+[timeout] eleven_v_eleven_match_soak.gd exceeded 120s; process group terminated
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+SOAK_PROGRESS ticks=1800 remaining=155.333333333314 phase=0 elapsed=1.0 host_ms=26872
+SOAK_PROGRESS ticks=3600 remaining=128.266666666625 phase=0 elapsed=1.0 host_ms=41641
+SOAK_PROGRESS ticks=5400 remaining=101.316666666627 phase=0 elapsed=1.0 host_ms=58024
+SOAK_PROGRESS ticks=7200 remaining=73.3499999999617 phase=0 elapsed=1.0 host_ms=72087
+SOAK_PROGRESS ticks=9000 remaining=48.2999999999632 phase=0 elapsed=1.0 host_ms=87680
+SOAK_PROGRESS ticks=10800 remaining=23.6166666666312 phase=0 elapsed=1.0 host_ms=108085

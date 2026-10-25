@@ -30,6 +30,15 @@ var _action_contact_times: Dictionary = {}
 var _stop_latched := false
 var _close_control_blend := 0.0
 var _shield_blend := 0.0
+var _context_receiving := false
+var _receive_index := 0
+var _receive_clock := 0.0
+var _receive_speed := 1.0
+static var _receive_motion_cache: Dictionary = {}
+static var _receive_metadata: Dictionary = {}
+var _receive_marker := .2
+var _receive_duration := .5
+const CONTEXT_RECEIVE_CLIPS: Array[StringName] = [&"AN_Beechlawn_ReceiveStandRight",&"AN_Beechlawn_ReceiveStandLeft",&"AN_Beechlawn_ReceiveMoveRight",&"AN_Beechlawn_ReceiveMoveLeft"]
 var _appearance_profile: FootballerProfile
 var _appearance_team: FootballTeam
 var _human_rig := false
@@ -63,6 +72,7 @@ func _ready() -> void:
 	_install_keeper_high_actions()
 	_install_presentation_actions()
 	_install_skill_actions()
+	_install_receive_actions()
 	_build_locomotion_tree()
 	# Reception/kick setup reads this skeleton's boot pose in physics. Idle
 	# evaluation held the running pose for several ticks on slow renders.
@@ -138,6 +148,7 @@ func configure_appearance(profile: FootballerProfile, team: FootballTeam = null)
 		_install_keeper_high_actions()
 		_install_presentation_actions()
 		_install_skill_actions()
+		_install_receive_actions()
 		_install_action_contact_marker(&"pass", PASS_CLIP, PASS_EVENT_METADATA)
 		_install_action_contact_marker(&"receive", RECEIVE_CLIP, RECEIVE_EVENT_METADATA)
 		_install_action_contact_marker(&"shot", SHOT_CLIP, SHOT_EVENT_METADATA)
@@ -318,6 +329,7 @@ func _prime_locomotion_pose() -> void:
 
 
 func play_presentation(clip: StringName, phase_seconds := 0.0) -> bool:
+	cancel_context_receive()
 	if not animation_player.has_animation(clip):
 		return false
 	var animation := animation_player.get_animation(clip)
@@ -484,6 +496,7 @@ func _play_action(action: StringName, clip: StringName, playback_speed: float = 
 				and (not interrupt_receive or _active_action != &"receive"):
 			return false
 		var interrupted_action := _active_action
+		_clear_context_receive()
 		if interrupted_action == &"skill": animation_player.callback_mode_method = AnimationMixer.ANIMATION_CALLBACK_MODE_METHOD_DEFERRED
 		animation_player.stop()
 		_active_action = &""
@@ -609,7 +622,23 @@ func _build_locomotion_tree() -> void:
 	tree.add_node("Shield", shield, Vector2(480, 80))
 	tree.connect_node("Shield", 0, "GaitRate")
 	tree.connect_node("Shield", 1, "ShieldAnimation")
-	tree.connect_node("output", 0, "Shield")
+	# One selected receive layer keeps the dormant 22-player graph cheap.
+	# Clip/seek/blend parameters are actor-local; immutable motions stay shared.
+	var receive_space := AnimationNodeBlendSpace1D.new()
+	receive_space.min_space = 0
+	receive_space.max_space = 3
+	receive_space.blend_mode = AnimationNodeBlendSpace1D.BLEND_MODE_INTERPOLATED
+	for index in CONTEXT_RECEIVE_CLIPS.size():
+		var receive_animation := AnimationNodeAnimation.new()
+		receive_animation.animation = CONTEXT_RECEIVE_CLIPS[index]
+		receive_space.add_blend_point(receive_animation,index)
+	tree.add_node("ReceiveClip",receive_space)
+	tree.add_node("ReceiveSeek",AnimationNodeTimeSeek.new())
+	tree.add_node("Receive",AnimationNodeBlend2.new())
+	tree.connect_node("ReceiveSeek",0,"ReceiveClip")
+	tree.connect_node("Receive",0,"Shield")
+	tree.connect_node("Receive",1,"ReceiveSeek")
+	tree.connect_node("output",0,"Receive")
 	animation_tree.tree_root = tree
 
 
@@ -871,6 +900,7 @@ func set_shielding(value: bool, delta: float) -> void:
 	animation_tree.set("parameters/Shield/blend_amount", _shield_blend)
 
 func reset_to_idle() -> void:
+	_clear_context_receive()
 	end_presentation()
 	animation_player.callback_mode_method = AnimationMixer.ANIMATION_CALLBACK_MODE_METHOD_DEFERRED
 	_blend_position=0.0
@@ -880,3 +910,110 @@ func reset_to_idle() -> void:
 	animation_tree.set("parameters/Locomotion/blend_position",0.0)
 	animation_tree.set("parameters/CloseControl/blend_amount",0.0)
 	animation_tree.advance(0.0)
+
+func _install_receive_actions() -> void:
+	if _receive_motion_cache.is_empty():
+		var source := (load("res://assets/characters/shared/receive_actions.glb") as PackedScene).instantiate()
+		var player := source.get_node("AnimationPlayer") as AnimationPlayer
+		for clip in CONTEXT_RECEIVE_CLIPS:
+			var motion := player.get_animation(clip).duplicate() as Animation
+			motion.loop_mode = Animation.LOOP_NONE
+			_receive_motion_cache[clip] = motion
+			var suffix := String(clip).trim_prefix("AN_Beechlawn_Receive")
+			var kind := "move" if suffix.begins_with("Move") else "stand"
+			var side := "left" if suffix.ends_with("Left") else "right"
+			var event: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://assets/characters/shared/receive_%s_%s_contact.json"%[kind,side]))
+			_receive_metadata[clip] = event
+		source.free()
+	var library := animation_player.get_animation_library(&"")
+	for clip in CONTEXT_RECEIVE_CLIPS:
+		if library.has_animation(clip): library.remove_animation(clip)
+		library.add_animation(clip,_receive_motion_cache[clip])
+
+func can_receive_context() -> bool:
+	return not _presentation_active and _active_action in [&"",&"stop",&"turn"]
+
+func context_receiving() -> bool: return _context_receiving
+func context_receive_clock() -> float: return _receive_clock
+
+func set_context_receive_moving() -> void:
+	if not _context_receiving or _receive_index>=2: return
+	animation_tree.set("parameters/Receive/blend_amount",0.0)
+	_receive_index += 2
+	_active_clip = CONTEXT_RECEIVE_CLIPS[_receive_index]
+	_set_receive_filter()
+
+func receive_context_offset(foot: StringName, moving: bool) -> Vector3:
+	var index := (2 if moving else 0)+(1 if foot == &"left" else 0)
+	var point: Array = _receive_metadata[CONTEXT_RECEIVE_CLIPS[index]].toe_at_contact_cm
+	# Source local centimetres, Y up/Z forward; shipped Rig has a PI yaw.
+	return Vector3(-float(point[0]),float(point[1]),-float(point[2]))*.01
+
+func receive_context_contact_time() -> float:
+	var event: Dictionary = _receive_metadata[CONTEXT_RECEIVE_CLIPS[0]]
+	return float(event.frame)/float(event.fps)
+
+func receive_context_position(foot: StringName) -> Vector3:
+	return bone_world_position(&"mixamorig_LeftToe_End" if foot == &"left" else &"mixamorig_RightToe_End")
+
+func play_context_receive(foot: StringName, moving: bool, speed: float, start := 0.0) -> bool:
+	if not can_receive_context(): return false
+	animation_player.stop()
+	_receive_index = (2 if moving else 0)+(1 if foot == &"left" else 0)
+	_active_action = &"receive"
+	_active_clip = CONTEXT_RECEIVE_CLIPS[_receive_index]
+	var event: Dictionary = _receive_metadata[_active_clip]
+	_receive_marker = float(event.frame)/float(event.fps)
+	_receive_duration = animation_player.get_animation(_active_clip).length
+	_set_receive_filter()
+	_context_receiving = true
+	_action_has_contact = false
+	_receive_clock = start
+	_receive_speed = speed
+	animation_tree.active = true
+	advance_context_receive(0)
+	return true
+
+func advance_context_receive(delta: float) -> void:
+	if not _context_receiving: return
+	var before := _receive_clock
+	_receive_clock += delta*_receive_speed
+	var amount := minf(clampf(_receive_clock/.08,0,1),clampf((_receive_duration-_receive_clock)/.10,0,1))
+	animation_tree.set("parameters/Receive/blend_amount",amount)
+	animation_tree.set("parameters/ReceiveSeek/seek_request",minf(_receive_clock,_receive_duration))
+	# One fixed-tick clock drives both sampled pose and the exported marker.
+	# Seeking method tracks can skip callbacks, so this metadata crossing is
+	# dispatched explicitly after the mixer has captured the same physics pose.
+	animation_tree.advance(0)
+	if before < _receive_marker and _receive_clock >= _receive_marker and not _action_has_contact:
+		on_action_contact_marker()
+	if _context_receiving and _receive_clock >= _receive_duration:
+		cancel_context_receive()
+
+func _clear_context_receive() -> void:
+	if not _context_receiving: return
+	animation_tree.set("parameters/Receive/blend_amount",0.0)
+	var blend := (animation_tree.tree_root as AnimationNodeBlendTree).get_node("Receive") as AnimationNodeBlend2
+	blend.filter_enabled = false
+	_context_receiving = false
+
+func cancel_context_receive() -> void:
+	if not _context_receiving: return
+	_clear_context_receive()
+	_active_action = &""
+	_active_clip = &""
+	animation_tree.active = true
+	action_finished.emit(&"receive")
+
+func _set_receive_filter() -> void:
+	animation_tree.set("parameters/ReceiveClip/blend_position",float(_receive_index))
+	var blend := (animation_tree.tree_root as AnimationNodeBlendTree).get_node("Receive") as AnimationNodeBlend2
+	blend.filter_enabled = _receive_index>=2
+	if not blend.filter_enabled: return
+	var side := "Right" if _receive_index==2 else "Left"
+	var motion := animation_player.get_animation(CONTEXT_RECEIVE_CLIPS[_receive_index])
+	for track in motion.get_track_count():
+		var path := motion.track_get_path(track)
+		var bone := String(path.get_subname(0)) if path.get_subname_count()>0 else ""
+		var selected := bone in ["mixamorig_"+side+"UpLeg","mixamorig_"+side+"Leg","mixamorig_"+side+"Foot","mixamorig_"+side+"ToeBase","mixamorig_"+side+"Toe_End"]
+		blend.set_filter_path(path,selected or bone.contains("Arm") or bone.contains("Hand") or bone.contains("Spine") or bone.contains("Shoulder"))

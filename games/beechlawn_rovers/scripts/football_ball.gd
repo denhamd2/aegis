@@ -183,6 +183,8 @@ func _claim_dribble_control(player: Node3D, player_gap: float) -> bool:
 			var candidate := node as FootballPlayer
 			if candidate == null or candidate == player:
 				continue
+			if candidate.receiving != null and ((candidate.receiving.active and not candidate.receiving.contact_done) or candidate.receiving.release_seconds>0):
+				continue
 			var wants_moving_touch := candidate._stick.length_squared() > 0.0025
 			var can_gather_stationary := candidate.velocity.length() < 0.45 and linear_velocity.length() < 0.7
 			if not wants_moving_touch and not can_gather_stationary:
@@ -286,12 +288,13 @@ func tackle_touch(player: Node3D, direction: Vector3, speed: float) -> bool:
 	return true
 
 func receive_touch(player: Node3D, contact_position: Vector3,
-		preferred_direction: Vector3) -> bool:
-	if not is_instance_valid(player) or last_action not in [&"pass", &"through_pass", &"lofted_pass", &"cross", &"header_clearance"]:
+		preferred_direction: Vector3, mode: StringName = &"legacy") -> bool:
+	if not is_instance_valid(player) or last_action not in [&"pass", &"through_pass", &"lofted_pass", &"cross", &"header_clearance", &"goalkeeper_distribution"]:
 		return false
 	var touch_team := StringName(player.get("team_name"))
+	var ground := surface_height(global_position.x,global_position.z) if use_terrain else 0.0
 	if last_touch != touch_team or global_position.distance_to(contact_position) > 0.20 \
-			or global_position.y > RADIUS + 0.16:
+			or global_position.y > ground + RADIUS + 0.16:
 		return false
 	var incoming := Vector3(linear_velocity.x, 0.0, linear_velocity.z)
 	if incoming.length() < 0.35:
@@ -309,6 +312,22 @@ func receive_touch(player: Node3D, contact_position: Vector3,
 	# player's intent. It changes velocity through an impulse; the ball stays
 	# independent and the animation marker never sets its position.
 	var target_velocity := (incoming * 0.28 + actor_velocity * 0.32 + outlet).limit_length(4.2)
+	if mode != &"legacy" and player is FootballPlayer:
+		var actor := player as FootballPlayer
+		var distance: float = actor.tuning.receive_sprint_distance if mode == &"sprint" else (actor.tuning.receive_close_distance if mode == &"close" else actor.tuning.receive_carry_distance)
+		var direction := preferred_direction.normalized()
+		var offset := global_position-actor.global_position
+		offset.y = 0
+		var rating := float(actor.profile.attributes.ball_control) if actor.profile != null and actor.profile.attributes != null else 50.0
+		# Neutral 50 is exact default intent. Harder incoming balls and lower
+		# control retain a little more relative travel; no random ownership grant.
+		var retention := clampf(.065+(50-rating)*.0006+(incoming-actor_velocity).length()*.001,.025,.14)
+		if mode == &"close": retention *= .6
+		if mode == &"sprint": retention *= .45
+		var relative := (direction*distance-offset)/actor.tuning.receive_settle_seconds
+		relative = relative.limit_length(3.5 if mode == &"sprint" else (1.5 if mode == &"close" else 2.6))
+		target_velocity = actor_velocity+relative+(incoming-actor_velocity)*retention
+		target_velocity = target_velocity.limit_length(actor_velocity.length()+4.0)
 	target_velocity.y = clampf(linear_velocity.y * 0.12, -0.45, 0.25)
 	apply_central_impulse((target_velocity - linear_velocity) * mass)
 	last_touch = touch_team
@@ -316,6 +335,8 @@ func receive_touch(player: Node3D, contact_position: Vector3,
 	last_strike_part = &"foot"
 	action_serial += 1
 	_dribble_cooldowns.clear()
+	_dribble_controller = null
+	_dribble_control_lease = 0
 	record_touch(player)
 	touched.emit(&"first_touch", target_velocity.length())
 	return true

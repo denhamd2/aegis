@@ -1,0 +1,75 @@
+
+[smoke] moving_receive_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+MOVING_RECEIVE_FIRST_EVENT [&"first_touch"]
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+[passed] moving_receive_smoke.gd (9.2s)
+
+[smoke] football_receive_contact_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=8 officials=0 venue=kilmore_drive ball=ucl_26_27_league
+Beechlawn receive integration: incoming pass auto-triggered receive, toe gap 0.130m at 0.206 s, first touch cushioned the ball, and pass interruption worked
+[passed] football_receive_contact_smoke.gd (3.9s)
+
+[smoke] moving_kick_contact_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+MOVING_CONTACT kind=pass speed=0.0 human=false off_axis=false markers=1 impulses=1 toe_gap_m=0.166 marker_gap_m=0.166 case_ms=326
+MOVING_CONTACT kind=pass speed=6.0 human=false off_axis=false markers=1 impulses=1 toe_gap_m=0.084 marker_gap_m=0.084 case_ms=448
+MOVING_CONTACT kind=pass speed=8.6 human=false off_axis=false markers=1 impulses=1 toe_gap_m=0.082 marker_gap_m=0.082 case_ms=456
+MOVING_CONTACT kind=shot speed=0.0 human=false off_axis=false markers=1 impulses=1 toe_gap_m=0.134 marker_gap_m=0.134 case_ms=345
+MOVING_CONTACT kind=shot speed=6.0 human=false off_axis=false markers=1 impulses=1 toe_gap_m=0.079 marker_gap_m=0.079 case_ms=351
+MOVING_CONTACT kind=shot speed=8.6 human=false off_axis=false markers=1 impulses=1 toe_gap_m=0.084 marker_gap_m=0.084 case_ms=352
+MOVING_CONTACT kind=pass speed=0.0 human=true off_axis=false markers=1 impulses=1 toe_gap_m=0.166 marker_gap_m=0.166 case_ms=448
+MOVING_CONTACT kind=pass speed=6.0 human=true off_axis=false markers=1 impulses=1 toe_gap_m=0.084 marker_gap_m=0.084 case_ms=449
+MOVING_CONTACT kind=pass speed=8.6 human=true off_axis=false markers=1 impulses=1 toe_gap_m=0.082 marker_gap_m=0.082 case_ms=455
+MOVING_CONTACT kind=shot speed=0.0 human=true off_axis=false markers=1 impulses=1 toe_gap_m=0.134 marker_gap_m=0.134 case_ms=345
+MOVING_CONTACT kind=shot speed=6.0 human=true off_axis=false markers=1 impulses=1 toe_gap_m=0.08 marker_gap_m=0.08 case_ms=352
+MOVING_CONTACT kind=shot speed=8.6 human=true off_axis=false markers=1 impulses=1 toe_gap_m=0.084 marker_gap_m=0.084 case_ms=352
+MOVING_CONTACT kind=shot speed=0.0 human=true off_axis=true markers=1 impulses=0 toe_gap_m=inf marker_gap_m=0.838 case_ms=1194
+MOVING_CONTACT failures=0
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+[passed] moving_kick_contact_smoke.gd (16.9s)
+
+[smoke] first_time_pass_timing_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=8 officials=0 venue=kilmore_drive ball=ucl_26_27_league
+First-time 8.5 m/s pass contact: physics frame 7 (0.117 s), one impulse, gap 0.033 m
+First-time 18.0 m/s pass contact: physics frame 3 (0.050 s), one impulse, gap 0.059 m
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+[passed] first_time_pass_timing_smoke.gd (5.8s)
+
+[smoke] first_time_shot_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+FIRST_TIME_SHOT shots=1 traps=0 toe_gap_m=0.26 failures=0
+[passed] first_time_shot_smoke.gd (9.3s)
+
+[smoke] footballer_animation_tree_smoke.gd (timeout 45s)
+[failed] footballer_animation_tree_smoke.gd reported a script/assertion failure; stopped immediately
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+Animation duration AN_Beechlawn_Idle: old=1.500 new=1.500
+Animation duration AN_Beechlawn_Jog: old=0.833 new=1.000
+Animation duration AN_Beechlawn_Sprint: old=0.567 new=1.000
+Animation duration AN_Beechlawn_SlideTackle: old=1.000 new=1.000
+Animation duration AN_Beechlawn_ShoulderImpactSell: old=0.733 new=0.733
+SCRIPT ERROR: Assertion failed: Braking did not start the Blender-authored stop clip
+          at: _run (res://tests/footballer_animation_tree_smoke.gd:102)
+          GDScript backtrace (most recent call first):
+              [0] _run (res://tests/footballer_animation_tree_smoke.gd:102)

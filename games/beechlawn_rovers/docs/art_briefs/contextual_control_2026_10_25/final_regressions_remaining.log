@@ -1,0 +1,255 @@
+
+[smoke] footballer_animation_tree_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+Animation duration AN_Beechlawn_Idle: old=1.500 new=1.500
+Animation duration AN_Beechlawn_Jog: old=0.833 new=1.000
+Animation duration AN_Beechlawn_Sprint: old=0.567 new=1.000
+Animation duration AN_Beechlawn_SlideTackle: old=1.000 new=1.000
+Animation duration AN_Beechlawn_ShoulderImpactSell: old=0.733 new=0.733
+Beechlawn Y-Bot: locomotion, close-control loop, ball-action events, braking stop, mirrored turns, grounded slide-to-get-up playback and locomotion resume verified
+[passed] footballer_animation_tree_smoke.gd (6.9s)
+
+[smoke] braking_gait_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+BRAKING_GAIT fast_steps=21 kept_gait=true final_stop_pose=true
+BRAKING_GAIT PASS
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] braking_gait_smoke.gd (10.3s)
+
+[smoke] shared_gait_integrity_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+GAIT_INTEGRITY authored/preserved leg/root tracks=65
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] shared_gait_integrity_smoke.gd (8.7s)
+
+[smoke] wet_weather_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+Wet/weather checks: physical ground slowdown, airborne exclusion, mirrored masks, 60/120 Hz, preferences, four presets; failures=0
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] wet_weather_smoke.gd (8.6s)
+
+[smoke] aerial_contact_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+AERIAL_HEADER side=1.0 headers=1 jump_m=0.26584844663739 ball=(38.21227, 0.210422, 0.0)
+AERIAL_HEADER side=-1.0 headers=1 jump_m=0.26612541172653 ball=(-38.21227, 0.188675, 0.0)
+AERIAL_CONTACT headers=2 chest=4 gaps=[0.11321537196636, 0.036736022681, 0.03195240721107, 0.10937648266554, 0.03673599660397, 0.03195058181882] failures=0
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+[passed] aerial_contact_smoke.gd (9.0s)
+
+[smoke] cross_to_header_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+CROSS_RECEPTION variant=standard side=1.0 contested=false contacts=[{ "kind": &"cross", "part": &"foot", "style": &"standard", "team": &"Beechlawn Rovers", "opponent_gap": 160.265594482422, "tick": 33 }, { "kind": &"shot", "part": &"head", "style": &"header", "team": &"Beechlawn Rovers", "opponent_gap": 165.891555786133, "tick": 129 }] receiver=(47.76652, -0.030175, 2.261075) ball=(54.04428, 0.137237, -1.940606)
+CROSS_RECEPTION variant=standard side=1.0 contested=true contacts=[{ "kind": &"cross", "part": &"foot", "style": &"standard", "team": &"Beechlawn Rovers", "opponent_gap": 2.46075487136841, "tick": 189 }, { "kind": &"shot", "part": &"head", "style": &"header", "team": &"Beechlawn Rovers", "opponent_gap": 1.76963698863983, "tick": 278 }] receiver=(43.48371, -0.042121, 2.252652) ball=(52.16101, 0.138952, -0.545027)
+CROSS_RECEPTION variant=standard side=-1.0 contested=false contacts=[{ "kind": &"cross", "part": &"foot", "style": &"standard", "team": &"Boardeaux", "opponent_gap": 210.493667602539, "tick": 345 }, { "kind": &"shot", "part": &"head", "style": &"header", "team": &"Boardeaux", "opponent_gap": 229.600387573242, "tick": 434 }] receiver=(-43.5434, 0.049249, 2.171301) ball=(-52.12724, 0.111435, -0.536407)
+CROSS_RECEPTION variant=standard side=-1.0 contested=true contacts=[{ "kind": &"cross", "part": &"foot", "style": &"standard", "team": &"Boardeaux", "opponent_gap": 2.45879983901978, "tick": 501 }, { "kind": &"shot", "part": &"head", "style": &"header", "team": &"Boardeaux", "opponent_gap": 1.79322731494904, "tick": 590 }] receiver=(-43.48202, 0.049454, 2.252671) ball=(-52.13062, 0.111421, -0.526287)
+CROSS_HEADER failures=0
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 2 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+[passed] cross_to_header_smoke.gd (10.8s)
+
+[smoke] volley_contact_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+VOLLEY_CONTACT side=1.0 context=volley action=volley contacts=[{ "style": &"volley", "gap": 0.10883922129869, "bounce_age": 99.0 }] rise=0.0
+VOLLEY_CONTACT side=1.0 context=half_volley action=half_volley contacts=[{ "style": &"half_volley", "gap": 0.1250147074461, "bounce_age": 0.01666666666667 }] rise=0.0
+VOLLEY_CONTACT side=1.0 context=ai_half_volley action=half_volley contacts=[{ "style": &"half_volley", "gap": 0.12503211200237, "bounce_age": 0.01666666666667 }] rise=0.0
+VOLLEY_CONTACT side=-1.0 context=volley action=volley contacts=[{ "style": &"volley", "gap": 0.10275502502918, "bounce_age": 99.0 }] rise=0.0
+VOLLEY_CONTACT side=-1.0 context=half_volley action=half_volley contacts=[{ "style": &"half_volley", "gap": 0.03711184859276, "bounce_age": 0.01666666666667 }] rise=0.0
+VOLLEY_CONTACT side=-1.0 context=ai_half_volley action=half_volley contacts=[{ "style": &"half_volley", "gap": 0.04135055467486, "bounce_age": 0.01666666666667 }] rise=0.0
+VOLLEY_CONTACT failures=0
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+[passed] volley_contact_smoke.gd (12.5s)
+
+[smoke] grounded_aerial_recovery_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+GROUNDED_AERIAL_RECOVERY failures=0
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] grounded_aerial_recovery_smoke.gd (9.9s)
+
+[smoke] skill_control_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+SKILL_PASS ball_roll side=-1.0 contact=0.06307368725538
+SKILL_PASS ball_roll side=1.0 contact=0.06470592319965
+SKILL_PASS step_over side=-1.0 contact=0.06308498978615
+SKILL_PASS step_over side=1.0 contact=0.06470566987991
+SKILL_PASS body_feint side=-1.0 contact=0.06308491528034
+SKILL_PASS body_feint side=1.0 contact=0.06470585614443
+SKILL_PASS drag_back side=-1.0 contact=0.06308476626873
+SKILL_PASS drag_back side=1.0 contact=0.06470573693514
+SKILL_PASS skill_turn side=-1.0 contact=0.06308487057686
+SKILL_PASS skill_turn side=1.0 contact=0.06470583379269
+SKILL_PASS fake_shot side=-1.0 contact=0.06308472901583
+SKILL_PASS fake_shot side=1.0 contact=0.06470584869385
+SKILL_CONTROL PASS: 12 bilateral boot contacts, misses/loss/reset, fake-shot cancellation, shielding speed/pose
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] skill_control_smoke.gd (20.1s)
+
+[smoke] skill_moving_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+MOVING_SKILL speed=3.36 contacts=[{ "gap": 0.19397763907909 }]
+MOVING_SKILL speed=6.0 contacts=[{ "gap": 0.14577978849411 }]
+SKILL_MOVING PASS
+[passed] skill_moving_smoke.gd (9.7s)
+
+[smoke] keeper_live_contact_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+LIVE_SAVE team=Beechlawn Rovers tick=26 hands=[(-49.41092, 0.403865, 0.557505), (-49.35656, 0.348006, 0.852082)] ball=(-49.27924, 0.150238, 0.663718)
+LIVE_SAVE team=Boardeaux tick=26 hands=[(49.32183, 0.305759, 0.77395), (49.37627, 0.361712, 0.479402)] ball=(49.19161, 0.103095, 0.663471)
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+[passed] keeper_live_contact_smoke.gd (9.2s)
+
+[smoke] keeper_high_shots_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+HIGH_SHOT_CASE {"case":"central_high","closest_hand_m":0.217616721987724,"detail":{"ball":"(-49.13195, 2.108449, 0.0)","clip":"AN_Beechlawn_KeeperHighReach","hand":"(-49.30894, 2.150253, 0.119515)","keeper":"(-49.5, 0.164125, 0.0)","tick":23},"expected_save":true,"first_cross_tick":-1,"peak_root_y":0.169750139117241,"saved":true,"team":"Beechlawn Rovers","tip_height":-1.0}
+HIGH_SHOT_CASE {"case":"under_bar","closest_hand_m":0.105931602418423,"detail":{"ball":"(-49.25846, 2.419013, 0.025302)","clip":"AN_Beechlawn_KeeperHighReach","hand":"(-49.32007, 2.422687, 0.111395)","keeper":"(-49.5, 0.432609, 0.0)","tick":24},"expected_save":true,"first_cross_tick":-1,"peak_root_y":0.435096591711044,"saved":true,"team":"Beechlawn Rovers","tip_height":3.28528237342834}
+HIGH_SHOT_CASE {"case":"high_left","closest_hand_m":0.211435154080391,"detail":{"ball":"(-49.01898, 2.273891, -1.127847)","clip":"AN_Beechlawn_KeeperHighDiveLeft","hand":"(-49.22359, 2.233475, -1.093112)","keeper":"(-49.5, 0.471614, -0.54642)","tick":26},"expected_save":true,"first_cross_tick":-1,"peak_root_y":0.477062523365021,"saved":true,"team":"Beechlawn Rovers","tip_height":-1.0}
+HIGH_SHOT_CASE {"case":"high_right","closest_hand_m":0.211385756731033,"detail":{"ball":"(-49.01898, 2.273891, 1.127847)","clip":"AN_Beechlawn_KeeperHighDiveRight","hand":"(-49.22358, 2.233586, 1.093193)","keeper":"(-49.5, 0.471715, 0.546482)","tick":26},"expected_save":true,"first_cross_tick":-1,"peak_root_y":0.477164030075073,"saved":true,"team":"Beechlawn Rovers","tip_height":-1.0}
+HIGH_SHOT_CASE {"case":"long_under_bar","closest_hand_m":0.0834124013781548,"detail":{"ball":"(-49.29544, 2.453333, 0.029191)","clip":"AN_Beechlawn_KeeperHighReach","hand":"(-49.33021, 2.441203, 0.104034)","keeper":"(-49.5, 0.447963, 0.0)","tick":47},"expected_save":true,"first_cross_tick":-1,"peak_root_y":0.501586675643921,"saved":true,"team":"Beechlawn Rovers","tip_height":3.3196816444397}
+HIGH_SHOT_CASE {"case":"long_high_left","closest_hand_m":0.13131982088089,"detail":{"ball":"(-49.14949, 2.332243, -1.176632)","clip":"AN_Beechlawn_KeeperHighDiveLeft","hand":"(-49.27974, 2.345667, -1.166637)","keeper":"(-49.5, 0.47164, -0.40101)","tick":46},"expected_save":true,"first_cross_tick":-1,"peak_root_y":0.501857697963715,"saved":true,"team":"Beechlawn Rovers","tip_height":-1.0}
+HIGH_SHOT_CASE {"case":"unreachable_corner","closest_hand_m":2.81898164749146,"detail":{"ball":"(-48.10547, 2.283881, 2.533008)","clip":"","hand":"(-49.4467, 0.983526, 0.421887)","keeper":"(-49.51975, 0.021756, 0.08799)","tick":10},"expected_save":false,"first_cross_tick":14,"peak_root_y":0.026443587616086,"saved":false,"team":"Beechlawn Rovers","tip_height":-1.0}
+HIGH_SHOT_CASE {"case":"too_late","closest_hand_m":1.43621361255646,"detail":{"ball":"(-48.58989, 2.149731, 1.044946)","clip":"","hand":"(-49.23569, 1.130407, 0.266082)","keeper":"(-49.53219, 0.021756, 0.008512)","tick":4},"expected_save":false,"first_cross_tick":7,"peak_root_y":0.026443587616086,"saved":false,"team":"Beechlawn Rovers","tip_height":-1.0}
+HIGH_SHOT_CASE {"case":"over_bar","closest_hand_m":1.93731415271759,"detail":{"ball":"(-49.13195, 2.919343, 0.0)","clip":"","hand":"(-49.34867, 1.007249, -0.223868)","keeper":"(-49.62003, 0.020584, 0.0)","tick":23},"expected_save":false,"first_cross_tick":25,"peak_root_y":0.026443587616086,"saved":false,"team":"Beechlawn Rovers","tip_height":-1.0}
+HIGH_SHOT_CASE {"case":"central_high","closest_hand_m":0.217616945505142,"detail":{"ball":"(49.13195, 2.065563, 0.0)","clip":"AN_Beechlawn_KeeperHighReach","hand":"(49.30894, 2.107368, -0.119515)","keeper":"(49.5, 0.12124, 0.0)","tick":23},"expected_save":true,"first_cross_tick":-1,"peak_root_y":0.126864477992058,"saved":true,"team":"Boardeaux","tip_height":-1.0}
+HIGH_SHOT_CASE {"case":"under_bar","closest_hand_m":0.105926752090454,"detail":{"ball":"(49.25846, 2.376126, 0.025302)","clip":"AN_Beechlawn_KeeperHighReach","hand":"(49.32006, 2.379822, 0.111393)","keeper":"(49.5, 0.389724, 0.0)","tick":24},"expected_save":true,"first_cross_tick":-1,"peak_root_y":0.392211079597473,"saved":true,"team":"Boardeaux","tip_height":3.24239540100098}
+HIGH_SHOT_CASE {"case":"high_left","closest_hand_m":0.2115797996521,"detail":{"ball":"(49.01898, 2.231004, 1.127847)","clip":"AN_Beechlawn_KeeperHighDiveLeft","hand":"(49.22359, 2.190094, 1.092811)","keeper":"(49.5, 0.428233, 0.546119)","tick":26},"expected_save":true,"first_cross_tick":-1,"peak_root_y":0.43368136882782,"saved":true,"team":"Boardeaux","tip_height":-1.0}
+HIGH_SHOT_CASE {"case":"high_right","closest_hand_m":0.211588874459267,"detail":{"ball":"(49.01898, 2.231004, -1.127847)","clip":"AN_Beechlawn_KeeperHighDiveRight","hand":"(49.22358, 2.190005, -1.09277)","keeper":"(49.5, 0.428134, -0.546059)","tick":26},"expected_save":true,"first_cross_tick":-1,"peak_root_y":0.43358314037323,"saved":true,"team":"Boardeaux","tip_height":-1.0}
+HIGH_SHOT_CASE {"case":"long_under_bar","closest_hand_m":0.0834041908383369,"detail":{"ball":"(49.29544, 2.410446, 0.029191)","clip":"AN_Beechlawn_KeeperHighReach","hand":"(49.3302, 2.398337, 0.104032)","keeper":"(49.5, 0.405077, 0.0)","tick":47},"expected_save":true,"first_cross_tick":-1,"peak_root_y":0.458700597286224,"saved":true,"team":"Boardeaux","tip_height":3.27679467201233}
+HIGH_SHOT_CASE {"case":"long_high_left","closest_hand_m":0.131257012486458,"detail":{"ball":"(49.14949, 2.289356, 1.176632)","clip":"AN_Beechlawn_KeeperHighDiveLeft","hand":"(49.27974, 2.301967, 1.166407)","keeper":"(49.5, 0.42794, 0.400779)","tick":46},"expected_save":true,"first_cross_tick":-1,"peak_root_y":0.458157539367676,"saved":true,"team":"Boardeaux","tip_height":-1.0}
+HIGH_SHOT_CASE {"case":"unreachable_corner","closest_hand_m":2.81898760795593,"detail":{"ball":"(48.10547, 2.240994, -2.533008)","clip":"","hand":"(49.4467, 0.940639, -0.421879)","keeper":"(49.51975, -0.021131, -0.087982)","tick":10},"expected_save":false,"first_cross_tick":14,"peak_root_y":-0.0164435878396034,"saved":false,"team":"Boardeaux","tip_height":-1.0}
+HIGH_SHOT_CASE {"case":"too_late","closest_hand_m":1.43620193004608,"detail":{"ball":"(48.58989, 2.106844, -1.044946)","clip":"","hand":"(49.23566, 1.08752, -0.266072)","keeper":"(49.53215, -0.021131, -0.008502)","tick":4},"expected_save":false,"first_cross_tick":7,"peak_root_y":-0.0164435878396034,"saved":false,"team":"Boardeaux","tip_height":-1.0}
+HIGH_SHOT_CASE {"case":"over_bar","closest_hand_m":1.93480741977692,"detail":{"ball":"(49.13195, 2.876457, 0.0)","clip":"","hand":"(49.34859, 0.966893, 0.223868)","keeper":"(49.61995, -0.019772, 0.0)","tick":23},"expected_save":false,"first_cross_tick":25,"peak_root_y":-0.0164435878396034,"saved":false,"team":"Boardeaux","tip_height":-1.0}
+KEEPER_HIGH_SHOTS PASS: fast central/corner shots and unreachable/reaction misses on both rigs
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+[passed] keeper_high_shots_smoke.gd (14.6s)
+
+[smoke] keeper_full_dive_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+FULL_DIVE_CASE {"airborne":true,"case":"low","closest_m":0.0930499508976936,"committed_travel_m":0.813712163595483,"detail":{"ball":"(-48.92828, 0.562241, -1.991485)","clip":"AN_Beechlawn_KeeperDiveFullLowLeft","hand":"(-49.09706, 0.523496, -1.896288)","roll":79.7391642725708,"tick":33},"expected":true,"motion_ok":true,"restored":true,"roll_degrees":79.7391642725708,"saved":true,"side":-2.0,"team":"Beechlawn Rovers"}
+FULL_DIVE_CASE {"airborne":true,"case":"low","closest_m":0.093016728758812,"committed_travel_m":0.813859453657642,"detail":{"ball":"(-48.92828, 0.562241, 1.991485)","clip":"AN_Beechlawn_KeeperDiveFullLowRight","hand":"(-49.09706, 0.523624, 1.896429)","roll":79.7476020558741,"tick":33},"expected":true,"motion_ok":true,"restored":true,"roll_degrees":79.7476020558741,"saved":true,"side":2.0,"team":"Beechlawn Rovers"}
+FULL_DIVE_CASE {"airborne":true,"case":"mid","closest_m":0.115033090114594,"committed_travel_m":0.949224069016054,"detail":{"ball":"(-49.00668, 1.239008, -1.901336)","clip":"AN_Beechlawn_KeeperDiveFullMidLeft","hand":"(-49.11001, 1.28867, -1.910712)","roll":72.434078091724,"tick":32},"expected":true,"motion_ok":true,"restored":true,"roll_degrees":74.7609675917753,"saved":true,"side":-2.0,"team":"Beechlawn Rovers"}
+FULL_DIVE_CASE {"airborne":true,"case":"mid","closest_m":0.115080863237381,"committed_travel_m":0.949333718279377,"detail":{"ball":"(-49.00668, 1.239008, 1.901336)","clip":"AN_Beechlawn_KeeperDiveFullMidRight","hand":"(-49.11002, 1.288746, 1.910807)","roll":72.4425191795286,"tick":32},"expected":true,"motion_ok":true,"restored":true,"roll_degrees":74.7694304941636,"saved":true,"side":2.0,"team":"Beechlawn Rovers"}
+FULL_DIVE_CASE {"airborne":true,"case":"high","closest_m":0.195034950971603,"committed_travel_m":1.1040167354513,"detail":{"ball":"(-49.00668, 2.291474, -1.901336)","clip":"AN_Beechlawn_KeeperHighDiveFullLeft","hand":"(-49.14608, 2.34566, -2.026512)","roll":57.7497617312913,"tick":32},"expected":true,"motion_ok":true,"restored":true,"roll_degrees":59.8220475113293,"saved":true,"side":-2.0,"team":"Beechlawn Rovers"}
+FULL_DIVE_CASE {"airborne":true,"case":"high","closest_m":0.195116370916367,"committed_travel_m":1.10409169481136,"detail":{"ball":"(-49.00668, 2.291474, 1.901336)","clip":"AN_Beechlawn_KeeperHighDiveFullRight","hand":"(-49.14609, 2.345769, 2.026583)","roll":57.758208969489,"tick":32},"expected":true,"motion_ok":true,"restored":true,"roll_degrees":59.8304814989228,"saved":true,"side":2.0,"team":"Beechlawn Rovers"}
+FULL_DIVE_CASE {"airborne":false,"case":"unreachable","closest_m":2.53567743301392,"committed_travel_m":0.290320187807083,"detail":{"ball":"(-48.10547, 1.260639, 2.609765)","clip":"","hand":"(-49.33975, 1.0393, 0.405715)","roll":0.593802499557408,"tick":10},"expected":false,"motion_ok":true,"restored":true,"roll_degrees":1.28633560999438,"saved":false,"side":3.4,"team":"Beechlawn Rovers"}
+FULL_DIVE_CASE {"airborne":false,"case":"late","closest_m":1.29128003120422,"committed_travel_m":0.0595084689557552,"detail":{"ball":"(-48.58989, 1.119394, 1.393261)","clip":"","hand":"(-49.25361, 1.123999, 0.283876)","roll":0.121946562464894,"tick":4},"expected":false,"motion_ok":true,"restored":true,"roll_degrees":0.804785701057329,"saved":false,"side":2.0,"team":"Beechlawn Rovers"}
+FULL_DIVE_CASE {"airborne":true,"case":"low","closest_m":0.0934024080634117,"committed_travel_m":0.813385099638253,"detail":{"ball":"(48.92828, 0.519354, 1.991485)","clip":"AN_Beechlawn_KeeperDiveFullLowLeft","hand":"(49.09706, 0.479207, 1.895961)","roll":79.7391651402207,"tick":33},"expected":true,"motion_ok":true,"restored":true,"roll_degrees":79.7391651402207,"saved":true,"side":-2.0,"team":"Boardeaux"}
+FULL_DIVE_CASE {"airborne":true,"case":"low","closest_m":0.0934145301580429,"committed_travel_m":0.813325107796118,"detail":{"ball":"(48.92828, 0.519354, -1.991485)","clip":"AN_Beechlawn_KeeperDiveFullLowRight","hand":"(49.09706, 0.479189, -1.895894)","roll":79.7475994529936,"tick":33},"expected":true,"motion_ok":true,"restored":true,"roll_degrees":79.7475994529936,"saved":true,"side":2.0,"team":"Boardeaux"}
+FULL_DIVE_CASE {"airborne":true,"case":"mid","closest_m":0.114383667707443,"committed_travel_m":0.94889552751556,"detail":{"ball":"(49.00668, 1.196121, 1.901336)","clip":"AN_Beechlawn_KeeperDiveFullMidLeft","hand":"(49.11001, 1.244322, 1.910384)","roll":72.434078091724,"tick":32},"expected":true,"motion_ok":true,"restored":true,"roll_degrees":74.7609675917753,"saved":true,"side":-2.0,"team":"Boardeaux"}
+FULL_DIVE_CASE {"airborne":true,"case":"mid","closest_m":0.114332877099514,"committed_travel_m":0.948788047535345,"detail":{"ball":"(49.00668, 1.196121, -1.901336)","clip":"AN_Beechlawn_KeeperDiveFullMidRight","hand":"(49.11002, 1.244208, -1.910262)","roll":72.4425263434504,"tick":32},"expected":true,"motion_ok":true,"restored":true,"roll_degrees":74.7694375729859,"saved":true,"side":2.0,"team":"Boardeaux"}
+FULL_DIVE_CASE {"airborne":true,"case":"high","closest_m":0.194674462080002,"committed_travel_m":1.10370011487976,"detail":{"ball":"(49.00668, 2.248588, 1.901336)","clip":"AN_Beechlawn_KeeperHighDiveFullLeft","hand":"(49.14608, 2.302202, 2.026196)","roll":57.7497819216118,"tick":32},"expected":true,"motion_ok":true,"restored":true,"roll_degrees":59.8220672638999,"saved":true,"side":-2.0,"team":"Boardeaux"}
+FULL_DIVE_CASE {"airborne":true,"case":"high","closest_m":0.194584041833878,"committed_travel_m":1.10362720559351,"detail":{"ball":"(49.00668, 2.248588, -1.901336)","clip":"AN_Beechlawn_KeeperHighDiveFullRight","hand":"(49.14608, 2.302044, -2.026119)","roll":57.7582412709953,"tick":32},"expected":true,"motion_ok":true,"restored":true,"roll_degrees":59.8305051999787,"saved":true,"side":2.0,"team":"Boardeaux"}
+FULL_DIVE_CASE {"airborne":false,"case":"unreachable","closest_m":2.53568077087402,"committed_travel_m":0.290265768766403,"detail":{"ball":"(48.10547, 1.217752, -2.609765)","clip":"","hand":"(49.33974, 0.996413, -0.405708)","roll":0.593802499557408,"tick":10},"expected":false,"motion_ok":true,"restored":true,"roll_degrees":1.28633560999438,"saved":false,"side":3.4,"team":"Boardeaux"}
+FULL_DIVE_CASE {"airborne":false,"case":"late","closest_m":1.29126691818237,"committed_travel_m":0.0594778656959534,"detail":{"ball":"(48.58989, 1.076507, -1.393261)","clip":"","hand":"(49.25357, 1.081112, -0.283864)","roll":0.121946562464894,"tick":4},"expected":false,"motion_ok":true,"restored":true,"roll_degrees":0.804785701057329,"saved":false,"side":2.0,"team":"Boardeaux"}
+KEEPER_FULL_DIVE PASS: bilateral low/mid/high contact, physical flight, recovery, honest misses
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] keeper_full_dive_smoke.gd (20.7s)
+
+[smoke] replay_results_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+BEECHLAWN_MENU_READY
+REPLAY_RESULTS failures=0
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] replay_results_smoke.gd (30.1s)
+
+[smoke] recorded_face_replay_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+RECORDED_FACES PASS: recorded blink interpolation and exact live weight restoration
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] recorded_face_replay_smoke.gd (9.2s)
+
+[smoke] discipline_rules_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+DISCIPLINE free kicks, penalties, yellow/second yellow/red, keeper replacement, direct throw goals failures=0
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+[passed] discipline_rules_smoke.gd (12.4s)
+
+[smoke] hud_layout_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+HUD PASS: monochrome replacement, clock, responsive radar at 3 aspects, carrier identity, distinct power, help and presentation visibility
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] hud_layout_smoke.gd (9.8s)
+
+[smoke] ball_selection_smoke.gd (timeout 90s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+BALL_COMBINATION PASS ucl_26_27_league kilmore_drive mode=0
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+BALL_COMBINATION PASS ucl_26_27_league kilmore_drive mode=1
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=rovers_arena ball=ucl_26_27_league
+BALL_COMBINATION PASS ucl_26_27_league rovers_arena mode=0
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=rovers_arena ball=ucl_26_27_league
+BALL_COMBINATION PASS ucl_26_27_league rovers_arena mode=1
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=worn_sunday_league
+BALL_COMBINATION PASS worn_sunday_league kilmore_drive mode=0
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=worn_sunday_league
+BALL_COMBINATION PASS worn_sunday_league kilmore_drive mode=1
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=rovers_arena ball=worn_sunday_league
+BALL_COMBINATION PASS worn_sunday_league rovers_arena mode=0
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=rovers_arena ball=worn_sunday_league
+BALL_COMBINATION PASS worn_sunday_league rovers_arena mode=1
+BEECHLAWN_MENU_READY
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=rovers_arena ball=worn_sunday_league
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=rovers_arena ball=worn_sunday_league
+BEECHLAWN_MENU_READY
+BALL_SELECTION PASS: legacy/invalid/missing settings, persistence, 8 mode/venue/ball combinations, intro/replay, scale and physics; failures=0
+[passed] ball_selection_smoke.gd (78.2s)

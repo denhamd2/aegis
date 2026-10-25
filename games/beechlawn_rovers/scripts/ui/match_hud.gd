@@ -77,8 +77,8 @@ func _draw() -> void:
 		draw_rect(Rect2(size.x/2-240,size.y-182,480,29),INK)
 		_text(prompt,Vector2(size.x/2-224,size.y-161),17)
 	if help_visible:
-		draw_rect(Rect2(size.x-438,135,410,234),INK)
-		var lines := ["KEYBOARD CONTROLS","WASD  Move   Shift  Sprint   Ctrl  Close / jockey","E  Pass   Q  Through   R  Loft   T  Cross","Space  Shoot   F  Tackle   G  Slide","J  Contain   H  Pressure   K  Shield","U / I / O / P / L / B  Skills","Tab  Switch   C  Camera   Esc  Title","F1  Close help"]
+		draw_rect(Rect2(size.x-438,135,410,260),INK)
+		var lines := ["KEYBOARD CONTROLS","WASD  Move   Shift  Sprint   Ctrl  Close / jockey","First touch: Move direct · Ctrl close · Shift push","E  Pass   Q  Through   R  Loft   T  Cross","Space  Shoot   F  Tackle   G  Slide","J  Contain   H  Pressure   K  Shield","U / I / O / P / L / B  Skills","Tab  Switch   C  Camera   Esc  Title","F1  Close help"]
 		for i in lines.size(): _text(lines[i],Vector2(size.x-420,161+i*26),17)
 	else:
 		draw_rect(Rect2(size.x-104,12,80,26),INK)

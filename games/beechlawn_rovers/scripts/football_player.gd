@@ -70,7 +70,7 @@ var _visual_shot_speed := 0.0
 var _visual_shot_lift := 0.0
 var _contact_wait_action: StringName = &""
 var _contact_wait_remaining := 0.0
-var _last_receive_action_serial := -1
+var receiving: PlayerReceiveController
 
 func _ready() -> void:
 	# The independent ball collides against players, but is never a floor or
@@ -86,6 +86,8 @@ func _ready() -> void:
 	_aerial_controller.configure(self, ball)
 	skills = PlayerSkillController.new()
 	skills.configure(self, ball)
+	receiving = PlayerReceiveController.new()
+	receiving.configure(self,ball)
 	if profile == null:
 		rotation.y = -PI * 0.5 * attack_sign
 	elif profile.role == "goalkeeper":
@@ -133,6 +135,8 @@ func _physics_process(delta: float) -> void:
 		if ball.goalkeeper_is_holding(self):
 			_stick = Vector2.ZERO
 	_aerial_controller.before_move(delta)
+	if receive_target_time>0 or receiving.active or receiving.release_seconds>0:
+		receiving.before_move(delta)
 	_update_locomotion(delta)
 	_aerial_controller.after_locomotion()
 	if _goalkeeper_controller != null: _goalkeeper_controller.after_locomotion(delta)
@@ -147,15 +151,18 @@ func _physics_process(delta: float) -> void:
 		_goalkeeper_controller.try_save()
 	_aerial_controller.resolve_contact(delta)
 	skills.resolve_contact(delta)
+	if receiving.active: receiving.after_move(delta)
+	if step_version!=_stoppage_version: return
 	_update_dribble(delta)
+	if step_version!=_stoppage_version: return
 	_resolve_pending_kick_contact(delta)
+	if step_version!=_stoppage_version: return
 	_try_shoulder_challenge()
 	if not controlled_by_human:
 		_try_ai_tackle()
 		if step_version!=_stoppage_version: return
 	_update_actions(delta)
 	if step_version!=_stoppage_version: return
-	_try_play_receive_animation(delta)
 	_update_visual_pose(delta)
 
 func _sample_input() -> void:
@@ -298,6 +305,7 @@ func _keeper_is_recovering() -> bool:
 func _update_dribble(delta: float) -> void:
 	if ball == null or _keeper_is_recovering() or _aerial_controller.committed():
 		return
+	if receiving != null and receiving.defer_dribble(): return
 	if skills.active != &"":
 		skills.control_setup()
 		return
@@ -781,6 +789,9 @@ func _on_visual_action_contact(action: StringName) -> void:
 		_resolve_standing_tackle()
 		return
 	if action == &"receive":
+		if receiving != null and receiving.active:
+			receiving.on_marker()
+			return
 		if ball.receive_touch(self, _receive_contact_position(), _flat_direction):
 			receive_target_time = 0.0
 			status_changed.emit("First touch")
@@ -839,52 +850,6 @@ func _on_visual_action_finished(action: StringName) -> void:
 	elif action == &"slide_tackle":
 		velocity.x = 0.0
 		velocity.z = 0.0
-
-func _try_play_receive_animation(delta: float) -> void:
-	if not is_instance_valid(_footballer_visual) or receive_target_time <= 0.0 \
-			or ball == null or ball.action_serial == _last_receive_action_serial \
-			or ball.last_touch != team_name \
-			or ball.last_action not in [&"pass", &"through_pass", &"lofted_pass", &"cross", &"header_clearance"] \
-			or _pending_pass > 0.0 or _pending_shot > 0.0 or _shot_charge >= 0.0 \
-			or _visual_pass_pending or _slide_tackle_time > 0.0:
-		return
-	var authored_contact := _footballer_visual.action_contact_time(&"receive")
-	if authored_contact <= 0.0:
-		return
-	var time_to_contact := _incoming_receive_contact_time()
-	# Start close to the authored foot-contact frame. The short window keeps the
-	# clip from playing conspicuously early or after a fast pass has gone by.
-	if time_to_contact < authored_contact * 0.88 \
-			or time_to_contact > authored_contact + minf(delta, 1.0 / 120.0):
-		return
-	var playback_speed := clampf(authored_contact / maxf(time_to_contact, 0.01), 0.86, 1.16)
-	if _footballer_visual.play_receive(playback_speed):
-		_last_receive_action_serial = ball.action_serial
-
-func _incoming_receive_contact_time() -> float:
-	if ball.last_touch != team_name or ball.global_position.y > 0.62 \
-			or ball.linear_velocity.length_squared() < 1.0:
-		return -1.0
-	var forward := -global_basis.z
-	forward.y = 0.0
-	forward = forward.normalized()
-	# The authored receive pose meets the ball about 0.55 m in front of the root.
-	var contact_target := global_position + forward * 0.55
-	var offset := ball.global_position - contact_target
-	offset.y = 0.0
-	var relative_velocity := ball.linear_velocity - Vector3(velocity.x, 0.0, velocity.z)
-	relative_velocity.y = 0.0
-	var speed_squared := relative_velocity.length_squared()
-	if speed_squared < 0.5 or offset.dot(relative_velocity) >= 0.0:
-		return -1.0
-	var closest_time := clampf(-offset.dot(relative_velocity) / speed_squared,
-		0.0, tuning.incoming_pass_prediction_window)
-	if closest_time <= 0.04 or closest_time > tuning.incoming_pass_prediction_window:
-		return -1.0
-	var closest_offset := offset + relative_velocity * closest_time
-	if closest_offset.length() > 0.18:
-		return -1.0
-	return closest_time
 
 func _receive_contact_position() -> Vector3:
 	if is_instance_valid(_footballer_visual):
@@ -1078,6 +1043,7 @@ func prepare_control_handover(receiving: bool) -> void:
 	shot_charge_changed.emit(0)
 
 func reset_for_stoppage() -> void:
+	if receiving != null: receiving.cancel(true)
 	_cursor_receive_assist = false
 	_stoppage_version+=1
 	_aerial_controller.reset()

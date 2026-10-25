@@ -160,3 +160,7 @@ contests, action/foot-plant polish and M1 play-feel/performance remain open.
 ### Match ball
 
 Options → Match Setup selects the adidas UCL 2026/27 League size-5 ball (default) or the original worn Sunday-league ball, beside Venue. The saved choice applies to Play/Watch, both venues and rematches. The appearance changes; the regulation collider/mass and ball physics are shared.
+
+### First touch
+
+Movement directs a reception. Hold Ctrl to cushion the ball close or Shift to push it into space; Ctrl takes priority if both are held. Sprint touches carry more possession risk. E/Q/Space can request a first-time return or shot. Both feet share the receiving animations while the supporting leg continues its gait.

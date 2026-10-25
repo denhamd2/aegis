@@ -24,9 +24,9 @@ from pathlib import Path
 PROJECT = Path(__file__).resolve().parents[1]
 GODOT = os.environ.get("GODOT_BIN", "godot")
 TIMEOUT = float(os.environ.get("BEECHLAWN_TEST_TIMEOUT_SECONDS", "45"))
-# Full 23-actor pose evaluation takes about 64 s on this cloud CPU before
-# cold-start/host-load variation. These remain hard deadlines; progress logs
-# distinguish simulation stalls from a healthy slower-than-real-time run.
+# Full matches preserve a 60 Hz gameplay step. Asset startup is bounded
+# separately so a cold load cannot consume the simulation budget. Selection
+# checks construct ten complete scenes and retain their own single deadline.
 LONG_TEST_TIMEOUTS = {"eleven_v_eleven_match_soak.gd": 120.0, "full_presentation_match_soak.gd": 180.0,
                      "ball_selection_smoke.gd": 90.0}  # Eight full match/intro/replay assemblies.
 DEFAULT_TESTS = [
@@ -58,14 +58,17 @@ def stop_process_group(process: subprocess.Popen[str]) -> None:
         pass
 
 
-def monitor_process(process, timeout, live=False):
+def monitor_process(process, timeout, live=False, startup_timeout=None):
     """Detect a failed GDScript immediately: assert() need not exit SceneTree."""
     selector = selectors.DefaultSelector()
     selector.register(process.stdout, selectors.EVENT_READ)
-    deadline = time.monotonic() + timeout
+    started = time.monotonic()
+    awaiting_ready = startup_timeout is not None
+    deadline = started + (startup_timeout if awaiting_ready else timeout)
+    hard_deadline = started + timeout + (startup_timeout or 0)
     output = bytearray()
     status = 'complete'
-    fatal = (b'SCRIPT ERROR:', b'Assertion failed', b'ERROR: Failed to load', b'SHADER ERROR:', b'ERROR: Shader compilation failed')
+    fatal = (b'SCRIPT ERROR:', b'Assertion failed', b'ERROR: Failed to load', b'SHADER ERROR:', b'ERROR: Shader compilation failed', b'ERROR: Condition', b'ERROR: AnimationPlayer has no current animation')
     try:
         while True:
             if time.monotonic() >= deadline:
@@ -82,11 +85,19 @@ def monitor_process(process, timeout, live=False):
             output.extend(chunk)
             if live:
                 print(chunk.decode(errors="replace"), end="", flush=True)
+            if awaiting_ready and b'BEECHLAWN_MATCH_READY actors=22 officials=1 ' in output:
+                awaiting_ready = False
+                deadline = min(hard_deadline, time.monotonic()+timeout)
+                if live:
+                    print(f'[ready] startup={time.monotonic()-started:.1f}s; simulation deadline {timeout:g}s',flush=True)
             if status == 'complete' and any(marker in output for marker in fatal):
                 status = 'error'
                 stop_process_group(process)
                 deadline = time.monotonic() + 1
         process.wait(timeout=3)
+        if status == 'complete' and awaiting_ready:
+            output.extend(b'\nERROR: Match never reached its ready marker\n')
+            status = 'error'
     finally:
         selector.close()
         process.stdout.close()
@@ -127,7 +138,11 @@ def main() -> int:
             errors="replace",
         )
         live = name in LONG_TEST_TIMEOUTS
-        output, state = monitor_process(process, timeout, live=live)
+        # Cold asset loading has a separate hard bound. It cannot consume or
+        # extend the unchanged simulation budget; repeated ready lines cannot
+        # renew either deadline. Explicit timeout overrides retain old semantics.
+        startup_timeout = 90 if name in {'eleven_v_eleven_match_soak.gd','full_presentation_match_soak.gd'} and 'BEECHLAWN_TEST_TIMEOUT_SECONDS' not in os.environ else None
+        output, state = monitor_process(process, timeout, live=live, startup_timeout=startup_timeout)
         if state == 'timeout':
             if output:
                 print("\n".join(output.splitlines()[-60:]))

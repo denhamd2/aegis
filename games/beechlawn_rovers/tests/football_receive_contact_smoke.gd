@@ -66,8 +66,8 @@ func _run() -> void:
 		_fail("Incoming pass did not automatically start the receive clip/contact")
 		return
 	var distance := _toe_at_contact.distance_to(_ball_at_contact)
-	if absf(_contact_time - 20.0 / 60.0) > 0.06:
-		_fail("Receive contact event was at %.3f s, expected %.3f s" % [_contact_time, 20.0 / 60.0])
+	if absf(_contact_time - visual.receive_context_contact_time()) > 0.025:
+		_fail("Receive contact event was at %.3f s, expected %.3f s" % [_contact_time, visual.receive_context_contact_time()])
 		return
 	if distance > 0.14:
 		_fail("Receive toe missed incoming ball (distance=%.3fm toe=%s ball=%s)" % [
@@ -76,6 +76,10 @@ func _run() -> void:
 	if not _first_touch_seen:
 		_fail("Receive contact marker did not resolve the physical first touch")
 		return
+	# An impulse callback's velocity getter can still contain the pre-step
+	# velocity. Observe the integrated body before checking actual cushioning.
+	for frame in 2: await physics_frame
+	_speed_after_first_touch = _ball.linear_velocity.length()
 	if receiver.receive_target_time > 0.0:
 		_fail("Successful first touch retained its obsolete reception target")
 		return
@@ -103,7 +107,7 @@ func _on_action_contact(action: StringName) -> void:
 		return
 	_contact_seen = true
 	_receive_contact_count += 1
-	_contact_time = _visual.animation_player.current_animation_position
+	_contact_time = _visual.context_receive_clock()
 	var skeleton := _visual.get_node("Rig/YBot_Armature/Skeleton3D") as Skeleton3D
 	var toe_index := skeleton.find_bone("mixamorig_RightToe_End")
 	_toe_at_contact = skeleton.to_global(skeleton.get_bone_global_pose(toe_index).origin)

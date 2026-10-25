@@ -88,7 +88,7 @@ def main():
     from PIL import Image, ImageStat
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('output', type=Path)
-    parser.add_argument('--review-mode', choices=['stride_brake','stride_review','keeper_full_dives','keeper_high_shots','skills','skills_moving','keeper_dive_home','keeper_dive_away','keeper_high_home','outro','audio','free_kick','presentation','movement','throw','net','montage','attack_home','attack_away','keeper_home','keeper_away','cross_home','cross_away','header_close','chest_close','volley_close','half_volley_close','cross_driven_home','cross_driven_away','cross_lofted_home','cross_early_home','shot_finesse','shot_power','shot_low'], help='Capture a native moving repair review')
+    parser.add_argument('--review-mode', choices=['receive','receive_broadcast','stride_brake','stride_review','keeper_full_dives','keeper_high_shots','skills','skills_moving','keeper_dive_home','keeper_dive_away','keeper_high_home','outro','audio','free_kick','presentation','movement','throw','net','montage','attack_home','attack_away','keeper_home','keeper_away','cross_home','cross_away','header_close','chest_close','volley_close','half_volley_close','cross_driven_home','cross_driven_away','cross_lofted_home','cross_early_home','shot_finesse','shot_power','shot_low'], help='Capture a native moving repair review')
     parser.add_argument('--verbose', action='store_true', help='Include engine resource diagnostics')
     parser.add_argument('--ablation', choices=['none','scattering','transmittance','near_heads','pose','morphs','normal_maps','sun_shadows','shadow_bias','close_shadows'], default='none', help='Explicit portrait-only diagnostic; recorded in evidence')
     parser.add_argument('--setup-preview', action='store_true', help='Also capture the actual venue/control options')
@@ -96,6 +96,8 @@ def main():
     parser.add_argument('--venue-view', choices=['broadcast','wide','detail','all','corners','exterior','pitch','ball'], default='broadcast')
     parser.add_argument('--ball', choices=['ucl_26_27_league','worn_sunday_league'], default='ucl_26_27_league')
     parser.add_argument('--weather', choices=['sunny','cloudy','rain','mist'], default='sunny')
+    parser.add_argument('--project', type=Path, default=PROJECT, help='Explicit isolated football snapshot for before/after review')
+    parser.add_argument('--receive-baseline', action='store_true')
     parser.add_argument('--match',action='store_true',help='Capture the actual 22-player match and broadcast camera')
     parser.add_argument('--players', nargs='+', choices=['shane','john','des','referee','away_keeper','paddy'],
                         default=['shane','john','des','referee'])
@@ -113,6 +115,9 @@ def main():
     parser.add_argument('--lighting', choices=['match','soft','sun','shade'], default='match')
     parser.add_argument('--sky', choices=['match','review'], default='match')
     args = parser.parse_args()
+    project = args.project.resolve()
+    if not (project/'project.godot').is_file():
+        parser.error('Football project.godot is missing')
     if args.review_mode:
         args.match = True
     if not args.godot:
@@ -154,7 +159,7 @@ def main():
         selections = [('match','broadcast')] if args.match else [(p,v) for p in args.players for v in args.views]
         for player,view in selections:
             stem = player+'_'+view
-            command = [args.godot,'--path',str(PROJECT),'--rendering-method','forward_plus',
+            command = [args.godot,'--path',str(project),'--rendering-method','forward_plus',
                        '--resolution',args.resolution,'--fixed-fps','60','--disable-vsync',
                        '--audio-driver','Dummy']
             if args.verbose:
@@ -163,7 +168,7 @@ def main():
                 command += ['--write-movie',str(args.output/'audio_review.avi')]
             if linux:
                 command += ['--display-driver','x11','--rendering-driver','vulkan']
-            command += (['--script',('res://scripts/review_match_outro.gd' if args.review_mode == 'outro' else 'res://scripts/review_audio_mix.gd' if args.review_mode == 'audio' else 'res://scripts/review_broadcast_ui.gd' if args.review_mode == 'presentation' else 'res://scripts/review_native_repairs.gd') if args.review_mode else 'res://scripts/review_native_match.gd'] if args.match else ['res://scenes/review/shane_asset_review.tscn'])
+            command += (['--script',('res://scripts/review_contextual_control.gd' if args.review_mode in ['receive','receive_broadcast'] else 'res://scripts/review_match_outro.gd' if args.review_mode == 'outro' else 'res://scripts/review_audio_mix.gd' if args.review_mode == 'audio' else 'res://scripts/review_broadcast_ui.gd' if args.review_mode == 'presentation' else 'res://scripts/review_native_repairs.gd') if args.review_mode else 'res://scripts/review_native_match.gd'] if args.match else ['res://scenes/review/shane_asset_review.tscn'])
             command += ['--',
                 '--capture-dir='+str(args.output),'--player='+player,'--view='+view,
                 '--lighting='+args.lighting,'--sky='+args.sky,'--clean=1']
@@ -175,7 +180,7 @@ def main():
             if args.pose and not args.match:
                 command += ['--pose='+args.pose,'--frame='+str(args.frame)]
             if args.review_mode:
-                command += ['--review-mode='+args.review_mode]
+                command += ['--review-mode='+args.review_mode,'--receive-baseline='+('1' if args.receive_baseline else '0')]
             started = time.monotonic()
             image_path = args.output/(stem+'.png')
             report_path = args.output/(stem+'.json')

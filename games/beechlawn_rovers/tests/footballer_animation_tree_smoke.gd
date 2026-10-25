@@ -99,12 +99,15 @@ func _run() -> void:
 		"Releasing close control did not smoothly return toward jogging")
 	visual.set_locomotion_speed(4.8, false)
 	visual.set_locomotion_speed(4.2, false, true)
+	assert(visual.animation_tree.active and visual._active_action == &"",
+		"Fast braking must retain stepping before the final planted stop")
+	visual.set_locomotion_speed(2.4, false, true)
 	assert(player.current_animation == "AN_Beechlawn_StopFromRun",
-		"Braking did not start the Blender-authored stop clip")
+		"Slow braking did not start the Blender-authored stop clip")
 	visual.set_locomotion_speed(3.2, false, false)
 	assert(visual.animation_tree.active and visual._active_action == &"",
 		"Resuming movement did not restore locomotion from the stop clip")
-	visual.set_locomotion_speed(4.2, false, true)
+	visual.set_locomotion_speed(2.4, false, true)
 	await create_timer(0.68).timeout
 	assert(visual.animation_tree.active and visual._active_action == &"",
 		"Stop clip did not settle back into the locomotion blend")

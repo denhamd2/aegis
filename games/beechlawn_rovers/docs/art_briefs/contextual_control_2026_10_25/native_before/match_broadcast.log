@@ -1,0 +1,17 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Vulkan 1.4.305 - Forward+ - Using Device #0: Unknown - llvmpipe (LLVM 19.1.7, 256 bits)
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+RECEIVE_NATIVE_PROGRESS 0/100
+RECEIVE_NATIVE_PROGRESS 10/100
+RECEIVE_NATIVE_PROGRESS 20/100
+RECEIVE_NATIVE_PROGRESS 30/100
+RECEIVE_NATIVE_PROGRESS 40/100
+RECEIVE_NATIVE_PROGRESS 50/100
+RECEIVE_NATIVE_PROGRESS 60/100
+RECEIVE_NATIVE_PROGRESS 70/100
+RECEIVE_NATIVE_PROGRESS 80/100
+RECEIVE_NATIVE_PROGRESS 90/100
+BEECHLAWN_NATIVE_CAPTURE receiving cases=5 first_touches=2
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)

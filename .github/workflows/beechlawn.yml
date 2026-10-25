@@ -55,6 +55,7 @@ jobs:
           PYCODE
           timeout --kill-after=5s 180s godot --headless --editor --path games/beechlawn_rovers --import
           python3 games/beechlawn_rovers/tools/test_arena_seating_alignment.py
+          python3 games/beechlawn_rovers/tools/run_smoke_tests.py moving_receive_smoke.gd contextual_receive_smoke.gd receive_edge_cases_smoke.gd receive_layer_physics_smoke.gd first_time_pass_timing_smoke.gd first_time_shot_smoke.gd
           python3 games/beechlawn_rovers/tools/run_smoke_tests.py ball_selection_smoke.gd stadium_seating_smoke.gd player_selection_smoke.gd receiver_selection_pass_types_smoke.gd venue_selection_smoke.gd hud_layout_smoke.gd
       - name: Import and verify football project
         if: github.event_name != 'workflow_dispatch' || inputs.validation != 'package'
@@ -64,6 +65,7 @@ jobs:
           python3 games/beechlawn_rovers/tools/test_capture_native.py
           timeout --kill-after=5s 180s godot --headless --editor --path games/beechlawn_rovers --import
           python3 games/beechlawn_rovers/tools/test_arena_seating_alignment.py
+          python3 games/beechlawn_rovers/tools/run_smoke_tests.py moving_receive_smoke.gd contextual_receive_smoke.gd receive_edge_cases_smoke.gd receive_layer_physics_smoke.gd first_time_pass_timing_smoke.gd first_time_shot_smoke.gd
           python3 games/beechlawn_rovers/tools/run_smoke_tests.py ball_selection_smoke.gd
           python3 games/beechlawn_rovers/tools/run_smoke_tests.py stadium_seating_smoke.gd player_selection_smoke.gd receiver_selection_pass_types_smoke.gd venue_selection_smoke.gd
           python3 games/beechlawn_rovers/tools/run_smoke_tests.py realism_systems_smoke.gd shane_head_variant_smoke.gd shared_head_roster_smoke.gd
