@@ -10342,3 +10342,38 @@ Ours stood out as a round mass and hung past his shoulders.
 - **Determinism.** Byte-identical on a second run.
 - **Guard.** `test_the_hair_sits_close_to_his_head`.
 - **Review.** `gauntlet/refs/characters/review/kenny_hair_pass6.png`.
+
+## 25 Oct — Kenny pass 7: hair matched to the reference
+
+The owner: "His hair is far too big. Match it to the reference you found."
+
+**Method.** Pass 6 shortened the hair but left it about 25% wider than his AEW headshot at every height. This pass measured first: hair width as a multiple of head width at three heights, the photo in pixels and the model off `Kenny_Curls` against the body (2nd–98th percentile). The constants were set to the photo's ratios before any render.
+
+| Height | Photo | Pass 6 | Pass 7 |
+| --- | --- | --- | --- |
+| Forehead | ~1.5 | 1.87 | 1.52 |
+| Eye line | ~1.3 | 1.62 | 1.30 (0.249 m) |
+| Jaw | ~1.75 | 2.0 | 1.63 |
+
+The top of the hair stays about 3.5 cm over the skull. It still ends at the jaw at the sides and the collar at the back.
+
+**Changes in `kenny_aaa.py`:**
+
+| Setting | Was | Now |
+| --- | --- | --- |
+| `CURL_STANDOFF` | 6–16 mm | 3–8 mm |
+| `CURL_FLARE` | 0.12 | 0 |
+| `CURL_RADIUS` | 4–8 mm | 3–6 mm |
+| `CURL_WIDTH` top | 22–34 mm | 16–26 mm |
+| `CROWN_WIDTH` | 20–32 mm | 16–26 mm |
+| `CROWN_SWEEP` sideways | 0.45 | 0.25 |
+| `CROWN_OFF` max | 0.08 | 0.06 |
+
+**Colour.** The photo is dark wet lengths with blond through them:
+- `HAIR_TIP` goes from (214, 182, 124) to (196, 164, 112)
+- the strand-to-strand spread widens to 0.62–1.22 from 0.8–1.2
+
+**Also:**
+- **Guard.** `test_the_hair_sits_close_to_his_head` is now under 0.27 m at ear height.
+- **Budget.** Hair is 47.9k triangles.
+- **Review.** `gauntlet/refs/characters/review/kenny_hair_pass7.png`.

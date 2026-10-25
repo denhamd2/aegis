@@ -307,14 +307,14 @@ CURL_TOP = [(62.0, 0.035), (90.0, 0.025), (120.0, 0.010), (180.0, -0.010)]
 ## at the back; ours stood 2x his head's width and fell past the shoulders.
 ## So less standoff and flare, shorter, tighter coils, and less crown height.)
 CURL_END = (1.45, 1.54)
-CURL_STANDOFF = (0.006, 0.016)
-CURL_RADIUS = (0.004, 0.008)
+CURL_STANDOFF = (0.003, 0.008)
+CURL_RADIUS = (0.003, 0.006)
 CURL_PITCH = (0.034, 0.060)
-CURL_WIDTH = ((0.022, 0.034), 0.010)
+CURL_WIDTH = ((0.016, 0.026), 0.009)
 CURL_STEP = 0.006
 ## How far each curl drifts out from the head per metre of fall: the
 ## sheet's hair flares out over the shoulders rather than hanging plumb.
-CURL_FLARE = 0.12
+CURL_FLARE = 0.0
 CURL_SEED = 1012
 CURL_COLUMNS = 4
 CURL_TEX = (512, 2048)
@@ -324,7 +324,7 @@ CURL_STRANDS = 70
 ## in the ends and streaks, not the whole mass.)
 HAIR_ROOT = (56, 40, 26)
 HAIR_MID = (126, 94, 58)
-HAIR_TIP = (214, 182, 124)
+HAIR_TIP = (196, 164, 112)
 ## The curls follow his head down to HAIR_BODY_Z[0], then hand over to his
 ## upper chest (spine_03) by HAIR_BODY_Z[1], up to HAIR_BODY_SHARE of it.
 HAIR_BODY_Z = (1.58, 1.44)
@@ -341,20 +341,20 @@ PART_X = 0.016
 CROWN_COUNT = 140
 ## (Pass 4: from -0.10 to -0.115, so the first clumps start at the hairline.)
 CROWN_SPAN = (-0.115, 0.07)
-CROWN_OFF = (0.004, 0.08)
+CROWN_OFF = (0.004, 0.06)
 ## The heading each starts on: back over the crown near the part, turning out
 ## to the side with distance from it (CROWN_SWEEP: sideways at the edge,
 ## back); how quickly it turns down (per metre of strand), where it ends
 ## (world height) and how long it may run, and its standoff off the scalp --
 ## clear of the cap's 0.020. A strand slides along the scalp only above
 ## CROWN_SLIDE_Z: below it, on the shoulders, it drapes as the curls do.
-CROWN_SWEEP = (0.45, 0.75)
+CROWN_SWEEP = (0.25, 0.75)
 CROWN_GRAVITY = 7.5
 CROWN_END = (1.50, 1.62)
 CROWN_LENGTH = 0.34
 CROWN_SLIDE_Z = 1.62
 CROWN_STANDOFF = (0.021, 0.027)
-CROWN_WIDTH = (0.020, 0.032)
+CROWN_WIDTH = (0.016, 0.026)
 ## Wet strands framing his face (the sheet: falling at the temples and in
 ## front of the ears): FACE_STRANDS each side, round the head between
 ## FACE_ANGLES (clear of the eyes), ending FACE_END below the eyes.
@@ -1207,7 +1207,9 @@ def paint_hair_textures() -> None:
     rgb = np.where(t < 0.35, root + (mid - root) * (t / 0.35), mid + (tip - mid) * ((t - 0.35) / 0.65))
     streak = rng.random(CURL_TEX[0]).astype(np.float32)
     streak = np.convolve(streak, np.ones(9) / 9, "same")[None, :, None]
-    rgb = rgb * (0.8 + 0.4 * streak)
+    # Strand-to-strand spread: wide, so the mass is darker lengths with blond
+    # streaks through it, as his headshot (pass 7), not one even blond.
+    rgb = rgb * (0.62 + 0.6 * streak)
     rgba = np.concatenate([np.broadcast_to(rgb, (CURL_TEX[1], CURL_TEX[0], 3)),
                            np.asarray(mask, np.float32)[..., None]], -1)
     Image.fromarray(np.clip(np.round(rgba), 0, 255).astype(np.uint8), "RGBA").save(HAIR_TEX, optimize=True)
