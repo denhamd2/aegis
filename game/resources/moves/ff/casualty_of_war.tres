@@ -6,11 +6,11 @@
 script = ExtResource("1")
 resource_name = "Casualty of War"
 animation_pair_id = &"ff_casualty_of_war"
-startup_frames = 16
-active_frames = 4
-recovery_frames = 30
-reversal_window_start = 6
-reversal_window_end = 14
+startup_frames = 18
+active_frames = 6
+recovery_frames = 48
+reversal_window_start = 8
+reversal_window_end = 16
 damage_head = 16.0
 damage_torso = 12.0
 damage_arms = 0.0

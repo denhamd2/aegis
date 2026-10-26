@@ -266,6 +266,9 @@ EXISTING = {
     # Batch 2 (26 Oct): Roman's Samoan Drop is FF's squatting one -- he drops
     # to the crouch as the man falls off his shoulders.
     "squatting_samoan_drop": "res://resources/moves/power_samoan_drop.tres",
+    # Batch 6 (26 Oct): the springboard moonsault is the third ending of
+    # Cody's dive spot (DiveSpot), off the same spring as Cody Cutter 4.
+    "springboard_moonsault_3": "res://resources/moves/dive_springboard_moonsault.tres",
 }
 
 # The owner's ask (19 Oct): tag the library moves that suit our two men, built
@@ -310,6 +313,7 @@ CLIP_FRAMES = {
     "code_breaker_1": (28, 6, 38),        # 36 frames: contact at 14
     "inverted_ddt_1": (50, 6, 40),        # 48 frames: contact at 25
     "buckle_bomb": (72, 6, 54),           # 66 frames: contact at 36
+    "casualty_of_war": (18, 6, 48),       # 36 frames: contact at 9
 }
 
 # Damage by tier: (head, torso, legs). A special is the big one.

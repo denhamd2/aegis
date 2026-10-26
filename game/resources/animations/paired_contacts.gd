@@ -104,12 +104,30 @@ const MOVES := {
 	"ff_code_breaker_1": "none",
 	"ff_inverted_ddt_1": "neck",
 	"ff_buckle_bomb": "waist",
+	"ff_casualty_of_war": "none",
 }
 
 ## Moves the contact pull (GrappleRig._pull_into_reach) leaves alone: the
 ## cutter is a jump, and drawing his head in put it in the path of the
 ## attacker's legs a few frames later (6.6 cm, PairClearance).
 const NO_PULL := ["signature_cody_cutter"]
+
+
+## Whether the contact pull may draw the man toward `move`'s hold.
+##
+## Not for the Fight Forever library yet. Until 26 Oct none of its moves found
+## its family (see family()), so the pull never ran on one, and every stored
+## fit was measured without it. Turned on with the family fix, it dragged the
+## man up to 0.45 m off the fitted path on five of the holds (the Stampede,
+## the fireman's carry bomb, the Inverted DDT, the One Winged Angel and the
+## Tiger Driver). The hands now go to the right hold; the pull waits until
+## those moves are refit with it.
+static func pulls(move: MoveDef) -> bool:
+	if move == null:
+		return false
+	if NO_PULL.has(move.resource_path.get_file().get_basename()):
+		return false
+	return not move.resource_path.get_base_dir().ends_with("/ff")
 
 ## Where a "behind" hand sits past the bone, away from the attacker: round
 ## the back of the neck or the waist, not on the front of it.
@@ -123,7 +141,16 @@ const WAIST_BEHIND_HALF := 0.17
 static func family(move: MoveDef) -> String:
 	if move == null:
 		return ""
-	return MOVES.get(move.resource_path.get_file().get_basename(), "")
+	var key := move.resource_path.get_file().get_basename()
+	# The Fight Forever library files its moves as ff/<move>.tres and lists
+	# them here as ff_<move>, their animation id. Looked up by file name
+	# alone, not one of them ever found its family: every hold fell back to
+	# the default grip, and every strike's hands were drawn onto the man --
+	# the Casualty of War's lariat arm held at Roman's belt, its fist in
+	# Cody's hand (26 Oct review sheet).
+	if move.resource_path.get_base_dir().ends_with("/ff"):
+		key = "ff_" + key
+	return MOVES.get(key, "")
 
 
 ## [left target, right target] in world space for `family`, on `opponent`,

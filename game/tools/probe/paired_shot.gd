@@ -185,18 +185,33 @@ func _ready() -> void:
 	# lowest bone is printed with every frame because "does it still read as
 	# the move" and "does anybody go through the mat" are both being asked
 	# here, and only one of them is answerable from a number.
+	# Counted from the clip's first frame, not from begin(): the rig first
+	# walks both men onto their marks (GrappleRig._lead_in), and for a running
+	# move that starts 1.4 m out that walk-in is over half a second -- every
+	# frame of the Casualty of War's first sheet was labelled 0.57 s early.
 	var total := int(move.total_frames())
+	var lead := int(rig.get("lead_in_ticks"))
 	var grabbed := 0
 	var last: float = _at.max() if not _at.is_empty() else 1.0
-	for frame in int(total * maxf(last, 1.0)) + 4:
+	# One physics tick per frame, and nothing drawn but the grabs. Under the
+	# software rasteriser a frame takes longer than a tick, so the engine ran
+	# up to eight catch-up ticks while each grab was drawn, and every frame
+	# showed the move 0.1-0.2 s later than its label (the Casualty of War's
+	# lariat came out at "0.14 s" instead of 0.30). Drawing every tick
+	# (--fixed-fps) fixes that too, but takes a quarter of an hour.
+	Engine.max_physics_steps_per_frame = 1
+	RenderingServer.render_loop_enabled = false
+	for frame in lead + int(total * maxf(last, 1.0)) + 4:
 		await get_tree().physics_frame
 		# MatchCamera takes `current` back when it cuts; hold the probe's.
 		if not _match_cam:
 			camera.current = true
-		var fraction := float(frame) / float(total)
+		var fraction := float(frame - lead) / float(total)
 		if grabbed >= _at.size() or fraction < _at[grabbed]:
 			continue
+		RenderingServer.render_loop_enabled = true
 		await RenderingServer.frame_post_draw
+		RenderingServer.render_loop_enabled = false
 		var image := get_viewport().get_texture().get_image()
 		image.save_png("%s/%s_%02d.png" % [_out, shot, int(_at[grabbed] * 100)])
 		print("  t=%.2f  defender y=%.2f  attacker y=%.2f"

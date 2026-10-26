@@ -45,6 +45,8 @@ func _ready() -> void:
 			if not dived and scene.has_node("DiveSpot"):
 				dived = true
 				tally["cody dive spot"] = tally.get("cody dive spot", 0) + 1
+				var ending := DiveSpot.ending_of(scene.get_node("WrestlerB")).get_file().get_basename()
+				tally["cody dive: " + ending] = tally.get("cody dive: " + ending, 0) + 1
 			# The top-rope spots, and why the crossbody did or did not fire on
 			# the tick the man started to rise (MatchReferee._check_for_crossbody).
 			var spot_node := scene.get_node_or_null("TopRopeSpot") as TopRopeSpot

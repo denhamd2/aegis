@@ -6,7 +6,8 @@ extends Node
 ## head-first through the middle and top ropes into him -- the tope suicida --
 ## and they are both down on the floor. The man rolls back in, Cody climbs to
 ## the apron, and as the man turns to him, Cody springs off the middle rope
-## into a spinning Disaster Kick that drops him inside for the cover.
+## into a spinning Disaster Kick that drops him inside for the cover -- or,
+## on other nights, the Cody Cutter or a moonsault off the same rope.
 ##
 ## Built the way EntranceDirector is, and for the same reasons: there is no
 ## collision off the mat and keep_inside_the_ring() would snap a man on the
@@ -67,9 +68,19 @@ const TURN_RATE := 6.0
 const TOPE_MOVE := "res://resources/moves/dive_tope_suicida.tres"
 const SPRING_MOVE := "res://resources/moves/dive_springboard_disaster_kick.tres"
 ## The springboard's other ending (gauntlet/refs/moveset_audit_2k26.md): the
-## Cody Cutter off the same spring, on alternate matches when his dives
-## include it.
+## Cody Cutter off the same spring.
 const CUTTER_MOVE := "res://resources/moves/dive_springboard_cutter.tres"
+## The third (Fight Forever's Springboard Moonsault 3): his back to the ring,
+## up onto the middle rope and a backflip off it onto the man. Its own timing
+## -- the turn and the hop up onto the rope come before the spring -- and its
+## root faces OUT, turned round as it starts: he flips backward into the ring
+## and stands up past the man's head, MOONSAULT_TO from the centre.
+const MOONSAULT_MOVE := "res://resources/moves/dive_springboard_moonsault.tres"
+const MOONSAULT_TICKS := 120
+const MOONSAULT_CONTACT := 66
+const MOONSAULT_TO := 0.5
+## The springboard's endings, in the order the match seed takes them.
+const SPRING_ENDINGS := [SPRING_MOVE, CUTTER_MOVE, MOONSAULT_MOVE]
 
 var attacker: WrestlerController
 var defender: WrestlerController
@@ -197,24 +208,41 @@ func _build() -> void:
 	_seg_add(24, _hold("strikes/idle_ready", kicked, 0, apron),
 			_hold("strikes/apron_climb", apron, 0, kicked))
 	# 12. The springboard Disaster Kick -- or the springboard Cody Cutter, the
-	# same spring and the same contact tick.
-	var cutter := uses_cutter(attacker)
-	_seg_add(SPRING_TICKS,
-			_go("strikes/springboard_cutter_defender" if cutter else "strikes/disaster_kick_defender",
-					kicked, kicked, _out, SPRING_CONTACT - KICKED_CONTACT),
-			_go("strikes/springboard_cutter_attacker" if cutter else "strikes/springboard_dk_attacker",
-					apron, at(SPRING_TO, up_lane), -_out),
-			"wide", [[SPRING_CONTACT, "kick_hit"]])
+	# same spring and the same contact tick -- or the springboard moonsault.
+	var ending := ending_of(attacker)
+	if ending == MOONSAULT_MOVE:
+		var flip := _go("strikes/springboard_moonsault_attacker", apron,
+				at(MOONSAULT_TO, up_lane), _out)
+		flip["snap"] = true
+		flip["cut"] = true
+		flip["turn_round"] = true
+		_seg_add(MOONSAULT_TICKS,
+				_go("strikes/springboard_moonsault_defender", kicked, kicked, _out,
+						MOONSAULT_CONTACT - KICKED_CONTACT),
+				flip, "wide", [[MOONSAULT_CONTACT, "kick_hit"]])
+	else:
+		var cutter := ending == CUTTER_MOVE
+		_seg_add(SPRING_TICKS,
+				_go("strikes/springboard_cutter_defender" if cutter else "strikes/disaster_kick_defender",
+						kicked, kicked, _out, SPRING_CONTACT - KICKED_CONTACT),
+				_go("strikes/springboard_cutter_attacker" if cutter else "strikes/springboard_dk_attacker",
+						apron, at(SPRING_TO, up_lane), -_out),
+				"wide", [[SPRING_CONTACT, "kick_hit"]])
 
 
-## Whether this spot ends on the springboard Cutter rather than the Disaster
-## Kick: when his dives carry it, on odd match seeds.
-static func uses_cutter(w: WrestlerController) -> bool:
-	var has := false
-	for m: MoveDef in w.dive_moves:
-		if m and String(m.resource_path) == CUTTER_MOVE:
-			has = true
-	return has and w.match_seed % 2 == 1
+## How this spot ends (one of SPRING_ENDINGS): of the springboard endings his
+## dives carry, the one the match seed picks, so each comes round in turn
+## across matches. The Disaster Kick if he carries none of them.
+static func ending_of(w: WrestlerController) -> String:
+	var carried: Array[String] = []
+	for path: String in SPRING_ENDINGS:
+		for m: MoveDef in w.dive_moves:
+			if m and String(m.resource_path) == path:
+				carried.append(path)
+				break
+	if carried.is_empty():
+		return SPRING_MOVE
+	return carried[posmod(w.match_seed, carried.size())]
 
 
 ## One segment: what each man does, the shot, and cues at ticks into it.
@@ -263,6 +291,15 @@ func _next() -> void:
 		var w := pair[0] as WrestlerController
 		if beat.get("snap", false):
 			var f: Vector3 = beat["facing"]
+			if beat.get("turn_round", false):
+				# The root half round under him and the pose with it (the
+				# clip's first frame is the last one turned round): shown at
+				# once, not turned out by the inertializer, and the model held
+				# the old way until the new clip is on him -- as a man turned
+				# round on the mat is (WrestlerController._turn_round_on_the_mat).
+				if w.inertializer:
+					w.inertializer.skip_next_turn()
+				w._hold_model_facing()
 			w.rotation.y = atan2(-f.x, -f.z)
 		if int(beat["delay"]) == 0 and beat["clip"] != "":
 			w.play_presentation_clip(beat["clip"], beat.get("cut", false))
@@ -313,7 +350,7 @@ func _event(what: String) -> void:
 				defender.combat.apply_damage(tope)
 				attacker.combat.apply_momentum(tope)
 		"kick_hit":
-			var kick := load(CUTTER_MOVE if uses_cutter(attacker) else SPRING_MOVE) as MoveDef
+			var kick := load(ending_of(attacker)) as MoveDef
 			if kick:
 				defender.combat.apply_damage(kick)
 				attacker.combat.apply_momentum(kick)

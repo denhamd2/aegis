@@ -10488,3 +10488,44 @@ Two more of Cody's tagged fits (`FFMoveLibrary.FITS`). **18 of 146 library moves
 - **Guard.** `test_corner_spear.gd` holds the bomb in Roman's corner draw and plays it through on Cody in the corner: hurt, down, inside the ropes. `test_ff_library.gd` holds it built.
 - **Review sheet.** `gauntlet/refs/ff_review/ff_batch4_buckle_bomb.png`, from the side and from behind the post.
 - **In a match** (`moveset_tally`, seeds 2 and 3, both won by pinfall): Roman ran in from the corner once in the two matches, and the draw picked the Spear. One run-in is too few to show the bomb; it is proven by the corner test and the renders. Corner run-ins are rare because they need the man trapped and a blow landed first.
+
+## 26 Oct — Fight Forever library, batches 5 and 6: Roman's Casualty of War; Cody's springboard moonsault
+
+**21 of 146 library moves built.** These are the last two unbuilt fits tagged to Roman and Cody (`FFMoveLibrary.FITS`).
+
+**Casualty of War** (`ff_casualty_of_war`, 1.2 s; on Roman's `"running"` draw, a stretch-run special, once a match):
+- **What it is.** Wardlow's special. The library classifies it as a running lariat; a web search found nothing to confirm or describe it, so that classification is the only source. It is built as a *leaping* lariat so it reads unlike Roman's other two: the plain running clothesline, and the Clothesline From Hell, which turns the man over.
+- **The move.** Roman runs in with the right arm cocked and leaves his feet a stride out. The arm goes through the neck in the air, he lands crouched over the man, and the man goes straight over backward.
+- **The strike is the Clothesline From Hell's.** The first cut keyed the lariat from higher in the air and 0.85 m out. That was beyond the arm's reach, so the solve folded the arm and the fist stayed at Roman's belt; the review sheet showed it. The strike now uses CFH's geometry: 0.75 m from the man, hips and chest turned into the arm, hand at neck height, off a smaller hop.
+- **No grip.** The man waiting for it no longer reaches for the runner (`defender_grips_until` 0), and his hands hang at his belt instead of the guard's 0.3 m out in front, where Roman's arm met them before it met his neck.
+- **Fitted clean** from scratch in four passes (0.30 m to 9 mm).
+
+**Springboard Moonsault** (`dive_springboard_moonsault`; FF's Springboard Moonsault 3, tagged a fit for Cody):
+- **Where it goes.** It is the third ending of Cody's dive spot (`DiveSpot`), off the same spring as the Disaster Kick and the springboard Cutter.
+- **The spot.** On the apron Cody turns his back to the ring, hops up backward onto the middle rope, springs off it and backflips in over the top rope. His chest lands on the man standing 1.3 m in (the man's head goes past Cody's hip) and takes him straight over backward. Both are down. Cody pushes back off him onto his knees and stands past the man's head, looking down at him. The cover follows as before.
+- **The ending is the seed's.** `DiveSpot.ending_of()` replaces `uses_cutter()`: of the springboard endings a man's dives carry, the match seed picks one, so each comes round in turn (seed mod 3: Disaster Kick, Cutter, moonsault). The library's `EXISTING` maps the FF move to ours, and its unbuilt copy is deleted.
+- **The root turns round with him.** For the first time in this spot, the root faces *out*. The flip is about his own right-left axis only, as the top-rope moonsault's is, and he gets up facing the way he came down, so nothing has to unwind. The root is turned half round on the clip's first tick, and the clip's first frame is the apron pose turned half round: the same pixels. The inertializer is told not to turn it out, and the model is held facing the old way until the new clip is on him, as for a man turned round on the mat.
+- **Limb flips.** The first build added eight single-frame forearm flips (47 against the budget of 40). They came from elbow poles swung out and back during the turn and on the rope, and from the arms thrown from behind the hips to overhead in two frames at the spring. The elbows now keep the rig's own hanging pole there, and the swing takes six frames. The count is back to 39.
+- **Guard.** `test_2k26_moves.gd` holds each seed's ending and plays the moonsault ending through: Roman down, hurt and inside the ropes, with Cody standing clear of him. `test_ff_library.gd` holds it built and in Cody's dive tier.
+
+**No Fight Forever move had ever found its contact family** (`PairedContacts.family()`):
+- **The bug.** The table lists library moves by animation id (`ff_oklahoma_stampede`), but the lookup used the file name, and the library files them as `ff/oklahoma_stampede.tres`. So all 13 FF entries were missed. Every hold fell back to the default grip, and every strike drew the attacker's hands onto the man.
+- **How it was found.** The Casualty of War's sheet showed the lariat arm held at Roman's belt with its fist in Cody's hand.
+- **Why the gates missed it.** The clearance gate resolves families the same way, so it skipped the library's contact checks.
+- **The fix.** Library moves now find their family: the lariat's hands are his own, the Stampede holds the legs, and the Inverted DDT holds the neck. Pair clearance now checks their hands against their holds, and passes. `test_ff_library.gd` holds the lookup.
+- **The contact pull stays off for library moves** (`PairedContacts.pulls()`), as it has effectively always been. Every library fit was measured without it. Switched on, it dragged the man up to 0.45 m off the fitted path on five holds (the Stampede, the fireman's carry bomb, the Inverted DDT, the One Winged Angel and the Tiger Driver). With it off, all twelve fits measure as before (2 mm to 5.6 cm).
+- **Backlog.** Turning the pull on means refitting those holds with it. Separately, the Brainbuster's stored fit is 0.45 m off a clean measurement under either lookup. It was fitted in batch 1, before the fitter was fixed, and needs a refit.
+
+**The review probes were showing the wrong ticks.** Found while reading the first Casualty of War sheet:
+- `paired_shot` counted from `GrappleRig.begin()`, which first walks both men onto their marks. For a running move that starts 1.4 m out, that walk takes over half a second.
+- Under the software rasteriser a frame takes longer than a tick, so the engine ran up to eight catch-up ticks while each grab was drawn.
+- Each frame was therefore some way off its label.
+- Both probes (`paired_shot`, `dive_shot`) now count from the clip's first frame. They run one physics tick per frame and draw nothing but the grabs, so a frame shows exactly the tick it is named for. Drawing every tick (`--fixed-fps`) also works, but took over a quarter of an hour without finishing one move.
+- Earlier sheets show their frames in the right order, but their time labels are approximate, including the Buckle Bomb's "1.4 s" pad impact.
+- `dive_shot` also takes `--seed` (which picks the ending) and `--from`.
+
+**Review sheets.** `gauntlet/refs/ff_review/ff_batch5_casualty_of_war.png` and `ff_batch6_springboard_moonsault.png`.
+
+**Gates.** Pose lint, clip authoring (re-pinned), the body-deformation gate (39 of 40), pair clearance, paired poses and moveset, strike clips, and the dive, corner, rebound, roster and match-story pins all pass.
+
+**In a match** (`moveset_tally`, seeds 2 and 5, both won by pinfall; both seeds pick the moonsault ending): Roman threw the Casualty of War twice in the two matches. Cody reached the dive spot once, and it ended on the springboard moonsault. The Code Breaker was again not thrown. That is the signature pacing problem, which is the next step.

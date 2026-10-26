@@ -93,6 +93,43 @@ func test_batch_four_is_built_and_romans() -> void:
 	assert_int(FFMoveLibrary.progress().x).is_greater_equal(19)
 
 
+## Batch 5 (26 Oct): Roman's Casualty of War, in his running draw.
+func test_batch_five_is_built_and_romans() -> void:
+	assert_bool(FFMoveLibrary.is_built("casualty_of_war")).is_true()
+	assert_array(FFMoveLibrary.fits_of("roman")).contains(["casualty_of_war"])
+	var roman := Roster.by_id("roman")
+	assert_array(roman.moveset["running"]).contains(["res://resources/moves/ff/casualty_of_war.tres"])
+	assert_int(FFMoveLibrary.progress().x).is_greater_equal(20)
+
+
+## Batch 6 (26 Oct): the Springboard Moonsault is Cody's -- the third ending
+## of his dive spot, our own move under FF's name.
+func test_batch_six_is_codys_dive() -> void:
+	assert_bool(FFMoveLibrary.is_built("springboard_moonsault_3")).is_true()
+	assert_str(FFMoveLibrary.EXISTING["springboard_moonsault_3"]).is_equal(DiveSpot.MOONSAULT_MOVE)
+	var cody := Roster.by_id("cody")
+	assert_array(cody.moveset["dive"]).contains([DiveSpot.MOONSAULT_MOVE])
+	assert_int(FFMoveLibrary.progress().x).is_greater_equal(21)
+
+
+## A library move finds its hold (PairedContacts): filed as ff/<move>.tres,
+## listed as ff_<move>. Until 26 Oct none did -- the lariat's arm was drawn
+## onto the man -- and the contact pull stays off for them until they are
+## refit with it.
+func test_library_moves_find_their_contact_family() -> void:
+	var ff := "res://resources/moves/ff/%s.tres"
+	assert_str(PairedContacts.family(load(ff % "casualty_of_war"))).is_equal("none")
+	assert_str(PairedContacts.family(load(ff % "oklahoma_stampede"))).is_equal("legs")
+	assert_str(PairedContacts.family(load(ff % "inverted_ddt_1"))).is_equal("neck")
+	assert_str(PairedContacts.family(load(ff % "buckle_bomb"))).is_equal("waist")
+	assert_bool(PairedContacts.pulls(load(ff % "oklahoma_stampede"))).is_false()
+	# Our own moves are untouched: looked up by file name, and pulled.
+	var own: MoveDef = load("res://resources/moves/signature_neckbreaker.tres")
+	assert_str(PairedContacts.family(own)).is_equal("neck")
+	assert_bool(PairedContacts.pulls(own)).is_true()
+	assert_bool(PairedContacts.pulls(load("res://resources/moves/signature_cody_cutter.tres"))).is_false()
+
+
 ## The owner asked for good fits for Cody and Roman to be tagged, built or
 ## not: every fit is a library move, and the built ones are in their hands.
 func test_cody_and_roman_have_fits() -> void:

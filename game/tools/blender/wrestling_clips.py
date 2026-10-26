@@ -6889,6 +6889,230 @@ CLIPS["Springboard_Cutter_Defender"] = [
 ] + _face_first_then_roll(22, 42)
 
 
+# --- The springboard moonsault (DiveSpot's third ending) ------------------------
+#
+# Fight Forever's Springboard Moonsault 3 (Jericho's, and tagged a fit for
+# Cody: tools/moves/build_ff_library.py), as the third way his dive spot ends:
+# on the apron he turns his back to the ring, hops up backward onto the middle
+# rope, and springs off it into a backflip over the top rope -- coming down
+# chest first on the man standing 1.30 m in, whose head goes past Cody's hips,
+# and taking him straight over backward. Both down; Cody pushes back off him
+# onto his knees and stands past the man's head, looking down at him.
+#
+# The ROOT FACES OUT for this one, where the Disaster Kick's and the Cutter's
+# face in: the flip is about his own right-left axis only (hips pitch 0 -> 270,
+# as Moonsault's is), and he gets up facing the way he came down, so nothing
+# in it has to unwind. DiveSpot turns the root round on the clip's first tick
+# (WrestlerController._turn_round_on_the_mat), and frame 0 is Apron_Climb's
+# last pose turned half round (_yawed): the same pixels. World space; the man
+# stands at -fwd 1.30, and the root runs 2.65 m back to where Cody stands up.
+# 60 frames; the chest lands on frame 33 (DiveSpot.MOONSAULT_CONTACT, 66 ticks).
+SPRING_MS_TRAVEL = -2.65
+SPRING_MS_LAUNCH = 18
+SPRING_MS_CONTACT = 33
+
+
+def _moved(base, right, fwd, up=0.0):
+    """`base` moved in world space: every travelling field together, and the
+    lateral too, which _shifted leaves alone."""
+    out = dict(base)
+    for field in _TRAVEL_FIELDS:
+        x, y, z = base[field]
+        out[field] = (x + right, y + fwd, z + up)
+    return out
+
+
+def _smooth(t):
+    t = min(max(t, 0.0), 1.0)
+    return t * t * (3.0 - 2.0 * t)
+
+
+def _anchored(anchors, u):
+    """A value eased between (u, value) anchors."""
+    for (u0, v0), (u1, v1) in zip(anchors, anchors[1:]):
+        if u0 <= u <= u1:
+            return _lerp_value(v0, v1, _smooth((u - u0) / (u1 - u0)))
+    return anchors[-1][1]
+
+
+# rig_pose's own default elbow pole (down, a little back and out): what the
+# stance at each end of this clip is solved with, and the one the arms keep
+# through the turn and on the rope. Poles swung out and back there flipped
+# the forearms past 100 degrees between keys, eight times.
+_MS_ELBOW_POLE = (0.16, -0.38, -0.91)
+
+
+# The turn on the apron, keyed every frame (a half-turn keyed at its ends had
+# the hands and feet cut straight across through him -- see _spring_spin):
+# a little hop round to his right, yaw 172 -> -8, the hands off the rope and
+# out at his waist, the feet lifting clear and landing turned.
+def _spring_ms_turn():
+    keys = []
+    lifts = {3: 0.0, 4: 0.04, 5: 0.07, 6: 0.07, 7: 0.04, 8: 0.0}
+    for frame in range(3, 9):
+        yaw = 172.0 - 30.0 * (frame - 2)
+        lift = lifts[frame]
+        pz = 0.80 + 0.6 * lift
+        spec = dict(pelvis=(0.0, 0.0, pz), hips=(-10, yaw, 0), spine=(-8, 0, 0),
+                    head=(4, 0, 0), fist_r=0.5, fist_l=0.5, free_feet=True)
+        spec.update({k: v for k, v in _body(
+            (0, yaw, 0), (0.0, 0.0, pz),
+            hand_r=(0.32, 0.14, 0.16), hand_l=(-0.32, 0.14, 0.16),
+            elbow_r=_MS_ELBOW_POLE, elbow_l=(-_MS_ELBOW_POLE[0],) + _MS_ELBOW_POLE[1:],
+            foot_r=(0.19, 0.0, 0.104 + lift - pz), foot_l=(-0.19, 0.0, 0.104 + lift - pz),
+            knee_r=(0.2, 1.0, 0.2), knee_l=(-0.2, 1.0, 0.2)).items()
+            if k not in ("hips", "pelvis")})
+        keys.append((frame, spec))
+    return keys
+
+
+# The backflip, keyed every frame from the spring to the chest landing: the
+# pelvis on a thrown body's arc (2.76 m/s back into the ring, up 2.65 m/s
+# under gravity: the top at 2.02 m on frame 26), the hips turning at an even
+# 16 degrees a frame from upright to 240 -- inverted and tipping over, chest
+# toward the man -- with the arms swung up through the spring and over his
+# head (over six frames: thrown there in two, the forearms flipped), then out
+# in front to take him, the legs tucking through the top of it and reaching
+# again as he comes down. Limbs in the body's own frame (_body), so they turn
+# over with him. 0.22 to his right by the landing, so the man's head goes past
+# his hip instead of through it.
+_MS_HANDS = [(0.0, (0.30, 0.30, 0.00)), (0.2, (0.30, 0.25, 0.45)),
+             (0.4, (0.28, 0.00, 0.75)), (0.75, (0.45, 0.20, 0.45)),
+             (1.0, (0.45, 0.40, 0.25))]
+_MS_FEET = [(0.0, (0.15, 0.00, -0.86)), (0.5, (0.14, 0.30, -0.50)),
+            (1.0, (0.15, -0.05, -0.82))]
+
+
+def _spring_ms_flight():
+    keys = []
+    span = SPRING_MS_CONTACT - SPRING_MS_LAUNCH
+    for frame in range(SPRING_MS_LAUNCH, SPRING_MS_CONTACT + 1):
+        u = (frame - SPRING_MS_LAUNCH) / float(span)
+        t = (frame - SPRING_MS_LAUNCH) / 30.0
+        pitch = 240.0 * u
+        pelvis = (0.22 * u, -0.08 - 1.38 * u, 1.66 + 2.65 * t - 4.9 * t * t)
+        hr = _anchored(_MS_HANDS, u)
+        fr = _anchored(_MS_FEET, u)
+        spec = dict(pelvis=pelvis, hips=(pitch, 0, 0), spine=(-6, 0, 0),
+                    head=(14, 0, 0), fist_r=0.3, fist_l=0.3, free_feet=True)
+        spec.update({k: v for k, v in _body(
+            (pitch, 0, 0), pelvis,
+            hand_r=hr, hand_l=(-hr[0], hr[1], hr[2]),
+            elbow_r=(0.8, -0.2, -0.3), elbow_l=(-0.8, -0.2, -0.3),
+            foot_r=fr, foot_l=(-fr[0] + 0.01, fr[1] + 0.02, fr[2] - 0.02),
+            knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0)).items()
+            if k not in ("hips", "pelvis")})
+        keys.append((frame, spec))
+    return keys
+
+
+# Moonsault's own landing (frames 25 and 30): flat across him, chest on his
+# chest, arms out either side of him, toes on the mat.
+_MS_PRONE = dict(pelvis=(0.0, 0.0, 0.42), hips=(270, 0, 0), spine=(4, 0, 0),
+                 head=(6, 0, 0),
+                 hand_r=(0.50, 0.44, 0.22), hand_l=(-0.50, 0.44, 0.22),
+                 elbow_r=(0.8, 0.0, 0.6), elbow_l=(-0.8, 0.0, 0.6),
+                 fist_r=0.2, fist_l=0.2,
+                 foot_r=(0.16, -0.92, 0.16), foot_l=(-0.16, -0.92, 0.16),
+                 knee_r=(0.3, 0.0, -1.0), knee_l=(-0.3, 0.0, -1.0), free_feet=True)
+
+
+def _round(spec):
+    """`spec` with its hips pitched a full turn on, so a man who has flipped
+    to 270 gets up through 360 instead of unwinding back through 180."""
+    p, y, r = spec.get("hips", (0, 0, 0))
+    return dict(spec, hips=(p + 360, y, r))
+
+
+_MS_ELBOWS_DOWN = dict(elbow_r=(0.16, -0.38, -0.91), elbow_l=(-0.16, -0.38, -0.91))
+
+_MS_YAWED_APRON = _yawed(P(hand_r=(0.30, 0.10, 1.20), hand_l=(-0.30, 0.10, 1.20),
+                           fist_r=0.8, fist_l=0.8, **_MS_ELBOWS_DOWN))
+
+CLIPS["Springboard_Moonsault_Attacker"] = _world_clip(60, (SPRING_MS_TRAVEL, 0.0), _unified([
+    # Facing in on the apron, hands on the top rope: Apron_Climb's last pose,
+    # the root turned round under it.
+    (0,  dict(_MS_YAWED_APRON, free_feet=True)),
+    # Off the rope, a dip to hop round.
+    (2,  _yawed(P(pelvis=(0.0, 0.02, 0.80), hips=(-10, -8, 0), spine=(-8, 0, 0),
+                  hand_r=(0.32, 0.16, 0.96), hand_l=(-0.32, 0.16, 0.96),
+                  elbow_r=_MS_ELBOW_POLE, elbow_l=(-0.16, -0.38, -0.91),
+                  fist_r=0.5, fist_l=0.5, free_feet=True))),
+] + _spring_ms_turn() + [
+    # Round, his back to the ring: the hands go back onto the top rope.
+    (10, P(pelvis=(0.0, 0.04, 0.70), hips=(-24, -8, 0), spine=(-12, 0, 0),
+           hand_r=(0.40, -0.08, 1.18), hand_l=(-0.40, -0.08, 1.18),
+           elbow_r=_MS_ELBOW_POLE, elbow_l=(-0.16, -0.38, -0.91),
+           fist_r=0.8, fist_l=0.8, free_feet=True,
+           foot_r=(0.19, 0.02, 0.104), foot_l=(-0.19, 0.02, 0.104),
+           knee_r=(0.2, 1.0, 0.2), knee_l=(-0.2, 1.0, 0.2))),
+    # Up backward off the apron, pushing down on the rope.
+    (12, P(pelvis=(0.0, 0.00, 1.15), hips=(-20, -4, 0), spine=(-10, 0, 0),
+           hand_r=(0.40, -0.08, 1.20), hand_l=(-0.40, -0.08, 1.20),
+           elbow_r=_MS_ELBOW_POLE, elbow_l=(-0.16, -0.38, -0.91),
+           fist_r=0.8, fist_l=0.8, free_feet=True,
+           foot_r=(0.16, -0.02, 0.55), foot_l=(-0.16, -0.02, 0.58),
+           knee_r=(0.2, 1.0, 0.3), knee_l=(-0.2, 1.0, 0.3))),
+    # Both boots on the middle rope, crouched, hands on the top one.
+    (14, P(pelvis=(0.0, 0.04, 1.50), hips=(-24, 0, 0), spine=(-14, 0, 0),
+           hand_r=(0.40, -0.08, 1.22), hand_l=(-0.40, -0.08, 1.22),
+           elbow_r=_MS_ELBOW_POLE, elbow_l=(-0.16, -0.38, -0.91),
+           fist_r=0.8, fist_l=0.8, free_feet=True,
+           foot_r=(0.15, -0.06, 0.86), foot_l=(-0.15, -0.06, 0.86),
+           knee_r=(0.2, 1.0, 0.3), knee_l=(-0.2, 1.0, 0.3))),
+    # The rope taking his weight, the arms swung down and back.
+    (16, P(pelvis=(0.0, 0.00, 1.36), hips=(-34, 0, 0), spine=(-16, 0, 0),
+           hand_r=(0.34, -0.12, 1.16), hand_l=(-0.34, -0.12, 1.16),
+           elbow_r=_MS_ELBOW_POLE, elbow_l=(-0.16, -0.38, -0.91),
+           fist_r=0.6, fist_l=0.6, free_feet=True,
+           foot_r=(0.15, -0.06, 0.76), foot_l=(-0.15, -0.06, 0.76),
+           knee_r=(0.2, 1.0, 0.3), knee_l=(-0.2, 1.0, 0.3))),
+] + _spring_ms_flight() + [
+    # Taking him over: chest on his chest as he goes back.
+    (36, dict(_spring_ms_flight()[-1][1], **{k: v for k, v in _body(
+        (255, 0, 0), (0.21, -1.89, 1.13),
+        hand_r=(0.45, 0.40, 0.20), hand_l=(-0.45, 0.40, 0.20),
+        elbow_r=(0.8, -0.2, -0.3), elbow_l=(-0.8, -0.2, -0.3),
+        foot_r=(0.15, -0.10, -0.85), foot_l=(-0.14, -0.08, -0.86),
+        knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0)).items()})),
+    # Down on him, flat, as Moonsault lands.
+    (40, _moved(_MS_PRONE, 0.20, -2.00)),
+    (44, _moved(dict(_MS_PRONE, pelvis=(0.0, 0.0, 0.40), spine=(2, 0, 0), head=(4, 0, 0),
+                     hand_r=(0.44, 0.40, 0.20), hand_l=(-0.48, 0.42, 0.20),
+                     fist_r=0.3, fist_l=0.3), 0.20, -2.00)),
+    # Pushed back off him onto his knees, a hand on his chest, the knees down
+    # beyond his head.
+    (49, dict(pelvis=(0.20, -2.28, 0.62), hips=(280, 0, 0), spine=(0, 0, 0),
+              head=(24, 0, 0),
+              hand_r=(0.45, -1.80, 0.06), hand_l=(-0.05, -1.80, 0.26),
+              elbow_r=(0.3, -1.0, 0.0), elbow_l=(-0.3, -1.0, 0.0),
+              fist_r=0.1, fist_l=0.1,
+              foot_r=(0.34, -2.70, 0.12), foot_l=(0.06, -2.70, 0.12),
+              knee_r=(0.2, 0.4, -1.0), knee_l=(-0.2, 0.4, -1.0), free_feet=True)),
+    # Up onto his feet past the man's head, and standing, looking down at him.
+    # The elbows back on rig_pose's own default pole, which is what the
+    # stance he is handed back to is solved with.
+    (54, _round(_moved(dict(CROUCH, **_MS_ELBOWS_DOWN), 0.0, SPRING_MS_TRAVEL))),
+    (60, _round(_moved(P(**_MS_ELBOWS_DOWN), 0.0, SPRING_MS_TRAVEL))),
+]))
+
+# The man it lands on: facing the apron, groggy, looking up at him coming
+# over, and taken straight over backward on frame 18 -- the Disaster Kick
+# victim's contact frame, so DiveSpot's delay does the timing.
+CLIPS["Springboard_Moonsault_Defender"] = [
+    (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(-14, 0, 0),
+           hand_r=(0.22, 0.46, 1.32), hand_l=(-0.20, 0.48, 1.30),
+           fist_r=0.6, fist_l=0.6)),
+    (10, P(spine=(-6, 0, 0), head=(6, 0, 0),
+           hand_r=(0.26, 0.24, 1.10), hand_l=(-0.24, 0.26, 1.08),
+           fist_r=0.6, fist_l=0.6)),
+    # Chin up, watching him come over, the hands half up.
+    (16, P(spine=(2, 0, 0), head=(18, 0, 0),
+           hand_r=(0.28, 0.30, 1.30), hand_l=(-0.26, 0.32, 1.30),
+           fist_r=0.3, fist_l=0.3)),
+] + _back_fall(18, 42, pelvis_hit=0.82)
+
+
 # --- The possum attack (PossumSpot) ----------------------------------------------
 #
 # 2K26 640 s: Cody stands over Roman, who is down, and Roman -- playing possum
@@ -8261,6 +8485,55 @@ CLIPS["FF_Buckle_Bomb_Defender"] = _PB_LIFT_DEF + [
            foot_r=(0.18, 0.18, 0.104), foot_l=(-0.18, 0.20, 0.104),
            knee_r=(0.2, 1.0, 0.2), knee_l=(-0.2, 1.0, 0.2))),
 ] + _face_fall(42, 66)  # 66, not 60: the roll onto his back needs its 19 frames
+
+# --- Fight Forever library, batch 5: Roman's running lariat.
+
+# Casualty of War (Wardlow's special, a running lariat in the library's own
+# classification -- tools/moves/build_ff_library.py), 36 frames / 1.2 s.
+# Unlike the Clothesline From Hell (CFH_Attacker), which turns the man over,
+# Roman leaves his feet for this one: the run with the right arm cocked, the
+# take-off on frame 7, the lariat through the neck in the air on frame 9,
+# the arm carried on across, and a crouched landing over him as the man goes
+# straight over backward from the blow.
+CLIPS["FF_Casualty_Of_War_Attacker"] = [
+    (0, pose(RUN_A, hand_r=(0.36, -0.30, 1.30), fist_r=1.0)),
+    (4, pose(RUN_B, hand_r=(0.38, -0.30, 1.34), fist_r=1.0)),
+    # The take-off: the right knee driving, the arm drawn out wide, the left
+    # held back at his side -- forward, it met the man's hands before the
+    # lariat did (first review sheet).
+    (7, P(pelvis=(0.0, 0.10, 0.760), hips=(-16, 0, 0), spine=(-14, -14, 0),
+          hand_r=(0.56, 0.10, 1.40), hand_l=(-0.30, -0.10, 1.00),
+          fist_r=1.0, fist_l=0.6, clav_follow=False,
+          foot_r=(0.16, 0.10, 0.45), foot_l=(-0.14, 0.12, 0.104),
+          knee_r=(0.2, 1.0, 0.3))),
+    # In the air: the arm through his neck. The Clothesline From Hell's own
+    # strike (CFH_Attacker frame 9: the hips and chest turned into it, the
+    # hand 0.76 out at the height of his neck), off a hop rather than a step.
+    # First cut, the body 1.10 up and the hand 0.80 out at 1.55, was beyond
+    # the arm's reach: the solve folded it, and the fist stayed at his belt.
+    (9, _air(0.980, hips=(-14, 12, 0), spine=(-14, 24, 0),
+             hand_r=(0.18, 0.76, 1.50), hand_l=(-0.36, -0.12, 1.08),
+             fist_r=1.0, clav_follow=False)),
+    # Carried on across.
+    (11, _air(0.900, hips=(-12, 20, 0), spine=(-16, 32, 0),
+              hand_r=(-0.32, 0.56, 1.24), hand_l=(-0.30, 0.00, 1.02),
+              fist_r=1.0, clav_follow=False)),
+    # Down in a crouch over him.
+    (14, pose(CROUCH)),
+    (20, P(pelvis=(0.0, 0.04, 0.700), hips=(-16, 0, 0), spine=(-20, 0, 0),
+           head=(10, 0, 0),
+           hand_r=(0.26, 0.30, 0.80), hand_l=(-0.24, 0.30, 0.80),
+           fist_r=0.6, fist_l=0.6)),
+    (28, P(spine=(-12, 0, 0), head=(8, 0, 0))),
+    (36, P()),
+]
+# The man waiting for it: on his feet but not set, his hands down by his
+# belt rather than STAND's guard, whose hands 0.3 m out in front were met by
+# Roman's before the arm was.
+CLIPS["FF_Casualty_Of_War_Defender"] = [
+    (0, pose(STAND, hand_r=(0.26, 0.10, 1.00), hand_l=(-0.24, 0.12, 1.00))),
+    (8, pose(STAND, head=(4, 0, 0), hand_r=(0.28, 0.08, 1.02), hand_l=(-0.26, 0.10, 1.02))),
+] + _back_fall(9, 36, pelvis_hit=0.95)
 
 
 def main():

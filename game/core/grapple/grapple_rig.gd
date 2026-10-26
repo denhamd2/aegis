@@ -618,7 +618,7 @@ func _pull_into_reach(a: WrestlerController, d: WrestlerController) -> void:
 	var family := PairedContacts.family(_move)
 	if family == "" or family == "none":
 		return
-	if PairedContacts.NO_PULL.has(_move.resource_path.get_file().get_basename()):
+	if not PairedContacts.pulls(_move):
 		return
 	var dsk := d.skeleton
 	var pelvis := dsk.global_transform * dsk.get_bone_global_pose(

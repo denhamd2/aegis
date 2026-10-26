@@ -47,7 +47,8 @@ func test_the_variants_are_finishers() -> void:
 func test_every_new_clip_is_on_both_men() -> void:
 	for clip in ["strikes/strike_corner_clothesline", "strikes/top_rope_step",
 			"strikes/moonsault", "strikes/possum_sweep", "strikes/swept_legs",
-			"strikes/springboard_cutter_attacker", "strikes/springboard_cutter_defender"]:
+			"strikes/springboard_cutter_attacker", "strikes/springboard_cutter_defender",
+			"strikes/springboard_moonsault_attacker", "strikes/springboard_moonsault_defender"]:
 		for w in [_roman, _cody]:
 			assert_bool(w.anim_player.has_animation(clip)) \
 					.override_failure_message("%s lacks %s" % [w.name, clip]).is_true()
@@ -64,12 +65,48 @@ func test_roman_clotheslines_a_man_in_the_corner() -> void:
 	assert_object(_roman._pick_string_strike()).is_equal(_roman.corner_strike_move)
 
 
-func test_the_springboard_ends_on_the_cutter_on_odd_seeds() -> void:
-	_cody.match_seed = 3
-	assert_bool(DiveSpot.uses_cutter(_cody)).is_true()
-	_cody.match_seed = 4
-	assert_bool(DiveSpot.uses_cutter(_cody)).is_false()
-	assert_bool(DiveSpot.uses_cutter(_roman)).is_false()
+## The springboard ends three ways, one a match, in turn by the seed: the
+## Disaster Kick, the Cody Cutter, the moonsault (FF batch 6).
+func test_the_seed_picks_each_springboard_ending() -> void:
+	var picked := []
+	for seed_value in [3, 4, 5]:
+		_cody.match_seed = seed_value
+		picked.append(DiveSpot.ending_of(_cody))
+	assert_array(picked).is_equal([DiveSpot.SPRING_MOVE, DiveSpot.CUTTER_MOVE,
+			DiveSpot.MOONSAULT_MOVE])
+	# A man whose dives carry none of them would get the Disaster Kick.
+	assert_str(DiveSpot.ending_of(_roman)).is_equal(DiveSpot.SPRING_MOVE)
+
+
+## The moonsault ending, played: Roman taken over backward and down, hurt,
+## inside the ropes; Cody up on his feet inside, past him.
+func test_the_springboard_moonsault_puts_him_down() -> void:
+	await _ticks(2)
+	_cody.match_seed = 5
+	assert_str(DiveSpot.ending_of(_cody)).is_equal(DiveSpot.MOONSAULT_MOVE)
+	_roman.global_position = Vector3(2.4, 0.0, 0.3)
+	_cody.global_position = Vector3(1.0, 0.0, 0.3)
+	await _ticks(1)
+	var before := _roman.combat.total_damage()
+	var spot := DiveSpot.new()
+	spot.name = "DiveSpot"
+	_scene.add_child(spot)
+	spot.begin(_cody, _roman)
+	# Straight to the last beat, the springboard.
+	spot._seg = spot._segments.size() - 2
+	spot._next()
+	var guard := 0
+	while is_instance_valid(spot) and guard < DiveSpot.MOONSAULT_TICKS + 40:
+		await get_tree().physics_frame
+		guard += 1
+	assert_bool(is_instance_valid(spot)).is_false()
+	assert_int(_roman.fsm.current_state).is_equal(WrestlerFSM.State.DOWN)
+	assert_float(_roman.combat.total_damage()).is_greater(before)
+	assert_bool(_cody.outside_ring).is_false()
+	for w: WrestlerController in [_roman, _cody]:
+		assert_float(maxf(absf(w.global_position.x), absf(w.global_position.z))).is_less(3.0)
+	# Up past the man's head, not on top of him.
+	assert_float(_cody.global_position.distance_to(_roman.global_position)).is_greater(0.9)
 
 
 func test_a_man_down_mid_ring_can_be_dived_on() -> void:

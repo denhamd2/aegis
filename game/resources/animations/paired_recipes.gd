@@ -933,6 +933,22 @@ const RECIPES := {
 		],
 		"defender_grips_until": 0.55,
 	},
+	# Batch 5 (FFMoveLibrary, Roman's running lariat) -- see
+	# FF_Casualty_Of_War_Attacker: off his feet, the arm through the neck.
+	"ff_casualty_of_war": {
+		"authored": {"attacker": "FF_Casualty_Of_War_Attacker", "defender": "FF_Casualty_Of_War_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Punch_Cross", "at": 0.50},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Idle", "at": 0.00},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		# A man standing waiting for a lariat does not reach for the man
+		# running at him.
+		"defender_grips_until": 0.0,
+	},
 }
 
 ## Root-transform trajectories for the moves authored after the original
@@ -1993,6 +2009,26 @@ const TRAJECTORIES := {
 					[1.10, -0.25, 0.00, 0.00], [1.20, -0.55, 0.00, 0.00],
 					[1.33, -0.48, 0.00, 0.00], [2.20, -0.45, 0.00, 0.00]],
 			"rot": [[0.00, 0.0, -90.0, 0.0], [2.20, 0.0, -90.0, 0.0]],
+		},
+	},
+	# The run (from 1.4 m), the take-off at 0.23 s, the lariat at 0.30 s
+	# while he is in the air -- 0.75 m from the man, the Clothesline From
+	# Hell's distance; at 0.85 the arm could not reach him -- and the landing
+	# at 0.47 s just short of where the man stood; the man goes straight back.
+	"ff_casualty_of_war": {
+		"length": 1.2,
+		"attacker": {
+			"pos": [[0.000, 1.40, 0.00, 0.00], [0.133, 1.00, 0.00, 0.00],
+					[0.233, 0.62, 0.00, 0.00], [0.300, 0.35, 0.00, 0.00],
+					[0.367, 0.20, 0.00, 0.00], [0.467, 0.10, 0.00, 0.00],
+					[1.200, 0.10, 0.00, 0.00]],
+			"rot": [[0.000, 0.0, 90.0, 0.0], [1.200, 0.0, 90.0, 0.0]],
+		},
+		"defender": {
+			"pos": [[0.000, -0.40, 0.00, 0.00], [0.300, -0.40, 0.00, 0.00],
+					[0.500, -0.65, 0.00, 0.00], [0.700, -0.80, 0.00, 0.00],
+					[1.200, -0.80, 0.00, 0.00]],
+			"rot": [[0.000, 0.0, -90.0, 0.0], [1.200, 0.0, -90.0, 0.0]],
 		},
 	},
 }

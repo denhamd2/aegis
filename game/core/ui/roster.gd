@@ -192,7 +192,9 @@ static func entries() -> Array:
 		"signature": [M + "signature_superman_punch.tres", M + "signature_backbreaker.tres"],
 		"running": [M + "running_attack_clothesline.tres",
 				M + "running_clothesline_from_hell.tres", M + "running_knee_lift.tres",
-				M + "running_drive_by.tres"],
+				M + "running_drive_by.tres",
+				# FF batch 5: the leaping lariat, a stretch-run special.
+				M + "ff/casualty_of_war.tres"],
 		# From the corner: only thrown at a man hanging in one. The Spear,
 		# or (FF batch 4) up and heaved back into the turnbuckles.
 		"corner": [M + "running_corner_spear.tres", M + "ff/buckle_bomb.tres"],
@@ -256,7 +258,9 @@ static func entries() -> Array:
 		# 2K26 from-behind set-up, which ran 2.5 s.
 		"finisher": [M + "finisher_cross_rhodes.tres"],
 		"dive": [M + "dive_tope_suicida.tres", M + "dive_springboard_disaster_kick.tres",
-				M + "dive_springboard_cutter.tres"],
+				M + "dive_springboard_cutter.tres",
+				# FF's Springboard Moonsault 3, the spring's third ending.
+				M + "dive_springboard_moonsault.tres"],
 		# Off the top onto a man down mid-ring (TopRopeSpot), as in 2K26.
 		"top_rope": [M + "dive_moonsault.tres"],
 		# Off the top onto a man just up, still groggy, below the corner

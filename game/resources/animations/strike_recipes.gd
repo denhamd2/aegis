@@ -242,6 +242,11 @@ const RECIPES := {
 		"seconds": 1.600, "file": AUTHORED},
 	"springboard_cutter_defender": {"kind": "retime", "source": "Springboard_Cutter_Defender",
 		"seconds": 1.400, "file": AUTHORED},
+	# Its third ending, the springboard moonsault.
+	"springboard_moonsault_attacker": {"kind": "retime", "source": "Springboard_Moonsault_Attacker",
+		"seconds": 2.000, "file": AUTHORED},
+	"springboard_moonsault_defender": {"kind": "retime", "source": "Springboard_Moonsault_Defender",
+		"seconds": 1.400, "file": AUTHORED},
 	"possum_sweep": {"kind": "retime", "source": "Possum_Sweep",
 		"seconds": 1.000, "file": AUTHORED},
 	"swept_legs": {"kind": "retime", "source": "Swept_Legs",
