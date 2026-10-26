@@ -1,0 +1,122 @@
+{
+  "backlog": {
+    "id": "BR-023",
+    "ordinal": 23,
+    "of": 27,
+    "status": "in progress",
+    "slice": "Sunny Rovers Arena mowing visibility and broad turf glare"
+  },
+  "reported_hardware": "Owner Mac; Rovers Arena, sunny",
+  "baseline_source": "9d4d335a0128df6e8baa02823e1119923e13ce74",
+  "renderer": "Forward+ Vulkan",
+  "adapter": "llvmpipe LLVM19.1.7 256bits",
+  "material_resolution": [
+    640,
+    360
+  ],
+  "matched_full_scene_resolution": [
+    960,
+    540
+  ],
+  "baseline_rendered_check": "FAIL: mowing cancellation and excessive reflective lift",
+  "final_rendered_check": "PASS: all four sunny and rainy camera stations",
+  "isolated_hypotheses": {
+    "material_before": {
+      "length_min": 0.0356460758478046,
+      "cross_min": 0.0060172494064108,
+      "reflection_max": 0.330810754940512,
+      "samples_per_view": [
+        48,
+        48,
+        48,
+        48
+      ]
+    },
+    "material_mowing": {
+      "length_min": 0.148462622107334,
+      "cross_min": 0.00715259148022828,
+      "reflection_max": 0.33467593644644,
+      "samples_per_view": [
+        48,
+        48,
+        48,
+        48
+      ]
+    },
+    "material_no_macro_normals": {
+      "length_min": 0.208956975224574,
+      "cross_min": 0.116705367177117,
+      "reflection_max": 0.334344479860457,
+      "samples_per_view": [
+        48,
+        48,
+        48,
+        48
+      ]
+    },
+    "material_after": {
+      "length_min": 0.233216545637267,
+      "cross_min": 0.122767919140982,
+      "reflection_max": 0.0378485421081895,
+      "samples_per_view": [
+        48,
+        48,
+        48,
+        48
+      ]
+    },
+    "material_rain": {
+      "length_min": 0.101322437238319,
+      "cross_min": 0.0695558504182344,
+      "reflection_max": 0.0139170316723683,
+      "samples_per_view": [
+        48,
+        48,
+        48,
+        48
+      ]
+    }
+  },
+  "full_captures": {
+    "sunny_before_after": "PASS; actual22+referee, same lighting/camera/settings",
+    "cloudy": "PASS; actual22+referee",
+    "kilmore": "PASS; broadcast, grass, painted markings and goalmouth water"
+  },
+  "geometry": {
+    "sunny_before_after_primitives": 1165574,
+    "sunny_before_after_draw_calls": 1202,
+    "broadcast_turf_triangles": 32768,
+    "maximum_kilmore_closeup_turf_triangles": 205568,
+    "budget": 240000,
+    "new_geometry": 0,
+    "new_texture_reads": 0
+  },
+  "tests": {
+    "wet_weather_smoke.gd": "PASS",
+    "graphics_budget_smoke.gd": "PASS",
+    "stadium_remodel_smoke.gd": "PASS",
+    "pitch_presentation_repairs_smoke.gd": "PASS",
+    "realism_systems_smoke.gd": "PASS",
+    "capture_runner_cleanup_test": "PASS",
+    "python_compile": "PASS"
+  },
+  "unchanged": [
+    "Sun energy and direction",
+    "Sky, exposure and shadows",
+    "Weather presets and localized mud/puddle masks",
+    "Ball drag and gameplay",
+    "Character assets and Blender sources"
+  ],
+  "limits": [
+    "Software Vulkan measurements are not native Metal/M1 parity or1080p60 evidence",
+    "Material fixture hides all other geometry and its shadows; full scenes checked separately",
+    "Existing forced-close cached resource/GPU teardown diagnostics remain in some review/logic logs; strict package startup uses real window close"
+  ],
+  "next": {
+    "id": "BR-025",
+    "ordinal": 25,
+    "of": 27,
+    "status": "in progress",
+    "acceptance": "Play packaged sunny Rovers Arena on targetMac: readable cuts, restrained glare, sustained1080p60"
+  }
+}

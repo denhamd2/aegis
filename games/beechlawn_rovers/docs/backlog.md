@@ -10,6 +10,19 @@ items, use the archived references and skill workflow in
 [`art_reference_implementation_plan.md`](art_reference_implementation_plan.md)
 and [`../references/README.md`](../references/README.md) before implementation.
 
+## Mac playtest: mowing stripes and pitch glare — 26 October 2026
+
+BR-023 (23/27, in progress): the owner reported weak cut lines and bright glare
+in sunny Rovers Arena. Opposite-side view terms cancelled mowing contrast;
+strip-sized normal waves further opposed the cuts, while a globally smooth
+damp response added a broad pale reflection. The shared maintained-turf colour
+now retains a readable mowing signal in all four camera directions. Arena
+grass stays rough with restrained specular response; localized Kilmore water,
+weather/ball drag, sun, shadows, geometry and texture budgets are preserved.
+See [the material/capture review](art_briefs/turf_glare_2026_10_26/brief.md).
+Next acceptance: BR-025 (25/27, in progress), recheck sunny Rovers Arena in the
+packaged Mac build for pitch readability, glare and sustained 1080p60.
+
 ## Free-kick polish — 26 October 2026
 
 BR-019 (19/27, in progress), with BR-015/016/021: free kicks now have a fixed-tick

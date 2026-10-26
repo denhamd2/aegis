@@ -1,0 +1,5 @@
+TURF (0.0, 24.0, -45.0) length=0.180 cross=0.123 reflection=0.014
+TURF (0.0, 24.0, 45.0) length=0.176 cross=0.070 reflection=0.009
+TURF (-45.0, 24.0, 0.0) length=0.101 cross=0.097 reflection=0.010
+TURF (45.0, 24.0, 0.0) length=0.253 cross=0.098 reflection=0.013
+TURF_RENDER PASS

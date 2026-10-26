@@ -1,0 +1,46 @@
+{
+  "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+  "away_players": 11,
+  "cases": [
+    {
+      "camera": "(0.0, 24.0, -45.0)",
+      "cross_contrast": 0.123417156227164,
+      "length_contrast": 0.180092375739721,
+      "samples": 48,
+      "specular_fraction": 0.0139170316723683
+    },
+    {
+      "camera": "(0.0, 24.0, 45.0)",
+      "cross_contrast": 0.0695558504182344,
+      "length_contrast": 0.17638559644061,
+      "samples": 48,
+      "specular_fraction": 0.00944899361786939
+    },
+    {
+      "camera": "(-45.0, 24.0, 0.0)",
+      "cross_contrast": 0.0965067367561607,
+      "length_contrast": 0.101322437238319,
+      "samples": 48,
+      "specular_fraction": 0.00970866758617077
+    },
+    {
+      "camera": "(45.0, 24.0, 0.0)",
+      "cross_contrast": 0.0980253494254642,
+      "length_contrast": 0.252710909540028,
+      "samples": 48,
+      "specular_fraction": 0.0127432258345856
+    }
+  ],
+  "display_server": "X11",
+  "home_players": 11,
+  "officials": 1,
+  "other_geometry_hidden": true,
+  "rendering_method": "forward_plus",
+  "resolution": [
+    640,
+    360
+  ],
+  "scope": "Minimized production surface, sun, sky and weather; other geometry hidden. Diffuse diagnostic changes SPECULAR only. Not Mac performance/parity evidence.",
+  "venue": "rovers_arena",
+  "weather": "rain"
+}

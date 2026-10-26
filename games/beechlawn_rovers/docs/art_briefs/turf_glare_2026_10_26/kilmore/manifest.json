@@ -1,0 +1,51 @@
+{
+  "result": "PASS",
+  "captures": [
+    {
+      "image": "match_broadcast.png",
+      "report": "match_broadcast.json",
+      "sha256": "63fb2b73e767e66ed226f60357d33066a195a236c90078414e952ef0fdf8c101",
+      "process_cleanup": "normal",
+      "capture_seconds": 84.99,
+      "command": [
+        "/usr/local/bin/godot",
+        "--path",
+        "/workspace/aegis-checkout/games/beechlawn_rovers",
+        "--rendering-method",
+        "forward_plus",
+        "--resolution",
+        "640x360",
+        "--fixed-fps",
+        "60",
+        "--disable-vsync",
+        "--audio-driver",
+        "Dummy",
+        "--display-driver",
+        "x11",
+        "--rendering-driver",
+        "vulkan",
+        "--script",
+        "res://scripts/review_native_match.gd",
+        "--",
+        "--capture-dir=/tmp/turf-glare-park",
+        "--player=match",
+        "--view=broadcast",
+        "--lighting=match",
+        "--sky=match",
+        "--clean=1",
+        "--setup-preview=0",
+        "--venue=kilmore_drive",
+        "--venue-view=pitch",
+        "--ablation=none",
+        "--weather=sunny",
+        "--graphics=balanced_60",
+        "--ball=ucl_26_27_league",
+        "--free-kick-style=standard",
+        "--free-kick-view=wide",
+        "--expression=neutral"
+      ]
+    }
+  ],
+  "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+  "scope": "Forward+ appearance stills; software Vulkan does not measure Mac performance."
+}

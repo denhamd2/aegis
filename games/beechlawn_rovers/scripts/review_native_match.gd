@@ -42,6 +42,9 @@ func _capture() -> void:
 	rig.set_process(false)
 	var view := str(options.get("venue-view","broadcast"))
 	var camera: Camera3D = rig.get_node("Camera3D")
+	if view == "turf":
+		await _capture_turf(game,camera)
+		return
 	if view in ["wide","detail"]:
 		camera.global_position = Vector3(-42,29,52) if view == "wide" else Vector3(47,.38,3.5)
 		camera.look_at(Vector3(0,2,0) if view == "wide" else Vector3(53,1.1,0))
@@ -140,6 +143,81 @@ func _capture() -> void:
 	file.store_string(JSON.stringify(report,"  ") + "\n")
 	print("BEECHLAWN_NATIVE_CAPTURE ", JSON.stringify(report))
 	quit()
+
+func _capture_turf(game: Node3D, camera: Camera3D) -> void:
+	# Minimized material diagnostic: the production pitch, weather, sky and sun,
+	# with other geometry hidden before rendering. Full-match captures remain the
+	# appearance gate; this isolates actual shader response from roof/actor shadows.
+	game.get_node("HUD").hide()
+	for child in game.get_children():
+		if child is Node3D and child.name not in [&"Pitch",&"Sun",&"BroadcastCamera"]:
+			child.hide()
+			child.process_mode = Node.PROCESS_MODE_DISABLED
+	for child in game.get_node("Pitch").get_children():
+		if child is Node3D and child.name != &"SundayLeagueTurf": child.hide()
+	var turf: MeshInstance3D = game.get_node("Pitch/SundayLeagueTurf")
+	var material := turf.material_override as ShaderMaterial
+	var original := material.shader
+	var diffuse := Shader.new()
+	diffuse.code = original.code.strip_edges().trim_suffix("}")+"\nSPECULAR=0.0;\n}\n"
+	var folder := str(options["capture-dir"])
+	DirAccess.make_dir_recursive_absolute(folder)
+	var cases: Array = []
+	var positions := [Vector3(0,24,-45),Vector3(0,24,45),Vector3(-45,24,0),Vector3(45,24,0)]
+	for index in positions.size():
+		camera.global_position = positions[index]
+		camera.look_at(Vector3.ZERO); camera.fov=60
+		camera.reset_physics_interpolation()
+		var images: Array[Image] = []
+		for variant in [&"surface",&"diffuse"]:
+			material.shader = original if variant == &"surface" else diffuse
+			for frame in 2: await RenderingServer.frame_post_draw
+			var image := root.get_texture().get_image()
+			var filename := "turf_%d_%s.png"%[index,variant]
+			assert(image.save_png(folder.path_join(filename)) == OK)
+			if index == 0 and variant == &"surface":
+				assert(image.save_png(folder.path_join("match_broadcast.png")) == OK)
+			images.append(image)
+		var length_groups := [[],[]]
+		var cross_groups := [[],[]]
+		var specular_sum := 0.0
+		var diffuse_sum := 0.0
+		var samples := 0
+		for x_band in range(-4,4):
+			for z_band in range(-3,3):
+				var point := Vector3((float(x_band)+.5)*7.5,0,(float(z_band)+.5)*8.5)
+				if camera.is_position_behind(point): continue
+				var pixel := camera.unproject_position(point)*Vector2(images[0].get_size())/root.get_visible_rect().size
+				if not Rect2(Vector2(4,4),Vector2(images[0].get_size())-Vector2(8,8)).has_point(pixel): continue
+				var values: Array[float] = []
+				for image in images:
+					var value := 0.0
+					for dx in range(-2,3):
+						for dy in range(-2,3):
+							var c := image.get_pixel(int(pixel.x)+dx,int(pixel.y)+dy).srgb_to_linear()
+							value += c.r*.2126+c.g*.7152+c.b*.0722
+					values.append(value/25.0)
+				length_groups[posmod(x_band,2)].append(values[0])
+				cross_groups[posmod(z_band,2)].append(values[0])
+				specular_sum += maxf(0,values[0]-values[1]); diffuse_sum+=values[1]; samples+=1
+		cases.append({"camera":str(positions[index]),"samples":samples,"length_contrast":_turf_contrast(length_groups),
+			"cross_contrast":_turf_contrast(cross_groups),"specular_fraction":specular_sum/maxf(.0001,diffuse_sum)})
+	material.shader = original
+	var report := {"rendering_method":RenderingServer.get_current_rendering_method(),"adapter":RenderingServer.get_video_adapter_name(),"display_server":DisplayServer.get_name(),
+		"home_players":game._home_players.size(),"away_players":game._away_players.size(),"officials":get_nodes_in_group("match_officials").size(),"other_geometry_hidden":true,
+		"resolution":[root.size.x,root.size.y],"venue":str(game.venue.id),"weather":str(options.get("weather","sunny")),"cases":cases,
+		"scope":"Minimized production surface, sun, sky and weather; other geometry hidden. Diffuse diagnostic changes SPECULAR only. Not Mac performance/parity evidence."}
+	FileAccess.open(folder.path_join("match_broadcast.json"),FileAccess.WRITE).store_string(JSON.stringify(report,"  ")+"\n")
+	print("BEECHLAWN_NATIVE_CAPTURE ",JSON.stringify(report))
+	root.close_requested.emit()
+
+func _turf_contrast(groups: Array) -> float:
+	var means: Array[float] = []
+	for group in groups:
+		var total := 0.0
+		for value in group: total+=float(value)
+		means.append(total/maxi(1,group.size()))
+	return absf(means[0]-means[1])/maxf(.0001,(means[0]+means[1])*.5)
 
 func _audit_stadium_seating(game: Node3D) -> Dictionary:
 	var arena := game.get_node("ParkEdge/RoversArena")

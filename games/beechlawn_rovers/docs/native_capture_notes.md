@@ -147,6 +147,20 @@ Native chair readback now uses the descriptive section/row manifest and actual b
 
 Turf has a bounded dense near footprint and intermediate hash-faded fins. Fade only exposed intermediate residency boundaries and preserve an upward average normal: scissor-only fades plus dark downward normals exposed rectangular chunk edges. Check low moving/cut views as well as geometry budgets. The smoke runner now fails shader compilation errors immediately instead of accepting a nominal SceneTree exit.
 
+## Turf glare and mowing diagnostic
+
+`--match --venue rovers_arena --venue-view turf --weather sunny` isolates the
+actual production pitch, weather, sky and sun before rendering. Other geometry
+and its processes are hidden/disabled, including roof/actor shadows and turf
+detail meshes. It samples 48 world-space stripe centres from four opposite
+camera stations, with paired surface and SPECULAR=0 renders. The latter changes
+only specular response; no global exposure or lighting substitution is used.
+Run `python3 tools/check_turf_capture.py <capture-folder>` for mowing-contrast
+and broad-reflection limits. Use full `--venue-view broadcast` captures for
+complete-scene appearance; the material fixture cannot establish target-Mac
+graphics parity, animation or performance. See
+[the Mac glare repair](art_briefs/turf_glare_2026_10_26/brief.md).
+
 ## Ball appearance review
 
 `--ball ucl_26_27_league|worn_sunday_league` explicitly chooses the production appearance. `--match --venue-view ball` saves the unchanged broadcast view plus four rotations and an emboss macro on the actual pitch. The JSON records the ball ID and each rotation. `--setup-preview` also captures Options. Combine with either venue and sunny/cloudy/rain; these are native Forward+ stills, not Mac frame-rate measurements.

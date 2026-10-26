@@ -93,7 +93,7 @@ def main():
     parser.add_argument('--ablation', choices=['none','scattering','transmittance','near_heads','pose','morphs','normal_maps','sun_shadows','shadow_bias','close_shadows'], default='none', help='Explicit portrait-only diagnostic; recorded in evidence')
     parser.add_argument('--setup-preview', action='store_true', help='Also capture the actual venue/control options')
     parser.add_argument('--venue', choices=['kilmore_drive','rovers_arena'], default='kilmore_drive')
-    parser.add_argument('--venue-view', choices=['broadcast','wide','detail','all','corners','exterior','pitch','ball'], default='broadcast')
+    parser.add_argument('--venue-view', choices=['broadcast','wide','detail','all','corners','exterior','pitch','ball','turf'], default='broadcast')
     parser.add_argument('--ball', choices=['ucl_26_27_league','worn_sunday_league'], default='ucl_26_27_league')
     parser.add_argument('--free-kick-style', choices=['standard','finesse','power','low'], default='standard')
     parser.add_argument('--free-kick-view', choices=['wide','contact','prepare'], default='wide')

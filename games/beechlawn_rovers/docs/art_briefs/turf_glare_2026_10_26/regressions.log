@@ -1,0 +1,41 @@
+
+[smoke] wet_weather_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+Wet/weather checks: physical ground slowdown, airborne exclusion, mirrored masks, 60/120 Hz, preferences, four presets; failures=0
+[passed] wet_weather_smoke.gd (13.2s)
+
+[smoke] graphics_budget_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+GRAPHICS_BUDGET PASS: Retina cap, adaptive floor/hysteresis, unavailable timers, migration and persistence
+[passed] graphics_budget_smoke.gd (1.4s)
+
+[smoke] stadium_remodel_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+STADIUM_REMODEL PASS: 49554 supported/facing seats; 71 spatial blocks; four curved corners and distinct stand profiles
+[passed] stadium_remodel_smoke.gd (10.0s)
+
+[smoke] pitch_presentation_repairs_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+PITCH_REPAIRS horizontal complete indicator and mirrored exterior penalty arcs PASS
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+[passed] pitch_presentation_repairs_smoke.gd (11.5s)
+
+[smoke] realism_systems_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+REALISM_SYSTEMS PASS: shared physique/binds, render/contact/replay isolation, optics restoration, graphics preferences and field-wide bounded turf
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+[passed] realism_systems_smoke.gd (29.4s)

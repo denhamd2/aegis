@@ -36,16 +36,22 @@ void fragment() {
 	vec3 soil = texture(mud_albedo,p/1.3).rgb * mix(0.9,0.55,wetness);
 	ALBEDO = mix(ALBEDO, soil * (0.88 + grain * 0.18), mud * 0.94);
 	ALBEDO = mix(ALBEDO, vec3(0.045,0.052,0.036), water * 0.75);
-	ROUGHNESS = mix(mix(clamp(texture(grass_roughness,p/1.4).r,.72,.98),texture(mud_roughness,p/1.3).r*0.65+0.22,mud*wetness),0.13,water);
-	ROUGHNESS = mix(ROUGHNESS,.62,arena_wetness*.65);
-	SPECULAR = mix(0.24,0.5,max(water,arena_wetness*.35));
+	float turf_roughness = clamp(texture(grass_roughness,p/1.4).r,.72,.98);
+	// Damp leaves remain a rough, fibrous canopy. Treating the whole arena
+	// as a smooth wet sheet washed out the cuts in sunlight. Standing water
+	// retains its separate localized reflection and roughness response.
+	if (stadium_mowing) {
+		turf_roughness = max(.88,turf_roughness)-arena_wetness*.06;
+	}
+	ROUGHNESS = mix(mix(turf_roughness,texture(mud_roughness,p/1.3).r*0.65+0.22,mud*wetness),0.13,water);
+	SPECULAR = mix(stadium_mowing ? .12+arena_wetness*.02 : .24,.5,water);
 	// Small capillary ripples; wet mud stays rougher than standing water.
 	vec3 ripples = normalize(vec3(0.025*sin(p.x*27.0+p.y*13.0+TIME*1.8),
 		0.025*cos(p.y*31.0-p.x*9.0+TIME*1.4),1.0))*0.5+0.5;
 	vec3 turf_normal = mix(vec3(.5,.5,1.0),texture(grass_normal,p/.85).rgb,.22+close*.40);
-	if (stadium_mowing) {
-	 turf_normal.xy += vec2(sin((p.x-52.5)*3.14159265/7.5),sin((p.y-34.0)*3.14159265/8.5))*.045;
-	}
+	// Rolled bands change the aggregate leaf response, not the slope of the
+	// whole pitch. Broad normal waves opposed the colour bands rather than
+	// describing the fine grass texture.
 	NORMAL_MAP = mix(mix(turf_normal,texture(mud_normal,p/1.3).rgb,mud*0.7),ripples,water);
 	METALLIC = 0.0;
 	BACKLIGHT=ALBEDO*.12*(1.0-water);

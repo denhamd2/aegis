@@ -1,3 +1,19 @@
+# Beechlawn Rovers 27 — v0.5.4
+
+Rovers Arena's mowing stripes remain visible from either broadcast side.
+The maintained turf has a rougher, restrained damp-grass reflection, replacing
+the broad pale glare in sunny matches. Removing artificial strip-sized normal
+waves keeps the cut pattern readable while retaining the fine grass texture.
+
+Sun strength, shadows, weather and ball physics are unchanged. Kilmore's worn
+grass, mud and localized puddle reflections retain their existing response.
+Shared grass colours keep the surface and blade-detail LODs aligned without
+adding geometry or texture reads. Native four-angle material checks and full
+match-scene captures validate integration; target-Mac appearance and sustained
+1080p60 remain acceptance checks. Universal Apple Silicon/Intel Mac build.
+
+---
+
 # Beechlawn Rovers 27 — v0.5.3
 
 Free kicks now include an animated approach, a stance aligned to the actual

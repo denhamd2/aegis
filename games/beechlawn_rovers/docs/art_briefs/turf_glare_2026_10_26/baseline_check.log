@@ -1,0 +1,12 @@
+TURF (0.0, 24.0, -45.0) length=0.036 cross=0.075 reflection=0.331
+TURF (0.0, 24.0, 45.0) length=0.066 cross=0.086 reflection=0.103
+TURF (-45.0, 24.0, 0.0) length=0.081 cross=0.006 reflection=0.115
+TURF (45.0, 24.0, 0.0) length=0.187 cross=0.007 reflection=0.239
+FAIL: Length mowing fades at (0.0, 24.0, -45.0)
+FAIL: Excess broad turf reflection at (0.0, 24.0, -45.0)
+FAIL: Length mowing fades at (0.0, 24.0, 45.0)
+FAIL: Length mowing fades at (-45.0, 24.0, 0.0)
+FAIL: Cross mowing fades at (-45.0, 24.0, 0.0)
+FAIL: Cross mowing fades at (45.0, 24.0, 0.0)
+FAIL: Excess broad turf reflection at (45.0, 24.0, 0.0)
+TURF_RENDER FAIL

@@ -1,0 +1,51 @@
+{
+  "result": "PASS",
+  "captures": [
+    {
+      "image": "match_broadcast.png",
+      "report": "match_broadcast.json",
+      "sha256": "f6713fdec692c878a6aefe12efeefa4431f27e865be773ea91ad5f5d001d3aa1",
+      "process_cleanup": "normal",
+      "capture_seconds": 92.1,
+      "command": [
+        "/usr/local/bin/godot",
+        "--path",
+        "/workspace/aegis-checkout/games/beechlawn_rovers",
+        "--rendering-method",
+        "forward_plus",
+        "--resolution",
+        "640x360",
+        "--fixed-fps",
+        "60",
+        "--disable-vsync",
+        "--audio-driver",
+        "Dummy",
+        "--display-driver",
+        "x11",
+        "--rendering-driver",
+        "vulkan",
+        "--script",
+        "res://scripts/review_native_match.gd",
+        "--",
+        "--capture-dir=/tmp/turf-material-mowing",
+        "--player=match",
+        "--view=broadcast",
+        "--lighting=match",
+        "--sky=match",
+        "--clean=1",
+        "--setup-preview=0",
+        "--venue=rovers_arena",
+        "--venue-view=turf",
+        "--ablation=none",
+        "--weather=sunny",
+        "--graphics=balanced_60",
+        "--ball=ucl_26_27_league",
+        "--free-kick-style=standard",
+        "--free-kick-view=wide",
+        "--expression=neutral"
+      ]
+    }
+  ],
+  "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+  "scope": "Forward+ appearance stills; software Vulkan does not measure Mac performance."
+}

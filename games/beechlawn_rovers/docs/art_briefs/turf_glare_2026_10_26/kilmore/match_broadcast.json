@@ -1,0 +1,64 @@
+{
+  "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+  "api": "1.4.305",
+  "away_players": 11,
+  "ball_id": "ucl_26_27_league",
+  "camera": "close_broadcast",
+  "display_server": "X11",
+  "draw_calls": 918,
+  "extra_views": [
+    {
+      "ball_position": "(0.0, 0.135, 0.0)",
+      "ball_rotation": "(0.0, 0.0, 0.0)",
+      "camera_position": "(9.0, 0.16, 14.0)",
+      "draw_calls": 843,
+      "fov": 48.0,
+      "image": "match_grass.png",
+      "primitives": 547999,
+      "turf_triangles": 205568
+    },
+    {
+      "ball_position": "(0.0, 0.135, 0.0)",
+      "ball_rotation": "(0.0, 0.0, 0.0)",
+      "camera_position": "(1.0, 0.17, 8.0)",
+      "draw_calls": 712,
+      "fov": 48.0,
+      "image": "match_paint.png",
+      "primitives": 547963,
+      "turf_triangles": 205568
+    },
+    {
+      "ball_position": "(0.0, 0.135, 0.0)",
+      "ball_rotation": "(0.0, 0.0, 0.0)",
+      "camera_position": "(46.0, 0.24, 3.0)",
+      "draw_calls": 194,
+      "fov": 45.0,
+      "image": "match_puddle.png",
+      "primitives": 279293,
+      "turf_triangles": 163219
+    }
+  ],
+  "godot": "4.6.3-stable (official)",
+  "home_players": 11,
+  "msaa_3d": 1,
+  "officials": 1,
+  "phase": "stationary kickoff",
+  "primitives": 509546,
+  "rendering_method": "forward_plus",
+  "resolution": [
+    640,
+    360
+  ],
+  "scene": "res://scenes/match_11v11.tscn",
+  "scope": "Actual Forward+ match still; no native Mac timing or graphics parity claim.",
+  "seating_audit": {
+
+  },
+  "sun_shadows": true,
+  "turf_triangles": 32768,
+  "vendor": "Unknown",
+  "venue": "kilmore_drive",
+  "venue_view": "pitch",
+  "warmup_frames": 3,
+  "weather": "sunny"
+}
