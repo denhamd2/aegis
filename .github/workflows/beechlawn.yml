@@ -55,8 +55,9 @@ jobs:
           PYCODE
           timeout --kill-after=5s 180s godot --headless --editor --path games/beechlawn_rovers --import
           python3 games/beechlawn_rovers/tools/test_audio_shutdown.py
+          BEECHLAWN_TEST_VENUE=rovers_arena python3 games/beechlawn_rovers/tools/run_smoke_tests.py free_kick_planner_smoke.gd free_kick_contact_smoke.gd
           python3 games/beechlawn_rovers/tools/test_arena_seating_alignment.py
-          python3 games/beechlawn_rovers/tools/run_smoke_tests.py graphics_budget_smoke.gd frame_profiler_smoke.gd supporter_crowd_smoke.gd stadium_presentation_smoke.gd pitch_audio_smoke.gd recorded_audio_smoke.gd left_strike_smoke.gd ai_attack_choice_smoke.gd
+          python3 games/beechlawn_rovers/tools/run_smoke_tests.py graphics_budget_smoke.gd frame_profiler_smoke.gd supporter_crowd_smoke.gd stadium_presentation_smoke.gd pitch_audio_smoke.gd recorded_audio_smoke.gd free_kick_planner_smoke.gd free_kick_contact_smoke.gd left_strike_smoke.gd ai_attack_choice_smoke.gd
           python3 games/beechlawn_rovers/tools/run_smoke_tests.py moving_receive_smoke.gd contextual_receive_smoke.gd receive_edge_cases_smoke.gd receive_layer_physics_smoke.gd first_time_pass_timing_smoke.gd first_time_shot_smoke.gd
           python3 games/beechlawn_rovers/tools/run_smoke_tests.py ball_selection_smoke.gd stadium_seating_smoke.gd player_selection_smoke.gd receiver_selection_pass_types_smoke.gd venue_selection_smoke.gd hud_layout_smoke.gd
       - name: Import and verify football project
@@ -67,8 +68,9 @@ jobs:
           python3 games/beechlawn_rovers/tools/test_capture_native.py
           timeout --kill-after=5s 180s godot --headless --editor --path games/beechlawn_rovers --import
           python3 games/beechlawn_rovers/tools/test_audio_shutdown.py
+          BEECHLAWN_TEST_VENUE=rovers_arena python3 games/beechlawn_rovers/tools/run_smoke_tests.py free_kick_planner_smoke.gd free_kick_contact_smoke.gd
           python3 games/beechlawn_rovers/tools/test_arena_seating_alignment.py
-          python3 games/beechlawn_rovers/tools/run_smoke_tests.py graphics_budget_smoke.gd frame_profiler_smoke.gd supporter_crowd_smoke.gd stadium_presentation_smoke.gd pitch_audio_smoke.gd recorded_audio_smoke.gd left_strike_smoke.gd ai_attack_choice_smoke.gd
+          python3 games/beechlawn_rovers/tools/run_smoke_tests.py graphics_budget_smoke.gd frame_profiler_smoke.gd supporter_crowd_smoke.gd stadium_presentation_smoke.gd pitch_audio_smoke.gd recorded_audio_smoke.gd free_kick_planner_smoke.gd free_kick_contact_smoke.gd left_strike_smoke.gd ai_attack_choice_smoke.gd
           python3 games/beechlawn_rovers/tools/run_smoke_tests.py moving_receive_smoke.gd contextual_receive_smoke.gd receive_edge_cases_smoke.gd receive_layer_physics_smoke.gd first_time_pass_timing_smoke.gd first_time_shot_smoke.gd
           python3 games/beechlawn_rovers/tools/run_smoke_tests.py ball_selection_smoke.gd
           python3 games/beechlawn_rovers/tools/run_smoke_tests.py stadium_seating_smoke.gd player_selection_smoke.gd receiver_selection_pass_types_smoke.gd venue_selection_smoke.gd
@@ -93,7 +95,7 @@ jobs:
           # Six fixed complete matches gate natural chance frequency for both
           # teams. These are tests, never runtime quotas or forced goals.
           python3 games/beechlawn_rovers/tools/check_ai_chances.py build/beechlawn/ai-chances
-          python3 games/beechlawn_rovers/tools/run_smoke_tests.py full_presentation_match_soak.gd
+          BEECHLAWN_TEST_TIMEOUT_SECONDS=240 python3 games/beechlawn_rovers/tools/run_smoke_tests.py full_presentation_match_soak.gd
       - name: Export and verify universal Mac build
         run: |
           python3 games/beechlawn_rovers/tools/stamp_build.py --source "$GITHUB_SHA"

@@ -58,7 +58,8 @@ func _run() -> void:
 	game.restart.update(1.0/60)
 	check(game.restart.phase==game.restart.Phase.ACTION,"Release executes human restart")
 	var before:=ball.action_serial
-	for frame in 80:
+	# The free kick now includes an animated approach before the strike.
+	for frame in 120:
 		game.restart.update(1.0/60)
 		await physics_frame
 	check(ball.action_serial>before and not game.restart.active(),"Free-kick shot contact and follow-through finish")

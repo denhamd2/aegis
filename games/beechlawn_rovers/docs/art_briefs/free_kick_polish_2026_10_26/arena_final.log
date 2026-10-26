@@ -1,0 +1,17 @@
+
+[smoke] free_kick_contact_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=rovers_arena ball=ucl_26_27_league
+FREE_KICK_CONTACT Beechlawn Rovers standard toe_m=0.12283610552549 hop_m=0.20099994540215
+FREE_KICK_CONTACT Beechlawn Rovers finesse toe_m=0.12283610552549 hop_m=0.20100003480911
+FREE_KICK_CONTACT Beechlawn Rovers low toe_m=0.12283610552549 hop_m=0.00099999422673
+FREE_KICK_CONTACT Boardeaux standard toe_m=0.12283610552549 hop_m=0.20094600319862
+FREE_KICK_CONTACT Boardeaux finesse toe_m=0.12283610552549 hop_m=0.20099996030331
+FREE_KICK_CONTACT Boardeaux low toe_m=0.12283610552549 hop_m=0.0009999073809
+FREE_KICK_CONTACT PASS: both teams, three strikes, fixed ball, >1m approach, <=22cm anatomical contact, single impulses, reacting wall, genuine misses and cleanup
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 2 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+[passed] free_kick_contact_smoke.gd (31.9s)

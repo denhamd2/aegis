@@ -528,7 +528,7 @@ func _play_action(action: StringName, clip: StringName, playback_speed: float = 
 		blend_seconds = minf(blend_seconds, arrival * 0.35)
 	# Fixed-tick contacts must run at the marker, before a fast arrival has
 	# advanced into the body on the next deferred callback.
-	animation_player.callback_mode_method = AnimationMixer.ANIMATION_CALLBACK_MODE_METHOD_IMMEDIATE if action in [&"pass",&"shot"] else AnimationMixer.ANIMATION_CALLBACK_MODE_METHOD_DEFERRED
+	animation_player.callback_mode_method = AnimationMixer.ANIMATION_CALLBACK_MODE_METHOD_IMMEDIATE if action in [&"pass",&"shot"] or String(action).begins_with("restart_") else AnimationMixer.ANIMATION_CALLBACK_MODE_METHOD_DEFERRED
 	animation_player.play(clip, blend_seconds, playback_speed)
 	if start_time > 0.0:
 		animation_player.seek(start_time, true)
@@ -674,7 +674,7 @@ func _on_animation_finished(animation_name: StringName) -> void:
 	if animation_name != _active_clip or _active_action == &"":
 		return
 	var finished_action := _active_action
-	if finished_action in AERIAL_CLIPS or finished_action in VOLLEY_CLIPS or finished_action in [&"skill",&"pass",&"shot"]:
+	if finished_action in AERIAL_CLIPS or finished_action in VOLLEY_CLIPS or finished_action in [&"skill",&"pass",&"shot"] or String(finished_action).begins_with("restart_"):
 		animation_player.callback_mode_method = AnimationMixer.ANIMATION_CALLBACK_MODE_METHOD_DEFERRED
 	if finished_action == &"slide_tackle" and animation_player.has_animation(GET_UP_CLIP):
 		_active_action = &"get_up"
@@ -844,6 +844,31 @@ func _install_restart_actions() -> void:
 		if not library.has_animation(name): library.add_animation(name,source_player.get_animation(name).duplicate())
 	source.free()
 	_install_action_contact_marker(&"restart_throw", &"AN_Beechlawn_ThrowIn", "res://assets/characters/shared/throw_contact.json")
+	var wall_source := (load("res://assets/characters/shared/free_kick_wall.glb") as PackedScene).instantiate()
+	var wall_player := wall_source.get_node("AnimationPlayer") as AnimationPlayer
+	for name in [&"AN_Beechlawn_WallBrace",&"AN_Beechlawn_WallJump"]:
+		if not library.has_animation(name):
+			var motion := wall_player.get_animation(name).duplicate() as Animation
+			motion.loop_mode = Animation.LOOP_LINEAR if name == &"AN_Beechlawn_WallBrace" else Animation.LOOP_NONE
+			library.add_animation(name,motion)
+	wall_source.free()
+
+func play_wall(jump: bool) -> void:
+	_play_action(&"wall", &"AN_Beechlawn_WallJump" if jump else &"AN_Beechlawn_WallBrace",1,false,true)
+
+func restart_contact_offset(shooting: bool) -> Vector3:
+	# Sample the real imported pose without firing its method track. Convert
+	# through the assembled player's actual height/rig transform, not a proxy.
+	var clip := SHOT_CLIP if shooting else PASS_CLIP
+	var marker := action_contact_time(&"shot" if shooting else &"pass")
+	animation_tree.active = false
+	animation_player.play(clip,0)
+	animation_player.seek(marker,true,true)
+	var skeleton := get_node("Rig").find_child("Skeleton3D",true,false) as Skeleton3D
+	var bone := skeleton.find_bone("mixamorig_RightToe_End")
+	var offset: Vector3 = get_parent().to_local(skeleton.to_global(skeleton.get_bone_global_pose(bone).origin))
+	end_presentation()
+	return offset
 
 func _install_aerial_actions() -> void:
 	var scene := load("res://assets/characters/shared/aerial_actions.glb") as PackedScene

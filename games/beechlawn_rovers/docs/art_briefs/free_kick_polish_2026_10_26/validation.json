@@ -1,0 +1,93 @@
+{
+  "backlog": {
+    "id": "BR-019",
+    "ordinal": 19,
+    "of": 27,
+    "status": "in progress",
+    "slice": "free-kick approach, live boot contact, reacting wall, aim and contextual shot variety"
+  },
+  "baseline_sha": "417cc9eafd4b7a91e498417c0a3021927fb7e31e",
+  "protected_existing_files": 775,
+  "protected_files_unchanged": true,
+  "tests": {
+    "planner_and_contact_both_teams_both_venues": "PASS",
+    "contact_styles": [
+      "standard",
+      "finesse",
+      "low"
+    ],
+    "other_10_regressions": "PASS; regressions.log",
+    "actual_window_close_both_11v11_venues_and_4_audio_loops": "PASS; shutdown.log",
+    "full_unskipped_match": {
+      "status": "PASS",
+      "host_seconds": 231.6,
+      "deadline_seconds": 240,
+      "match_seconds": 180,
+      "physics_ticks": 16505,
+      "shots": [
+        7,
+        7
+      ],
+      "contested_shots": [
+        4,
+        4
+      ],
+      "saves": [
+        2,
+        2
+      ],
+      "goals": [
+        1,
+        2
+      ],
+      "auto_skips": 0
+    },
+    "first_full_match_attempt": "180s host deadline at final cleanup; not counted as passing",
+    "python_capture_tool_checks": "PASS"
+  },
+  "native": {
+    "renderer": "Forward+",
+    "adapter": "llvmpipe LLVM 19.1.7 256bits",
+    "resolution": [
+      640,
+      360
+    ],
+    "physics_hz": 60,
+    "captured_fps": 10,
+    "baseline": "native_before",
+    "final_sequences": [
+      "native_wide",
+      "native_contact",
+      "native_aim"
+    ],
+    "boot_contact_m": [
+      0.122895479202271,
+      0.12283610552549
+    ],
+    "wall_hop_m": 0.201
+  },
+  "blender": {
+    "version": "4.3.2",
+    "clips": [
+      "AN_Beechlawn_WallBrace",
+      "AN_Beechlawn_WallJump"
+    ],
+    "fps": 60,
+    "rest_bones": 65,
+    "animation_only": true,
+    "root_authority": "Godot fixed physics"
+  },
+  "limits": [
+    "Not native Metal/M1 performance evidence",
+    "M1 input feel, appearance and sustained1080p60 acceptance open",
+    "Logic fixtures retain known cached resource exit diagnostics; actual normal close checks clean",
+    "BR019 broader aerial contest and strike polish remains open"
+  ],
+  "next": {
+    "id": "BR-025",
+    "ordinal": 25,
+    "of": 27,
+    "status": "in progress",
+    "acceptance": "Target-Mac free-kick feel, visuals and1080p60"
+  }
+}

@@ -1,0 +1,19 @@
+
+[smoke] full_presentation_match_soak.gd (timeout 240s)
+[replay] fixed render cadence 60 Hz; gameplay dt 1/60 s
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+SOAK_PROGRESS ticks=1800 remaining=152.633333333312 phase=0 elapsed=0.0 host_ms=54355
+SOAK_PROGRESS ticks=3600 remaining=138.666666666634 phase=0 elapsed=2.84999999999999 host_ms=68978
+SOAK_PROGRESS ticks=5400 remaining=122.283333333292 phase=0 elapsed=7.01666666666665 host_ms=87939
+SOAK_PROGRESS ticks=7200 remaining=101.34999999996 phase=0 elapsed=7.01666666666665 host_ms=108229
+SOAK_PROGRESS ticks=9000 remaining=82.6833333332945 phase=0 elapsed=7.01666666666665 host_ms=134699
+SOAK_PROGRESS ticks=10800 remaining=55.4833333332961 phase=0 elapsed=7.01666666666665 host_ms=167497
+SOAK_PROGRESS ticks=12600 remaining=30.8166666666308 phase=0 elapsed=7.01666666666665 host_ms=189405
+SOAK_PROGRESS ticks=14400 remaining=11.8499999999648 phase=2 elapsed=3.61666666666666 host_ms=212376
+SOAK_PROGRESS ticks=16200 remaining=0.33333333329796 phase=1 elapsed=4.13333333333332 host_ms=228431
+PRESENTATION_SOAK complete=true auto_skips=0 pose_data_bytes=22818132
+11v11 SOAK match_seconds=180.0 physics_ticks=16505 ball_travel_m=1592.0 shots=7/7 contested_shots=4/4 saves=2/2 shot_status={ "Shot fired": 8 } sampled_options={ &"Beechlawn Rovers": { &"none": 435, &"carry": 167, &"short_pass": 5, &"through_pass": 2, &"shoot": 48, &"cross": 3 }, &"Boardeaux": { &"none": 515, &"carry": 183, &"short_pass": 11, &"through_pass": 1, &"shoot": 2, &"cross": 3 } } sampled_shot_options=48/2 sampled_max_attack_x=53.8/54.0 closest_goal_xz_m=2.7/1.8 at_lateral=-2.7/1.8 goals=1/2 longest_stationary_samples_s=2
+AI_MATCH_METRICS {"ball_travel_m":1591.9562033494,"goals":[1,2],"kickoff":"Beechlawn Rovers","longest_stationary_s":2,"statuses":{"Shot fired":8},"teams":{"Beechlawn Rovers":{"action_decisions":{"cross":3,"shoot":6,"short_pass":9,"through_pass":2},"cancelled_contacts":0,"chest_controls":0,"completed_passes":8,"contested_shots":4,"controls":31,"cross_styles":{"driven_cross":2,"early_cross":1},"crosses":3,"final_third_entries":3,"headers":0,"intercepted_passes":7,"lofted_passes":0,"passes":16,"sampled_decisions":{"carry":167,"cross":3,"none":435,"shoot":48,"short_pass":5,"through_pass":2},"saves":2,"shot_styles":{"finesse":3,"power":2,"standard":1,"volley":1},"shots":7},"Boardeaux":{"action_decisions":{"cross":3,"shoot":3,"short_pass":15,"through_pass":1},"cancelled_contacts":3,"chest_controls":0,"completed_passes":13,"contested_shots":4,"controls":33,"cross_styles":{"early_cross":1,"lofted_cross":1,"standard":1},"crosses":3,"final_third_entries":4,"headers":2,"intercepted_passes":5,"lofted_passes":1,"passes":20,"sampled_decisions":{"carry":183,"cross":3,"none":515,"shoot":2,"short_pass":11,"through_pass":1},"saves":2,"shot_styles":{"finesse":1,"header":2,"power":2,"standard":2},"shots":7}},"variation":1,"weather":"sunny"}
+[passed] full_presentation_match_soak.gd (231.6s)

@@ -1,0 +1,11 @@
+{
+  "source_sha256": "5c61518d38f9bd0e9c4aa4e60e2d04719c6487b2dfc13f96e485af860739ebd4",
+  "rest_sha256": "a95f066729fdf0c2dd0aaca6b4cc0e4ee22ae29cce79b29397704e1049d4a055",
+  "bones": 65,
+  "fps": 60,
+  "root_motion": "None; Godot controls physical root",
+  "clips": {
+    "AN_Beechlawn_WallBrace": 1.0,
+    "AN_Beechlawn_WallJump": 0.5
+  }
+}

@@ -10,6 +10,24 @@ items, use the archived references and skill workflow in
 [`art_reference_implementation_plan.md`](art_reference_implementation_plan.md)
 and [`../references/README.md`](../references/README.md) before implementation.
 
+## Free-kick polish — 26 October 2026
+
+BR-019 (19/27, in progress), with BR-015/016/021: free kicks now have a fixed-tick
+approach, imported-pose stance alignment and a live boot-contact gate. Short
+free-kick passes approach as well; misses reset preparation without a forced
+impulse. Intended flight dots, terrain-relative goal aiming, distinct low/power/
+curl trajectories, execution error and keeper/lane-aware AI replace serial-only
+free-kick target choice. Existing penalty target variety remains separate.
+
+Original shared-rig brace/jump poses support a legal facing wall, attacking
+clearance and an open-side keeper position. The wall observes released flight
+before reacting; high strikes produce a bounded physical hop and low strikes
+do not trigger a blind jump. Head/body/kit/rest and existing motion assets are
+preserved. Evidence: [free-kick pass](art_briefs/free_kick_polish_2026_10_26/brief.md).
+The broader BR-019 item remains open for aerial contests/strike polish; next
+acceptance is BR-025 (25/27, in progress), native M1 free-kick feel/graphics and
+the combined-workload 1080p60 check.
+
 ## Recorded match audio — 26 October 2026
 
 BR-024 (24/27, in progress): twenty edited recorded effects replace the synthetic
@@ -909,6 +927,11 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
 ### P4 — Advanced football actions and feel
 
 - [ ] **BR-019 — Shooting and aerial actions**
+  - 2026-10-26 free-kick follow-up (19/27, in progress): real approach/contact,
+    trajectory aiming, distinct power/low/curl, contextual AI and reacting wall.
+    Original 60 Hz wall poses retain the shared rest. Both teams/venues have
+    live boot/miss/clearance/flight checks; native wide/contact/aim reviews
+    remain distinct from M1 acceptance. See `art_briefs/free_kick_polish_2026_10_26/`.
   - 2026-10-26 (19/27, in progress), v0.5.1: four left-foot strike add-ons,
     locked contextual boot choice, physics-time ground markers and unchanged
     live anatomical contact guards. Moving/first-time strikes, both-direction

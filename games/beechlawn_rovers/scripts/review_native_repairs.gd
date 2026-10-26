@@ -130,6 +130,10 @@ func _save(label: String) -> void:
 		"ball_action":str(game.ball.last_action),"ball_velocity":str(game.ball.linear_velocity),
 		"aerial_actor":str(review_actor.position) if is_instance_valid(review_actor) else "",
 		"player_velocity":str(game.player.velocity),"shot_contacts":shot_contacts.duplicate(true),"score":[game._home_score,game._away_score]})
+	if mode=="free_kick":
+		sequence.back()["taker_id"]=str(game.restart.taker.profile.player_id)
+		sequence.back()["approaching"]=game.restart._approaching
+		sequence.back()["wall"]=game.restart.wall.map(func(actor: FootballPlayer): return {"position":str(actor.position),"clip":str(actor.get_node("Visual")._active_clip)})
 	if mode.begins_with("skills"): sequence.back()["skill"] = skill_label
 	if mode.begins_with("stride_"):
 		sequence.back()["stride_case"]=stride_case
@@ -340,9 +344,16 @@ func _capture() -> void:
 			game.restart._shot_style = &"finesse"
 			camera.position = Vector3(20,2.8,9)
 			camera.look_at(Vector3(39,1.0,1));camera.fov=60
+			if str(options.get("free-kick-view","wide")) == "contact":
+				camera.position=game.restart.taker.position+Vector3(8.7,1.4,5)
+				camera.look_at(game.restart.taker.position+Vector3(.8,.75,0));camera.fov=18
 			game.ball.touched.connect(func(kind: StringName, _speed: float):
-				if kind==&"shot": shot_contacts.append({"tick":tick,"ball":str(game.ball.position)}))
-			game.restart.take(.8,true)
+				if kind==&"shot": shot_contacts.append({"tick":tick,"ball":str(game.ball.position),"toe_distance":game.restart.last_contact_distance,"style":str(game.ball.last_strike_style)}))
+			var modifier: String = {"finesse":"finesse_modifier","power":"power_modifier","low":"low_modifier"}.get(str(options.get("free-kick-style","standard")),"")
+			if modifier!="": Input.action_press(modifier)
+			if str(options.get("free-kick-view","wide"))!="prepare":
+				game.restart.take(.8,true)
+				if modifier!="": Input.action_release(modifier)
 		elif mode=="movement":
 			var actor: FootballPlayer=game.player
 			actor.position=Vector3.ZERO;actor.rotation.y=-PI/2
@@ -400,6 +411,12 @@ func _capture() -> void:
 	if mode.begins_with("attack_") and shot_contacts.is_empty():
 		push_error("Native attack fixture produced no physical AI shot contact")
 		quit(1);return
+	if mode=="free_kick":
+		if str(options.get("free-kick-view","wide"))=="prepare":
+			assert(shot_contacts.is_empty() and game.ball.freeze,"Aim review must not take the free kick")
+		else:
+			assert(shot_contacts.size()==1 and float(shot_contacts[0].toe_distance)<=.22,"Native free kick needs exactly one real boot contact")
+		for modifier in ["finesse_modifier","power_modifier","low_modifier"]: Input.action_release(modifier)
 	if mode.begins_with("keeper_") and keeper_contacts.is_empty():
 		push_error("Native keeper fixture produced no physical save/catch contact")
 		quit(1);return

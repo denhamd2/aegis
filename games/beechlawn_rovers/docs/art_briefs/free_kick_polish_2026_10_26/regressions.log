@@ -1,0 +1,106 @@
+
+[smoke] free_kick_planner_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+FREE_KICK_PLANNER PASS: legal facing/clearance, shared original brace, visible-keeper choice, delivery fallback, low/power/curl, discrete flight and bounded placement variation
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+[passed] free_kick_planner_smoke.gd (13.7s)
+
+[smoke] free_kick_contact_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+FREE_KICK_CONTACT Beechlawn Rovers standard toe_m=0.12289547920227 hop_m=0.20110050303607
+FREE_KICK_CONTACT Beechlawn Rovers finesse toe_m=0.12289547920227 hop_m=0.20110475453558
+FREE_KICK_CONTACT Beechlawn Rovers low toe_m=0.12289547920227 hop_m=0.00109598172257
+FREE_KICK_CONTACT Boardeaux standard toe_m=0.12277679145336 hop_m=0.20100111575832
+FREE_KICK_CONTACT Boardeaux finesse toe_m=0.12277679145336 hop_m=0.20101963222962
+FREE_KICK_CONTACT Boardeaux low toe_m=0.12277679145336 hop_m=0.00100186568067
+FREE_KICK_CONTACT PASS: both teams, three strikes, fixed ball, >1m approach, <=22cm anatomical contact, single impulses, reacting wall, genuine misses and cleanup
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 3 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+[passed] free_kick_contact_smoke.gd (26.3s)
+
+[smoke] full_match_restarts_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+RESTARTS whole-ball ownership, overhead release, corners, goal kicks, free-kick contact and paused preparation failures=0
+[passed] full_match_restarts_smoke.gd (18.5s)
+
+[smoke] discipline_rules_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+DISCIPLINE free kicks, penalties, yellow/second yellow/red, keeper replacement, direct throw goals failures=0
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 3 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+[passed] discipline_rules_smoke.gd (16.5s)
+
+[smoke] left_strike_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+LEFT_STRIKE_IMPORT pass max_mirrored_joint_error_m=0.00025292483042
+LEFT_STRIKE_IMPORT shot max_mirrored_joint_error_m=0.00031635581399
+LEFT_STRIKE_IMPORT volley max_mirrored_joint_error_m=0.00031635581399
+LEFT_STRIKE_IMPORT half_volley max_mirrored_joint_error_m=0.00031635581399
+LEFT_STRIKES PASS: full-clip symmetry, marker timing, independent actions and contextual selection
+[passed] left_strike_smoke.gd (12.0s)
+
+[smoke] advanced_shots_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+FINESSE_CURVE side=1.0 deviation=(-0.031696, -0.006917, -0.277114)
+FINESSE_CURVE side=-1.0 deviation=(0.031521, -0.036073, -0.27971)
+ADVANCED_SHOTS failures=0
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+[passed] advanced_shots_smoke.gd (12.6s)
+
+[smoke] recorded_audio_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=rovers_arena ball=ucl_26_27_league
+RECORDED_AUDIO PASS: 20 recorded clips, two venue beds, event variants/cooldowns, own-goal/replay isolation, priority stealing, chant spacing, ducking, weather, full-time and clean teardown
+[passed] recorded_audio_smoke.gd (18.7s)
+
+[smoke] replay_results_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+BEECHLAWN_MENU_READY
+REPLAY_RESULTS failures=0
+[passed] replay_results_smoke.gd (30.4s)
+
+[smoke] shared_gait_integrity_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+GAIT_INTEGRITY authored/preserved leg/root tracks=65
+[passed] shared_gait_integrity_smoke.gd (11.9s)
+
+[smoke] shared_roster_resources_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+Shared fabric imported mask: ink=0.60000002384186 cloth=0.78823530673981 sock=0.8941176533699 normal_bytes_with_mips=16777215 role_roughness_bytes_with_mips=1398101
+Shared roster resources PASS: kit edits propagate, opposing kit isolated, playback independent
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+[passed] shared_roster_resources_smoke.gd (10.8s)

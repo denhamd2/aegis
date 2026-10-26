@@ -1,0 +1,24 @@
+
+[smoke] free_kick_planner_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=rovers_arena ball=ucl_26_27_league
+FREE_KICK_PLANNER PASS: legal facing/clearance, shared original brace, visible-keeper choice, delivery fallback, low/power/curl, discrete flight and bounded placement variation
+[passed] free_kick_planner_smoke.gd (30.7s)
+
+[smoke] free_kick_contact_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=rovers_arena ball=ucl_26_27_league
+FREE_KICK_CONTACT Beechlawn Rovers standard toe_m=0.12283610552549 hop_m=0.20099994540215
+FREE_KICK_CONTACT Beechlawn Rovers finesse toe_m=0.12283610552549 hop_m=0.20100003480911
+FREE_KICK_CONTACT Beechlawn Rovers low toe_m=0.12283610552549 hop_m=0.00099976279307
+FREE_KICK_CONTACT Boardeaux standard toe_m=0.12283610552549 hop_m=0.20100000500679
+FREE_KICK_CONTACT Boardeaux finesse toe_m=0.12283610552549 hop_m=0.20099997520447
+FREE_KICK_CONTACT Boardeaux low toe_m=0.12283610552549 hop_m=0.00100000924431
+FREE_KICK_CONTACT PASS: both teams, three strikes, fixed ball, >1m approach, <=22cm anatomical contact, single impulses, reacting wall, genuine misses and cleanup
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 2 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+[passed] free_kick_contact_smoke.gd (41.0s)

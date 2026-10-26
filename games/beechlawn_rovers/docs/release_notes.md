@@ -1,3 +1,20 @@
+# Beechlawn Rovers 27 — v0.5.3
+
+Free kicks now include an animated approach, a stance aligned to the actual
+strike pose and live boot-to-ball contact. A missed contact resets preparation
+without a substitute impulse. The goal target and dotted intended trajectory
+help aiming; low shots stay low, powerful shots retain pace and curled shots
+use actual side spin. AI considers visible keeper position and defender lanes.
+
+A facing wall braces, leaves legal attacking clearance and reacts to released
+flight with a small physical hop for elevated shots. The keeper covers the open
+side. Original wall poses share the existing rig; bodies, likenesses, kits and
+base motions are preserved. Existing throw-in, corner, goal-kick and penalty
+checks remain covered. Universal Apple Silicon/Intel Mac build; target-Mac
+feel/appearance and sustained 1080p60 remain acceptance checks.
+
+---
+
 # Beechlawn Rovers 27 — v0.5.2
 
 Recorded football audio replaces the synthesized match effects: boot contact,

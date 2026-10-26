@@ -1,0 +1,943 @@
+{
+  "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+  "aerial_events": [],
+  "api": "1.4.305",
+  "away_players": 11,
+  "camera_position": "(20.0, 2.8, 9.0)",
+  "display_server": "X11",
+  "fixture_setup": "free_kick",
+  "fov_degrees": 60.0,
+  "frames": [
+    {
+      "aerial_actor": "",
+      "approaching": false,
+      "ball": "(28.0, 0.138794, 3.0)",
+      "ball_action": "none",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_000.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "free_kick",
+      "player": "(26.0, 0.013794, 3.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "taker_id": "derek_mitchell",
+      "tick": 6,
+      "wall": [
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.53302, -0.017955, 1.553788)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.56725, -0.01937, 2.152811)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.60148, -0.020681, 2.751833)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.63571, -0.021864, 3.350856)"
+        }
+      ]
+    },
+    {
+      "aerial_actor": "",
+      "approaching": false,
+      "ball": "(28.0, 0.138794, 3.0)",
+      "ball_action": "none",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_001.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "free_kick",
+      "player": "(26.0, 0.013794, 3.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "taker_id": "derek_mitchell",
+      "tick": 12,
+      "wall": [
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.53302, -0.017955, 1.553788)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.56725, -0.01937, 2.152811)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.60148, -0.020681, 2.751833)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.63571, -0.021864, 3.350856)"
+        }
+      ]
+    },
+    {
+      "aerial_actor": "",
+      "approaching": false,
+      "ball": "(28.0, 0.138794, 3.0)",
+      "ball_action": "none",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_002.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "free_kick",
+      "player": "(26.0, 0.013794, 3.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "taker_id": "derek_mitchell",
+      "tick": 18,
+      "wall": [
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.53302, -0.017955, 1.553788)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.56725, -0.01937, 2.152811)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.60148, -0.020681, 2.751833)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.63571, -0.021864, 3.350856)"
+        }
+      ]
+    },
+    {
+      "aerial_actor": "",
+      "approaching": false,
+      "ball": "(28.0, 0.138794, 3.0)",
+      "ball_action": "none",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_003.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "free_kick",
+      "player": "(26.0, 0.013794, 3.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "taker_id": "derek_mitchell",
+      "tick": 24,
+      "wall": [
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.53302, -0.017955, 1.553788)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.56725, -0.01937, 2.152811)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.60148, -0.020681, 2.751833)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.63571, -0.021864, 3.350856)"
+        }
+      ]
+    },
+    {
+      "aerial_actor": "",
+      "approaching": false,
+      "ball": "(28.0, 0.138794, 3.0)",
+      "ball_action": "none",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_004.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "free_kick",
+      "player": "(26.0, 0.013794, 3.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "taker_id": "derek_mitchell",
+      "tick": 30,
+      "wall": [
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.53302, -0.017955, 1.553788)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.56725, -0.01937, 2.152811)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.60148, -0.020681, 2.751833)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.63571, -0.021864, 3.350856)"
+        }
+      ]
+    },
+    {
+      "aerial_actor": "",
+      "approaching": false,
+      "ball": "(28.0, 0.138794, 3.0)",
+      "ball_action": "none",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_005.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "free_kick",
+      "player": "(26.0, 0.013794, 3.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "taker_id": "derek_mitchell",
+      "tick": 36,
+      "wall": [
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.53302, -0.017955, 1.553788)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.56725, -0.01937, 2.152811)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.60148, -0.020681, 2.751833)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.63571, -0.021864, 3.350856)"
+        }
+      ]
+    },
+    {
+      "aerial_actor": "",
+      "approaching": false,
+      "ball": "(28.0, 0.138794, 3.0)",
+      "ball_action": "none",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_006.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "free_kick",
+      "player": "(26.0, 0.013794, 3.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "taker_id": "derek_mitchell",
+      "tick": 42,
+      "wall": [
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.53302, -0.017955, 1.553788)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.56725, -0.01937, 2.152811)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.60148, -0.020681, 2.751833)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.63571, -0.021864, 3.350856)"
+        }
+      ]
+    },
+    {
+      "aerial_actor": "",
+      "approaching": false,
+      "ball": "(28.0, 0.138794, 3.0)",
+      "ball_action": "none",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_007.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "free_kick",
+      "player": "(26.0, 0.013794, 3.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "taker_id": "derek_mitchell",
+      "tick": 48,
+      "wall": [
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.53302, -0.017955, 1.553788)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.56725, -0.01937, 2.152811)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.60148, -0.020681, 2.751833)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.63571, -0.021864, 3.350856)"
+        }
+      ]
+    },
+    {
+      "aerial_actor": "",
+      "approaching": false,
+      "ball": "(28.0, 0.138794, 3.0)",
+      "ball_action": "none",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_008.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "free_kick",
+      "player": "(26.0, 0.013794, 3.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "taker_id": "derek_mitchell",
+      "tick": 54,
+      "wall": [
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.53302, -0.017955, 1.553788)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.56725, -0.01937, 2.152811)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.60148, -0.020681, 2.751833)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.63571, -0.021864, 3.350856)"
+        }
+      ]
+    },
+    {
+      "aerial_actor": "",
+      "approaching": false,
+      "ball": "(28.0, 0.138794, 3.0)",
+      "ball_action": "none",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_009.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "free_kick",
+      "player": "(26.0, 0.013794, 3.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "taker_id": "derek_mitchell",
+      "tick": 60,
+      "wall": [
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.53302, -0.017955, 1.553788)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.56725, -0.01937, 2.152811)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.60148, -0.020681, 2.751833)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.63571, -0.021864, 3.350856)"
+        }
+      ]
+    },
+    {
+      "aerial_actor": "",
+      "approaching": false,
+      "ball": "(28.0, 0.138794, 3.0)",
+      "ball_action": "none",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_010.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "free_kick",
+      "player": "(26.0, 0.013794, 3.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "taker_id": "derek_mitchell",
+      "tick": 66,
+      "wall": [
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.53302, -0.017955, 1.553788)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.56725, -0.01937, 2.152811)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.60148, -0.020681, 2.751833)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.63571, -0.021864, 3.350856)"
+        }
+      ]
+    },
+    {
+      "aerial_actor": "",
+      "approaching": false,
+      "ball": "(28.0, 0.138794, 3.0)",
+      "ball_action": "none",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_011.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "free_kick",
+      "player": "(26.0, 0.013794, 3.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "taker_id": "derek_mitchell",
+      "tick": 72,
+      "wall": [
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.53302, -0.017955, 1.553788)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.56725, -0.01937, 2.152811)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.60148, -0.020681, 2.751833)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.63571, -0.021864, 3.350856)"
+        }
+      ]
+    },
+    {
+      "aerial_actor": "",
+      "approaching": false,
+      "ball": "(28.0, 0.138794, 3.0)",
+      "ball_action": "none",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_012.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "free_kick",
+      "player": "(26.0, 0.013794, 3.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "taker_id": "derek_mitchell",
+      "tick": 78,
+      "wall": [
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.53302, -0.017955, 1.553788)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.56725, -0.01937, 2.152811)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.60148, -0.020681, 2.751833)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.63571, -0.021864, 3.350856)"
+        }
+      ]
+    },
+    {
+      "aerial_actor": "",
+      "approaching": false,
+      "ball": "(28.0, 0.138794, 3.0)",
+      "ball_action": "none",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_013.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "free_kick",
+      "player": "(26.0, 0.013794, 3.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "taker_id": "derek_mitchell",
+      "tick": 84,
+      "wall": [
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.53302, -0.017955, 1.553788)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.56725, -0.01937, 2.152811)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.60148, -0.020681, 2.751833)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.63571, -0.021864, 3.350856)"
+        }
+      ]
+    },
+    {
+      "aerial_actor": "",
+      "approaching": false,
+      "ball": "(28.0, 0.138794, 3.0)",
+      "ball_action": "none",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_014.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "free_kick",
+      "player": "(26.0, 0.013794, 3.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "taker_id": "derek_mitchell",
+      "tick": 90,
+      "wall": [
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.53302, -0.017955, 1.553788)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.56725, -0.01937, 2.152811)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.60148, -0.020681, 2.751833)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.63571, -0.021864, 3.350856)"
+        }
+      ]
+    },
+    {
+      "aerial_actor": "",
+      "approaching": false,
+      "ball": "(28.0, 0.138794, 3.0)",
+      "ball_action": "none",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_015.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "free_kick",
+      "player": "(26.0, 0.013794, 3.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "taker_id": "derek_mitchell",
+      "tick": 96,
+      "wall": [
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.53302, -0.017955, 1.553788)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.56725, -0.01937, 2.152811)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.60148, -0.020681, 2.751833)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.63571, -0.021864, 3.350856)"
+        }
+      ]
+    },
+    {
+      "aerial_actor": "",
+      "approaching": false,
+      "ball": "(28.0, 0.138794, 3.0)",
+      "ball_action": "none",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_016.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "free_kick",
+      "player": "(26.0, 0.013794, 3.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "taker_id": "derek_mitchell",
+      "tick": 102,
+      "wall": [
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.53302, -0.017955, 1.553788)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.56725, -0.01937, 2.152811)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.60148, -0.020681, 2.751833)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.63571, -0.021864, 3.350856)"
+        }
+      ]
+    },
+    {
+      "aerial_actor": "",
+      "approaching": false,
+      "ball": "(28.0, 0.138794, 3.0)",
+      "ball_action": "none",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_017.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "free_kick",
+      "player": "(26.0, 0.013794, 3.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "taker_id": "derek_mitchell",
+      "tick": 108,
+      "wall": [
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.53302, -0.017955, 1.553788)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.56725, -0.01937, 2.152811)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.60148, -0.020681, 2.751833)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.63571, -0.021864, 3.350856)"
+        }
+      ]
+    },
+    {
+      "aerial_actor": "",
+      "approaching": false,
+      "ball": "(28.0, 0.138794, 3.0)",
+      "ball_action": "none",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_018.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "free_kick",
+      "player": "(26.0, 0.013794, 3.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "taker_id": "derek_mitchell",
+      "tick": 114,
+      "wall": [
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.53302, -0.017955, 1.553788)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.56725, -0.01937, 2.152811)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.60148, -0.020681, 2.751833)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.63571, -0.021864, 3.350856)"
+        }
+      ]
+    },
+    {
+      "aerial_actor": "",
+      "approaching": false,
+      "ball": "(28.0, 0.138794, 3.0)",
+      "ball_action": "none",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_019.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "free_kick",
+      "player": "(26.0, 0.013794, 3.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "taker_id": "derek_mitchell",
+      "tick": 120,
+      "wall": [
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.53302, -0.017955, 1.553788)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.56725, -0.01937, 2.152811)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.60148, -0.020681, 2.751833)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.63571, -0.021864, 3.350856)"
+        }
+      ]
+    },
+    {
+      "aerial_actor": "",
+      "approaching": false,
+      "ball": "(28.0, 0.138794, 3.0)",
+      "ball_action": "none",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_020.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "free_kick",
+      "player": "(26.0, 0.013794, 3.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "taker_id": "derek_mitchell",
+      "tick": 126,
+      "wall": [
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.53302, -0.017955, 1.553788)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.56725, -0.01937, 2.152811)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.60148, -0.020681, 2.751833)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.63571, -0.021864, 3.350856)"
+        }
+      ]
+    },
+    {
+      "aerial_actor": "",
+      "approaching": false,
+      "ball": "(28.0, 0.138794, 3.0)",
+      "ball_action": "none",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_021.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "free_kick",
+      "player": "(26.0, 0.013794, 3.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "taker_id": "derek_mitchell",
+      "tick": 132,
+      "wall": [
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.53302, -0.017955, 1.553788)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.56725, -0.01937, 2.152811)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.60148, -0.020681, 2.751833)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.63571, -0.021864, 3.350856)"
+        }
+      ]
+    },
+    {
+      "aerial_actor": "",
+      "approaching": false,
+      "ball": "(28.0, 0.138794, 3.0)",
+      "ball_action": "none",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_022.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "free_kick",
+      "player": "(26.0, 0.013794, 3.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "taker_id": "derek_mitchell",
+      "tick": 138,
+      "wall": [
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.53302, -0.017955, 1.553788)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.56725, -0.01937, 2.152811)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.60148, -0.020681, 2.751833)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.63571, -0.021864, 3.350856)"
+        }
+      ]
+    },
+    {
+      "aerial_actor": "",
+      "approaching": false,
+      "ball": "(28.0, 0.138794, 3.0)",
+      "ball_action": "none",
+      "ball_velocity": "(0.0, 0.0, 0.0)",
+      "file": "frame_023.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "free_kick",
+      "player": "(26.0, 0.013794, 3.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "taker_id": "derek_mitchell",
+      "tick": 144,
+      "wall": [
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.53302, -0.017955, 1.553788)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.56725, -0.01937, 2.152811)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.60148, -0.020681, 2.751833)"
+        },
+        {
+          "clip": "AN_Beechlawn_WallBrace",
+          "position": "(37.63571, -0.021864, 3.350856)"
+        }
+      ]
+    }
+  ],
+  "godot": "4.6.3-stable (official)",
+  "graphics_profile": "balanced_60",
+  "home_players": 11,
+  "keeper_contacts": [],
+  "msaa_3d": 1,
+  "officials": 1,
+  "physics_steps_per_draw": 6,
+  "rendering_method": "forward_plus",
+  "requested_strike_foot": "right",
+  "resolution": [
+    640,
+    360
+  ],
+  "review_mode": "free_kick",
+  "scope": "Actual native Forward+ controllers and assets; accelerated simulated time, software GPU, no Mac performance claim.",
+  "sequence_fps": 10.0,
+  "shot_contacts": [],
+  "skill_events": [],
+  "vendor": "Unknown"
+}

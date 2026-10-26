@@ -95,6 +95,8 @@ def main():
     parser.add_argument('--venue', choices=['kilmore_drive','rovers_arena'], default='kilmore_drive')
     parser.add_argument('--venue-view', choices=['broadcast','wide','detail','all','corners','exterior','pitch','ball'], default='broadcast')
     parser.add_argument('--ball', choices=['ucl_26_27_league','worn_sunday_league'], default='ucl_26_27_league')
+    parser.add_argument('--free-kick-style', choices=['standard','finesse','power','low'], default='standard')
+    parser.add_argument('--free-kick-view', choices=['wide','contact','prepare'], default='wide')
     parser.add_argument('--graphics', choices=['balanced_60','custom'], default='balanced_60', help='Explicit graphics profile for repeatable native evidence')
     parser.add_argument('--weather', choices=['sunny','cloudy','rain','mist'], default='sunny')
     parser.add_argument('--project', type=Path, default=PROJECT, help='Explicit isolated football snapshot for before/after review')
@@ -177,6 +179,7 @@ def main():
             command += ['--venue='+args.venue,'--venue-view='+args.venue_view,'--ablation='+args.ablation]
             command += ['--weather='+args.weather,'--graphics='+args.graphics]
             command += ['--ball='+args.ball]
+            command += ['--free-kick-style='+args.free_kick_style,'--free-kick-view='+args.free_kick_view]
             command += ['--expression='+args.expression]
             if args.pose and not args.match:
                 command += ['--pose='+args.pose,'--frame='+str(args.frame)]

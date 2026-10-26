@@ -158,8 +158,12 @@ actual boot/head reach. Finesse uses bounded spin-driven force in the air.
 
 See [advanced-shot evidence](docs/art_briefs/advanced_shots_2026_10_23/brief.md)
 and the [earlier aerial pass](docs/art_briefs/aerial_play_2026_10_22/brief.md).
-Dedicated goalkeeper high claims, left-foot strike variants, richer aerial
-contests, action/foot-plant polish and M1 play-feel/performance remain open.
+Free kicks now use an approach into live boot contact, a braced reacting wall
+and a dotted intended-flight guide. Arrow keys move the goal target; the same
+Z/X/V modifiers select curl, power and low shots. AI considers keeper position
+and defender lanes. See the [free-kick review](docs/art_briefs/free_kick_polish_2026_10_26/brief.md).
+Left-foot strikes have shipped. Dedicated goalkeeper high claims, richer aerial
+contests, further action/foot-plant polish and M1 play-feel/performance remain open.
 
 ### Match ball
 

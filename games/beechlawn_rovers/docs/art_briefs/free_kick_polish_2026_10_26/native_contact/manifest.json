@@ -1,0 +1,53 @@
+{
+  "result": "PASS",
+  "captures": [
+    {
+      "image": "match_broadcast.png",
+      "report": "match_broadcast.json",
+      "sha256": "bbbb3b44a90ff8c717550759490295649fb7120234f3146bf5c19aebb318266c",
+      "process_cleanup": "normal",
+      "capture_seconds": 135.91,
+      "command": [
+        "/usr/local/bin/godot",
+        "--path",
+        "/workspace/aegis-checkout/games/beechlawn_rovers",
+        "--rendering-method",
+        "forward_plus",
+        "--resolution",
+        "640x360",
+        "--fixed-fps",
+        "60",
+        "--disable-vsync",
+        "--audio-driver",
+        "Dummy",
+        "--display-driver",
+        "x11",
+        "--rendering-driver",
+        "vulkan",
+        "--script",
+        "res://scripts/review_native_repairs.gd",
+        "--",
+        "--capture-dir=/tmp/free-kick-final-contact",
+        "--player=match",
+        "--view=broadcast",
+        "--lighting=match",
+        "--sky=match",
+        "--clean=1",
+        "--setup-preview=0",
+        "--venue=rovers_arena",
+        "--venue-view=broadcast",
+        "--ablation=none",
+        "--weather=sunny",
+        "--graphics=balanced_60",
+        "--ball=ucl_26_27_league",
+        "--free-kick-style=finesse",
+        "--free-kick-view=contact",
+        "--expression=neutral",
+        "--review-mode=free_kick",
+        "--receive-baseline=0"
+      ]
+    }
+  ],
+  "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+  "scope": "Forward+ appearance stills; software Vulkan does not measure Mac performance."
+}

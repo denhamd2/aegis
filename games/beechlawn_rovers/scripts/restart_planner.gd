@@ -4,7 +4,10 @@ static func plan(taker: FootballPlayer, teammates: Array, opponents: Array,
 		kind: String, spot: Vector3, serial: int) -> Dictionary:
 	var goal := Vector3(taker.attack_sign*52.5,0,0)
 	var range_to_goal := Vector2(goal.x-spot.x, spot.z).length()
-	if kind == "PENALTY" or (kind == "FREE KICK" and range_to_goal < 30 and absf(spot.z) < 20):
+	if kind == "FREE KICK":
+		var direct := FootballFreeKickPlanner.choose(taker,opponents,spot,serial)
+		if not direct.is_empty(): return direct
+	if kind == "PENALTY":
 		var variant := posmod(serial + roundi(absf(spot.x)*.7+absf(spot.z)*1.3), 7)
 		var widths := [-2.8,2.7,-3.3,3.45,1.7,-2.2,3.9]
 		var heights := [.35,1.65,2.15,2.8,.85,1.9,1.3]
