@@ -35,6 +35,7 @@ var _reaction_gain := -12.0
 var _last_event_serial := 0
 var _stadium := false
 var _ended := false
+var _quitting := false
 var event_count := 0
 var crowd_event_count := 0
 var chant_count := 0
@@ -42,6 +43,8 @@ var last_cue := ""
 var last_reaction := ""
 
 func _ready() -> void:
+	get_tree().auto_accept_quit = false
+	get_tree().root.close_requested.connect(request_quit)
 	for name in ["Music", "Match", "UI"]:
 		if AudioServer.get_bus_index(name) < 0:
 			AudioServer.add_bus()
@@ -89,10 +92,12 @@ func _loop_stream(name: String) -> AudioStream:
 	return stream
 
 func set_music(enabled: bool) -> void:
+	if enabled and _quitting: return
 	if enabled and not music.playing: music.play()
 	elif not enabled: music.stop()
 
 func bind_match(match_scene: Node3D, events: FootballMatchEvents) -> void:
+	if _quitting: return
 	stop_match()
 	game = match_scene; _events = events
 	_step_times.clear(); _cooldowns.clear(); _variants.clear()
@@ -114,7 +119,27 @@ func stop_match() -> void:
 	crowd.stop(); rain.stop(); reaction.stop(); chant.stop()
 	for voice in voices: voice.stop()
 
+func _exit_tree() -> void:
+	_stop_all_audio()
+
+func _stop_all_audio() -> void:
+	stop_match()
+	music.stop()
+	for player in ui_voices: player.stop()
+
+func request_quit() -> void:
+	if _quitting: return
+	_quitting = true
+	set_process(false)
+	_stop_all_audio()
+	# Godot #76745: Ogg cleanup needs audio mixing AND subsequent main-thread
+	# AudioServer updates. Waiting inside _exit_tree is too late. Only normal
+	# app-close requests take this short drain; match/menu transitions do not.
+	await get_tree().create_timer(.10, true, false, true).timeout
+	get_tree().quit()
+
 func play_ui() -> void:
+	if _quitting: return
 	for player in ui_voices:
 		if not player.playing: player.play(); return
 
@@ -125,6 +150,7 @@ func _variant(name: String) -> String:
 	return name if index % 2 == 0 else name + "_alt"
 
 func sound(name: String, at: Vector3, volume := 0.0) -> bool:
+	if _quitting: return false
 	if not streams.has(name): return false
 	var family := name.trim_suffix("_alt")
 	if _clock < float(_cooldowns.get(family, -1.0)): return false
@@ -173,7 +199,7 @@ func _replaying() -> bool:
 	return is_instance_valid(game) and game.presentation != null and game.presentation.replaying()
 
 func _on_event(event: FootballMatchEvent) -> void:
-	if not is_instance_valid(game) or _replaying() or _ended: return
+	if not is_instance_valid(game) or _replaying() or _ended or _quitting: return
 	if event.serial > 0 and event.serial <= _last_event_serial: return
 	_last_event_serial = event.serial
 	match event.kind:

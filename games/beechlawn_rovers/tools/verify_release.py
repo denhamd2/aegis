@@ -45,12 +45,17 @@ with zipfile.ZipFile(root / 'mac/Beechlawn-Rovers-Mac.zip') as archive:
         print('Exported pack identity PASS:',json.dumps(actual))
         for venue in ['kilmore_drive', 'rovers_arena']:
             for ball in ['ucl_26_27_league', 'worn_sunday_league']:
+                # Use the application's window-close path so the AudioServer
+                # gets main-thread updates to drain Ogg playback (Godot #76745).
+                # Abrupt --quit-after tears down after the final server update.
+                startup_probe = Path(__file__).resolve().parents[1]/'tests/package_startup_probe.gd'
                 startup = subprocess.run(['godot','--headless','--main-pack',str(path),
-                    'res://scenes/match_11v11.tscn','--quit-after','3','--','--venue='+venue,'--ball='+ball],
+                    '--script',str(startup_probe),'--','--venue='+venue,'--ball='+ball],
                     capture_output=True,text=True,timeout=45)
                 output = startup.stdout+startup.stderr
                 assert startup.returncode == 0 and 'ERROR:' not in output, output
                 assert 'BEECHLAWN_MATCH_READY actors=22 officials=1 venue='+venue+' ball='+ball in output, output
+                assert 'BEECHLAWN_PACKAGE_STARTUP_CLOSE venue='+venue in output, output
                 print('Packaged match startup PASS:', venue, ball, '(22 players + referee)')
         # Validate the new resources through the actual pack, including JSON,
         # signed EXRs, the supporter MIT license and transparent tifo texture.

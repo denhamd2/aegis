@@ -47,5 +47,23 @@
     "Minimal native 3D listener is an AudioServer signal check, not a full-match image/performance test",
     "Existing goal-net/wet-weather probes report resource-in-use-at-exit diagnostics; their functional assertions pass",
     "M1 1080p60 and input/audio latency remain hardware-only gates"
-  ]
+  ],
+  "shutdown": {
+    "result": "PASS",
+    "engine_issue": "https://github.com/godotengine/godot/issues/76745",
+    "minimal_loops": 12,
+    "modes": [
+      "park",
+      "stadium",
+      "rain",
+      "music"
+    ],
+    "actual_11v11_venues": [
+      "kilmore_drive",
+      "rovers_arena"
+    ],
+    "normal_close_drain_ms": 100,
+    "package_startup": "Actual exported match; normal application window close; no new error suppression",
+    "scope": "Forced CLI --quit-after can still expose upstream Ogg teardown diagnostic; normal window-close path is covered."
+  }
 }

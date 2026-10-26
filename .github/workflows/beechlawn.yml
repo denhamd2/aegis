@@ -54,6 +54,7 @@ jobs:
           print('Game and Blender source trees exactly match validated commit',source)
           PYCODE
           timeout --kill-after=5s 180s godot --headless --editor --path games/beechlawn_rovers --import
+          python3 games/beechlawn_rovers/tools/test_audio_shutdown.py
           python3 games/beechlawn_rovers/tools/test_arena_seating_alignment.py
           python3 games/beechlawn_rovers/tools/run_smoke_tests.py graphics_budget_smoke.gd frame_profiler_smoke.gd supporter_crowd_smoke.gd stadium_presentation_smoke.gd pitch_audio_smoke.gd recorded_audio_smoke.gd left_strike_smoke.gd ai_attack_choice_smoke.gd
           python3 games/beechlawn_rovers/tools/run_smoke_tests.py moving_receive_smoke.gd contextual_receive_smoke.gd receive_edge_cases_smoke.gd receive_layer_physics_smoke.gd first_time_pass_timing_smoke.gd first_time_shot_smoke.gd
@@ -65,6 +66,7 @@ jobs:
           python3 games/beechlawn_rovers/tools/test_smoke_monitor.py
           python3 games/beechlawn_rovers/tools/test_capture_native.py
           timeout --kill-after=5s 180s godot --headless --editor --path games/beechlawn_rovers --import
+          python3 games/beechlawn_rovers/tools/test_audio_shutdown.py
           python3 games/beechlawn_rovers/tools/test_arena_seating_alignment.py
           python3 games/beechlawn_rovers/tools/run_smoke_tests.py graphics_budget_smoke.gd frame_profiler_smoke.gd supporter_crowd_smoke.gd stadium_presentation_smoke.gd pitch_audio_smoke.gd recorded_audio_smoke.gd left_strike_smoke.gd ai_attack_choice_smoke.gd
           python3 games/beechlawn_rovers/tools/run_smoke_tests.py moving_receive_smoke.gd contextual_receive_smoke.gd receive_edge_cases_smoke.gd receive_layer_physics_smoke.gd first_time_pass_timing_smoke.gd first_time_shot_smoke.gd

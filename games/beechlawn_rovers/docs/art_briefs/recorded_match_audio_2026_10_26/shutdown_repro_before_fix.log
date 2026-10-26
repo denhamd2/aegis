@@ -1,0 +1,22 @@
+Loading resource: res://assets/audio/stadium_chant.ogg
+Loading resource: res://.godot/imported/stadium_chant.ogg-52d79fa58dc097a2afba56dba3e9ac99.oggvorbisstr
+Loading resource: res://assets/audio/park_goal.ogg
+Loading resource: res://.godot/imported/park_goal.ogg-e9c8e86453195607e5395fdb1ce2f451.oggvorbisstr
+Loading resource: res://assets/audio/park_reaction.ogg
+Loading resource: res://.godot/imported/park_reaction.ogg-33ba49b98a969fc310a9170027c0e003.oggvorbisstr
+AUDIO_SHUTDOWN probe=park
+XR: Clearing primary interface
+XR: Removed interface "Native mobile"
+XR: Removed interface "OpenXR"
+Leaked instance: OggPacketSequence:9223372080190326325 - Reference count: 3
+Leaked instance: AudioStreamOggVorbis:9223372081515726414 - Reference count: 1
+Leaked instance: AudioStreamPlaybackOggVorbis:9223372082404918907 - Reference count: 1
+Leaked instance: OggPacketSequencePlayback:9223372082421696126 - Reference count: 1
+Hint: Leaked instances typically happen when nodes are removed from the scene tree (with `remove_child()`) but not freed (with `free()` or `queue_free()`).
+Resource still in use: res://assets/audio/park_bed.ogg::OggPacketSequence_yxrjc (OggPacketSequence)
+Orphan StringName: Match (static: 0, total: 1)
+StringName: 1 unclaimed string names at exit.
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 1 resources still in use at exit.
+   at: clear (core/io/resource.cpp:805)

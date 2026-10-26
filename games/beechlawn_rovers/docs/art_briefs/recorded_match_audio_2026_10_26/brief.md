@@ -58,6 +58,25 @@ start stadium chants. Full time has a distinct whistle; menu return stops all
 match layers and disconnects the old event source. Replayed contacts cannot
 trigger duplicate live reactions.
 
+## Shutdown regression
+
+The initial package check rejected an Ogg playback/packet-sequence leak on
+immediate CLI exit, matching [Godot issue #76745](https://github.com/godotengine/godot/issues/76745).
+`tools/test_audio_shutdown.py park` reproduced it without a match or event
+connection: a playing autoload crowd loop was sufficient. Merely stopping,
+clearing the stream or sleeping at tree exit did not reliably fix it. The engine
+queues audio-thread deletion and frees it on a later main-thread server update;
+tree teardown happens after the final such update. Normal window close now
+stops audio, rejects new cues, and gives both threads 100 ms of normal processing
+before quitting. No blocking delay was added to gameplay or menu transitions.
+
+The strict no-leak probe covers park, stadium, rain and music; the source run
+repeats each three times. Both actual venue/ball startups and the exported PCK
+checks use that same window-close path and retain strict error rejection.
+Abrupt CLI `--quit-after` can still expose the upstream teardown warning; it is
+not used as a substitute for the application's close behavior. There is no new
+error suppression in the package checks.
+
 ## Verification and limits
 
 - `bank_validation.json`: source/shipped hashes, finite unclipped decodes and
