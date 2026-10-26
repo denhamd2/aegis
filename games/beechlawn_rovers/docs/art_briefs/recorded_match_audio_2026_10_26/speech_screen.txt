@@ -1,0 +1,10 @@
+Local faster-whisper tiny.en, CPU int8; VAD enabled. Empty results are not proof of no spoken/music content.
+chant []
+crowd []
+goal []
+park []
+net []
+kick []
+kick_alt []
+whistle []
+rain []

@@ -1,3 +1,23 @@
+# Beechlawn Rovers 27 — v0.5.2
+
+Recorded football audio replaces the synthesized match effects: boot contact,
+grass steps, referee whistles, net/post Foley and rain. Kilmore Drive has quiet
+park ambience and small-group applause; Rovers Arena has a stadium murmur,
+event-driven reactions and occasional chants. Goals, saves, posts and missed
+chances receive distinct levels and timing. Whistles duck crowd layers, replays
+cannot retrigger live incidents, and full time has its own whistle.
+
+The selected Cool Rock music remains in menus and the intro. Options → Audio
+Credits now scrolls through the recording credits and licenses. Music/Match/UI
+volume controls remain independent. The edited bank adds about 2.5 MB.
+
+Two-venue event checks, real native AudioServer output/mute checks and an
+unskipped complete match pass. Listening balance on the target M1 Mac remains
+an acceptance check, alongside sustained 1080p60. Universal Apple Silicon/Intel
+Mac release; existing gameplay, player artwork and stadium content are retained.
+
+---
+
 # Beechlawn Rovers 27 — v0.5.1
 
 Players now choose a left-foot pass, shot, volley or half-volley when the ball

@@ -1,0 +1,8 @@
+
+[smoke] recorded_audio_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=rovers_arena ball=ucl_26_27_league
+RECORDED_AUDIO PASS: 20 recorded clips, two venue beds, event variants/cooldowns, own-goal/replay isolation, priority stealing, chant spacing, ducking, weather, full-time and clean teardown
+[passed] recorded_audio_smoke.gd (15.2s)

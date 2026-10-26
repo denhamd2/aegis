@@ -1,0 +1,43 @@
+{
+  "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+  "audio_events": 8,
+  "chants": 0,
+  "crowd_events": 4,
+  "display_server": "X11",
+  "fps": 60,
+  "frames": 1500,
+  "listener": "Broadcast 31.6m; close-up 5.4m from 2.0 to 3.5s",
+  "mute_from_seconds": 24.1666666666667,
+  "rendering_method": "forward_plus",
+  "scope": "Native Forward+ / real AudioServer mix in a minimal 3D listening fixture; no subjective listening or M1 performance claim",
+  "venue": "kilmore_drive",
+  "mix": {
+    "duration": 25.016689342403627,
+    "bed": {
+      "rms": 0.0043437809209203124,
+      "peak": 0.015691451728343964
+    },
+    "kick": {
+      "rms": 0.016613490027664553,
+      "peak": 0.22219908237457275
+    },
+    "whistle": {
+      "rms": 0.019421877652250986,
+      "peak": 0.07163137197494507
+    },
+    "goal": {
+      "rms": 0.009324435284365655,
+      "peak": 0.29972657561302185
+    },
+    "chant_window": {
+      "rms": 0.006656421298199344,
+      "peak": 0.036981694400310516
+    },
+    "muted": {
+      "rms": 0.0,
+      "peak": 0.0
+    },
+    "peak": 0.4832707643508911,
+    "result": "PASS"
+  }
+}

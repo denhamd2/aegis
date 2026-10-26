@@ -1,0 +1,133 @@
+{
+  "result": "PASS",
+  "recorded_clips": [
+    {
+      "file": "kick.wav",
+      "peak": 0.459615,
+      "rms": 0.096356,
+      "seconds": 0.072
+    },
+    {
+      "file": "kick_alt.wav",
+      "peak": 0.459615,
+      "rms": 0.053406,
+      "seconds": 0.1162
+    },
+    {
+      "file": "pass.wav",
+      "peak": 0.339419,
+      "rms": 0.071633,
+      "seconds": 0.0719
+    },
+    {
+      "file": "pass_alt.wav",
+      "peak": 0.339419,
+      "rms": 0.041907,
+      "seconds": 0.1133
+    },
+    {
+      "file": "header.wav",
+      "peak": 0.296994,
+      "rms": 0.049386,
+      "seconds": 0.1154
+    },
+    {
+      "file": "catch.wav",
+      "peak": 0.318207,
+      "rms": 0.067284,
+      "seconds": 0.072
+    },
+    {
+      "file": "post.wav",
+      "peak": 0.424268,
+      "rms": 0.013674,
+      "seconds": 0.6251
+    },
+    {
+      "file": "net.wav",
+      "peak": 0.282838,
+      "rms": 0.020612,
+      "seconds": 0.4591
+    },
+    {
+      "file": "step.wav",
+      "peak": 0.169699,
+      "rms": 0.024993,
+      "seconds": 0.2355
+    },
+    {
+      "file": "step_alt.wav",
+      "peak": 0.169699,
+      "rms": 0.02788,
+      "seconds": 0.3514
+    },
+    {
+      "file": "whistle.wav",
+      "peak": 0.339419,
+      "rms": 0.17761,
+      "seconds": 0.3889
+    },
+    {
+      "file": "whistle_full.wav",
+      "peak": 0.339419,
+      "rms": 0.157339,
+      "seconds": 1.4868
+    },
+    {
+      "file": "stadium_bed.ogg",
+      "peak": 0.610884,
+      "rms": 0.088351,
+      "seconds": 21.0,
+      "loop_boundary_jump": 0.014535143040120602,
+      "local_derivative_limit": 0.09514325112104416
+    },
+    {
+      "file": "park_bed.ogg",
+      "peak": 0.421371,
+      "rms": 0.033937,
+      "seconds": 45.0,
+      "loop_boundary_jump": 0.013211890123784542,
+      "local_derivative_limit": 0.40260399878025055
+    },
+    {
+      "file": "rain_bed.ogg",
+      "peak": 0.540432,
+      "rms": 0.021657,
+      "seconds": 31.0,
+      "loop_boundary_jump": 0.008306644856929779,
+      "local_derivative_limit": 0.22962411493062973
+    },
+    {
+      "file": "stadium_goal.ogg",
+      "peak": 0.656342,
+      "rms": 0.096419,
+      "seconds": 15.8
+    },
+    {
+      "file": "stadium_reaction.ogg",
+      "peak": 0.535558,
+      "rms": 0.085231,
+      "seconds": 7.3
+    },
+    {
+      "file": "stadium_chant.ogg",
+      "peak": 0.515837,
+      "rms": 0.065142,
+      "seconds": 14.7
+    },
+    {
+      "file": "park_goal.ogg",
+      "peak": 0.470481,
+      "rms": 0.007468,
+      "seconds": 7.9671
+    },
+    {
+      "file": "park_reaction.ogg",
+      "peak": 0.342214,
+      "rms": 0.007119,
+      "seconds": 3.0
+    }
+  ],
+  "bytes": 2527653,
+  "scope": "Decoded source assets; runtime/import/mix separately checked"
+}

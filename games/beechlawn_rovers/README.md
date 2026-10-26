@@ -16,6 +16,10 @@ likeness/environment art and M1 performance acceptance remain in development.
 ## Current checkpoint
 
 - Fixed 60 Hz player and ball simulation.
+- Recorded match Foley, distinct park/stadium ambience and goal reactions,
+  intermittent stadium chants and recorded rain. Cool Rock accompanies menus
+  and the intro; saved Music/Match/UI levels and scrollable Audio Credits are
+  available in Options. Target-Mac listening approval remains open.
 - Camera-relative keyboard movement with acceleration, turning,
   sprint stamina and close-control modifier.
 - An independent regulation-size rigid-body ball, grounded dribble touches,

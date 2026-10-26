@@ -1,0 +1,17 @@
+
+[smoke] full_presentation_match_soak.gd (timeout 180s)
+[replay] fixed render cadence 60 Hz; gameplay dt 1/60 s
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+SOAK_PROGRESS ticks=1800 remaining=156.116666666648 phase=0 elapsed=0.0 host_ms=19457
+SOAK_PROGRESS ticks=3600 remaining=126.116666666625 phase=0 elapsed=0.0 host_ms=31956
+SOAK_PROGRESS ticks=5400 remaining=96.1166666666271 phase=0 elapsed=0.0 host_ms=45025
+SOAK_PROGRESS ticks=7200 remaining=73.933333333295 phase=2 elapsed=5.76666666666665 host_ms=56455
+SOAK_PROGRESS ticks=9000 remaining=47.2166666666299 phase=0 elapsed=7.01666666666665 host_ms=68644
+SOAK_PROGRESS ticks=10800 remaining=28.316666666631 phase=0 elapsed=7.01666666666665 host_ms=79442
+SOAK_PROGRESS ticks=12600 remaining=7.1499999999646 phase=2 elapsed=2.81666666666666 host_ms=92910
+PRESENTATION_SOAK complete=true auto_skips=0 pose_data_bytes=33861936
+11v11 SOAK match_seconds=180.0 physics_ticks=13522 ball_travel_m=1267.2 shots=3/2 contested_shots=3/1 saves=1/2 shot_status={ "Shot fired": 4 } sampled_options={ &"Beechlawn Rovers": { &"none": 235, &"carry": 172, &"short_pass": 5, &"through_pass": 2, &"shoot": 0, &"cross": 2 }, &"Boardeaux": { &"none": 406, &"carry": 294, &"short_pass": 8, &"through_pass": 1, &"shoot": 1 } } sampled_shot_options=0/1 sampled_max_attack_x=48.1/53.8 closest_goal_xz_m=3.7/1.0 at_lateral=-0.9/-0.8 goals=0/1 longest_stationary_samples_s=4
+AI_MATCH_METRICS {"ball_travel_m":1267.17628554246,"goals":[0,1],"kickoff":"Beechlawn Rovers","longest_stationary_s":4,"statuses":{"Shot fired":4},"teams":{"Beechlawn Rovers":{"action_decisions":{"cross":2,"shoot":2,"short_pass":14,"through_pass":2},"cancelled_contacts":1,"chest_controls":0,"completed_passes":8,"contested_shots":3,"controls":28,"cross_styles":{"early_cross":1,"lofted_cross":1},"crosses":2,"final_third_entries":4,"headers":1,"intercepted_passes":6,"lofted_passes":0,"passes":15,"sampled_decisions":{"carry":172,"cross":2,"none":235,"shoot":0,"short_pass":5,"through_pass":2},"saves":1,"shot_styles":{"finesse":2,"header":1},"shots":3},"Boardeaux":{"action_decisions":{"cross":1,"shoot":2,"short_pass":15,"through_pass":3},"cancelled_contacts":5,"chest_controls":0,"completed_passes":10,"contested_shots":1,"controls":31,"cross_styles":{"early_cross":1},"crosses":1,"final_third_entries":4,"headers":0,"intercepted_passes":5,"lofted_passes":1,"passes":18,"sampled_decisions":{"carry":294,"none":406,"shoot":1,"short_pass":8,"through_pass":1},"saves":2,"shot_styles":{"finesse":2},"shots":2}},"variation":1,"weather":"sunny"}
+[passed] full_presentation_match_soak.gd (101.8s)

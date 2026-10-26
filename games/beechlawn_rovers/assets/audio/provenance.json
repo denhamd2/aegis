@@ -3,73 +3,13 @@
     "author": "Beechlawn Rovers project",
     "license": "CC0-1.0",
     "source": "tools/synthesize_match_audio.py",
-    "description": "Original synthesized match Foley/ambience/UI retained pending the recorded-sound pass. Menu music has separate recorded-source provenance.",
+    "description": "Only the original UI click remains in the shipped bank.",
     "clips": [
-      {
-        "file": "pass.wav",
-        "seconds": 0.24,
-        "peak": 0.85,
-        "rms": 0.13940218588286502
-      },
-      {
-        "file": "kick.wav",
-        "seconds": 0.4,
-        "peak": 0.85,
-        "rms": 0.12390698523652277
-      },
-      {
-        "file": "header.wav",
-        "seconds": 0.2,
-        "peak": 0.6996360954716332,
-        "rms": 0.1259552891895549
-      },
-      {
-        "file": "post.wav",
-        "seconds": 0.8499773242630385,
-        "peak": 0.5855187245232163,
-        "rms": 0.059241447964980536
-      },
-      {
-        "file": "net.wav",
-        "seconds": 0.5499773242630386,
-        "peak": 0.25346589235765743,
-        "rms": 0.05194982308257266
-      },
-      {
-        "file": "step.wav",
-        "seconds": 0.12997732426303854,
-        "peak": 0.2786282808365044,
-        "rms": 0.048629408855139854
-      },
-      {
-        "file": "whistle.wav",
-        "seconds": 0.8,
-        "peak": 0.6092537033339844,
-        "rms": 0.3487284559532267
-      },
       {
         "file": "ui.wav",
         "seconds": 0.1,
         "peak": 0.177991605128453,
         "rms": 0.05189580666136423
-      },
-      {
-        "file": "crowd.wav",
-        "seconds": 8.0,
-        "peak": 0.09454470418061639,
-        "rms": 0.022832257512959035
-      },
-      {
-        "file": "cheer.wav",
-        "seconds": 2.6,
-        "peak": 0.3553945343895448,
-        "rms": 0.12142718510084312
-      },
-      {
-        "file": "rain.wav",
-        "seconds": 4.0,
-        "peak": 0.03999971598018586,
-        "rms": 0.023068145221884863
       }
     ]
   },
@@ -85,5 +25,538 @@
     "modifications": "Loudness normalized to -19 LUFS / -2 dBTP and transcoded to Ogg Vorbis; composition unchanged.",
     "shipped_sha256": "f47eeb2f469a66333134ca60f9854820ba6fb1298570f47b4ac2154b799b1f8b",
     "selected_by_owner": "2026-10-25"
-  }
+  },
+  "recorded_sources": [
+    {
+      "id": "kick",
+      "title": "Soccer Kick.wav",
+      "author": "musita182",
+      "page": "https://freesound.org/people/musita182/sounds/261267/",
+      "download": "https://cdn.freesound.org/previews/261/261267_2399519-hq.mp3",
+      "local_file": "kick.mp3",
+      "download_quality": "Freesound public HQ MP3 preview; not the original upload",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "source_sha256": "a3528faad72f837bf06a9bc2f52a5a38d0df2fcf6346c2af2f198bd1069a725c",
+      "modifications": "Excerpt, DC/rumble removal, EQ, fades, normalization and WAV/Ogg conversion; loops have a baked equal-power wrap. Header/catch are edited ball-contact Foley; post uses a recorded metal-pipe strike. See recorded_clips and tools/build_recorded_audio.py."
+    },
+    {
+      "id": "kick_alt",
+      "title": "Soccer Ball Kick",
+      "author": "bittermelonheart",
+      "page": "https://freesound.org/people/bittermelonheart/sounds/555042/",
+      "download": "https://cdn.freesound.org/previews/555/555042_11910076-hq.mp3",
+      "local_file": "kick_alt.mp3",
+      "download_quality": "Freesound public HQ MP3 preview; not the original upload",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "source_sha256": "7b5b6bd8f7567832c98f030e94783dba04108d74fef42fb24d5b2bbf1abb3949",
+      "modifications": "Excerpt, DC/rumble removal, EQ, fades, normalization and WAV/Ogg conversion; loops have a baked equal-power wrap. Header/catch are edited ball-contact Foley; post uses a recorded metal-pipe strike. See recorded_clips and tools/build_recorded_audio.py."
+    },
+    {
+      "id": "whistle",
+      "title": "Referee whistle sound.wav",
+      "author": "Rosa-Orenes256",
+      "page": "https://freesound.org/people/Rosa-Orenes256/sounds/538422/",
+      "download": "https://cdn.freesound.org/previews/538/538422_11966684-hq.mp3",
+      "local_file": "whistle.mp3",
+      "download_quality": "Freesound public HQ MP3 preview; not the original upload",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "source_sha256": "1bc56409d3439a16fd54bc8fa83affb7e2bc69519b15ac49979d924e895910bf",
+      "modifications": "Excerpt, DC/rumble removal, EQ, fades, normalization and WAV/Ogg conversion; loops have a baked equal-power wrap. Header/catch are edited ball-contact Foley; post uses a recorded metal-pipe strike. See recorded_clips and tools/build_recorded_audio.py."
+    },
+    {
+      "id": "net",
+      "title": "Soccer net",
+      "author": "Luisa_Sanchez",
+      "page": "https://freesound.org/people/Luisa_Sanchez/sounds/813410/",
+      "download": "https://cdn.freesound.org/previews/813/813410_17552599-hq.mp3",
+      "local_file": "net.mp3",
+      "download_quality": "Freesound public HQ MP3 preview; not the original upload",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "source_sha256": "094928cab68000fc6114b50a64e54a132260fb7b7656c5c12c435a4a2342edee",
+      "modifications": "Excerpt, DC/rumble removal, EQ, fades, normalization and WAV/Ogg conversion; loops have a baked equal-power wrap. Header/catch are edited ball-contact Foley; post uses a recorded metal-pipe strike. See recorded_clips and tools/build_recorded_audio.py."
+    },
+    {
+      "id": "post",
+      "title": "hit - metallic - metal pipe 01.wav",
+      "author": "Anthousai",
+      "page": "https://freesound.org/people/Anthousai/sounds/406556/",
+      "download": "https://cdn.freesound.org/previews/406/406556_5923045-hq.mp3",
+      "local_file": "post.mp3",
+      "download_quality": "Freesound public HQ MP3 preview; not the original upload",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "source_sha256": "957afdf79e188f9d1b0fd250955307f7ea9b88eafbf1a006f6e8884ca0a94627",
+      "modifications": "Excerpt, DC/rumble removal, EQ, fades, normalization and WAV/Ogg conversion; loops have a baked equal-power wrap. Header/catch are edited ball-contact Foley; post uses a recorded metal-pipe strike. See recorded_clips and tools/build_recorded_audio.py."
+    },
+    {
+      "id": "step",
+      "title": "Grassy Footstep 3",
+      "author": "Ashe Kirk / OwlStorm (Owlish Media)",
+      "page": "https://freesound.org/people/OwlStorm/sounds/151228/",
+      "download": "https://cdn.freesound.org/previews/151/151228_140737-hq.mp3",
+      "local_file": "step.mp3",
+      "download_quality": "Freesound public HQ MP3 preview; not the original upload",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "source_sha256": "7be3c57009a009e84cab4bd2e208c9990bd9cef131a056c53603abaad6790ec8",
+      "modifications": "Excerpt, DC/rumble removal, EQ, fades, normalization and WAV/Ogg conversion; loops have a baked equal-power wrap. Header/catch are edited ball-contact Foley; post uses a recorded metal-pipe strike. See recorded_clips and tools/build_recorded_audio.py."
+    },
+    {
+      "id": "step_two",
+      "title": "Grassy Footstep 1",
+      "author": "Ashe Kirk / OwlStorm (Owlish Media)",
+      "page": "https://freesound.org/people/OwlStorm/sounds/151230/",
+      "download": "https://cdn.freesound.org/previews/151/151230_140737-hq.mp3",
+      "local_file": "step_two.mp3",
+      "download_quality": "Freesound public HQ MP3 preview; not the original upload",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "source_sha256": "9263399b9406b9ff09769c43dad025407d228eff2151172ba443e89f40414345",
+      "modifications": "Excerpt, DC/rumble removal, EQ, fades, normalization and WAV/Ogg conversion; loops have a baked equal-power wrap. Header/catch are edited ball-contact Foley; post uses a recorded metal-pipe strike. See recorded_clips and tools/build_recorded_audio.py."
+    },
+    {
+      "id": "crowd",
+      "title": "Football stadium.wav",
+      "author": "BeeProductive",
+      "page": "https://freesound.org/people/BeeProductive/sounds/395592/",
+      "download": "https://cdn.freesound.org/previews/395/395592_4298084-hq.mp3",
+      "local_file": "crowd.mp3",
+      "download_quality": "Freesound public HQ MP3 preview; not the original upload",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "source_sha256": "76fed8896935c2b8164db7b13f3d9af925121cd6e44a6c9cb9ba1c12c9a4b5c3",
+      "modifications": "Excerpt, DC/rumble removal, EQ, fades, normalization and WAV/Ogg conversion; loops have a baked equal-power wrap. Header/catch are edited ball-contact Foley; post uses a recorded metal-pipe strike. See recorded_clips and tools/build_recorded_audio.py."
+    },
+    {
+      "id": "park",
+      "title": "Ambience - European city park - morning - birds - light wind.wav",
+      "author": "ValentinPetiteau",
+      "page": "https://freesound.org/people/ValentinPetiteau/sounds/563547/",
+      "download": "https://cdn.freesound.org/previews/563/563547_10443988-hq.mp3",
+      "local_file": "park.mp3",
+      "download_quality": "Freesound public HQ MP3 preview; not the original upload",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "source_sha256": "96784c0c48b8f9607268a7cf83167edcb343c602dff2015b188aff8d8497055f",
+      "modifications": "Excerpt, DC/rumble removal, EQ, fades, normalization and WAV/Ogg conversion; loops have a baked equal-power wrap. Header/catch are edited ball-contact Foley; post uses a recorded metal-pipe strike. See recorded_clips and tools/build_recorded_audio.py."
+    },
+    {
+      "id": "rain",
+      "title": "Gentle rain",
+      "author": "SpinOpel",
+      "page": "https://freesound.org/people/SpinOpel/sounds/772244/",
+      "download": "https://cdn.freesound.org/previews/772/772244_16303686-hq.mp3",
+      "local_file": "rain.mp3",
+      "download_quality": "Freesound public HQ MP3 preview; not the original upload",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "source_sha256": "81fd482eb901c7f388fa16c60856a14d717fa61374dbbe9404cf2eaa974a3416",
+      "modifications": "Excerpt, DC/rumble removal, EQ, fades, normalization and WAV/Ogg conversion; loops have a baked equal-power wrap. Header/catch are edited ball-contact Foley; post uses a recorded metal-pipe strike. See recorded_clips and tools/build_recorded_audio.py."
+    },
+    {
+      "id": "goal",
+      "title": "19 Football Crowd - Reaction To Goal.flac",
+      "author": "D.jones",
+      "page": "https://freesound.org/people/D.jones/sounds/528799/",
+      "download": "https://cdn.freesound.org/previews/528/528799_11431915-hq.mp3",
+      "local_file": "goal.mp3",
+      "download_quality": "Freesound public HQ MP3 preview; not the original upload",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "source_sha256": "06b918aa8986ac38bd5f189f0038b08f4194760f36801f5e588093cd842a6235",
+      "modifications": "Excerpt, DC/rumble removal, EQ, fades, normalization and WAV/Ogg conversion; loops have a baked equal-power wrap. Header/catch are edited ball-contact Foley; post uses a recorded metal-pipe strike. See recorded_clips and tools/build_recorded_audio.py."
+    },
+    {
+      "id": "chant",
+      "title": "Football-match_Chanting-crowd_Ambience .stereo.wav",
+      "author": "Dan_AudioFile",
+      "page": "https://freesound.org/people/Dan_AudioFile/sounds/654084/",
+      "download": "https://cdn.freesound.org/previews/654/654084_12932169-hq.mp3",
+      "local_file": "chant.mp3",
+      "download_quality": "Freesound public HQ MP3 preview; not the original upload",
+      "license": "CC-BY-4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "source_sha256": "5aae7b9a5261d54dee3e2b473ca0d17e4c135127e09fa0cf1b1ce42318517942",
+      "modifications": "Excerpt, DC/rumble removal, EQ, fades, normalization and WAV/Ogg conversion; loops have a baked equal-power wrap. Header/catch are edited ball-contact Foley; post uses a recorded metal-pipe strike. See recorded_clips and tools/build_recorded_audio.py."
+    },
+    {
+      "id": "applause",
+      "title": "Applause about 25-50 people #5",
+      "author": "Joseph SARDIN (BigSoundBank)",
+      "page": "https://bigsoundbank.com/applause-about-25-50-people-5-s0816.html",
+      "download": "https://bigsoundbank.com/UPLOAD/bwf-en/0816.wav",
+      "local_file": "applause.wav",
+      "download_quality": "Original public 48 kHz stereo WAV",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "source_sha256": "362c38c930a9639d62eab64008de584de79948a19e402bdaa1b796e3446f0a66",
+      "modifications": "Outdoor small-group applause excerpts, filtering, normalization, fades and Ogg conversion."
+    }
+  ],
+  "recorded_clips": [
+    {
+      "file": "kick.wav",
+      "source": "kick",
+      "excerpt_seconds": [
+        0,
+        null
+      ],
+      "mono": true,
+      "highpass_hz": 70,
+      "lowpass_hz": 11000,
+      "loop_wrap_seconds": 0,
+      "trim_to_contact": true,
+      "repeat": 1,
+      "seconds": 0.072,
+      "peak": 0.4596150815486908,
+      "rms": 0.09635647386312485,
+      "shipped_sha256": "24060d311667c316ecdeeb1dabc765be8243c9d75d2fd3688277b43f2869442e"
+    },
+    {
+      "file": "kick_alt.wav",
+      "source": "kick_alt",
+      "excerpt_seconds": [
+        0,
+        null
+      ],
+      "mono": true,
+      "highpass_hz": 70,
+      "lowpass_hz": 11000,
+      "loop_wrap_seconds": 0,
+      "trim_to_contact": true,
+      "repeat": 1,
+      "seconds": 0.11622916666666666,
+      "peak": 0.4596150815486908,
+      "rms": 0.05340571328997612,
+      "shipped_sha256": "d45a33e014bc07d6b635227559f8e844ba81f3db238b95aa3b3ec49629356c47"
+    },
+    {
+      "file": "pass.wav",
+      "source": "kick",
+      "excerpt_seconds": [
+        0,
+        null
+      ],
+      "mono": true,
+      "highpass_hz": 70,
+      "lowpass_hz": 5500,
+      "loop_wrap_seconds": 0,
+      "trim_to_contact": true,
+      "repeat": 1,
+      "seconds": 0.07189583333333334,
+      "peak": 0.33941900730133057,
+      "rms": 0.07163282483816147,
+      "shipped_sha256": "b19ebfcd1174fb559880cbb6c82f55751dec7d33eee96df4e3cc00cd3a00330c"
+    },
+    {
+      "file": "pass_alt.wav",
+      "source": "kick_alt",
+      "excerpt_seconds": [
+        0,
+        null
+      ],
+      "mono": true,
+      "highpass_hz": 70,
+      "lowpass_hz": 5500,
+      "loop_wrap_seconds": 0,
+      "trim_to_contact": true,
+      "repeat": 1,
+      "seconds": 0.11329166666666667,
+      "peak": 0.33941900730133057,
+      "rms": 0.04190672188997269,
+      "shipped_sha256": "72fecfa6269523471cbe8a93c0a0d83718945c46d2ec8eba6c4c226a8c891949"
+    },
+    {
+      "file": "header.wav",
+      "source": "kick_alt",
+      "excerpt_seconds": [
+        0,
+        null
+      ],
+      "mono": true,
+      "highpass_hz": 70,
+      "lowpass_hz": 1700,
+      "loop_wrap_seconds": 0,
+      "trim_to_contact": true,
+      "repeat": 1,
+      "seconds": 0.11535416666666666,
+      "peak": 0.29699432849884033,
+      "rms": 0.049386024475097656,
+      "shipped_sha256": "cb804af42c8cf7e70514bf2c21d7f486ae640a1b11390ec291aca304eb870ab6"
+    },
+    {
+      "file": "catch.wav",
+      "source": "kick",
+      "excerpt_seconds": [
+        0,
+        null
+      ],
+      "mono": true,
+      "highpass_hz": 70,
+      "lowpass_hz": 2700,
+      "loop_wrap_seconds": 0,
+      "trim_to_contact": true,
+      "repeat": 1,
+      "seconds": 0.07197916666666666,
+      "peak": 0.31820666790008545,
+      "rms": 0.06728384643793106,
+      "shipped_sha256": "1cd455897b2bf21c03aa90f37bee0cf50c36b43677acc56a5754efca79114e83"
+    },
+    {
+      "file": "post.wav",
+      "source": "post",
+      "excerpt_seconds": [
+        0,
+        null
+      ],
+      "mono": true,
+      "highpass_hz": 70,
+      "lowpass_hz": 7500,
+      "loop_wrap_seconds": 0,
+      "trim_to_contact": false,
+      "repeat": 1,
+      "seconds": 0.625125,
+      "peak": 0.42426836490631104,
+      "rms": 0.013674170710146427,
+      "shipped_sha256": "a36545d7e51b85d79913b3cd2b5b862d0b15d143f673d5a79de7fd5eee642ae1"
+    },
+    {
+      "file": "net.wav",
+      "source": "net",
+      "excerpt_seconds": [
+        0,
+        null
+      ],
+      "mono": true,
+      "highpass_hz": 70,
+      "lowpass_hz": 8000,
+      "loop_wrap_seconds": 0,
+      "trim_to_contact": true,
+      "repeat": 1,
+      "seconds": 0.45910416666666665,
+      "peak": 0.2828384041786194,
+      "rms": 0.020612427964806557,
+      "shipped_sha256": "67130a98860a9ea5e02ef8f933e8b5368394a7c94ff1acec92789491a632e1cd"
+    },
+    {
+      "file": "step.wav",
+      "source": "step",
+      "excerpt_seconds": [
+        0,
+        null
+      ],
+      "mono": true,
+      "highpass_hz": 70,
+      "lowpass_hz": 6500,
+      "loop_wrap_seconds": 0,
+      "trim_to_contact": true,
+      "repeat": 1,
+      "seconds": 0.23547916666666666,
+      "peak": 0.16969871520996094,
+      "rms": 0.024992646649479866,
+      "shipped_sha256": "24bcdaaee363d261229067761bfe5ad37674b67907e76b4322a11e28cd304d54"
+    },
+    {
+      "file": "step_alt.wav",
+      "source": "step_two",
+      "excerpt_seconds": [
+        0,
+        null
+      ],
+      "mono": true,
+      "highpass_hz": 70,
+      "lowpass_hz": 6500,
+      "loop_wrap_seconds": 0,
+      "trim_to_contact": true,
+      "repeat": 1,
+      "seconds": 0.35141666666666665,
+      "peak": 0.16969871520996094,
+      "rms": 0.027880197390913963,
+      "shipped_sha256": "2422e700b2aa2cb7faad431d6f66111bb39d8cd311b40dd92d75dfb5a3a54737"
+    },
+    {
+      "file": "whistle.wav",
+      "source": "whistle",
+      "excerpt_seconds": [
+        0,
+        null
+      ],
+      "mono": true,
+      "highpass_hz": 70,
+      "lowpass_hz": 11000,
+      "loop_wrap_seconds": 0,
+      "trim_to_contact": true,
+      "repeat": 1,
+      "seconds": 0.3889166666666667,
+      "peak": 0.33941900730133057,
+      "rms": 0.1776096224784851,
+      "shipped_sha256": "4e4c8d89be0e92da07b7ae6894b9965b2ef4c232f25d17f89b12eb6a6a65c732"
+    },
+    {
+      "file": "whistle_full.wav",
+      "source": "whistle",
+      "excerpt_seconds": [
+        0,
+        null
+      ],
+      "mono": true,
+      "highpass_hz": 70,
+      "lowpass_hz": 11000,
+      "loop_wrap_seconds": 0,
+      "trim_to_contact": true,
+      "repeat": 3,
+      "seconds": 1.48675,
+      "peak": 0.33941900730133057,
+      "rms": 0.15733902156352997,
+      "shipped_sha256": "743156c9b297ca023c00e97bfca858f4208df3b8fcad9318eba4083e6a4ca825"
+    },
+    {
+      "file": "stadium_bed.ogg",
+      "source": "crowd",
+      "excerpt_seconds": [
+        14,
+        36
+      ],
+      "mono": false,
+      "highpass_hz": 70,
+      "lowpass_hz": 11000,
+      "loop_wrap_seconds": 1,
+      "trim_to_contact": false,
+      "repeat": 1,
+      "seconds": 21.0,
+      "peak": 0.6108843088150024,
+      "rms": 0.08835124969482422,
+      "shipped_sha256": "ab2972e728eab8490b52fa6eb839b3e9fa25c0bdc7df616833321e94ed31fa8f"
+    },
+    {
+      "file": "park_bed.ogg",
+      "source": "park",
+      "excerpt_seconds": [
+        5,
+        51
+      ],
+      "mono": false,
+      "highpass_hz": 70,
+      "lowpass_hz": 11000,
+      "loop_wrap_seconds": 1,
+      "trim_to_contact": false,
+      "repeat": 1,
+      "seconds": 45.0,
+      "peak": 0.4213710427284241,
+      "rms": 0.033937323838472366,
+      "shipped_sha256": "c9ae00d802d7840377f1752a94093bc60622083c45ca66bbf2379e89a9571f6f"
+    },
+    {
+      "file": "rain_bed.ogg",
+      "source": "rain",
+      "excerpt_seconds": [
+        3,
+        35
+      ],
+      "mono": false,
+      "highpass_hz": 70,
+      "lowpass_hz": 11000,
+      "loop_wrap_seconds": 1,
+      "trim_to_contact": false,
+      "repeat": 1,
+      "seconds": 31.0,
+      "peak": 0.5404322147369385,
+      "rms": 0.02165691740810871,
+      "shipped_sha256": "a48d31cbb0ec60c4f1f758e1591752f07fcd6be7e785e544d2bc599acafc97f6"
+    },
+    {
+      "file": "stadium_goal.ogg",
+      "source": "goal",
+      "excerpt_seconds": [
+        2.2,
+        18
+      ],
+      "mono": false,
+      "highpass_hz": 70,
+      "lowpass_hz": 11000,
+      "loop_wrap_seconds": 0,
+      "trim_to_contact": false,
+      "repeat": 1,
+      "seconds": 15.8,
+      "peak": 0.6563417911529541,
+      "rms": 0.09641894698143005,
+      "shipped_sha256": "8d33c5b2b95488048237964295c755bc96ba5f3a15a1edab6a064927fa04cd1a"
+    },
+    {
+      "file": "stadium_reaction.ogg",
+      "source": "crowd",
+      "excerpt_seconds": [
+        1.2,
+        8.5
+      ],
+      "mono": false,
+      "highpass_hz": 70,
+      "lowpass_hz": 11000,
+      "loop_wrap_seconds": 0,
+      "trim_to_contact": false,
+      "repeat": 1,
+      "seconds": 7.3,
+      "peak": 0.535557746887207,
+      "rms": 0.08523114770650864,
+      "shipped_sha256": "731d1d4d74430d409e4138c7969f683ac91b63ed2d48c8dec16ed641fd77987c"
+    },
+    {
+      "file": "stadium_chant.ogg",
+      "source": "chant",
+      "excerpt_seconds": [
+        0,
+        14.7
+      ],
+      "mono": false,
+      "highpass_hz": 70,
+      "lowpass_hz": 11000,
+      "loop_wrap_seconds": 0,
+      "trim_to_contact": false,
+      "repeat": 1,
+      "seconds": 14.7,
+      "peak": 0.5158369541168213,
+      "rms": 0.06514164805412292,
+      "shipped_sha256": "e94be02a8515a0c731abf1fc7998894679c992a8af6667f78e4ad6bd97dca489"
+    },
+    {
+      "file": "park_goal.ogg",
+      "source": "applause",
+      "excerpt_seconds": [
+        0.1,
+        8.9
+      ],
+      "mono": false,
+      "highpass_hz": 70,
+      "lowpass_hz": 11000,
+      "loop_wrap_seconds": 0,
+      "trim_to_contact": false,
+      "repeat": 1,
+      "seconds": 7.967145833333333,
+      "peak": 0.47048068046569824,
+      "rms": 0.007468062452971935,
+      "shipped_sha256": "d4719989ec1c0a6281d8b66b8e979b58ffc7bb93605ecbacc56b868e0f6a3ebd"
+    },
+    {
+      "file": "park_reaction.ogg",
+      "source": "applause",
+      "excerpt_seconds": [
+        0.5,
+        3.5
+      ],
+      "mono": false,
+      "highpass_hz": 70,
+      "lowpass_hz": 11000,
+      "loop_wrap_seconds": 0,
+      "trim_to_contact": false,
+      "repeat": 1,
+      "seconds": 3.0,
+      "peak": 0.3422141671180725,
+      "rms": 0.0071194409392774105,
+      "shipped_sha256": "1ae24769195cbc255b95aaa0b477a4a7e2c0e40d20168adc9c6d862248a6c1be"
+    }
+  ]
 }

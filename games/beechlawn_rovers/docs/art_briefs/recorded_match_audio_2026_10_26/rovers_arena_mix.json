@@ -1,0 +1,43 @@
+{
+  "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+  "audio_events": 8,
+  "chants": 1,
+  "crowd_events": 4,
+  "display_server": "X11",
+  "fps": 60,
+  "frames": 1500,
+  "listener": "Broadcast 31.6m; close-up 5.4m from 2.0 to 3.5s",
+  "mute_from_seconds": 24.1666666666667,
+  "rendering_method": "forward_plus",
+  "scope": "Native Forward+ / real AudioServer mix in a minimal 3D listening fixture; no subjective listening or M1 performance claim",
+  "venue": "rovers_arena",
+  "mix": {
+    "duration": 25.016689342403627,
+    "bed": {
+      "rms": 0.021436741517439732,
+      "peak": 0.0774310901761055
+    },
+    "kick": {
+      "rms": 0.026490814536634353,
+      "peak": 0.2182634472846985
+    },
+    "whistle": {
+      "rms": 0.025478177592358327,
+      "peak": 0.11221134662628174
+    },
+    "goal": {
+      "rms": 0.05966683427668348,
+      "peak": 0.4397941827774048
+    },
+    "chant_window": {
+      "rms": 0.026611200678354503,
+      "peak": 0.1318722367286682
+    },
+    "muted": {
+      "rms": 0.0,
+      "peak": 0.0
+    },
+    "peak": 0.6632454991340637,
+    "result": "PASS"
+  }
+}

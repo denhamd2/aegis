@@ -10,6 +10,22 @@ items, use the archived references and skill workflow in
 [`art_reference_implementation_plan.md`](art_reference_implementation_plan.md)
 and [`../references/README.md`](../references/README.md) before implementation.
 
+## Recorded match audio — 26 October 2026
+
+BR-024 (24/27, in progress): twenty edited recorded effects replace the synthetic
+match bank. Separate park/stadium ambience, goal/save/post/missed-chance reactions,
+intermittent stadium chants and recorded rain accompany spatial boot/head/glove,
+grass, net/post and single/full-time whistle cues. Field voices stay bounded and
+prioritized; whistles duck crowd layers, replays cannot retrigger incidents, and
+leaving a match disconnects its event source. Cool Rock remains the menu/intro
+track. Options has scrollable source/CC0/CC BY credits.
+
+Automated source, two-venue event and native AudioServer mix checks cover this
+slice; see [production evidence](art_briefs/recorded_match_audio_2026_10_26/brief.md).
+BR-024 remains in progress: target-Mac listening approval, broader reaction
+content and any future licensed commentary are still open. BR-025 (25/27,
+in progress) retains the combined-workload M1 1080p60 hardware check.
+
 ## Bilateral strikes and attacking choices — 25 October 2026
 
 BR-019 (19/27, in progress): four 60 Hz left-foot strike add-ons mirror actual
@@ -53,8 +69,8 @@ No extra generic lower thirds. Exact architecture and owner visual acceptance
 remain open; photographic dimensions are estimates.
 
 BR-024 (24/27, in progress): typed match events drive crowd attention and scoring
-reactions without changing rules or outcomes. Existing match audio remains; a
-native M1 Pro listening/input playtest is still required.
+reactions without changing rules or outcomes. The recorded audio slice above
+supersedes the synthetic match bank; target-Mac listening/input approval remains.
 
 BR-025 (25/27, in progress): Balanced 60 defaults to native Metal, MSAA 2×, a
 physical-pixel 1080p 3D ceiling and 80–100% adaptive resolution, leaving the HUD
@@ -1276,11 +1292,18 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
     A 4v4 scene smoke test checks module loading, inward-facing facades, licensed
     surface maps, site dressing and kit variants.
 - [ ] **BR-024 — Audio and match feedback**
+  - 2026-10-26 (24/27, in progress): recorded 20-clip match bank, two venue beds,
+    event-prioritized reactions, scheduled stadium chants, rain, 12 priority field
+    voices, whistle ducking, replay/full-time isolation and clean menu teardown.
+    Source/hash/license catalogue and scrollable credits ship with the game.
+    Native AudioServer signal checks cover both venue mixes and independent mute;
+    subjective M1 listening acceptance and optional recorded commentary remain
+    open. See `art_briefs/recorded_match_audio_2026_10_26/brief.md`.
   - 2026-10-25 (24/27, in progress): owner-selected **Cool Rock** by Kevin
     MacLeod replaces the synthesized menu/intro loop, with CC BY 4.0 credits
     accessible in Options and shipped source/license notices. Recorded kicks,
     referee, net, stadium crowd/chant and goal reaction sources researched;
-    match effects remain synthesized pending listening/edit/mix approval.
+    this earlier shortlist was integrated in the 2026-10-26 recorded-audio slice.
     See `art_briefs/audio_replacement_2026_10_25/research.md`.
   - 2026-10-23: original CC0 menu/intro music and eleven Foley/ambience/UI clips, typed match events, bounded voices and saved Music/Match/UI buses. Native Movie Maker verifies nonzero unclipped output and bus mute. Blue HUD/intro cleanup and title build identity shipped; native M1 mix/feel approval remains open.
   - 2026-10-18 pre-match slice: approximately 40-second original TV-style intro

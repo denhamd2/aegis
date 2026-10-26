@@ -1,0 +1,51 @@
+{
+  "local_result": "PASS",
+  "version": "0.5.2",
+  "backlog": "BR-024 (24/27, in progress)",
+  "recorded_clips": 20,
+  "source_recordings": 13,
+  "recorded_bank_bytes": 2527653,
+  "regressions": [
+    "recorded_audio_smoke.gd (both venues, actual ball signal + corner restart)",
+    "pitch_audio_smoke.gd",
+    "title_screen_smoke.gd",
+    "replay_results_smoke.gd",
+    "pre_match_intro_smoke.gd",
+    "goal_net_contact_smoke.gd",
+    "wet_weather_smoke.gd",
+    "full_presentation_match_soak.gd"
+  ],
+  "complete_match": {
+    "seconds": 180,
+    "physics_ticks": 13522,
+    "auto_skips": 0,
+    "result": "PASS"
+  },
+  "native_audio": {
+    "renderer": "Forward+",
+    "driver": "Vulkan",
+    "adapter": "llvmpipe LLVM 19.1.7",
+    "display": "X11",
+    "venues": [
+      "kilmore_drive",
+      "rovers_arena"
+    ],
+    "frames_per_venue": 1500,
+    "recorded_seconds_per_venue": 25,
+    "result": "PASS",
+    "peak_per_venue": [
+      0.4832707643508911,
+      0.6632454991340637
+    ],
+    "muted_tail_rms": [
+      0,
+      0
+    ]
+  },
+  "limits": [
+    "No subjective ear audition available in this session; target-Mac speakers/headphones review pending",
+    "Minimal native 3D listener is an AudioServer signal check, not a full-match image/performance test",
+    "Existing goal-net/wet-weather probes report resource-in-use-at-exit diagnostics; their functional assertions pass",
+    "M1 1080p60 and input/audio latency remain hardware-only gates"
+  ]
+}

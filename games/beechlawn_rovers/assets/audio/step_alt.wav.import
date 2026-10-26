@@ -2,13 +2,13 @@
 
 importer="wav"
 type="AudioStreamWAV"
-uid="uid://b70t3rhnyv7m2"
-path="res://.godot/imported/cheer.wav-738bbd08bbb81a69e4245818d44c9b01.sample"
+uid="uid://dvgtff4bnk8bn"
+path="res://.godot/imported/step_alt.wav-fe53fbc92be7edaab06ee2df389d7618.sample"
 
 [deps]
 
-source_file="res://assets/audio/cheer.wav"
-dest_files=["res://.godot/imported/cheer.wav-738bbd08bbb81a69e4245818d44c9b01.sample"]
+source_file="res://assets/audio/step_alt.wav"
+dest_files=["res://.godot/imported/step_alt.wav-fe53fbc92be7edaab06ee2df389d7618.sample"]
 
 [params]
 

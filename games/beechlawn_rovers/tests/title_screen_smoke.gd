@@ -28,7 +28,9 @@ func _run() -> void:
 	check(menu.options_layer.visible and menu.volume_slider.has_focus(),"Options should open and receive keyboard focus")
 	menu.options_layer.get_node("AudioCredits").pressed.emit()
 	var credits := menu.get_node("AudioCreditsDialog") as AcceptDialog
-	check(credits.visible and credits.dialog_text.contains("Kevin MacLeod") and credits.dialog_text.contains("https://creativecommons.org/licenses/by/4.0/"),"Shipped music attribution must be accessible from Options")
+	var credit_text := credits.get_node("CreditsText") as RichTextLabel
+	check(credits.visible and credit_text.text.contains("Kevin MacLeod") and credit_text.text.contains("https://creativecommons.org/licenses/by/4.0/"),"Shipped music attribution must be accessible from Options")
+	check(credit_text.scroll_active and not credit_text.fit_content and credit_text.text.contains("Dan_AudioFile") and credit_text.text.contains("Joseph SARDIN"),"Recorded effect credits must remain scrollable within the display")
 	credits.hide()
 	check(menu.start_button.focus_mode == Control.FOCUS_NONE,"Modal options must keep focus out of the background menu")
 	menu.camera_select.select(1)

@@ -7,5 +7,70 @@ https://creativecommons.org/licenses/by/4.0/
 Changes: loudness normalization and Ogg Vorbis transcoding.
 
 MATCH SOUND EFFECTS
-Original Beechlawn Rovers project synthesized audio — CC0-1.0.
-These have not yet been replaced by the recorded-sound research shortlist.
+
+"Soccer Kick.wav" — musita182
+https://freesound.org/people/musita182/sounds/261267/
+CC0-1.0: https://creativecommons.org/publicdomain/zero/1.0/
+Changes: Excerpt, DC/rumble removal, EQ, fades, normalization and WAV/Ogg conversion; loops have a baked equal-power wrap. Header/catch are edited ball-contact Foley; post uses a recorded metal-pipe strike. See recorded_clips and tools/build_recorded_audio.py.
+
+"Soccer Ball Kick" — bittermelonheart
+https://freesound.org/people/bittermelonheart/sounds/555042/
+CC0-1.0: https://creativecommons.org/publicdomain/zero/1.0/
+Changes: Excerpt, DC/rumble removal, EQ, fades, normalization and WAV/Ogg conversion; loops have a baked equal-power wrap. Header/catch are edited ball-contact Foley; post uses a recorded metal-pipe strike. See recorded_clips and tools/build_recorded_audio.py.
+
+"Referee whistle sound.wav" — Rosa-Orenes256
+https://freesound.org/people/Rosa-Orenes256/sounds/538422/
+CC0-1.0: https://creativecommons.org/publicdomain/zero/1.0/
+Changes: Excerpt, DC/rumble removal, EQ, fades, normalization and WAV/Ogg conversion; loops have a baked equal-power wrap. Header/catch are edited ball-contact Foley; post uses a recorded metal-pipe strike. See recorded_clips and tools/build_recorded_audio.py.
+
+"Soccer net" — Luisa_Sanchez
+https://freesound.org/people/Luisa_Sanchez/sounds/813410/
+CC0-1.0: https://creativecommons.org/publicdomain/zero/1.0/
+Changes: Excerpt, DC/rumble removal, EQ, fades, normalization and WAV/Ogg conversion; loops have a baked equal-power wrap. Header/catch are edited ball-contact Foley; post uses a recorded metal-pipe strike. See recorded_clips and tools/build_recorded_audio.py.
+
+"hit - metallic - metal pipe 01.wav" — Anthousai
+https://freesound.org/people/Anthousai/sounds/406556/
+CC0-1.0: https://creativecommons.org/publicdomain/zero/1.0/
+Changes: Excerpt, DC/rumble removal, EQ, fades, normalization and WAV/Ogg conversion; loops have a baked equal-power wrap. Header/catch are edited ball-contact Foley; post uses a recorded metal-pipe strike. See recorded_clips and tools/build_recorded_audio.py.
+
+"Grassy Footstep 3" — Ashe Kirk / OwlStorm (Owlish Media)
+https://freesound.org/people/OwlStorm/sounds/151228/
+CC0-1.0: https://creativecommons.org/publicdomain/zero/1.0/
+Changes: Excerpt, DC/rumble removal, EQ, fades, normalization and WAV/Ogg conversion; loops have a baked equal-power wrap. Header/catch are edited ball-contact Foley; post uses a recorded metal-pipe strike. See recorded_clips and tools/build_recorded_audio.py.
+
+"Grassy Footstep 1" — Ashe Kirk / OwlStorm (Owlish Media)
+https://freesound.org/people/OwlStorm/sounds/151230/
+CC0-1.0: https://creativecommons.org/publicdomain/zero/1.0/
+Changes: Excerpt, DC/rumble removal, EQ, fades, normalization and WAV/Ogg conversion; loops have a baked equal-power wrap. Header/catch are edited ball-contact Foley; post uses a recorded metal-pipe strike. See recorded_clips and tools/build_recorded_audio.py.
+
+"Football stadium.wav" — BeeProductive
+https://freesound.org/people/BeeProductive/sounds/395592/
+CC0-1.0: https://creativecommons.org/publicdomain/zero/1.0/
+Changes: Excerpt, DC/rumble removal, EQ, fades, normalization and WAV/Ogg conversion; loops have a baked equal-power wrap. Header/catch are edited ball-contact Foley; post uses a recorded metal-pipe strike. See recorded_clips and tools/build_recorded_audio.py.
+
+"Ambience - European city park - morning - birds - light wind.wav" — ValentinPetiteau
+https://freesound.org/people/ValentinPetiteau/sounds/563547/
+CC0-1.0: https://creativecommons.org/publicdomain/zero/1.0/
+Changes: Excerpt, DC/rumble removal, EQ, fades, normalization and WAV/Ogg conversion; loops have a baked equal-power wrap. Header/catch are edited ball-contact Foley; post uses a recorded metal-pipe strike. See recorded_clips and tools/build_recorded_audio.py.
+
+"Gentle rain" — SpinOpel
+https://freesound.org/people/SpinOpel/sounds/772244/
+CC0-1.0: https://creativecommons.org/publicdomain/zero/1.0/
+Changes: Excerpt, DC/rumble removal, EQ, fades, normalization and WAV/Ogg conversion; loops have a baked equal-power wrap. Header/catch are edited ball-contact Foley; post uses a recorded metal-pipe strike. See recorded_clips and tools/build_recorded_audio.py.
+
+"19 Football Crowd - Reaction To Goal.flac" — D.jones
+https://freesound.org/people/D.jones/sounds/528799/
+CC0-1.0: https://creativecommons.org/publicdomain/zero/1.0/
+Changes: Excerpt, DC/rumble removal, EQ, fades, normalization and WAV/Ogg conversion; loops have a baked equal-power wrap. Header/catch are edited ball-contact Foley; post uses a recorded metal-pipe strike. See recorded_clips and tools/build_recorded_audio.py.
+
+"Football-match_Chanting-crowd_Ambience .stereo.wav" — Dan_AudioFile
+https://freesound.org/people/Dan_AudioFile/sounds/654084/
+CC-BY-4.0: https://creativecommons.org/licenses/by/4.0/
+Changes: Excerpt, DC/rumble removal, EQ, fades, normalization and WAV/Ogg conversion; loops have a baked equal-power wrap. Header/catch are edited ball-contact Foley; post uses a recorded metal-pipe strike. See recorded_clips and tools/build_recorded_audio.py.
+
+"Applause about 25-50 people #5" — Joseph SARDIN (BigSoundBank)
+https://bigsoundbank.com/applause-about-25-50-people-5-s0816.html
+CC0-1.0: https://creativecommons.org/publicdomain/zero/1.0/
+Changes: Outdoor small-group applause excerpts, filtering, normalization, fades and Ogg conversion.
+
+UI click: original Beechlawn Rovers project synthesis — CC0-1.0.

@@ -186,12 +186,18 @@ func _build_options() -> void:
 	var credits_dialog := AcceptDialog.new()
 	credits_dialog.name = "AudioCreditsDialog"
 	credits_dialog.title = "Audio credits"
-	credits_dialog.dialog_text = FileAccess.get_file_as_string("res://assets/audio/CREDITS.txt")
-	credits_dialog.dialog_autowrap = true
-	credits_dialog.min_size = Vector2i(900,460)
+	var credits_text := RichTextLabel.new()
+	credits_text.name = "CreditsText"
+	credits_text.text = FileAccess.get_file_as_string("res://assets/audio/CREDITS.txt")
+	credits_text.custom_minimum_size = Vector2(600,340)
+	credits_text.selection_enabled = true
+	credits_text.focus_mode = Control.FOCUS_ALL
+	credits_text.add_theme_font_size_override("normal_font_size",16)
+	credits_dialog.add_child(credits_text)
+	credits_dialog.min_size = Vector2i(640,420)
 	credits_dialog.exclusive = true
 	add_child(credits_dialog)
-	audio_credits.pressed.connect(func(): credits_dialog.popup_centered())
+	audio_credits.pressed.connect(func(): credits_dialog.popup_centered_clamped(Vector2i(900,600),.88))
 	_label(options_layer,"SOUND & PRESENTATION",Vector2(100,194),20,BOLD,RED)
 	_label(options_layer,"MASTER VOLUME",Vector2(100,244),23,BOLD)
 	volume_label = _label(options_layer,"80%",Vector2(640,244),23,BOLD,RED)
