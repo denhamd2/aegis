@@ -863,6 +863,34 @@ const RECIPES := {
 		],
 		"defender_grips_until": 0.55,
 	},
+	# Batch 2 (FFMoveLibrary, Roman's fits) -- see FF_Oklahoma_Stampede_Attacker:
+	# scooped across the chest, carried two strides, powerslammed.
+	"ff_oklahoma_stampede": {
+		"authored": {"attacker": "FF_Oklahoma_Stampede_Attacker", "defender": "FF_Oklahoma_Stampede_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "PickUp_Table", "at": 0.45},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.40,
+	},
+	# Batch 2 -- see FF_Fireman_Carry_Bomb_2_Attacker: up in the fireman's carry,
+	# heaved over the head and driven down in front.
+	"ff_fireman_carry_bomb_2": {
+		"authored": {"attacker": "FF_Fireman_Carry_Bomb_2_Attacker", "defender": "FF_Fireman_Carry_Bomb_2_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "PickUp_Table", "at": 0.45},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.62,
+	},
 }
 
 ## Root-transform trajectories for the moves authored after the original
@@ -1813,6 +1841,56 @@ const TRAJECTORIES := {
 					[1.00, -0.40, 0.00, 0.00], [1.13, -0.85, 0.00, 0.00],
 					[1.80, -0.88, 0.00, 0.00]],
 			"rot": [[0.00, 0.00, -90.00, 0.00], [1.80, 0.00, -90.00, 0.00]],
+		},
+	},
+	# The powerslam AS FITTED (its authored keys plus PairedFit's measured
+	# corrections and insert -- authored alone, the man landed under Roman):
+	# the scoop and turn to 0.63 s, two running strides with the man across
+	# the chest (0.63-1.03 s, 0.64 m along the attacker's facing), then the
+	# powerslam's fall, 0.40 s later and 0.64 m on. It travels 1.5 m;
+	# GrappleRig.inside_ropes_shift() keeps that inside the ropes.
+	# Through the run he is carried lower and a little further out (0.20 m
+	# of root lift, 0.85 m in front) than the powerslam's fitted lift, which
+	# held him at Roman's head height: carried there for the whole run, the
+	# fit could only clear the head by sliding him along his own length.
+	"ff_oklahoma_stampede": {
+		"length": 1.9,
+		"attacker": {
+			"pos": [[0.00, 0.400, 0.000, 0.000], [0.23, 0.313, 0.000, 0.010],
+					[0.43, 0.404, 0.000, 0.015], [0.63, 0.406, 0.000, 0.086],
+					[0.77, 0.406, 0.000, -0.134], [0.90, 0.406, 0.000, -0.354],
+					[1.03, 0.406, 0.000, -0.554], [1.17, 0.397, 0.000, -0.616],
+					[1.40, 0.381, 0.000, -0.652], [1.90, 0.378, 0.000, -0.683]],
+			"rot": [[0.00, 0.0, 90.0, 0.0], [0.23, 0.0, 88.0, 0.0],
+					[0.43, 0.0, 40.0, 0.0], [0.63, 0.0, 0.0, 0.0],
+					[1.90, 0.0, 0.0, 0.0]],
+		},
+		"defender": {
+			"pos": [[0.00, -0.400, 0.000, 0.000], [0.23, -0.356, 0.057, -0.062],
+					[0.43, -0.258, 0.304, -0.175], [0.517, 0.022, 0.384, -0.389],
+					[0.63, 0.295, 0.340, -0.684], [0.77, 0.300, 0.200, -0.984],
+					[0.90, 0.300, 0.200, -1.204], [1.03, 0.295, 0.260, -1.364],
+					[1.20, 0.223, 0.280, -1.492], [1.37, 0.199, 0.232, -1.532],
+					[1.90, 0.222, 0.170, -1.344]],
+			"rot": [[0.00, 0.0, -90.0, 0.0], [1.90, 0.0, -90.0, 0.0]],
+		},
+	},
+	# The One Winged Angel's carry and swing; the attacker bends with the throw
+	# instead of sitting out, so he barely gives ground.
+	"ff_fireman_carry_bomb_2": {
+		"length": 2.0,
+		"attacker": {
+			"pos": [[0.00, 0.40, 0.00, 0.00], [1.20, 0.40, 0.00, 0.00],
+					[1.40, 0.46, 0.00, 0.00], [2.00, 0.46, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, 90.0, 0.0], [2.00, 0.0, 90.0, 0.0]],
+		},
+		"defender": {
+			"pos": [[0.00, -0.40, 0.00, 0.00], [0.27, -0.10, 0.00, 0.00],
+					[0.53, 0.34, 0.00, 0.00], [1.07, 0.34, 0.00, 0.00],
+					[1.20, 0.34, 0.00, 0.15], [1.33, 0.34, 0.00, 0.30],
+					[1.43, 0.00, 0.00, 0.40], [1.53, -0.30, 0.00, 0.45],
+					[2.00, -0.35, 0.00, 0.45]],
+			"rot": [[0.00, 0.0, -90.0, 0.0], [2.00, 0.0, -90.0, 0.0]],
 		},
 	},
 }

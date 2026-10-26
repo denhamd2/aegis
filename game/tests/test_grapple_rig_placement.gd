@@ -56,6 +56,42 @@ func test_pair_frame_is_clamped_inside_the_ring() -> void:
 	assert_float(frame.origin.x).is_less_equal(GrappleRig.RING_HALF_EXTENT)
 	assert_float(frame.origin.z).is_less_equal(GrappleRig.RING_HALF_EXTENT)
 
+## A move that travels is slid back in until none of its root keys crosses
+## the ropes: the Oklahoma Stampede carries the man 1.5 m, and from a midpoint
+## at RING_HALF_EXTENT it would have played straight out over the top rope.
+func test_a_travelling_move_is_kept_inside_the_ropes() -> void:
+	var move: MoveDef = load("res://resources/moves/ff/oklahoma_stampede.tres")
+	var spec: Dictionary = PairedRecipes.TRAJECTORIES[String(move.animation_pair_id)]
+	# The run goes along the frame's +Z (the attacker's yaw 0): aim that at
+	# the near ropes from the clamp line.
+	for yaw: float in [0.0, PI * 0.5, PI, PI * 1.5]:
+		var at := Transform3D(Basis(Vector3.UP, yaw),
+				Vector3(GrappleRig.RING_HALF_EXTENT, 0.0, GrappleRig.RING_HALF_EXTENT))
+		var shifted := at.translated(GrappleRig.inside_ropes_shift(at, move))
+		for role: String in ["attacker", "defender"]:
+			for key: Array in spec[role]["pos"]:
+				var p := shifted * Vector3(key[1], 0.0, key[3])
+				assert_float(absf(p.x)).is_less_equal(GrappleRig.ROPE_SAFE + 0.001)
+				assert_float(absf(p.z)).is_less_equal(GrappleRig.ROPE_SAFE + 0.001)
+	# And at least one of those starts really did need it.
+	var toward := Transform3D(Basis(), Vector3(2.0, 0.0, 2.0))
+	var worst := 0.0
+	for yaw: float in [0.0, PI * 0.5, PI, PI * 1.5]:
+		toward.basis = Basis(Vector3.UP, yaw)
+		worst = maxf(worst, GrappleRig.inside_ropes_shift(toward, move).length())
+	assert_float(worst).is_greater(0.1)
+
+
+## A move that stays put -- nearly all of them -- is played exactly where it
+## always was, even from the clamp line.
+func test_a_move_that_stays_put_is_not_shifted() -> void:
+	var move: MoveDef = load("res://resources/moves/power_bodyslam.tres")
+	for yaw: float in [0.0, PI * 0.5, PI, PI * 1.5]:
+		var at := Transform3D(Basis(Vector3.UP, yaw),
+				Vector3(GrappleRig.RING_HALF_EXTENT, 0.0, -GrappleRig.RING_HALF_EXTENT))
+		assert_vector(GrappleRig.inside_ropes_shift(at, move)).is_equal(Vector3.ZERO)
+	assert_vector(GrappleRig.inside_ropes_shift(Transform3D(), null)).is_equal(Vector3.ZERO)
+
 ## Height is taken from the anchor, not the pair: clip vertical keys are
 ## authored against mat level and either wrestler may be mid-drift.
 func test_pair_frame_takes_height_from_the_anchor() -> void:

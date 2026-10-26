@@ -26,6 +26,10 @@ const OVERRIDES := {
 	&"ff_powerbomb_1": [Place.MID, 1],
 	&"ff_spinebuster_5": [Place.MID, 1],
 	&"ff_chokeslam_1": [Place.MID, 1],
+	# Luchasaurus's signature as well as his special: Roman's big power move
+	# of the middle, beside the powerbomb. Left a stretch-run special, two
+	# tallied matches drew 15 power moves from Roman and never this one.
+	&"ff_fireman_carry_bomb_2": [Place.MID, 1],
 }
 
 

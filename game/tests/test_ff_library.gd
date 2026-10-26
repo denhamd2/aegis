@@ -58,6 +58,20 @@ func test_batch_one_is_built() -> void:
 	assert_str(FFMoveLibrary.move("spear_2").resource_path).is_equal("res://resources/moves/finisher_spear.tres")
 
 
+## Batch 2 (26 Oct), Roman's fits: two new paired moves and our Samoan Drop
+## under FF's name, each in the roster draw where he throws it.
+func test_batch_two_is_built_and_romans() -> void:
+	for m: String in ["oklahoma_stampede", "fireman_carry_bomb_2", "squatting_samoan_drop"]:
+		assert_bool(FFMoveLibrary.is_built(m)).override_failure_message(m).is_true()
+		assert_array(FFMoveLibrary.fits_of("roman")).contains([m])
+	assert_str(FFMoveLibrary.move("squatting_samoan_drop").resource_path) \
+			.is_equal("res://resources/moves/power_samoan_drop.tres")
+	var roman := Roster.by_id("roman")
+	assert_array(roman.moveset["power"]).contains(["res://resources/moves/ff/fireman_carry_bomb_2.tres"])
+	assert_array(roman.moveset["rebound"]).contains(["res://resources/moves/ff/oklahoma_stampede.tres"])
+	assert_int(FFMoveLibrary.progress().x).is_greater_equal(16)
+
+
 ## The owner asked for good fits for Cody and Roman to be tagged, built or
 ## not: every fit is a library move, and the built ones are in their hands.
 func test_cody_and_roman_have_fits() -> void:

@@ -326,7 +326,41 @@ func _compute_pair_transform(attacker: Node3D, defender: Node3D) -> Transform3D:
 	if facing.length() < 0.001:
 		return Transform3D(Basis(), midpoint)
 	# rotY(theta) takes -X to (-cos theta, 0, sin theta); solve for `facing`.
-	return Transform3D(Basis(Vector3.UP, atan2(facing.z, -facing.x)), midpoint)
+	var xform := Transform3D(Basis(Vector3.UP, atan2(facing.z, -facing.x)), midpoint)
+	if not outside:
+		xform.origin += inside_ropes_shift(xform, _move)
+	return xform
+
+
+## Inside the ring, no man's root may be carried past this far from centre,
+## on either axis: the rope line (RopeReach.ROPE_LINE, 3.1 m) less a body's
+## half-width.
+const ROPE_SAFE := 2.8
+
+## How far to slide a move's frame so every root key of its trajectory lands
+## inside ROPE_SAFE. Zero for nearly every move -- a throw's keys stay within
+## a metre of the midpoint, which RING_HALF_EXTENT already keeps 1.1 m clear
+## of the ropes -- but a move that travels (the Oklahoma Stampede carries him
+## two strides, the Spear drives through him) could otherwise be played on
+## across the rope line from a midpoint near it, both bodies suspended and
+## ignoring collision as they went.
+static func inside_ropes_shift(xform: Transform3D, move: MoveDef) -> Vector3:
+	if move == null:
+		return Vector3.ZERO
+	var spec: Dictionary = PairedRecipes.TRAJECTORIES.get(String(move.animation_pair_id), {})
+	if spec.is_empty():
+		return Vector3.ZERO
+	var lo := Vector2(INF, INF)
+	var hi := Vector2(-INF, -INF)
+	for role: String in ["attacker", "defender"]:
+		for key: Array in spec[role]["pos"]:
+			var p := xform * Vector3(key[1], 0.0, key[3])
+			lo = Vector2(minf(lo.x, p.x), minf(lo.y, p.z))
+			hi = Vector2(maxf(hi.x, p.x), maxf(hi.y, p.z))
+	var shift := Vector3.ZERO
+	shift.x = minf(0.0, ROPE_SAFE - hi.x) + maxf(0.0, -ROPE_SAFE - lo.x)
+	shift.z = minf(0.0, ROPE_SAFE - hi.y) + maxf(0.0, -ROPE_SAFE - lo.y)
+	return shift
 
 ## Where a role's clip starts, in the pair frame: the first key of that
 ## wrestler's root tracks, as _transform_track_into_pair_frame() will play it.

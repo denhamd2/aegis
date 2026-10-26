@@ -29,8 +29,10 @@ func test_roman_and_cody_carry_their_rebound_moves() -> void:
 	var cody := scene.get_node("WrestlerB") as WrestlerController
 	var ids := func(moves: Array[MoveDef]) -> Array:
 		return moves.map(func(m: MoveDef) -> String: return String(m.animation_pair_id))
+	# Batch 2 of the FF library adds the Oklahoma Stampede: caught, carried.
 	assert_array(ids.call(roman.rebound_moves)) \
-		.contains_exactly(["ff_spinebuster_5", "power_samoan_drop", "power_powerslam"])
+		.contains_exactly(["ff_spinebuster_5", "power_samoan_drop", "power_powerslam",
+				"ff_oklahoma_stampede"])
 	assert_array(ids.call(cody.rebound_moves)) \
 		.contains_exactly(["strike_dropdown_uppercut", "power_powerslam"])
 	# What each does to a man whipped into the corner: Roman's clotheslines,

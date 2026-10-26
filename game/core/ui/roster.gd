@@ -185,8 +185,10 @@ static func entries() -> Array:
 		"power": [M + "power_samoan_drop.tres", M + "power_bodyslam.tres",
 				M + "power_powerslam.tres",
 				# Fight Forever library, batch 1 (FFMoveLibrary.FITS): a big
-				# man's powerbomb and spinebuster.
-				M + "ff/powerbomb_1.tres", M + "ff/spinebuster_5.tres"],
+				# man's powerbomb and spinebuster; batch 2, the fireman's
+				# carry bomb (the Samoan Drop above is FF's squatting one).
+				M + "ff/powerbomb_1.tres", M + "ff/spinebuster_5.tres",
+				M + "ff/fireman_carry_bomb_2.tres"],
 		"signature": [M + "signature_superman_punch.tres", M + "signature_backbreaker.tres"],
 		"running": [M + "running_attack_clothesline.tres",
 				M + "running_clothesline_from_hell.tres", M + "running_knee_lift.tres",
@@ -198,7 +200,9 @@ static func entries() -> Array:
 		# At a man he whipped into the ropes, coming back off them: the
 		# spinebuster, the Samoan drop and the powerslam of a big man.
 		"rebound": [M + "ff/spinebuster_5.tres", M + "power_samoan_drop.tres",
-				M + "power_powerslam.tres"],
+				M + "power_powerslam.tres",
+				# FF batch 2: caught, carried at a run and powerslammed.
+				M + "ff/oklahoma_stampede.tres"],
 		# From the mat: sweeps the legs of a man standing over him (PossumSpot).
 		"possum": [M + "possum_sweep.tres"],
 		# Beside the Spear: the Superman Punch into it, his 2K26 "super"

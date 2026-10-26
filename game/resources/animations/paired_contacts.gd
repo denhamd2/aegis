@@ -98,6 +98,8 @@ const MOVES := {
 	# pulled back down onto Cody's head as both fell.
 	"ff_brainbuster_1": "none",
 	"ff_chokeslam_1": "none",
+	"ff_oklahoma_stampede": "legs",
+	"ff_fireman_carry_bomb_2": "legs",
 }
 
 ## Moves the contact pull (GrappleRig._pull_into_reach) leaves alone: the

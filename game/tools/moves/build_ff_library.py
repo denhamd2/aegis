@@ -263,6 +263,9 @@ EXISTING = {
     "spear_2": "res://resources/moves/finisher_spear.tres",
     "cody_cutter_5": "res://resources/moves/signature_cody_cutter.tres",
     "scoop_slam_2": "res://resources/moves/power_bodyslam.tres",
+    # Batch 2 (26 Oct): Roman's Samoan Drop is FF's squatting one -- he drops
+    # to the crouch as the man falls off his shoulders.
+    "squatting_samoan_drop": "res://resources/moves/power_samoan_drop.tres",
 }
 
 # The owner's ask (19 Oct): tag the library moves that suit our two men, built
@@ -302,6 +305,8 @@ CLIP_FRAMES = {
     "spinebuster_5": (52, 6, 50),         # 54 frames: contact at 26
     "brainbuster_1": (78, 6, 36),         # 60 frames: contact at 39
     "chokeslam_1": (68, 6, 34),           # 54 frames: contact at 34
+    "oklahoma_stampede": (84, 6, 24),     # 57 frames: contact at 42
+    "fireman_carry_bomb_2": (80, 6, 34),  # 60 frames: contact at 40
 }
 
 # Damage by tier: (head, torso, legs). A special is the big one.

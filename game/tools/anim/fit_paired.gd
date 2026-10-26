@@ -124,12 +124,24 @@ func _record(move_id: String) -> Array:
 	rig.begin(a, d, move)
 	var samples := []
 	var guard := 0
+	# This move's clip only. Nothing here resolves the move, so the rig stays
+	# active after it and the two men, still in GRAPPLE_HOLD, start one of
+	# their own (grapple_clinch_knee) -- whose separations, filed by clip
+	# time, were being fitted into this move's keys: 0.4 m of it slid the
+	# Oklahoma Stampede's man along his own length through a carry that,
+	# measured alone, has no overlap at all.
+	var played := false
 	while rig.is_active() and guard < 2000:
 		await get_tree().physics_frame
 		guard += 1
 		var player := rig.animation_player
-		if player == null or not player.is_playing():
+		var own := player != null and player.is_playing() \
+				and player.current_animation == move.animation_pair_id
+		if played and not own:
+			break
+		if not own:
 			continue
+		played = true
 		var to_pair := rig._pair_transform.basis.inverse()
 		var inv := rig._pair_transform.affine_inverse()
 		samples.append([player.current_animation_position,

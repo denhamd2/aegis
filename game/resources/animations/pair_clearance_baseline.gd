@@ -30,7 +30,10 @@ const CONTACT_LIMIT := 0.05
 const GRIP := {
 	# Stage 8: 5.6 cm, the same landing as its OVER entry above.
 	"power_samoan_drop": 0.07,
-	"running_rolling_codebreaker": 0.54,
+	# running_rolling_codebreaker (0.54) left 26 Oct: from where this measure
+	# starts it, its roll carried the attacker's root to 3.25 m, over the
+	# ropes, and the ring keep-in held his body back while the clip went on.
+	# GrappleRig.inside_ropes_shift() now plays it inside them: 0.011.
 	# 0.18 -> 0.21: re-measured when PairClearance went deterministic (one
 	# physics tick per render frame). The old reading swung 0.17-0.20 with the
 	# machine's frame timing; the move did not change. Its true median is 0.20.

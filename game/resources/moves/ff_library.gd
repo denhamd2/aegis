@@ -224,6 +224,7 @@ const EXISTING := {
 	"spear_2": "res://resources/moves/finisher_spear.tres",
 	"cody_cutter_5": "res://resources/moves/signature_cody_cutter.tres",
 	"scoop_slam_2": "res://resources/moves/power_bodyslam.tres",
+	"squatting_samoan_drop": "res://resources/moves/power_samoan_drop.tres",
 }
 
 ## Library moves that suit our own men, built or not, by roster id: what

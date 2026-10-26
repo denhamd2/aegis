@@ -8059,6 +8059,80 @@ CLIPS["FF_Chokeslam_1_Defender"] = [
     (27, dict(_CS_UP_DEF, foot_r=(0.14, 0.00, 0.560), foot_l=(-0.14, 0.06, 0.580))),
 ] + _back_fall(27, 54, skip_hit=True, fall_z=1.10)
 
+# --- Fight Forever library, batch 2: Roman's fits (FFMoveLibrary.FITS). Built,
+# as batch 1 was, from the nearest lift we already animate, so the part both
+# moves share reads the same in each.
+
+# Oklahoma Stampede (Powerhouse Hobbs's special), 57 frames / 1.9 s. Caught
+# coming in and scooped across the chest -- the powerslam's scoop, frames
+# 0-19 shared -- then carried two strides at a run (the root travels them,
+# paired_recipes.gd; 0.65 m, which keeps a move started at GrappleRig's
+# RING_HALF_EXTENT inside the ropes), and the powerslam's fall: he goes down
+# WITH the man, chest to chest, across him on his knees.
+_OKS_CARRY = dict(hand_r=(0.28, 0.30, 0.96), hand_l=(-0.34, 0.28, 0.94),
+                  elbow_r=(0.5, -0.4, -0.7), elbow_l=(-0.5, -0.4, -0.7),
+                  fist_r=0.6, fist_l=0.6, spine=(2, 0, 0), head=(-6, 0, 0))
+CLIPS["FF_Oklahoma_Stampede_Attacker"] = [k for k in CLIPS["Powerslam_Attacker"] if k[0] <= 19] + [
+    # Two strides with him, upright under the weight.
+    (23, P(pelvis=(0.0, 0.04, 0.840), hips=(-6, 0, 0),
+           foot_r=(0.20, 0.24, 0.104), foot_l=(-0.18, -0.24, 0.18), **_OKS_CARRY)),
+    (27, P(pelvis=(0.0, 0.04, 0.860), hips=(-6, 0, 0),
+           foot_r=(0.20, -0.24, 0.18), foot_l=(-0.18, 0.24, 0.104), **_OKS_CARRY)),
+] + [(k + 12, v) for k, v in CLIPS["Powerslam_Attacker"] if 23 <= k < 30] + [
+    # The powerslam's kneel across him, with the knees aimed forward: its
+    # own aim straight down put the leg on the IK's singularity, and the
+    # thigh and calf flipped 103-111 degrees in a single frame of the hold
+    # (test_body_deformation_gate). Up over four frames, not two -- the
+    # forearm swung 126 degrees in one.
+    (42, dict(_ON_TOP, knee_r=(0.2, 1.0, -0.6), knee_l=(-0.2, 1.0, -0.6))),
+    (50, dict(_ON_TOP, pelvis=(0.0, 0.00, 0.450), spine=(-8, 0, 0), head=(-2, 0, 0),
+              knee_r=(0.2, 1.0, -0.6), knee_l=(-0.2, 1.0, -0.6))),
+    (53, pose(CROUCH)),
+    (57, P()),
+]
+CLIPS["FF_Oklahoma_Stampede_Defender"] = [k for k in CLIPS["Powerslam_Defender"] if k[0] <= 20] + [
+    # Flat across the chest, riding the strides.
+    (25, dict(dict(CLIPS["Bodyslam_Defender"])[24], pelvis=(0.0, 0.0, 1.090))),
+    (29, dict(dict(CLIPS["Bodyslam_Defender"])[24], pelvis=(0.0, 0.0, 1.120))),
+] + [(k + 12, v) for k, v in CLIPS["Powerslam_Defender"] if k >= 24]
+
+# Fireman Carry Bomb 2 (Luchasaurus's), 60 frames / 2.0 s. Up across the
+# shoulders in the fireman's carry -- the Samoan Drop's, frames 0-28 shared --
+# then, where the Samoan Drop lets him fall off in front, Roman takes the
+# legs and heaves them up and over his head: the man turns head-down in
+# front of him (the One Winged Angel's swing, the same body keys), and Roman
+# stays on his feet and bends with the throw, as in his powerbomb, driving
+# him into the mat on his shoulders. Flat on his back, head toward Roman.
+CLIPS["FF_Fireman_Carry_Bomb_2_Attacker"] = [k for k in CLIPS["Samoan_Drop_Attacker"] if k[0] <= 28] + [
+    # The One Winged Angel's grip, since his body takes the same swing: left
+    # hand to the head at Roman's side, right hand under the legs.
+    (32, _key("FF_One_Winged_Angel_Attacker", 32)),
+    # Over and down in front: bending with it, still on his feet.
+    (36, P(pelvis=(0.0, 0.06, 0.780), hips=(-12, 0, 0), spine=(-18, 0, 0),
+           head=(-10, 0, 0),
+           hand_r=(0.26, 0.40, 1.10), hand_l=(-0.26, 0.40, 1.06),
+           fist_r=0.6, fist_l=0.6,
+           foot_r=(0.26, -0.10, 0.104), foot_l=(-0.24, 0.14, 0.104))),
+    # The impact: over him, arms driving down.
+    (40, P(pelvis=(0.0, 0.10, 0.680), hips=(-28, 0, 0), spine=(-30, 0, 0),
+           head=(-14, 0, 0),
+           hand_r=(0.28, 0.52, 0.50), hand_l=(-0.28, 0.52, 0.50),
+           fist_r=0.4, fist_l=0.4,
+           foot_r=(0.26, -0.14, 0.104), foot_l=(-0.24, 0.20, 0.104))),
+    (46, P(pelvis=(0.0, 0.08, 0.740), hips=(-18, 0, 0), spine=(-22, 0, 0),
+           head=(-10, 0, 0),
+           hand_r=(0.28, 0.44, 0.70), hand_l=(-0.28, 0.44, 0.70),
+           fist_r=0.4, fist_l=0.4,
+           foot_r=(0.26, -0.12, 0.104), foot_l=(-0.24, 0.18, 0.104))),
+    (54, P(pelvis=(0.0, 0.02, 0.820), hips=(-4, 0, 0), spine=(-8, 0, 0))),
+    (60, P()),
+]
+CLIPS["FF_Fireman_Carry_Bomb_2_Defender"] = \
+    [k for k in CLIPS["FF_One_Winged_Angel_Defender"] if k[0] <= 46] + [
+    (52, dict(SUPINE, pelvis=(0.0, 0.0, 0.190))),
+    (60, dict(SUPINE)),
+]
+
 
 def main():
     arm = load_rig()
