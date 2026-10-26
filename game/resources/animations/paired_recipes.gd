@@ -949,6 +949,44 @@ const RECIPES := {
 		# running at him.
 		"defender_grips_until": 0.0,
 	},
+	# Kenny batch 1 (FFMoveLibrary, Kenny Omega's V-Triggers) -- see
+	# FF_Running_V_Trigger_1_Attacker: the knee into the face, arms flung back.
+	"ff_running_v_trigger_1": {
+		"authored": {"attacker": "FF_Running_V_Trigger_1_Attacker", "defender": "FF_Running_V_Trigger_1_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Punch_Cross", "at": 0.50},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Idle", "at": 0.00},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.0,
+	},
+	"ff_running_v_trigger_3": {
+		"authored": {"attacker": "FF_Running_V_Trigger_3_Attacker", "defender": "FF_Running_V_Trigger_3_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Punch_Cross", "at": 0.50},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Idle", "at": 0.00},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.0,
+	},
+	"ff_v_trigger_1": {
+		"authored": {"attacker": "FF_V_Trigger_1_Attacker", "defender": "FF_V_Trigger_1_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Punch_Cross", "at": 0.50},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Idle", "at": 0.00},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.0,
+	},
 }
 
 ## Root-transform trajectories for the moves authored after the original
@@ -2028,6 +2066,56 @@ const TRAJECTORIES := {
 			"pos": [[0.000, -0.40, 0.00, 0.00], [0.300, -0.40, 0.00, 0.00],
 					[0.500, -0.65, 0.00, 0.00], [0.700, -0.80, 0.00, 0.00],
 					[1.200, -0.80, 0.00, 0.00]],
+			"rot": [[0.000, 0.0, -90.0, 0.0], [1.200, 0.0, -90.0, 0.0]],
+		},
+	},
+	# Kenny's V-Triggers. The running ones on the Knee Lift's run, stopping
+	# over the man rather than running past him; the man goes straight back.
+	# Spaced so the knee meets the face: 0.52 m between them for the man
+	# standing and leaning in (Running V-Trigger 1), 0.77 for the one doubled
+	# over, whose face is well out in front of him (3).
+	"ff_running_v_trigger_1": {
+		"length": 1.2,
+		"attacker": {
+			"pos": [[0.000, 1.20, 0.00, 0.00], [0.133, 0.75, 0.00, 0.00],
+					[0.233, 0.40, 0.00, 0.00], [0.300, 0.14, 0.00, 0.00],
+					[0.400, 0.06, 0.00, 0.00], [1.200, 0.06, 0.00, 0.00]],
+			"rot": [[0.000, 0.0, 90.0, 0.0], [1.200, 0.0, 90.0, 0.0]],
+		},
+		"defender": {
+			"pos": [[0.000, -0.40, 0.00, 0.00], [0.300, -0.40, 0.00, 0.00],
+					[0.400, -0.62, 0.00, 0.00], [0.533, -0.95, 0.00, 0.00],
+					[1.200, -0.95, 0.00, 0.00]],
+			"rot": [[0.000, 0.0, -90.0, 0.0], [1.200, 0.0, -90.0, 0.0]],
+		},
+	},
+	"ff_running_v_trigger_3": {
+		"length": 1.2,
+		"attacker": {
+			"pos": [[0.000, 1.20, 0.00, 0.00], [0.133, 0.75, 0.00, 0.00],
+					[0.233, 0.55, 0.00, 0.00], [0.300, 0.37, 0.00, 0.00],
+					[0.400, 0.28, 0.00, 0.00], [1.200, 0.28, 0.00, 0.00]],
+			"rot": [[0.000, 0.0, 90.0, 0.0], [1.200, 0.0, 90.0, 0.0]],
+		},
+		"defender": {
+			"pos": [[0.000, -0.40, 0.00, 0.00], [0.300, -0.40, 0.00, 0.00],
+					[0.400, -0.60, 0.00, 0.00], [0.533, -0.90, 0.00, 0.00],
+					[1.200, -0.90, 0.00, 0.00]],
+			"rot": [[0.000, 0.0, -90.0, 0.0], [1.200, 0.0, -90.0, 0.0]],
+		},
+	},
+	# Standing: the man yanked in by the wrist to Kenny's knee, then back.
+	"ff_v_trigger_1": {
+		"length": 1.2,
+		"attacker": {
+			"pos": [[0.000, 0.40, 0.00, 0.00], [0.233, 0.44, 0.00, 0.00],
+					[0.500, 0.40, 0.00, 0.00], [1.200, 0.40, 0.00, 0.00]],
+			"rot": [[0.000, 0.0, 90.0, 0.0], [1.200, 0.0, 90.0, 0.0]],
+		},
+		"defender": {
+			"pos": [[0.000, -0.40, 0.00, 0.00], [0.233, -0.22, 0.00, 0.00],
+					[0.300, -0.22, 0.00, 0.00], [0.500, -0.55, 0.00, 0.00],
+					[0.700, -0.75, 0.00, 0.00], [1.200, -0.75, 0.00, 0.00]],
 			"rot": [[0.000, 0.0, -90.0, 0.0], [1.200, 0.0, -90.0, 0.0]],
 		},
 	},

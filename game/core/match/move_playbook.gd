@@ -36,6 +36,9 @@ const OVERRIDES := {
 	&"ff_inverted_ddt_1": [Place.MID, 1],
 	# Brian Cage's signature: Roman's corner move of the middle, once.
 	&"ff_buckle_bomb": [Place.MID, 1],
+	# Kenny's running V-Trigger is his staple, not a stretch-run special:
+	# from the middle of the match, twice.
+	&"ff_running_v_trigger_3": [Place.MID, 2],
 }
 
 

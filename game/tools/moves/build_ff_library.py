@@ -278,6 +278,11 @@ EXISTING = {
 # Roman's are a big man's power moves -- powerbombs, spinebuster, Samoan
 # drops, the spear, the lariat.
 FITS = {
+    # Kenny's own Fight Forever set, and the Tiger Driver '98 he hits in his
+    # real matches (it is Cody's in the game).
+    "kenny": ["running_v_trigger_1", "running_v_trigger_3", "v_trigger_1",
+              "snap_dragon_suplex_2", "snap_dragon_suplex_3", "powerbomb_v_trigger_combo",
+              "one_winged_angel", "tiger_driver_98"],
     "cody": ["cody_cutter_4", "cody_cutter_5", "figure_four_leglock", "tiger_driver_98",
              "cross_rhodes", "scoop_slam_2", "brainbuster_1", "sit_out_powerbomb_2",
              "springboard_moonsault_3", "code_breaker_1", "inverted_ddt_1"],
@@ -314,6 +319,10 @@ CLIP_FRAMES = {
     "inverted_ddt_1": (50, 6, 40),        # 48 frames: contact at 25
     "buckle_bomb": (72, 6, 54),           # 66 frames: contact at 36
     "casualty_of_war": (18, 6, 48),       # 36 frames: contact at 9
+    # Kenny batch 1: the V-Triggers, 36 frames, the knee home on frame 9.
+    "running_v_trigger_1": (18, 6, 48),
+    "running_v_trigger_3": (18, 6, 48),
+    "v_trigger_1": (18, 6, 48),
 }
 
 # Damage by tier: (head, torso, legs). A special is the big one.

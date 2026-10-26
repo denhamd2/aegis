@@ -8536,6 +8536,129 @@ CLIPS["FF_Casualty_Of_War_Defender"] = [
 ] + _back_fall(9, 36, pelvis_hit=0.95)
 
 
+# --- Fight Forever library, Kenny batch 1: the V-Triggers.
+#
+# Kenny Omega's knee, which Fight Forever lists three ways
+# (tools/moves/build_ff_library.py): Running V-Trigger 1 (a special), Running
+# V-Trigger 3 (a signature) and the standing V-Trigger 1 (a special). Built on
+# the Knee Lift's run and plant (Knee_Lift_Attacker), with what makes it his:
+# the knee driven up into the face rather than the jaw from below, and both
+# arms flung back behind him for the drive, where Roman's knee lift throws
+# them up. 36 frames each, the knee home on frame 9.
+
+# Running V-Trigger 1: into the face of a man standing, who goes straight
+# over backward; Kenny lands and stays over him.
+CLIPS["FF_Running_V_Trigger_1_Attacker"] = [
+    (0, pose(RUN_A)), (4, pose(RUN_B)),
+    (7, P(pelvis=(0.0, 0.10, 0.740), hips=(-20, 0, 0), spine=(-20, 0, 0),
+          hand_r=(0.26, 0.20, 0.90), hand_l=(-0.24, 0.24, 0.92),
+          foot_r=(0.16, 0.10, 0.50), foot_l=(-0.14, 0.12, 0.104),
+          knee_r=(0.2, 1.0, 0.3))),
+    # Off the floor, the knee up into his face, the arms flung back. The
+    # thigh is driven UP, the shin hanging under it: keyed with the foot level
+    # with the hip (first cut), the leg folded flat and the knee met him at the
+    # belt, which is where a knee sits when the thigh is level.
+    (9, dict(pelvis=(0.0, 0.10, 1.200), hips=(10, 0, 0), spine=(8, 0, 0),
+             head=(-4, 0, 0),
+             hand_r=(0.36, -0.34, 1.26), hand_l=(-0.36, -0.34, 1.26),
+             fist_r=0.8, fist_l=0.8,
+             foot_r=(0.18, 0.24, 1.04), foot_l=(-0.14, -0.10, 0.56),
+             knee_r=(0.2, 0.7, 0.7), knee_l=(-0.2, 1.0, 0.0))),
+    (12, P(pelvis=(0.0, 0.06, 0.800), hips=(-10, 0, 0), spine=(-10, 0, 0),
+           hand_r=(0.30, 0.00, 1.10), hand_l=(-0.30, 0.00, 1.08),
+           foot_r=(0.20, 0.10, 0.104), foot_l=(-0.18, -0.10, 0.104))),
+    (20, pose(STAND)),
+    (36, P()),
+]
+CLIPS["FF_Running_V_Trigger_1_Defender"] = [
+    (0, pose(STAND, hand_r=(0.26, 0.10, 1.00), hand_l=(-0.24, 0.12, 1.00))),
+    # Groggy, leaning into it: his face comes down to meet the knee, and is
+    # still there when it lands (frame 9) -- he goes over from the next. With
+    # the fall starting on the contact frame he was upright already, and the
+    # knee took him in the chest.
+    (7, pose(STAND, spine=(-18, 0, 0), head=(12, 0, 0),
+             hand_r=(0.28, 0.08, 1.00), hand_l=(-0.26, 0.10, 1.00))),
+    (9, pose(STAND, pelvis=(0.0, 0.04, 0.840), spine=(-24, 0, 0), head=(14, 0, 0),
+             hand_r=(0.28, 0.10, 0.98), hand_l=(-0.26, 0.12, 0.98))),
+] + _back_fall(10, 36, pelvis_hit=1.00)
+
+# Running V-Trigger 3: the same knee into a man doubled over in front of him
+# (GUT_HURT), lower; his head is snapped up by it and he goes over backward.
+CLIPS["FF_Running_V_Trigger_3_Attacker"] = [
+    (0, pose(RUN_A)), (4, pose(RUN_B)),
+    # The plant upright, not crouched into it: leaning in, his head met the
+    # bent man's a frame before the knee did.
+    (7, P(pelvis=(0.0, 0.06, 0.760), hips=(-8, 0, 0), spine=(-6, 0, 0),
+          hand_r=(0.26, 0.20, 0.90), hand_l=(-0.24, 0.24, 0.92),
+          foot_r=(0.16, 0.10, 0.50), foot_l=(-0.14, 0.12, 0.104),
+          knee_r=(0.2, 1.0, 0.3))),
+    # Leaning back from him so the heads clear, the knee up under his face.
+    (9, dict(pelvis=(0.0, 0.08, 0.980), hips=(10, 0, 0), spine=(8, 0, 0),
+             head=(-2, 0, 0),
+             hand_r=(0.36, -0.32, 1.06), hand_l=(-0.36, -0.32, 1.06),
+             fist_r=0.8, fist_l=0.8,
+             foot_r=(0.18, 0.24, 0.80), foot_l=(-0.14, -0.10, 0.36),
+             knee_r=(0.2, 0.8, 0.5), knee_l=(-0.2, 1.0, 0.0))),
+    (12, P(pelvis=(0.0, 0.06, 0.800), hips=(-10, 0, 0), spine=(-10, 0, 0),
+           hand_r=(0.30, 0.00, 1.10), hand_l=(-0.30, 0.00, 1.08),
+           foot_r=(0.20, 0.10, 0.104), foot_l=(-0.18, -0.10, 0.104))),
+    (20, pose(STAND)),
+    (36, P()),
+]
+CLIPS["FF_Running_V_Trigger_3_Defender"] = [
+    (0, dict(GUT_HURT)),
+    (7, pose(GUT_HURT, spine=(-48, 0, 0), head=(12, 0, 0))),
+    # Still doubled over as the knee comes up into his face.
+    (9, pose(GUT_HURT, spine=(-46, 0, 0), head=(16, 0, 0))),
+] + _back_fall(10, 36, pelvis_hit=0.90)
+
+# V-Trigger 1, standing: his left hand takes the man's right wrist and yanks
+# him in, onto the knee coming up into his face; the man goes over backward.
+CLIPS["FF_V_Trigger_1_Attacker"] = [
+    (0, P()),
+    # The wrist: his left hand out to the man's right hand.
+    (4, P(pelvis=(0.0, 0.04, 0.840), spine=(-8, 0, 0),
+          hand_l=(-0.20, 0.52, 1.02), hand_r=(0.30, 0.10, 1.20),
+          fist_l=0.9, fist_r=0.8)),
+    # The yank: the arm drawn back, the right knee chambered.
+    (7, P(pelvis=(0.0, 0.00, 0.820), hips=(-6, 0, 0), spine=(-10, 0, 0),
+          hand_l=(-0.26, 0.20, 1.02), hand_r=(0.34, -0.20, 1.14),
+          fist_l=0.9, fist_r=0.8,
+          foot_r=(0.16, 0.06, 0.46), foot_l=(-0.16, -0.02, 0.104),
+          knee_r=(0.2, 1.0, 0.3))),
+    # The knee into his face, still holding the wrist.
+    (9, dict(pelvis=(0.0, 0.04, 1.080), hips=(8, 0, 0), spine=(4, 0, 0),
+             head=(-2, 0, 0),
+             hand_l=(-0.28, 0.06, 1.10), hand_r=(0.36, -0.30, 1.14),
+             fist_l=0.9, fist_r=0.8,
+             foot_r=(0.16, 0.24, 0.92), foot_l=(-0.14, -0.08, 0.40),
+             knee_r=(0.2, 0.7, 0.7), knee_l=(-0.2, 1.0, 0.0))),
+    # Let go as he goes; down onto both feet.
+    (12, P(pelvis=(0.0, 0.04, 0.800), hips=(-8, 0, 0), spine=(-8, 0, 0),
+           hand_l=(-0.30, 0.10, 1.08), hand_r=(0.30, 0.00, 1.10),
+           foot_r=(0.20, 0.08, 0.104), foot_l=(-0.18, -0.06, 0.104))),
+    (20, pose(STAND)),
+    (36, P()),
+]
+CLIPS["FF_V_Trigger_1_Defender"] = [
+    (0, pose(STAND, hand_r=(0.26, 0.20, 1.00), hand_l=(-0.24, 0.12, 1.00))),
+    # The wrist taken, the arm drawn out.
+    (4, pose(STAND, hand_r=(0.22, 0.40, 1.02), hand_l=(-0.24, 0.12, 1.00))),
+    # Yanked in, bent forward over his own arm -- and still there when the
+    # knee lands (frame 9); over backward from the next.
+    (7, P(pelvis=(0.0, 0.10, 0.820), hips=(-14, 0, 0), spine=(-22, 0, 0),
+          head=(12, 0, 0),
+          hand_r=(0.20, 0.62, 1.00), hand_l=(-0.26, 0.20, 0.96),
+          fist_r=0.3, fist_l=0.3,
+          foot_r=(0.18, 0.14, 0.104), foot_l=(-0.18, -0.12, 0.104))),
+    (9, P(pelvis=(0.0, 0.12, 0.810), hips=(-16, 0, 0), spine=(-26, 0, 0),
+          head=(14, 0, 0),
+          hand_r=(0.20, 0.60, 1.00), hand_l=(-0.26, 0.20, 0.94),
+          fist_r=0.3, fist_l=0.3,
+          foot_r=(0.18, 0.14, 0.104), foot_l=(-0.18, -0.12, 0.104))),
+] + _back_fall(10, 36, pelvis_hit=0.95)
+
+
 def main():
     arm = load_rig()
     clear_actions()

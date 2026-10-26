@@ -231,6 +231,7 @@ const EXISTING := {
 ## Library moves that suit our own men, built or not, by roster id: what
 ## the batches animate first.
 const FITS := {
+	"kenny": ["running_v_trigger_1", "running_v_trigger_3", "v_trigger_1", "snap_dragon_suplex_2", "snap_dragon_suplex_3", "powerbomb_v_trigger_combo", "one_winged_angel", "tiger_driver_98"],
 	"cody": ["cody_cutter_4", "cody_cutter_5", "figure_four_leglock", "tiger_driver_98", "cross_rhodes", "scoop_slam_2", "brainbuster_1", "sit_out_powerbomb_2", "springboard_moonsault_3", "code_breaker_1", "inverted_ddt_1"],
 	"roman": ["spear_2", "powerbomb_1", "sit_out_powerbomb_2", "spinebuster_5", "squatting_samoan_drop", "scoop_slam_2", "casualty_of_war", "fireman_carry_bomb_2", "buckle_bomb", "oklahoma_stampede"],
 }

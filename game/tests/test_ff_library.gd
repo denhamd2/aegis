@@ -112,6 +112,20 @@ func test_batch_six_is_codys_dive() -> void:
 	assert_int(FFMoveLibrary.progress().x).is_greater_equal(21)
 
 
+## Kenny batch 1 (26 Oct): his V-Triggers, built and in his hands -- his own
+## moveset now, not the shared draw.
+func test_kenny_batch_one_is_built_and_his() -> void:
+	var kenny := Roster.by_id("kenny")
+	for m: String in ["running_v_trigger_1", "running_v_trigger_3", "v_trigger_1"]:
+		assert_bool(FFMoveLibrary.is_built(m)).override_failure_message(m).is_true()
+		assert_array(FFMoveLibrary.fits_of("kenny")).contains([m])
+	assert_array(kenny.moveset["running"]).contains([
+			"res://resources/moves/ff/running_v_trigger_1.tres",
+			"res://resources/moves/ff/running_v_trigger_3.tres"])
+	assert_array(kenny.moveset["signature"]).contains(["res://resources/moves/ff/v_trigger_1.tres"])
+	assert_int(FFMoveLibrary.progress().x).is_greater_equal(24)
+
+
 ## A library move finds its hold (PairedContacts): filed as ff/<move>.tres,
 ## listed as ff_<move>. Until 26 Oct none did -- the lariat's arm was drawn
 ## onto the man -- and the contact pull stays off for them until they are

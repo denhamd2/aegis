@@ -105,6 +105,10 @@ const MOVES := {
 	"ff_inverted_ddt_1": "neck",
 	"ff_buckle_bomb": "waist",
 	"ff_casualty_of_war": "none",
+	# Kenny batch 1: knees. The V-Trigger's wrist is authored in the clip.
+	"ff_running_v_trigger_1": "none",
+	"ff_running_v_trigger_3": "none",
+	"ff_v_trigger_1": "none",
 }
 
 ## Moves the contact pull (GrappleRig._pull_into_reach) leaves alone: the

@@ -6,11 +6,11 @@
 script = ExtResource("1")
 resource_name = "Running V-Trigger 3"
 animation_pair_id = &"ff_running_v_trigger_3"
-startup_frames = 14
-active_frames = 4
-recovery_frames = 26
-reversal_window_start = 4
-reversal_window_end = 12
+startup_frames = 18
+active_frames = 6
+recovery_frames = 48
+reversal_window_start = 8
+reversal_window_end = 16
 damage_head = 10.0
 damage_torso = 8.0
 damage_arms = 0.0

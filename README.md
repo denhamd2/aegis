@@ -10565,3 +10565,25 @@ Both men had about the same free time, yet Roman landed eight signatures from si
 **Not met: the Code Breaker was not seen in any of the five.** Cody's first signature in a match is always his own Cody Cutter, by design (`own_signature`), and he rarely gets a second. When he did (seed 1), the draw picked the Pedigree. Jericho hits the Code Breaker as a counter as often as a set-piece. Putting it on Cody's rebound tier (a man coming off the ropes) would show it in most matches, but it needs a running variant of the clip. That is a follow-up, not done here.
 
 **Gates.** Match flow, match flow 2K26, AI match shape, match-loop reachability, grapple move selection, weapon AI, finisher-only wins, match story, FF library and paired moveset all pass.
+
+## 26 Oct — Kenny's Fight Forever set, batch 1: the V-Triggers, and a moveset of his own
+
+**24 of 146 library moves built.** Kenny had no moveset tiers, only his One Winged Angel finisher; he fought with the shared draw. He now has his own (`Roster`, `kenny`): chops, jabs, kicks and the cross; the suplex and body slam; the powerslam and the Tiger Driver '98 (he hits it in his real matches, though it is Cody's in the game); the V-Trigger as his signature; and two V-Triggers and the clothesline on the run. `FFMoveLibrary.FITS` gains `kenny`: his seven FF moves and the Tiger Driver.
+
+**The moves** (`wrestling_clips.py`, Kenny batch 1; each 1.2 s, the knee home at 0.30 s):
+- **Running V-Trigger 1** (`ff_running_v_trigger_1`, his special): the Knee Lift's run and plant, then a hop with the knee driven up into the face of a man leaning in, both arms flung back behind him (where Roman's knee lift throws them up). The man goes straight over backward and Kenny stays over him.
+- **Running V-Trigger 3** (`ff_running_v_trigger_3`, a signature): the same knee into a man doubled over in front of him. His head is snapped up by it and he goes over backward. `MovePlaybook` makes it a move of the middle, twice a match: it is Kenny's staple, not a stretch-run special.
+- **V-Trigger 1** (`ff_v_trigger_1`, his special; Kenny's signature draw): standing. His left hand takes the man's right wrist and yanks him in, bent over his own arm, onto the knee coming up into his face.
+
+**Two fixes, both found on the review sheets:**
+- **The knee met the belt.** Keyed with the foot level with the hip, the leg folded flat, and a knee there sits at hip height. The thigh is now driven *up*, with the shin hanging under it and the knee pointed forward-up: the knee is about 0.3 m higher.
+- **The man was upright when it landed.** His fall started on the contact frame, so the knee always took him in the chest. Each man now stays bent into the knee through frame 9 and goes over from frame 10. For the doubled-over version Kenny also plants upright: leaning in, his head met the man's a frame before the knee did.
+- **Spacing.** The runs are spaced so the knee meets the face: 0.52 m between them for the man leaning in, 0.77 m for the one doubled over.
+
+**Fitted clean** from scratch, three passes each (to 3 mm, 0 and 0). Limb flips stay at 39 of 40.
+
+**Review sheet.** `gauntlet/refs/ff_review/ff_kenny_batch1_v_triggers.png`: Kenny on Cody, one row per move.
+
+**In a match** (`moveset_tally --wrestlers kenny,cody`, seeds 1 and 2, both won by pinfall in about 7.2 minutes): Kenny threw the running V-Trigger 3 four times, the running V-Trigger 1 twice, the V-Trigger as his signature six times (three a match, the top of the 2K26 range), the Tiger Driver twice and the One Winged Angel once, around his chops and kicks.
+
+**Gates.** Clip authoring (re-pinned), pose lint, the body-deformation gate, pair clearance, paired poses and moveset, roster, match story and FF library all pass. `test_ff_library.gd` holds the three built and in Kenny's tiers.
