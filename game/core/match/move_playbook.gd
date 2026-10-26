@@ -34,6 +34,8 @@ const OVERRIDES := {
 	# middle of the match, once each.
 	&"ff_code_breaker_1": [Place.MID, 1],
 	&"ff_inverted_ddt_1": [Place.MID, 1],
+	# Brian Cage's signature: Roman's corner move of the middle, once.
+	&"ff_buckle_bomb": [Place.MID, 1],
 }
 
 

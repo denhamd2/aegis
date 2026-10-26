@@ -8211,6 +8211,57 @@ CLIPS["FF_Inverted_DDT_1_Defender"] = [
            fist_r=0.5, fist_l=0.5)),
 ] + _back_fall(19, 48, skip_hit=True)
 
+# --- Fight Forever library, batch 4: Roman's corner (FFMoveLibrary.FITS).
+
+# Buckle Bomb (Brian Cage's signature), 66 frames / 2.2 s. Thrown at a man
+# hanging in the corner: the powerbomb's lift (_PB_LIFT, shared), and where
+# Powerbomb 1 throws him down in front, Roman heaves him back the way he came
+# -- into the turnbuckles. His back hits the pad at its own height with his
+# arms flung over the ropes; he drops onto his feet, knees going, and pitches
+# forward out of the corner onto his face while Roman backs off to give him
+# the room (paired_recipes.gd).
+CLIPS["FF_Buckle_Bomb_Attacker"] = _PB_LIFT_ATK + [
+    # The heave: forward and up, a step into it.
+    (33, P(pelvis=(0.0, 0.08, 0.840), hips=(-8, 0, 0), spine=(-6, 0, 0),
+           head=(-8, 0, 0),
+           hand_r=(0.24, 0.56, 1.60), hand_l=(-0.24, 0.56, 1.60),
+           fist_r=0.3, fist_l=0.3,
+           foot_r=(0.22, 0.20, 0.104), foot_l=(-0.20, -0.16, 0.104))),
+    # Following it through.
+    (36, P(pelvis=(0.0, 0.10, 0.820), hips=(-12, 0, 0), spine=(-12, 0, 0),
+           head=(-8, 0, 0),
+           hand_r=(0.24, 0.62, 1.30), hand_l=(-0.24, 0.62, 1.30),
+           fist_r=0.3, fist_l=0.3,
+           foot_r=(0.22, 0.20, 0.104), foot_l=(-0.20, -0.16, 0.104))),
+    # Backing off as the man comes out of the corner.
+    (44, P(pelvis=(0.0, 0.0, 0.840), spine=(-6, 0, 0),
+           hand_r=(0.26, 0.36, 1.10), hand_l=(-0.26, 0.36, 1.10),
+           fist_r=0.5, fist_l=0.5)),
+    (52, P()),
+    (66, P()),
+]
+CLIPS["FF_Buckle_Bomb_Defender"] = _PB_LIFT_DEF + [
+    # Off the shoulders backward, still high.
+    (33, dict(_PB_TOP_DEF, pelvis=(0.0, -0.20, 1.400), hips=(30, 0, 0),
+              spine=(14, 0, 0), head=(16, 0, 0))),
+    # Into the buckle: back flat to the pad, arms flung out over the ropes,
+    # feet off the mat.
+    (36, P(pelvis=(0.0, -0.12, 1.020), hips=(-6, 0, 0), spine=(22, 0, 0),
+           head=(24, 0, 0),
+           hand_r=(0.62, -0.10, 1.40), hand_l=(-0.62, -0.10, 1.40),
+           elbow_r=(0.6, 0.4, 0.4), elbow_l=(-0.6, 0.4, 0.4),
+           fist_r=0.1, fist_l=0.1,
+           foot_r=(0.18, 0.30, 0.300), foot_l=(-0.18, 0.30, 0.300),
+           knee_r=(0.2, 1.0, 0.0), knee_l=(-0.2, 1.0, 0.0), free_feet=True)),
+    # Dropped onto his feet, the knees going.
+    (40, P(pelvis=(0.0, -0.06, 0.760), hips=(-20, 0, 0), spine=(-10, 0, 0),
+           head=(10, 0, 0),
+           hand_r=(0.46, -0.04, 1.06), hand_l=(-0.46, -0.04, 1.06),
+           fist_r=0.1, fist_l=0.1,
+           foot_r=(0.18, 0.18, 0.104), foot_l=(-0.18, 0.20, 0.104),
+           knee_r=(0.2, 1.0, 0.2), knee_l=(-0.2, 1.0, 0.2))),
+] + _face_fall(42, 66)  # 66, not 60: the roll onto his back needs its 19 frames
+
 
 def main():
     arm = load_rig()

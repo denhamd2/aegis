@@ -309,6 +309,7 @@ CLIP_FRAMES = {
     "fireman_carry_bomb_2": (80, 6, 34),  # 60 frames: contact at 40
     "code_breaker_1": (28, 6, 38),        # 36 frames: contact at 14
     "inverted_ddt_1": (50, 6, 40),        # 48 frames: contact at 25
+    "buckle_bomb": (72, 6, 54),           # 66 frames: contact at 36
 }
 
 # Damage by tier: (head, torso, legs). A special is the big one.

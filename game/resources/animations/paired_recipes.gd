@@ -919,6 +919,20 @@ const RECIPES := {
 		],
 		"defender_grips_until": 0.60,
 	},
+	# Batch 4 (FFMoveLibrary, Roman's corner) -- see FF_Buckle_Bomb_Attacker:
+	# the powerbomb's lift, thrown back into the turnbuckles.
+	"ff_buckle_bomb": {
+		"authored": {"attacker": "FF_Buckle_Bomb_Attacker", "defender": "FF_Buckle_Bomb_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "PickUp_Table", "at": 0.45},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.55,
+	},
 }
 
 ## Root-transform trajectories for the moves authored after the original
@@ -1957,6 +1971,28 @@ const TRAJECTORIES := {
 			"pos": [[0.00, -0.40, 0.00, 0.00], [0.60, -0.40, 0.00, 0.00],
 					[0.87, -0.50, 0.00, 0.00], [1.60, -0.55, 0.00, 0.00]],
 			"rot": [[0.00, 0.0, -90.0, 0.0], [1.60, 0.0, -90.0, 0.0]],
+		},
+	},
+	# Thrown only at a man in the corner, who stands at -0.40 with the
+	# buckle behind him: Powerbomb 1's lift (his root in under Roman's), then
+	# heaved back to the pad (-0.55) instead of down in front of it, onto
+	# his feet, and out of the corner on his face -- Roman backing off a
+	# metre to give him the room.
+	"ff_buckle_bomb": {
+		"length": 2.2,
+		"attacker": {
+			"pos": [[0.00, 0.40, 0.00, 0.00], [1.00, 0.40, 0.00, 0.00],
+					[1.10, 0.32, 0.00, 0.00], [1.40, 0.40, 0.00, 0.00],
+					[1.60, 0.95, 0.00, 0.00], [2.00, 1.30, 0.00, 0.00],
+					[2.20, 1.30, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, 90.0, 0.0], [2.20, 0.0, 90.0, 0.0]],
+		},
+		"defender": {
+			"pos": [[0.00, -0.40, 0.00, 0.00], [0.20, -0.20, 0.00, 0.00],
+					[0.67, 0.10, 0.00, 0.00], [1.00, 0.10, 0.00, 0.00],
+					[1.10, -0.25, 0.00, 0.00], [1.20, -0.55, 0.00, 0.00],
+					[1.33, -0.48, 0.00, 0.00], [2.20, -0.45, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, -90.0, 0.0], [2.20, 0.0, -90.0, 0.0]],
 		},
 	},
 }

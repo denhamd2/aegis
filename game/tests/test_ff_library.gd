@@ -84,6 +84,15 @@ func test_batch_three_is_built_and_codys() -> void:
 	assert_int(FFMoveLibrary.progress().x).is_greater_equal(18)
 
 
+## Batch 4 (26 Oct): Roman's Buckle Bomb, in his corner draw beside the Spear.
+func test_batch_four_is_built_and_romans() -> void:
+	assert_bool(FFMoveLibrary.is_built("buckle_bomb")).is_true()
+	assert_array(FFMoveLibrary.fits_of("roman")).contains(["buckle_bomb"])
+	var roman := Roster.by_id("roman")
+	assert_array(roman.moveset["corner"]).contains(["res://resources/moves/ff/buckle_bomb.tres"])
+	assert_int(FFMoveLibrary.progress().x).is_greater_equal(19)
+
+
 ## The owner asked for good fits for Cody and Roman to be tagged, built or
 ## not: every fit is a library move, and the built ones are in their hands.
 func test_cody_and_roman_have_fits() -> void:

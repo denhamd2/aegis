@@ -10476,3 +10476,15 @@ Two more of Cody's tagged fits (`FFMoveLibrary.FITS`). **18 of 146 library moves
 - **Fitted with the fixed fitter** (batch 2): three clean passes, the leftover correction down to 7 mm and 28 mm. Pose lint, limb flips, pair clearance and the moveset pins all pass. The knees land chest-high on Roman, the tallest man, as the corner knee does.
 - **Review sheet.** `gauntlet/refs/ff_review/ff_batch3_cody.png`.
 - **In a match** (`moveset_tally`, seeds 1 and 4, both won by pinfall): Cody threw the Inverted DDT twice in the first match. The second came after his other grapples had reached their per-match limits, which is the playbook's least-used fallback. The Code Breaker was not thrown. Cody reached his signature rung once in the two matches, and his first signature is always his own Cody Cutter; his Disaster Kick and Pedigree were not seen either. That is the existing pacing of the signature rung, not the new move. Its mechanics are covered by the gates and the review sheet above.
+
+## 26 Oct — Fight Forever library, batch 4: Roman's Buckle Bomb in the corner
+
+**19 of 146 library moves built.**
+
+- **Buckle Bomb** (`ff_buckle_bomb`, 2.2 s; Brian Cage's signature). It is thrown only at a man hanging in a corner. It uses the powerbomb's lift, shared with Powerbomb 1, but where Powerbomb 1 throws the man down in front, Roman heaves him back the way he came, into the turnbuckles. His back hits the pads with his arms flung over the ropes. He drops onto his feet, knees going, and pitches forward out of the corner onto his face, while Roman backs off a metre to give him room.
+- **A corner pool.** Roman's corner tier was one move, `corner_move`. It is now drawn like every other tier (`corner_move_pool`, `_pick_tier_move`), so Roman runs in with either the Spear or the Buckle Bomb. The bomb is a middle-of-the-match move, once (`MovePlaybook`).
+- **Fitted clean** in four passes (0.45 m to 24 mm). The fit runs mid-ring and does not model the turnbuckle, so the impact was checked on a render from behind the post: his back meets the pads at about 1.4 s, 62% of the move.
+- **Limb flips.** At 2.0 s the face-first fall's roll onto his back had 12 frames instead of its 19, and both upper arms flipped about 128 degrees on the last frame (41 flips against the budget of 40). The clip is now 2.2 s and the count is back to 39.
+- **Guard.** `test_corner_spear.gd` holds the bomb in Roman's corner draw and plays it through on Cody in the corner: hurt, down, inside the ropes. `test_ff_library.gd` holds it built.
+- **Review sheet.** `gauntlet/refs/ff_review/ff_batch4_buckle_bomb.png`, from the side and from behind the post.
+- **In a match** (`moveset_tally`, seeds 2 and 3, both won by pinfall): Roman ran in from the corner once in the two matches, and the draw picked the Spear. One run-in is too few to show the bomb; it is proven by the corner test and the renders. Corner run-ins are rare because they need the man trapped and a blow landed first.

@@ -103,6 +103,7 @@ const MOVES := {
 	# Both knees, no hands.
 	"ff_code_breaker_1": "none",
 	"ff_inverted_ddt_1": "neck",
+	"ff_buckle_bomb": "waist",
 }
 
 ## Moves the contact pull (GrappleRig._pull_into_reach) leaves alone: the

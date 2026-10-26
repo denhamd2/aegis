@@ -193,8 +193,9 @@ static func entries() -> Array:
 		"running": [M + "running_attack_clothesline.tres",
 				M + "running_clothesline_from_hell.tres", M + "running_knee_lift.tres",
 				M + "running_drive_by.tres"],
-		# From the corner: only thrown at a man hanging in one.
-		"corner": [M + "running_corner_spear.tres"],
+		# From the corner: only thrown at a man hanging in one. The Spear,
+		# or (FF batch 4) up and heaved back into the turnbuckles.
+		"corner": [M + "running_corner_spear.tres", M + "ff/buckle_bomb.tres"],
 		# And at a man hanging in the corner, the lariat over and over.
 		"corner_strike": [M + "strike_corner_clothesline.tres"],
 		# At a man he whipped into the ropes, coming back off them: the

@@ -86,3 +86,38 @@ func test_codys_corner_knee_puts_the_man_in_the_buckle_down() -> void:
 	assert_float(absf(roman.global_position.x)).is_less(3.0)
 	assert_float(absf(roman.global_position.z)).is_less(3.0)
 	assert_bool(roman.outside_ring).is_false()
+
+
+## Roman's corner draw holds the Buckle Bomb beside the Spear (FF batch 4),
+## and played on Cody hanging in the buckle it puts him down, hurt, inside
+## the ropes -- thrown back into the pads, out of the corner on his face.
+func test_romans_buckle_bomb_in_the_corner() -> void:
+	var scene := _roman_vs_cody()
+	await await_millis(40)
+	var roman := scene.get_node("WrestlerA") as WrestlerController
+	var cody := scene.get_node("WrestlerB") as WrestlerController
+	var pool: Array = roman.corner_move_pool.map(func(m: MoveDef) -> String:
+		return String(m.animation_pair_id))
+	assert_array(pool).contains(["ff_buckle_bomb"])
+	roman.is_ai = false
+	cody.is_ai = false
+	roman.corner_move = load("res://resources/moves/ff/buckle_bomb.tres")
+	roman.corner_move_pool = []
+	var spot := WrestlerController.CORNER_SPOT
+	cody.global_position = Vector3(spot, 0.0, spot)
+	roman.global_position = Vector3(spot - 0.85, 0.0, spot - 0.85)
+	cody.fsm.transition_to(WrestlerFSM.State.STUNNED)
+	cody._corner_trapped = true
+	var before := cody.combat.total_damage()
+	assert_bool(roman.try_corner_spear()).is_true()
+	var down := false
+	for i in 500:
+		await get_tree().physics_frame
+		if cody.fsm.current_state == WrestlerFSM.State.DOWN:
+			down = true
+			break
+	assert_bool(down).override_failure_message("Cody never went down").is_true()
+	assert_float(cody.combat.total_damage()).is_greater(before)
+	assert_float(absf(cody.global_position.x)).is_less(3.0)
+	assert_float(absf(cody.global_position.z)).is_less(3.0)
+	assert_bool(cody.outside_ring).is_false()

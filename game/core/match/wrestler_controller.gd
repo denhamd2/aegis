@@ -284,6 +284,9 @@ var _own_signature_thrown: bool = false
 ## Thrown only at a man trapped in a corner (Roman's corner Spear). Not part
 ## of any draw: try_corner_spear() is the one way in.
 @export var corner_move: MoveDef
+## The rest of his corner moves, drawn with it (_pick_tier_move) each time
+## he runs in -- Roman's Spear or his Buckle Bomb.
+@export var corner_move_pool: Array[MoveDef] = []
 ## His strike at a man trapped in the corner, in place of his ordinary draw
 ## (Roman's corner clotheslines, gauntlet/refs/moveset_audit_2k26.md).
 @export var corner_strike_move: MoveDef
@@ -2571,10 +2574,11 @@ func try_corner_spear() -> bool:
 		return false
 	if not RUNNING_PAIRED_TARGET_STATES.has(fsm.current_state):
 		return false
-	if not PairedRecipes.RECIPES.has(String(corner_move.animation_pair_id)):
+	var move := _pick_tier_move(corner_move, corner_move_pool)
+	if not PairedRecipes.RECIPES.has(String(move.animation_pair_id)):
 		return false
 	opponent.fsm.transition_to(WrestlerFSM.State.IDLE)
-	_begin_running_paired(corner_move)
+	_begin_running_paired(move)
 	return true
 
 ## States a man can be run into a paired move from: on his feet and not
