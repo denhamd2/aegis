@@ -6,11 +6,11 @@
 script = ExtResource("1")
 resource_name = "Inverted DDT 1"
 animation_pair_id = &"ff_inverted_ddt_1"
-startup_frames = 32
+startup_frames = 50
 active_frames = 6
-recovery_frames = 36
-reversal_window_start = 22
-reversal_window_end = 30
+recovery_frames = 40
+reversal_window_start = 40
+reversal_window_end = 48
 damage_head = 16.0
 damage_torso = 12.0
 damage_arms = 0.0

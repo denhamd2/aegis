@@ -8133,6 +8133,84 @@ CLIPS["FF_Fireman_Carry_Bomb_2_Defender"] = \
     (60, dict(SUPINE)),
 ]
 
+# --- Fight Forever library, batch 3: Cody's fits (FFMoveLibrary.FITS).
+
+# Code Breaker 1 (Chris Jericho's signature), 36 frames / 1.2 s. Out of the
+# lock-up he shoves the man off a step, loads, and springs: both knees up
+# into the jaw, and down onto his seat as the man goes straight over
+# backward. The spring, the knees and the seat are the Rolling Codebreaker's
+# own (Codebreaker_Attacker 26-48) -- the same strike, from a standing start
+# instead of the roll.
+CLIPS["FF_Code_Breaker_1_Attacker"] = [
+    (0,  dict(_LOCK_ATK)),
+    # The shove: arms out, the man sent off a step.
+    (5,  P(pelvis=(0.0, 0.04, 0.840), hips=(-4, 0, 0), spine=(-8, 0, 0),
+           hand_r=(0.20, 0.52, 1.24), hand_l=(-0.20, 0.52, 1.22),
+           fist_r=0.2, fist_l=0.2)),
+    # Loads.
+    (10, _key("Codebreaker_Attacker", 26)),
+    # Both knees into the jaw.
+    (14, _key("Codebreaker_Attacker", 30)),
+    (17, pose(ATK_SEAT)), (24, pose(ATK_SEAT)),
+] + _get_up(25, 36, seated=True)
+CLIPS["FF_Code_Breaker_1_Defender"] = [
+    (0,  dict(_LOCK_DEF)),
+    # Shoved off, a step back, arms coming up.
+    (5,  P(pelvis=(0.0, -0.04, 0.840), spine=(4, 0, 0), head=(4, 0, 0),
+           hand_r=(0.26, 0.30, 1.04), hand_l=(-0.24, 0.32, 1.02),
+           fist_r=0.3, fist_l=0.3)),
+    (10, _key("Codebreaker_Defender", 24)),
+    (13, _key("Codebreaker_Defender", 29)),
+] + _back_fall(15, 36, pelvis_hit=0.90)
+
+# Inverted DDT 1 (Christian Cage's signature), 48 frames / 1.6 s. Out of the
+# lock-up he ducks round the man's left side to his back -- the chain
+# waistlock's go-behind (Chain_Waistlock_Attacker 6-10, the same root
+# path) -- hooks the head under his right arm from behind, the forearm under
+# the chin, and falls back: the man is pulled over backward and the back of
+# his head driven into the mat beside Cody's chest. Cody lies half a body to
+# the man's side (0.45 m, paired_recipes.gd), so the two land side by side,
+# not one on the other.
+CLIPS["FF_Inverted_DDT_1_Attacker"] = [
+    (0,  dict(_LOCK_ATK)),
+    (6,  _key("Chain_Waistlock_Attacker", 6)),
+    (10, _key("Chain_Waistlock_Attacker", 10)),
+    # Behind him and to his left: the right forearm round under his chin,
+    # the left hand on his shoulder.
+    (14, P(pelvis=(0.0, 0.02, 0.820), hips=(-4, 0, 0), spine=(-8, 0, 0),
+           head=(-4, 0, 0),
+           hand_r=(0.42, 0.40, 1.40), hand_l=(0.20, 0.28, 1.30),
+           elbow_r=(0.6, -0.3, -0.5), elbow_l=(-0.4, -0.4, -0.6),
+           fist_r=0.6, fist_l=0.5)),
+    # Sits back into it, taking the man's weight.
+    (18, P(pelvis=(0.0, -0.06, 0.760), hips=(14, 0, 0), spine=(10, 0, 0),
+           head=(-4, 0, 0),
+           hand_r=(0.42, 0.30, 1.28), hand_l=(0.22, 0.20, 1.20),
+           elbow_r=(0.6, -0.3, -0.5), elbow_l=(-0.4, -0.4, -0.6),
+           fist_r=0.6, fist_l=0.5)),
+    # Falling back with him.
+    (21, pose(SIT_DROP, hand_r=(0.42, 0.10, 0.80), hand_l=(0.24, 0.06, 0.76))),
+    # Flat on his back, the head driven in beside him.
+    (24, pose(ATK_BACK, hand_r=(0.45, -0.18, 0.14))),
+    (33, pose(ATK_BACK)),
+] + _get_up(36, 48, lying=True)
+CLIPS["FF_Inverted_DDT_1_Defender"] = [
+    (0,  dict(_LOCK_DEF)),
+    # Stands, the man gone round him; looks after him.
+    (6,  P(pelvis=(0.0, 0.0, 0.840), spine=(-6, -10, 0), head=(0, -24, 0),
+           hand_r=(0.24, 0.30, 1.10), hand_l=(-0.22, 0.32, 1.10),
+           fist_r=0.4, fist_l=0.4)),
+    # Hooked from behind: chin forced up, both hands to the arm.
+    (14, P(pelvis=(0.0, -0.04, 0.820), spine=(10, 0, 0), head=(20, 0, 0),
+           hand_r=(0.10, 0.12, 1.44), hand_l=(-0.10, 0.12, 1.44),
+           fist_r=0.5, fist_l=0.5)),
+    # Pulled back off balance.
+    (18, P(pelvis=(0.0, -0.10, 0.800), hips=(16, 0, 0), spine=(16, 0, 0),
+           head=(24, 0, 0),
+           hand_r=(0.10, 0.10, 1.40), hand_l=(-0.10, 0.10, 1.40),
+           fist_r=0.5, fist_l=0.5)),
+] + _back_fall(19, 48, skip_hit=True)
+
 
 def main():
     arm = load_rig()

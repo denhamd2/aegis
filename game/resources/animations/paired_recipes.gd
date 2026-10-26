@@ -891,6 +891,34 @@ const RECIPES := {
 		],
 		"defender_grips_until": 0.62,
 	},
+	# Batch 3 (FFMoveLibrary, Cody's fits) -- see FF_Code_Breaker_1_Attacker:
+	# shoved off, both knees into the jaw, down to a seat.
+	"ff_code_breaker_1": {
+		"authored": {"attacker": "FF_Code_Breaker_1_Attacker", "defender": "FF_Code_Breaker_1_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "PickUp_Table", "at": 0.45},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.20,
+	},
+	# Batch 3 -- see FF_Inverted_DDT_1_Attacker: round behind him, the head
+	# hooked, and over backward together.
+	"ff_inverted_ddt_1": {
+		"authored": {"attacker": "FF_Inverted_DDT_1_Attacker", "defender": "FF_Inverted_DDT_1_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "PickUp_Table", "at": 0.45},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.60,
+	},
 }
 
 ## Root-transform trajectories for the moves authored after the original
@@ -1891,6 +1919,44 @@ const TRAJECTORIES := {
 					[1.43, 0.00, 0.00, 0.40], [1.53, -0.30, 0.00, 0.45],
 					[2.00, -0.35, 0.00, 0.45]],
 			"rot": [[0.00, 0.0, -90.0, 0.0], [2.00, 0.0, -90.0, 0.0]],
+		},
+	},
+	# Shoved off to 0.95 m apart, Cody loads a step back and springs in; the
+	# man goes straight over backward from the knees.
+	"ff_code_breaker_1": {
+		"length": 1.2,
+		"attacker": {
+			"pos": [[0.00, 0.40, 0.00, 0.00], [0.17, 0.44, 0.00, 0.00],
+					[0.33, 0.52, 0.00, 0.00], [0.47, 0.28, 0.00, 0.00],
+					[0.57, 0.30, 0.00, 0.00], [1.20, 0.30, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, 90.0, 0.0], [1.20, 0.0, 90.0, 0.0]],
+		},
+		"defender": {
+			"pos": [[0.00, -0.40, 0.00, 0.00], [0.17, -0.52, 0.00, 0.00],
+					[0.43, -0.56, 0.00, 0.00], [0.73, -0.90, 0.00, 0.00],
+					[1.20, -0.92, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, -90.0, 0.0], [1.20, 0.0, -90.0, 0.0]],
+		},
+	},
+	# The chain waistlock's go-behind round the man's left side (-Z) to his
+	# back by 0.47 s, but stopping half a body to that side (Z -0.45) with
+	# the head hooked; then both go over backward (-X), Cody onto his back
+	# beside the man, the man's head driven in level with Cody's chest.
+	"ff_inverted_ddt_1": {
+		"length": 1.6,
+		"attacker": {
+			"pos": [[0.00, 0.40, 0.00, 0.00], [0.17, 0.12, 0.00, -0.50],
+					[0.33, -0.50, 0.00, -0.56], [0.47, -0.72, 0.00, -0.45],
+					[0.60, -0.82, 0.00, -0.45], [0.80, -1.05, 0.00, -0.47],
+					[1.60, -1.05, 0.00, -0.47]],
+			"rot": [[0.00, 0.0, 90.0, 0.0], [0.17, 0.0, 20.0, 0.0],
+					[0.33, 0.0, -45.0, 0.0], [0.47, 0.0, -90.0, 0.0],
+					[1.60, 0.0, -90.0, 0.0]],
+		},
+		"defender": {
+			"pos": [[0.00, -0.40, 0.00, 0.00], [0.60, -0.40, 0.00, 0.00],
+					[0.87, -0.50, 0.00, 0.00], [1.60, -0.55, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, -90.0, 0.0], [1.60, 0.0, -90.0, 0.0]],
 		},
 	},
 }

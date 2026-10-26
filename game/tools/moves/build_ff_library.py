@@ -307,6 +307,8 @@ CLIP_FRAMES = {
     "chokeslam_1": (68, 6, 34),           # 54 frames: contact at 34
     "oklahoma_stampede": (84, 6, 24),     # 57 frames: contact at 42
     "fireman_carry_bomb_2": (80, 6, 34),  # 60 frames: contact at 40
+    "code_breaker_1": (28, 6, 38),        # 36 frames: contact at 14
+    "inverted_ddt_1": (50, 6, 40),        # 48 frames: contact at 25
 }
 
 # Damage by tier: (head, torso, legs). A special is the big one.

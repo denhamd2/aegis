@@ -100,6 +100,9 @@ const MOVES := {
 	"ff_chokeslam_1": "none",
 	"ff_oklahoma_stampede": "legs",
 	"ff_fireman_carry_bomb_2": "legs",
+	# Both knees, no hands.
+	"ff_code_breaker_1": "none",
+	"ff_inverted_ddt_1": "neck",
 }
 
 ## Moves the contact pull (GrappleRig._pull_into_reach) leaves alone: the

@@ -413,9 +413,11 @@ func test_each_wrestler_gets_his_own_signature_and_keeps_the_shared_ones() -> vo
 	assert_array(ids["WrestlerA"]).not_contains(["signature_cody_cutter",
 			"signature_neckbreaker"])
 	# Cody has his own signature tier (Roster.Entry.moveset): his Cutter and
-	# his Disaster Kick, and not the shared two.
+	# his Disaster Kick, and not the shared two -- and the library's Code
+	# Breaker (FF batch 3).
 	assert_array(ids["WrestlerB"]).contains_exactly_in_any_order(
-			["signature_cody_cutter", "signature_disaster_kick", "signature_pedigree"])
+			["signature_cody_cutter", "signature_disaster_kick", "signature_pedigree",
+			"ff_code_breaker_1"])
 	assert_array(ids["WrestlerB"]).not_contains(["signature_superman_punch"])
 
 ## And it is the first one he throws.
@@ -461,13 +463,14 @@ func test_cody_fights_with_his_own_moveset() -> void:
 	assert_array(ids.call(cody.strike_move, cody.strike_move_pool)).contains(
 			["strike_bionic_elbow", "strike_dropdown_uppercut"])
 	assert_array(ids.call(cody.grapple_move, cody.grapple_move_pool)) \
-			.is_equal(["grapple_vertical_suplex", "ff_brainbuster_1", "power_bodyslam",
-					"signature_neckbreaker"])
+			.is_equal(["grapple_vertical_suplex", "ff_brainbuster_1", "ff_inverted_ddt_1",
+					"power_bodyslam", "signature_neckbreaker"])
 	assert_array(ids.call(cody.power_move, cody.power_move_pool)) \
 			.is_equal(["power_powerslam", "power_alabama_slam", "ff_tiger_driver_98",
 					"ff_sit_out_powerbomb_2"])
 	assert_array(ids.call(cody.signature_move, cody.signature_move_pool)) \
-			.contains_exactly_in_any_order(["signature_disaster_kick", "signature_cody_cutter", "signature_pedigree"])
+			.contains_exactly_in_any_order(["signature_disaster_kick", "signature_cody_cutter",
+					"signature_pedigree", "ff_code_breaker_1"])
 	assert_str(String(cody.own_signature.animation_pair_id)).is_equal("signature_cody_cutter")
 	assert_str(String(cody.finisher_move.animation_pair_id)).is_equal("finisher_cross_rhodes")
 	# Roman has his own, and Cody's Alabama Slam is not in it.

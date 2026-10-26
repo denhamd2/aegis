@@ -72,6 +72,18 @@ func test_batch_two_is_built_and_romans() -> void:
 	assert_int(FFMoveLibrary.progress().x).is_greater_equal(16)
 
 
+## Batch 3 (26 Oct), Cody's fits: the Code Breaker in his signature draw and
+## the Inverted DDT among his grapples.
+func test_batch_three_is_built_and_codys() -> void:
+	for m: String in ["code_breaker_1", "inverted_ddt_1"]:
+		assert_bool(FFMoveLibrary.is_built(m)).override_failure_message(m).is_true()
+		assert_array(FFMoveLibrary.fits_of("cody")).contains([m])
+	var cody := Roster.by_id("cody")
+	assert_array(cody.moveset["signature"]).contains(["res://resources/moves/ff/code_breaker_1.tres"])
+	assert_array(cody.moveset["grapple"]).contains(["res://resources/moves/ff/inverted_ddt_1.tres"])
+	assert_int(FFMoveLibrary.progress().x).is_greater_equal(18)
+
+
 ## The owner asked for good fits for Cody and Roman to be tagged, built or
 ## not: every fit is a library move, and the built ones are in their hands.
 func test_cody_and_roman_have_fits() -> void:

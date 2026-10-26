@@ -30,6 +30,10 @@ const OVERRIDES := {
 	# of the middle, beside the powerbomb. Left a stretch-run special, two
 	# tallied matches drew 15 power moves from Roman and never this one.
 	&"ff_fireman_carry_bomb_2": [Place.MID, 1],
+	# Jericho's and Christian's signatures, not their specials: Cody's in the
+	# middle of the match, once each.
+	&"ff_code_breaker_1": [Place.MID, 1],
+	&"ff_inverted_ddt_1": [Place.MID, 1],
 }
 
 

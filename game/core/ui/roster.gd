@@ -221,6 +221,8 @@ static func entries() -> Array:
 		"grapple": [M + "grapple_vertical_suplex.tres",
 				# FF batch 1: the suplex lift, dropped on the head.
 				M + "ff/brainbuster_1.tres",
+				# FF batch 3: round behind him and over backward.
+				M + "ff/inverted_ddt_1.tres",
 				# His standard moves beside the suplex (the owner, 19 Oct: "Cody
 				# doing so many suplexes is crazy"): the body slam and the
 				# swinging neckbreaker. MovePlaybook keeps each to a couple.
@@ -232,7 +234,9 @@ static func entries() -> Array:
 		# to replace the Entry's own signature with these two, so off the
 		# springboard was the only Cody Cutter he had.
 		"signature": [M + "signature_disaster_kick.tres", M + "signature_pedigree.tres",
-				M + "signature_cody_cutter.tres"],
+				M + "signature_cody_cutter.tres",
+				# FF batch 3: both knees into the jaw.
+				M + "ff/code_breaker_1.tres"],
 		"running": [M + "running_attack_clothesline.tres",
 				M + "running_single_leg_dropkick.tres"],
 		"submission": [M + "submission_figure_four.tres"],
