@@ -1341,6 +1341,22 @@ func signature_landed(_knocked_down: bool) -> void:
 	_signature_retry = SIGNATURE_RETRY_TICKS
 
 
+## The highest rung a lock-up this man wins may draw when nothing capped it
+## (WrestlerController._pick_hold_move): whatever the meter affords only
+## when he would lock up for his signature or finisher himself
+## (_wants_signature_tie_up: the man ripe and the retry spent, or the finish
+## his); otherwise no higher than the power move.
+##
+## Without it, winning any uncapped lock-up -- the other man going for his
+## power move or his own signature, or the opening one -- handed the winner
+## his signature whatever state his opponent was in, retry wait or not:
+## Roman landed eight in two tallied matches, two backbreakers nine seconds
+## apart, while Cody's four signature lock-ups landed him one
+## (moveset_tally seeds 1 and 4, 26 Oct).
+func lock_up_cap() -> int:
+	return -1 if _wants_signature_tie_up() else CombatSystem.Tier.POWER
+
+
 ## Time for a working lock-up: enough blows since the last one, a grapple-tier
 ## move to work, and nothing better to do -- not mid-comeback (that is a flurry
 ## of strikes), and not at a man hanging in the corner (he cannot lock up).

@@ -4293,6 +4293,10 @@ func _pick_hold_move() -> MoveDef:
 	var move: MoveDef = null
 	var cap := tie_up_rung_cap
 	tie_up_rung_cap = -1
+	# Uncapped, an AI still draws its signature or finisher only when it would
+	# have locked up for one (WrestlerAI.lock_up_cap).
+	if cap < 0 and is_ai and ai:
+		cap = ai.lock_up_cap()
 	if prefer_hold_move:
 		# the AI's pick for a spot (WrestlerAI: the suplex onto a table)
 		move = prefer_hold_move

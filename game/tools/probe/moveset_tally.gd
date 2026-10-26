@@ -73,6 +73,7 @@ func _ready() -> void:
 				tally[gate] = tally.get(gate, 0) + 1
 				print("  seed %d tick %d: crossbody gate %s" % [seed_value, ticks, why])
 			last["rising"] = rising
+			_signature_gates(scene, pair, tally, last, seed_value, ticks)
 			for n in ["WrestlerA", "WrestlerB"]:
 				var w: WrestlerController = scene.get_node(n)
 				var m: MoveDef = w._active_move
@@ -95,8 +96,56 @@ func _ready() -> void:
 		print("seed %d: %d ticks, done=%s by %s" % [seed_value, ticks, done[0], how[0]])
 		scene.queue_free()
 		await get_tree().process_frame
+	# Seconds, not ticks, for the signature gate's time counts.
+	for k in tally.keys():
+		if String(k).contains(" sig ready"):
+			tally[k] = snappedf(float(tally[k]) / 60.0, 0.1)
 	var keys := tally.keys()
 	keys.sort()
 	for k in keys:
 		print("  %-44s %d" % [k, tally[k]])
 	get_tree().quit()
+
+
+## Why a man's signature does or does not come (Step 3 of the movesets plan:
+## Cody landed about one in two matches, Roman eight to ten). Per man: the
+## seconds his signature rung is affordable, split by what holds it back --
+## the man not ripe (WrestlerAI._opponent_is_ripe), the retry wait after one
+## lands, or nothing -- and each time he starts wanting the signature tie-up
+## and each time one lands. The gap still to close and the weakest
+## signature's reach are printed at the first ready tick of each wait.
+func _signature_gates(scene: Node, pair: Array, tally: Dictionary, last: Dictionary,
+		seed_value: int, ticks: int) -> void:
+	for n in ["WrestlerA", "WrestlerB"]:
+		var w: WrestlerController = scene.get_node(n)
+		if w.ai == null or w.ai.target == null:
+			continue
+		var who: String = pair[0 if n == "WrestlerA" else 1].id
+		var ready := w.combat.can_signature()
+		var why := ""
+		if ready:
+			if not w.ai._opponent_is_ripe():
+				why = "not ripe"
+			elif w.ai._signature_retry > 0:
+				why = "retry wait"
+			else:
+				why = "free"
+			var k := "%s sig ready, %s" % [who, why]
+			tally[k] = tally.get(k, 0) + 1
+			if not last.get(n + " ready", false):
+				var t := w.ai.target
+				var gap := WrestlerController.KNOCKDOWN_DAMAGE \
+						- (t.combat.wear - t._damage_at_last_knockdown)
+				print("  seed %d tick %d: %s sig ready (%s): gap %.1f, weakest %.1f x%.2f" % [
+						seed_value, ticks, who, why, gap, w.ai._weakest_signature_damage(),
+						t.combat.damage_taken_scale])
+		last[n + " ready"] = ready
+		var wants := w.ai._wants_signature_tie_up()
+		if wants and not last.get(n + " wants", false):
+			tally["%s sig tie-up wanted" % who] = tally.get("%s sig tie-up wanted" % who, 0) + 1
+		last[n + " wants"] = wants
+		var retry: int = w.ai._signature_retry
+		if retry > last.get(n + " retry", 0):
+			tally["%s sig landed" % who] = tally.get("%s sig landed" % who, 0) + 1
+			print("  seed %d tick %d: %s signature landed" % [seed_value, ticks, who])
+		last[n + " retry"] = retry

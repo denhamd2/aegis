@@ -10529,3 +10529,39 @@ Two more of Cody's tagged fits (`FFMoveLibrary.FITS`). **18 of 146 library moves
 **Gates.** Pose lint, clip authoring (re-pinned), the body-deformation gate (39 of 40), pair clearance, paired poses and moveset, strike clips, and the dive, corner, rebound, roster and match-story pins all pass.
 
 **In a match** (`moveset_tally`, seeds 2 and 5, both won by pinfall; both seeds pick the moonsault ending): Roman threw the Casualty of War twice in the two matches. Cody reached the dive spot once, and it ended on the springboard moonsault. The Code Breaker was again not thrown. That is the signature pacing problem, which is the next step.
+
+## 26 Oct — Signature pacing: Roman's came off Cody's lock-ups; Cody's waited on the Code Breaker
+
+Measured, not guessed. `moveset_tally` now logs, per man, how long his signature rung is affordable, what holds it back (the man not ripe, the retry wait, or nothing), each signature lock-up he wants, and each signature that lands.
+
+**Before** (seeds 1 and 4):
+
+| | Signature rung affordable | Held by "not ripe" | Free | Signature lock-ups wanted | Landed |
+|---|---|---|---|---|---|
+| Roman | 649 s | 612 s | 22 s | 6 | **8** |
+| Cody | 262 s | 237 s | 21 s | 4 | **1** |
+
+Both men had about the same free time, yet Roman landed eight signatures from six lock-ups, two backbreakers nine seconds apart (inside the 45-second retry wait). Something other than his own signature lock-up was throwing them.
+
+**Cause 1: winning someone else's lock-up threw your signature.** There is exactly one place a signature is drawn: `WrestlerController._pick_hold_move()`, when a man wins a lock-up. It draws the highest tier his meter affords unless the lock-up was capped. The AI caps only its working lock-ups, and copies that cap onto the other man. So when Cody locked up for his power move or his own signature (uncapped), and Roman won it, Roman threw his signature whether Cody was ready to go down or not.
+- **Fix** (`WrestlerAI.lock_up_cap()`): an AI that wins an uncapped lock-up draws its signature or finisher only when it would have locked up for one itself (the man ripe and the retry spent, or the finish his). Otherwise it goes no higher than the power move.
+- **Scope.** A man on the controller is unaffected.
+- **Guard.** `test_grapple_move_selection.gd` holds it: fresh man, power move; beaten-down man, signature; human, signature.
+
+**Cause 2: the Code Breaker's damage held Cody's whole draw back.** The AI only reaches for a signature when the *weakest* one he could draw would put the man down (`_opponent_is_ripe()`).
+- **The mismatch.** The library gave the Code Breaker its generic signature damage, 20, beside Cody's own Disaster Kick (26), Pedigree and Cody Cutter (28). So Cody's ripeness was set by a move he rarely throws.
+- **Fix** (`build_ff_library.py`, `DRAW_DAMAGE`): a library move placed in one of our signature draws takes that draw's damage. The Code Breaker is now 26, laid out like the Disaster Kick.
+
+**After** (five seeds, all won by pinfall in 7.2 to 8.5 minutes, inside the 8 to 12 minute design):
+
+| Signatures landed | Seed 1 | Seed 2 | Seed 3 | Seed 4 | Seed 6 | Per match |
+|---|---|---|---|---|---|---|
+| Roman | 2 | 1 | 3 | 3 | 2 | **2.2** (was 4) |
+| Cody | 2 | 1 | 0 | 1 | 1 | **1.0** (was 0.5) |
+
+- **Roman** is inside the 2K26 range (one to three a match) in every match.
+- **Cody** is inside it in four of five. Seed 3 had none.
+
+**Not met: the Code Breaker was not seen in any of the five.** Cody's first signature in a match is always his own Cody Cutter, by design (`own_signature`), and he rarely gets a second. When he did (seed 1), the draw picked the Pedigree. Jericho hits the Code Breaker as a counter as often as a set-piece. Putting it on Cody's rebound tier (a man coming off the ropes) would show it in most matches, but it needs a running variant of the clip. That is a follow-up, not done here.
+
+**Gates.** Match flow, match flow 2K26, AI match shape, match-loop reachability, grapple move selection, weapon AI, finisher-only wins, match story, FF library and paired moveset all pass.

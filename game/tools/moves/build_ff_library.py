@@ -318,6 +318,16 @@ CLIP_FRAMES = {
 
 # Damage by tier: (head, torso, legs). A special is the big one.
 TIER_DAMAGE = {"signature": (10.0, 8.0, 2.0), "special": (16.0, 12.0, 4.0)}
+
+# Moves we put in one of OUR wrestlers' signature draws take that draw's
+# damage, not the library tier's: WrestlerAI only reaches for a signature
+# when the WEAKEST one in the draw would put the man down
+# (_opponent_is_ripe), so a library signature at 20 beside Cody's own at
+# 26-28 made him wait longer for every signature he has. Tallied before
+# (seeds 1 and 4): his signature rung affordable 262 s, 237 of them held by
+# that gate. The Code Breaker is a knee to the face: the Disaster Kick's 26,
+# laid out like it.
+DRAW_DAMAGE = {"code_breaker_1": (18.0, 6.0, 2.0)}
 LEG_FAMILIES = {"submission"}
 
 
@@ -335,7 +345,7 @@ def tres(move_id: str) -> str:
     tiers = tiers_of(move_id)
     top = "special" if any("special" in t for t in tiers.values()) else "signature"
     su, ac, rc = CLIP_FRAMES.get(move_id, FAMILY_FRAMES[family])
-    head, torso, legs = TIER_DAMAGE[top]
+    head, torso, legs = DRAW_DAMAGE.get(move_id, TIER_DAMAGE[top])
     if family in LEG_FAMILIES:
         head, legs = head * 0.4, legs + head * 0.6
     down = family not in ("strike", "kick", "submission", "pin") or top == "special"

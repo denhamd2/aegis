@@ -150,3 +150,36 @@ func test_a_strike_is_not_a_rung() -> void:
 	assert_int(attacker.tier_of(attacker.strike_move)).is_equal(-1)
 	attacker.combat.record_tier(attacker.tier_of(attacker.strike_move))
 	assert_int(attacker.combat.tier_reached).is_equal(-1)
+
+
+## An AI that wins a lock-up nothing capped draws its signature only when it
+## would have locked up for one itself (WrestlerAI.lock_up_cap): on a man the
+## signature would leave standing it throws the power move instead. Before
+## this, winning the other man's lock-up threw the signature whatever state
+## he was in -- Roman landed eight in two tallied matches, Cody one.
+func test_an_ai_saves_its_signature_off_a_lock_up_for_a_ripe_man() -> void:
+	# Fresh: a 20-point signature would not put him down.
+	var fresh := _ai_pair(true)
+	assert_str(_selected_move_id(fresh[0], fresh[1], CombatSystem.SIGNATURE_THRESHOLD)) \
+			.is_equal(&"power")
+	# Beaten down to within its reach: now it comes.
+	var ripe := _ai_pair(true)
+	(ripe[1] as WrestlerController).combat.wear = WrestlerController.KNOCKDOWN_DAMAGE - 10.0
+	assert_str(_selected_move_id(ripe[0], ripe[1], CombatSystem.SIGNATURE_THRESHOLD)) \
+			.is_equal(&"signature")
+	# A man on the controller is not the AI's to hold back.
+	var human := _ai_pair(false)
+	assert_str(_selected_move_id(human[0], human[1], CombatSystem.SIGNATURE_THRESHOLD)) \
+			.is_equal(&"signature")
+
+
+func _ai_pair(is_ai: bool) -> Array:
+	var pair := _make_grappling_pair()
+	var attacker: WrestlerController = pair[0]
+	var ai: WrestlerAI = auto_free(WrestlerAI.new())
+	ai.controller = attacker
+	ai.target = pair[1]
+	attacker.ai = ai
+	attacker.is_ai = is_ai
+	attacker.signature_move.damage_head = 20.0
+	return pair
