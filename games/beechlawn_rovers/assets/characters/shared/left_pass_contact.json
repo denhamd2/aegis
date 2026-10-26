@@ -1,0 +1,9 @@
+{
+  "clip": "AN_Beechlawn_PassLeft",
+  "event": "ball_contact",
+  "frame": 24,
+  "fps": 60,
+  "time_seconds": 0.4,
+  "foot": "left",
+  "source_clip": "AN_Beechlawn_PassRight"
+}

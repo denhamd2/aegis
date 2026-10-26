@@ -1,5 +1,7 @@
 extends SceneTree
 var failures: Array[String] = []
+var foot: StringName = &"left" if OS.get_environment("BEECHLAWN_STRIKE_FOOT")=="left" else &"right"
+var lateral: float = -.09 if foot==&"left" else .09
 func _initialize() -> void: call_deferred("_run")
 func check(ok: bool, message: String) -> void:
 	if not ok: failures.append(message)
@@ -30,8 +32,8 @@ func _run() -> void:
 			actor.rotation.y = -PI / 2 * sx; actor.velocity = Vector3.ZERO; actor.controlled_by_human = context != &"ai_half_volley"
 			actor._flat_direction = Vector3(sx, 0, 0)
 			ball.freeze = true; ball.release_for_restart(); ball.linear_velocity = Vector3.ZERO; ball.angular_velocity = Vector3.ZERO
-			var destination := actor.position + Vector3(.60 * sx, actor.tuning.volley_contact_height, .09 * sx)
-			ball.position = destination + Vector3(2 * sx, .7, 0) if action == &"volley" else Vector3(35 * sx, 1.9, .09 * sx)
+			var destination := actor.position + Vector3(.60 * sx, actor.tuning.volley_contact_height, lateral * sx)
+			ball.position = destination + Vector3(2 * sx, .7, 0) if action == &"volley" else Vector3(35 * sx, 1.9, lateral * sx)
 			await physics_frame; ball.freeze = false
 			var launch := FootballBallFlight.launch(ball, destination, .31) if action == &"volley" else Vector3(-7 * sx, -5, 0)
 			ball.kick_velocity(launch, &"cross", actor.team_name, team[1])
@@ -42,7 +44,7 @@ func _run() -> void:
 				if not forecast.is_empty(): actor.position.x = forecast.position.x - .60 * sx
 			var contacts: Array[Dictionary] = []
 			var observe := func(kind: StringName, _speed: float):
-				if kind == &"shot": contacts.append({"style": ball.last_strike_style, "gap": actor._receive_contact_position().distance_to(ball.position), "bounce_age": actor.get_meta("last_air_contact_bounce_age", 99)})
+				if kind == &"shot": contacts.append({"foot": actor._footballer_visual.strike_foot(), "style": ball.last_strike_style, "gap": actor._receive_contact_position().distance_to(ball.position), "bounce_age": actor.get_meta("last_air_contact_bounce_age", 99)})
 			ball.touched.connect(observe)
 			actor.set_physics_process(true)
 			if actor.controlled_by_human: Input.action_press("shoot")
@@ -54,7 +56,7 @@ func _run() -> void:
 				await physics_frame
 				max_rise = maxf(max_rise, actor.position.y - start_y)
 			actor.set_physics_process(false); ball.touched.disconnect(observe)
-			check(contacts.size() == 1 and contacts[0].style == action and contacts[0].gap <= .20, "Actual boot contact failed: " + str(action) + " side=" + str(sx))
+			check(contacts.size() == 1 and contacts[0].foot == foot and contacts[0].style == action and contacts[0].gap <= .20, "Actual boot contact failed: " + str(action) + " side=" + str(sx))
 			if action == &"half_volley" and not contacts.is_empty(): check(contacts[0].bounce_age < .30, "Half-volley occurred without a recent physical bounce")
 			check(max_rise < .12 and not actor._aerial_controller.committed(), "Grounded strike jumped or did not recover")
 			print("VOLLEY_CONTACT side=", sx, " context=", context, " action=", action, " contacts=", contacts, " rise=", max_rise)

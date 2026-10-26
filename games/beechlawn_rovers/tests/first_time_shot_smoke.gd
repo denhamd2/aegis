@@ -1,4 +1,5 @@
 extends SceneTree
+var use_left := OS.get_environment("BEECHLAWN_STRIKE_FOOT")=="left"
 ## A released shot command must survive a friendly incoming pass, with no trap.
 var failures: Array[String] = []
 var shots := 0
@@ -27,7 +28,7 @@ func _run() -> void:
 	player.receive_target_time = 1.0
 	player.set_physics_process(true)
 	ball.freeze = false
-	ball.global_position = Vector3(16, 0.13, 0)
+	ball.global_position = Vector3(16, 0.13, -.14 if use_left else 0.0)
 	ball.linear_velocity = Vector3.LEFT * 12.0
 	ball.last_touch = player.team_name
 	ball.last_action = &"pass"
@@ -36,6 +37,7 @@ func _run() -> void:
 		if kind == &"shot":
 			shots += 1
 			contact_gap = player._receive_contact_position().distance_to(ball.global_position)
+			if visual.strike_foot()!=(&"left" if use_left else &"right"): failures.append("Wrong first-time strike boot")
 		if kind == &"receive": receipts += 1)
 	Input.action_press("shoot")
 	for tick in 3: await physics_frame

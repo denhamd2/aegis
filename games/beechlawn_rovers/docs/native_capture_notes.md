@@ -79,7 +79,8 @@ The goal-side camera stays close enough to see keeper, ball and net, with the
 pitch filling the frame. Other actors are parked for this fixture; these clips
 are not evidence of natural full-match chance creation. The manifest records
 ball action/velocity, keeper position/recovery and actual save/catch events.
-The current standing-save animation remains; low/dive motion is an open gate.
+Use `keeper_high_shots` and `keeper_full_dives` for the later high and
+full-stretch save/recovery coverage; this basic fixture checks near-body handling.
 
 ```sh
 python3 games/beechlawn_rovers/tools/capture_native.py build/keeper-home \
@@ -155,3 +156,27 @@ Turf has a bounded dense near footprint and intermediate hash-faded fins. Fade o
 `--review-mode receive` captures five original live receptions with current Shane: standing right/left, Ctrl close, running carry and Sprint push. `receive_broadcast` uses a broadcast-distance view of those same cases. Input basis is fixed to world X for repeatable before/after trajectories; actor movement, ball physics, contacts and clips remain production code. The JSON records the actual identity, 60 Hz ticks, 20 fps sampling, touching events and each pose/action. Other actors are parked and HUD hidden.
 
 `--project /absolute/path/to/isolated/football/snapshot --receive-baseline` runs the same review driver against a prior snapshot and records its actual first-touch count without requiring the new behaviour. Keep the review driver identical between snapshots. Use the default project for final evidence. These software Forward+ sequences do not establish M1 frame timing.
+
+## Bilateral strikes and explicit graphics profiles
+
+The runner defaults to `--graphics balanced_60`, independent of saved Options.
+Use `BEECHLAWN_STRIKE_FOOT=left` with `shot_power`, `volley_close` or a cross
+review to exercise a real selected-left-boot contact. Reports record the foot,
+actor, variant and gap; a missing left contact fails. The left motion review uses
+a broadcast-distance telephoto lens for full-body framing; this legitimately
+selects the normal head/cloth LOD. It is motion evidence rather than close-skin
+appearance approval.
+
+The initial viewport is drawn before the accelerated review physics cadence is
+changed. In the 2026-10-25 software Vulkan review, the first close-view image
+arrived near the four-minute deadline, while the telephoto image arrived in
+about 51 seconds. Trace first draw, physics ticks and first saved PNG separately
+so expensive close-view material startup is not mistaken for a stalled contact.
+Keep a hard process bound and retain the failed-run scope. Native Mac startup,
+close-material appearance, memory and frame time still need its actual hardware.
+
+```sh
+BEECHLAWN_STRIKE_FOOT=left python3 games/beechlawn_rovers/tools/capture_native.py \
+  games/beechlawn_rovers/build/left-volley --match --review-mode volley_close \
+  --graphics balanced_60 --resolution 960x540 --deadline 180
+```

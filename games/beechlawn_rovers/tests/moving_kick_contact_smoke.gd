@@ -33,6 +33,7 @@ func _run() -> void:
 		for kind in [&"pass", &"shot"]:
 			for speed in [0.0, 6.0, 8.6]:
 				await _case(kind, speed, human)
+				await _case(kind, speed, human, false, &"left")
 	await _case(&"shot", 0.0, true, true)
 	for message in failures:
 		push_error(message)
@@ -41,7 +42,7 @@ func _run() -> void:
 	quit(0 if failures.is_empty() else 1)
 
 var _contact_kind: StringName
-func _case(kind: StringName, speed: float, human := false, off_axis := false) -> void:
+func _case(kind: StringName, speed: float, human := false, off_axis := false, foot: StringName = &"right") -> void:
 	var started:=Time.get_ticks_msec()
 	var player := game.get_node("Player") as FootballPlayer
 	var ball := game.get_node("Ball") as FootballBall
@@ -66,7 +67,7 @@ func _case(kind: StringName, speed: float, human := false, off_axis := false) ->
 	var move_action: StringName = &"move_right" if player.camera.global_basis.x.x > 0.0 else &"move_left"
 	if human and speed > 0.0: Input.action_press(move_action)
 	if human and speed > player.tuning.jog_speed: Input.action_press("sprint")
-	ball.global_position = player.global_position + (Vector3(0, 0.13, 0.95) if off_axis else Vector3(0.65, 0.13, 0.0))
+	ball.global_position = player.global_position + (Vector3(0, 0.13, 0.95) if off_axis else Vector3(0.65, 0.13, -.14 if foot==&"left" else 0.0))
 	ball.last_touch = player.team_name
 	ball.last_action = &"dribble"
 	await physics_frame
@@ -80,11 +81,12 @@ func _case(kind: StringName, speed: float, human := false, off_axis := false) ->
 	player.set_physics_process(true)
 	if kind == &"pass": player._do_pass(false, Vector3.RIGHT)
 	else: player._do_shot(0.55)
+	if visual.strike_foot()!=foot and not off_axis: failures.append("Wrong context boot selected: "+String(foot))
 	for tick in 70:
 		await physics_frame
 		if not off_axis and (kicks>0 or (contacts>0 and player._contact_wait_action==&"")):break
 	print("MOVING_CONTACT kind=", kind, " speed=", speed,
-		" human=", human, " off_axis=", off_axis, " markers=", contacts, " impulses=", kicks, " toe_gap_m=", snappedf(contact_gap, 0.001)," marker_gap_m=",snappedf(marker_gap,.001)," case_ms=",Time.get_ticks_msec()-started)
+		" human=", human, " foot=", foot, " off_axis=", off_axis, " markers=", contacts, " impulses=", kicks, " toe_gap_m=", snappedf(contact_gap, 0.001)," marker_gap_m=",snappedf(marker_gap,.001)," case_ms=",Time.get_ticks_msec()-started)
 	if off_axis and kicks != 0:
 		failures.append("A stationary kick struck a ball beside the player, outside the actual foot window")
 	elif not off_axis and (contacts != 1 or kicks != 1 or contact_gap > 0.30):

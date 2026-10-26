@@ -66,9 +66,20 @@ static func plan(actor: FootballPlayer, charge: float, direction: Vector3,
 
 static func ai_style(actor: FootballPlayer) -> StringName:
 	var forward := actor.position.x * actor.attack_sign
-	if forward > 43.0 and absf(actor.position.z) < 5.0: return &"low"
-	if forward > 30.0 and absf(actor.position.z) > 8.0: return &"finesse"
-	if forward < 34.0: return &"power"
+	var goal_distance := Vector2(52.5-forward,actor.position.z).length()
+	var pressure := INF
+	var keeper_gap := INF
+	for opponent in actor.get_tree().get_nodes_in_group("football_players"):
+		if opponent==actor or opponent.team_name==actor.team_name or opponent.profile==null: continue
+		var gap: float = opponent.position.distance_to(actor.position)
+		if opponent.profile.role=="goalkeeper": keeper_gap=minf(keeper_gap,gap)
+		else: pressure=minf(pressure,gap)
+	# A closing keeper or nearby challenge favours a quick low release. With
+	# time, use the far-corner curve from an angle or drive a longer attempt.
+	if goal_distance<17 and (keeper_gap<6 or pressure<1.6): return &"low"
+	if forward>43 and absf(actor.position.z)<5: return &"low"
+	if forward>30 and absf(actor.position.z)>5 and pressure>1.6: return &"finesse"
+	if goal_distance>19: return &"power"
 	return &"standard"
 
 static func ai_cross_style(actor: FootballPlayer, receiver: FootballPlayer) -> StringName:

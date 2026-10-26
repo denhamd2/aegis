@@ -1,3 +1,23 @@
+# Beechlawn Rovers 27 — v0.5.1
+
+Players now choose a left-foot pass, shot, volley or half-volley when the ball
+arrives on that side. Four new shared-rig motions preserve existing bodies,
+faces, kits and gaits. The selected live boot must reach the independent ball;
+ground strike markers now run on the physics animation update, avoiding a late
+first-time contact after the ball has already reached the body.
+
+AI carriers compare tight-angle shots with reachable box deliveries and
+cutbacks, release safe progressive passes before an approaching challenge,
+and choose shot style using pressure and a closing goalkeeper. Open central
+shots and clear carrying space retain priority. Both teams use the same rules.
+
+The animated crowd, stadium docks/goals/tifo and “Cool Rock” from v0.5.0 remain
+included. Native M1 Pro 16 GB 1080p60 and subjective Mac input/visual acceptance
+remain open; cloud tests and software Forward+ reviews establish integration.
+Universal Apple Silicon/Intel Mac delivery.
+
+---
+
 # Beechlawn Rovers 27 — v0.5.0
 
 Rovers Arena now has animated full-body supporters, seated play and standing

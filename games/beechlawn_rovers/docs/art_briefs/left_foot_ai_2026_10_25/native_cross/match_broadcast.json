@@ -1,0 +1,598 @@
+{
+  "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+  "aerial_events": [
+    {
+      "ball": "(33.12809, 0.098344, 20.39731)",
+      "bounce_age": 99,
+      "contact": "(33.2605, 0.082027, 20.54499)",
+      "foot": "left",
+      "gap": 0.199019759893417,
+      "kind": "cross",
+      "part": "foot",
+      "player_id": "colly_roden",
+      "style": "driven_cross",
+      "team": "Beechlawn Rovers",
+      "tick": 25
+    },
+    {
+      "ball": "(42.66019, 0.723859, 1.883046)",
+      "bounce_age": 99.0,
+      "contact": "(42.6343, 0.761684, 1.895044)",
+      "foot": "right",
+      "gap": 0.0473787300288677,
+      "kind": "shot",
+      "part": "foot",
+      "player_id": "damo_murphy",
+      "style": "volley",
+      "team": "Beechlawn Rovers",
+      "tick": 67
+    }
+  ],
+  "api": "1.4.305",
+  "away_players": 11,
+  "camera_position": "(48.96736, 12.22992, -30.8078)",
+  "display_server": "X11",
+  "fixture_setup": "winger delivery through foot marker",
+  "fov_degrees": 50.0,
+  "frames": [
+    {
+      "aerial_actor": "(42.0, -0.043916, 2.0)",
+      "ball": "(33.13029, 0.098354, 20.39782)",
+      "ball_action": "dribble",
+      "ball_velocity": "(-0.002372, -0.00001, -0.000548)",
+      "file": "frame_000.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "cross_driven_home",
+      "player": "(42.0, -0.043916, 2.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 6
+    },
+    {
+      "aerial_actor": "(42.0, -0.043916, 2.0)",
+      "ball": "(33.1299, 0.098352, 20.39772)",
+      "ball_action": "dribble",
+      "ball_velocity": "(-0.005155, -0.000022, -0.00119)",
+      "file": "frame_001.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "cross_driven_home",
+      "player": "(42.0, -0.043916, 2.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 12
+    },
+    {
+      "aerial_actor": "(42.0, -0.043916, 2.0)",
+      "ball": "(33.12922, 0.098349, 20.39757)",
+      "ball_action": "dribble",
+      "ball_velocity": "(-0.007895, -0.000035, -0.001822)",
+      "file": "frame_002.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "cross_driven_home",
+      "player": "(42.0, -0.043916, 2.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 18
+    },
+    {
+      "aerial_actor": "(42.0, -0.043916, 2.0)",
+      "ball": "(33.12828, 0.098345, 20.39735)",
+      "ball_action": "dribble",
+      "ball_velocity": "(-0.01059, -0.000045, -0.002444)",
+      "file": "frame_003.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "cross_driven_home",
+      "player": "(42.0, -0.043916, 2.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 24
+    },
+    {
+      "aerial_actor": "(42.0016, -0.043916, 1.997076)",
+      "ball": "(34.32333, 0.432724, 18.0758)",
+      "ball_action": "cross",
+      "ball_velocity": "(14.26154, 3.663156, -27.70023)",
+      "file": "frame_004.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "cross_driven_home",
+      "player": "(42.0016, -0.043916, 1.997076)",
+      "player_velocity": "(0.096181, 0.0, -0.175354)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 30
+    },
+    {
+      "aerial_actor": "(42.01456, -0.043916, 1.97464)",
+      "ball": "(35.7354, 0.738527, 15.33312)",
+      "ball_action": "cross",
+      "ball_velocity": "(14.02081, 2.628237, -27.23265)",
+      "file": "frame_005.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "cross_driven_home",
+      "player": "(42.01456, -0.043916, 1.97464)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 36
+    },
+    {
+      "aerial_actor": "(42.01456, -0.043916, 1.97464)",
+      "ball": "(37.12365, 0.941859, 12.63673)",
+      "ball_action": "cross",
+      "ball_velocity": "(13.78414, 1.610788, -26.77297)",
+      "file": "frame_006.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "cross_driven_home",
+      "player": "(42.01456, -0.043916, 1.97464)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 42
+    },
+    {
+      "aerial_actor": "(42.01456, -0.043916, 1.97464)",
+      "ball": "(38.48845, 1.044451, 9.985856)",
+      "ball_action": "cross",
+      "ball_velocity": "(13.55146, 0.610513, -26.32104)",
+      "file": "frame_007.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "cross_driven_home",
+      "player": "(42.01456, -0.043916, 1.97464)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 48
+    },
+    {
+      "aerial_actor": "(42.01456, -0.043916, 1.97464)",
+      "ball": "(39.83022, 1.048002, 7.379729)",
+      "ball_action": "cross",
+      "ball_velocity": "(13.32271, -0.372877, -25.87675)",
+      "file": "frame_008.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "cross_driven_home",
+      "player": "(42.01456, -0.043916, 1.97464)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 54
+    },
+    {
+      "aerial_actor": "(42.01456, -0.043916, 1.97464)",
+      "ball": "(41.14934, 0.954184, 4.817595)",
+      "ball_action": "cross",
+      "ball_velocity": "(13.09783, -1.339667, -25.43995)",
+      "file": "frame_009.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "cross_driven_home",
+      "player": "(42.01456, -0.043916, 1.97464)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 60
+    },
+    {
+      "aerial_actor": "(42.01456, -0.043916, 1.97464)",
+      "ball": "(42.44619, 0.764643, 2.298707)",
+      "ball_action": "cross",
+      "ball_velocity": "(12.87674, -2.290138, -25.01053)",
+      "file": "frame_010.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "cross_driven_home",
+      "player": "(42.01456, -0.043916, 1.97464)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 66
+    },
+    {
+      "aerial_actor": "(42.01456, -0.043916, 1.97464)",
+      "ball": "(44.3679, 0.69764, 1.422962)",
+      "ball_action": "shot",
+      "ball_velocity": "(20.37643, -0.639517, -5.489731)",
+      "file": "frame_011.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "cross_driven_home",
+      "player": "(42.01456, -0.043916, 1.97464)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 72
+    },
+    {
+      "aerial_actor": "(42.01456, -0.043916, 1.97464)",
+      "ball": "(46.38543, 0.577422, 0.879407)",
+      "ball_action": "shot",
+      "ball_velocity": "(20.03248, -1.601807, -5.397065)",
+      "file": "frame_012.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "cross_driven_home",
+      "player": "(42.01456, -0.043916, 1.97464)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 78
+    },
+    {
+      "aerial_actor": "(42.01456, -0.043916, 1.97464)",
+      "ball": "(48.36891, 0.361925, 0.345027)",
+      "ball_action": "shot",
+      "ball_velocity": "(19.69434, -2.547853, -5.305963)",
+      "file": "frame_013.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "cross_driven_home",
+      "player": "(42.01456, -0.043916, 1.97464)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 84
+    },
+    {
+      "aerial_actor": "(42.01456, -0.043916, 1.97464)",
+      "ball": "(50.31213, 0.124323, -0.177559)",
+      "ball_action": "shot",
+      "ball_velocity": "(18.95544, 0.816077, -5.050009)",
+      "file": "frame_014.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "cross_driven_home",
+      "player": "(42.01456, -0.043916, 1.97464)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 90
+    },
+    {
+      "aerial_actor": "(42.0229, -0.043916, 1.969118)",
+      "ball": "(52.18356, 0.148228, -0.676134)",
+      "ball_action": "shot",
+      "ball_velocity": "(18.58175, -0.170783, -4.950454)",
+      "file": "frame_015.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "cross_driven_home",
+      "player": "(42.0229, -0.043916, 1.969118)",
+      "player_velocity": "(0.333533, 0.0, -0.220807)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 96
+    },
+    {
+      "aerial_actor": "(42.03124, -0.043916, 1.963597)",
+      "ball": "(54.01481, 0.11, -1.163538)",
+      "ball_action": "shot",
+      "ball_velocity": "(18.09458, 0.0, -4.805658)",
+      "file": "frame_016.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "cross_driven_home",
+      "player": "(42.03124, -0.043916, 1.963597)",
+      "player_velocity": "(0.5003, 0.0, -0.33121)",
+      "score": [
+        1,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 102
+    },
+    {
+      "aerial_actor": "(42.03124, -0.043916, 1.963597)",
+      "ball": "(53.80896, 0.176169, -1.493207)",
+      "ball_action": "shot",
+      "ball_velocity": "(-4.064835, 0.46286, -3.501607)",
+      "file": "frame_017.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "cross_driven_home",
+      "player": "(42.03124, -0.043916, 1.963597)",
+      "player_velocity": "(0.5003, 0.0, -0.33121)",
+      "score": [
+        1,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 108
+    },
+    {
+      "aerial_actor": "(42.03124, -0.043916, 1.963597)",
+      "ball": "(53.40649, 0.1651, -1.839912)",
+      "ball_action": "shot",
+      "ball_velocity": "(-3.996221, -0.518037, -3.4425)",
+      "file": "frame_018.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "cross_driven_home",
+      "player": "(42.03124, -0.043916, 1.963597)",
+      "player_velocity": "(0.5003, 0.0, -0.33121)",
+      "score": [
+        1,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 114
+    },
+    {
+      "aerial_actor": "(42.03124, -0.043916, 1.963597)",
+      "ball": "(53.01632, 0.123853, -2.176504)",
+      "ball_action": "shot",
+      "ball_velocity": "(-3.814021, -0.147326, -3.295202)",
+      "file": "frame_019.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "cross_driven_home",
+      "player": "(42.03124, -0.043916, 1.963597)",
+      "player_velocity": "(0.5003, 0.0, -0.33121)",
+      "score": [
+        1,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 120
+    },
+    {
+      "aerial_actor": "(42.03124, -0.043916, 1.963597)",
+      "ball": "(52.64492, 0.11, -2.497795)",
+      "ball_action": "shot",
+      "ball_velocity": "(-3.634473, 0.0, -3.148096)",
+      "file": "frame_020.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "cross_driven_home",
+      "player": "(42.03124, -0.043916, 1.963597)",
+      "player_velocity": "(0.5003, 0.0, -0.33121)",
+      "score": [
+        1,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 126
+    },
+    {
+      "aerial_actor": "(42.03124, -0.043916, 1.963597)",
+      "ball": "(52.29186, 0.109312, -2.803979)",
+      "ball_action": "shot",
+      "ball_velocity": "(-3.448458, -0.011417, -2.99276)",
+      "file": "frame_021.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "cross_driven_home",
+      "player": "(42.03124, -0.043916, 1.963597)",
+      "player_velocity": "(0.5003, 0.0, -0.33121)",
+      "score": [
+        1,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 132
+    },
+    {
+      "aerial_actor": "(42.03124, -0.043916, 1.963597)",
+      "ball": "(51.95893, 0.108314, -3.093118)",
+      "ball_action": "shot",
+      "ball_velocity": "(-3.24655, -0.042933, -2.819876)",
+      "file": "frame_022.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "cross_driven_home",
+      "player": "(42.03124, -0.043916, 1.963597)",
+      "player_velocity": "(0.5003, 0.0, -0.33121)",
+      "score": [
+        1,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 138
+    },
+    {
+      "aerial_actor": "(42.03124, -0.043916, 1.963597)",
+      "ball": "(51.6462, 0.107376, -3.365072)",
+      "ball_action": "shot",
+      "ball_velocity": "(-3.044321, -0.008375, -2.649663)",
+      "file": "frame_023.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "cross_driven_home",
+      "player": "(42.03124, -0.043916, 1.963597)",
+      "player_velocity": "(0.5003, 0.0, -0.33121)",
+      "score": [
+        1,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 144
+    },
+    {
+      "aerial_actor": "(42.03124, -0.043916, 1.963597)",
+      "ball": "(51.35297, 0.105867, -3.620546)",
+      "ball_action": "shot",
+      "ball_velocity": "(-2.854405, -0.021661, -2.488012)",
+      "file": "frame_024.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "cross_driven_home",
+      "player": "(42.03124, -0.043916, 1.963597)",
+      "player_velocity": "(0.5003, 0.0, -0.33121)",
+      "score": [
+        1,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 150
+    },
+    {
+      "aerial_actor": "(42.03124, -0.043916, 1.963597)",
+      "ball": "(51.07819, 0.103822, -3.860179)",
+      "ball_action": "shot",
+      "ball_velocity": "(-2.672294, -0.019495, -2.331457)",
+      "file": "frame_025.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "cross_driven_home",
+      "player": "(42.03124, -0.043916, 1.963597)",
+      "player_velocity": "(0.5003, 0.0, -0.33121)",
+      "score": [
+        1,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 156
+    },
+    {
+      "aerial_actor": "(42.03124, -0.043916, 1.963597)",
+      "ball": "(50.82135, 0.101937, -4.084414)",
+      "ball_action": "shot",
+      "ball_velocity": "(-2.494932, -0.01853, -2.179362)",
+      "file": "frame_026.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "cross_driven_home",
+      "player": "(42.03124, -0.043916, 1.963597)",
+      "player_velocity": "(0.5003, 0.0, -0.33121)",
+      "score": [
+        1,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 162
+    },
+    {
+      "aerial_actor": "(42.03124, -0.043916, 1.963597)",
+      "ball": "(50.58191, 0.100186, -4.293754)",
+      "ball_action": "shot",
+      "ball_velocity": "(-2.323602, -0.01643, -2.032934)",
+      "file": "frame_027.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "cross_driven_home",
+      "player": "(42.03124, -0.043916, 1.963597)",
+      "player_velocity": "(0.5003, 0.0, -0.33121)",
+      "score": [
+        1,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 168
+    },
+    {
+      "aerial_actor": "(42.03124, -0.043916, 1.963597)",
+      "ball": "(50.35902, 0.098133, -4.488933)",
+      "ball_action": "shot",
+      "ball_velocity": "(-2.16328, -0.022915, -1.895078)",
+      "file": "frame_028.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "cross_driven_home",
+      "player": "(42.03124, -0.043916, 1.963597)",
+      "player_velocity": "(0.5003, 0.0, -0.33121)",
+      "score": [
+        1,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 174
+    },
+    {
+      "aerial_actor": "(42.03124, -0.043916, 1.963597)",
+      "ball": "(50.1515, 0.095935, -4.670814)",
+      "ball_action": "shot",
+      "ball_velocity": "(-2.013211, -0.021323, -1.765389)",
+      "file": "frame_029.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "cross_driven_home",
+      "player": "(42.03124, -0.043916, 1.963597)",
+      "player_velocity": "(0.5003, 0.0, -0.33121)",
+      "score": [
+        1,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 180
+    }
+  ],
+  "godot": "4.6.3-stable (official)",
+  "graphics_profile": "balanced_60",
+  "home_players": 11,
+  "keeper_contacts": [],
+  "msaa_3d": 1,
+  "officials": 1,
+  "physics_steps_per_draw": 6,
+  "rendering_method": "forward_plus",
+  "requested_strike_foot": "left",
+  "resolution": [
+    960,
+    540
+  ],
+  "review_mode": "cross_driven_home",
+  "scope": "Actual native Forward+ controllers and assets; accelerated simulated time, software GPU, no Mac performance claim.",
+  "sequence_fps": 10.0,
+  "shot_contacts": [],
+  "skill_events": [],
+  "vendor": "Unknown"
+}

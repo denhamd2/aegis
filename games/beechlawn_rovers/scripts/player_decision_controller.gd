@@ -37,23 +37,36 @@ func choose_carrier_action(carrier: FootballPlayer, teammates: Array[FootballPla
 		if offset.dot(goalward) >= 0.0:
 			nearest_forward_defender = minf(nearest_forward_defender, opponent_position.distance_to(ball_position))
 
-	# Pressure behind or beside the carrier does not necessarily block a shot.
-	# Check the immediate goalward corridor rather than vetoing every attempt
-	# whenever any defender is within three metres of the ball.
+	# Compare the goal opening with a reachable box delivery. A nominally
+	# in-range shot from a narrow wing angle must not always suppress crossing.
+	var shot := {}
 	var shot_range := carrier.tuning.ai_shot_range if carrier.tuning != null else SHOOT_RANGE
 	if goal_distance <= CLOSE_SHOT_RANGE or (goal_distance <= shot_range and absf(ball_position.y) <= 15.0):
-		var shot := _best_shot_lane(ball_position, carrier.attack_sign, opponents)
-		if not shot.is_empty():
-			return shot
-	# Wide delivery is useful only when an attacker can meet it in the area.
+		shot = _best_shot_lane(ball_position, carrier.attack_sign, opponents)
+	var shot_quality := _shot_quality(ball_position,carrier.attack_sign)
 	if ball_position.x * carrier.attack_sign >= 24.0 and absf(ball_position.y) >= 13.0:
+		var cutback := _cutback_option(carrier,teammates,ball_position,shot_quality)
+		if not cutback.is_empty() and (shot.is_empty() or shot_quality<.70): return cutback
 		var toward_box := Vector3(carrier.attack_sign * 43.0, ball.position.y, 0) - ball.position
 		var crossing := LoftedPassPlanner.plan(carrier, &"cross", toward_box, .72)
 		var receiver := crossing.get("receiver") as FootballPlayer
 		if receiver != null and teammates.has(receiver):
-			return {"type": &"cross", "direction": toward_box, "power": .72,
-				"receiver_id": receiver.get_instance_id(),
-				"variant": ShotPlanner.ai_cross_style(carrier, receiver)}
+			var space := 6.0
+			for opponent in opponents:
+				if opponent==null: continue
+				space=minf(space,opponent.global_position.distance_to(receiver.global_position))
+			var delivery_quality := .28 + clampf((receiver.position.x*carrier.attack_sign-28)/18,0,1)*.32 \
+				+ clampf((space-1)/4,0,1)*.20 - receiver.position.distance_to(ball.position)*.003
+			if shot.is_empty() or delivery_quality>shot_quality+.08:
+				return {"type": &"cross", "direction": toward_box, "power": .72,
+					"receiver_id": receiver.get_instance_id(),
+					"variant": ShotPlanner.ai_cross_style(carrier, receiver)}
+	if not shot.is_empty(): return shot
+	# A midfielder can release a genuinely open progressive lane before the
+	# challenge arrives. An unopposed carrier still uses the available space.
+	if teammates.size()>=7 and nearest_action_pressure>PRESSURE_RANGE and nearest_forward_defender<8:
+		var progressive := _progressive_option(carrier,teammates)
+		if not progressive.is_empty(): return progressive
 	# Under pressure, release the ball into a forward run if a teammate and lane
 	# Evaluate a progressive pass before the generic safe outlet. The outlet
 	# condition below also matches high pressure, so checking it first otherwise
@@ -111,6 +124,46 @@ func choose_carrier_action(carrier: FootballPlayer, teammates: Array[FootballPla
 			return {"type": &"lofted_pass", "direction": receiver.position - carrier.position,
 				"power": .8, "receiver_id": receiver.get_instance_id()}
 	return {"type": &"carry"}
+
+func _shot_quality(at: Vector2, attack_sign: float) -> float:
+	var depth := maxf(.5,52.5-at.x*attack_sign)
+	var opening := absf(atan2(3.66-at.y,depth)-atan2(-3.66-at.y,depth))
+	return clampf(.35+opening*.9-at.distance_to(Vector2(52.5*attack_sign,0))*.012,0,1)
+
+func _cutback_option(carrier: FootballPlayer, teammates: Array[FootballPlayer],
+		ball_position: Vector2, current_quality: float) -> Dictionary:
+	if ball_position.x*carrier.attack_sign<43: return {}
+	var best := {}
+	var score := current_quality+.12
+	for receiver in teammates:
+		if receiver==carrier or receiver.profile.role=="goalkeeper" or absf(receiver.position.z)>9 or receiver.position.x*carrier.attack_sign<34: continue
+		var target := receiver.global_position
+		if target.distance_to(carrier.global_position)<5 or target.distance_to(carrier.global_position)>21: continue
+		var risk := carrier._pass_lane_risk(carrier.ball.position,target)
+		if risk>.35: continue
+		var quality := _shot_quality(Vector2(target.x,target.z),carrier.attack_sign)-risk*.3
+		if quality>score:
+			score=quality
+			best={"type":&"short_pass","direction":target-carrier.position,"receiver_id":receiver.get_instance_id()}
+	return best
+
+func _progressive_option(carrier: FootballPlayer, teammates: Array[FootballPlayer]) -> Dictionary:
+	var best := {}
+	var score := -INF
+	for receiver in teammates:
+		if receiver==carrier or receiver.profile.role=="goalkeeper": continue
+		var target := receiver.global_position
+		var distance := target.distance_to(carrier.global_position)
+		var progress := (target.x-carrier.position.x)*carrier.attack_sign
+		if distance<8 or distance>28 or progress<6: continue
+		var risk := carrier._pass_lane_risk(carrier.ball.position,target)
+		if risk>.35: continue
+		var value := progress*.10-risk*2-distance*.018
+		if value>score:
+			score=value
+			var running := receiver.velocity.x*carrier.attack_sign>1.5
+			best={"type":&"through_pass" if running else &"short_pass","direction":target-carrier.position,"receiver_id":receiver.get_instance_id()}
+	return best
 
 func _best_shot_lane(ball_position: Vector2, attack_sign: float,
 		opponents: Array[FootballPlayer]) -> Dictionary:

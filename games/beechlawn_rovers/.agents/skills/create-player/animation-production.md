@@ -18,7 +18,17 @@ Inspect rig-local units, armature/object transforms, facing and bone axes before
 
 Retarget with rest-pose and bone-roll awareness. Shane's axial leg twist remained wrong despite correct joint positions. Correct only the intended rotations on copies, preserve required joint paths and foot orientation, maintain quaternion sign continuity and compare evaluated results across the clip. Leave unkeyed lower-body channels unkeyed in upper-body actions. `shane_leg_retarget.py` records a historical prototype method, not a command to run blindly on the shared production source.
 
-Keep authoring FPS, FPS base, clip origin/range, export sampling and event metadata consistent. A previous 60-to-30 authoring mismatch doubled exported durations. Compare imported seconds against source seconds and event frames. Resampling 30 Hz at 60 Hz does not add captured detail; 120 fps rendering does not repair a bad pose, stride or contact. Keep the game's fixed physics cadence distinct from authoring and display rates.
+For opposite-foot motion, reflect evaluated global pose deltas relative to each
+bone's rest, map Left/Right names, then convert through the target parent/rest.
+Quaternion component swaps lose bone-roll information. When Blender's imported
+cubic curves differ from Godot playback, capture the evaluated shipping motion
+at the physics cadence and bake that onto the preserved source rest. Verify all
+joints across complete imported clips and lock the selected foot for the action.
+
+Keep authoring FPS, FPS base, clip origin/range, export sampling and event metadata consistent. A previous 60-to-30 authoring mismatch doubled exported durations. Compare imported seconds against source seconds and event frames. A nonzero
+first GLB key can represent a leading hold; preserve that absolute time instead
+of shifting its first sample to zero. Set the new Godot import sampling rate to
+match the authored motion before comparing complete poses. Resampling 30 Hz at 60 Hz does not add captured detail; 120 fps rendering does not repair a bad pose, stride or contact. Keep the game's fixed physics cadence distinct from authoring and display rates.
 
 For in-place motion, keep horizontal displacement under the movement controller. Offline IK may be baked to ordinary bone curves and removed. Runtime IK, root-motion authority or additional solvers are separate design/performance changes. Preserve source curves/rests through digests where unchanged; check intentional edits against their stated scope.
 
@@ -68,7 +78,12 @@ reaching 1 does not establish correct filtering.
 
 Store authored contact markers in the existing metadata contract and verify its clip name, time origin, frame and FPS against the export. Install the Godot event once on an appropriate clip copy. Repeated setup must not add duplicate markers, and cancellation/interruptions must not leave a stale pending action.
 
-The marker signals contact; the fixed-tick gameplay code validates reach and applies the independent ball impulse. Preserve aim/power, input buffering and action-priority behavior. Check no early impulse, exactly one valid impulse, correct cancellation and locomotion recovery. Keep raw ball-physics fixtures separate from marker-gated action tests.
+The marker signals contact; the fixed-tick gameplay code validates reach and applies the independent ball impulse.
+For ground strikes as well as aerial contacts, run the marker on the physics
+animation update and restore method-callback mode on recovery/reset. A deferred
+callback can arrive one tick late and let a fast first-time ball hit the capsule
+before its boot. Exercise both feet with live incoming balls while preserving
+the anatomical contact radius and genuine miss/cancellation cases. Preserve aim/power, input buffering and action-priority behavior. Check no early impulse, exactly one valid impulse, correct cancellation and locomotion recovery. Keep raw ball-physics fixtures separate from marker-gated action tests.
 
 When gameplay samples the live skeleton, both the locomotion AnimationTree and
 action AnimationPlayer must evaluate on the physics clock. Setting only the
@@ -279,7 +294,7 @@ Run bounded, serial checks with `games/beechlawn_rovers/tools/run_smoke_tests.py
 | Startup, shared playback, relaxed poses | `shared_pose_safety_smoke.gd`, `shared_roster_resources_smoke.gd`, `shared_head_roster_smoke.gd` |
 | Gait, braking, pivots, reversal | `footballer_animation_tree_smoke.gd`, `football_stop_runtime_smoke.gd`, `shared_pivot_pose_smoke.gd`, `turn_dribble_control_smoke.gd` |
 | Stride calibration and shared phase | `stride_plant_smoke.gd`, `braking_gait_smoke.gd`, `shared_gait_integrity_smoke.gd`, `shared_roster_resources_smoke.gd`; native `--review-mode stride_review` / `stride_brake` |
-| Marker-gated contact | `football_kick_contact_integration_smoke.gd`, `football_receive_contact_smoke.gd`, `football_shot_contact_integration_smoke.gd`; select the actual 11v11 fixture where supported |
+| Marker-gated contact | `football_kick_contact_integration_smoke.gd`, `football_receive_contact_smoke.gd`, `football_shot_contact_integration_smoke.gd`, `left_strike_smoke.gd`; select the actual 11v11 fixture where supported |
 | Keeper contact and recovery | `keeper_live_contact_smoke.gd`, `keeper_diving_high_smoke.gd`, `keeper_high_shots_smoke.gd`, `keeper_full_dive_smoke.gd`, `goalkeeper_outcomes_smoke.gd`; native `--review-mode keeper_high_shots` / `keeper_full_dives` |
 | Replay appearance and state | `replay_results_smoke.gd`, native `--review-mode outro` |
 | Moving contact and combinations | `moving_kick_contact_smoke.gd`, `first_time_pass_timing_smoke.gd`, `first_time_shot_smoke.gd`, `ai_shot_approach_smoke.gd` |

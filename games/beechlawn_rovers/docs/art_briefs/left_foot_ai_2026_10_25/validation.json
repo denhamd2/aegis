@@ -1,0 +1,205 @@
+{
+  "version": "0.5.1",
+  "logic_checks": {
+    "unique_passed_smoke_scripts": [
+      "ai_attack_choice_smoke.gd",
+      "ai_carry_to_shot_smoke.gd",
+      "ai_midfield_to_shot_smoke.gd",
+      "ai_shot_lane_smoke.gd",
+      "contextual_receive_smoke.gd",
+      "cross_to_header_smoke.gd",
+      "cross_variants_smoke.gd",
+      "first_time_pass_timing_smoke.gd",
+      "first_time_shot_smoke.gd",
+      "full_presentation_match_soak.gd",
+      "goalkeeper_response_smoke.gd",
+      "left_strike_smoke.gd",
+      "moving_kick_contact_smoke.gd",
+      "moving_receive_smoke.gd",
+      "pass_lane_selection_smoke.gd",
+      "player_selection_smoke.gd",
+      "receive_edge_cases_smoke.gd",
+      "recorded_face_replay_smoke.gd",
+      "volley_contact_smoke.gd"
+    ],
+    "count": 19,
+    "bilateral_moving_ground_cases": 25,
+    "left_aerial_cases": 6,
+    "full_presentation": "PASS; no auto-skips"
+  },
+  "full_matches": {
+    "ai_kilmore": {
+      "venue": "kilmore_drive",
+      "total_shots": {
+        "Beechlawn Rovers": 30,
+        "Boardeaux": 19
+      },
+      "qualifying_scenarios": {
+        "Beechlawn Rovers": 6,
+        "Boardeaux": 6
+      },
+      "shot_share": {
+        "Beechlawn Rovers": 0.6122448979591837,
+        "Boardeaux": 0.3877551020408163
+      },
+      "accepted": true,
+      "criteria": "Each team: >=2 physical shots + >=1 contested in >=5/6; aggregate share 35\u201365%.",
+      "passes": {
+        "Beechlawn Rovers": 113,
+        "Boardeaux": 132
+      },
+      "crosses": {
+        "Beechlawn Rovers": 20,
+        "Boardeaux": 14
+      },
+      "headers": {
+        "Beechlawn Rovers": 7,
+        "Boardeaux": 3
+      },
+      "shot_styles": {
+        "finesse": 18,
+        "header": 6,
+        "low": 3,
+        "power": 17,
+        "standard": 4,
+        "volley": 1
+      }
+    },
+    "ai_arena": {
+      "venue": "rovers_arena",
+      "total_shots": {
+        "Beechlawn Rovers": 27,
+        "Boardeaux": 36
+      },
+      "qualifying_scenarios": {
+        "Beechlawn Rovers": 5,
+        "Boardeaux": 6
+      },
+      "shot_share": {
+        "Beechlawn Rovers": 0.42857142857142855,
+        "Boardeaux": 0.5714285714285714
+      },
+      "accepted": true,
+      "criteria": "Each team: >=2 physical shots + >=1 contested in >=5/6; aggregate share 35\u201365%.",
+      "passes": {
+        "Beechlawn Rovers": 133,
+        "Boardeaux": 112
+      },
+      "crosses": {
+        "Beechlawn Rovers": 24,
+        "Boardeaux": 21
+      },
+      "headers": {
+        "Beechlawn Rovers": 6,
+        "Boardeaux": 8
+      },
+      "shot_styles": {
+        "finesse": 19,
+        "header": 13,
+        "power": 23,
+        "standard": 5,
+        "volley": 2,
+        "low": 1
+      }
+    }
+  },
+  "native_review": {
+    "native_shot_telephoto": {
+      "frames": 30,
+      "events": [
+        {
+          "ball": "(38.62056, 0.080492, 5.633881)",
+          "bounce_age": 99,
+          "contact": "(38.43495, 0.069859, 5.789042)",
+          "foot": "left",
+          "gap": 0.242159247398376,
+          "kind": "shot",
+          "part": "foot",
+          "player_id": "shane_denham",
+          "style": "power",
+          "team": "Beechlawn Rovers",
+          "tick": 19
+        }
+      ],
+      "renderer": "forward_plus",
+      "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+      "resolution": [
+        960,
+        540
+      ],
+      "profile": "balanced_60 (explicit runner)",
+      "fov": 14
+    },
+    "native_volley_telephoto": {
+      "frames": 72,
+      "events": [
+        {
+          "ball": "(32.69534, 0.828169, -0.09)",
+          "bounce_age": 99.0,
+          "contact": "(32.60011, 0.788445, -0.089954)",
+          "foot": "left",
+          "gap": 0.103183165192604,
+          "kind": "shot",
+          "part": "foot",
+          "player_id": "shane_denham",
+          "style": "volley",
+          "team": "Beechlawn Rovers",
+          "tick": 21
+        }
+      ],
+      "renderer": "forward_plus",
+      "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+      "resolution": [
+        960,
+        540
+      ],
+      "profile": "balanced_60",
+      "fov": 14.0
+    },
+    "native_cross": {
+      "frames": 30,
+      "events": [
+        {
+          "ball": "(33.12809, 0.098344, 20.39731)",
+          "bounce_age": 99,
+          "contact": "(33.2605, 0.082027, 20.54499)",
+          "foot": "left",
+          "gap": 0.199019759893417,
+          "kind": "cross",
+          "part": "foot",
+          "player_id": "colly_roden",
+          "style": "driven_cross",
+          "team": "Beechlawn Rovers",
+          "tick": 25
+        },
+        {
+          "ball": "(42.66019, 0.723859, 1.883046)",
+          "bounce_age": 99.0,
+          "contact": "(42.6343, 0.761684, 1.895044)",
+          "foot": "right",
+          "gap": 0.0473787300288677,
+          "kind": "shot",
+          "part": "foot",
+          "player_id": "damo_murphy",
+          "style": "volley",
+          "team": "Beechlawn Rovers",
+          "tick": 67
+        }
+      ],
+      "renderer": "forward_plus",
+      "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+      "resolution": [
+        960,
+        540
+      ],
+      "profile": "balanced_60",
+      "fov": 50.0
+    }
+  },
+  "hardware": "Actual M1 1080p60 and subjective Mac feel remain unmeasured",
+  "protected_original_assets_unchanged": 190,
+  "source_import_max_mirror_joint_error_m": 0.000316356,
+  "source_bones": 65,
+  "native_limitations": "Software Vulkan close-view first image required nearly240s; successful telephoto action review selects normal head/cloth LOD. These controlled sequences are motion evidence, not a close-skin or Mac framerate approval.",
+  "known_teardown": "Some headless fixtures report retained ObjectDB/resources at exit; no leak-free claim."
+}

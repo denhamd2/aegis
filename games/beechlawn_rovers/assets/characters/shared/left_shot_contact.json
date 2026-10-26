@@ -1,0 +1,9 @@
+{
+  "clip": "AN_Beechlawn_ShotLeft",
+  "event": "ball_contact",
+  "frame": 18,
+  "fps": 60,
+  "time_seconds": 0.3,
+  "foot": "left",
+  "source_clip": "AN_Beechlawn_ShotRight"
+}

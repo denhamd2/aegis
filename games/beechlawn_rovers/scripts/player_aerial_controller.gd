@@ -158,8 +158,9 @@ func before_move(delta: float) -> void:
 		direction = incoming.normalized() if incoming.length() > .1 else -actor.global_basis.z
 	if float(prediction.time) < .55:
 		facing = direction
+	var strike_foot := actor.select_strike_foot(prediction.position,direction) if strike else &"right"
 	var target: Vector3 = prediction.position - direction * (.60 if strike else (.14 if wants_header else .16))
-	if strike: target -= direction.cross(Vector3.UP) * .09
+	if strike: target -= direction.cross(Vector3.UP) * (-.09 if strike_foot == &"left" else .09)
 	var offset := Vector3(target.x - actor.position.x, 0, target.z - actor.position.z)
 	if not actor.controlled_by_human and (has_reception or is_chaser or attacking) \
 			and float(prediction.time) < 1.5:
@@ -191,7 +192,7 @@ func before_move(delta: float) -> void:
 		contact_eta = maxf(.1, floorf((contact_eta - tick) / tick) * tick - .0001)
 		if contact_eta < contact / 1.35: return
 	var playback := clampf(contact / maxf(contact_eta, .1), .90, 1.35 if strike else 1.17)
-	if actor._footballer_visual.play_aerial(action, playback):
+	if actor._footballer_visual.play_aerial(action, playback, strike_foot):
 		_active = action
 		_serial = ball.action_serial
 		_incoming_kind = ball.last_action

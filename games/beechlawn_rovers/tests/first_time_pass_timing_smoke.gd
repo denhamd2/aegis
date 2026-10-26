@@ -1,4 +1,5 @@
 extends SceneTree
+var use_left := OS.get_environment("BEECHLAWN_STRIKE_FOOT")=="left"
 ## Verifies an incoming first-time pass reaches the authored contact frame in time.
 
 func _initialize() -> void:
@@ -37,7 +38,7 @@ func _run() -> void:
 		player._pending_pass = 0.0
 		player._visual_pass_pending = false
 		ball.freeze = false
-		ball.global_position = Vector3(1.5, FootballBall.RADIUS, 0.0)
+		ball.global_position = Vector3(1.5, FootballBall.RADIUS, -.14 if use_left else 0.0)
 		ball.linear_velocity = Vector3(-launch_speed, 0.0, 0.0)
 		ball.angular_velocity = Vector3.ZERO
 		ball.last_touch = player.team_name
@@ -47,6 +48,7 @@ func _run() -> void:
 		player._queue_pass(false)
 		assert(player._ball_will_reach_kick_window(), "Incoming pass was not recognized")
 		player._update_actions(1.0 / 60.0)
+		assert(visual.strike_foot()==(&"left" if use_left else &"right"),"Incoming side must select the matching boot")
 		assert(player.get("_visual_pass_pending"),
 			"First-time pass did not start before the ball reached the player")
 		assert(visual.animation_player.get_playing_speed() > 1.2,

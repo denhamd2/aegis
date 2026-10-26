@@ -10,6 +10,22 @@ items, use the archived references and skill workflow in
 [`art_reference_implementation_plan.md`](art_reference_implementation_plan.md)
 and [`../references/README.md`](../references/README.md) before implementation.
 
+## Bilateral strikes and attacking choices — 25 October 2026
+
+BR-019 (19/27, in progress): four 60 Hz left-foot strike add-ons mirror actual
+Godot-evaluated right-foot motion on the unchanged shared rest. Context chooses
+and locks the boot; physical toe contact still gates the impulse. Ground strike
+markers evaluate during physics rather than a delayed method callback. Both
+feet pass moving/first-time checks, and volley/half-volley contacts cover both
+attacking directions with the original bounce/miss guards.
+
+BR-008 (8/27, in progress): attacking decisions compare goal opening with useful
+crosses/cutbacks, use safe progressive lanes before frontal pressure arrives and
+retain open central shots/free carrying space. Shot style also considers pressure
+and a closing goalkeeper. Mirrored controlled decisions pass; full-match gates
+and native review are recorded under `art_briefs/left_foot_ai_2026_10_25/`.
+Broader aerial contests, tactical consistency and M1 feel remain open.
+
 ## Animated supporters, dockside and steady 60 target — 25 October 2026
 
 BR-021 (21/27, in progress): preserve player bodies, likenesses, kits and existing
@@ -55,7 +71,7 @@ M1 Pro 16 GB at 1080p; retain 60 fps as a target until that run passes.
 
 BR-002 (2/27) and BR-021 (21/27), both in progress: reception is scheduled before generic dribble assistance, with a serial-bound selected-boot contact and carrier-relative cushioning. Move directs the outlet; Ctrl keeps it close and Shift pushes into space. Four original 60 Hz shared actions cover standing/moving left/right contacts. A selected animation layer preserves the support gait and avoids dormant 22-player branch overhead. First-time combinations, misses, ownership loss and reentrant whistle cleanup remain physical and bounded. Sources, native before/after motion and checks: [production evidence](art_briefs/contextual_control_2026_10_25/brief.md).
 
-Delivery is universal Mac v0.4.2. BR-025 (25/27, in progress) retains native M1 appearance, input feel and 1080p60 acceptance. Further BR-019 (19/27) left-foot strikes/aerial contests and broader BR-021 turn/intro polish remain open.
+The previous contextual-receive slice shipped as universal Mac v0.4.2. BR-025 (25/27, in progress) retains native M1 appearance, input feel and 1080p60 acceptance. Further BR-019 (19/27) left-foot strikes/aerial contests and broader BR-021 turn/intro polish remain open.
 
 ## Default ball and saved selection — 25 October 2026
 
@@ -568,6 +584,14 @@ playtest has no stuck bodies or unreported frame-rate failure on the target Mac.
     arrows, E ground pass, Q
     through-ball.
 - [ ] **BR-008 — Small-sided attacking/defending AI**
+  - 2026-10-26 (8/27, in progress), v0.5.1: mirrored decisions compare narrow
+    shots with crosses/cutbacks and release safe progressive passes before
+    frontal pressure. Shot styles consider pressure/keeper approach. Twelve
+    full matches pass the unchanged chance gate: Kilmore 30/19 shots (both
+    qualifying 6/6), arena 27/36 (5/6 and 6/6). Every fixture has contested
+    attempts from each team; one arena match has a single home shot. Native
+    production cross-to-volley and unskipped presentation pass. Broader tactical
+    consistency and Mac feel remain open. See `art_briefs/left_foot_ai_2026_10_25/`.
   - 2026-10-24 stride/contact follow-up: the latest six full matches pass the
     existing chance gate at 26/42 shots, both teams qualifying in 6/6 with
     contested attempts in every fixture. Aggregate share is 38.2%/61.8%.
@@ -686,7 +710,7 @@ playtest has no stuck bodies or unreported frame-rate failure on the target Mac.
     left alone. `ai_carrier_decision_smoke.gd` verifies the three choices and
     confirms the match layer executes shots/passes and assigns the receiving
     run. Team-shape, defensive-marking, transition, tackle and passing checks
-    also pass. BR-008 remains open for authored-clip integration and actual
+    also pass. BR-008 remains open for broader tactical consistency and actual
     human-vs-AI / AI-vs-AI play-quality review.
   - AI-vs-AI acceptance samples two-second movement windows and reports action
     counts after kickoff. At 720 physics frames (~12 simulated seconds), runs
@@ -869,6 +893,13 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
 ### P4 — Advanced football actions and feel
 
 - [ ] **BR-019 — Shooting and aerial actions**
+  - 2026-10-26 (19/27, in progress), v0.5.1: four left-foot strike add-ons,
+    locked contextual boot choice, physics-time ground markers and unchanged
+    live anatomical contact guards. Moving/first-time strikes, both-direction
+    volleys/half-volleys and native left shot/volley/cross receiving pass.
+    Protected bodies/heads/kits/rests/gaits survive; complete imported left
+    poses mirror actual shipping right motion within 0.317 mm. Broader aerial
+    contests and strike/plant polish remain open. See `art_briefs/left_foot_ai_2026_10_25/`.
   Add driven, finesse, low, first-time and contextual shots; headers, volleys,
   jumps, aerial contests, crosses, lofted passes and goalkeeper cross claims.
   - 2026-10-23 **in progress**: R/T charge-release loft/cross, assisted forward
@@ -894,8 +925,8 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
     pose testing and universal Mac packaging pass; the Mac release is published.
     Cross-machine counts vary; bitwise replay determinism remains unproven.
     Next acceptance: final native/M1 input and motion review; dedicated high
-    keeper claims depend on BR-009 (9/25). Left-foot variants, broader aerial
-    duels and source stride/plant polish remain open under BR-019/BR-021.
+    keeper claims depend on BR-009 (9/25). Left-foot variants follow in v0.5.1; broader aerial
+    duels and strike/plant polish remain open under BR-019/BR-021.
 - [x] **BR-020 — Defending and skill moves**
   - 2026-10-24 completed keyboard scope (20/27): retained F standing / G slide tackle, Ctrl jockey,
     J contain and H pressure; added K shielding and U/I/O/P/L/B possession

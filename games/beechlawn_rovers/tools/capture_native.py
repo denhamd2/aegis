@@ -95,6 +95,7 @@ def main():
     parser.add_argument('--venue', choices=['kilmore_drive','rovers_arena'], default='kilmore_drive')
     parser.add_argument('--venue-view', choices=['broadcast','wide','detail','all','corners','exterior','pitch','ball'], default='broadcast')
     parser.add_argument('--ball', choices=['ucl_26_27_league','worn_sunday_league'], default='ucl_26_27_league')
+    parser.add_argument('--graphics', choices=['balanced_60','custom'], default='balanced_60', help='Explicit graphics profile for repeatable native evidence')
     parser.add_argument('--weather', choices=['sunny','cloudy','rain','mist'], default='sunny')
     parser.add_argument('--project', type=Path, default=PROJECT, help='Explicit isolated football snapshot for before/after review')
     parser.add_argument('--receive-baseline', action='store_true')
@@ -174,7 +175,7 @@ def main():
                 '--lighting='+args.lighting,'--sky='+args.sky,'--clean=1']
             command += ['--setup-preview='+('1' if args.setup_preview else '0')]
             command += ['--venue='+args.venue,'--venue-view='+args.venue_view,'--ablation='+args.ablation]
-            command += ['--weather='+args.weather]
+            command += ['--weather='+args.weather,'--graphics='+args.graphics]
             command += ['--ball='+args.ball]
             command += ['--expression='+args.expression]
             if args.pose and not args.match:

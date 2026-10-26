@@ -17,6 +17,7 @@ var skill_events: Array[Dictionary] = []
 var skill_label := ""
 var keeper_case := ""
 var stride_case := ""
+var left_review := OS.get_environment("BEECHLAWN_STRIKE_FOOT")=="left"
 func _initialize() -> void:
 	for argument in OS.get_cmdline_user_args():
 		if argument.begins_with("--") and argument.contains("="):
@@ -151,6 +152,8 @@ func _capture() -> void:
 	game=load("res://scenes/match_11v11.tscn").instantiate()
 	root.add_child(game);current_scene=game
 	game.set_physics_process(false);game._set_players_physics_enabled(false)
+	# Settle the initial viewport before changing the review physics cadence.
+	await RenderingServer.frame_post_draw
 	game.camera_rig.presentation_override=true
 	camera=Camera3D.new();game.add_child(camera);camera.make_current()
 	camera.near=.04;camera.far=350
@@ -245,6 +248,7 @@ func _capture() -> void:
 			var toward:=review_actor.position-passer.position;toward.y=0
 			passer.rotation.y=atan2(-toward.x,-toward.z)
 			game.ball.position=passer.position+toward.normalized()*.6+Vector3.UP*.13
+			if left_review:game.ball.position-=toward.normalized().cross(Vector3.UP)*.14
 			game.ball.freeze=false;game.ball.last_action=&"dribble"
 			game.ball.last_touch=passer.team_name;game.ball.last_touch_player=passer
 			game._kickoff_pending=false
@@ -262,8 +266,9 @@ func _capture() -> void:
 			game.player=review_actor;game._kickoff_pending=false
 			if mode in ["volley_close", "half_volley_close"]:
 				var action: StringName = &"volley" if mode=="volley_close" else &"half_volley"
-				var destination:=review_actor.position+Vector3(.60,review_actor.tuning.volley_contact_height,.09)
-				game.ball.position=destination+Vector3(2,.7,0) if action==&"volley" else Vector3(35,1.9,.09)
+				var lateral := -.09 if left_review else .09
+				var destination:=review_actor.position+Vector3(.60,review_actor.tuning.volley_contact_height,lateral)
+				game.ball.position=destination+Vector3(2,.7,0) if action==&"volley" else Vector3(35,1.9,lateral)
 				game.ball.freeze=false
 				var launch:=FootballBallFlight.launch(game.ball,destination,.31) if action==&"volley" else Vector3(-7,-5,0)
 				game.ball.kick_velocity(launch,&"cross",review_actor.team_name,null)
@@ -285,6 +290,9 @@ func _capture() -> void:
 			review_actor.set_physics_process(true)
 			camera.position=review_actor.position+Vector3(2.7,1.6,2.6)
 			camera.look_at(review_actor.position+Vector3(.1,1.05,0));camera.fov=45
+			if left_review:
+				camera.position=review_actor.position+Vector3(10,1.8,4)
+				camera.look_at(review_actor.position+Vector3(.1,.9,0));camera.fov=14
 		elif mode.begins_with("shot_"):
 			for actor in game._home_players:
 				if actor.profile.player_id==&"shane_denham":review_actor=actor
@@ -294,6 +302,7 @@ func _capture() -> void:
 			review_actor.rotation.y=atan2(-aim.x,-aim.z);review_actor._flat_direction=aim
 			game.player=review_actor;game._kickoff_pending=false
 			game.ball.position=review_actor.position+aim*.6+Vector3.UP*.13
+			if left_review:game.ball.position-=aim.cross(Vector3.UP)*.14
 			game.ball.freeze=false;game.ball.last_touch=review_actor.team_name;game.ball.last_action=&"dribble"
 			for actor in game._away_players:
 				if actor.profile.role=="goalkeeper":
@@ -302,6 +311,9 @@ func _capture() -> void:
 			review_actor.set_physics_process(true)
 			review_actor._do_shot(.65,1.0,aim,StringName(mode.trim_prefix("shot_")))
 			camera.position=Vector3(43,7,17);camera.look_at(Vector3(44,.7,2));camera.fov=54
+			if left_review:
+				camera.position=review_actor.position+Vector3(10,1.8,3)
+				camera.look_at(review_actor.position+Vector3(0,.9,0));camera.fov=14
 		elif mode.begins_with("keeper_"):
 			var team: Array[FootballPlayer] = game._home_players if mode.ends_with("_home") else game._away_players
 			for candidate in team:
@@ -411,6 +423,11 @@ func _capture() -> void:
 		if not valid:
 			push_error("Native special-shot fixture produced no physical shot contact")
 			quit(1);return
+	if left_review and (mode.begins_with("shot_") or mode.begins_with("cross_") or mode in ["volley_close","half_volley_close"]):
+		var validated_left := false
+		for event in aerial_events:
+			if event.foot=="left" and event.kind==("cross" if mode.begins_with("cross_") else "shot"):validated_left=true
+		assert(validated_left,"Native review must show a physical selected-left-boot strike")
 	game.set_physics_process(false);game._set_players_physics_enabled(false)
 	paused=true
 	var primary:=(40 if mode=="stride_brake" else 145) if mode.begins_with("stride_") else (2 if mode.begins_with("skills") else (1 if mode=="montage" else 0))
@@ -430,9 +447,10 @@ func _capture() -> void:
 		"adapter":RenderingServer.get_video_adapter_name(),"vendor":RenderingServer.get_video_adapter_vendor(),
 		"api":RenderingServer.get_video_adapter_api_version(),"display_server":DisplayServer.get_name(),
 		"godot":Engine.get_version_info().string,"resolution":[first.get_width(),first.get_height()],
+		"camera_position":str(camera.global_position),"fov_degrees":camera.fov,"graphics_profile":str(session.graphics_profile),
 		"msaa_3d":root.msaa_3d,"home_players":game._home_players.size(),"away_players":game._away_players.size(),
 		"sequence_fps":60.0/frame_steps,"physics_steps_per_draw":frame_steps,
-		"officials":get_nodes_in_group("match_officials").size(),"review_mode":mode,"frames":sequence,"shot_contacts":shot_contacts,"keeper_contacts":keeper_contacts,"aerial_events":aerial_events,"skill_events":skill_events,
+		"officials":get_nodes_in_group("match_officials").size(),"requested_strike_foot":"left" if left_review else "right","review_mode":mode,"frames":sequence,"shot_contacts":shot_contacts,"keeper_contacts":keeper_contacts,"aerial_events":aerial_events,"skill_events":skill_events,
 		"fixture_setup":"scripted incoming ball" if mode in ["header_close", "chest_close", "volley_close", "half_volley_close"] else ("winger delivery through foot marker" if mode.begins_with("cross_") else mode),
 		"scope":"Actual native Forward+ controllers and assets; accelerated simulated time, software GPU, no Mac performance claim."}
 	var file:=FileAccess.open(output.path_join("match_broadcast.json"),FileAccess.WRITE)
@@ -449,6 +467,6 @@ func _record_aerial(kind: StringName, _speed: float) -> void:
 	elif actor!=null and ball.last_strike_part==&"chest":point=actor._aerial_controller.chest_point()
 	elif actor!=null and ball.last_strike_part==&"foot":point=actor._receive_contact_position()
 	aerial_events.append({"tick":tick,"kind":str(kind),"part":str(ball.last_strike_part),
-		"style":str(ball.last_strike_style),"bounce_age":actor.get_meta("last_air_contact_bounce_age",99) if actor!=null else 99,
+		"style":str(ball.last_strike_style),"foot":str(actor._footballer_visual.strike_foot()) if actor!=null else "","bounce_age":actor.get_meta("last_air_contact_bounce_age",99) if actor!=null else 99,
 		"team":str(ball.last_touch),"player_id":str(actor.profile.player_id) if actor!=null else "",
 		"ball":str(ball.position),"contact":str(point),"gap":point.distance_to(ball.position)})

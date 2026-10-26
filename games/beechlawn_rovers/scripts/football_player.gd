@@ -724,7 +724,7 @@ func _do_pass(through: bool, requested_direction := Vector3.ZERO,
 		_visual_pass_direction = requested_direction if requested_direction.length_squared() > 0.01 else _action_direction()
 		# Interrupting a previous pass emits action_finished synchronously.
 		# Arm the new contact afterward so that cleanup cannot erase it.
-		_visual_pass_pending = _footballer_visual.play_pass(playback_speed)
+		_visual_pass_pending = _footballer_visual.play_pass(playback_speed, select_strike_foot(ball.global_position+ball.linear_velocity*.10))
 		if _visual_pass_pending:
 			_visual_pass_receiver_id = requested_receiver.get_instance_id() if is_instance_valid(requested_receiver) else 0
 			_visual_pass_kind = pass_kind
@@ -855,12 +855,21 @@ func _receive_contact_position() -> Vector3:
 	if is_instance_valid(_footballer_visual):
 		var skeleton := _footballer_visual.get_node_or_null("Rig/YBot_Armature/Skeleton3D") as Skeleton3D
 		if skeleton != null:
-			var toe_index := skeleton.find_bone("mixamorig_RightToe_End")
+			var toe_name := &"mixamorig_LeftToe_End" if _footballer_visual.strike_foot() == &"left" else &"mixamorig_RightToe_End"
+			var toe_index := skeleton.find_bone(toe_name)
 			if toe_index >= 0:
-				return _footballer_visual.bone_world_position(&"mixamorig_RightToe_End")
+				return _footballer_visual.bone_world_position(toe_name)
 	var forward := -global_basis.z
 	forward.y = 0.0
 	return global_position + forward.normalized() * 0.55 + Vector3.UP * 0.05
+
+func select_strike_foot(point: Vector3, forward: Vector3 = Vector3.ZERO) -> StringName:
+	# The approach/arrival chooses the foot once. Keep a stable right tie-break
+	# through the central corridor instead of alternating on numerical noise.
+	var facing := forward if forward.length_squared() > .01 else -global_basis.z
+	facing.y = 0
+	var lateral := (point-global_position).dot(facing.normalized().cross(Vector3.UP))
+	return &"left" if lateral < -.04 else &"right"
 
 func consume_pass_input_until_released() -> void:
 	_ignore_pass_until_released = true
@@ -960,7 +969,7 @@ func _do_shot(charge: float, playback_speed := 1.0, requested_direction := Vecto
 		_visual_shot_direction = direction
 		_visual_shot_speed = speed
 		_visual_shot_lift = lift
-		_visual_shot_pending = _footballer_visual.play_shot(playback_speed)
+		_visual_shot_pending = _footballer_visual.play_shot(playback_speed, select_strike_foot(ball.global_position+ball.linear_velocity*.10))
 		if not _visual_shot_pending:
 			status_changed.emit("Shot action unavailable: animation is busy or missing")
 		return
