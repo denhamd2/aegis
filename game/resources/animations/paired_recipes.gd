@@ -479,6 +479,21 @@ const RECIPES := {
 		],
 		"defender_grips_until": 0.25,
 	},
+	# Cody's, from the corner -- the Bicycle Knee's clips, played against a man
+	# hanging in the buckle (see TRAJECTORIES): the head snaps back into the
+	# pad, then he pitches out of the corner onto his face.
+	"running_corner_knee": {
+		"authored": {"attacker": "Bicycle_Knee_Attacker", "defender": "Bicycle_Knee_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Punch_Cross", "at": 0.50},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Idle", "at": 0.00},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.25,
+	},
 	# Running attack -- see Stundog_Attacker in tools/blender/wrestling_clips.py.
 	"running_stundog_millionaire": {
 		"authored": {"attacker": "Stundog_Attacker", "defender": "Stundog_Defender"},
@@ -1318,6 +1333,20 @@ const TRAJECTORIES := {
 		"defender": {
 			"pos": [[0.000, -0.40, 0.00, 0.00], [0.300, -0.45, 0.00, 0.00], [0.533, -0.60, 0.00, 0.00], [1.000, -0.60, 0.00, 0.00]],
 			"rot": [[0.000, 0.00, -90.00, 0.00], [1.000, 0.00, -90.00, 0.00]],
+		},
+	},
+	# The corner knee: the Bicycle Knee's run and leap, but the man is against
+	# the buckle, so the knee drives him back into it rather than off his feet
+	# where he stood; the runner lands to one side, clear of the fall.
+	"running_corner_knee": {
+		"length": 1.2,
+		"attacker": {
+			"pos": [[0.000, 1.20, 0.00, 0.00], [0.133, 0.75, 0.00, 0.00], [0.233, 0.50, 0.00, 0.00], [0.300, 0.35, 0.00, 0.00], [0.467, 0.55, 0.00, 0.30], [1.200, 0.70, 0.00, 0.40]],
+			"rot": [[0.000, 0.00, 90.00, 0.00], [1.200, 0.00, 90.00, 0.00]],
+		},
+		"defender": {
+			"pos": [[0.000, -0.40, 0.00, 0.00], [0.300, -0.45, 0.00, 0.00], [0.400, -0.60, 0.00, 0.00], [1.200, -0.60, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, -90.00, 0.00], [1.200, 0.00, -90.00, 0.00]],
 		},
 	},
 	"running_stundog_millionaire": {

@@ -235,6 +235,9 @@ static func entries() -> Array:
 		# Whipped into the corner, chopped there Flair-style (a knife-edge
 		# chop; ff_moves_and_gameplay_plan.md, staples 4).
 		"corner_strike": [M + "strike_chop.tres"],
+		# And the run-in to finish the flurry: a running knee into the man in
+		# the buckle (staples 4 and 7, "corner chops or a running knee").
+		"corner": [M + "running_corner_knee.tres"],
 		# At a man he whipped into the ropes: the dropdown uppercut ("drops
 		# under a charging man, pops up into the chin", cody_moveset.md) and
 		# the powerslam.

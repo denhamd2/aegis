@@ -61,8 +61,9 @@ var _string_blows := 0
 ## Between strikes on a man trapped in a corner (Phase 4, position): he is
 ## worked over while he hangs there, not sized up.
 @export var corner_strike_cooldown_ticks: int = 18
-## Chance, each time he would strike a man hanging in a corner, that he runs
-## in with his corner move instead (when he has one).
+## Chance, each time he would strike a man hanging in a corner who has
+## already taken a blow there, that he runs in with his corner move instead
+## (when he has one).
 const CORNER_MOVE_CHANCE := 0.35
 ## How far away the AI stops walking in and charges instead.
 ##
@@ -965,8 +966,12 @@ func _poll_input() -> Dictionary:
 			input["move"] = _circle_move(to_target, distance)
 		elif _cooldown <= 0 and distance <= reach and not is_reading():
 			# Hanging in the corner, with a corner move to hand: sometimes
-			# the flurry gives way to the run-in instead of another blow.
+			# the flurry gives way to the run-in instead of another blow --
+			# after one at least, so Cody's chops come before his knee and
+			# Roman's lariats before his Spear (both rolled the run-in first
+			# in a tally, and the man never took a blow in the buckle).
 			if cornered and controller.corner_move != null \
+					and target._corner_hits >= 1 \
 					and _chain_rng().randf() < CORNER_MOVE_CHANCE \
 					and controller.try_corner_spear():
 				return input

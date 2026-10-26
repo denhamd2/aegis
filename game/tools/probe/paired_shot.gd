@@ -33,6 +33,9 @@ extends Node
 ## straight down on the pair instead of from the side.
 ## --at fractions over 1.0 look past the move's end, into the knockdown or the
 ## stance it hands off to (1.5 is half the move's length again).
+## --corner: the defender trapped in the near-right corner (CORNER_SPOT), the
+## attacker a run-in's length out in front -- for the corner moves, which are
+## only ever thrown at a man in the buckle.
 
 const MATCH_SCENE := "res://scenes/match.tscn"
 const MOVES_DIR := "res://resources/moves"
@@ -50,6 +53,7 @@ var _bare := false
 var _match_cam := false
 var _top := false
 var _weapon_id := ""
+var _corner := false
 
 
 func _ready() -> void:
@@ -71,6 +75,8 @@ func _ready() -> void:
 			_match_cam = true
 		elif args[i] == "--top":
 			_top = true
+		elif args[i] == "--corner":
+			_corner = true
 		elif args[i] == "--dist" and i + 1 < args.size():
 			_dist = float(args[i + 1])
 		elif args[i] == "--wrestlers" and i + 1 < args.size():
@@ -111,6 +117,10 @@ func _ready() -> void:
 	# are, so starting them scattered renders a different move.
 	defender.global_position = attacker.global_position \
 			- attacker.global_transform.basis.z * 0.9
+	if _corner:
+		var spot := WrestlerController.CORNER_SPOT
+		defender.global_position = Vector3(spot, 0.0, spot)
+		attacker.global_position = Vector3(spot - 0.85, 0.0, spot - 0.85)
 	attacker.look_at(defender.global_position, Vector3.UP)
 	defender.look_at(attacker.global_position, Vector3.UP)
 	await get_tree().physics_frame

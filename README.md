@@ -10428,3 +10428,18 @@ The owner's AI staples list asked for top-rope spots; Cody had only the moonsaul
 - **Review sheet.** `gauntlet/refs/ff_review/crossbody.png` (`tools/probe/crossbody_shot.tscn`). The spot's own camera shots run dark in this probe (the moonsault's are the same), so the flight reads in silhouette; the cover is the match camera.
 
 **The opening lock-up, to Fight Forever's tempo.** Fight Forever has no chain wrestling; its tie-up reads in about 0.3 s. Ours opened with one to three 1.8 s chain holds, 3.2 s on average. It is now one hold four times in five and never three (`CHAIN_LINK_WEIGHTS`). The working lock-ups after the opening were already Fight Forever-fast: the 0.4 s tie-up and a 0.3 s read before the move.
+
+## 26 Oct — Cody's running knee into the corner
+
+The owner's staples list asked for knees, and the plan's corner staple offers "corner chops or a running knee". Cody already chopped; he now has both.
+
+**The move** (`running_corner_knee`; roster tier `"corner"`, `running_corner_knee.tres`):
+- **The Bicycle Knee's own clips**, played against a man hanging in the buckle, exactly as Roman's corner Spear reuses the Spear's. Its trajectory drives the man back into the pad on the knee (0.60 m), and Cody lands to one side. The man's head snaps back, then he pitches out of the corner onto his face.
+- **No reversal window.** A man trapped in a corner cannot counter, as with the corner Spear.
+- **The fit** (`tools/anim/fit_paired.tscn`, `FIT_ONLY=running_corner_knee`, two passes) needed no correction: the two bodies never pass through each other. Pair clearance passes.
+- **Guard.** `test_corner_spear.gd` now holds both men's corner moves, and a new test plays Cody's knee through to Roman down, hurt and still inside the ropes.
+- **Review sheet.** `gauntlet/refs/ff_review/corner_knee.png`, from `tools/probe/paired_shot.tscn`'s new `--corner` option, which stands the defender in the buckle. The knee lands chest-high on Roman, the tallest man; on the reference mannequin it is at the jaw.
+
+**The flurry before the run-in.** The first tally showed the knee pre-empting the chops: Cody was trapped in a corner twice and ran in both times before a single chop. The AI rolled for the corner move on its very first decision. It now needs the man to have taken at least one blow in the buckle (`target._corner_hits >= 1`), which is what its comment already promised: the flurry gives way to the run-in. That holds Roman's lariats-then-Spear too. With three blows allowed before the man escapes, the run-in still comes about 73% of the time.
+
+**In a match** (`moveset_tally`, seeds 2 and 3, both won by pinfall): Roman was trapped in a corner twice; Cody chopped him twice and ran in with the knee once (after his running dropkick into the buckle, which counts as the blow). Cody was trapped four times; Roman threw five lariats and one corner Spear. Cody hit the top-rope crossbody in both matches.
