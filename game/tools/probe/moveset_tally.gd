@@ -45,6 +45,32 @@ func _ready() -> void:
 			if not dived and scene.has_node("DiveSpot"):
 				dived = true
 				tally["cody dive spot"] = tally.get("cody dive spot", 0) + 1
+			# The top-rope spots, and why the crossbody did or did not fire on
+			# the tick the man started to rise (MatchReferee._check_for_crossbody).
+			var spot_node := scene.get_node_or_null("TopRopeSpot") as TopRopeSpot
+			if spot_node and not spot_node.has_meta("tallied"):
+				spot_node.set_meta("tallied", true)
+				var kind := "crossbody" if spot_node._crossbody else "moonsault"
+				tally["cody " + kind] = tally.get("cody " + kind, 0) + 1
+				print("  seed %d tick %d: cody %s" % [seed_value, ticks, kind])
+			var cb_a: WrestlerController = scene.get_node("WrestlerB")
+			var cb_d: WrestlerController = scene.get_node("WrestlerA")
+			var rising := cb_d.fsm.current_state == WrestlerFSM.State.GETUP
+			if rising and not last.get("rising", false) and cb_a.top_rope_standing_move \
+					and not cb_a._top_rope_standing_used:
+				var why := "ok"
+				if not cb_a.fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION]):
+					why = "cody busy: %s" % WrestlerFSM.State.keys()[cb_a.fsm.current_state]
+				elif cb_a.outside_ring or cb_d.outside_ring:
+					why = "outside"
+				elif cb_a.last_landed_tier >= CombatSystem.Tier.FINISHER:
+					why = "after finisher"
+				elif not TopRopeSpot.can_crossbody(cb_d):
+					why = "no corner in reach: %s" % cb_d.global_position.snappedf(0.1)
+				var gate := "crossbody gate " + why.split(":")[0]
+				tally[gate] = tally.get(gate, 0) + 1
+				print("  seed %d tick %d: crossbody gate %s" % [seed_value, ticks, why])
+			last["rising"] = rising
 			for n in ["WrestlerA", "WrestlerB"]:
 				var w: WrestlerController = scene.get_node(n)
 				var m: MoveDef = w._active_move

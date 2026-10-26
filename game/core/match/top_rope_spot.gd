@@ -53,6 +53,29 @@ var _out := Vector3.FORWARD
 var _land := Vector3.ZERO
 var _cam_flip := 0.0
 
+## The crossbody (begin(..., true)): the other top-rope spot, onto a man on his
+## FEET -- just up, still groggy -- below the corner (ff_moves_and_gameplay_plan.md,
+## AI staples 5). The same walk, climb and step; then Crossbody_Leap carries
+## him off the top to the man and Crossbody_Land takes them both down, the
+## man in his own Bump_Back, Cody face down across his chest.
+var _crossbody := false
+var _hit := false
+var _meet := Vector3.ZERO
+var _dir := Vector3.FORWARD
+## The flight reaches a standing man at this range from the corner, best.
+const CROSS_BEST_REACH := 2.2
+const CROSS_MIN_REACH := 1.6
+const CROSS_MAX_REACH := 3.0
+## Crossbody_Leap's 16 frames; Crossbody_Land's 14, then on him until he is
+## down (the bump is Bump_Back's BUMP_TICKS).
+const LEAP_TICKS := 32
+const LAND_TICKS := 28
+const LIE_TICKS := 16
+## His root at contact, short of the man: chest to chest, sideways.
+const CROSS_MEET := 0.35
+## The man's chest lands this far past where he stood (Bump_Back, away).
+const CROSS_CHEST_PAST := 0.35
+
 
 ## The corner he would dive from at a man lying at `man`, as
 ## [corner (Vector2 of +-1), stand point], or [] if no corner suits.
@@ -73,6 +96,27 @@ static func pick_corner(man: Transform3D) -> Array:
 	return best
 
 
+## The corner he would crossbody from at a man standing at `man`, as
+## [corner, stand point], or [] if none is in reach.
+static func pick_corner_standing(man: Vector3) -> Array:
+	var best := []
+	var best_err := INF
+	for corner: Vector2 in [Vector2(1, 1), Vector2(1, -1), Vector2(-1, 1), Vector2(-1, -1)]:
+		var stand := stand_at(corner)
+		var reach := Vector3(stand.x, 0, stand.z).distance_to(Vector3(man.x, 0, man.z))
+		if reach < CROSS_MIN_REACH or reach > CROSS_MAX_REACH:
+			continue
+		var err := absf(reach - CROSS_BEST_REACH)
+		if err < best_err:
+			best_err = err
+			best = [corner, stand]
+	return best
+
+
+static func can_crossbody(man: WrestlerController) -> bool:
+	return not pick_corner_standing(man.global_position).is_empty()
+
+
 static func stand_at(corner: Vector2) -> Vector3:
 	var pad := Vector3(corner.x * RingBuilder.TURNBUCKLE_PAD_XZ, 0.0,
 			corner.y * RingBuilder.TURNBUCKLE_PAD_XZ)
@@ -84,7 +128,9 @@ static func can_dive_on(man: WrestlerController) -> bool:
 	return not pick_corner(man.global_transform).is_empty()
 
 
-func begin(p_attacker: WrestlerController, p_defender: WrestlerController) -> void:
+func begin(p_attacker: WrestlerController, p_defender: WrestlerController,
+		crossbody := false) -> void:
+	_crossbody = crossbody
 	attacker = p_attacker
 	defender = p_defender
 	var match_root := get_parent()
@@ -97,14 +143,22 @@ func begin(p_attacker: WrestlerController, p_defender: WrestlerController) -> vo
 			node.set_physics_process(false)
 	for w: WrestlerController in [attacker, defender]:
 		w.velocity = Vector3.ZERO
-	var pick := pick_corner(defender.global_transform)
+	var pick := pick_corner_standing(defender.global_position) if _crossbody \
+			else pick_corner(defender.global_transform)
 	_corner = pick[0]
 	_stand = pick[1]
 	_out = RingBuilder.step_out_dir(_corner)
-	var chest := defender.global_transform * DOWNED_CHEST
-	chest.y = attacker.global_position.y
-	_land = chest - _out * CHEST_FROM_ROOT
 	_stand.y = attacker.global_position.y
+	if _crossbody:
+		var man := defender.global_position
+		man.y = attacker.global_position.y
+		_dir = DiveSpot._flat(man - _stand).normalized()
+		_meet = man - _dir * CROSS_MEET
+		_land = man + _dir * CROSS_CHEST_PAST
+	else:
+		var chest := defender.global_transform * DOWNED_CHEST
+		chest.y = attacker.global_position.y
+		_land = chest - _out * CHEST_FROM_ROOT
 	if attacker.fsm.current_state != WrestlerFSM.State.IDLE:
 		attacker.fsm.transition_to(WrestlerFSM.State.IDLE)
 	_build()
@@ -125,6 +179,16 @@ func _build() -> void:
 			"facing": _out}, "corner")
 	_seg_add(STEP_TICKS, {"clip": "strikes/top_rope_step", "from": _stand, "to": _stand,
 			"facing": _out}, "corner")
+	if _crossbody:
+		# 4. Off the top and twisting, to the man; then both of them down,
+		# Cody face down across him until he is on the mat. The root faces
+		# away from the man, as on the rope: the clips fly to -fwd.
+		_seg_add(LEAP_TICKS, {"clip": "strikes/crossbody_leap", "from": _stand, "to": _meet,
+				"facing": -_dir}, "dive")
+		_seg_add(LAND_TICKS, {"clip": "strikes/crossbody_land", "from": _meet, "to": _land,
+				"facing": -_dir}, "dive", [[1, "crossbody_hit"]])
+		_seg_add(LIE_TICKS, {"clip": "", "from": _land, "to": _land, "facing": -_dir}, "dive")
+		return
 	# 4. The moonsault: carried backward along the mat at a constant speed while
 	# the clip turns him over.
 	_seg_add(MOONSAULT_TICKS, {"clip": "strikes/moonsault", "from": _stand, "to": _land,
@@ -142,7 +206,9 @@ func _next() -> void:
 		_finish()
 		return
 	var seg: Dictionary = _segments[_seg]
-	attacker.play_presentation_clip(seg["a"]["clip"])
+	# "" keeps the clip already playing (the crossbody's hold on the man).
+	if String(seg["a"]["clip"]) != "":
+		attacker.play_presentation_clip(seg["a"]["clip"])
 	_frame_shot(seg, true, 1.0 / TPS)
 
 
@@ -161,6 +227,12 @@ func _physics_process(delta: float) -> void:
 	if facing.length() > 0.01:
 		var want := atan2(-facing.x, -facing.z)
 		attacker.rotation.y = rotate_toward(attacker.rotation.y, want, TURN_RATE * delta)
+	# Up off the mat and turned to the corner, groggy, until he is hit.
+	if _crossbody and not _hit:
+		var to_stand := DiveSpot._flat(_stand - defender.global_position)
+		if to_stand.length() > 0.01:
+			defender.rotation.y = rotate_toward(defender.rotation.y,
+					atan2(-to_stand.x, -to_stand.z), TURN_RATE * delta)
 	for cue: Array in seg["events"]:
 		if int(cue[0]) == _tick:
 			_event(cue[1])
@@ -170,6 +242,24 @@ func _physics_process(delta: float) -> void:
 
 
 func _event(what: String) -> void:
+	if what == "crossbody_hit":
+		_hit = true
+		var move := attacker.top_rope_standing_move
+		if move:
+			defender.combat.apply_damage(move)
+			attacker.combat.apply_momentum(move)
+		# Over backward in his own bump, on his own ticks from here; the
+		# knockdown is worth the cover that follows. Cody comes down on top
+		# of him, so their capsules overlap from here to the cover: without
+		# the exception the man's move_and_slide pushed him a metre clear.
+		attacker.add_collision_exception_with(defender)
+		defender.add_collision_exception_with(attacker)
+		defender.set_physics_process(true)
+		defender.bump_tier = CombatSystem.Tier.POWER
+		defender._bump_down()
+		if defender.hit_flinch:
+			defender.hit_flinch.hit(attacker.global_position, "body", 1.0)
+		return
 	if what == "landed" and attacker.top_rope_move:
 		defender.combat.apply_damage(attacker.top_rope_move)
 		attacker.combat.apply_momentum(attacker.top_rope_move)
@@ -212,6 +302,13 @@ func _finish() -> void:
 	# cut to standing.
 	attacker.end_presentation(true)
 	MatchSmoothing.snap(attacker)
+	if _crossbody and _hit:
+		attacker.remove_collision_exception_with(defender)
+		defender.remove_collision_exception_with(attacker)
+	if _crossbody:
+		var referee := get_parent().get_node_or_null("MatchReferee") as MatchReferee
+		if referee:
+			referee.cover_now(attacker, defender)
 	if _camera:
 		_camera.resume_play()
 	finished.emit()

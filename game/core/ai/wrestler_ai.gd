@@ -315,10 +315,17 @@ var _guard_decided := false
 var _guard_intent := false
 
 
-## Chain wrestling. How many links the opening lock-up runs to -- one to
-## three, seeded -- and nothing out of any later one: the power and signature
+## Chain wrestling. How many links the opening lock-up runs to -- one or
+## two, seeded -- and nothing out of any later one: the power and signature
 ## lock-ups are the business end of a match, and the chain is its opening.
-const CHAIN_LINK_WEIGHTS := [2, 2, 1]
+##
+## Fight Forever has no chain wrestling at all -- its tie-up reads in about
+## 0.3 s and the move follows (gauntlet/refs/aew_ff_animation_review.md) --
+## and each link here is 1.8 s, so the opening ran 1-3 links, 3.2 s on
+## average, before anybody threw anything. Now it is one link four times in
+## five and never three: the opening still reads as wrestling, and is over
+## in about two seconds (the owner, 25 Oct: "faster lock-ups").
+const CHAIN_LINK_WEIGHTS := [4, 1, 0]
 ## The read tick the holder picks on, and the one the held man reads it on
 ## (inside WrestlerController.CHAIN_REVERSAL_WINDOW).
 const CHAIN_PICK_TICK := 6

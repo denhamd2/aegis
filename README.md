@@ -10408,3 +10408,23 @@ The owner: "Wrestlers climbing out of the ring properly, not teleporting to the 
 - **Clip gate.** `wrestling_clips.py` re-pinned after the renders below were looked at.
 - **Body-deformation gate.** The first cut of `Ring_Exit` added 7 single-frame limb flips (the gate allows 40 across every clip): the stepping knee was aimed almost exactly where the foot travels over the middle rope, and the rope hand passed just over the shoulder, folding the arm shut. The knee now aims out to his right, as a man hurdles a rope, and the rope hand is held higher and wider. One flip is left, at the first lift of the knee; the library is at 39.
 - **Review sheets.** `gauntlet/refs/nhb/review/ring_exit.png` (the exit in the match, every 0.2 s, before the knee re-aim), `ring_exit_keys.png` (the re-keyed step-through, front and side) and `gauntlet/refs/ff_review/staples_chop_spear_setup.png`.
+
+## 25 Oct — Cody's crossbody off the top; a faster opening lock-up
+
+The owner's AI staples list asked for top-rope spots; Cody had only the moonsault, onto a man already down.
+
+**The crossbody** (`TopRopeSpot`, crossbody mode; roster tier `"top_rope_standing"`, `dive_crossbody.tres`):
+- **When.** Once a match, as the man Cody put down starts to get up below a corner 1.6–3.0 m away (`MatchReferee._check_for_crossbody`).
+- **The climb** is the moonsault's: the walk to the corner, the climb, the step up to the top rope. The man rises meanwhile and is turned to face the corner.
+- **The dive** is two new clips, so the spot can carry the root at its own speed in each:
+  - `Crossbody_Leap` (16 frames): off the top and twisting, to fly at him sideways, chest first.
+  - `Crossbody_Land` (14 frames): rolling onto his chest as they go down.
+  - Every flight key is a sample of the one shortest turn from the top-rope stance to the sideways body. Each was solved with `mathutils`, then measured on the posed rig in Blender (head to his left, chest to the man, right side down) rather than guessed.
+- **The man** goes over backward in his own `Bump_Back`. The knockdown counts as a power move's, and Cody is face down across him when the referee covers (`MatchReferee.cover_now`).
+- **Pose lint** caught the trail boot's toes and the right fingertips going through the mat on the landing; feet and hands now sit higher.
+- **Bug found in the render.** Cody lands on top of him, so their two capsules overlapped from the impact on, and the man's own physics pushed him a metre clear before the cover. They now ignore each other's collision from the hit until the spot ends.
+- **Guard.** `test_crossbody.gd` covers the roster tier, the corner reach and the whole spot end to end: the man hurt, down and covered, with Cody on him, lying within 0.3 m of where he stood.
+- **In a match.** `tools/probe/moveset_tally.tscn` now counts the top-rope spots and, each time the man starts to rise, which gate stops the crossbody. Seed 2: twice Cody was mid-strike as the man rose; the third rise was the crossbody (28 s in), and the match went on to its pinfall.
+- **Review sheet.** `gauntlet/refs/ff_review/crossbody.png` (`tools/probe/crossbody_shot.tscn`). The spot's own camera shots run dark in this probe (the moonsault's are the same), so the flight reads in silhouette; the cover is the match camera.
+
+**The opening lock-up, to Fight Forever's tempo.** Fight Forever has no chain wrestling; its tie-up reads in about 0.3 s. Ours opened with one to three 1.8 s chain holds, 3.2 s on average. It is now one hold four times in five and never three (`CHAIN_LINK_WEIGHTS`). The working lock-ups after the opening were already Fight Forever-fast: the 0.4 s tie-up and a 0.3 s read before the move.

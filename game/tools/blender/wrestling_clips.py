@@ -6749,6 +6749,78 @@ CLIPS["Moonsault"] = [
               knee_r=(0.3, 0.0, -1.0), knee_l=(-0.3, 0.0, -1.0))),
 ]
 
+# --- Cody's crossbody off the top (TopRopeSpot, crossbody) ---------------------
+#
+# gauntlet/refs/ff_moves_and_gameplay_plan.md, AI staples 5: the other top-rope
+# spot, onto a man on his FEET -- he has just got up, still groggy, and Cody is
+# on the top rope above him. Climbed as the moonsault is (Corner_Climb,
+# Top_Rope_Step), facing out; then he springs off and twists in the air to fly
+# at the man sideways, chest first, arms out, and takes him over backward
+# (the man's own Bump_Back), landing face down across his chest. Two clips,
+# so the spot can carry the root at its own speed in each: the flight to the
+# man (Crossbody_Leap, 16 frames) and the fall with him (Crossbody_Land, 14).
+#
+# hips are (pitch, yaw, roll) as rig_pose._euler reads them. Every key of the
+# flight from (-28, 0, 0) on the rope to (-90, -90, 90) -- horizontal, head
+# to his left (-x), chest to the man (-fwd), right side down -- is a sample of
+# the one shortest turn between them, solved for here rather than guessed
+# (mathutils slerp, 160 degrees); the landing keeps pitch and yaw and only
+# rolls him the last 90 degrees onto his chest: (-90, -90, 0) is face down,
+# head still to -x. Root faces OUT throughout, as on the rope: the man is at
+# -fwd.
+CROSSBODY_AIR = dict(
+    pelvis=(0.30, 0.0, 1.30), hips=(-90, -90, 90), spine=(-4, 0, 0), head=(14, 0, 0),
+    hand_r=(-0.25, -0.50, 1.02), hand_l=(-0.25, -0.50, 1.56),
+    elbow_r=(0.0, -0.3, -1.0), elbow_l=(0.0, -0.3, 1.0),
+    fist_r=0.1, fist_l=0.1,
+    foot_r=(1.08, 0.06, 1.18), foot_l=(1.08, 0.02, 1.42),
+    knee_r=(0.0, -0.3, -1.0), knee_l=(0.0, -0.3, 1.0), free_feet=True)
+
+CLIPS["Crossbody_Leap"] = [
+    (0,  TOP_ON),
+    # Down into the knees on the rope, arms back.
+    (3,  pose(TOP_ON, pelvis=(0.0, 0.14, 1.78), hips=(-36, 0, 0),
+              hand_r=(0.50, 0.30, 1.90), hand_l=(-0.50, 0.30, 1.90))),
+    # Off it, already turning.
+    (7,  pose(TOP_ON, pelvis=(0.04, -0.06, 2.18), hips=(-53.5, -25.5, 13.0),
+              spine=(-6, 0, 0), head=(12, 0, 0),
+              hand_r=(0.10, -0.40, 2.10), hand_l=(-0.40, -0.30, 2.40),
+              foot_r=(0.24, 0.30, 1.50), foot_l=(-0.10, 0.34, 1.60),
+              knee_r=(0.3, 1.0, 0.0), knee_l=(-0.3, 1.0, 0.0), free_feet=True)),
+    (10, pose(CROSSBODY_AIR, pelvis=(0.16, -0.06, 1.95), hips=(-73.6, -45.6, 35.0),
+              hand_r=(-0.10, -0.50, 1.70), hand_l=(-0.30, -0.40, 2.20),
+              foot_r=(0.80, 0.30, 1.70), foot_l=(0.70, 0.40, 1.95))),
+    (13, pose(CROSSBODY_AIR, pelvis=(0.26, -0.04, 1.58), hips=(-89.7, -61.7, 61.5),
+              hand_r=(-0.20, -0.52, 1.30), hand_l=(-0.28, -0.48, 1.86),
+              foot_r=(1.00, 0.20, 1.45), foot_l=(0.96, 0.20, 1.70))),
+    # Sideways in the air, chest first, at his chest.
+    (16, CROSSBODY_AIR),
+]
+
+CLIPS["Crossbody_Land"] = [
+    (0,  CROSSBODY_AIR),
+    # Taking him over: rolling onto his chest as they go down.
+    (5,  pose(CROSSBODY_AIR, pelvis=(0.30, 0.0, 0.86), hips=(-90, -90, 45),
+              hand_r=(-0.25, 0.10, 0.60), hand_l=(-0.25, -0.55, 0.95),
+              foot_r=(1.06, 0.20, 0.62), foot_l=(1.06, -0.10, 0.80))),
+    # Face down across him, arms draped over, toes on the mat (the boots sit
+    # 0.17 up: lower, the toes of the trail boot went through it).
+    (9,  dict(pelvis=(0.30, 0.0, 0.44), hips=(-90, -90, 0), spine=(-2, 0, 0),
+              head=(8, 0, 0),
+              hand_r=(-0.24, 0.42, 0.25), hand_l=(-0.24, -0.42, 0.25),
+              elbow_r=(0.0, 0.6, 0.8), elbow_l=(0.0, -0.6, 0.8),
+              fist_r=0.2, fist_l=0.2,
+              foot_r=(1.04, 0.14, 0.18), foot_l=(1.04, -0.14, 0.18),
+              knee_r=(0.0, 0.3, -1.0), knee_l=(0.0, -0.3, -1.0))),
+    (14, dict(pelvis=(0.30, 0.0, 0.42), hips=(-90, -90, 0), spine=(-2, 0, 0),
+              head=(6, 0, 0),
+              hand_r=(-0.24, 0.40, 0.24), hand_l=(-0.24, -0.42, 0.24),
+              elbow_r=(0.0, 0.6, 0.8), elbow_l=(0.0, -0.6, 0.8),
+              fist_r=0.3, fist_l=0.3,
+              foot_r=(1.04, 0.14, 0.17), foot_l=(1.04, -0.14, 0.17),
+              knee_r=(0.0, 0.3, -1.0), knee_l=(0.0, -0.3, -1.0))),
+]
+
 
 # --- The springboard Cody Cutter (DiveSpot's other ending) -----------------------
 #

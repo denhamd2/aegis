@@ -236,6 +236,8 @@ func _resolve_tick() -> void:
 		return
 	if _try_start_tie_up():
 		return
+	if _check_for_crossbody():
+		return
 	_check_for_downed_opponent_action()
 
 ## Starts a tie-up once either wrestler pressed grapple this tick (captured
@@ -399,6 +401,50 @@ func _wants_top_rope(attacker: WrestlerController, defender: WrestlerController)
 			and attacker.last_landed_tier < CombatSystem.Tier.FINISHER \
 			and (attacker.submission_move == null or attacker._submission_move_used) \
 			and TopRopeSpot.can_dive_on(defender)
+
+## Covers `defender` now, from where `attacker` lies on him: the crossbody
+## ends lying across him, and the referee's own order (a stomp first, when
+## the man is fresh down) would stand him up off it.
+func cover_now(attacker: WrestlerController, defender: WrestlerController) -> void:
+	if _pinning or defender.fsm.current_state != WrestlerFSM.State.DOWN:
+		return
+	_pinning = true
+	_pin_ticks = 0
+	_pin_count_shown = 0
+	_pin_attacker = attacker
+	_pin_defender = defender
+	_rope_side = _reachable_ropes(attacker, defender)
+	attacker.begin_pin(defender, _pin_seed())
+
+
+## The crossbody (TopRopeSpot, crossbody): once a match, as the man he put
+## down starts to get up below a corner that suits it.
+const CROSSBODY_RISE_TICKS := 6
+
+
+func _check_for_crossbody() -> bool:
+	for pair in [[wrestler_a, wrestler_b], [wrestler_b, wrestler_a]]:
+		var attacker: WrestlerController = pair[0]
+		var defender: WrestlerController = pair[1]
+		if attacker.top_rope_standing_move == null or attacker._top_rope_standing_used:
+			continue
+		if defender.dead or defender.fsm.current_state != WrestlerFSM.State.GETUP \
+				or defender.fsm.ticks_in_state > CROSSBODY_RISE_TICKS:
+			continue
+		if not attacker.fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION]) \
+				or attacker.outside_ring or defender.outside_ring \
+				or attacker.last_landed_tier >= CombatSystem.Tier.FINISHER:
+			continue
+		if not TopRopeSpot.can_crossbody(defender):
+			continue
+		attacker._top_rope_standing_used = true
+		var spot := TopRopeSpot.new()
+		spot.name = "TopRopeSpot"
+		get_parent().add_child(spot)
+		spot.begin(attacker, defender, true)
+		return true
+	return false
+
 
 func _start_top_rope(attacker: WrestlerController, defender: WrestlerController) -> void:
 	attacker._top_rope_used = true

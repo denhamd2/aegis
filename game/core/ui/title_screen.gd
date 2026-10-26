@@ -535,6 +535,8 @@ static func configure_match(scene: Node, player: Roster.Entry,
 					wrestler.possum_move = moves[0]
 				"top_rope":
 					wrestler.top_rope_move = moves[0]
+				"top_rope_standing":
+					wrestler.top_rope_standing_move = moves[0]
 				"corner_strike":
 					wrestler.corner_strike_move = moves[0]
 				"rebound":

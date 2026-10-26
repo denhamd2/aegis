@@ -308,6 +308,10 @@ var _submission_move_used := false
 ## His dive off the top rope onto a man down mid-ring (TopRopeSpot), or null.
 @export var top_rope_move: MoveDef
 var _top_rope_used := false
+## His dive off the top onto a man just up on his feet below the corner
+## (TopRopeSpot's crossbody; Roster's "top_rope_standing"), or null.
+@export var top_rope_standing_move: MoveDef
+var _top_rope_standing_used := false
 ## His sweep from the mat at a man standing over him (PossumSpot), or null.
 @export var possum_move: MoveDef
 var _possum_used := false
@@ -4734,6 +4738,9 @@ var _bumping := false
 ## the bump carries him (WeaponCatalog.IMPACT_DOWN_SCALE, IMPACT_SHOVE).
 var _down_scale := 1.0
 var _bump_shove := 1.0
+## The tier the next bump's knockdown counts as (knockdown_tier), or -1: a
+## set piece that bumps a man (TopRopeSpot's crossbody) is worth a cover.
+var bump_tier := -1
 ## Put down by a weapon (the owner, 20 Oct: "they'll pose, but then get
 ## attacked during their pose because the victim is already back up"): no
 ## quick rise -- not the automatic one, not his own button, not fired up --
@@ -4866,7 +4873,9 @@ func _process_timed_state(input: Dictionary, next_state: WrestlerFSM.State) -> v
 		# moves' falls are (MoveDef.defender_lands_head_away).
 		_bumping = false
 		_turn_round_on_the_mat()
-		_go_down()
+		var tier := bump_tier
+		bump_tier = -1
+		_go_down(tier)
 		return
 	if _move_ticks_remaining <= 0:
 		# Out of a hit reaction into IDLE: sell it (SELL_TICKS).

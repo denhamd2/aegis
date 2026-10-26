@@ -251,6 +251,12 @@ const RECIPES := {
 		"seconds": 2.000, "file": AUTHORED},
 	"moonsault": {"kind": "retime", "source": "Moonsault",
 		"seconds": 1.200, "file": AUTHORED},
+	# Cody's crossbody off the top onto a man on his feet (TopRopeSpot,
+	# crossbody): the flight (16 frames) and the fall with him (14).
+	"crossbody_leap": {"kind": "retime", "source": "Crossbody_Leap",
+		"seconds": 0.533, "file": AUTHORED},
+	"crossbody_land": {"kind": "retime", "source": "Crossbody_Land",
+		"seconds": 0.467, "file": AUTHORED},
 	# Roman's corner clothesline (wrestling_clips.py "Strike_Corner_Clothesline"):
 	# 24 frames, contact on frame 9 = tick 18.
 	"strike_corner_clothesline": {"kind": "retime", "source": "Strike_Corner_Clothesline",

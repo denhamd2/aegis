@@ -247,6 +247,9 @@ static func entries() -> Array:
 				M + "dive_springboard_cutter.tres"],
 		# Off the top onto a man down mid-ring (TopRopeSpot), as in 2K26.
 		"top_rope": [M + "dive_moonsault.tres"],
+		# Off the top onto a man just up, still groggy, below the corner
+		# (TopRopeSpot's crossbody; ff_moves_and_gameplay_plan.md, staples 5).
+		"top_rope_standing": [M + "dive_crossbody.tres"],
 	}
 	return list
 
