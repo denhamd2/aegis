@@ -10634,3 +10634,129 @@ Both men had about the same free time, yet Roman landed eight signatures from si
   - **Kenny walking first:** Justin's intro and his 22.7 s call fill the lane past the end of his entrance. Tony and Excalibur are dropped when the next man walks out (`MatchAudio.ENTRANCE_LINES`) rather than played over him. Before that fix they pushed Cody's own lines and call about 10 s late.
 - **Kenny never had a name card.** A plain entrance's tracking shot stops at z −21, short of the halfway mark (−19.5) where the card goes up, so the card never came up for him. It now goes up on his name if the name is said in his own entrance, and otherwise on the walk after the cut (`EntranceDirector._card_at`). Walking first, it goes up at 23.5 s, during his walk.
 - **Tests.** `test_ring_announcer.gd` and `test_match_audio.gd` hold all of it.
+
+## 27 Oct — Kenny rebuilt on Cody's model; his face, hair and gear to the sheet; an entrance of his own (unverified)
+
+The owner: "Kenny's body isn't good … use Cody's body for Kenny and adjust it to Kenny, eg, skin shade, no Cody tattoos"; "Inspect our Kenny face vs the reference image … much closer … in terms of detail and texture. Also his hair still doesn't match"; "Research Kenny's typical entrance movements and … match our animation of his entrance to that."
+
+**Kenny is Cody's model now.** `KennyModel extends CodyModel` and `kenny_model.tscn` instances `cody_rhodes.glb`:
+- **Same rig and clips.** Cody's mesh, rig, animations, eyes and adapter, all already gated against every clip. Kenny is billed at 1.829 m on the 1.837 m mesh. His build is leaner (`BodyBulk.KENNY`).
+- **Kenny's look swaps in at load,** through hooks on `CodyModel`: `_body_gains`, `_skin_texture`, `_skin_tint`, `_fix_gear`, `_eye_tone`, `_eye_prefix`, `_add_hair`.
+- **Retired:** `kenny_aaa.glb` and its textures, and `tools/blender/kenny_aaa.py`. They are in git history.
+
+**Skin and face** (`tools/assets/build_kenny_textures.py`, deterministic):
+- **Tattoos gone.** Cody's three are cloned out: the skull and flag on his neck, "Dream" on his chest, and the ring-finger mark.
+- **The face is the sheet's.** Its front head shot is warped onto Cody's head UVs over 34 landmarks (`tools/blender/kenny_face_projection.py`).
+  - The photo supplies the colour, flush, brows and beard. Cody's 2048 texture keeps the pores, under a 24-texel feather.
+  - On top: procedural ginger-blond stubble, and Kenny's dark roots on the scalp.
+  - Cody's painted fringe was showing as a pale band across his forehead below the hair. It is now filled with the forehead skin from just below it.
+- **Skin tone took four passes against renders.**
+  - **Pass 1:** matched the sheet's photo medians and rendered a brick-red face. The forehead came out (170,65,52) against the sheet's (199,106,92): the arena's warm keys and tonemap push red further.
+  - **Pass 2:** went cool and lilac, (156,101,97).
+  - **Pass 3:** warm and natural under match light, but much brighter than Cody. On the stage lip his bare chest clipped to white, (254,253,228).
+  - **Shipped** (`KENNY_SKIN_TINT` 0.80/0.72/0.66): fairer than Cody in hue (less red over green), close to him in level.
+- **Eyes.** Cody's eyeballs, re-coloured (`build_eyes.py`). The first pass's periwinkle iris glowed under match light; see the judge loop below for the fix.
+
+**Hair** (`tools/blender/kenny_curls.py`, deterministic):
+- **Built on Cody's scalp:**
+  - an opaque matte cap;
+  - 520 slicked cards running back off a part left of centre, over the crown and down the back of the skull;
+  - 140 curly ringlets falling from behind the ears and round the back, 24 of them framing his face.
+- **How the ringlets hang.** Each one falls under gravity and is pushed off his head, neck and shoulders. It never draws in toward the neck faster than 0.3 m per metre of fall, so it hangs from the skull's bulge.
+- **Rigging.** All skinned to Cody's bones by height (Head, neck_01, spine_03, and a clavicle share on the shoulders), so the lengths ride the body.
+- **Colour.** Dark dirty blond at the root to gold at the tips, varying by ringlet. The first pass went ginger: its tips were too saturated, and the cap's strand ground was near black.
+- **Size and budget.** Measured to the owner's earlier "too big": 0.235 m wide at ear height (the guard is 0.27), nothing below 1.43 m. 25.5k triangles.
+
+**Gear** (same script, procedural, onto Cody's gear UVs). Each texel is painted from where it sits on the body, measured off the mesh:
+- white marbled tights with scalloped gold-and-black panels down the outer thighs and a gold stripe behind;
+- black kneepads with gold scrollwork and rims;
+- tall black boots with gold panels. Their tops are painted onto the tights' shins, because Cody's boots stop at 0.36 m.
+- a black-and-gold belt;
+- Cody's wrist tape cleaned to white.
+
+**Kenny's entrance** (`EntranceDirector._add_kenny_entrance`). **Best knowledge, NOT checked against footage:** nothing of his entrance could be downloaded to measure, and the owner said to go ahead.
+- **Timed to "Battle Cry" itself,** measured off the track: about 83 bpm, an onset at 20.8 s, one dip at 35–36 s and the lift at 37.0 s.
+- **The opening:**
+  - the house dims and his video plays;
+  - the cameras cut from the wall to the crowd to the building to the empty stage;
+  - he walks out on the 20.8 s onset at his own loose pace;
+  - on the lip he takes the building in until the lift.
+- **On the lift:** arms thrown wide and head back, with the stage pyro, then a point out to the crowd.
+- **The ramp:** down it on the broadcast cut, slapping hands on one side of the aisle, then the other.
+- **The ring:** in by the steps, up onto the second rope in the corner with his arms spread over the crowd and the ring pyro, then to his mark.
+- **The voice lane now fits inside his entrance** (`voice_lane_log.tscn`, at real time). Justin's call starts so the name lands on his ramp card, and Tony and Excalibur follow in both walk orders:
+  - **walking first:** the call at 44.7 s, his card at 64.2 s, Tony at 68.4 s, Excalibur at 84.1 s, all before Cody appears at 123.3 s. Before this, Tony's and Excalibur's lines were dropped;
+  - **walking second:** the call at 143.6 s, his card at 163.0 s, Tony at 167.2 s, Excalibur at 182.9 s, all clear of the face-off at 206.3 s.
+- **Left out on purpose:** the "Terminator" kneel the crowd claps along to. He does it in the ring before a dive, not in his entrance (Wrestling Inc, 2017).
+- **Lighting:**
+  - **The house** comes up to Cody's walk level on the stage pyro (`house_walk`). The crowd cutaways went near-black under the dimmed house, so they are now the lit wide and the long lens.
+  - **The walk lights are halved for him** (`EntranceDirector.WALK_LIGHT_GAIN`). The follow spot, walk key and camera key were tuned on Cody in his coat and Roman in his vest, and they burn a bare chest white: Cody's measures (254,232,191) where his coat shows it. Kenny, bare the whole way, now shows skin and shading on the lip.
+  - **Still to do:** the over-the-shoulder and close shots on the lower ramp leave him dark. They were dark before this change too.
+
+**New clips** (`wrestling_clips.py`):
+- **`Kenny_Walk`.** Built on Cody's gait engine, slower (1.1 m/s) and bouncier: a deeper drop, more sway, looser rolling shoulders and wider, later arms.
+- **Also:** `Kenny_Walk_Slap_L`/`_R`, `Kenny_Stand`, `Kenny_Stage_Pose` and `Kenny_Corner_Wings`.
+- **Cut:** a pointing variant. It added the same two snaps Cody's has and went over the cadence budget.
+- **Paired moves untouched** (134 clips).
+
+**Gates:**
+- **Tests:**
+  - `test_kenny_model.gd` is rewritten for the new build: base-rig bones, skinned meshes, his skin, gear and eyes, the tattoo texels, Cody's groom gone, the slick over the crown, a matte cap, and the hair's size.
+  - `test_entrance_director` gains his routine: his walk-out and the pyro land within two ticks of 20.8 s and 37.0 s, and his music outlasts his entrance in either order.
+  - In `test_ring_announcer`, Justin's call now lands on his ramp card like anyone's.
+- **Blood masks.** Kenny's are re-baked. The baker also moved Cody's by one level and Roman's further; both were left as committed.
+- **Probe.** New `tools/probe/model_turnaround.tscn` renders a model alone in 30 s instead of 10 minutes a frame for the match probe, so a texture or groom can be iterated. Close a look on `face_shot`, not on this.
+- **Review sheets:**
+  - `gauntlet/refs/characters/review/kenny_on_cody_pass1.png`: the sheet against our turnaround, his face under match light, and him in the entrance;
+  - `gauntlet/refs/kenny_entrance_review.png`: 18 frames of the entrance on music time.
+- **Known gaps for the next pass:**
+  - the hair reads darker than the sheet when he is backlit in the ring;
+  - the face is still Cody's bone structure under Kenny's skin;
+  - only his left wrist is taped (Cody's model has the one wrist piece).
+
+## 27 Oct — Kenny's face, judged in four runs: eyes that don't glow, a beard to the ears, ginger brows, a receding hairline
+
+The owner: "Add an art director judge to critically review Kenny's reference facial details vs ours … score likeness out of 10 … Run this in a loop to a max of four runs." And on the screenshots so far: "The beard on the side of his face doesn't look right … his eyes don't match with the reference. Ours looks glowing and slightly wrong color."
+
+**How it was judged.** Inline, against a fixed rubric (no sub-agent, per the owner's rule): shape 25%, eyes 15%, beard 15%, brows, nose, mouth and skin 10% each, hair framing 5%. Each run rebuilt the textures and curls, rendered `model_turnaround`, and was set against the sheet. The record is `gauntlet/refs/characters/review/kenny_face_judge.md`; the sheet is `kenny_face_judge.png` (reference, runs 1–4, and the eyes under match light before and after).
+
+**Scores:** run 1 **5.7**, run 2 **6.2**, run 3 **5.8** (an overshoot, reverted), run 4 **6.5** out of 10.
+
+**The eyes** (`tools/assets/build_eyes.py`, `KennyModel.KENNY_EYE_TONE`):
+- **Measured cause.** Under match light the old iris rendered (73,85,125), 1.7× his sclera (49,39,46) and as bright as his forehead. The sheet's iris sits darker than the white of his eye. The cause was a periwinkle tint on Cody's iris plus a bluer, brighter material tone.
+- **Now:**
+  - a grey iris with a trace of blue-green;
+  - drawn in to 0.9 of its radius by a radial warp. A flat white ring painted over the old rim glowed as a halo;
+  - a 1.6 mm pupil;
+  - a lighter, warmer sclera with less of the lids' shade;
+  - Cody's material tone, a shade warm.
+- **Level set under match light** (`face_shot`), not the turnaround's stand-in light. At Cody's iris level the eye, in the brow's shade, fell into the tonemap's toe and rendered black (0,0,5). The shipped tint gives (29,27,37) against a (50,30,31) white: about 0.6, close to the sheet's arena photo.
+
+**The beard** (`build_kenny_textures.beard_masks`):
+- **The defect.** It was a polygon drawn on the head atlas. It stopped in a straight edge mid-cheek, short of the ear, and changed character where the photo projection faded out.
+- **Now placed in 3D:** each texel's bind-pose point on the head against measured landmarks.
+  - A cheek line rises from under the nose to the sideburns, and a neckline runs low under the chin and up to the jaw at the sides.
+  - It reaches round to the ear above the jaw's corner and under it below.
+- **Drawn evenly** over the photo and Cody's skin, so there is no seam.
+- **Short auburn strokes,** about a fifth ginger-blond, over skin shaded by the sheet's chin-to-cheek ratio (0.74, 0.65, 0.66).
+
+**Brows.** Cody's dark-brown brows are taken to the sheet's sandy ginger, each hair by how dark it is against the skin round it. A lash-line pass was tried and dropped: it caught the whole lid and read as more eyeliner, not less.
+
+**Hairline.** Cody's scalp ran flat across the forehead and dropped square at the temples, a helmet. One table (`build_kenny_textures.HAIRLINE`) now gives his soft M, read by both the head texture (bared temples) and `tools/blender/kenny_curls.py` (no cap or slick below it), so they cannot disagree.
+- **Run 3:** the line read off the sheet came out at +1 cm at the centre and +2.5 cm at the temples, and bared him nearly to the crown. Near the top of the skull a centimetre of height is a lot of scalp.
+- **Run 4 ships half that**, with the bared skin's tone taken from round about so the forehead's creases do not show twice.
+
+**What holds the score at 6.5:**
+- **The bones are Cody's.** At matched pupil distance the nose, mouth, chin and face width land close; the longer nose and narrower cheekbones need a mesh change.
+- **The skin** is peach where the sheet's face is flushed red, and the stage spots limit how far it can go.
+- **The slick over the crown** reads as brushed streaks, not wet curls.
+
+**Gates:** `test_kenny_model` is 16 tests, three of them new or rewritten:
+- the eye map is grey, no brighter than the white beside it, and not under 0.6 of it;
+- the beard darkens the jaw by the ear on both sides: 0.82–0.84 of the bare cheek, against 1.09–1.10 with no beard;
+- no hair cap over the temple corners below 1.79 m.
+
+The tattoo check now samples the lower neck, because a beard hair is as dark as ink. Every Kenny asset rebuilds byte-identical from its script.
+
+**The crowd stripes:** investigated, then cancelled at the owner's word. Nothing of it ships.
+

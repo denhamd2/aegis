@@ -55,9 +55,9 @@ sight at (0.5, 0.5) -- so the whole procedural eye at real sizes, in the
 sheet's colour: a grey-green iris with a warm hazel ring round the pupil
 (aubrey_aaa_eye_*.png). Her lids and make-up are in her skin texture now.
 
-KENNY: his scan has no eyes, only paint. tools/blender/kenny_eyes.py builds
-eye caps over the openings, front-projected at KENNY's spec, and this paints
-them blue-grey (kenny_eye_*.png).
+KENNY, on Cody's model (KennyModel): Cody's own eyeballs and photographic
+texture, built as Cody's are but with the iris carried in the paler grey-blue
+of the owner's sheet (kenny_eye_*.png).
 
 Usage:  python3 tools/assets/build_eyes.py     (deterministic)
 """
@@ -166,11 +166,27 @@ AUBREY_AAA = EyeSpec(centre=(0.5, 0.5), mm_per_uv=30.0, size=512,
                      collarette_lift=12.0, limbus=(34, 42, 38), veins=0,
                      sclera=(214, 206, 196), occluded_albedo=0.5,
                      occlude_from=6.5, occlude_to=10.5, seed=53)
-## Kenny: new caps (kenny_eyes.py) front-projected at 30 mm per unit,
-## centred. Blue-grey, a touch of hazel at the pupil.
-KENNY = EyeSpec(centre=(0.5, 0.5), mm_per_uv=30.0, size=512,
-                iris_inner=(122, 120, 96), iris_outer=(84, 104, 122),
-                collarette_lift=12.0, limbus=(30, 36, 44), veins=18, seed=43)
+## Kenny wears Cody's eyes: the same texture, re-coloured to the sheet's eye
+## close-up. Measured there: a grey iris with the faintest blue-green in it,
+## (55,53,52) against a sclera of (111,80,75) and skin about three times the
+## iris's level -- the iris sits DARKER than the white of the eye. The first
+## pass tinted it a pale periwinkle (1.62, 1.82, 2.05): under match light the
+## iris rendered (79,89,122), as bright as his forehead and brighter than his
+## sclera (42,34,43), and the owner saw it glow, the wrong colour. So: grey,
+## a shade of blue-green; a lighter, faintly warm sclera with less of the
+## lids' shade on it; and the iris a little smaller, as the sheet's sits in a
+## wider show of white. Its level, set under match light (face_shot), where
+## the eye sits in the brow's shade at the toe of the tonemap: at Cody's iris
+## level (0.94, 1.04, 1.06) it rendered black, (0, 0, 5) against a sclera of
+## (51, 33, 34); lifted a quarter, (9, 8, 16), a dark slate. The sheet's
+## arena photo has the iris at about half the white's level.
+KENNY_IRIS_TINT = (1.40, 1.54, 1.57)
+KENNY = dataclasses.replace(CODY, sclera=(224, 204, 194), occluded_albedo=0.72)
+KENNY_IRIS_SCALE = 0.9
+## The sheet's close-up is lit hard: a small pupil, about a quarter of the
+## iris across. Cody's texture's is 2.0 mm on a 6.1 mm iris.
+CODY_PUPIL_R = 2.0
+KENNY_PUPIL_R = 1.6
 
 
 def smooth(a, b, x):
@@ -276,7 +292,7 @@ def write_maps(spec: EyeSpec, r, prefix: str, skin=None, skin_roughness=0.6) -> 
 
 
 def build_procedural(spec: EyeSpec, prefix: str) -> None:
-    """Roman's and Kenny's: the whole eye painted."""
+    """Roman's and Aubrey's rebuild: the whole eye painted."""
     rgb, r, _ = paint_eye(spec)
     rgb *= (1.0 - (1.0 - spec.occluded_albedo) * occlusion(spec, r))[..., None]
     save_rgb(rgb, CHARACTERS / f"{prefix}_eye_color.png")
@@ -296,16 +312,51 @@ def glb_image(path: pathlib.Path, name: str) -> Image.Image:
     return Image.open(io.BytesIO(data[start:start + view["byteLength"]])).convert("RGB")
 
 
-def build_cody() -> None:
-    spec = CODY
-    base = np.asarray(glb_image(CHARACTERS / "cody_rhodes.glb", CODY_TEXTURE)
-                      .resize((spec.size, spec.size), Image.LANCZOS), dtype=np.float32)
+def shrink_iris(base, spec: EyeSpec, scale: float, reach: float = 3.0,
+                pupil: tuple[float, float] | None = None):
+    """A radial warp about the line of sight: the iris drawn in to `scale` of
+    its radius, the white within `reach` mm of the old limbus stretched in to
+    meet it, everything beyond untouched. A flat white ring painted over the
+    old rim glowed like a halo (kenny judge run 1); the warp keeps the
+    sclera's own veins and shading all the way to the new limbus. `pupil`,
+    (Cody's radius, the new one) in mm, sizes the pupil inside the new iris."""
+    r_out, theta = polar(spec)
+    new_r = spec.iris_r * scale
+    outer = spec.iris_r + reach
+    inside = r_out / scale
+    if pupil is not None:
+        old_p, new_p = pupil
+        inside = np.where(r_out <= new_p, r_out * old_p / new_p,
+                          old_p + (r_out - new_p) * (spec.iris_r - old_p) / (new_r - new_p))
+    r_src = np.where(r_out <= new_r, inside,
+                     np.where(r_out < outer,
+                              spec.iris_r + (r_out - new_r) * (outer - spec.iris_r) / (outer - new_r),
+                              r_out))
+    px = spec.size / spec.mm_per_uv
+    sx = np.clip(spec.centre[0] * spec.size + r_src * np.cos(theta) * px - 0.5, 0, spec.size - 1.001)
+    sy = np.clip(spec.centre[1] * spec.size + r_src * np.sin(theta) * px - 0.5, 0, spec.size - 1.001)
+    x0, y0 = sx.astype(int), sy.astype(int)
+    fx, fy = (sx - x0)[..., None], (sy - y0)[..., None]
+    warped = (base[y0, x0] * (1 - fx) * (1 - fy) + base[y0, x0 + 1] * fx * (1 - fy)
+              + base[y0 + 1, x0] * (1 - fx) * fy + base[y0 + 1, x0 + 1] * fx * fy)
+    return warped, dataclasses.replace(spec, iris_r=new_r)
+
+
+def build_cody(prefix: str = "cody", tint=CODY_IRIS_TINT, spec=CODY, iris_scale=1.0,
+               pupil_r: float | None = None) -> None:
+    """Cody's photographic eye, corrected; `iris_scale` < 1 shrinks the iris
+    about the line of sight, the white stretched in round it."""
+    image = glb_image(CHARACTERS / "cody_rhodes.glb", CODY_TEXTURE).resize((spec.size, spec.size), Image.LANCZOS)
+    base = np.asarray(image, dtype=np.float32)
+    if iris_scale != 1.0:
+        base, spec = shrink_iris(base, spec, iris_scale,
+                                 pupil=(CODY_PUPIL_R, pupil_r) if pupil_r else None)
     r, _ = polar(spec)
     out = base.copy()
     # The iris: its own luminance, carried in blue.
     iris = 1.0 - smooth(spec.iris_r - 0.25, spec.iris_r + 0.35, r)
     lum = base.mean(axis=-1, keepdims=True)
-    out = out * (1.0 - iris[..., None]) + np.clip(lum * col(CODY_IRIS_TINT), 0, 255) * iris[..., None]
+    out = out * (1.0 - iris[..., None]) + np.clip(lum * col(tint), 0, 255) * iris[..., None]
     # The sclera: the veins calmed toward a smooth, desaturated off-white.
     calm = np.asarray(Image.fromarray(base.astype(np.uint8)).filter(ImageFilter.GaussianBlur(9)), dtype=np.float32)
     calm = calm.mean(axis=-1, keepdims=True) * 0.25 + calm * 0.75
@@ -314,9 +365,9 @@ def build_cody() -> None:
     sclera = smooth(spec.iris_r + 0.3, spec.iris_r + 1.2, r)[..., None] * CODY_VEIN_CALM
     out = out * (1.0 - sclera) + calm * sclera
     out *= (1.0 - (1.0 - spec.occluded_albedo) * occlusion(spec, r))[..., None]
-    save_rgb(out, CHARACTERS / "cody_eye_color.png")
-    write_maps(spec, r, "cody")
-    print("eye -> cody_eye_color / _orm / _height")
+    save_rgb(out, CHARACTERS / f"{prefix}_eye_color.png")
+    write_maps(spec, r, prefix)
+    print(f"eye -> {prefix}_eye_color / _orm / _height")
 
 
 def build_aubrey() -> None:
@@ -403,7 +454,7 @@ def main() -> int:
     build_cody()
     build_aubrey()
     build_procedural(AUBREY_AAA, "aubrey_aaa")
-    build_procedural(KENNY, "kenny")
+    build_cody("kenny", KENNY_IRIS_TINT, KENNY, KENNY_IRIS_SCALE, KENNY_PUPIL_R)
     return 0
 
 

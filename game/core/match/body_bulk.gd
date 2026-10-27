@@ -26,6 +26,14 @@ const CODY := {
 	"clavicle_l": 0.012, "clavicle_r": 0.012,
 	"spine_03": 0.007,
 }
+## Kenny, on Cody's model: leaner than Cody -- the sheet's turnaround is a
+## cut, athletic build, not a heavyweight's -- so about half Cody's gains.
+const KENNY := {
+	"upperarm_l": 0.008, "upperarm_r": 0.008,
+	"lowerarm_l": 0.004, "lowerarm_r": 0.004,
+	"clavicle_l": 0.006, "clavicle_r": 0.006,
+	"spine_03": 0.003,
+}
 const ROMAN := {
 	# Heavier than Cody's: 2K26's Roman is the bigger, thicker-armed man.
 	"J_Shoulder_L": 0.026, "J_Shoulder_R": 0.026,

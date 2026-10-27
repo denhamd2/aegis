@@ -617,7 +617,7 @@ def _smoother(t):
     return t * t * t * (t * (t * 6.0 - 15.0) + 10.0)
 
 
-def _crowd_walk(variant=""):
+def _crowd_walk(variant="", gait=None, gestures=None, looks=None):
     """Cody's walk to the ring: 1.2 m/s, working the building.
 
     The gait is _heavy_gait() at CODY_GAIT -- the same continuous, eased
@@ -636,17 +636,23 @@ def _crowd_walk(variant=""):
     raise kicked the upper arm 24 deg/frame^2.
 
     Every variant starts and ends on the plain walk's frame 0, so the
-    director can switch between them on any cycle boundary."""
-    raw = _heavy_gait(**CODY_GAIT)
+    director can switch between them on any cycle boundary.
+
+    `gait`, `gestures` and `looks` make it another man's walk (Kenny's:
+    KENNY_GAIT, KENNY_GESTURES, KENNY_LOOKS); left out, it is Cody's."""
+    gait = CODY_GAIT if gait is None else gait
+    gestures = CROWD_GESTURES if gestures is None else gestures
+    raw = _heavy_gait(**gait)
     cycle = _open_hands([(f, {k: v for k, v in pose.items() if not k.startswith("_")})
                          for f, pose in raw], curl=0.45)
     twist = {f: pose["_shoulder_yaw"] for f, pose in raw}
-    g = CROWD_GESTURES[variant]
+    g = gestures[variant]
     if g is None:
         # Broadcast (C-39 WHOA sheet 8-15 s; 2K26 1:03-1:06): he never looks
         # ahead for long, and when he looks he stays a moment.
-        looks = [(0, 0.0), (8, 0.0), (30, 32.0), (50, 32.0), (66, 0.0),
-                 (80, -22.0), (92, -22.0), (104, 0.0)]
+        if looks is None:
+            looks = [(0, 0.0), (8, 0.0), (30, 32.0), (50, 32.0), (66, 0.0),
+                     (80, -22.0), (92, -22.0), (104, 0.0)]
         arm = [(0, 0.0), (104, 0.0)]
     else:
         (a_in, a_out), yaw, _side, _t, _e, _f, _pt = g
@@ -678,7 +684,7 @@ def _crowd_walk(variant=""):
             hx, hf, hu = base["hand_" + side]
             # The hand still rides the gait a little: a man walking with a
             # fist up does not hold it dead still.
-            bob = base["pelvis"][2] - CODY_GAIT["pelvis_up"]
+            bob = base["pelvis"][2] - gait["pelvis_up"]
             # On the way up and down the hand travels in front of him, not
             # straight through the shoulder: a straight line passed within
             # 0.3 m of the shoulder joint, where the elbow's plane flipped.
@@ -716,6 +722,49 @@ CORNER_ON = dict(
     foot_r=(0.247, CORNER_FOOT_FWD, CORNER_FOOT_UP),
     foot_l=(-0.247, CORNER_FOOT_FWD, CORNER_FOOT_UP),
     knee_r=(0.3, 1.0, 0.0), knee_l=(-0.3, 1.0, 0.0))
+
+
+## Kenny Omega's entrance (EntranceDirector._add_kenny_entrance). Best
+## knowledge, NOT measured off footage -- the owner's call, 27 Oct, since
+## nothing could be downloaded to measure: an unhurried, loose, bouncy walk,
+## rolling his shoulders and playing to both sides; a pose on the stage, arms
+## spread and head back, then a point to the crowd; hands slapped down the
+## ramp; and arms spread wide from the second rope.
+##
+## His stand: loose, not Cody's up-on-the-toes showman -- shoulders down,
+## hands hanging open a little in front of the thighs, weight easy.
+KENNY_STAND = dict(
+    pelvis=(0.0, 0.0, 0.900), hips=(0, 0, 0), spine=(3, 0, 0), head=(3, 0, 0),
+    hand_r=(0.28, 0.05, 0.93), hand_l=(-0.28, 0.05, 0.93),
+    elbow_r=(0.6, -0.4, -1.0), elbow_l=(-0.6, -0.4, -1.0),
+    fist_r=0.3, fist_l=0.3,
+    foot_r=(0.19, 0.02, 0.104), foot_l=(-0.19, -0.02, 0.104),
+)
+## His walk on _heavy_gait: slower than Cody's (1.1 m/s), the same 26-frame
+## cycle and contact (the director's gesture hand-offs land on its cycle
+## boundaries, WALK_CYCLE_TICKS), but more bounce in it -- a deeper drop
+## after each step and more sway -- and looser up top: the shoulders roll
+## further against the hips and the arms swing wider and later.
+KENNY_GAIT = dict(
+    frames=26, fps=FPS, speed=1.1, contact=15,
+    plant_up=0.104, lift_up=0.075,
+    foot_x={"r": 0.16, "l": -0.15},
+    pelvis_up=0.880, pelvis_dip=0.044, sway=0.026, low_at=1.5 / 26.0,
+    hips_yaw=9.0, spine_lean=-2.0, shoulder_twist=13.0, side_roll=3.5,
+    hand_x={"r": 0.31, "l": -0.30}, hand_fwd=(-0.06, 0.25),
+    hand_up=(0.875, 0.945), arm_lag=4)
+## Playing to both sides as he goes: longer looks, further round.
+KENNY_LOOKS = [(0, 0.0), (6, 0.0), (26, 40.0), (46, 40.0), (60, 0.0),
+               (74, -38.0), (92, -38.0), (104, 0.0)]
+## His walk's gestures, as CROWD_GESTURES: a hand slapped along each side
+## of the aisle -- the arm reached out low and open, the head turned to it.
+## (A point out to a fan, as Cody's, went over the clip-cadence budget with
+## the same two snaps Walk_Crowd_Point has; the slaps are his.)
+KENNY_GESTURES = {
+    "": None,
+    "slap_l": ((14, 76), 48.0, "l", (-0.60, 0.30, 1.12), (-1.0, -0.3, -0.4), 0.05, False),
+    "slap_r": ((14, 76), -48.0, "r", (0.60, 0.30, 1.12), (1.0, -0.3, -0.4), 0.05, False),
+}
 
 
 def _gait(frames, fps, speed, contacts, plant_up, lift_up, foot_x,
@@ -2699,6 +2748,87 @@ CLIPS = {
                   foot_r=(0.247, CORNER_FOOT_FWD, CORNER_FOOT_UP),
                   knee_r=(0.3, 1.0, 0.0))),
         (30, CODY_STAND),
+    ],
+
+    # === Kenny (best knowledge, unverified: see KENNY_STAND) ==============
+
+    # 60 frames / 2.0s, looping: waiting, loose -- the weight goes from one
+    # foot to the other and his head turns out to the building and back.
+    "Kenny_Stand": [
+        (0,  KENNY_STAND),
+        (20, pose(KENNY_STAND, pelvis=(0.02, 0.0, 0.896), spine=(3, 4, -2),
+                  head=(4, 14, 0))),
+        (40, pose(KENNY_STAND, pelvis=(-0.02, 0.0, 0.896), spine=(3, -4, 2),
+                  head=(4, -12, 0))),
+        (60, KENNY_STAND),
+    ],
+
+    # 104 frames / 3.5s, looping: his walk (KENNY_GAIT), and the same walk
+    # with one gesture over it, each once an entrance.
+    "Kenny_Walk": _crowd_walk("", KENNY_GAIT, KENNY_GESTURES, KENNY_LOOKS),
+    "Kenny_Walk_Slap_L": _crowd_walk("slap_l", KENNY_GAIT, KENNY_GESTURES),
+    "Kenny_Walk_Slap_R": _crowd_walk("slap_r", KENNY_GAIT, KENNY_GESTURES),
+
+    # 150 frames / 5.0s: the pose on the stage. A beat of gathering -- arms
+    # in, chin down (6) -- then the arms thrown out wide at the shoulders,
+    # hands open, chest up and head back (12: EntranceDirector.KENNY_PYRO_AT,
+    # the stage pyro). Held and breathed into (to 84); the right arm comes
+    # round to point out at the crowd on his right, the left dropping (96),
+    # held; back to his stand.
+    "Kenny_Stage_Pose": [
+        (0,   KENNY_STAND),
+        (6,   pose(KENNY_STAND, pelvis=(0.0, 0.0, 0.870), spine=(-6, 0, 0),
+                   head=(-8, 0, 0),
+                   hand_r=(0.20, 0.20, 1.02), hand_l=(-0.20, 0.20, 1.02),
+                   elbow_r=(1.0, -0.4, -0.6), elbow_l=(-1.0, -0.4, -0.6),
+                   fist_r=0.6, fist_l=0.6)),
+        (12,  pose(KENNY_STAND, pelvis=(0.0, 0.0, 0.912), spine=(14, 0, 0),
+                   head=(14, 0, 0),
+                   hand_r=(0.82, 0.10, 1.50), hand_l=(-0.82, 0.10, 1.50),
+                   elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
+                   fist_r=0.05, fist_l=0.05)),
+        (18,  pose(KENNY_STAND, pelvis=(0.0, 0.0, 0.906), spine=(12, 0, 0),
+                   head=(14, 0, 0),
+                   hand_r=(0.80, 0.10, 1.47), hand_l=(-0.80, 0.10, 1.47),
+                   elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
+                   fist_r=0.05, fist_l=0.05)),
+        (50,  pose(KENNY_STAND, pelvis=(0.0, 0.0, 0.910), spine=(15, 0, 0),
+                   head=(18, 0, 0),
+                   hand_r=(0.81, 0.08, 1.50), hand_l=(-0.81, 0.08, 1.50),
+                   elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
+                   fist_r=0.05, fist_l=0.05)),
+        (84,  pose(KENNY_STAND, pelvis=(0.0, 0.0, 0.906), spine=(12, 0, 0),
+                   head=(14, 0, 3),
+                   hand_r=(0.80, 0.10, 1.46), hand_l=(-0.80, 0.10, 1.46),
+                   elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
+                   fist_r=0.1, fist_l=0.1)),
+        (96,  pose(KENNY_STAND, spine=(6, -10, 0), head=(8, -30, 0),
+                   hand_r=(0.66, 0.40, 1.56), elbow_r=(1.0, -0.2, 0.0),
+                   fist_r=0.95, point_r=True)),
+        (130, pose(KENNY_STAND, spine=(6, -12, 0), head=(8, -34, 0),
+                   hand_r=(0.67, 0.42, 1.58), elbow_r=(1.0, -0.2, 0.0),
+                   fist_r=0.95, point_r=True)),
+        (150, KENNY_STAND),
+    ],
+
+    # 120 frames / 4.0s: on the second rope, the arms come off the top rope
+    # and spread WIDE and level over the crowd (12: the ring pyro), chest out,
+    # head back; held and breathed into to 90; back to the rope by 120.
+    "Kenny_Corner_Wings": [
+        (0,   CORNER_ON),
+        (12,  pose(CORNER_ON, spine=(14, 0, 0), head=(18, 0, 0),
+                   hand_r=(0.88, 0.32, 2.10), hand_l=(-0.88, 0.32, 2.10),
+                   elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
+                   fist_r=0.05, fist_l=0.05)),
+        (50,  pose(CORNER_ON, spine=(16, 0, 0), head=(22, 0, 0),
+                   hand_r=(0.89, 0.30, 2.12), hand_l=(-0.89, 0.30, 2.12),
+                   elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
+                   fist_r=0.05, fist_l=0.05)),
+        (90,  pose(CORNER_ON, spine=(15, 0, 0), head=(18, 0, 0),
+                   hand_r=(0.88, 0.32, 2.10), hand_l=(-0.88, 0.32, 2.10),
+                   elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
+                   fist_r=0.1, fist_l=0.1)),
+        (120, CORNER_ON),
     ],
 
     "Win_Celebrate": [

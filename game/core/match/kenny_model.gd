@@ -1,257 +1,148 @@
 class_name KennyModel
-extends Node3D
-## Adapts the supplied Kenny Omega model to the game's wrestler rig.
+extends CodyModel
+## Kenny Omega, built on Cody's model.
 ##
-## The supplied asset is a STATUE, and an unusual one: a photogrammetry scan of a
-## physical action figure, delivered as a binary FBX inside two nested zips with
-## a 4096-square diffuse and normal map beside it. Measured before anything was
-## written: no armature, no vertex groups, no animations; ONE mesh of 285,913
-## vertices and 571,794 triangles; and 0.176 units tall, because the thing that
-## was scanned is 17.6 cm of plastic rather than a person.
+## The owner, 27 Oct: "Kenny's body isn't good. I'm thinking it would make
+## sense to use Cody's body for Kenny and adjust it to Kenny, e.g. skin shade,
+## no Cody tattoos" -- and of the face, "much closer to the reference in terms
+## of detail and texture". Cody's is the project's best-finished body: rigged
+## on the base rig's own 65 bones, gated against every clip, with 2048 skin
+## atlases carrying real pores. Its tights and tall boots are Kenny's
+## silhouette too, so his gear is a repaint, not new geometry.
 ##
-## `tools/assets/fbx_to_static_glb.py` converts it (the rigger reads only glTF),
-## stands it up the right way -- it is supplied upside down -- drops seven loose
-## scan fragments and decimates it to a size the game can carry.
-## `tools/assets/rig_static_wrestler.py` then gives it the base rig's own 65-bone
-## hierarchy, and `assets/characters/kenny_omega.glb` is that output.
+## So this is CodyModel with Kenny's look swapped in at load (the hooks
+## CodyModel exposes for it): the same mesh, rig, animations, helpers and
+## adapter. What differs:
 ##
-## What that leaves this script to do is small, for the same reasons it is small
-## for CodyModel:
-##
-## * The bone NAMES and HIERARCHY are the base rig's exactly, so there is no
-##   bone map and `game_bone_name()` is not implemented -- the controller's
-##   pass-through fallback is already correct.
-## * There is ONE skeleton, so `apply_physique_height()` is not implemented
-##   either; the controller's single-skeleton fallback is correct. (Contrast
-##   RomanModel, which is rigged on two and must scale both.)
-## * There is ONE material, with its base colour and normal map both properly
-##   wired in the supplied file. So there is no equivalent of RomanModel's
-##   `_fix_materials()` here -- no packed data map in an albedo slot, no
-##   untextured material, no alpha card. A photogrammetry scan has exactly one
-##   surface and paints everything onto it, which costs fidelity but removes
-##   this entire class of defect.
-##
-## The scan's limitations are worth stating, because they are permanent and no
-## amount of adapter code touches them: the face is soft and the hair is a solid
-## blob at close range, the lighting of the room it was scanned in is baked into
-## the diffuse and will not respond to the arena lights, and the figure's
-## pointing hand gesture is frozen into the mesh, so his fingers keep that shape
-## in every animation.
+## * SKIN. Every skin atlas is Kenny's (tools/assets/build_kenny_textures.py):
+##   retinted to his pinker, fairer tone, Cody's three tattoos gone, and on
+##   the head his own face -- the owner's sheet's front head shot projected
+##   onto these UVs (tools/blender/kenny_face_projection.py) over Cody's pore
+##   detail, with his ginger-blond beard.
+## * GEAR. White-and-gold tights, black-and-gold kneepads and boots, his
+##   wrist tape: Cody's gear atlases repainted by the same script.
+## * BUILD. Leaner than Cody's (BodyBulk.KENNY).
+## * EYES. Cody's eyeballs with a paler grey-blue iris (the sheet's eye
+##   close-up; kenny_eye_*.png from tools/assets/build_eyes.py).
+## * HAIR. His shoulder-length dirty-blond curls (tools/blender/kenny_curls.py)
+##   in place of Cody's short groom.
 
-## The rig every animation in this project is authored against.
-const BASE_RIG := "res://assets/characters/wrestler_base.glb"
+const CHAR := "res://assets/characters/"
+## Cody's skin material -> Kenny's atlas.
+const SKIN_TEXTURES := {
+	"xmaterial_c3d4d9e78b44a79": CHAR + "kenny_head.png",
+	"xmaterial_495900de7002683": CHAR + "kenny_body_abdomen.png",
+	"xmaterial_90b39911eb484a2": CHAR + "kenny_body_arm_r.png",
+	"xmaterial_90b2b911eb46cd8": CHAR + "kenny_body_arm_l.png",
+	"xmaterial_5a329cd32db96c3": CHAR + "kenny_body_chest.png",
+}
+## Cody's gear material -> Kenny's atlas.
+const GEAR_TEXTURES := {
+	"xmaterial_e531cd813705b95": CHAR + "kenny_gear_tights.png",
+	"xmaterial_c7ae1bc9f4b14": CHAR + "kenny_gear_belt.png",
+	"xmaterial_6d1e7e57b971093": CHAR + "kenny_gear_boot_r.png",
+	"xmaterial_6d205e57b97438d": CHAR + "kenny_gear_boot_l.png",
+	"xmaterial_f003af958238385": CHAR + "kenny_gear_wrist.png",
+}
+## Fairer than Cody's arena tan (his SKIN_TINT, 0.8/0.68/0.58): the sheet's
+## Kenny is pale and flushes red under the lights -- the lights' red, not the
+## albedo's (build_kenny_textures.py SKIN_GAIN). But not much brighter than
+## Cody: the entrance's stage spots are set for Cody's skin, and at 0.95/0.90/
+## 0.86 they took Kenny's chest to (250,245,233) on the stage lip, clipped
+## white, where Cody's sits well inside the range. Fairer in hue, close to
+## Cody's in level.
+const KENNY_SKIN_TINT := Color(0.80, 0.72, 0.66)
+## Cody's level, a shade warmer -- the sheet's white of the eye is pink-white
+## under his flushed lids, not grey: the colour is in the maps now (build_eyes.py,
+## a grey iris). The first pass set this bluer and brighter than Cody's
+## (0.86, 0.88, 0.92) on top of a periwinkle iris, and the owner saw the eyes
+## glow, the wrong colour.
+const KENNY_EYE_TONE := Color(0.82, 0.78, 0.76)
 
-
-func _ready() -> void:
-	_install_animations()
-	_dress_skin()
-	_dress_eyes()
-	_dress_hair()
-	_dress_gear()
-
-
-# ---------------------------------------------------------------------------
-# The AAA rebuild (tools/blender/kenny_aaa.py): what Godot's glTF import does
-# not carry over. Each look is found by its Blender material name.
-# ---------------------------------------------------------------------------
-
-const SKIN_MATERIAL := "M_KennySkin"
-const SKIN_PORE_TILES := 48.0
-
-
-## His skin: SkinLook's subsurface, sheen and pores, as Aubrey's.
-func _dress_skin() -> void:
-	var skin: Array[BaseMaterial3D] = []
-	for mi: MeshInstance3D in find_children("", "MeshInstance3D", true, false):
-		var surfaces := _surfaces_named(mi, SKIN_MATERIAL)
-		if surfaces.is_empty():
-			continue
-		SkinLook.with_detail_uv(mi, surfaces)
-		for surface: int in surfaces:
-			var material := mi.mesh.surface_get_material(surface).duplicate() as BaseMaterial3D
-			material.metallic_specular = 0.5
-			SkinLook.apply(material)
-			material.subsurf_scatter_transmittance_enabled = false
-			SkinLook.add_pores(material, SKIN_PORE_TILES)
-			mi.set_surface_override_material(surface, material)
-			skin.append(material)
-	# For Sweat and Blood (WrestlerController attaches them), as Roman's and Cody's.
-	set_meta("skin_materials", skin)
-
-
-const EYE_MATERIAL := "MI_KennyEyes"
-const EYE_PARALLAX := 4.0
-const CARD_MATERIALS := {"M_KennyBrows": 0.12, "M_KennyLashes": 0.3}
-
-
-## His eyes (EyeKit, build_eyes.py's KENNY maps) and his brow and lash cards.
-func _dress_eyes() -> void:
-	EyeKit.dress(self, EYE_MATERIAL, EyeKit.eye_material("kenny", EYE_PARALLAX))
-	for mi: MeshInstance3D in find_children("", "MeshInstance3D", true, false):
-		if mi.mesh == null:
-			continue
-		for surface in mi.mesh.get_surface_count():
-			var source := mi.mesh.surface_get_material(surface) as BaseMaterial3D
-			if source and CARD_MATERIALS.has(source.resource_name):
-				mi.set_surface_override_material(surface, EyeKit.lash_material(
-						source.albedo_texture, Color.WHITE, CARD_MATERIALS[source.resource_name]))
-
-
-## The curls: strand cards, scissored with alpha-to-coverage (a hundred and
-## ninety crossing clumps must not sort against each other) and seen from
-## both sides. The cap: its hairline feathered by vertex alpha.
-const HAIR_MATERIALS := {"M_KennyHair": 0.4, "M_KennyHairCap": 0.5}
-const HAIR_ROUGHNESS := 0.6
-const HAIR_SPECULAR := 0.25
-## The cap is the shadowed roots under the curls, so it is matte, with no
-## stretched hair highlight. With HairLook's anisotropy on a smooth
-## skull-shaped surface, the overhead key drew one broad pale band across
-## his hairline that read as slicked-back hair whatever was painted there
-## (the owner, 20 Oct: his model "doesn't look good or realistic"; kenny
-## pass 4).
+const CURLS := CHAR + "kenny_curls.glb"
+const CURL_CARDS := CHAR + "kenny_curl_cards.png"
+## The colour is in the curls' vertex colours (kenny_curls.py: dirty blond at
+## the root to gold at the tips, per ringlet lighter or darker), so the
+## material is white.
+const CURL_ROUGHNESS := 0.55
+const CAP_SPECULAR := 0.08
 const CAP_ROUGHNESS := 0.9
-const CAP_SPECULAR := 0.05
 
 
-func _dress_hair() -> void:
+func _body_gains() -> Dictionary:
+	return BodyBulk.KENNY
+
+
+func _skin_texture(material_name: String) -> Texture2D:
+	var path: String = SKIN_TEXTURES.get(material_name, "")
+	return load(path) if path != "" and ResourceLoader.exists(path) else null
+
+
+func _skin_tint() -> Color:
+	return KENNY_SKIN_TINT
+
+
+func _eye_tone() -> Color:
+	return KENNY_EYE_TONE
+
+
+func _eye_prefix() -> String:
+	return "kenny"
+
+
+func _fix_gear() -> void:
 	for mi: MeshInstance3D in find_children("", "MeshInstance3D", true, false):
 		if mi.mesh == null:
 			continue
 		for surface in mi.mesh.get_surface_count():
 			var source := mi.mesh.surface_get_material(surface) as BaseMaterial3D
-			if source == null or not HAIR_MATERIALS.has(source.resource_name):
+			if source == null or not GEAR_TEXTURES.has(source.resource_name):
+				continue
+			var path: String = GEAR_TEXTURES[source.resource_name]
+			if not ResourceLoader.exists(path):
 				continue
 			var material := source.duplicate() as BaseMaterial3D
-			var cap := source.resource_name == "M_KennyHairCap"
-			if cap:
-				material.vertex_color_use_as_albedo = true
-			material.roughness = CAP_ROUGHNESS if cap else HAIR_ROUGHNESS
-			material.metallic_specular = CAP_SPECULAR if cap else HAIR_SPECULAR
-			material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
-			material.alpha_scissor_threshold = HAIR_MATERIALS[source.resource_name]
-			material.alpha_antialiasing_mode = BaseMaterial3D.ALPHA_ANTIALIASING_ALPHA_TO_COVERAGE_AND_TO_ONE
-			material.alpha_antialiasing_edge = 0.35
-			material.cull_mode = BaseMaterial3D.CULL_DISABLED
-			if not cap:
-				HairLook.apply(material)
+			material.albedo_texture = load(path)
 			mi.set_surface_override_material(surface, material)
 
 
-## His gear: the painted albedo with its roughness and metal map (gold leaf
-## is metal; satin, leather and tape are not) and a cloth rim.
-const GEAR_MATERIAL := "M_KennyGear"
-const GEAR_ORM := "res://assets/characters/kenny_aaa_gear_orm.png"
-
-
-func _dress_gear() -> void:
-	var orm := load(GEAR_ORM) as Texture2D
-	for mi: MeshInstance3D in find_children("", "MeshInstance3D", true, false):
-		for surface: int in _surfaces_named(mi, GEAR_MATERIAL):
-			var material := mi.mesh.surface_get_material(surface).duplicate() as StandardMaterial3D
-			if orm:
-				material.roughness_texture = orm
-				material.roughness_texture_channel = BaseMaterial3D.TEXTURE_CHANNEL_GREEN
-				material.roughness = 1.0
-				material.metallic_texture = orm
-				material.metallic_texture_channel = BaseMaterial3D.TEXTURE_CHANNEL_BLUE
-				material.metallic = 1.0
-			material.rim_enabled = true
-			material.rim = 0.3
-			material.rim_tint = 0.7
-			mi.set_surface_override_material(surface, material)
-
-
-func _surfaces_named(mi: MeshInstance3D, material_name: String) -> Array:
-	var out := []
-	if mi.mesh == null:
-		return out
-	for surface in mi.mesh.get_surface_count():
-		var source := mi.mesh.surface_get_material(surface)
-		if source and source.resource_name == material_name:
-			out.append(surface)
-	return out
-
-
-## Kenny wrestles in his own gear, so the generated trunks must not be painted on.
-##
-## This is the one method the controller has no safe default for: absent it,
-## `_uses_universal_attire()` returns true and `WrestlerAttire.build()` paints
-## procedural trunks and boots over a model that already has them -- and here
-## they are not merely modelled but scanned into the single body mesh, so there
-## is nothing to hide them behind either.
-func uses_universal_attire() -> bool:
-	return false
-
-
-## Fills this model's AnimationPlayer with the base rig's clips.
-##
-## The keys are copied UNCHANGED. Only the node path is rewritten, because this
-## model sits under a `Source` node and the base rig's tracks name
-## "Armature/Skeleton3D:<bone>" relative to their own root.
-##
-## No rest-space conversion. This skeleton IS the base rig's -- same bone names,
-## same hierarchy, same parent chain -- and differs only in its REST pose, which
-## is the supplied model's own pose rather than the base rig's T-pose. In Godot
-## an animation track sets a bone's local pose directly, so identical local poses
-## down an identical hierarchy produce identical GLOBAL poses. The rest pose does
-## not enter into that; what it defines is the BIND pose, which the mesh's skin
-## already accounts for, so the vertices deform correctly from the pose they were
-## bound in.
-##
-## Converting instead applies the pose offset a second time, which renders as a
-## wrestler whose legs and head are right and whose arms are folded across his
-## waist. RomanModel needs the conversion because its skeleton is a genuinely
-## foreign rig; this one does not, because it is not.
-func _install_animations() -> void:
-	var player := $AnimationPlayer as AnimationPlayer
+func _add_hair() -> void:
 	var skeleton := get_game_skeleton()
-	if player == null or skeleton == null:
-		push_error("KennyModel: expected an AnimationPlayer and a Skeleton3D")
+	if skeleton == null or not ResourceLoader.exists(CURLS):
 		return
-	var source_root: Node = (load(BASE_RIG) as PackedScene).instantiate()
-	var source_player := source_root.find_child("AnimationPlayer", true, false) \
-			as AnimationPlayer
-	if source_player == null:
-		push_error("KennyModel: the base rig has no AnimationPlayer to read")
-		source_root.free()
-		return
-	player.add_animation_library("",
-			adapt_animation_library(source_player.get_animation_library("")))
-	source_root.free()
+	var curls: Node = (load(CURLS) as PackedScene).instantiate()
+	# The curls are skinned to this skeleton's own bones (head, neck and upper
+	# back by height), so the lengths follow the shoulders instead of swinging
+	# through them: they go under the skeleton, not on a bone attachment.
+	for mi: MeshInstance3D in curls.find_children("*", "MeshInstance3D", true, false):
+		var mesh_instance := mi.duplicate() as MeshInstance3D
+		skeleton.add_child(mesh_instance)
+		mesh_instance.skeleton = NodePath("..")
+		mesh_instance.material_override = _curl_material(mi.name == "CurlCap")
+		mesh_instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON \
+				if mi.name == "CurlCap" else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	curls.free()
 
 
-## Rebases a library authored against the base rig onto this model's node paths.
-##
-## `WrestlerController` calls this for PAIRED_POSES and STRIKE_CLIPS, whose
-## tracks are also written as "Armature/Skeleton3D:<bone>" and would otherwise
-## resolve to nothing here -- silently, leaving the wrestler inert through every
-## grapple and strike rather than erroring.
-##
-## `source_skeleton` is accepted and ignored: the controller passes one argument
-## and RomanModel's signature takes two, and matching the shape keeps the
-## duck-typed call site identical for both models.
-func adapt_animation_library(source: AnimationLibrary,
-		_source_skeleton: Skeleton3D = null) -> AnimationLibrary:
-	var skeleton := get_game_skeleton()
-	if skeleton == null:
-		push_error("KennyModel: no Skeleton3D to rebase animation tracks onto")
-		return source
-	var skeleton_path := get_path_to(skeleton)
-	var target := AnimationLibrary.new()
-	for name in source.get_animation_list():
-		var source_animation: Animation = source.get_animation(name)
-		var animation: Animation = source_animation.duplicate(true)
-		for track in animation.get_track_count():
-			var bone := String(animation.track_get_path(track)
-					.get_concatenated_subnames())
-			# Leave any non-bone track alone rather than guessing at it.
-			if bone == "":
-				continue
-			animation.track_set_path(track,
-					NodePath("%s:%s" % [skeleton_path, bone]))
-		target.add_animation(name, animation)
-	return target
-
-
-func get_game_skeleton() -> Skeleton3D:
-	return find_child("Skeleton3D", true, false) as Skeleton3D
+func _curl_material(cap: bool) -> StandardMaterial3D:
+	var mat := StandardMaterial3D.new()
+	mat.albedo_texture = load(CURL_CARDS)
+	mat.vertex_color_use_as_albedo = true
+	if cap:
+		# The shadowed roots under the hair: matte. With HairLook's stretched
+		# highlight the overhead key drew a pale band across his hairline that
+		# read as a painted helmet (kenny pass 4).
+		mat.metallic_specular = CAP_SPECULAR
+		mat.roughness = CAP_ROUGHNESS
+	else:
+		mat.metallic_specular = 0.25
+		mat.roughness = CURL_ROUGHNESS
+		HairLook.apply(mat)
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	if not cap:
+		mat.texture_repeat = false
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+		mat.alpha_scissor_threshold = 0.3
+		mat.alpha_antialiasing_mode = BaseMaterial3D.ALPHA_ANTIALIASING_ALPHA_TO_COVERAGE_AND_TO_ONE
+		mat.alpha_antialiasing_edge = mat.alpha_scissor_threshold
+	return mat

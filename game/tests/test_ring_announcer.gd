@@ -77,27 +77,9 @@ func test_each_name_is_said_on_his_card() -> void:
 			var name_tick := _abs_tick(director, int(moment[0]), int(moment[1]))
 			var said := int(starts[0]) + int(round(RingAnnouncer.name_at(w.entrance_style)
 					* EntranceDirector.TPS))
-			if w.entrance_style == "kenny":
-				# "Making his way to the ring ...": 18.9 s to his name, longer
-				# than his walk to the card. The call starts as he walks out,
-				# and the card waits for the name (name_called).
-				var first := -1
-				for i in director._beats.size():
-					if first < 0 and director._beats[i].get("who") == w:
-						first = i
-				assert_int(int(starts[0])).is_equal(_abs_tick(director, first, 1))
-				assert_int(said).is_greater(name_tick)
-				# Walking first, behind Justin's intro, his name comes after
-				# his entrance: the ramp puts his card up, not the call.
-				var walks_first: bool = w == scene.get_node("WrestlerB")
-				assert_bool(director._called.has(w)).is_equal(not walks_first)
-				var card_cues := 0
-				for beat: Dictionary in director._beats:
-					for cue: Array in beat.get("events", []):
-						if cue[1] == "name_card" and beat.get("who") == w:
-							card_cues += 1
-				assert_int(card_cues).is_equal(1 if walks_first else 0)
-				continue
+			# Kenny's own entrance (27 Oct) is long enough that his 18.9 s to
+			# the name lands on his ramp card like anyone's; on the old plain
+			# walk it came after his card and the ramp put the card up instead.
 			assert_int(absi(said - name_tick)).override_failure_message(
 					"%s's name is said %d ticks off his card" % [w.entrance_style, said - name_tick]
 			).is_less_equal(1)

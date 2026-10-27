@@ -8,7 +8,7 @@ extends Node
 ##   xvfb-run -a godot4 --path game --rendering-driver vulkan \
 ##       --resolution 1280x720 tools/probe/face_shot.tscn -- \
 ##       --a kenny --b cody --out /tmp/faces [--only kenny] \
-##       [--clips strikes/whoa_arms,strikes/kneel --at 0.5]
+##       [--clips strikes/whoa_arms,strikes/kneel --at 0.5] [--body] [--all_views]
 ##
 ## --clips: after the face-off shots, each listed clip played on the --only
 ## man (or --b), held at --at through it, and his head and neck framed from
@@ -29,6 +29,8 @@ var _at := 0.5
 ## --body: frame the pose's head, shoulders and arms (2.6 m back, the whole
 ## upper body) instead of the neck, from the front, the side and behind.
 var _body := false
+## --all_views: the neck framing from behind and three-quarter as well (hair).
+var _all_views := false
 
 
 func _ready() -> void:
@@ -45,6 +47,8 @@ func _ready() -> void:
 			"--at": _at = float(args[i + 1])
 	if args.has("--body"):
 		_body = true
+	if args.has("--all_views"):
+		_all_views = true
 	DirAccess.make_dir_recursive_absolute(_out)
 	var scene: Node = load("res://scenes/match.tscn").instantiate()
 	TitleScreen.configure_match(scene, Roster.by_id(_a), Roster.by_id(_b), 1)
@@ -115,7 +119,7 @@ func _ready() -> void:
 			man.anim_tree.active = false
 			var head := _head(man)
 			var views := [["front", face], ["side", side]]
-			if _body:
+			if _body or _all_views:
 				views.append(["back", -face])
 				views.append(["three_quarter", (face + side).normalized()])
 			for view: Array in views:

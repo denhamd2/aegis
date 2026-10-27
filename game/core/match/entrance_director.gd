@@ -229,6 +229,12 @@ const WALK_BACK_UP := 3.4
 const WALK_BACK_ENERGY := 5.0
 const WALK_BACK_ANGLE := 34.0
 const WALK_BACK_RANGE := 10.0
+## The walk lights on a bare-chested man. Tuned on Cody in his coat and Roman
+## in his vest, the follow spot, the walk key and the camera key burn a bare
+## chest to white: Cody's measures (254,232,191) where his coat shows it, and
+## Kenny, bare the whole way, walked out with his chest at (254,253,228) and
+## his face at (243,225,197). His keys run at this share.
+const WALK_LIGHT_GAIN := {"kenny": 0.5}
 ## The titantron's light on him (lighting_2k26.md item 11): while his video is
 ## on the wall and he is out of the ring, a spot in the wall's own colour
 ## (StageVideo.glow_color) hangs between him and the wall, high, and rakes his
@@ -440,6 +446,32 @@ const CODY_BLUE := Color(0.18, 0.32, 1.0)
 const CODY_DARK_AT := Vector3(0.0, RIG_CLEAR_Y, 14.0)
 const CODY_DARK_LOOK := Vector3(0.0, 3.0, -30.0)
 const CODY_DARK_FOV := 50.0
+
+## Kenny Omega (_add_kenny_entrance). Best knowledge, NOT measured off footage
+## -- the owner's call, 27 Oct: nothing of his entrance could be downloaded
+## to measure. Times are music seconds into "Battle Cry"
+## (assets/audio/music/kenny_entrance.ogg), measured off the track itself:
+## loud from the top at ~83 bpm (a beat every 0.72 s); an onset at 20.8 s
+## with the kick under it at 21.1; one dip at 35-36 s and the lift at 37.0
+## (StageVideo's "chorus").
+const KENNY_BEAT := 0.72
+## He walks out on the 20.8 s onset...
+const KENNY_OUT := 20.8
+## ...and his arms go wide on the stage on the lift, the stage pyro with them.
+const KENNY_LIFT := 37.0
+## Unhurried: Kenny_Walk travels 1.1 m/s.
+const KENNY_WALK_SPEED := 1.1
+const KENNY_WALK_CLIP := "strikes/kenny_walk"
+## Kenny_Stage_Pose throws the arms wide on its frame 12 (24 ticks) and runs
+## 5 s; Kenny_Corner_Wings spreads them on its frame 12 and runs 4 s.
+const KENNY_PYRO_AT := 24
+const KENNY_POSE_TICKS := 300
+const KENNY_WINGS_TICKS := 240
+## Down the ramp as Cody's cut is, on his beat; hands slapped along one side
+## of the aisle and then the other (wrestling_clips.py KENNY_GESTURES).
+const KENNY_WALK_SHOTS := [["steadicam_front", 8 * KENNY_BEAT], ["over_shoulder", 5 * KENNY_BEAT],
+		["face_walk", 5 * KENNY_BEAT], ["barricade_track", 5 * KENNY_BEAT]]
+const KENNY_WALK_GESTURES := ["strikes/kenny_walk_slap_l", "strikes/kenny_walk_slap_r"]
 ## His video starting on the big screen: from a crane over the floor, square
 ## to the wall, the whole screen and the dark stage under it (owner: the old
 ## cut "stays too long on the crowd" -- the 2K26 intro shows the video).
@@ -833,6 +865,8 @@ func _build_timeline() -> void:
 			_add_roman_entrance(w, pair[1], pair[2])
 		elif w.entrance_style == "cody":
 			_add_cody_entrance(w, pair[1], pair[2])
+		elif w.entrance_style == "kenny":
+			_add_kenny_entrance(w, pair[1], pair[2])
 		else:
 			_add_entrance(w, pair[1], pair[2])
 		if w == _b and RingAnnouncer.has_call("intro"):
@@ -1059,6 +1093,8 @@ static func _wait_clip(w: WrestlerController) -> String:
 			return "strikes/roman_stand"
 		"cody":
 			return "strikes/cody_stand"
+		"kenny":
+			return "strikes/kenny_stand"
 	return "strikes/face_off"
 
 
@@ -1767,6 +1803,95 @@ func _add_cody_entrance(w: WrestlerController, entrance_x: float, _side: String)
 	# Nothing moves on until the coat is on the timekeeper's table.
 	_beats.append({"kind": "hold", "who": w, "ticks": 30, "shot": "end_wide",
 			"wait_idle": true})
+
+
+## Kenny Omega (KENNY_*; best knowledge, unverified against footage). The
+## house down and his video on the wall through the opening of his music;
+## he walks out on the onset at 20.8 s, unhurried, to the lip, and stands
+## there taking the building in until the track lifts at 37 s: arms thrown
+## wide, head back, the stage pyro -- then a point out to the crowd. Down the
+## ramp slapping hands on both sides, in by the steps, up onto the second
+## rope in the corner with his arms spread over the crowd and the ring pyro,
+## and down to his mark. (The "Terminator" kneel the crowd claps along to is
+## in the ring before a dive, not his entrance -- Wrestling Inc, 2017.)
+func _add_kenny_entrance(w: WrestlerController, entrance_x: float, side: String) -> void:
+	var deck := ArenaBuilder.STAGE_DECK_Y
+	var emerge := Vector3(entrance_x, deck, ArenaBuilder.ENTRANCE_Z)
+	var lip := Vector3(0.0, deck, ArenaBuilder.STAGE_FRONT - 0.6)
+	var foot_of_ramp := Vector3(0.0, 0.0, CUT_TO_Z)
+	var lit := {"lights": side}
+	# Every beat up to the pose is placed by its music time, counted in whole
+	# ticks from his first: rounding each beat on its own drifted the pyro.
+	var first := _beats.size()
+	var to := func(music: float) -> int:
+		var done := 0
+		for i in range(first, _beats.size()):
+			done += beat_ticks(_beats[i])
+		return int(round(music * TPS)) - done
+	# The opening: the video, the building, the stage waiting for him. (Not
+	# the crowd: under the dimmed house its wide rendered all but black.)
+	_beats.append({"kind": "hold", "who": w, "ticks": to.call(8.0), "shot": "tron_video",
+			"events": [[1, "tron_on"], [1, "dim_on"]]})
+	for cut: Array in [[12.5, "arena_dark_high"], [16.85, "tron_video"],
+			[KENNY_OUT, "stage_wide"]]:
+		_beats.append(_with(lit, {"kind": "hold", "who": w, "ticks": to.call(cut[0]),
+				"shot": cut[1]}))
+	# Out on the onset, to the lip at his own pace.
+	var half := emerge.lerp(lip, 0.5)
+	_beats.append(_with(lit, {"kind": "walk", "who": w, "path": [emerge, half],
+			"speed": KENNY_WALK_SPEED, "walk_clip": KENNY_WALK_CLIP, "appear": true,
+			"shot": "stage_wide"}))
+	_beats.append(_with(lit, {"kind": "walk", "who": w, "path": [half, lip],
+			"speed": KENNY_WALK_SPEED, "walk_clip": KENNY_WALK_CLIP, "shot": "face_walk"}))
+	# On the lip, looking the building over until the lift: pushed in on, the
+	# long lens from down the ramp, then close.
+	var at_lip := KENNY_OUT + _flat(emerge).distance_to(_flat(lip)) / KENNY_WALK_SPEED
+	var pose_from := KENNY_LIFT - float(KENNY_PYRO_AT) / TPS
+	for hold: Array in [[lerpf(at_lip, pose_from, 0.45), "stage_push"],
+			[lerpf(at_lip, pose_from, 0.7), "ramp_long"], [pose_from, "face_walk"]]:
+		var ticks: int = to.call(hold[0])
+		if ticks > 0:
+			_beats.append(_with(lit, {"kind": "pose", "who": w, "ticks": ticks,
+					"clip": "strikes/kenny_stand", "facing": Vector3.BACK, "shot": hold[1]}))
+	# The lift: arms wide, the stage pyro on a low hero angle, then the wide
+	# for the burst and the point out to the crowd. The house comes up to the
+	# walk's level with the pyro, as on Cody's WHOA: left down, his whole walk
+	# to the ring rendered in the dark.
+	_beats.append(_with(lit, {"kind": "pose", "who": w, "ticks": KENNY_PYRO_AT + 30,
+			"clip": "strikes/kenny_stage_pose", "facing": Vector3.BACK, "shot": "hero_low",
+			"events": [[KENNY_PYRO_AT, "pyro_stage"], [KENNY_PYRO_AT, "house_walk"]]}))
+	_beats.append(_with(lit, {"kind": "pose", "who": w,
+			"ticks": KENNY_POSE_TICKS - KENNY_PYRO_AT - 30, "clip": "strikes/kenny_stage_pose",
+			"facing": Vector3.BACK, "shot": "stage_wide"}))
+	# Down the ramp, working both sides.
+	_add_walk_cut(w, lip, foot_of_ramp, KENNY_WALK_SPEED, KENNY_WALK_CLIP, KENNY_WALK_SHOTS,
+			KENNY_WALK_GESTURES, true)
+	var in_at := _add_route_in(w, foot_of_ramp, KENNY_WALK_SPEED, KENNY_WALK_CLIP, true)
+	# The corner by the steps, up on the second rope facing out (as Cody's).
+	var post := Vector3(ENTRY_CORNER.x * RingBuilder.TURNBUCKLE_PAD_XZ, 0.0,
+			ENTRY_CORNER.y * RingBuilder.TURNBUCKLE_PAD_XZ)
+	var out_dir := RingBuilder.step_out_dir(ENTRY_CORNER)
+	var stand := post - out_dir * CORNER_ROOT_M
+	_beats.append({"kind": "walk", "who": w, "path": [in_at, stand],
+			"speed": KENNY_WALK_SPEED, "walk_clip": KENNY_WALK_CLIP,
+			"shot": "ring_behind_low", "on_mat": true})
+	_beats.append({"kind": "turn", "who": w, "facing": out_dir, "shot": "corner_low"})
+	_beats.append({"kind": "clip", "who": w, "clip": "strikes/corner_climb",
+			"ticks": 72, "from": stand, "to": stand, "facing": out_dir,
+			"shot": "corner_low"})
+	_beats.append({"kind": "clip", "who": w, "clip": "strikes/kenny_corner_wings",
+			"ticks": KENNY_WINGS_TICKS, "from": stand, "to": stand, "facing": out_dir,
+			"shot": "corner_low", "events": [[KENNY_PYRO_AT, "pyro_over_ring"]]})
+	_beats.append({"kind": "clip", "who": w, "clip": "strikes/corner_down",
+			"ticks": 60, "from": stand, "to": stand, "facing": out_dir,
+			"shot": "ring_high_corner"})
+	var mark: Transform3D = _mark[w]
+	_beats.append({"kind": "walk", "who": w, "path": [stand, mark.origin],
+			"speed": KENNY_WALK_SPEED, "walk_clip": KENNY_WALK_CLIP,
+			"shot": "ringside", "on_mat": true})
+	_beats.append({"kind": "turn", "who": w, "facing": -mark.basis.z,
+			"shot": "end_wide", "settle": true, "snap_end": true,
+			"events": [[SETTLE_TICKS, "tron_off"], [SETTLE_TICKS, "dim_off"]]})
 
 
 ## The way into the ring every entrance shares, from the ramp's cut to the
@@ -2771,14 +2896,16 @@ func _aim_follow_spot(w: WrestlerController) -> void:
 			wash.visible = false
 		return
 	_follow.visible = true
+	var gain: float = WALK_LIGHT_GAIN.get(w.entrance_style, 1.0)
 	# In the ring the long-throw spot is a glare in the haze and burns his
 	# gear white on the low shots (lighting_2k26.md item 10): a third of it.
-	_follow.light_energy = FOLLOW_SPOT_ENERGY * (0.35 if _at_ring(w) else 1.0)
+	_follow.light_energy = FOLLOW_SPOT_ENERGY * (0.35 if _at_ring(w) else 1.0) * gain
 	var target := w.global_position + Vector3.UP * 1.1
 	if _follow.global_position.distance_to(target) > 0.1:
 		_follow.look_at(target, Vector3.UP)
 	if _walk_key:
 		_walk_key.visible = true
+		_walk_key.light_energy = WALK_KEY_ENERGY * gain
 		var fwd := _flat(-w.global_transform.basis.z).normalized()
 		var right := Vector3.UP.cross(-fwd).normalized()
 		_walk_key.global_position = walk_key_at(w.global_position, fwd, right)
@@ -2800,7 +2927,8 @@ func _aim_cam_key(w: WrestlerController, in_ring := false) -> void:
 		_cam_key.visible = false
 		return
 	# In the ring the lens is three metres off, not ten: half the light.
-	_cam_key.light_energy = CAM_KEY_ENERGY * (CAM_KEY_RING_GAIN if in_ring else 1.0)
+	_cam_key.light_energy = CAM_KEY_ENERGY * (CAM_KEY_RING_GAIN if in_ring else 1.0) \
+			* float(WALK_LIGHT_GAIN.get(w.entrance_style, 1.0))
 	var chest := w.global_position + Vector3.UP * 1.3
 	var cam := _camera.global_position
 	var to := (chest - cam)

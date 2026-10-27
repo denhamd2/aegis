@@ -222,7 +222,29 @@ Cody's and from every clip authored against the rig, so the mismatch is left
 in place and recorded here. The legs, by contrast, fit to +2.0% and +1.2%.
 
 
-## Cody Rhodes's entrance coat (`cody_coat.glb`, `cody_coat_*.png`) and blond head texture
+**No longer used by the game (27 Oct).** The owner: "Kenny's body isn't good
+... use Cody's body for Kenny." Kenny is now `cody_rhodes.glb` re-skinned (next
+section); this file stays as the original supplied asset.
+
+## Kenny Omega on Cody's model (`kenny_head.png`, `kenny_body_*.png`, `kenny_gear_*.png`, `kenny_face_projected.png`, `kenny_curls.glb`, `kenny_curl_cards.png`)
+
+`KennyModel` is `cody_rhodes.glb` (above, same provenance caveats) with these
+swapped in at load:
+
+- `kenny_head.png`, `kenny_body_*.png`: the supplied Cody skin atlases,
+  retinted and with his tattoos cloned out, by
+  `tools/assets/build_kenny_textures.py`. The head's face also carries
+  `kenny_face_projected.png`, the owner's reference sheet
+  (`gauntlet/refs/characters/kenny_omega_sheet.png`) front head shot
+  warped onto Cody's head UVs by `tools/blender/kenny_face_projection.py`.
+  That sheet is a likeness reference supplied by the owner; its own
+  provenance is the owner's to confirm before redistribution.
+- `kenny_gear_*.png`: painted procedurally by the same script, from nothing
+  but code, onto the supplied gear's UVs (the wrist tape keeps the supplied
+  tape texture's weave).
+- `kenny_curls.glb`, `kenny_curl_cards.png`: original geometry and texture,
+  built by `tools/blender/kenny_curls.py` on the supplied model's scalp and
+  painted procedurally. (`cody_coat.glb`, `cody_coat_*.png`) and blond head texture
 
 Original geometry and textures, built by `tools/blender/cody_coat.py` on the
 supplied Cody model's own body (see above) and painted procedurally; the
@@ -303,10 +325,10 @@ from nothing but code, laid out for the supplied model's own eye and lash UVs.
 
 ## Cody's, Aubrey's and Kenny's eye textures (`cody_eye_*.png`, `aubrey_eye_*.png`, `kenny_eye_*.png`)
 
-Painted by `tools/assets/build_eyes.py`. Kenny's and the occlusion, roughness
-and height maps are procedural, from nothing but code. `cody_eye_color.png` is
-derived from the eye texture embedded in `cody_rhodes.glb` (iris tinted,
-sclera calmed); `aubrey_eye_color.png` from the kit eye texture embedded in
+Painted by `tools/assets/build_eyes.py`. The occlusion, roughness and
+height maps are procedural, from nothing but code. `cody_eye_color.png` and
+`kenny_eye_color.png` are derived from the eye texture embedded in
+`cody_rhodes.glb` (iris tinted -- Kenny's paler -- sclera calmed); `aubrey_eye_color.png` from the kit eye texture embedded in
 `aubrey_edwards.glb` (Quaternius, CC0), with the iris and lids repainted.
 
 ## October 16 skin finish maps

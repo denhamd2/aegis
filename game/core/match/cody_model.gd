@@ -84,7 +84,7 @@ func _ready() -> void:
 	# The mirror seam down his centre line first, so it shades and inflates
 	# as one surface (BodyBulk.mend_flipped_seams).
 	BodyBulk.mend_flipped_seams(self)
-	BodyBulk.apply(self, get_game_skeleton(), BodyBulk.CODY)
+	BodyBulk.apply(self, get_game_skeleton(), _body_gains())
 	# Before the animations: they add the helpers' tracks if the bones exist.
 	HipHelpers.install(get_game_skeleton())
 	# The same fix at the shoulders: an arm raised overhead (the win, the
@@ -92,8 +92,44 @@ func _ready() -> void:
 	ShoulderHelpers.install(get_game_skeleton())
 	_install_animations()
 	_fix_look()
+	_fix_gear()
 	_fix_eyes()
 	_add_hair()
+
+
+## The hooks KennyModel overrides: Kenny is built on this model (the owner,
+## 27 Oct: "use Cody's body for Kenny"), with his own skin, gear, eyes and
+## hair swapped in here. Each returns what Cody wears.
+
+## BodyBulk gains for this man's build.
+func _body_gains() -> Dictionary:
+	return BodyBulk.CODY
+
+
+## The albedo to put on skin material `material_name` in place of the
+## supplied one, or null to keep it.
+func _skin_texture(material_name: String) -> Texture2D:
+	if material_name == HEAD_MATERIAL and ResourceLoader.exists(HEAD_BLOND):
+		return load(HEAD_BLOND)
+	return null
+
+
+func _skin_tint() -> Color:
+	return SKIN_TINT
+
+
+## His gear as supplied: Cody's own.
+func _fix_gear() -> void:
+	pass
+
+
+func _eye_tone() -> Color:
+	return EYE_TONE
+
+
+## Whose eye maps (tools/assets/build_eyes.py) go on these eyeballs.
+func _eye_prefix() -> String:
+	return "cody"
 
 
 ## His eyes (character_aaa_plan.md S1): the eyeball's photographic texture,
@@ -128,8 +164,8 @@ const EYE_ROUGHNESS := 0.3
 
 
 func _fix_eyes() -> void:
-	var eye := EyeKit.eye_material("cody", EYE_PARALLAX)
-	eye.albedo_color = EYE_TONE
+	var eye := EyeKit.eye_material(_eye_prefix(), EYE_PARALLAX)
+	eye.albedo_color = _eye_tone()
 	eye.clearcoat = EYE_COAT
 	eye.clearcoat_roughness = EYE_COAT_ROUGHNESS
 	eye.metallic_specular = EYE_SPECULAR
@@ -205,9 +241,10 @@ func _fix_look() -> void:
 			if source == null or not SKIN_MATERIALS.has(source.resource_name):
 				continue
 			var material := source.duplicate() as BaseMaterial3D
-			if source.resource_name == HEAD_MATERIAL and ResourceLoader.exists(HEAD_BLOND):
-				material.albedo_texture = load(HEAD_BLOND)
-			material.albedo_color = material.albedo_color * SKIN_TINT
+			var albedo := _skin_texture(source.resource_name)
+			if albedo:
+				material.albedo_texture = albedo
+			material.albedo_color = material.albedo_color * _skin_tint()
 			material.roughness = 1.0
 			material.roughness_texture = load("res://assets/characters/cody_skin_head_roughness.png"
 					if source.resource_name == HEAD_MATERIAL else "res://assets/characters/skin_body_roughness.png")

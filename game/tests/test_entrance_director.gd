@@ -817,3 +817,118 @@ func test_entrances_animate_at_render_rate_and_the_match_at_tick_rate() -> void:
 	director.skip()
 	assert_int(a.anim_tree.callback_mode_process).is_equal(
 			AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_PHYSICS)
+
+
+## Kenny walks his own entrance (EntranceDirector._add_kenny_entrance; best
+## knowledge, unverified): his walk down the ramp with a hand slapped on each
+## side, the stage pose with the stage pyro, his arms spread on the second
+## rope with the ring pyro, and his own stand on his mark.
+func test_kenny_walks_his_own_entrance() -> void:
+	var scene := _match(true, "", "kenny")
+	var director: EntranceDirector = scene.get_node("EntranceDirector")
+	var kenny: WrestlerController = scene.get_node("WrestlerB")
+	var clips := {}
+	var walks := {}
+	var gestures: Array = []
+	var events := {}
+	for beat: Dictionary in director._beats:
+		if beat.get("who") != kenny:
+			continue
+		clips[beat.get("clip", "")] = true
+		if beat["kind"] == "walk":
+			walks[beat.get("walk_clip", "strikes/entrance_walk")] = true
+		if beat.has("gesture"):
+			gestures.append(beat["gesture"])
+		for e: Array in beat.get("events", []):
+			events[e[1]] = true
+	for clip in ["strikes/kenny_stage_pose", "strikes/kenny_stand",
+			"strikes/corner_climb", "strikes/kenny_corner_wings", "strikes/corner_down"]:
+		assert_bool(clips.has(clip)).override_failure_message("no %s" % clip).is_true()
+	assert_array(walks.keys()).contains_exactly([EntranceDirector.KENNY_WALK_CLIP])
+	assert_array(gestures).contains_exactly(EntranceDirector.KENNY_WALK_GESTURES)
+	for e in ["tron_on", "dim_on", "pyro_stage", "pyro_over_ring", "tron_off", "dim_off"]:
+		assert_bool(events.has(e)).override_failure_message("no %s" % e).is_true()
+	assert_str(EntranceDirector._wait_clip(kenny)).is_equal("strikes/kenny_stand")
+	# Every clip he plays is in the game.
+	for clip: String in clips.keys() + walks.keys() + gestures:
+		if clip != "":
+			assert_bool(kenny.anim_player.has_animation(clip)) \
+				.override_failure_message("%s is not built" % clip).is_true()
+
+
+## He walks out on the onset at 20.8 s and his arms go wide -- the stage pyro
+## with them -- on the lift at 37 s, measured in his music.
+func test_kennys_beats_land_on_the_music() -> void:
+	var scene := _match(true, "", "kenny")
+	var director: EntranceDirector = scene.get_node("EntranceDirector")
+	var kenny: WrestlerController = scene.get_node("WrestlerB")
+	var start := -1
+	var ticks := 0
+	var starts := {}
+	var last := -1
+	var seen_at := -1
+	# A lambda captures locals by value: the pyro's tick goes in an array.
+	var pyro_ticks: Array[int] = []
+	var clock: Array[int] = [0]
+	director.cue.connect(func(what: String) -> void:
+		if what == "pyro_stage":
+			pyro_ticks.append(clock[0]))
+	while ticks < 20000 and director._beat < director._beats.size():
+		var b: Dictionary = director._beats[director._beat]
+		if director._beat != last:
+			last = director._beat
+			if b.get("kind") == "hold" and b.get("who") != null and start < 0:
+				start = ticks
+			var clip: String = b.get("clip", "")
+			if start >= 0 and not starts.has(clip):
+				starts[clip] = ticks - start
+		clock[0] = ticks + 1
+		director._physics_process(1.0 / 60.0)
+		ticks += 1
+		if start >= 0 and seen_at < 0 and kenny.visible:
+			seen_at = ticks - start
+		if not pyro_ticks.is_empty():
+			break
+	var on := func(what: String, at: int, music: float) -> void:
+		assert_int(at).override_failure_message("%s at tick %d, music %.2f s" % [
+				what, at, music]).is_between(int(round(music * 60)) - 2,
+				int(round(music * 60)) + 2)
+	on.call("appears", seen_at, EntranceDirector.KENNY_OUT)
+	on.call("arms wide", starts.get("strikes/kenny_stage_pose", -999)
+			+ EntranceDirector.KENNY_PYRO_AT, EntranceDirector.KENNY_LIFT)
+	on.call("stage pyro", (pyro_ticks[0] - start) if not pyro_ticks.is_empty() else -999,
+			EntranceDirector.KENNY_LIFT)
+
+
+## His music runs the whole of his entrance and outlasts it, walking first or
+## second, and the house comes back up when he is done.
+func test_kennys_music_outlasts_his_entrance() -> void:
+	for styles: Array in [["cody", "kenny"], ["kenny", "cody"]]:
+		var scene := _match(true, styles[0], styles[1])
+		var director: EntranceDirector = scene.get_node("EntranceDirector")
+		var wall: StageVideo = scene.find_child("StageVideo", true, false)
+		var kenny: WrestlerController = scene.get_node(
+				"WrestlerA" if styles[0] == "kenny" else "WrestlerB")
+		# Lambdas capture by value: the clock and the marks live in arrays.
+		var ticks: Array[int] = [0]
+		var marks := {}
+		var silent := 0
+		director.cue.connect(func(what: String) -> void:
+			var w: WrestlerController = (director._beats[mini(director._beat,
+					director._beats.size() - 1)] as Dictionary).get("who")
+			if w == kenny and (what == "tron_on" or what == "tron_off") and not marks.has(what):
+				marks[what] = ticks[0])
+		while ticks[0] < 30000 and not director._done:
+			director._physics_process(1.0 / 60.0)
+			ticks[0] += 1
+			if marks.has("tron_on") and not marks.has("tron_off") and not wall.is_music_playing():
+				silent += 1
+		var length := -1.0
+		if marks.has("tron_on") and marks.has("tron_off"):
+			length = (marks["tron_off"] - marks["tron_on"]) / 60.0
+		var stream := load(StageVideo.ENTRANCES["kenny"]["music"]) as AudioStreamOggVorbis
+		assert_float(length).override_failure_message("%s: no tron_off for Kenny" % [styles]) \
+			.is_greater(0.0)
+		assert_float(length).is_less(stream.get_length() - 20.0)
+		assert_int(silent).override_failure_message("%s: %d silent ticks" % [styles, silent]) \
+			.is_equal(0)
