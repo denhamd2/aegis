@@ -10,6 +10,23 @@ items, use the archived references and skill workflow in
 [`art_reference_implementation_plan.md`](art_reference_implementation_plan.md)
 and [`../references/README.md`](../references/README.md) before implementation.
 
+## Shooting and aerial actions — 27 October 2026
+
+BR-019 (19/27, complete in v0.5.6): nearby defenders now prepare real
+headers against descending crosses. Eligible forehead and legal goalkeeper
+glove contacts share one physical winner, with stable rated ties; a missed
+ball receives no forced impulse. A braced challenged-header clip and a
+two-hand high-claim/recovery clip use the existing 65-bone rig. Power, finesse
+and low shots have distinct left/right 60 Hz body clips, with live boot contact
+and the original flight rules. Source export audits, both-direction contact
+and keeper checks, native motion captures and complete-match gates are
+recorded in [the BR-019 evidence](art_briefs/br019_finish_2026_10_27/brief.md).
+
+Next acceptance: BR-025 (25/27, in progress), review the packaged v0.5.6
+motion and input feel on the M1 Pro/16 GB Mac and measure sustained 1080p60.
+BR-021 retains broader turning, starts and intro-motion polish. Linux
+software Forward+ footage does not close the target-hardware gate.
+
 ## Stadium crowd allocation and motion — 27 October 2026
 
 BR-023 (23/27, in progress): v0.5.5 fills all 49,554 modeled Rovers Arena
@@ -54,9 +71,9 @@ clearance and an open-side keeper position. The wall observes released flight
 before reacting; high strikes produce a bounded physical hop and low strikes
 do not trigger a blind jump. Head/body/kit/rest and existing motion assets are
 preserved. Evidence: [free-kick pass](art_briefs/free_kick_polish_2026_10_26/brief.md).
-The broader BR-019 item remains open for aerial contests/strike polish; next
-acceptance is BR-025 (25/27, in progress), native M1 free-kick feel/graphics and
-the combined-workload 1080p60 check.
+The broader aerial/strike follow-up is completed in the v0.5.6 section above;
+next acceptance is BR-025 (25/27, in progress), native M1 free-kick feel/graphics
+and the combined-workload 1080p60 check.
 
 ## Recorded match audio — 26 October 2026
 
@@ -88,7 +105,8 @@ crosses/cutbacks, use safe progressive lanes before frontal pressure arrives and
 retain open central shots/free carrying space. Shot style also considers pressure
 and a closing goalkeeper. Mirrored controlled decisions pass; full-match gates
 and native review are recorded under `art_briefs/left_foot_ai_2026_10_25/`.
-Broader aerial contests, tactical consistency and M1 feel remain open.
+The aerial follow-up is completed above; tactical consistency and M1 feel
+remain open under BR-008/025.
 
 ## Animated supporters, dockside and steady 60 target — 25 October 2026
 
@@ -956,7 +974,12 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
 
 ### P4 — Advanced football actions and feel
 
-- [ ] **BR-019 — Shooting and aerial actions**
+- [x] **BR-019 — Shooting and aerial actions**
+  - 2026-10-27, v0.5.6: deterministic physical aerial contest across eligible
+    field-player foreheads and legal keeper gloves, active nearby defenders,
+    a dedicated challenged-header and high two-hand claim, and six distinct
+    left/right ground-shot style clips. Existing rest/mesh/rules and live
+    contact bounds remain. See `art_briefs/br019_finish_2026_10_27/`.
   - 2026-10-26 free-kick follow-up (19/27, in progress): real approach/contact,
     trajectory aiming, distinct power/low/curl, contextual AI and reacting wall.
     Original 60 Hz wall poses retain the shared rest. Both teams/venues have
@@ -967,8 +990,9 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
     live anatomical contact guards. Moving/first-time strikes, both-direction
     volleys/half-volleys and native left shot/volley/cross receiving pass.
     Protected bodies/heads/kits/rests/gaits survive; complete imported left
-    poses mirror actual shipping right motion within 0.317 mm. Broader aerial
-    contests and strike/plant polish remain open. See `art_briefs/left_foot_ai_2026_10_25/`.
+    poses mirror actual shipping right motion within 0.317 mm. The later
+    aerial/strike pass is recorded above; broader plant polish stays BR-021.
+    See `art_briefs/left_foot_ai_2026_10_25/`.
   Add driven, finesse, low, first-time and contextual shots; headers, volleys,
   jumps, aerial contests, crosses, lofted passes and goalkeeper cross claims.
   - 2026-10-23 **in progress**: R/T charge-release loft/cross, assisted forward
@@ -994,8 +1018,9 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
     pose testing and universal Mac packaging pass; the Mac release is published.
     Cross-machine counts vary; bitwise replay determinism remains unproven.
     Next acceptance: final native/M1 input and motion review; dedicated high
-    keeper claims depend on BR-009 (9/25). Left-foot variants follow in v0.5.1; broader aerial
-    duels and strike/plant polish remain open under BR-019/BR-021.
+    keeper claims depend on BR-009 (9/25). Left-foot variants followed in
+    v0.5.1, and the remaining BR-019 duel/strike work is completed above;
+    broader plant polish remains BR-021.
 - [x] **BR-020 — Defending and skill moves**
   - 2026-10-24 completed keyboard scope (20/27): retained F standing / G slide tackle, Ctrl jockey,
     J contain and H pressure; added K shielding and U/I/O/P/L/B possession

@@ -1,0 +1,151 @@
+{
+  "backlog": {
+    "id": "BR-019",
+    "ordinal": 19,
+    "of": 27,
+    "status": "complete",
+    "next_acceptance": {
+      "id": "BR-025",
+      "ordinal": 25,
+      "of": 27,
+      "status": "in progress"
+    }
+  },
+  "baseline_commit": "4a61945946fc6d703b261b225b83e0a93626afce",
+  "baseline_version": "0.5.5",
+  "candidate_version": "0.5.6",
+  "bundle_version": "17",
+  "source_export": {
+    "blender_version": "4.3.2",
+    "fps": 60,
+    "rest_bones": 65,
+    "animation_only_clips": 8,
+    "glb_bytes": {
+      "br019_strikes.glb": 412892,
+      "br019_header_duel.glb": 77720,
+      "br019_keeper_claim.glb": 83408
+    },
+    "glb_total_bytes": 574020,
+    "audit": "tools/blender/beechlawn/validate_br019_exports.py PASS; unchanged inverse bind matrices and joint list"
+  },
+  "tests": {
+    "serial_targeted_passed": 27,
+    "serial_targeted_failed": 0,
+    "post_keeper_serial_passed": 3,
+    "driven_cross": "PASS in driven_cross.log",
+    "full_presentation": {
+      "status": "PASS",
+      "complete": true,
+      "auto_skips": 0,
+      "shots": {
+        "Beechlawn Rovers": 3,
+        "Boardeaux": 3
+      },
+      "contested_shots": {
+        "Beechlawn Rovers": 2,
+        "Boardeaux": 2
+      },
+      "goals": [
+        1,
+        1
+      ],
+      "match_seconds": 180
+    },
+    "six_seed_chance_gate": {
+      "kilmore_drive": {
+        "accepted": true,
+        "total_shots": {
+          "Beechlawn Rovers": 23,
+          "Boardeaux": 31
+        },
+        "qualifying_scenarios": {
+          "Beechlawn Rovers": 6,
+          "Boardeaux": 6
+        },
+        "shot_share": {
+          "Beechlawn Rovers": 0.42592592592592593,
+          "Boardeaux": 0.5740740740740741
+        },
+        "criteria": "Each team: >=2 physical shots + >=1 contested in >=5/6; aggregate share 35\u201365%."
+      },
+      "rovers_arena": {
+        "accepted": true,
+        "total_shots": {
+          "Beechlawn Rovers": 24,
+          "Boardeaux": 34
+        },
+        "qualifying_scenarios": {
+          "Beechlawn Rovers": 5,
+          "Boardeaux": 6
+        },
+        "shot_share": {
+          "Beechlawn Rovers": 0.41379310344827586,
+          "Boardeaux": 0.5862068965517241
+        },
+        "criteria": "Each team: >=2 physical shots + >=1 contested in >=5/6; aggregate share 35\u201365%."
+      }
+    },
+    "known_diagnostic": "Cached resources remain in use at some headless test exits; no new script/shader failures"
+  },
+  "native_motion": {
+    "rendering_method": "forward_plus",
+    "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+    "shot_power_right": {
+      "clip": "AN_Beechlawn_ShotPowerRight",
+      "foot": "right",
+      "toe_gap_m": 0.241214081645012
+    },
+    "shot_finesse_left": {
+      "clip": "AN_Beechlawn_ShotFinesseLeft",
+      "foot": "left",
+      "toe_gap_m": 0.240773394703865
+    },
+    "contested_header": {
+      "clip": "AN_Beechlawn_HeaderDuel",
+      "player_id": "damo_murphy",
+      "forehead_gap_m": 0.146792903542519
+    },
+    "keeper_high_claim": {
+      "ball": "(-48.98112, 2.02367, 0.0)",
+      "clip": "AN_Beechlawn_KeeperHighClaim",
+      "kind": "goalkeeper_catch",
+      "team": "Beechlawn Rovers",
+      "tick": 49
+    },
+    "resolution_motion": [
+      480,
+      270
+    ],
+    "resolution_close_duel": [
+      640,
+      360
+    ],
+    "scope": "Linux software Vulkan; accelerated fixed-step sequence, not target-Mac frame timing"
+  },
+  "matched_broadcast": {
+    "resolution": [
+      640,
+      360
+    ],
+    "before": {
+      "draw_calls": 1208,
+      "primitives": 1157084,
+      "peak_rss_kib": 4274476,
+      "seating_errors": 0
+    },
+    "after": {
+      "draw_calls": 1208,
+      "primitives": 1157084,
+      "peak_rss_kib": 4307132,
+      "seating_errors": 0
+    },
+    "delta": {
+      "draw_calls": 0,
+      "primitives": 0,
+      "peak_rss_kib": 32656
+    }
+  },
+  "limits": [
+    "Native M1 Pro / 16 GB appearance, input feel and sustained 1080p60 remain BR-025 acceptance"
+  ]
+}

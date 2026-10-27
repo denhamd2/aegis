@@ -1,0 +1,13 @@
+
+[smoke] cross_to_header_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+CROSS_RECEPTION variant=driven_cross side=1.0 contested=false contacts=[{ "kind": &"cross", "part": &"foot", "style": &"driven_cross", "team": &"Beechlawn Rovers", "opponent_gap": 160.265594482422, "clip": &"AN_Beechlawn_PassRight", "tick": 33 }, { "kind": &"shot", "part": &"foot", "style": &"volley", "team": &"Beechlawn Rovers", "opponent_gap": 168.975555419922, "clip": &"AN_Beechlawn_Volley", "tick": 75 }] receiver=(42.03132, -0.043916, 1.963914) ball=(51.06229, 0.103668, -3.775636)
+CROSS_RECEPTION variant=driven_cross side=-1.0 contested=false contacts=[{ "kind": &"cross", "part": &"foot", "style": &"driven_cross", "team": &"Boardeaux", "opponent_gap": 210.493667602539, "clip": &"AN_Beechlawn_PassRight", "tick": 189 }, { "kind": &"shot", "part": &"foot", "style": &"volley", "team": &"Boardeaux", "opponent_gap": 229.00373840332, "clip": &"AN_Beechlawn_VolleyLeft", "tick": 231 }] receiver=(-42.02459, 0.04381, 1.955464) ball=(-51.25386, 0.11588, -3.57337)
+CROSS_HEADER failures=0
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 4 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+[passed] cross_to_header_smoke.gd (7.8s)

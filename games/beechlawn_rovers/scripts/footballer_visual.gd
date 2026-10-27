@@ -20,6 +20,12 @@ const SHOT_EVENT_METADATA := "res://assets/characters/mixamo/y_bot_shot_contact.
 const AERIAL_CLIPS := {&"header": &"AN_Beechlawn_Header", &"chest_control": &"AN_Beechlawn_ChestControl"}
 const LEFT_STRIKE_CLIPS := {&"pass": &"AN_Beechlawn_PassLeft", &"shot": &"AN_Beechlawn_ShotLeft", &"volley": &"AN_Beechlawn_VolleyLeft", &"half_volley": &"AN_Beechlawn_HalfVolleyLeft"}
 const VOLLEY_CLIPS := {&"volley": &"AN_Beechlawn_Volley", &"half_volley": &"AN_Beechlawn_HalfVolley"}
+const BR019_SHOT_CLIPS := {
+	&"power": [&"AN_Beechlawn_ShotPowerRight", &"AN_Beechlawn_ShotPowerLeft"],
+	&"finesse": [&"AN_Beechlawn_ShotFinesseRight", &"AN_Beechlawn_ShotFinesseLeft"],
+	&"low": [&"AN_Beechlawn_ShotLowRight", &"AN_Beechlawn_ShotLowLeft"],
+}
+const HEADER_DUEL_CLIP := &"AN_Beechlawn_HeaderDuel"
 
 @onready var animation_tree: AnimationTree = $AnimationTree
 @onready var animation_player: AnimationPlayer = $Rig/AnimationPlayer
@@ -69,6 +75,7 @@ func _ready() -> void:
 	_install_aerial_actions()
 	_install_volley_actions()
 	_install_left_strikes()
+	_install_br019_actions()
 	_install_match_motion()
 	_install_stride_gaits()
 	_install_keeper_high_actions()
@@ -146,6 +153,7 @@ func configure_appearance(profile: FootballerProfile, team: FootballTeam = null)
 		_install_aerial_actions()
 		_install_volley_actions()
 		_install_left_strikes()
+		_install_br019_actions()
 		_install_match_motion()
 		_install_stride_gaits()
 		_install_keeper_high_actions()
@@ -426,14 +434,17 @@ func play_pass(playback_speed: float = 1.0, foot: StringName = &"right") -> bool
 
 
 func strike_foot() -> StringName:
-	return &"left" if _active_clip in LEFT_STRIKE_CLIPS.values() else &"right"
+	if _active_clip in LEFT_STRIKE_CLIPS.values(): return &"left"
+	for pair in BR019_SHOT_CLIPS.values():
+		if _active_clip == pair[1]: return &"left"
+	return &"right"
 
 
 func play_receive(playback_speed: float = 1.0) -> bool:
 	return _play_action(&"receive", RECEIVE_CLIP, playback_speed)
 
-func play_aerial(action: StringName, playback_speed := 1.0, foot: StringName = &"right") -> bool:
-	var clip: StringName = AERIAL_CLIPS.get(action, VOLLEY_CLIPS.get(action, &""))
+func play_aerial(action: StringName, playback_speed := 1.0, foot: StringName = &"right", duel := false) -> bool:
+	var clip: StringName = HEADER_DUEL_CLIP if action == &"header" and duel else AERIAL_CLIPS.get(action, VOLLEY_CLIPS.get(action, &""))
 	if foot == &"left" and action in VOLLEY_CLIPS: clip = LEFT_STRIKE_CLIPS[action]
 	var started := _play_action(action, clip, playback_speed, true)
 	if started:
@@ -465,8 +476,10 @@ func play_turn(turn_right: bool) -> bool:
 	return _play_action(&"turn", clip, 1.0)
 
 
-func play_shot(playback_speed: float = 1.0, foot: StringName = &"right") -> bool:
-	return _play_action(&"shot", LEFT_STRIKE_CLIPS[&"shot"] if foot == &"left" else SHOT_CLIP, playback_speed, true)
+func play_shot(playback_speed: float = 1.0, foot: StringName = &"right", style: StringName = &"standard") -> bool:
+	var clip: StringName = LEFT_STRIKE_CLIPS[&"shot"] if foot == &"left" else SHOT_CLIP
+	if BR019_SHOT_CLIPS.has(style): clip = BR019_SHOT_CLIPS[style][1 if foot == &"left" else 0]
+	return _play_action(&"shot", clip, playback_speed, true)
 
 
 func play_get_up() -> bool:
@@ -808,7 +821,7 @@ func play_standing_tackle() -> bool:
 
 func _install_keeper_high_actions() -> void:
 	var library := animation_player.get_animation_library(&"")
-	for path in ["res://assets/characters/shared/keeper_high_saves.glb","res://assets/characters/shared/keeper_full_dives.glb"]:
+	for path in ["res://assets/characters/shared/keeper_high_saves.glb","res://assets/characters/shared/keeper_full_dives.glb","res://assets/characters/shared/br019_keeper_claim.glb"]:
 		var source := (load(path) as PackedScene).instantiate()
 		var player := source.get_node("AnimationPlayer") as AnimationPlayer
 		for name in player.get_animation_list():
@@ -902,6 +915,22 @@ func _install_left_strikes() -> void:
 	source.free()
 	for action: StringName in LEFT_STRIKE_CLIPS:
 		_install_action_contact_marker(action,LEFT_STRIKE_CLIPS[action],"res://assets/characters/shared/left_"+String(action)+"_contact.json")
+
+func _install_br019_actions() -> void:
+	var library := animation_player.get_animation_library(&"")
+	for path in ["res://assets/characters/shared/br019_strikes.glb", "res://assets/characters/shared/br019_header_duel.glb"]:
+		var source := (load(path) as PackedScene).instantiate()
+		var player := source.get_node("AnimationPlayer") as AnimationPlayer
+		for clip in player.get_animation_list():
+			if clip == "RESET": continue
+			if library.has_animation(clip): library.remove_animation(clip)
+			library.add_animation(clip, player.get_animation(clip).duplicate())
+		source.free()
+	for style in BR019_SHOT_CLIPS:
+		for side in ["right", "left"]:
+			var clip: StringName = BR019_SHOT_CLIPS[style][1 if side == "left" else 0]
+			_install_action_contact_marker(&"shot", clip, "res://assets/characters/shared/shot_%s_%s_contact.json"%[style, side])
+	_install_action_contact_marker(&"header", HEADER_DUEL_CLIP, "res://assets/characters/shared/br019_header_duel_contact.json")
 
 func _install_skill_actions() -> void:
 	var source := (load("res://assets/characters/shared/skill_actions.glb") as PackedScene).instantiate()

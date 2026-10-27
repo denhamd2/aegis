@@ -116,6 +116,16 @@ actors are parked. These are controlled integration fixtures, not full-match
 chance evidence. JSON records head/chest/foot contact points and distances,
 actor identity, ball velocity and renderer. A missing aerial contact fails.
 
+`cross_duel_home|cross_duel_away` keeps that live delivery but places a nearby
+defender in a pressing position. It requires the contested `HeaderDuel` body
+clip at a real head contact, using a fixed close goal-side camera to inspect
+the bodies. `keeper_claim_home|keeper_claim_away` sends a high
+cross to the live goalkeeper and requires `KeeperHighClaim` with a legal glove
+catch. The review JSON records the active clip and measured contact gaps.
+These are controlled contact fixtures; the complete-match chance checks remain
+the evidence for natural attack frequency. Linux software Forward+ sequences
+show body motion but leave native M1 appearance and timing for BR-025.
+
 ## Advanced strikes
 
 The review runner also accepts `volley_close`, `half_volley_close`,

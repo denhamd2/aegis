@@ -45,27 +45,41 @@ func _run() -> void:
 		print("FINESSE_CURVE side=", sx, " deviation=", ends[1] - ends[0])
 	ball.freeze = true; ball.release_for_restart()
 	check(ball._curve_seconds == 0, "Stoppage retained curve assistance")
-	# Authored markers and real toe reach still gate special ground strikes.
+	# Imported left/right style motions must each produce one live boot contact
+	# at their own authored marker, including a moving support leg.
 	for style: StringName in [&"power", &"low", &"finesse"]:
-		actor.attack_sign = 1; actor.reset_for_stoppage()
-		actor.position = Vector3(32, PitchSurface.height_at(32, 0) + .005, 0)
-		actor.rotation.y = -PI / 2; actor._flat_direction = Vector3.RIGHT
-		actor.controlled_by_human = false; actor.ai_move_direction = Vector3.ZERO
-		ball.release_for_restart(); ball.position = actor.position + Vector3(.60, .13, 0)
-		ball.linear_velocity = Vector3.ZERO; ball.angular_velocity = Vector3.ZERO
-		await physics_frame
-		ball.freeze = false
-		var contacts: Array[Dictionary] = []
-		var observe := func(kind: StringName, _speed: float):
-			if kind == &"shot": contacts.append({"style": ball.last_strike_style, "gap": actor._receive_contact_position().distance_to(ball.position)})
-		ball.touched.connect(observe)
-		actor._do_shot(.6, 1, Vector3.RIGHT, style)
-		actor.set_physics_process(true)
-		for frame in 40: await physics_frame
-		actor.set_physics_process(false)
-		ball.touched.disconnect(observe)
-		check(contacts.size() == 1 and contacts[0].style == style and contacts[0].gap <= .28, "Marker-gated special shot failed: " + str(style))
-		ball.freeze = true
+		for foot: StringName in [&"right", &"left"]:
+			for travel: float in [0.0, 6.0]:
+				actor.attack_sign = 1; actor.reset_for_stoppage()
+				actor.position = Vector3(32, PitchSurface.height_at(32, 0) + .005, 0)
+				actor.rotation.y = -PI / 2; actor._flat_direction = Vector3.RIGHT
+				actor.controlled_by_human = false; actor.ai_move_direction = Vector3.RIGHT if travel > 0 else Vector3.ZERO
+				actor.velocity = Vector3.RIGHT * travel
+				ball.release_for_restart(); ball.freeze = true
+				ball.position = actor.position + Vector3(.65, .13, -.14 if foot == &"left" else 0.0)
+				ball.linear_velocity = Vector3.ZERO; ball.angular_velocity = Vector3.ZERO
+				await physics_frame
+				ball.freeze = false; ball.linear_velocity = Vector3.RIGHT * travel
+				var contacts: Array[Dictionary] = []
+				var observe := func(kind: StringName, _speed: float):
+					if kind == &"shot": contacts.append({"style": ball.last_strike_style, "gap": actor._receive_contact_position().distance_to(ball.position)})
+				ball.touched.connect(observe)
+				actor._do_shot(.6, 1, Vector3.RIGHT, style)
+				var visual: FootballerVisual = actor._footballer_visual
+				check(visual._active_clip == FootballerVisual.BR019_SHOT_CLIPS[style][1 if foot == &"left" else 0], "Wrong authored clip: " + str(style) + " " + str(foot))
+				check(visual.strike_foot() == foot, "Wrong style strike foot")
+				var motion: Animation = visual.animation_player.get_animation(visual._active_clip)
+				var marker_count := 0
+				for track in motion.get_track_count():
+					if motion.track_get_type(track) == Animation.TYPE_METHOD: marker_count += motion.track_get_key_count(track)
+				check(marker_count == 1 and absf(motion.length - .9) < .001, "Style motion marker/duration mismatch")
+				actor.set_physics_process(true)
+				for frame in 42: await physics_frame
+				actor.set_physics_process(false)
+				ball.touched.disconnect(observe)
+				check(contacts.size() == 1 and contacts[0].style == style and contacts[0].gap <= .28,
+					"Marker-gated style shot failed: %s %s %.1f m/s %s" % [style, foot, travel, contacts])
+				ball.freeze = true
 	for message in failures: push_error(message)
 	print("ADVANCED_SHOTS failures=", failures.size())
 	game.free(); quit(0 if failures.is_empty() else 1)

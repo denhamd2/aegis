@@ -31,7 +31,9 @@ func _run() -> void:
 						closest=distance;diagnostic={"tick":tick,"ball":str(game.ball.position),"hand":str(hand),"keeper":str(keeper.position),"yaw":keeper.rotation.y,"clip":keeper._footballer_visual.animation_player.current_animation}
 				if game.ball.last_action in [&"goalkeeper_save",&"goalkeeper_catch"]:
 					var visual:=keeper.get_node("Visual") as FootballerVisual
-					if high:assert(game.ball.goalkeeper_is_holding(keeper),"High cross must be supported by a real claim")
+					if high:
+						assert(game.ball.goalkeeper_is_holding(keeper),"High cross must be supported by a real claim")
+						assert(String(visual.animation_player.current_animation).contains("KeeperHighClaim"),"High cross must use the dedicated claim clip")
 					else:
 						assert(String(visual.animation_player.current_animation).contains("KeeperDive"),"Wide shot uses a directional dive")
 						var skeleton:=visual.get_node("Rig/YBot_Armature/Skeleton3D") as Skeleton3D

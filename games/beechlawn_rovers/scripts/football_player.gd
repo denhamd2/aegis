@@ -969,7 +969,7 @@ func _do_shot(charge: float, playback_speed := 1.0, requested_direction := Vecto
 		_visual_shot_direction = direction
 		_visual_shot_speed = speed
 		_visual_shot_lift = lift
-		_visual_shot_pending = _footballer_visual.play_shot(playback_speed, select_strike_foot(ball.global_position+ball.linear_velocity*.10))
+		_visual_shot_pending = _footballer_visual.play_shot(playback_speed, select_strike_foot(ball.global_position+ball.linear_velocity*.10), style)
 		if not _visual_shot_pending:
 			status_changed.emit("Shot action unavailable: animation is busy or missing")
 		return

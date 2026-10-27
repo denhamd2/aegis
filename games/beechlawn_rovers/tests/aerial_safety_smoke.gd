@@ -56,8 +56,8 @@ func _run() -> void:
 		_check(ball.last_strike_part != &"head", "Cancelled aerial action emitted a stale header")
 		actor.set_physics_process(false)
 		actor.position = Vector3(0,0,90)
-	# Evaluate both actual imported rigs at the authored marker. This isolated
-	# contact fixture supplements the full moving/jumping tests, not replaces it.
+	# Evaluate both actual imported rigs at the authored marker. A real reach
+	# gets one winner; an equal-looking pose outside reach gets no impulse.
 	for equal: bool in [true,false]:
 		for reverse: bool in [false,true]:
 			ball.freeze = true
@@ -83,12 +83,14 @@ func _run() -> void:
 			for actor in [home,away]:
 				actor._aerial_controller._serial = serial
 				actor._aerial_controller._incoming_kind = &"cross"
+			var expected := FootballAerialContest.winner(ball)
 			for actor in ([away,home] if reverse else [home,away]):
 				actor._footballer_visual.on_action_contact_marker()
 			if equal:
-				_check(ball.action_serial==serial, "Equal aerial reaches rewarded the first marker caller")
+				_check(ball.action_serial==serial+(0 if expected==null else 1), "Equal aerial reaches used caller order or forced a miss")
+				if expected!=null: _check(ball.last_touch_player==expected, "Equal reach ignored the selected winner")
 			else:
-				_check(ball.action_serial==serial+1 and ball.last_touch_player==home and ball.last_strike_part==&"head",
+				_check(expected==home and ball.action_serial==serial+1 and ball.last_touch_player==home and ball.last_strike_part==&"head",
 					"Closest valid forehead lost the contest or produced duplicate impulses")
 	for message in failures:push_error(message)
 	print("AERIAL_SAFETY failures=",failures.size())

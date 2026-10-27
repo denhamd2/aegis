@@ -1,0 +1,41 @@
+{
+  "fps": 60,
+  "source_sha256": {
+    "tools/blender/beechlawn/footballer_shared.blend": "5c61518d38f9bd0e9c4aa4e60e2d04719c6487b2dfc13f96e485af860739ebd4",
+    "games/beechlawn_rovers/assets/characters/shared/footballer_base.glb": "605440e6f6f6458f4d11c311d2d79583995ca03f313da71177de8000e16e801a",
+    "games/beechlawn_rovers/assets/characters/shared/left_strikes.glb": "802a738339e400e55220335644450a79162f50ab89ae9705a68e9918b73e1293"
+  },
+  "clips": {
+    "AN_Beechlawn_ShotPowerRight": {
+      "frames": 55,
+      "duration_seconds": 0.9,
+      "contact_seconds": 0.3
+    },
+    "AN_Beechlawn_ShotPowerLeft": {
+      "frames": 55,
+      "duration_seconds": 0.9,
+      "contact_seconds": 0.3
+    },
+    "AN_Beechlawn_ShotFinesseRight": {
+      "frames": 55,
+      "duration_seconds": 0.9,
+      "contact_seconds": 0.3
+    },
+    "AN_Beechlawn_ShotFinesseLeft": {
+      "frames": 55,
+      "duration_seconds": 0.9,
+      "contact_seconds": 0.3
+    },
+    "AN_Beechlawn_ShotLowRight": {
+      "frames": 55,
+      "duration_seconds": 0.9,
+      "contact_seconds": 0.3
+    },
+    "AN_Beechlawn_ShotLowLeft": {
+      "frames": 55,
+      "duration_seconds": 0.9,
+      "contact_seconds": 0.3
+    }
+  },
+  "root_motion": "Existing in-place strike; gameplay owns root and ball"
+}

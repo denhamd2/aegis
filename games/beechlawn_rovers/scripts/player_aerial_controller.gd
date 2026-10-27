@@ -118,9 +118,10 @@ func before_move(delta: float) -> void:
 		return
 	var intended_receiver := ball.last_touch == actor.team_name and actor.receive_target_time > 0.0 \
 		and ball.last_action in [&"lofted_pass", &"cross"]
+	var duel_defender := _nearest_duel_defender()
 	if actor.profile == null or actor.profile.role != "outfield" \
 			or is_instance_valid(ball.goalkeeper_holder) or ball.position.y - actor.position.y < (.15 if _requested_header > 0.0 or ball.last_action == &"cross" else .65) \
-			or (not intended_receiver and _flat_gap(ball.position) > 9.0) or not actor._can_start_ball_action():
+			or (not intended_receiver and not duel_defender and _flat_gap(ball.position) > 9.0) or not actor._can_start_ball_action():
 		return
 	var wants_header := _requested_header > 0.0
 	var incoming_cross := ball.last_action == &"cross"
@@ -131,7 +132,7 @@ func before_move(delta: float) -> void:
 	var can_intercept := is_chaser and ball.last_touch != actor.team_name \
 		and ball.last_action in [&"lofted_pass", &"cross", &"header_clearance"]
 	if not actor.controlled_by_human:
-		wants_header = attacking or (defending and is_chaser)
+		wants_header = attacking or (defending and is_chaser) or (incoming_cross and duel_defender)
 		if not wants_header and not has_reception and not can_intercept: return
 	elif not wants_header and not has_reception:
 		return
@@ -192,7 +193,8 @@ func before_move(delta: float) -> void:
 		contact_eta = maxf(.1, floorf((contact_eta - tick) / tick) * tick - .0001)
 		if contact_eta < contact / 1.35: return
 	var playback := clampf(contact / maxf(contact_eta, .1), .90, 1.35 if strike else 1.17)
-	if actor._footballer_visual.play_aerial(action, playback, strike_foot):
+	var duel_motion := action == &"header" and (duel_defender or _opponent_near(prediction.position, 2.8))
+	if actor._footballer_visual.play_aerial(action, playback, strike_foot, duel_motion):
 		_active = action
 		_serial = ball.action_serial
 		_incoming_kind = ball.last_action
@@ -240,15 +242,8 @@ func resolve_contact(delta: float) -> void:
 		if ball.kick_velocity(launch, &"shot", actor.team_name, actor, &"foot", _active):
 			actor.status_changed.emit("Half-volley" if _active == &"half_volley" else "Volley")
 	elif _active == &"header":
-		# Simultaneous equal reaches do not reward actor processing order.
-		var own_gap := point.distance_to(ball.position)
-		for node in actor.get_tree().get_nodes_in_group("football_players"):
-			var other := node as FootballPlayer
-			if other == actor or other._aerial_controller == null: continue
-			var rival := other._aerial_controller
-			if not rival._header_contact_due(): continue
-			var gap := rival.forehead_point().distance_to(ball.position)
-			if gap <= own_gap + .02: return
+		# Compare every valid live forehead and keeper hand before one impulse.
+		if FootballAerialContest.winner(ball) != actor: return
 		var rating := actor._attribute_value(&"heading") / 100.0
 		var aim := _header_aim
 		var shot := actor.position.x * actor.attack_sign > 27.0 \
@@ -333,3 +328,31 @@ func _default_header_direction() -> Vector3:
 
 func _flat_gap(point: Vector3) -> float:
 	return Vector2(point.x - actor.position.x, point.z - actor.position.z).length()
+
+func _opponent_near(point: Vector3, reach: float) -> bool:
+	for node in actor.get_tree().get_nodes_in_group("football_players"):
+		var other := node as FootballPlayer
+		if other == null or other.team_name == actor.team_name or other.profile == null \
+				or other.profile.role != "outfield": continue
+		if Vector2(other.position.x - point.x, other.position.z - point.z).length() <= reach:
+			return true
+	return false
+
+func _nearest_duel_defender() -> bool:
+	if actor.profile == null or actor.controlled_by_human or ball.last_touch == actor.team_name \
+			or ball.last_action not in [&"cross", &"lofted_pass", &"header_clearance"]:
+		return false
+	var forecast := FootballBallFlight.descending_contact(ball, actor.position.y + actor.tuning.header_contact_height, 1.7)
+	if forecast.is_empty() or _flat_gap(forecast.position) > 3.5: return false
+	var best := actor
+	var best_gap := _flat_gap(forecast.position)
+	for node in actor.get_tree().get_nodes_in_group("football_players"):
+		var other := node as FootballPlayer
+		if other == null or other == actor or other.team_name != actor.team_name \
+				or other.profile == null or other.profile.role != "outfield" or other.controlled_by_human:
+			continue
+		var gap := Vector2(other.position.x - float(forecast.position.x), other.position.z - float(forecast.position.z)).length()
+		if gap < best_gap - .01 or (absf(gap - best_gap) <= .01 and String(other.profile.player_id) < String(best.profile.player_id)):
+			best = other
+			best_gap = gap
+	return best == actor

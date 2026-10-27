@@ -1,3 +1,23 @@
+# Beechlawn Rovers 27 — v0.5.6
+
+Crosses now support active attacker-defender header duels with one physical,
+deterministic contact winner. A dedicated challenged-header motion shows the
+competing body action. Keepers use a two-hand high-claim motion on reachable
+crosses; legal handling, actual glove reach and secure-catch requirements still
+apply. Out-of-reach balls remain live.
+
+Power, finesse and low shots now have separate left- and right-foot body
+motions, with distinct support-leg, torso and arm follow-through. Their 60 Hz
+contact markers still require the live boot to meet the independently moving
+ball. Existing shot trajectories, controls, ratings and football rules remain.
+
+The v0.5.5 full stadium crowd and v0.5.4 turf repair are included. Native
+Forward+ and automated checks cover motion and contact; target-Mac input feel,
+appearance and sustained 1080p60 remain BR-025 acceptance checks. Universal
+Apple Silicon/Intel Mac build.
+
+---
+
 # Beechlawn Rovers 27 — v0.5.5
 
 All 49,554 modeled Rovers Arena seats now have animated spectators, while the

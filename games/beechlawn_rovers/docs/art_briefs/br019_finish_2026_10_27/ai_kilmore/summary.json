@@ -1,0 +1,557 @@
+{
+  "venue": "kilmore_drive",
+  "scenarios": [
+    {
+      "ball_travel_m": 1463.21816467488,
+      "goals": [
+        1,
+        1
+      ],
+      "kickoff": "Beechlawn Rovers",
+      "longest_stationary_s": 0,
+      "statuses": {
+        "Shot fired": 3
+      },
+      "teams": {
+        "Beechlawn Rovers": {
+          "action_decisions": {
+            "cross": 3,
+            "shoot": 1,
+            "short_pass": 13
+          },
+          "cancelled_contacts": 1,
+          "chest_controls": 0,
+          "completed_passes": 6,
+          "contested_shots": 1,
+          "controls": 23,
+          "cross_styles": {
+            "early_cross": 3
+          },
+          "crosses": 3,
+          "final_third_entries": 4,
+          "headers": 0,
+          "intercepted_passes": 8,
+          "lofted_passes": 0,
+          "passes": 17,
+          "sampled_decisions": {
+            "carry": 192,
+            "cross": 1,
+            "none": 287,
+            "shoot": 14,
+            "short_pass": 10,
+            "through_pass": 0
+          },
+          "saves": 2,
+          "shot_styles": {
+            "finesse": 1,
+            "power": 1
+          },
+          "shots": 2
+        },
+        "Boardeaux": {
+          "action_decisions": {
+            "cross": 5,
+            "shoot": 2,
+            "short_pass": 7,
+            "through_pass": 6
+          },
+          "cancelled_contacts": 2,
+          "chest_controls": 0,
+          "completed_passes": 10,
+          "contested_shots": 5,
+          "controls": 24,
+          "cross_styles": {
+            "driven_cross": 1,
+            "early_cross": 2,
+            "standard": 2
+          },
+          "crosses": 5,
+          "final_third_entries": 5,
+          "headers": 2,
+          "intercepted_passes": 4,
+          "lofted_passes": 0,
+          "passes": 19,
+          "sampled_decisions": {
+            "carry": 231,
+            "cross": 3,
+            "none": 262,
+            "shoot": 25,
+            "short_pass": 5,
+            "through_pass": 2
+          },
+          "saves": 1,
+          "shot_styles": {
+            "finesse": 1,
+            "header": 2,
+            "power": 2,
+            "standard": 1,
+            "volley": 1
+          },
+          "shots": 7
+        }
+      },
+      "variation": 0,
+      "weather": "sunny"
+    },
+    {
+      "ball_travel_m": 1410.28757381579,
+      "goals": [
+        1,
+        0
+      ],
+      "kickoff": "Beechlawn Rovers",
+      "longest_stationary_s": 0,
+      "statuses": {
+        "Shot fired": 3
+      },
+      "teams": {
+        "Beechlawn Rovers": {
+          "action_decisions": {
+            "cross": 4,
+            "shoot": 1,
+            "short_pass": 13,
+            "through_pass": 4
+          },
+          "cancelled_contacts": 1,
+          "chest_controls": 0,
+          "completed_passes": 14,
+          "contested_shots": 3,
+          "controls": 38,
+          "cross_styles": {
+            "driven_cross": 1,
+            "early_cross": 3,
+            "standard": 1
+          },
+          "crosses": 5,
+          "final_third_entries": 5,
+          "headers": 3,
+          "intercepted_passes": 5,
+          "lofted_passes": 0,
+          "passes": 21,
+          "sampled_decisions": {
+            "carry": 162,
+            "none": 406,
+            "shoot": 1,
+            "short_pass": 8,
+            "through_pass": 2
+          },
+          "saves": 2,
+          "shot_styles": {
+            "header": 2,
+            "power": 1
+          },
+          "shots": 3
+        },
+        "Boardeaux": {
+          "action_decisions": {
+            "cross": 1,
+            "shoot": 2,
+            "short_pass": 14,
+            "through_pass": 2
+          },
+          "cancelled_contacts": 0,
+          "chest_controls": 0,
+          "completed_passes": 5,
+          "contested_shots": 3,
+          "controls": 28,
+          "cross_styles": {
+            "lofted_cross": 1,
+            "standard": 1
+          },
+          "crosses": 2,
+          "final_third_entries": 3,
+          "headers": 2,
+          "intercepted_passes": 9,
+          "lofted_passes": 0,
+          "passes": 15,
+          "sampled_decisions": {
+            "carry": 119,
+            "cross": 2,
+            "none": 322,
+            "shoot": 1,
+            "short_pass": 13,
+            "through_pass": 2
+          },
+          "saves": 1,
+          "shot_styles": {
+            "finesse": 2,
+            "header": 1,
+            "power": 1
+          },
+          "shots": 4
+        }
+      },
+      "variation": 1,
+      "weather": "sunny"
+    },
+    {
+      "ball_travel_m": 1416.16876165941,
+      "goals": [
+        1,
+        1
+      ],
+      "kickoff": "Beechlawn Rovers",
+      "longest_stationary_s": 0,
+      "statuses": {
+        "Shot cancelled: ball left the contact window": 1,
+        "Shot fired": 5
+      },
+      "teams": {
+        "Beechlawn Rovers": {
+          "action_decisions": {
+            "shoot": 3,
+            "short_pass": 12,
+            "through_pass": 3
+          },
+          "cancelled_contacts": 4,
+          "chest_controls": 0,
+          "completed_passes": 9,
+          "contested_shots": 1,
+          "controls": 29,
+          "cross_styles": {},
+          "crosses": 0,
+          "final_third_entries": 3,
+          "headers": 0,
+          "intercepted_passes": 8,
+          "lofted_passes": 0,
+          "passes": 17,
+          "sampled_decisions": {
+            "carry": 160,
+            "none": 341,
+            "shoot": 1,
+            "short_pass": 7,
+            "through_pass": 1
+          },
+          "saves": 4,
+          "shot_styles": {
+            "finesse": 1,
+            "power": 1,
+            "standard": 1
+          },
+          "shots": 3
+        },
+        "Boardeaux": {
+          "action_decisions": {
+            "cross": 4,
+            "shoot": 3,
+            "short_pass": 15,
+            "through_pass": 5
+          },
+          "cancelled_contacts": 2,
+          "chest_controls": 1,
+          "completed_passes": 10,
+          "contested_shots": 2,
+          "controls": 33,
+          "cross_styles": {
+            "early_cross": 1,
+            "standard": 2
+          },
+          "crosses": 3,
+          "final_third_entries": 5,
+          "headers": 0,
+          "intercepted_passes": 7,
+          "lofted_passes": 0,
+          "passes": 18,
+          "sampled_decisions": {
+            "carry": 185,
+            "cross": 4,
+            "none": 351,
+            "shoot": 16,
+            "short_pass": 10,
+            "through_pass": 2
+          },
+          "saves": 1,
+          "shot_styles": {
+            "finesse": 5,
+            "power": 2
+          },
+          "shots": 7
+        }
+      },
+      "variation": 2,
+      "weather": "sunny"
+    },
+    {
+      "ball_travel_m": 1238.2494839679,
+      "goals": [
+        0,
+        0
+      ],
+      "kickoff": "Boardeaux",
+      "longest_stationary_s": 0,
+      "statuses": {
+        "Shot fired": 3
+      },
+      "teams": {
+        "Beechlawn Rovers": {
+          "action_decisions": {
+            "cross": 1,
+            "shoot": 1,
+            "short_pass": 7,
+            "through_pass": 2
+          },
+          "cancelled_contacts": 1,
+          "chest_controls": 0,
+          "completed_passes": 3,
+          "contested_shots": 1,
+          "controls": 14,
+          "cross_styles": {
+            "early_cross": 1
+          },
+          "crosses": 1,
+          "final_third_entries": 3,
+          "headers": 2,
+          "intercepted_passes": 2,
+          "lofted_passes": 0,
+          "passes": 7,
+          "sampled_decisions": {
+            "carry": 153,
+            "cross": 1,
+            "none": 194,
+            "shoot": 1,
+            "short_pass": 3,
+            "through_pass": 1
+          },
+          "saves": 2,
+          "shot_styles": {
+            "header": 1,
+            "power": 1
+          },
+          "shots": 2
+        },
+        "Boardeaux": {
+          "action_decisions": {
+            "cross": 4,
+            "shoot": 2,
+            "short_pass": 22,
+            "through_pass": 7
+          },
+          "cancelled_contacts": 5,
+          "chest_controls": 0,
+          "completed_passes": 13,
+          "contested_shots": 4,
+          "controls": 26,
+          "cross_styles": {
+            "early_cross": 3,
+            "standard": 2
+          },
+          "crosses": 5,
+          "final_third_entries": 6,
+          "headers": 2,
+          "intercepted_passes": 7,
+          "lofted_passes": 0,
+          "passes": 30,
+          "sampled_decisions": {
+            "carry": 193,
+            "cross": 3,
+            "none": 420,
+            "shoot": 1,
+            "short_pass": 14,
+            "through_pass": 3
+          },
+          "saves": 2,
+          "shot_styles": {
+            "finesse": 1,
+            "header": 2,
+            "power": 1
+          },
+          "shots": 4
+        }
+      },
+      "variation": 0,
+      "weather": "sunny"
+    },
+    {
+      "ball_travel_m": 1803.38095317275,
+      "goals": [
+        3,
+        3
+      ],
+      "kickoff": "Boardeaux",
+      "longest_stationary_s": 0,
+      "statuses": {
+        "Shot fired": 10
+      },
+      "teams": {
+        "Beechlawn Rovers": {
+          "action_decisions": {
+            "cross": 1,
+            "shoot": 5,
+            "short_pass": 17,
+            "through_pass": 4
+          },
+          "cancelled_contacts": 1,
+          "chest_controls": 0,
+          "completed_passes": 15,
+          "contested_shots": 5,
+          "controls": 29,
+          "cross_styles": {
+            "early_cross": 1,
+            "standard": 1
+          },
+          "crosses": 2,
+          "final_third_entries": 5,
+          "headers": 1,
+          "intercepted_passes": 9,
+          "lofted_passes": 0,
+          "passes": 29,
+          "sampled_decisions": {
+            "carry": 180,
+            "cross": 1,
+            "none": 384,
+            "shoot": 18,
+            "short_pass": 12,
+            "through_pass": 5
+          },
+          "saves": 2,
+          "shot_styles": {
+            "header": 1,
+            "power": 6,
+            "standard": 2
+          },
+          "shots": 9
+        },
+        "Boardeaux": {
+          "action_decisions": {
+            "cross": 1,
+            "shoot": 6,
+            "short_pass": 10,
+            "through_pass": 3
+          },
+          "cancelled_contacts": 0,
+          "chest_controls": 0,
+          "completed_passes": 11,
+          "contested_shots": 5,
+          "controls": 29,
+          "cross_styles": {},
+          "crosses": 0,
+          "final_third_entries": 4,
+          "headers": 1,
+          "intercepted_passes": 4,
+          "lofted_passes": 0,
+          "passes": 20,
+          "sampled_decisions": {
+            "carry": 142,
+            "none": 379,
+            "shoot": 11,
+            "short_pass": 8,
+            "through_pass": 1
+          },
+          "saves": 3,
+          "shot_styles": {
+            "finesse": 2,
+            "power": 4,
+            "standard": 1
+          },
+          "shots": 7
+        }
+      },
+      "variation": 1,
+      "weather": "sunny"
+    },
+    {
+      "ball_travel_m": 1437.6576756367,
+      "goals": [
+        2,
+        0
+      ],
+      "kickoff": "Boardeaux",
+      "longest_stationary_s": 0,
+      "statuses": {
+        "Shot fired": 3
+      },
+      "teams": {
+        "Beechlawn Rovers": {
+          "action_decisions": {
+            "cross": 2,
+            "shoot": 2,
+            "short_pass": 14,
+            "through_pass": 8
+          },
+          "cancelled_contacts": 3,
+          "chest_controls": 0,
+          "completed_passes": 10,
+          "contested_shots": 3,
+          "controls": 25,
+          "cross_styles": {
+            "early_cross": 2,
+            "standard": 1
+          },
+          "crosses": 3,
+          "final_third_entries": 4,
+          "headers": 1,
+          "intercepted_passes": 7,
+          "lofted_passes": 0,
+          "passes": 23,
+          "sampled_decisions": {
+            "carry": 194,
+            "cross": 1,
+            "none": 349,
+            "shoot": 14,
+            "short_pass": 8,
+            "through_pass": 4
+          },
+          "saves": 2,
+          "shot_styles": {
+            "header": 1,
+            "power": 3
+          },
+          "shots": 4
+        },
+        "Boardeaux": {
+          "action_decisions": {
+            "cross": 3,
+            "shoot": 1,
+            "short_pass": 13,
+            "through_pass": 5
+          },
+          "cancelled_contacts": 0,
+          "chest_controls": 0,
+          "completed_passes": 14,
+          "contested_shots": 1,
+          "controls": 31,
+          "cross_styles": {
+            "early_cross": 2,
+            "standard": 1
+          },
+          "crosses": 3,
+          "final_third_entries": 4,
+          "headers": 1,
+          "intercepted_passes": 8,
+          "lofted_passes": 0,
+          "passes": 25,
+          "sampled_decisions": {
+            "carry": 162,
+            "cross": 3,
+            "none": 356,
+            "shoot": 1,
+            "short_pass": 7,
+            "through_pass": 0
+          },
+          "saves": 2,
+          "shot_styles": {
+            "finesse": 1,
+            "header": 1
+          },
+          "shots": 2
+        }
+      },
+      "variation": 2,
+      "weather": "sunny"
+    }
+  ],
+  "total_shots": {
+    "Beechlawn Rovers": 23,
+    "Boardeaux": 31
+  },
+  "qualifying_scenarios": {
+    "Beechlawn Rovers": 6,
+    "Boardeaux": 6
+  },
+  "shot_share": {
+    "Beechlawn Rovers": 0.42592592592592593,
+    "Boardeaux": 0.5740740740740741
+  },
+  "accepted": true,
+  "criteria": "Each team: >=2 physical shots + >=1 contested in >=5/6; aggregate share 35\u201365%."
+}

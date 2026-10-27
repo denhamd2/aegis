@@ -1,0 +1,45 @@
+
+[smoke] br019_aerial_duel_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+BR019_DUEL order=false case=equal winner=bordeaux_03
+BR019_DUEL order=false case=home winner=colly_roden
+BR019_DUEL order=false case=away winner=bordeaux_03
+BR019_DUEL order=false case=miss winner=none
+BR019_DUEL order=true case=equal winner=bordeaux_03
+BR019_DUEL order=true case=home winner=colly_roden
+BR019_DUEL order=true case=away winner=bordeaux_03
+BR019_DUEL order=true case=miss winner=none
+BR019_AERIAL_DUEL PASS: stable head winner, misses, legal glove/forehead reach and area bounds
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+[passed] br019_aerial_duel_smoke.gd (6.3s)
+
+[smoke] keeper_diving_high_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+KEEPER_ADVANCED team=Beechlawn Rovers high=false contact=(-48.96942, 1.202868, 1.670005) clip=AN_Beechlawn_KeeperDiveFullMidRight
+KEEPER_ADVANCED team=Beechlawn Rovers high=true contact=(-48.99156, 2.013271, 0.0) clip=AN_Beechlawn_KeeperHighClaim
+KEEPER_ADVANCED team=Boardeaux high=false contact=(49.18935, 1.178697, 1.669895) clip=AN_Beechlawn_KeeperDiveLeft
+KEEPER_ADVANCED team=Boardeaux high=true contact=(48.99156, 2.013271, 0.0) clip=AN_Beechlawn_KeeperHighClaim
+KEEPER_DIVING_HIGH PASS
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 4 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+[passed] keeper_diving_high_smoke.gd (7.1s)
+
+[smoke] aerial_safety_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive ball=ucl_26_27_league
+AERIAL_SAFETY failures=0
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 2 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+[passed] aerial_safety_smoke.gd (6.1s)

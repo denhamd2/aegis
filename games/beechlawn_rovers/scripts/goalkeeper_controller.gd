@@ -177,6 +177,9 @@ func try_save() -> bool:
 	if flat_separation > reach + .5 or height < 0.04 or height > GOAL_HEIGHT + FootballBall.RADIUS:
 		return false
 	if not _hands_reach_ball(): return false
+	if is_instance_valid(keeper._footballer_visual) and ball.last_action in [&"cross", &"lofted_pass"] \
+			and FootballAerialContest.winner(ball) != keeper:
+		return false
 	var handling := 50.0
 	if keeper.profile != null and keeper.profile.attributes != null:
 		handling = keeper.profile.attributes.goalkeeper_handling
@@ -220,6 +223,8 @@ func _save_style() -> StringName:
 	var local := keeper.to_local(target)
 	var height := target.y - keeper.global_position.y
 	var suffix := "Left" if local.x < 0 else "Right"
+	if height > 1.65 and absf(local.x) <= .45 and ball.last_action in [&"cross", &"lofted_pass"]:
+		return &"KeeperHighClaim"
 	if height > 1.65 and absf(local.x) > 1.5: return StringName("KeeperHighDiveFull"+suffix)
 	if height <= 1.65 and absf(local.x) > 1.25:
 		return StringName(("KeeperDiveFullLow" if height<.55 else "KeeperDiveFullMid")+suffix)
@@ -341,6 +346,12 @@ func _inside_handling_area() -> bool:
 	# own-penalty-area bounds and never claim a ball beyond the goal line.
 	var depth := (ball.global_position.x + FIELD_LENGTH * 0.5 * keeper.attack_sign) * keeper.attack_sign
 	return depth >= 0.0 and depth <= 16.5 and absf(ball.global_position.z) <= 20.16
+
+func claim_contact_due() -> bool:
+	return _shot_active and _save_animation_started and _observed_action_serial == ball.action_serial \
+		and _reaction_remaining <= 0.0 \
+		and ball.last_action in [&"cross", &"lofted_pass"] and ball.last_touch != keeper.team_name \
+		and not is_instance_valid(ball.goalkeeper_holder) and _inside_handling_area()
 
 func _observe_action() -> void:
 	if ball.action_serial == _observed_action_serial:

@@ -23,7 +23,8 @@ func _run() -> void:
 			for other in game._home_players + game._away_players:
 				if other.team_name != ball.last_touch and other.profile.role == "outfield":
 					gap = minf(gap, other.position.distance_to(ball.position))
-			contacts.append({"kind":kind,"part":ball.last_strike_part,"style":ball.last_strike_style,"team":ball.last_touch,"opponent_gap":gap,"tick":Engine.get_physics_frames()}))
+			var clip: StringName=ball.last_touch_player._footballer_visual._active_clip if is_instance_valid(ball.last_touch_player) and is_instance_valid(ball.last_touch_player._footballer_visual) else &""
+			contacts.append({"kind":kind,"part":ball.last_strike_part,"style":ball.last_strike_style,"team":ball.last_touch,"opponent_gap":gap,"clip":clip,"tick":Engine.get_physics_frames()}))
 	for sx: float in [1.0, -1.0]:
 		for contested: bool in ([false] if variant == &"driven_cross" else [false, true]):
 			game._set_players_physics_enabled(false)
@@ -73,14 +74,18 @@ func _run() -> void:
 			var cross_count := 0
 			var head_count := 0
 			var close_contest := false
+			var duel_motion := false
 			for event in contacts.slice(before):
 				if event.kind == &"cross": cross_count += 1
 				if event.part == &"head" or (variant == &"driven_cross" and event.style == &"volley"):
 					head_count += 1
 					if event.opponent_gap < 2.5: close_contest = true
+					if event.clip == FootballerVisual.HEADER_DUEL_CLIP: duel_motion = true
 			_check(cross_count == 1, "Cross did not leave the actual animated boot")
 			_check(head_count >= 1, "Cross produced no expected aerial reception; side=" + str(sx) + " contested=" + str(contested))
-			if contested: _check(close_contest, "Contested fixture had no opponent near the actual header")
+			if contested:
+				_check(close_contest, "Contested fixture had no opponent near the actual header")
+				_check(duel_motion, "Contested header did not use the authored duel body clip")
 			print("CROSS_RECEPTION variant=",variant," side=",sx," contested=",contested," contacts=",contacts.slice(before)," receiver=",receiver.position," ball=",ball.position)
 			ball.freeze = true
 	for message in failures: push_error(message)

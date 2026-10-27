@@ -1,0 +1,16 @@
+BR019_STRIKE_BAKED AN_Beechlawn_ShotPowerRight 55
+BR019_STRIKE_BAKED AN_Beechlawn_ShotPowerLeft 55
+BR019_STRIKE_BAKED AN_Beechlawn_ShotFinesseRight 55
+BR019_STRIKE_BAKED AN_Beechlawn_ShotFinesseLeft 55
+BR019_STRIKE_BAKED AN_Beechlawn_ShotLowRight 55
+BR019_STRIKE_BAKED AN_Beechlawn_ShotLowLeft 55
+Info: Saved "football_br019_strikes.blend"
+ERROR Draco mesh compression is not available because library could not be found at /usr/bin/4.3/python/lib/python3.13/site-packages/libextern_draco.so
+03:47:43 | INFO: Starting glTF 2.0 export
+03:47:45 | INFO: Finished glTF 2.0 export in 1.1896312236785889 s
+
+BR019_STRIKES_EXPORTED 6 clips with unchanged 65-bone rest
+Blender 4.3.2
+Read blend: "/workspace/aegis-checkout/tools/blender/beechlawn/footballer_shared.blend"
+
+Blender quit
