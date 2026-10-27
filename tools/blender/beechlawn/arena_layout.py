@@ -83,7 +83,11 @@ def make_layout():
                 key=(bank['name'],deck,block)
                 if key not in section_lookup:
                     section_lookup[key]=len(sections)
-                    sections.append(dict(id=len(sections),bank=bank['name'],role=bank['role'],kind=bank['kind'],deck=deck,block=block))
+                    # Structural role controls tiering and access geometry. Supporter
+                    # affiliation is independent: visitors occupy the lower NE corner
+                    # and the two adjoining lower North blocks only.
+                    away=(bank['name']=='NorthEast' and deck==0) or (bank['name']=='North' and deck==0 and block in (0,1))
+                    sections.append(dict(id=len(sections),bank=bank['name'],role=bank['role'],support_side='away' if away else 'home',kind=bank['kind'],deck=deck,block=block))
                 # Blender XY -> Godot XZ: (x,y,z) -> (x,z,-y).
                 seats.append([round(x,4),round(level+.02,4),round(-y,4),round(math.atan2(nx,-ny),6),section_lookup[key]])
     for section in sections:

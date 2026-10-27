@@ -29,6 +29,9 @@ with zipfile.ZipFile(root / 'mac/Beechlawn-Rovers-Mac.zip') as archive:
     # This verifies packaged GDScript/resources/metadata, not the Mac executable.
     expected = json.loads((Path(__file__).resolve().parents[1]/'data/build_info.json').read_text())
     assert info['CFBundleShortVersionString'] == expected['version']
+    preset = (Path(__file__).resolve().parents[1]/'export_presets.cfg').read_text()
+    bundle_version = re.search(r'^application/version="([^"]+)"$', preset, re.MULTILINE)
+    assert bundle_version and info['CFBundleVersion'] == bundle_version.group(1), 'Wrong Mac bundle build number'
     pack = next(n for n in archive.namelist() if n.endswith('.pck'))
     with tempfile.TemporaryDirectory(prefix='beechlawn-package-') as temporary:
         path = Path(temporary)/'match.pck'

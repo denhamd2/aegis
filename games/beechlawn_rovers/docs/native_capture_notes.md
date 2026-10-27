@@ -54,6 +54,23 @@ for appearance; the Web game and deployment have been retired.
 
 ## Match repair sequences
 
+`--review-mode crowd` captures the actual Rovers Arena match crowd at close,
+middle and far camera distances. Five stills cover ordinary flag waving, a
+dangerous chance, away-goal and home-goal reactions. The JSON reports body
+states, detail-distance draw calls and a sampled animated-hand/pole gap for
+the selected flag bearer. The manifest includes each PNG hash and, on Linux,
+the Godot process peak resident memory. Use matched `--match --venue
+rovers_arena --venue-view broadcast` captures for before/after scene budgets;
+the review camera moves and event states cannot be used as a matched budget.
+
+```sh
+python3 games/beechlawn_rovers/tools/capture_native.py build/crowd-motion \
+  --review-mode crowd --resolution 480x270 --deadline 300
+```
+
+Linux software Vulkan demonstrates the body and flag motion in Forward+ but
+does not establish target-Mac colours, detail or 1080p60 performance.
+
 `--review-mode movement|throw|net|montage` records numbered native PNG frames
 plus metadata in `match_broadcast.json`. Movement/throw/net use six real 60 Hz
 simulation steps per draw; assemble at 10 fps to review simulated timing, not

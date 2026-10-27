@@ -1,0 +1,144 @@
+{
+  "baseline_commit": "f005bb739a7ff506fad119a2c35beba620126077",
+  "baseline_version": "0.5.4",
+  "candidate_version": "0.5.5",
+  "rendering_method": "forward_plus",
+  "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+  "matched_resolution": [
+    640,
+    360
+  ],
+  "motion_resolution": [
+    480,
+    270
+  ],
+  "allocation": {
+    "total": 49554,
+    "home": 46436,
+    "away": 3118,
+    "away_section_ids": [
+      0,
+      1,
+      47,
+      48,
+      49
+    ],
+    "home_team_colour": 37149,
+    "away_team_colour": 2494,
+    "flags": {
+      "south_home": 36,
+      "other_home": 12,
+      "away": 16
+    }
+  },
+  "matched_broadcast": {
+    "before": {
+      "draw_calls": 1202,
+      "primitives": 1130204,
+      "peak_rss_kib": 4192968,
+      "turf_triangles": 32768,
+      "seating_audit": {
+        "errors": 0,
+        "sampled_seats": 3837,
+        "scope": "Actual GPU buffers: centred blocks, supported level rows, inward chairs, straight/radial aisles, identical near/far transforms"
+      }
+    },
+    "after": {
+      "draw_calls": 1208,
+      "primitives": 1157084,
+      "peak_rss_kib": 4274476,
+      "turf_triangles": 32768,
+      "seating_audit": {
+        "errors": 0,
+        "sampled_seats": 3837,
+        "scope": "Actual GPU buffers: centred blocks, supported level rows, inward chairs, straight/radial aisles, identical near/far transforms"
+      }
+    },
+    "delta": {
+      "draw_calls": 6,
+      "primitives": 26880,
+      "peak_rss_kib": 81508
+    }
+  },
+  "motion": {
+    "frames": [
+      {
+        "away_state": "Seated",
+        "body_state": "Flag",
+        "distance": 3.5,
+        "draw_calls": 237,
+        "flag_bearer_promoted": false,
+        "flag_hand_gap": 0.0,
+        "home_state": "Seated",
+        "image": "match_broadcast.png",
+        "primitives": 1686680
+      },
+      {
+        "away_state": "Attention",
+        "body_state": "Flag",
+        "distance": 35.0,
+        "draw_calls": 469,
+        "flag_bearer_promoted": false,
+        "flag_hand_gap": 2.38418579101562e-07,
+        "home_state": "Attention",
+        "image": "crowd_mid_chance.png",
+        "primitives": 1277911
+      },
+      {
+        "away_state": "Cheer",
+        "body_state": "Cheer",
+        "distance": 3.5,
+        "draw_calls": 234,
+        "flag_bearer_promoted": false,
+        "flag_hand_gap": 0.0,
+        "home_state": "Disappoint",
+        "image": "crowd_away_goal_close.png",
+        "primitives": 1664300
+      },
+      {
+        "away_state": "Cheer",
+        "body_state": "Cheer",
+        "distance": 85.0,
+        "draw_calls": 1292,
+        "flag_bearer_promoted": false,
+        "flag_hand_gap": 0.0,
+        "home_state": "Disappoint",
+        "image": "crowd_away_goal_far.png",
+        "primitives": 1597527
+      },
+      {
+        "away_state": "Disappoint",
+        "body_state": "Cheer",
+        "distance": 3.5,
+        "draw_calls": 216,
+        "flag_bearer_promoted": true,
+        "flag_hand_gap": 0.0,
+        "home_state": "Cheer",
+        "image": "crowd_home_goal_close.png",
+        "primitives": 1698520
+      }
+    ],
+    "max_flag_hand_gap_m": 2.38418579101562e-07
+  },
+  "asset_audit": "12 supporters; 80 bones, nine clips each; 59,031 vertices; garment masks present; original mesh attributes, indices, inverse bind matrices and animation samples equal baseline",
+  "tests_passed": [
+    "supporter_crowd_smoke.gd",
+    "stadium_seating_smoke.gd",
+    "stadium_presentation_smoke.gd",
+    "graphics_budget_smoke.gd",
+    "frame_profiler_smoke.gd",
+    "replay_results_smoke.gd",
+    "venue_selection_smoke.gd",
+    "test_arena_seating_alignment.py",
+    "test_capture_native.py",
+    "validate_supporter_exports.py",
+    "Python syntax",
+    "git diff --check"
+  ],
+  "capture_manifests": {
+    "broadcast_before": "broadcast_before/manifest.json",
+    "broadcast_after": "broadcast_after/manifest.json",
+    "motion": "motion/manifest.json"
+  },
+  "limits": "Linux llvmpipe Forward+ proves integration, not M1 Pro appearance or 1080p60."
+}

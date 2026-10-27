@@ -39,10 +39,16 @@ static func material(avatar:int,level:int) -> ShaderMaterial:
 	mat.set_shader_parameter("vertex_count",int(data.vertex_count));mat.set_shader_parameter("texture_width",int(data.width));mat.set_shader_parameter("texture_height",int(data.height))
 	mat.set_shader_parameter("photo",load(ROOT+"fan_%02d.png"%avatar));mat.set_shader_parameter("photographic",level==0)
 	return mat
-static func hero(avatar:int) -> Node3D:
+static func hero(avatar:int,park:=false) -> Node3D:
 	if not _heroes.has(avatar):_heroes[avatar]=load(ROOT+"fan_%02d.glb"%avatar)
 	var instance:Node3D=(_heroes[avatar] as PackedScene).instantiate()
-	var photo:=StandardMaterial3D.new();photo.albedo_texture=load(ROOT+"fan_%02d.png"%avatar);photo.roughness=.86;photo.cull_mode=BaseMaterial3D.CULL_DISABLED
+	var photo:Material
+	if park:
+		var casual:=StandardMaterial3D.new();casual.albedo_texture=load(ROOT+"fan_%02d.png"%avatar);casual.roughness=.86;casual.cull_mode=BaseMaterial3D.CULL_DISABLED
+		photo=casual
+	else:
+		var garment:=ShaderMaterial.new();garment.shader=preload("res://shaders/supporter_hero.gdshader");garment.set_shader_parameter("photo",load(ROOT+"fan_%02d.png"%avatar))
+		photo=garment
 	for mesh:MeshInstance3D in instance.find_children("*","MeshInstance3D",true,false):mesh.material_override=photo;mesh.layers=4
 	return instance
 static func animation(player:AnimationPlayer,state:String) -> StringName:

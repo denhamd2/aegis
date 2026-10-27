@@ -10,6 +10,23 @@ items, use the archived references and skill workflow in
 [`art_reference_implementation_plan.md`](art_reference_implementation_plan.md)
 and [`../references/README.md`](../references/README.md) before implementation.
 
+## Stadium crowd allocation and motion — 27 October 2026
+
+BR-023 (23/27, in progress): v0.5.5 fills all 49,554 modeled Rovers Arena
+seats without changing the bowl, aisles or capacity. Separate `support_side`
+metadata puts 3,118 Boardeaux supporters in lower NorthEast blocks and adjoining
+North blocks 0–1; 46,436 support Beechlawn. Each side has the owner-approved
+80/20 team-colour/casual-clothing split. The 12 existing avatars retain their
+photographic skin, hair and fabric detail across three VAT detail levels and the
+16/32 close-rig pool. Score-aware body reactions, replay restoration and 64
+hand-following team-colour flags (36 South, 12 other home, 16 away) are checked.
+Kilmore's eight casual spectators remain unchanged. See
+[the crowd validation](art_briefs/stadium_crowd_2026_10_27/brief.md).
+
+Next acceptance: BR-025 (25/27, in progress), inspect the v0.5.5 package's crowd
+colours, flags, detail transitions and combined 1080p60 performance on the
+M1 Pro/16 GB Mac. Linux software Forward+ captures do not close that gate.
+
 ## Mac playtest: mowing stripes and pitch glare — 26 October 2026
 
 BR-023 (23/27, in progress): the owner reported weak cut lines and bright glare
@@ -81,9 +98,9 @@ football-owned crowd production. Twelve textured 80-bone adults have nine author
 clips, fitted seated/rise/sit footwork, three animated 3D body LODs and a bounded
 16/32-rig near pool. Kilmore has eight animated standing casual spectators.
 
-BR-023 (23/27, in progress): retain 49,554 aligned chairs and add 44,685 supporters
-(95% home, 90% side/corner, 85% away), 64 hand-following flags, score-aware reactions
-and replay-state restoration. Original dockside public realm includes quay walls,
+BR-023 (23/27, in progress): retain 49,554 aligned chairs. The original
+44,685-supporter occupancy has been superseded by the full-seat allocation
+documented above. Original dockside public realm includes quay walls,
 water/channel/crossings, steps, railings, bollards, heritage tower/engine house,
 retained rails, eastern plaza, Regent Road and simpler industrial context. The
 stadium has a dedicated 7.32 × 2.44 m goal, square box net, separate rear poles and
@@ -1247,6 +1264,7 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
     acceptance check is the reference-matched face/hair and full-clip garment
     review, before roster integration or duplicating the process to others.
 - [ ] **BR-023 — Kilmore Drive and selectable Rovers Arena**
+  - 2026-10-27, v0.5.5: fill all 49,554 existing arena seats; place Boardeaux in the 3,118-seat lower north-east allocation; apply each side's approved 80/20 clothing colours through garment-only masks across three VAT levels and close rigs; keep 64 colour-matched, hand-following waving flags and score/replay-aware body motion. Preserve Kilmore's eight spectators, v0.5.4 turf and the bowl/access geometry. Evidence: `art_briefs/stadium_crowd_2026_10_27/`. Target-Mac appearance/performance stays BR-025.
   - 2026-10-25, v0.4.1: reference-led UCL 26/27 League size-5 ball, editable Blender/continuous UV/PBR source, default for both venues and Play/Watch; saved worn-ball option; intro/replay continuity. Cosmetic selection preserves the existing collider and all ball tuning. See `art_briefs/ucl_ball_2026_10_25/brief.md`. Wider venue likeness/M1 remain open.
   - 2026-10-25, v0.4.0: owner-approved complete Hill Dickinson reference-led building replaces the octagonal arena. Distinct stands, tapered/fanned corners, a continuous home end, true-normal terraces, brick/metal/glass exterior, barrel roof/trusses and Rovers signage are authored in Blender. A section/row manifest replaces fixed banks and records actual-mesh seat support. Both venues receive short-turf/material refinement; Kilmore's original terrain, wear, markings and wet physics remain. Reference archive and native evidence: `art_briefs/hill_dickinson_remodel_2026_10_25/`. Exact photographic likeness and native M1 timing remain open.
   - 2026-10-24, v0.3.1: fixed the slanted seat/aisle appearance in the opposing
@@ -1372,6 +1390,7 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
   timing, priority, cooldowns, and mix behavior with test clips before content
   production.
 - [ ] **BR-025 — M1 performance and Mac delivery**
+  - 2026-10-27 (25/27, in progress): inspect the v0.5.5 crowd and combined match on the packaged M1 Pro/16 GB Mac at 1080p. Validate appearance, detail switching, flag animation and sustained 60 fps with hardware timings and resident memory; cloud software Vulkan confirms integration only.
   - 2026-10-25 (25/27, in progress): v0.4.1 packages both ball choices and venues. Release verification now boots each ball/venue pair from the actual PCK. Native M1 appearance, input feel and sustained 1080p60 remain hardware acceptance checks.
   - 2026-10-24 (25/27, in progress): v0.3.0 combines the tested heads, skills,
     keeper/stride work, assisted controls, monochrome HUD and selectable arena.

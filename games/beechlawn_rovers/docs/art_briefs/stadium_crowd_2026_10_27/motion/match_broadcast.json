@@ -1,0 +1,77 @@
+{
+  "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+  "api": "1.4.305",
+  "away_players": 11,
+  "display_server": "X11",
+  "draw_calls": 237,
+  "frames": [
+    {
+      "away_state": "Seated",
+      "body_state": "Flag",
+      "distance": 3.5,
+      "draw_calls": 237,
+      "flag_bearer_promoted": false,
+      "flag_hand_gap": 0.0,
+      "home_state": "Seated",
+      "image": "match_broadcast.png",
+      "primitives": 1686680
+    },
+    {
+      "away_state": "Attention",
+      "body_state": "Flag",
+      "distance": 35.0,
+      "draw_calls": 469,
+      "flag_bearer_promoted": false,
+      "flag_hand_gap": 0.000000238418579101562,
+      "home_state": "Attention",
+      "image": "crowd_mid_chance.png",
+      "primitives": 1277911
+    },
+    {
+      "away_state": "Cheer",
+      "body_state": "Cheer",
+      "distance": 3.5,
+      "draw_calls": 234,
+      "flag_bearer_promoted": false,
+      "flag_hand_gap": 0.0,
+      "home_state": "Disappoint",
+      "image": "crowd_away_goal_close.png",
+      "primitives": 1664300
+    },
+    {
+      "away_state": "Cheer",
+      "body_state": "Cheer",
+      "distance": 85.0,
+      "draw_calls": 1292,
+      "flag_bearer_promoted": false,
+      "flag_hand_gap": 0.0,
+      "home_state": "Disappoint",
+      "image": "crowd_away_goal_far.png",
+      "primitives": 1597527
+    },
+    {
+      "away_state": "Disappoint",
+      "body_state": "Cheer",
+      "distance": 3.5,
+      "draw_calls": 216,
+      "flag_bearer_promoted": true,
+      "flag_hand_gap": 0.0,
+      "home_state": "Cheer",
+      "image": "crowd_home_goal_close.png",
+      "primitives": 1698520
+    }
+  ],
+  "godot": "4.6.3-stable (official)",
+  "home_players": 11,
+  "officials": 1,
+  "primitives": 1686680,
+  "rendering_method": "forward_plus",
+  "resolution": [
+    480,
+    270
+  ],
+  "scene": "res://scenes/match_11v11.tscn",
+  "scope": "Actual Forward+ body/flag and LOD motion; Linux software Vulkan does not establish Mac performance.",
+  "venue": "rovers_arena",
+  "venue_view": "crowd_motion"
+}

@@ -33,6 +33,17 @@ def stop(process):
             process.wait(timeout=3)
 
 
+def peak_rss_kib(pid):
+    """Linux process high-water RSS; unavailable on other platforms."""
+    try:
+        for line in Path(f'/proc/{pid}/status').read_text().splitlines():
+            if line.startswith('VmHWM:'):
+                return int(line.split()[1])
+    except (FileNotFoundError, PermissionError, ValueError):
+        pass
+    return None
+
+
 def run_bounded(command, env, deadline, log, ready_files=()):
     # Stream diagnostics immediately so a compiling/failed scene is observable
     # while the bounded render is running, rather than only after timeout.
@@ -41,7 +52,11 @@ def run_bounded(command, env, deadline, log, ready_files=()):
                                    stderr=subprocess.STDOUT, start_new_session=True)
         started, completed = time.monotonic(), None
         cleanup = 'normal'
+        run_bounded.peak_rss_kib = None
         while process.poll() is None:
+            measured = peak_rss_kib(process.pid) if getattr(process,'pid',None) is not None else None
+            if measured is not None:
+                run_bounded.peak_rss_kib = max(run_bounded.peak_rss_kib or 0, measured)
             if completed is None and time.monotonic()-started > deadline:
                 stop(process)
                 raise RuntimeError(f'Native render exceeded {deadline}s; see {log}')
@@ -88,7 +103,7 @@ def main():
     from PIL import Image, ImageStat
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('output', type=Path)
-    parser.add_argument('--review-mode', choices=['receive','receive_broadcast','stride_brake','stride_review','keeper_full_dives','keeper_high_shots','skills','skills_moving','keeper_dive_home','keeper_dive_away','keeper_high_home','outro','audio','free_kick','presentation','movement','throw','net','montage','attack_home','attack_away','keeper_home','keeper_away','cross_home','cross_away','header_close','chest_close','volley_close','half_volley_close','cross_driven_home','cross_driven_away','cross_lofted_home','cross_early_home','shot_finesse','shot_power','shot_low'], help='Capture a native moving repair review')
+    parser.add_argument('--review-mode', choices=['receive','receive_broadcast','stride_brake','stride_review','keeper_full_dives','keeper_high_shots','skills','skills_moving','keeper_dive_home','keeper_dive_away','keeper_high_home','outro','audio','free_kick','presentation','movement','throw','net','montage','attack_home','attack_away','keeper_home','keeper_away','cross_home','cross_away','header_close','chest_close','volley_close','half_volley_close','cross_driven_home','cross_driven_away','cross_lofted_home','cross_early_home','shot_finesse','shot_power','shot_low','crowd'], help='Capture a native moving repair review')
     parser.add_argument('--verbose', action='store_true', help='Include engine resource diagnostics')
     parser.add_argument('--ablation', choices=['none','scattering','transmittance','near_heads','pose','morphs','normal_maps','sun_shadows','shadow_bias','close_shadows'], default='none', help='Explicit portrait-only diagnostic; recorded in evidence')
     parser.add_argument('--setup-preview', action='store_true', help='Also capture the actual venue/control options')
@@ -171,7 +186,7 @@ def main():
                 command += ['--write-movie',str(args.output/'audio_review.avi')]
             if linux:
                 command += ['--display-driver','x11','--rendering-driver','vulkan']
-            command += (['--script',('res://scripts/review_contextual_control.gd' if args.review_mode in ['receive','receive_broadcast'] else 'res://scripts/review_match_outro.gd' if args.review_mode == 'outro' else 'res://scripts/review_audio_mix.gd' if args.review_mode == 'audio' else 'res://scripts/review_broadcast_ui.gd' if args.review_mode == 'presentation' else 'res://scripts/review_native_repairs.gd') if args.review_mode else 'res://scripts/review_native_match.gd'] if args.match else ['res://scenes/review/shane_asset_review.tscn'])
+            command += (['--script',('res://scripts/review_contextual_control.gd' if args.review_mode in ['receive','receive_broadcast'] else 'res://scripts/review_match_outro.gd' if args.review_mode == 'outro' else 'res://scripts/review_audio_mix.gd' if args.review_mode == 'audio' else 'res://scripts/review_broadcast_ui.gd' if args.review_mode == 'presentation' else 'res://scripts/review_supporter_crowd.gd' if args.review_mode == 'crowd' else 'res://scripts/review_native_repairs.gd') if args.review_mode else 'res://scripts/review_native_match.gd'] if args.match else ['res://scenes/review/shane_asset_review.tscn'])
             command += ['--',
                 '--capture-dir='+str(args.output),'--player='+player,'--view='+view,
                 '--lighting='+args.lighting,'--sky='+args.sky,'--clean=1']
@@ -206,6 +221,7 @@ def main():
             captures.append({'image':image_path.name,'report':report_path.name,
                 'sha256':hashlib.sha256(image_path.read_bytes()).hexdigest(),
                 'process_cleanup':cleanup,
+                'peak_rss_kib':run_bounded.peak_rss_kib,
                 'capture_seconds':round(time.monotonic()-started,2),
                 'command':command})
             print('NATIVE_CAPTURE PASS',stem,report['adapter'],flush=True)

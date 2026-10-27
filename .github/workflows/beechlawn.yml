@@ -102,6 +102,7 @@ jobs:
           mkdir -p build/beechlawn/mac
           timeout --kill-after=5s 180s godot --headless --path games/beechlawn_rovers --export-release macOS "$PWD/build/beechlawn/mac/Beechlawn-Rovers-Mac.zip"
           python3 games/beechlawn_rovers/tools/verify_release.py build/beechlawn
+          (cd build/beechlawn/mac && sha256sum Beechlawn-Rovers-Mac.zip > Beechlawn-Rovers-Mac.zip.sha256 && sha256sum -c Beechlawn-Rovers-Mac.zip.sha256)
       - uses: actions/upload-artifact@v4
         with:
           name: beechlawn-mac-build
@@ -120,7 +121,7 @@ jobs:
         run: |
           tag="beechlawn-${GITHUB_SHA:0:12}"
           if gh release view "$tag" >/dev/null 2>&1; then
-            gh release upload "$tag" build/beechlawn/mac/Beechlawn-Rovers-Mac.zip --clobber
+            gh release upload "$tag" build/beechlawn/mac/Beechlawn-Rovers-Mac.zip build/beechlawn/mac/Beechlawn-Rovers-Mac.zip.sha256 --clobber
           else
-            gh release create "$tag" build/beechlawn/mac/Beechlawn-Rovers-Mac.zip --target "$GITHUB_SHA" --title "Beechlawn Rovers — 11v11 (${GITHUB_SHA:0:7})" --notes-file games/beechlawn_rovers/docs/release_notes.md --prerelease
+            gh release create "$tag" build/beechlawn/mac/Beechlawn-Rovers-Mac.zip build/beechlawn/mac/Beechlawn-Rovers-Mac.zip.sha256 --target "$GITHUB_SHA" --title "Beechlawn Rovers — 11v11 (${GITHUB_SHA:0:7})" --notes-file games/beechlawn_rovers/docs/release_notes.md --prerelease
           fi

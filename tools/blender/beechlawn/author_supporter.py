@@ -13,6 +13,7 @@ HERE=Path(__file__).resolve().parent;ROOT=HERE.parents[2]
 sys.path.insert(0,str(HERE.parent));sys.path.insert(0,str(HERE))
 import rocketbox_crowd as rb
 from fetch_supporter_sources import AVATARS,COMMIT
+from supporter_garment_uv import ensure_mask_uv
 os.environ.setdefault('ROCKETBOX_DIR','/tmp/beechlawn-rocketbox')
 rb.TEXTURE_LEVEL=1.0  # Daylight albedo; the wrestling look remains unchanged.
 OUT=ROOT/'games/beechlawn_rovers/assets/characters/supporters';OUT.mkdir(parents=True,exist_ok=True)
@@ -212,6 +213,7 @@ for image in list(bpy.data.images):
  if image.users==0:bpy.data.images.remove(image)
  elif image.filepath and image.source=='FILE':
   image.filepath=bpy.path.relpath(bpy.path.abspath(image.filepath),start=str(Path(__file__).resolve().parent))
+ensure_mask_uv(mesh.data)
 bpy.context.preferences.filepaths.save_version=0
 bpy.ops.wm.save_as_mainfile(filepath=str(HERE/('supporter_%02d.blend'%INDEX)),compress=True)
 # Avoid a second embedded atlas residency; the runtime binds fan_NN.png.

@@ -1,3 +1,25 @@
+# Beechlawn Rovers 27 — v0.5.5
+
+All 49,554 modeled Rovers Arena seats now have animated spectators, while the
+existing aisles and entrances remain clear. Boardeaux's 3,118 supporters occupy
+the lower north-east corner and its two adjoining North blocks; the other
+46,436 support Beechlawn. On each side, 80% wear varied team-colour clothing
+and 20% wear casual colours. Faces, hair and skin keep their photographic detail.
+
+Most supporters sit and move independently during play, rise for chances,
+celebrate their own team's goals and react to opposition goals. Own goals and
+replay/live restoration follow the scoring side. A small contingent of 64
+waves team-colour flags: 36 in the South home end, 12 elsewhere at home and
+16 in the away section. Flag poles follow the animated hands. Kilmore's eight
+casual spectators remain as before.
+
+The v0.5.4 mowing contrast and restrained turf glare remain included. Native
+Forward+ cloud captures and automated checks cover crowd appearance and state;
+target-Mac 1080p60 appearance and performance remain BR-025 acceptance checks.
+Universal Apple Silicon/Intel Mac build.
+
+---
+
 # Beechlawn Rovers 27 — v0.5.4
 
 Rovers Arena's mowing stripes remain visible from either broadcast side.
