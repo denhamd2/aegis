@@ -1,0 +1,149 @@
+{
+  "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+  "away_players": 11,
+  "display_server": "X11",
+  "frames": [
+    {
+      "animation_seconds": 0.0166666666666667,
+      "clip": "AN_Beechlawn_KeeperDistribute",
+      "draw_calls": 429,
+      "file": "home_1.png",
+      "hand_to_ball_m": 0.513275742530823,
+      "holding": true,
+      "mode": "keeper_distribution",
+      "primitives": 439328,
+      "tick": 1
+    },
+    {
+      "animation_seconds": 0.216666666666667,
+      "clip": "AN_Beechlawn_KeeperDistribute",
+      "draw_calls": 429,
+      "file": "home_14.png",
+      "hand_to_ball_m": 0.0576565749943256,
+      "holding": true,
+      "mode": "keeper_distribution",
+      "primitives": 439768,
+      "tick": 14
+    },
+    {
+      "animation_seconds": 0.416666666666667,
+      "clip": "AN_Beechlawn_KeeperDistribute",
+      "draw_calls": 440,
+      "file": "home_27.png",
+      "hand_to_ball_m": 0.140502512454987,
+      "holding": true,
+      "mode": "keeper_distribution",
+      "primitives": 452702,
+      "tick": 27
+    },
+    {
+      "animation_seconds": 0.466666666666667,
+      "clip": "AN_Beechlawn_KeeperDistribute",
+      "draw_calls": 440,
+      "file": "home_31.png",
+      "hand_to_ball_m": 0.192357242107391,
+      "holding": true,
+      "mode": "keeper_distribution",
+      "primitives": 452702,
+      "tick": 31
+    },
+    {
+      "animation_seconds": 0.566666666666667,
+      "clip": "AN_Beechlawn_KeeperDistribute",
+      "draw_calls": 440,
+      "file": "home_38.png",
+      "hand_to_ball_m": 0.734769463539124,
+      "holding": false,
+      "mode": "keeper_distribution",
+      "primitives": 452702,
+      "tick": 38
+    },
+    {
+      "animation_seconds": 0.850000000000001,
+      "clip": "AN_Beechlawn_KeeperDistribute",
+      "draw_calls": 440,
+      "file": "home_56.png",
+      "hand_to_ball_m": 2.45772862434387,
+      "holding": false,
+      "mode": "keeper_distribution",
+      "primitives": 452702,
+      "tick": 56
+    },
+    {
+      "animation_seconds": 0.0166666666666667,
+      "clip": "AN_Beechlawn_KeeperDistribute",
+      "draw_calls": 376,
+      "file": "away_1.png",
+      "hand_to_ball_m": 0.512663602828979,
+      "holding": true,
+      "mode": "keeper_distribution",
+      "primitives": 338948,
+      "tick": 1
+    },
+    {
+      "animation_seconds": 0.216666666666667,
+      "clip": "AN_Beechlawn_KeeperDistribute",
+      "draw_calls": 376,
+      "file": "away_14.png",
+      "hand_to_ball_m": 0.0576899945735931,
+      "holding": true,
+      "mode": "keeper_distribution",
+      "primitives": 338288,
+      "tick": 14
+    },
+    {
+      "animation_seconds": 0.416666666666667,
+      "clip": "AN_Beechlawn_KeeperDistribute",
+      "draw_calls": 376,
+      "file": "away_27.png",
+      "hand_to_ball_m": 0.140502080321312,
+      "holding": true,
+      "mode": "keeper_distribution",
+      "primitives": 338288,
+      "tick": 27
+    },
+    {
+      "animation_seconds": 0.466666666666667,
+      "clip": "AN_Beechlawn_KeeperDistribute",
+      "draw_calls": 376,
+      "file": "away_31.png",
+      "hand_to_ball_m": 0.192357301712036,
+      "holding": true,
+      "mode": "keeper_distribution",
+      "primitives": 338948,
+      "tick": 31
+    },
+    {
+      "animation_seconds": 0.566666666666667,
+      "clip": "AN_Beechlawn_KeeperDistribute",
+      "draw_calls": 376,
+      "file": "away_38.png",
+      "hand_to_ball_m": 0.734769761562347,
+      "holding": false,
+      "mode": "keeper_distribution",
+      "primitives": 338948,
+      "tick": 38
+    },
+    {
+      "animation_seconds": 0.850000000000001,
+      "clip": "AN_Beechlawn_KeeperDistribute",
+      "draw_calls": 375,
+      "file": "away_56.png",
+      "hand_to_ball_m": 2.45772862434387,
+      "holding": false,
+      "mode": "keeper_distribution",
+      "primitives": 338508,
+      "tick": 56
+    }
+  ],
+  "home_players": 11,
+  "mode": "keeper_distribution",
+  "officials": 1,
+  "rendering_method": "forward_plus",
+  "resolution": [
+    960,
+    540
+  ],
+  "scope": "Native Forward+ moving/still evidence; cloud renderer does not measure M1 performance",
+  "vendor": "Unknown"
+}

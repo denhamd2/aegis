@@ -30,7 +30,6 @@ var _pending_pass: float = 0.0
 var _pending_through := false
 var _pending_shot: float = 0.0
 var _leg_time := 0.0
-var _debug := false
 var _kick_time := -1.0
 var _kick_duration := 0.0
 var _kick_side := 1.0
@@ -177,9 +176,6 @@ func _sample_input() -> void:
 	_aim = Input.get_vector("aim_left", "aim_right", "aim_up", "aim_down")
 	if _aim.length_squared() < 0.02:
 		_aim = _stick
-	if Input.is_action_just_pressed("debug"):
-		_debug = not _debug
-		set_meta("debug_enabled", _debug)
 
 func _update_locomotion(delta: float) -> void:
 	var camera_right := camera.global_basis.x
@@ -779,6 +775,9 @@ func _do_pass(through: bool, requested_direction := Vector3.ZERO,
 
 
 func _on_visual_action_contact(action: StringName) -> void:
+	if action == &"keeper_distribution" and _goalkeeper_controller != null:
+		_goalkeeper_controller.on_distribution_contact()
+		return
 	if action == &"skill":
 		skills.on_marker()
 		return
@@ -835,6 +834,8 @@ func _resolve_pending_kick_contact(delta: float) -> void:
 
 
 func _on_visual_action_finished(action: StringName) -> void:
+	if action == &"keeper_distribution" and _goalkeeper_controller != null:
+		_goalkeeper_controller.on_distribution_finished()
 	if action == &"skill": skills.on_finished()
 	_aerial_controller.on_finished(action)
 	if action == &"standing_tackle": _standing_pending = false

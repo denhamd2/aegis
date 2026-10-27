@@ -10,6 +10,24 @@ items, use the archived references and skill workflow in
 [`art_reference_implementation_plan.md`](art_reference_implementation_plan.md)
 and [`../references/README.md`](../references/README.md) before implementation.
 
+## P1 match validation — 27 October 2026
+
+BR-010 (10/27, complete): F3 now reveals live player/ball velocity,
+projected collision capsules, AI intents and targets, pass reception targets,
+and keeper shot prediction; the view stays off in ordinary play and works in
+Play and Watch modes. BR-009 (9/27, in progress) now has a shared-rig keeper
+distribution clip for both sides. A held ball follows the throwing glove and
+releases once at its 0.5-second physics marker, then the keeper completes the
+follow-through. BR-008 (8/27, in progress) retains its tested attacking and
+defending decisions: the 4v4 sample made two passes and one shot without a
+movement stall; a complete 11v11 match ended 1–1 with nine shots and three
+saves. See [P1 evidence](art_briefs/p1_match_2026_10_27/brief.md).
+
+Next acceptance: BR-008 (8/27, in progress), review human-vs-AI tactical
+quality and input feel on the M1 Pro Mac, then BR-009 keeper distribution and
+BR-025 sustained 1080p60 on the same hardware. Linux Forward+ captures prove
+the current cloud visuals and logic, not Mac appearance or performance.
+
 ## Shooting and aerial actions — 27 October 2026
 
 BR-019 (19/27, complete in v0.5.6): nearby defenders now prepare real
@@ -666,6 +684,13 @@ playtest has no stuck bodies or unreported frame-rate failure on the target Mac.
     arrows, E ground pass, Q
     through-ball.
 - [ ] **BR-008 — Small-sided attacking/defending AI**
+  - 2026-10-27 P1 verification: the 4v4 AI-vs-AI run covered 720 physics
+    frames with six moving outfielders, two passes, one shot and no two-second
+    stall. Mirrored attack choices, tactical parity, defending and transitions
+    pass. A complete 11v11 match produced 2/7 shots, 2/1 saves, a 1–1 result
+    and no stationary sample. The human 4v4 milestone smoke covers pass,
+    control handover, shot, movement and goal; Mac human-vs-AI play quality
+    remains the acceptance check. See the P1 evidence above.
   - 2026-10-26 (8/27, in progress), v0.5.1: mirrored decisions compare narrow
     shots with crosses/cutbacks and release safe progressive passes before
     frontal pressure. Shot styles consider pressure/keeper approach. Twelve
@@ -818,6 +843,13 @@ playtest has no stuck bodies or unreported frame-rate failure on the target Mac.
     deterministic action choice/execution remains covered by
     `ai_carrier_decision_smoke.gd`.
 - [ ] **BR-009 — First goalkeeper**
+  - 2026-10-27 P1 distribution (9/27, in progress): the unchanged 65-bone rig
+    gains an original in-place sidearm clip. Both keepers hold the physical
+    ball through windup, follow the throwing glove, release once at the 0.5 s
+    marker as a hand action, and finish before moving again. Both-direction
+    marker, hand gap, interruption, recovery and live save regressions pass.
+    Native Linux Forward+ motion shows both sides; target-Mac match feel and
+    1080p60 acceptance remain open. See the P1 evidence above.
   - 2026-10-24 full-stretch dives (9/27, in progress): six original shared-rig
     clips add bilateral low/mid/high dives with 60–80-degree whole-body roll,
     physical sideways take-off and staged landing, brace, kneel and rise.
@@ -869,15 +901,18 @@ playtest has no stuck bodies or unreported frame-rate failure on the target Mac.
     radius. Fast shots are parried; slower ones are physically held near the
     keeper briefly, then distributed toward a teammate selected for distance
     and passing-lane safety. `goalkeeper_smoke.gd` covers prediction, frame
-    rejection, reach, parries, catch, hold and distribution. Authored dive/catch
-    animations, throws, tuning and gameplay validation remain.
-- [ ] **BR-010 — 4v4 match loop and debug views**
+    rejection, reach, parries, catch, hold and distribution. Authored save and
+    throw clips now cover the cloud motion checks; Mac gameplay validation remains.
+- [x] **BR-010 — 4v4 match loop and debug views**
   Add kickoff, goal, restart and short-match timer states. Add development
   overlays for player/ball velocity, AI targets, pass target, collision shapes
   and keeper prediction. Keep overlays disabled in ordinary play.
-  - Cloud progress: kickoff, goal pause, conceded-team restart and three-minute
-    open-play timer are implemented and smoke-tested. Remaining: debug overlays
-    for tactical targets, collision shapes and goalkeeper prediction.
+  - Complete: kickoff, goal pause, conceded-team restart and three-minute
+    open-play timer are smoke-tested. F3 enables projected ball/player velocity,
+    real collision shapes, AI targets/intents, pass targets and keeper
+    prediction. It is disabled by default and survives player switches and
+    Watch mode. `p1_debug_overlay_smoke.gd` and native Forward+ off/on and
+    keeper-prediction captures verify the view.
 
 **P1 exit check:** a short 4v4 game (three outfield players and a goalkeeper
 per side) can start, produce purposeful support and

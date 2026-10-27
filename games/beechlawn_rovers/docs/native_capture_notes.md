@@ -54,6 +54,15 @@ for appearance; the Web game and deployment have been retired.
 
 ## Match repair sequences
 
+`--review-mode p1_debug` saves F3 off/on views and a keeper-end view with
+live prediction and pass-target guides. `--review-mode keeper_distribution`
+records both imported keeper body clips, held-ball glove gaps and the marker
+release before and after 0.5 seconds. Both use the real 11v11 scene in
+Forward+ and record draw calls; the throw fixture stages a legal hold for a
+repeatable motion review. See [P1 evidence](art_briefs/p1_match_2026_10_27/brief.md).
+Normal-play cost must come from a matched plain `--match --venue rovers_arena`
+capture because the diagnostic overlay deliberately adds CanvasItem draws.
+
 `--review-mode crowd` captures the actual Rovers Arena match crowd at close,
 middle and far camera distances. Five stills cover ordinary flag waving, a
 dangerous chance, away-goal and home-goal reactions. The JSON reports body

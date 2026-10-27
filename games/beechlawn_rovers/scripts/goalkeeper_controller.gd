@@ -15,6 +15,7 @@ var _shot_active := false
 var _predicted_intercept := Vector3.ZERO
 var _has_intercept := false
 var _distribution_remaining := 0.0
+var _distribution_pending := false
 var _intercept_seconds := 0.0
 var _save_animation_started := false
 var _save_elapsed := 0.0
@@ -44,9 +45,10 @@ func update_before_move(delta: float) -> void:
 	if ball.goalkeeper_is_holding(keeper):
 		keeper.ai_move_direction = Vector3.ZERO
 		keeper.ai_sprinting = false
-		_distribution_remaining = maxf(0.0, _distribution_remaining - delta)
-		if _distribution_remaining <= 0.0:
-			_distribute_to_teammate()
+		if not _distribution_pending:
+			_distribution_remaining = maxf(0.0, _distribution_remaining - delta)
+			if _distribution_remaining <= 0.0 and not is_recovering():
+				_begin_distribution()
 		return
 	_observe_action()
 	if _gather_pending:
@@ -306,6 +308,7 @@ func reset_for_stoppage() -> void:
 	_save_animation_started = false
 	_save_elapsed = 0.0
 	_distribution_remaining = 0.0
+	_distribution_pending = false
 	_observed_action_serial = ball.action_serial if is_instance_valid(ball) else -1
 
 func _commit_recovery(stretched: bool) -> void:
@@ -388,6 +391,24 @@ func _safe_parry_side() -> float:
 			best_side = side
 	return best_side
 
+func _begin_distribution() -> void:
+	var visual := keeper.get_node_or_null("Visual") as FootballerVisual
+	if visual != null and visual.play_keeper_distribution():
+		_distribution_pending = true
+		return
+	# A fixture without a visual still uses the same physical distribution.
+	_distribute_to_teammate()
+
+func on_distribution_contact() -> void:
+	if not _distribution_pending or not ball.goalkeeper_is_holding(keeper): return
+	_distribution_pending = false
+	_distribute_to_teammate()
+
+func on_distribution_finished() -> void:
+	if _distribution_pending:
+		_distribution_pending = false
+		_distribution_remaining = 0.15
+
 func _distribute_to_teammate() -> void:
 	var best: FootballPlayer
 	var best_score := INF
@@ -420,11 +441,13 @@ func _distribute_to_teammate() -> void:
 			best_score = score
 			best = candidate
 	if best == null:
+		_distribution_remaining = 0.15
 		return
 	var direction := best.global_position - ball.global_position
 	direction.y = 0.0
 	var distance := direction.length()
 	if distance < 0.1:
+		_distribution_remaining = 0.15
 		return
 	direction /= distance
 	var speed := clampf(distance * 0.58, 7.0, 14.0)
@@ -436,6 +459,9 @@ func _distribute_to_teammate() -> void:
 		keeper.pass_released.emit(best,ball.action_serial)
 		keeper.status_changed.emit("Goalkeeper distributes to %s" % best.profile.display_name)
 		_distribution_remaining = 0.0
+		_recovery_remaining = maxf(_recovery_remaining, 0.45)
+	else:
+		_distribution_remaining = 0.15
 
 func _goal_line_position() -> Vector3:
 	var goal_x := -FIELD_LENGTH * 0.5 * keeper.attack_sign

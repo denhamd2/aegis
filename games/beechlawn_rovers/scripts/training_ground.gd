@@ -30,6 +30,7 @@ var _away_score := 0
 var _remaining_time := 180.0
 var _message_time := 0.0
 var _full_time := false
+var _debug_enabled := false
 var _kickoff_pending := true
 var _kickoff_team: StringName = &"Beechlawn Rovers"
 var _goal_pause_timer := 0.0
@@ -179,6 +180,10 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		return
 	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_F3:
+			_debug_enabled = not _debug_enabled
+			get_viewport().set_input_as_handled()
+			return
 		if _intro_active and event.keycode in [KEY_ENTER, KEY_SPACE]:
 			_pre_match.finish()
 			get_viewport().set_input_as_handled()
@@ -242,7 +247,7 @@ func _physics_process(delta: float) -> void:
 		if _message_time <= 0.0:
 			message_label.text = ""
 	_update_clock()
-	debug_label.visible = bool(player.get_meta("debug_enabled", false))
+	debug_label.visible = _debug_enabled
 	if debug_label.visible:
 		debug_label.text = "60 Hz physics  |  Player %.1f m/s  |  Ball %.1f m/s  |  Stamina %d%%" % [
 			float(player.get_meta("move_speed", 0.0)), ball.linear_velocity.length(), roundi(player.stamina)]

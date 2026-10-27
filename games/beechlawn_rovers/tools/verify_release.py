@@ -64,7 +64,8 @@ with zipfile.ZipFile(root / 'mac/Beechlawn-Rovers-Mac.zip') as archive:
         # signed EXRs, the supporter MIT license and transparent tifo texture.
         for name in ['graphics_budget_smoke.gd','frame_profiler_smoke.gd',
                      'supporter_crowd_smoke.gd','stadium_presentation_smoke.gd','pitch_audio_smoke.gd','recorded_audio_smoke.gd','free_kick_planner_smoke.gd','free_kick_contact_smoke.gd','left_strike_smoke.gd','ai_attack_choice_smoke.gd',
-                     'br019_aerial_duel_smoke.gd','advanced_shots_smoke.gd','cross_to_header_smoke.gd','keeper_diving_high_smoke.gd']:
+                     'br019_aerial_duel_smoke.gd','advanced_shots_smoke.gd','cross_to_header_smoke.gd','keeper_diving_high_smoke.gd',
+                     'p1_debug_overlay_smoke.gd','keeper_distribution_smoke.gd','keeper_distribution_hand_smoke.gd']:
             source_probe=Path(__file__).resolve().parents[1]/'tests'/name
             result=subprocess.run(['godot','--headless','--main-pack',str(path),
                 '--script',str(source_probe)],capture_output=True,text=True,timeout=60)

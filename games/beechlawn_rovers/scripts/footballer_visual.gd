@@ -79,6 +79,7 @@ func _ready() -> void:
 	_install_match_motion()
 	_install_stride_gaits()
 	_install_keeper_high_actions()
+	_install_keeper_distribution_action()
 	_install_presentation_actions()
 	_install_skill_actions()
 	_install_receive_actions()
@@ -92,6 +93,7 @@ func _ready() -> void:
 	_install_action_contact_marker(&"pass", PASS_CLIP, PASS_EVENT_METADATA)
 	_install_action_contact_marker(&"receive", RECEIVE_CLIP, RECEIVE_EVENT_METADATA)
 	_install_action_contact_marker(&"shot", SHOT_CLIP, SHOT_EVENT_METADATA)
+	_install_action_contact_marker(&"keeper_distribution", &"AN_Beechlawn_KeeperDistribute", "res://assets/characters/shared/keeper_distribution_contact.json")
 	if _appearance_profile != null:
 		configure_appearance(_appearance_profile, _appearance_team)
 	else:
@@ -157,12 +159,14 @@ func configure_appearance(profile: FootballerProfile, team: FootballTeam = null)
 		_install_match_motion()
 		_install_stride_gaits()
 		_install_keeper_high_actions()
+		_install_keeper_distribution_action()
 		_install_presentation_actions()
 		_install_skill_actions()
 		_install_receive_actions()
 		_install_action_contact_marker(&"pass", PASS_CLIP, PASS_EVENT_METADATA)
 		_install_action_contact_marker(&"receive", RECEIVE_CLIP, RECEIVE_EVENT_METADATA)
 		_install_action_contact_marker(&"shot", SHOT_CLIP, SHOT_EVENT_METADATA)
+		_install_action_contact_marker(&"keeper_distribution", &"AN_Beechlawn_KeeperDistribute", "res://assets/characters/shared/keeper_distribution_contact.json")
 		animation_tree.active = true
 	var appearance := profile.appearance
 	if appearance == null:
@@ -458,6 +462,9 @@ func play_keeper_save(style: StringName = &"KeeperCatch", preparation: float = .
 	var minimum_speed := .55 if String(style).begins_with("KeeperHigh") or String(style).contains("DiveFull") else 1.0
 	return _play_action(&"keeper_save", StringName("AN_Beechlawn_" + String(style)), clampf(.25 / maxf(preparation,.09),minimum_speed,2.8), true, true)
 
+func play_keeper_distribution() -> bool:
+	return _play_action(&"keeper_distribution", &"AN_Beechlawn_KeeperDistribute", 1.0, false, true)
+
 
 func sustain_keeper_recovery() -> float:
 	if _active_action != &"keeper_save": return 0
@@ -541,7 +548,7 @@ func _play_action(action: StringName, clip: StringName, playback_speed: float = 
 		blend_seconds = minf(blend_seconds, arrival * 0.35)
 	# Fixed-tick contacts must run at the marker, before a fast arrival has
 	# advanced into the body on the next deferred callback.
-	animation_player.callback_mode_method = AnimationMixer.ANIMATION_CALLBACK_MODE_METHOD_IMMEDIATE if action in [&"pass",&"shot"] or String(action).begins_with("restart_") else AnimationMixer.ANIMATION_CALLBACK_MODE_METHOD_DEFERRED
+	animation_player.callback_mode_method = AnimationMixer.ANIMATION_CALLBACK_MODE_METHOD_IMMEDIATE if action in [&"pass",&"shot",&"keeper_distribution"] or String(action).begins_with("restart_") else AnimationMixer.ANIMATION_CALLBACK_MODE_METHOD_DEFERRED
 	animation_player.play(clip, blend_seconds, playback_speed)
 	if start_time > 0.0:
 		animation_player.seek(start_time, true)
@@ -687,7 +694,7 @@ func _on_animation_finished(animation_name: StringName) -> void:
 	if animation_name != _active_clip or _active_action == &"":
 		return
 	var finished_action := _active_action
-	if finished_action in AERIAL_CLIPS or finished_action in VOLLEY_CLIPS or finished_action in [&"skill",&"pass",&"shot"] or String(finished_action).begins_with("restart_"):
+	if finished_action in AERIAL_CLIPS or finished_action in VOLLEY_CLIPS or finished_action in [&"skill",&"pass",&"shot",&"keeper_distribution"] or String(finished_action).begins_with("restart_"):
 		animation_player.callback_mode_method = AnimationMixer.ANIMATION_CALLBACK_MODE_METHOD_DEFERRED
 	if finished_action == &"slide_tackle" and animation_player.has_animation(GET_UP_CLIP):
 		_active_action = &"get_up"
@@ -829,6 +836,15 @@ func _install_keeper_high_actions() -> void:
 			if library.has_animation(name): library.remove_animation(name)
 			library.add_animation(name,player.get_animation(name).duplicate())
 		source.free()
+
+func _install_keeper_distribution_action() -> void:
+	var source := (load("res://assets/characters/shared/keeper_distribution.glb") as PackedScene).instantiate()
+	var source_player := source.get_node("AnimationPlayer") as AnimationPlayer
+	var library := animation_player.get_animation_library(&"")
+	var name := &"AN_Beechlawn_KeeperDistribute"
+	if library.has_animation(name): library.remove_animation(name)
+	library.add_animation(name, source_player.get_animation(name).duplicate())
+	source.free()
 
 func hand_positions() -> Array[Vector3]:
 	var result: Array[Vector3] = []

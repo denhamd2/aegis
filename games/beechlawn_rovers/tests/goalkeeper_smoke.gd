@@ -85,8 +85,19 @@ func _run_checks() -> void:
 	assert(ball.last_action == &"goalkeeper_catch", "Claim was not recorded as a catch")
 	controller.update_before_move(0.3)
 	assert(ball.goalkeeper_is_holding(home_keeper), "Keeper released the ball before the hold interval")
-	controller.update_before_move(0.3)
-	assert(not ball.goalkeeper_is_holding(home_keeper), "Keeper did not distribute after the hold interval")
+	var visual := home_keeper.get_node("Visual") as FootballerVisual
+	for step in 120:
+		controller.update_before_move(1.0 / 60.0)
+		await physics_frame
+		if visual._active_action == &"keeper_distribution":
+			break
+	assert(visual._active_action == &"keeper_distribution", "Keeper did not begin distribution motion")
+	assert(ball.goalkeeper_is_holding(home_keeper), "Keeper released before the authored throw marker")
+	for step in 65:
+		controller.update_before_move(1.0 / 60.0)
+		await physics_frame
+		if not ball.goalkeeper_is_holding(home_keeper): break
+	assert(not ball.goalkeeper_is_holding(home_keeper), "Keeper did not distribute at the authored throw marker")
 	assert(ball.last_action == &"goalkeeper_distribution", "Distribution action was not recorded")
 	assert(ball.last_touch == home_keeper.team_name, "Distribution lost the keeper's team touch")
 	assert(ball.linear_velocity.length() > 1.0, "Distribution did not impart physical ball velocity")

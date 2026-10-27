@@ -1,0 +1,38 @@
+{
+  "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+  "away_players": 11,
+  "display_server": "X11",
+  "frames": [
+    {
+      "draw_calls": 1205,
+      "file": "debug_off.png",
+      "mode": "p1_debug",
+      "primitives": 1228098
+    },
+    {
+      "draw_calls": 1537,
+      "file": "debug_on.png",
+      "mode": "p1_debug",
+      "primitives": 1238760,
+      "projected_actors": 22
+    },
+    {
+      "draw_calls": 731,
+      "file": "debug_keeper.png",
+      "keeper_prediction": "(-49.5, 0.11, 2.4)",
+      "mode": "p1_debug",
+      "pass_target": "(-40.0, 0.0, 2.0)",
+      "primitives": 1393105
+    }
+  ],
+  "home_players": 11,
+  "mode": "p1_debug",
+  "officials": 1,
+  "rendering_method": "forward_plus",
+  "resolution": [
+    1280,
+    720
+  ],
+  "scope": "Native Forward+ moving/still evidence; cloud renderer does not measure M1 performance",
+  "vendor": "Unknown"
+}

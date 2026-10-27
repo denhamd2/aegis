@@ -7,6 +7,7 @@ var game: Node3D
 var help_visible := false
 var reader := preload("res://scripts/tactical_possession.gd").new()
 var radar: Control
+var debug_overlay: Control
 var possession: Dictionary = {}
 var crest_cache: Dictionary = {}
 
@@ -19,6 +20,13 @@ func setup(match_scene: Node3D) -> void:
 	radar.name = "TacticalRadar"
 	radar.game = game
 	add_child(radar)
+	debug_overlay = Control.new()
+	debug_overlay.set_script(preload("res://scripts/ui/match_debug_overlay.gd"))
+	debug_overlay.name = "MatchDebugOverlay"
+	debug_overlay.game = game
+	debug_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	debug_overlay.visible = false
+	add_child(debug_overlay)
 	_process(0)
 
 func _process(_delta: float) -> void:
@@ -29,6 +37,7 @@ func _process(_delta: float) -> void:
 	size = viewport/maxf(factor,.01)
 	radar.position = Vector2(size.x/2-94,size.y-136)
 	radar.size = Vector2(188,112)
+	debug_overlay.size = size
 	radar.visible = not game._presentation_active and not game._full_time
 	var actors: Array[FootballPlayer] = []
 	actors.assign(game._home_players+game._away_players)
@@ -78,7 +87,7 @@ func _draw() -> void:
 		_text(prompt,Vector2(size.x/2-224,size.y-161),17)
 	if help_visible:
 		draw_rect(Rect2(size.x-438,135,410,260),INK)
-		var lines := ["KEYBOARD CONTROLS","WASD  Move   Shift  Sprint   Ctrl  Close / jockey","First touch: Move direct · Ctrl close · Shift push","E  Pass   Q  Through   R  Loft   T  Cross","Space  Shoot   F  Tackle   G  Slide","J  Contain   H  Pressure   K  Shield","U / I / O / P / L / B  Skills","Tab  Switch   C  Camera   Esc  Title","F1  Close help"]
+		var lines := ["KEYBOARD CONTROLS","WASD  Move   Shift  Sprint   Ctrl  Close / jockey","First touch: Move direct · Ctrl close · Shift push","E  Pass   Q  Through   R  Loft   T  Cross","Space  Shoot   F  Tackle   G  Slide","J  Contain   H  Pressure   K  Shield","U / I / O / P / L / B  Skills","Tab  Switch   C  Camera   F3  Debug   Esc  Title","F1  Close help"]
 		for i in lines.size(): _text(lines[i],Vector2(size.x-420,161+i*26),17)
 	else:
 		draw_rect(Rect2(size.x-104,12,80,26),INK)

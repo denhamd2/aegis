@@ -1,3 +1,19 @@
+# Beechlawn Rovers 27 — v0.5.7
+
+The first goalkeeper now gathers and distributes with an authored sidearm
+motion on both teams. A held ball follows the throwing glove and leaves once
+at its half-second hand marker. Saves, catch rules and the independent ball
+remain physical. F3 opens a development view of player and ball velocity,
+AI and pass targets, collision shapes and keeper shot prediction; it is off
+during ordinary play and works when watching an AI match.
+
+The 4v4 and complete 11v11 cloud match checks pass. The v0.5.6 shooting and
+aerial actions, v0.5.5 full stadium crowd and v0.5.4 turf repair are included.
+Target-Mac human-vs-AI feel, keeper appearance and sustained 1080p60 remain
+open acceptance checks. Universal Apple Silicon/Intel Mac build.
+
+---
+
 # Beechlawn Rovers 27 — v0.5.6
 
 Crosses now support active attacker-defender header duels with one physical,

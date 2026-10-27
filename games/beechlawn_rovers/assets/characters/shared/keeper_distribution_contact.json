@@ -1,0 +1,7 @@
+{
+  "clip": "AN_Beechlawn_KeeperDistribute",
+  "event": "ball_contact",
+  "frame": 30,
+  "fps": 60,
+  "time_seconds": 0.5
+}

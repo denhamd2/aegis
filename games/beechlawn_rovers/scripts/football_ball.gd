@@ -28,6 +28,8 @@ var _curve_seconds := 0.0
 var _curve_airborne := false
 var action_serial := 0
 var goalkeeper_holder: Node3D
+var _last_distribution_hand := Vector3.ZERO
+var _has_distribution_hand := false
 var _dribble_cooldowns: Dictionary[int, float] = {}
 var _holder_collision_exception: PhysicsBody3D
 var _dribble_controller: Node3D
@@ -59,11 +61,26 @@ func _physics_process(delta: float) -> void:
 		var hold_target := goalkeeper_holder.global_position + Vector3.UP * 1.05 \
 			+ forward.normalized() * 0.45
 		var visual := goalkeeper_holder.get_node_or_null("Visual") as FootballerVisual
+		var distributing := visual != null and visual._active_action == &"keeper_distribution"
 		if visual != null:
 			var hands := visual.hand_positions()
-			if hands.size()==2: hold_target=(hands[0]+hands[1])*.5+forward.normalized()*.10+Vector3.UP*.05
-		var spring_force := ((hold_target - global_position) * 40.0 - linear_velocity * 12.0 + Vector3.UP*9.81) * mass
-		apply_central_force(spring_force.limit_length(20.0))
+			if hands.size()==2:
+				hold_target=(hands[1] if distributing else (hands[0]+hands[1])*.5) \
+					+forward.normalized()*(.06 if distributing else .10)+Vector3.UP*.05
+		var hand_velocity := Vector3.ZERO
+		if distributing:
+			if _has_distribution_hand and delta > 0.0:
+				hand_velocity = ((hold_target - _last_distribution_hand) / delta).limit_length(12.0)
+			_last_distribution_hand = hold_target
+			_has_distribution_hand = true
+		else:
+			_has_distribution_hand = false
+		# A held ball follows the moving glove; release remains the ordinary
+		# independent rigid-body kick at the authored contact marker.
+		var spring_force := ((hold_target - global_position) * (600.0 if distributing else 40.0) \
+			+ (hand_velocity - linear_velocity) * (45.0 if distributing else 12.0) \
+			+ Vector3.UP*9.81) * mass
+		apply_central_force(spring_force.limit_length(120.0 if distributing else 20.0))
 	elif goalkeeper_holder != null:
 		_release_goalkeeper_holder()
 	# Editable ground resistance. The PhysicsMaterial handles surface collision,
@@ -384,9 +401,10 @@ func goalkeeper_distribute(player: PhysicsBody3D, direction: Vector3, speed: flo
 	if not goalkeeper_is_holding(player):
 		return false
 	_release_goalkeeper_holder()
-	return kick(direction, speed, lift, &"goalkeeper_distribution", StringName(player.get("team_name")),player)
+	return kick(direction, speed, lift, &"goalkeeper_distribution", StringName(player.get("team_name")),player, &"hands")
 
 func _release_goalkeeper_holder() -> void:
+	_has_distribution_hand = false
 	if is_instance_valid(_holder_collision_exception):
 		remove_collision_exception_with(_holder_collision_exception)
 	_holder_collision_exception = null

@@ -33,7 +33,9 @@ func _run_checks() -> void:
 	var goal_size := _mesh_bounds(goal_visual, goal_visual).size
 	assert(absf(goal_size.y - 2.56) < 0.08, "Blender goal height import/axis conversion is incorrect")
 	assert(absf(goal_size.x - 7.56) < 0.10, "Blender goal opening-width geometry is incorrect")
-	assert(absf(goal_size.z - 1.8) < 0.1, "Blender goal depth import is incorrect")
+	# The authored sagging mesh extends behind the 1.8 m gameplay net collider.
+	assert(absf(goal_size.z - 2.0) < 0.1 and is_equal_approx(game.venue.goal.depth, 1.8),
+		"Park-goal visual/collider depths no longer match the current source")
 
 	# Check the complete ball crosses the line even when it moves several metres
 	# between physics samples. This reproduces the high-speed Area miss case.
@@ -80,6 +82,9 @@ func _run_checks() -> void:
 		"Buffered pass did not apply a playable ball impulse")
 	for _frame in 60:
 		await physics_frame
+	# A completed pass may transfer human control to its receiver.
+	player = game.player
+	visual = player.get_node("Visual") as FootballerVisual
 
 	# A quick shot tap receives the same short contact buffer and remains a
 	# grounded strike when the authored foot reaches the contact window.

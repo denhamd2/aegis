@@ -1,0 +1,237 @@
+{
+  "baseline_commit": "b8e2a83787c1aacc9a421a5a9c9cae557b118bd6",
+  "renderer": {
+    "method": "forward_plus",
+    "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+    "platform": "Linux software Vulkan; not Mac performance"
+  },
+  "match": {
+    "four_v_four": {
+      "physics_ticks": 720,
+      "passes": 2,
+      "shots": 1,
+      "moved_outfielders": 6,
+      "stall_windows": 0
+    },
+    "eleven_v_eleven": {
+      "match_seconds": 180,
+      "shots": [
+        2,
+        7
+      ],
+      "saves": [
+        2,
+        1
+      ],
+      "goals": [
+        1,
+        1
+      ],
+      "longest_stationary_samples_seconds": 0
+    }
+  },
+  "distribution": {
+    "source_clip": "AN_Beechlawn_KeeperDistribute",
+    "authored_frames": 58,
+    "fps": 60,
+    "release_seconds": 0.5,
+    "hand_gap_at_live_release_m": 0.17976078391075,
+    "native_frames": [
+      {
+        "animation_seconds": 0.0166666666666667,
+        "clip": "AN_Beechlawn_KeeperDistribute",
+        "draw_calls": 429,
+        "file": "home_1.png",
+        "hand_to_ball_m": 0.513275742530823,
+        "holding": true,
+        "mode": "keeper_distribution",
+        "primitives": 439328,
+        "tick": 1
+      },
+      {
+        "animation_seconds": 0.216666666666667,
+        "clip": "AN_Beechlawn_KeeperDistribute",
+        "draw_calls": 429,
+        "file": "home_14.png",
+        "hand_to_ball_m": 0.0576565749943256,
+        "holding": true,
+        "mode": "keeper_distribution",
+        "primitives": 439768,
+        "tick": 14
+      },
+      {
+        "animation_seconds": 0.416666666666667,
+        "clip": "AN_Beechlawn_KeeperDistribute",
+        "draw_calls": 440,
+        "file": "home_27.png",
+        "hand_to_ball_m": 0.140502512454987,
+        "holding": true,
+        "mode": "keeper_distribution",
+        "primitives": 452702,
+        "tick": 27
+      },
+      {
+        "animation_seconds": 0.466666666666667,
+        "clip": "AN_Beechlawn_KeeperDistribute",
+        "draw_calls": 440,
+        "file": "home_31.png",
+        "hand_to_ball_m": 0.192357242107391,
+        "holding": true,
+        "mode": "keeper_distribution",
+        "primitives": 452702,
+        "tick": 31
+      },
+      {
+        "animation_seconds": 0.566666666666667,
+        "clip": "AN_Beechlawn_KeeperDistribute",
+        "draw_calls": 440,
+        "file": "home_38.png",
+        "hand_to_ball_m": 0.734769463539124,
+        "holding": false,
+        "mode": "keeper_distribution",
+        "primitives": 452702,
+        "tick": 38
+      },
+      {
+        "animation_seconds": 0.850000000000001,
+        "clip": "AN_Beechlawn_KeeperDistribute",
+        "draw_calls": 440,
+        "file": "home_56.png",
+        "hand_to_ball_m": 2.45772862434387,
+        "holding": false,
+        "mode": "keeper_distribution",
+        "primitives": 452702,
+        "tick": 56
+      },
+      {
+        "animation_seconds": 0.0166666666666667,
+        "clip": "AN_Beechlawn_KeeperDistribute",
+        "draw_calls": 376,
+        "file": "away_1.png",
+        "hand_to_ball_m": 0.512663602828979,
+        "holding": true,
+        "mode": "keeper_distribution",
+        "primitives": 338948,
+        "tick": 1
+      },
+      {
+        "animation_seconds": 0.216666666666667,
+        "clip": "AN_Beechlawn_KeeperDistribute",
+        "draw_calls": 376,
+        "file": "away_14.png",
+        "hand_to_ball_m": 0.0576899945735931,
+        "holding": true,
+        "mode": "keeper_distribution",
+        "primitives": 338288,
+        "tick": 14
+      },
+      {
+        "animation_seconds": 0.416666666666667,
+        "clip": "AN_Beechlawn_KeeperDistribute",
+        "draw_calls": 376,
+        "file": "away_27.png",
+        "hand_to_ball_m": 0.140502080321312,
+        "holding": true,
+        "mode": "keeper_distribution",
+        "primitives": 338288,
+        "tick": 27
+      },
+      {
+        "animation_seconds": 0.466666666666667,
+        "clip": "AN_Beechlawn_KeeperDistribute",
+        "draw_calls": 376,
+        "file": "away_31.png",
+        "hand_to_ball_m": 0.192357301712036,
+        "holding": true,
+        "mode": "keeper_distribution",
+        "primitives": 338948,
+        "tick": 31
+      },
+      {
+        "animation_seconds": 0.566666666666667,
+        "clip": "AN_Beechlawn_KeeperDistribute",
+        "draw_calls": 376,
+        "file": "away_38.png",
+        "hand_to_ball_m": 0.734769761562347,
+        "holding": false,
+        "mode": "keeper_distribution",
+        "primitives": 338948,
+        "tick": 38
+      },
+      {
+        "animation_seconds": 0.850000000000001,
+        "clip": "AN_Beechlawn_KeeperDistribute",
+        "draw_calls": 375,
+        "file": "away_56.png",
+        "hand_to_ball_m": 2.45772862434387,
+        "holding": false,
+        "mode": "keeper_distribution",
+        "primitives": 338508,
+        "tick": 56
+      }
+    ]
+  },
+  "debug": {
+    "default_visible": false,
+    "works_in_watch_mode": true,
+    "frames": [
+      {
+        "draw_calls": 1205,
+        "file": "debug_off.png",
+        "mode": "p1_debug",
+        "primitives": 1228098
+      },
+      {
+        "draw_calls": 1537,
+        "file": "debug_on.png",
+        "mode": "p1_debug",
+        "primitives": 1238760,
+        "projected_actors": 22
+      },
+      {
+        "draw_calls": 731,
+        "file": "debug_keeper.png",
+        "keeper_prediction": "(-49.5, 0.11, 2.4)",
+        "mode": "p1_debug",
+        "pass_target": "(-40.0, 0.0, 2.0)",
+        "primitives": 1393105
+      }
+    ]
+  },
+  "normal_play_budget": {
+    "draw_calls": 1208,
+    "primitives": 1157084,
+    "baseline_draw_calls": 1208,
+    "baseline_primitives": 1157084,
+    "peak_linux_rss_kib": 4289380,
+    "baseline_peak_linux_rss_kib": 4307132
+  },
+  "asset_sha256": {
+    "tools/blender/beechlawn/footballer_shared.blend": "5c61518d38f9bd0e9c4aa4e60e2d04719c6487b2dfc13f96e485af860739ebd4",
+    "games/beechlawn_rovers/assets/characters/shared/footballer_base.glb": "605440e6f6f6458f4d11c311d2d79583995ca03f313da71177de8000e16e801a",
+    "tools/blender/beechlawn/football_keeper_distribution.blend": "8b75f7e05fcb8806f4f72dcf9bdb106c0aca7f6763baf9e51868c91eddbf1460",
+    "games/beechlawn_rovers/assets/characters/shared/keeper_distribution.glb": "99f23373a3099db045c35c71a918fffc676f5776ae25f35dd9c91453e148a5fe"
+  },
+  "tests_passed": [
+    "milestone1_smoke.gd",
+    "p1_debug_overlay_smoke.gd",
+    "keeper_distribution_smoke.gd",
+    "keeper_distribution_hand_smoke.gd",
+    "goalkeeper_smoke.gd",
+    "goalkeeper_outcomes_smoke.gd",
+    "keeper_live_contact_smoke.gd",
+    "full_match_restarts_smoke.gd",
+    "match_flow_smoke.gd",
+    "ai_vs_ai_smoke.gd",
+    "ai_tactical_parity_smoke.gd",
+    "ai_attack_choice_smoke.gd",
+    "defensive_ai_smoke.gd",
+    "transition_ai_smoke.gd",
+    "eleven_v_eleven_match_soak.gd"
+  ],
+  "remaining_acceptance": [
+    "BR-008 target-Mac human-vs-AI tactical feel",
+    "BR-009 target-Mac keeper throw appearance",
+    "BR-025 target-Mac sustained 1080p60"
+  ]
+}
