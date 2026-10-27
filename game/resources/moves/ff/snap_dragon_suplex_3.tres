@@ -6,11 +6,11 @@
 script = ExtResource("1")
 resource_name = "Snap Dragon Suplex 3"
 animation_pair_id = &"ff_snap_dragon_suplex_3"
-startup_frames = 44
+startup_frames = 56
 active_frames = 6
-recovery_frames = 36
-reversal_window_start = 34
-reversal_window_end = 42
+recovery_frames = 58
+reversal_window_start = 46
+reversal_window_end = 54
 damage_head = 10.0
 damage_torso = 8.0
 damage_arms = 0.0

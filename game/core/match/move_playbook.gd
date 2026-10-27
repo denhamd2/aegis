@@ -39,6 +39,11 @@ const OVERRIDES := {
 	# Kenny's running V-Trigger is his staple, not a stretch-run special:
 	# from the middle of the match, twice.
 	&"ff_running_v_trigger_3": [Place.MID, 2],
+	# His snap dragons are suplexes of the middle, not stretch-run specials:
+	# left on the library's default (the stretch run, once), the bridging one
+	# never came up in two tallied matches.
+	&"ff_snap_dragon_suplex_2": [Place.MID, 2],
+	&"ff_snap_dragon_suplex_3": [Place.MID, 1],
 }
 
 

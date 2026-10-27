@@ -126,6 +126,31 @@ func test_kenny_batch_one_is_built_and_his() -> void:
 	assert_int(FFMoveLibrary.progress().x).is_greater_equal(24)
 
 
+## Kenny batch 2 (26 Oct): the snap dragons and the combo, the last of his
+## Fight Forever set, each in the draw he throws it from. The combo's damage
+## is not below the V-Trigger's: the signature rung opens on the weakest
+## signature in the draw (WrestlerAI._opponent_is_ripe).
+func test_kenny_batch_two_is_built_and_his() -> void:
+	var kenny := Roster.by_id("kenny")
+	var ff := "res://resources/moves/ff/%s.tres"
+	for m: String in ["snap_dragon_suplex_2", "snap_dragon_suplex_3", "powerbomb_v_trigger_combo"]:
+		assert_bool(FFMoveLibrary.is_built(m)).override_failure_message(m).is_true()
+		assert_array(FFMoveLibrary.fits_of("kenny")).contains([m])
+	assert_array(kenny.moveset["grapple"]).contains([ff % "snap_dragon_suplex_2"])
+	assert_array(kenny.moveset["power"]).contains([ff % "snap_dragon_suplex_3"])
+	assert_array(kenny.moveset["signature"]).contains([ff % "powerbomb_v_trigger_combo"])
+	assert_str(PairedContacts.family(load(ff % "snap_dragon_suplex_2"))).is_equal("none")
+	assert_str(PairedContacts.family(load(ff % "powerbomb_v_trigger_combo"))).is_equal("waist")
+	var combo: MoveDef = load(ff % "powerbomb_v_trigger_combo")
+	var knee: MoveDef = load(ff % "v_trigger_1")
+	var total := func(m: MoveDef) -> float:
+		return m.damage_head + m.damage_torso + m.damage_arms + m.damage_legs
+	assert_float(total.call(combo)).is_greater_equal(total.call(knee))
+	# Frame data is the clip's: the knee lands 2.37 s in.
+	assert_int(combo.startup_frames).is_equal(142)
+	assert_int(FFMoveLibrary.progress().x).is_greater_equal(27)
+
+
 ## A library move finds its hold (PairedContacts): filed as ff/<move>.tres,
 ## listed as ff_<move>. Until 26 Oct none did -- the lariat's arm was drawn
 ## onto the man -- and the contact pull stays off for them until they are

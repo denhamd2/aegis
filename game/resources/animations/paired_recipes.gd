@@ -987,6 +987,49 @@ const RECIPES := {
 		],
 		"defender_grips_until": 0.0,
 	},
+	# Kenny batch 2 -- see FF_Snap_Dragon_Suplex_2_Attacker: round behind him
+	# (the Inverted DDT's go-behind), the full nelson, and over backward. His
+	# hands are up in the nelson from 0.47 s, so he lets go of Kenny as Kenny
+	# ducks round him.
+	"ff_snap_dragon_suplex_2": {
+		"authored": {"attacker": "FF_Snap_Dragon_Suplex_2_Attacker", "defender": "FF_Snap_Dragon_Suplex_2_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "PickUp_Table", "at": 0.45},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.17,
+	},
+	"ff_snap_dragon_suplex_3": {
+		"authored": {"attacker": "FF_Snap_Dragon_Suplex_3_Attacker", "defender": "FF_Snap_Dragon_Suplex_3_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "PickUp_Table", "at": 0.45},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.17,
+	},
+	# Powerbomb 1, then the V-Trigger as he gets up doubled over. The lift's
+	# grips are Powerbomb 1's: he holds the waist until he throws.
+	"ff_powerbomb_v_trigger_combo": {
+		"authored": {"attacker": "FF_Powerbomb_V_Trigger_Combo_Attacker", "defender": "FF_Powerbomb_V_Trigger_Combo_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "PickUp_Table", "at": 0.45},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.60,
+		"attacker_grips_until": 0.52,
+	},
 }
 
 ## Root-transform trajectories for the moves authored after the original
@@ -2117,6 +2160,88 @@ const TRAJECTORIES := {
 					[0.300, -0.22, 0.00, 0.00], [0.500, -0.55, 0.00, 0.00],
 					[0.700, -0.75, 0.00, 0.00], [1.200, -0.75, 0.00, 0.00]],
 			"rot": [[0.000, 0.0, -90.0, 0.0], [1.200, 0.0, -90.0, 0.0]],
+		},
+	},
+	# Kenny batch 2. The snap dragons: Kenny goes round the man's left side
+	# as in the chain waistlock (ff_inverted_ddt_1's path), to 0.34 m behind
+	# him and 0.18 m to his left, so that the man's head goes over beside
+	# Kenny's and not into it. Kenny sits back 0.26 m as he falls; the man's
+	# root rides over him under his pelvis (the clip keeps the pelvis over
+	# the root) and lands 1.7 m behind Kenny, face down, head toward him.
+	"ff_snap_dragon_suplex_2": {
+		"length": 1.8,
+		"attacker": {
+			"pos": [[0.00, 0.40, 0.00, 0.00], [0.17, 0.12, 0.00, -0.50],
+					[0.33, -0.56, 0.00, -0.56], [0.40, -0.82, 0.00, -0.34],
+					[0.47, -0.74, 0.00, -0.18], [0.57, -0.76, 0.00, -0.18],
+					[0.67, -0.84, 0.00, -0.18], [0.77, -0.95, 0.00, -0.18],
+					[0.87, -1.00, 0.00, -0.18], [1.80, -1.00, 0.00, -0.18]],
+			# Up first, then round to face him.
+			"rot": [[0.00, 0.0, 90.0, 0.0], [0.17, 0.0, 20.0, 0.0],
+					[0.33, 0.0, -45.0, 0.0], [0.40, 0.0, -80.0, 0.0],
+					[0.47, 0.0, -90.0, 0.0], [1.50, 0.0, -90.0, 0.0],
+					[1.65, 0.0, 0.0, 0.0], [1.80, 0.0, 90.0, 0.0]],
+		},
+		"defender": {
+			"pos": [[0.00, -0.40, 0.00, 0.00], [0.47, -0.40, 0.00, 0.00],
+					[0.57, -0.42, 0.00, 0.00], [0.67, -0.54, 0.00, 0.00],
+					[0.77, -1.09, 0.00, 0.00], [0.87, -1.65, 0.00, 0.00],
+					[0.93, -2.32, 0.00, 0.00], [1.00, -2.60, 0.00, 0.00],
+					[1.03, -2.68, 0.00, 0.00], [1.80, -2.68, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, -90.0, 0.0], [1.80, 0.0, -90.0, 0.0]],
+		},
+	},
+	# The bridging one: the same to the landing; held spiked there to 1.20 s.
+	"ff_snap_dragon_suplex_3": {
+		"length": 2.0,
+		"attacker": {
+			"pos": [[0.00, 0.40, 0.00, 0.00], [0.17, 0.12, 0.00, -0.50],
+					[0.33, -0.56, 0.00, -0.56], [0.40, -0.82, 0.00, -0.34],
+					[0.47, -0.74, 0.00, -0.18], [0.57, -0.76, 0.00, -0.18],
+					[0.67, -0.84, 0.00, -0.18], [0.77, -0.95, 0.00, -0.18],
+					[0.87, -1.00, 0.00, -0.18], [2.00, -1.00, 0.00, -0.18]],
+			"rot": [[0.00, 0.0, 90.0, 0.0], [0.17, 0.0, 20.0, 0.0],
+					[0.33, 0.0, -45.0, 0.0], [0.40, 0.0, -80.0, 0.0],
+					[0.47, 0.0, -90.0, 0.0], [2.00, 0.0, -90.0, 0.0]],
+		},
+		"defender": {
+			"pos": [[0.00, -0.40, 0.00, 0.00], [0.47, -0.40, 0.00, 0.00],
+					[0.57, -0.42, 0.00, 0.00], [0.67, -0.54, 0.00, 0.00],
+					[0.77, -1.09, 0.00, 0.00], [0.87, -1.65, 0.00, 0.00],
+					[0.93, -2.32, 0.00, 0.00], [1.20, -2.34, 0.00, 0.00],
+					[1.27, -2.60, 0.00, 0.00], [1.30, -2.68, 0.00, 0.00],
+					[2.00, -2.68, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, -90.0, 0.0], [2.00, 0.0, -90.0, 0.0]],
+		},
+	},
+	# The combo. To 1.23 s it is Powerbomb 1 where its fit put it
+	# (ff_powerbomb_1's keys plus paired_fit.gd's offsets and inserts), so the
+	# lift starts from a fitted path instead of from the unfitted one -- along
+	# the mat only: the fit drops Powerbomb 1's root up to 0.25 m under it,
+	# and an authored root may not go there (build_paired_moves.gd). Then
+	# the man settles and gets up doubled over where he landed, and Kenny
+	# runs in from where he stood: Running V-Trigger 3's 0.77 m between them
+	# at the knee (2.37 s), and the man's 0.5 m back as he goes over.
+	"ff_powerbomb_v_trigger_combo": {
+		"length": 3.13,
+		"attacker": {
+			"pos": [[0.00, 0.40, 0.00, 0.00], [0.35, 0.50, 0.02, 0.03],
+					[1.23, 0.45, 0.00, 0.02], [1.97, 0.41, 0.00, 0.00],
+					[2.07, 0.30, 0.00, 0.00], [2.20, -0.12, 0.00, 0.00],
+					[2.30, -0.28, 0.00, 0.00], [2.37, -0.43, 0.00, 0.00],
+					[2.47, -0.48, 0.00, 0.00], [2.73, -0.40, 0.00, 0.00],
+					[3.13, -0.40, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, 90.0, 0.0], [3.13, 0.0, 90.0, 0.0]],
+		},
+		"defender": {
+			"pos": [[0.00, -0.40, 0.01, -0.01], [0.20, -0.57, 0.02, -0.17],
+					[0.48, -0.56, 0.00, -0.12], [0.67, -0.33, 0.00, -0.09],
+					[0.83, -0.15, 0.00, -0.03], [0.92, -0.17, 0.00, -0.02],
+					[1.00, -0.36, 0.00, -0.02], [1.10, -0.89, 0.00, -0.04],
+					[1.23, -1.33, 0.00, -0.03], [1.53, -1.22, 0.00, 0.00],
+					[2.37, -1.20, 0.00, 0.00], [2.47, -1.40, 0.00, 0.00],
+					[2.60, -1.70, 0.00, 0.00], [3.13, -1.70, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, -90.0, 0.0], [3.13, 0.0, -90.0, 0.0]],
 		},
 	},
 }

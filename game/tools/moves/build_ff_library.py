@@ -323,6 +323,11 @@ CLIP_FRAMES = {
     "running_v_trigger_1": (18, 6, 48),
     "running_v_trigger_3": (18, 6, 48),
     "v_trigger_1": (18, 6, 48),
+    # Kenny batch 2: the snap dragons, the neck into the mat on frame 28 of
+    # 54 (the snap) and of 60 (the bridge, held); the combo's knee on 71 of 94.
+    "snap_dragon_suplex_2": (56, 6, 46),
+    "snap_dragon_suplex_3": (56, 6, 58),
+    "powerbomb_v_trigger_combo": (142, 6, 40),
 }
 
 # Damage by tier: (head, torso, legs). A special is the big one.
@@ -336,7 +341,12 @@ TIER_DAMAGE = {"signature": (10.0, 8.0, 2.0), "special": (16.0, 12.0, 4.0)}
 # (seeds 1 and 4): his signature rung affordable 262 s, 237 of them held by
 # that gate. The Code Breaker is a knee to the face: the Disaster Kick's 26,
 # laid out like it.
-DRAW_DAMAGE = {"code_breaker_1": (18.0, 6.0, 2.0)}
+# The combo goes in Kenny's signature draw beside the V-Trigger (a special,
+# 16/12/4): at the library's signature 10/8/2 it would be the weakest in the
+# draw and hold every signature he has back, as the Code Breaker did Cody's.
+# A powerbomb and then the knee: a little over the knee alone.
+DRAW_DAMAGE = {"code_breaker_1": (18.0, 6.0, 2.0),
+               "powerbomb_v_trigger_combo": (18.0, 14.0, 4.0)}
 LEG_FAMILIES = {"submission"}
 
 

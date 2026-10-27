@@ -10587,3 +10587,50 @@ Both men had about the same free time, yet Roman landed eight signatures from si
 **In a match** (`moveset_tally --wrestlers kenny,cody`, seeds 1 and 2, both won by pinfall in about 7.2 minutes): Kenny threw the running V-Trigger 3 four times, the running V-Trigger 1 twice, the V-Trigger as his signature six times (three a match, the top of the 2K26 range), the Tiger Driver twice and the One Winged Angel once, around his chops and kicks.
 
 **Gates.** Clip authoring (re-pinned), pose lint, the body-deformation gate, pair clearance, paired poses and moveset, roster, match story and FF library all pass. `test_ff_library.gd` holds the three built and in Kenny's tiers.
+
+## 27 Oct — Kenny's Fight Forever set, batch 2: the snap dragons and the Powerbomb/V-Trigger combo; Justin, Tony and Excalibur for his entrance
+
+**27 of 146 library moves built: Kenny's Fight Forever set is complete.** Kenny's draws gain:
+- the snap Snap Dragon in `"grapple"`;
+- the bridging one in `"power"`;
+- the combo in `"signature"`, beside the V-Trigger.
+
+**The snap dragons** (`ff_snap_dragon_suplex_2` and `_3`; `wrestling_clips.py`, Kenny batch 2):
+- **The setup.** Nothing in this game starts from behind: every paired move comes out of the lock-up, face to face. So both go behind first, by the Inverted DDT's go-behind (the chain waistlock's path round the man's left side).
+- **The nelson.** From behind, a full nelson: Kenny's forearms up under the man's armpits, hands locked behind his neck, the man's arms forced up. Kenny's head is beside the man's, 0.18 m to his left, so the man's head goes over beside Kenny's and not into it.
+- **The throw.** Kenny falls back with him. The man rides over on Kenny's chest, legs whipped up and over, and is driven down on the back of his neck beyond Kenny's head. He goes on over onto his front and rolls onto his back, head toward Kenny.
+- **His turn.** One direction, backward, 0 to 268 degrees in steps of at most 55 in his body's frame: the vertical suplex's turn, reversed.
+- **What the 2 and the 3 are in Fight Forever could not be found.** They are built as the two ways Kenny throws it:
+  - **2 is the snap** (1.8 s): he lets go at the top, is up first, and turns round to the man.
+  - **3 holds on** (2.0 s): he goes up into a bridge as the man lands, keeps him spiked on his neck for a quarter of a second, then drops out of it and gets up.
+
+**The Powerbomb/V-Trigger combo** (`ff_powerbomb_v_trigger_combo`, 3.1 s):
+- **Which two moves FF strings together here could not be found.** It is built as the two Kenny strings together in the ring.
+- **The powerbomb.** Powerbomb 1 unchanged, started from Powerbomb 1's *fitted* path rather than its unfitted one.
+- **The knee.** Kenny slaps his knee while the man gets up doubled over, then runs in with Running V-Trigger 3, both halves at its own spacing.
+- **The first cut** brought the man up to one knee. He came up crouched with his head at Kenny's height, and the knee took him in the stomach.
+- **Damage and wiring.** It does 18/14/4: at the library's 10/8/2 it would be the weakest signature in Kenny's draw and hold back every signature he has, as the Code Breaker did Cody's. Its hands are Powerbomb 1's, round the waist until the throw.
+
+**A trap in the build.** On the first run `build_paired_poses` wrote nothing, and nothing said so. `paired_poses.tres` lacked the new clips, so the moves played the borrowed fallback: Kenny never left his feet. The fitter fitted that, and returned 0.45 m of corrections. The bare render caught it. Since then, the build log is checked for the line "Wrote … paired_poses" before any fit.
+
+**Fitted clean** from scratch: the snap dragons to 0 and the combo to 3 mm. Limb flips stay at 39 of 40. Two gates caught the combo:
+- **Pose lint:** the run's right hand passed through Kenny's side coming out of the knee slap's lean.
+- **Clip cadence:** the man sat up in four frames out of a still bump, a snap.
+
+**Review sheet.** `gauntlet/refs/ff_review/ff_kenny_batch2_snap_dragons_combo.png`: Kenny on Cody, one row per move.
+
+**In a match** (`moveset_tally --wrestlers kenny,cody`, seeds 1 and 2, both won by pinfall in about 7.2 minutes, one each):
+- Kenny threw Snap Dragon 2 four times and Snap Dragon 3 twice, the combo twice and the V-Trigger four times. That is three signatures a match, the top of the 2K26 range.
+- Around them came the running V-Triggers six times, the Tiger Driver once and the One Winged Angel three times.
+- The first tally left the snap dragons on the library's default place in the match (the stretch run, once), and the bridging one never came up. `MovePlaybook` now puts both in the middle: the snap twice a match, the bridge once.
+
+**Kenny's voices** (owner-supplied, 26 Oct):
+- **Justin's call.** `RingAnnouncer` gains Justin Roberts' call for Kenny ("Making his way to the ring … he is the best bout machine …"). His name is 18.87 s in, timed by the speech recogniser and checked against the loudness, because the recogniser mishears the name itself.
+- **Tony and Excalibur.** Tony Schiavone ("Look at him. Just look at the focus in the eyes of Kenny Omega …") follows straight after Justin, then Excalibur ("Indeed, Tony. A man whose big-match resume speaks entirely for itself …").
+  - The director names whose call it was (the cue `called_kenny`), and `MatchAudio` queues both lines.
+  - They wait in Justin's voice lane, so neither talks over him.
+- **Measured at real time** (`tools/probe/voice_lane_log.tscn`):
+  - **Kenny walking second:** his call starts as he walks out, his card goes up on his name at 130.1 s, Tony starts at 134.3 s and Excalibur at 149.9 s.
+  - **Kenny walking first:** Justin's intro and his 22.7 s call fill the lane past the end of his entrance. Tony and Excalibur are dropped when the next man walks out (`MatchAudio.ENTRANCE_LINES`) rather than played over him. Before that fix they pushed Cody's own lines and call about 10 s late.
+- **Kenny never had a name card.** A plain entrance's tracking shot stops at z −21, short of the halfway mark (−19.5) where the card goes up, so the card never came up for him. It now goes up on his name if the name is said in his own entrance, and otherwise on the walk after the cut (`EntranceDirector._card_at`). Walking first, it goes up at 23.5 s, during his walk.
+- **Tests.** `test_ring_announcer.gd` and `test_match_audio.gd` hold all of it.

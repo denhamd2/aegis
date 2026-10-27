@@ -273,10 +273,15 @@ static func entries() -> Array:
 	(list[2] as Entry).moveset = {
 		"strike": [M + "strike_chop.tres", M + "strike_jab.tres",
 				M + "strike_kick_heavy.tres", M + "strike_cross.tres"],
-		"grapple": [M + "grapple_vertical_suplex.tres", M + "power_bodyslam.tres"],
-		"power": [M + "power_powerslam.tres", M + "ff/tiger_driver_98.tres"],
-		# The V-Trigger: the knee off the wrist.
-		"signature": [M + "ff/v_trigger_1.tres"],
+		# The snap dragons: the snap in his grapples, the bridging one with
+		# his power moves.
+		"grapple": [M + "grapple_vertical_suplex.tres", M + "power_bodyslam.tres",
+				M + "ff/snap_dragon_suplex_2.tres"],
+		"power": [M + "power_powerslam.tres", M + "ff/tiger_driver_98.tres",
+				M + "ff/snap_dragon_suplex_3.tres"],
+		# The V-Trigger: the knee off the wrist; and the powerbomb with the
+		# knee after it.
+		"signature": [M + "ff/v_trigger_1.tres", M + "ff/powerbomb_v_trigger_combo.tres"],
 		# And on the run: into a man doubled over, or into the face of one
 		# standing.
 		"running": [M + "ff/running_v_trigger_3.tres", M + "ff/running_v_trigger_1.tres",

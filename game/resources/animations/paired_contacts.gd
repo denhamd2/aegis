@@ -109,6 +109,12 @@ const MOVES := {
 	"ff_running_v_trigger_1": "none",
 	"ff_running_v_trigger_3": "none",
 	"ff_v_trigger_1": "none",
+	# Kenny batch 2. The full nelson is authored hand by hand: "waist_behind"
+	# would draw both hands down to his hips. The combo's lift is Powerbomb
+	# 1's, round the waist until the throw (attacker_grips_until).
+	"ff_snap_dragon_suplex_2": "none",
+	"ff_snap_dragon_suplex_3": "none",
+	"ff_powerbomb_v_trigger_combo": "waist",
 }
 
 ## Moves the contact pull (GrappleRig._pull_into_reach) leaves alone: the
