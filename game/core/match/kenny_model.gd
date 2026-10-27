@@ -78,6 +78,12 @@ func _skin_texture(material_name: String) -> Texture2D:
 	return load(path) if path != "" and ResourceLoader.exists(path) else null
 
 
+## Cody's head toward Kenny's (KennyFaceShape): hooded eyes under a level
+## brow, fuller cheeks, a broader bridge.
+func _shape_face() -> void:
+	KennyFaceShape.apply(self)
+
+
 func _skin_tint() -> Color:
 	return KENNY_SKIN_TINT
 

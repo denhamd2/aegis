@@ -85,6 +85,8 @@ func _ready() -> void:
 	# as one surface (BodyBulk.mend_flipped_seams).
 	BodyBulk.mend_flipped_seams(self)
 	BodyBulk.apply(self, get_game_skeleton(), _body_gains())
+	# The face at rest, before anything reads the head.
+	_shape_face()
 	# Before the animations: they add the helpers' tracks if the bones exist.
 	HipHelpers.install(get_game_skeleton())
 	# The same fix at the shoulders: an arm raised overhead (the win, the
@@ -104,6 +106,11 @@ func _ready() -> void:
 ## BodyBulk gains for this man's build.
 func _body_gains() -> Dictionary:
 	return BodyBulk.CODY
+
+
+## Reshapes the head at rest. Cody's is as supplied.
+func _shape_face() -> void:
+	pass
 
 
 ## The albedo to put on skin material `material_name` in place of the

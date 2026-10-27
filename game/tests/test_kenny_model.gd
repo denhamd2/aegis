@@ -238,6 +238,43 @@ func test_the_hairline_recedes_at_the_temples() -> void:
 	assert_float(lowest).is_greater(1.79)
 
 
+## His face is reshaped from Cody's (KennyFaceShape, judge run 5): the upper
+## lids come down over the eyes -- hooded, the sheet's squint -- and nothing
+## below his jaw moves, so the neck seam and the body hold.
+func test_his_face_is_shaped_and_the_neck_is_not() -> void:
+	var kenny := _head_vertices(_model())
+	var cody_model := auto_free(load("res://scenes/cody_model.tscn").instantiate()) as Node
+	add_child(cody_model)
+	var cody := _head_vertices(cody_model)
+	assert_int(kenny.size()).is_equal(cody.size())
+	var lid := 0.0
+	var lids := 0
+	for i in kenny.size():
+		var c: Vector3 = cody[i]
+		var x := absf(c.x - KennyFaceShape.MIDLINE_X)
+		if x > 0.025 and x < 0.039 and c.y > 1.721 and c.y < 1.726 and c.z > -0.02:
+			lid += (kenny[i].y - c.y)
+			lids += 1
+	assert_int(lids).is_greater(4)
+	# Every move is clear of the neck (the body bulk moves the neck on its own,
+	# differently for Kenny and Cody, so the table is what is checked).
+	for row: Array in KennyFaceShape.TABLE:
+		assert_float((row[0] as Vector3).y - (row[1] as Vector3).y).is_greater(1.62)
+	# 2.8 mm at the lid's centre, less across the band.
+	assert_float(lid / lids).is_less(-0.001)
+
+
+func _head_vertices(model: Node) -> PackedVector3Array:
+	for mi: MeshInstance3D in model.find_children("", "MeshInstance3D", true, false):
+		if mi.mesh == null:
+			continue
+		for s in mi.mesh.get_surface_count():
+			var source := mi.mesh.surface_get_material(s)
+			if source and source.resource_name == KennyFaceShape.SKIN_MATERIAL:
+				return mi.mesh.surface_get_arrays(s)[Mesh.ARRAY_VERTEX]
+	return PackedVector3Array()
+
+
 func _hair(model: Node, hair_name: String) -> MeshInstance3D:
 	return model.get_game_skeleton().find_child(hair_name, true, false) as MeshInstance3D
 

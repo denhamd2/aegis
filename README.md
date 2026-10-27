@@ -10760,3 +10760,36 @@ The tattoo check now samples the lower neck, because a beard hair is as dark as 
 
 **The crowd stripes:** investigated, then cancelled at the owner's word. Nothing of it ships.
 
+## 27 Oct — Kenny's face, loop 2: his face sculpted from Cody's (runs 5–8, 6.5 → 6.9); a shared-Skin fix for Kenny-Cody matches
+
+The owner asked again for the judge loop, to match exactly, so a second loop of four ran on what loop 1 left. Record: `gauntlet/refs/characters/review/kenny_face_judge.md` (loop 2). Sheet: `kenny_face_judge_loop2.png`.
+
+**What loop 1 left is form, not texture.** At matched pupil distance Cody's head already lands Kenny's eye line, nose base, mouth, chin and face width. It misses his hooded eyes under a level brow, full cheeks, hanging nose tip, narrow mouth and flushed colour.
+
+**`KennyFaceShape`** (`game/core/match/kenny_face_shape.gd`) sculpts Cody's head-skin surface at load through the same machinery as Roman's face. `RomanFaceShape.offset`/`sculpt` now take a table of moves, Roman's by default, so Roman is unchanged. It runs from a new `CodyModel._shape_face()` hook, a no-op for Cody.
+- **The moves:**
+  - upper lids down 2.8 mm and forward onto the eyeball's curve;
+  - the brow lower at its outer end, the inner brows up 1.2 mm, out of Cody's resting frown;
+  - fuller cheeks and cheek hollows (2.5–3.5 mm);
+  - a broader bridge;
+  - the nose tip down 1.5 mm;
+  - the mouth corners in about 6 mm, by two graded pulls so no vertex crosses another;
+  - the mouth-corner crease filled.
+- **Mirrored about Cody's real midline,** x 0.004.
+- **Left untouched:** the eyeballs, the curls, and everything below y 1.62.
+
+**Texture** (`build_kenny_textures.py`):
+- a flush on the cheeks and nose, placed in 3D;
+- the nostrils lifted from painted black (luminance 16) to a shadowed brown;
+- the face a shade redder, by green only.
+
+**Scores:** run 5 **6.5** (the first moves too small to read), run 6 **6.7**, run 7 **6.8**, run 8 **6.9**.
+
+**Fixed on the way: a shared Skin in Kenny-Cody matches.**
+- **The bug.** `HipHelpers` and `ShoulderHelpers` added their bone binds to the model's Skin in place, and the Skin is shared by every instance of a .glb. Kenny is built on Cody's, so in a Kenny-Cody match the second man loaded with binds for bones he did not yet have, and Godot logged "named bind … but Skeleton3D has no bone by that name". The shared skin then collected the binds twice.
+- **The fix.** Each model now duplicates its Skin before adding binds.
+
+**Gates:** `test_kenny_model` gains `test_his_face_is_shaped_and_the_neck_is_not`. It checks that the upper lids come down by more than a millimetre against Cody's, and that every move is clear of the neck. The helper, deformation, blood and roster gates are green.
+
+**What is left before "exact":** the mouth is still a little wide, the jaw and chin are Cody's, the flush stops short of the sheet's under the stage spots, and the crown reads as streaks. Past about 7 out of 10 it needs Kenny's own head mesh.
+

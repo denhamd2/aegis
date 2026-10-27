@@ -93,10 +93,11 @@ const FIXED := ["M_EYE", "M_Head_Caruncle", "eye_l", "eye_caruncle"]
 const STEP := 0.0005
 
 
-## The displacement at `p`.
-static func offset(p: Vector3) -> Vector3:
+## The displacement at `p`, by `moves` (Roman's unless given: KennyFaceShape
+## shapes Cody's head with its own).
+static func offset(p: Vector3, moves: Array = MOVES) -> Vector3:
 	var d := Vector3.ZERO
-	for move: Array in MOVES:
+	for move: Array in moves:
 		var c: Vector3 = move[0]
 		var r: Vector3 = move[1]
 		var v: Vector3 = move[2]
@@ -154,21 +155,21 @@ static func _fixed(mi: MeshInstance3D) -> bool:
 
 
 ## Moves one surface's vertices, normals and tangents through the field.
-static func sculpt(arrays: Array) -> int:
+static func sculpt(arrays: Array, moves: Array = MOVES) -> int:
 	var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
 	var normals = arrays[Mesh.ARRAY_NORMAL]
 	var tangents = arrays[Mesh.ARRAY_TANGENT]
 	var moved := 0
 	for i in verts.size():
 		var p := verts[i]
-		var d := offset(p)
+		var d := offset(p, moves)
 		if d.length_squared() < 1e-12:
 			continue
 		# The field's Jacobian, by central differences.
 		var j := Basis(
-				Vector3.RIGHT + (offset(p + Vector3.RIGHT * STEP) - offset(p - Vector3.RIGHT * STEP)) / (2.0 * STEP),
-				Vector3.UP + (offset(p + Vector3.UP * STEP) - offset(p - Vector3.UP * STEP)) / (2.0 * STEP),
-				Vector3.BACK + (offset(p + Vector3.BACK * STEP) - offset(p - Vector3.BACK * STEP)) / (2.0 * STEP))
+				Vector3.RIGHT + (offset(p + Vector3.RIGHT * STEP, moves) - offset(p - Vector3.RIGHT * STEP, moves)) / (2.0 * STEP),
+				Vector3.UP + (offset(p + Vector3.UP * STEP, moves) - offset(p - Vector3.UP * STEP, moves)) / (2.0 * STEP),
+				Vector3.BACK + (offset(p + Vector3.BACK * STEP, moves) - offset(p - Vector3.BACK * STEP, moves)) / (2.0 * STEP))
 		verts[i] = p + d
 		if normals != null and i < (normals as PackedVector3Array).size():
 			normals[i] = (j.inverse().transposed() * (normals[i] as Vector3)).normalized()

@@ -76,6 +76,13 @@ static func _reweight(skeleton: Skeleton3D, mi: MeshInstance3D, thighs: Dictiona
 	var skin := mi.skin
 	if mesh == null or skin == null or mesh.get_blend_shape_count() > 0:
 		return
+	# This model's own skin: the supplied one is shared by every instance of
+	# the .glb, and Kenny is built on Cody's, so in a Kenny-Cody match a bind
+	# added to the shared one reached the other man before his bones existed
+	# ("named bind ... but Skeleton3D has no bone by that name") and the
+	# helpers' binds were added to it twice.
+	skin = skin.duplicate()
+	mi.skin = skin
 	# Bind index of each thigh in this mesh's skin, and a new bind for its helper.
 	var thigh_bind := {}
 	var helper_bind := {}

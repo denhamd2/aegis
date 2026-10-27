@@ -140,3 +140,69 @@ The before/after pair is the last row of `kenny_face_judge.png`.
   next step, checked under the entrance lights.
 - **Hair.** The slick cards over the crown read as brushed streaks, not wet
   curls. The ringlets are right in kind.
+
+## Loop 2 (the owner asked again for the loop, to match exactly): runs 5-8
+
+Sheet: `kenny_face_judge_loop2.png`. Loop 1 left the gaps in the FORM.
+- At matched pupil distance, Cody's head lands Kenny's eye line, nose base,
+  mouth, chin and face width.
+- What it does not land:
+  - Kenny's hooded, narrow eyes under a low, level brow;
+  - his full cheeks;
+  - his hanging nose tip;
+  - his narrow mouth;
+  - his flushed colour.
+
+The new tool is `KennyFaceShape` (`game/core/match/kenny_face_shape.gd`).
+- It sculpts Cody's head-skin surface at load with smooth bumps in rest
+  space, through `RomanFaceShape.sculpt`, so normals follow the new shape.
+- The moves mirror about x 0.004, Cody's actual midline: his eyes sit at
+  0.0359 and -0.0281.
+- The eyeballs are not moved. The curls, the neck seam and everything below
+  y 1.62 are untouched.
+
+| Run | Shape | Eyes | Beard | Brows | Nose | Mouth | Skin | Hair | Likeness |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 5 | 6 | 7 | 7 | 7 | 6 | 6 | 6 | 7 | **6.5** |
+| 6 | 6.5 | 7.5 | 7 | 7 | 6 | 6 | 6.5 | 7 | **6.7** |
+| 7 | 6.5 | 7.5 | 7 | 7 | 6.5 | 6 | 6.5 | 7 | **6.8** |
+| 8 | 6.5 | 7.5 | 7 | 7 | 6.5 | 6.5 | 7 | 7 | **6.9** |
+
+- **Run 5.**
+  - Shape: upper lids down 1.6 mm (and forward, to stay on the eyeball's
+    curve), the brow lower, fuller cheeks, a broader bridge.
+  - Colour: a flush on the cheeks and nose, placed in 3D like the beard.
+  - Result: too small to read at portrait distance.
+- **Run 6.** About twice as far: lids down 2.8 mm. The inner brows go up 1.2 mm
+  to take out Cody's resting frown. The flush is stronger. The lids now cut the
+  top of the iris, his squint, with no eyeball showing through.
+- **Run 7.**
+  - The nose tip comes down 1.5 mm. Cody's nostrils were painted near black
+    (luminance 16) and read as two holes; they are lifted to a shadowed brown.
+  - The mouth corners come in 4 mm. The sheet's mouth is about 0.72 of the
+    eyes' spacing, Cody's about 1.0.
+- **Run 8.**
+  - A second, gentler pull at the mouth. One bump twice as strong would fold
+    the lips' vertices over each other.
+  - The deep crease at Cody's mouth corners is filled; its shadow carried the
+    lip line past the lips.
+  - The face is a shade redder: green down 4%, never blue up (that went lilac).
+
+**Found on the way.** The hip and shoulder helpers added their bone binds to
+the model's Skin in place, and the Skin is shared by every instance of the
+.glb. In a Kenny-Cody match, two instances of Cody's .glb, the second man
+loaded with binds for bones he did not have yet ("named bind ... but
+Skeleton3D has no bone by that name"), and the shared skin collected the binds
+twice. Each model now gets its own copy (`HipHelpers` and `ShoulderHelpers`
+`_reweight`).
+
+**Still between this and "exact":**
+- **The mouth** is still a little wide.
+- **The jaw and chin** are Cody's square ones.
+- **The skin** stays peach-red, not the sheet's deep flush, which the stage
+  spots limit.
+- **The crown** reads as brushed streaks, not wet curls.
+
+A full likeness past about 7 needs Kenny's own head mesh. A sculpt of Cody's
+can only move his forms so far before it shows.
+

@@ -59,6 +59,10 @@ HEAD_OUT = CHARACTERS / "kenny_head.png"
 ## brighter than Cody's tan and as warm, red over green ~1.5 with KennyModel's
 ## tint, the rest of the flush left to the lights.
 SKIN_GAIN = np.array([1.20, 1.21, 1.18])
+## His face a shade redder than the body's tone, over the photo's area: the
+## sheet's face is flushed red all over under arena light (forehead G/R 0.65
+## there). Green only -- adding blue went lilac (pass 2).
+FACE_HUE = np.array([1.0, 0.96, 1.0])
 ## The photo's detail below this many texels replaces Cody's.
 FACE_SIGMA = 3.0
 ## Its edge feathered over this many texels, inside its coverage.
@@ -94,6 +98,21 @@ BEARD_REACH = [(1.64, 102.0), (1.665, 96.0), (1.68, 90.0), (1.75, 90.0)]
 BEARD_FEATHER = 0.008
 ## Down the neck it thins out over this far, as a neckline grows.
 BEARD_NECK_FADE = 0.016
+## His colour: the sheet's face is flushed, his cheeks and nose redder than
+## his forehead (cheek over forehead 0.85, 0.69, 0.65 in its arena photo). A
+## flush on the cheeks and the nose, placed on the head like the beard:
+## [centre (x from the midline, m), radii, mirrored]. Under the beard.
+FLUSH = [((0.045, 1.680, -0.010), (0.028, 0.026, 0.040), True),
+         ((0.0, 1.680, 0.015), (0.014, 0.020, 0.030), False)]
+FLUSH_SHADE = np.array([1.0, 0.85, 0.83])
+## Cody's nostrils are painted near black (luminance 16): on him they read as
+## two holes under a short tip. The sheet's are in shadow, not black. Texels
+## darker than NOSTRIL_BELOW round the nose base are lifted toward a dark
+## warm brown. [centre (x from the midline), radii], m.
+NOSTRILS = ((0.0, 1.663, 0.010), (0.022, 0.009, 0.016))
+NOSTRIL_BELOW = 70.0
+NOSTRIL_FLOOR = np.array([78.0, 42.0, 34.0])
+HEAD_MIDLINE_X = 0.004
 ## The mouth's own islands sit at the atlas's top corners: nothing above this.
 BEARD_ATLAS_TOP = 0.15
 LIPS = (0.500, 0.581, 0.090, 0.031)
@@ -380,6 +399,22 @@ def head() -> None:
     k = k * (1 - t) + flat * t
     face = blur(k, FACE_SIGMA) + (skin - blur(skin, FACE_SIGMA)) * 0.9
     out = skin * (1 - a[..., None]) + face * a[..., None]
+    out = out * (1 - a[..., None]) + out * FACE_HUE * a[..., None]
+
+    # His flush, cheeks and nose.
+    flush = np.zeros((h, w), np.float32)
+    for centre, radii, mirrored in FLUSH:
+        for side in ((1.0, -1.0) if mirrored else (1.0,)):
+            c = np.array([HEAD_MIDLINE_X + centre[0] * side, centre[1], centre[2]])
+            q = np.linalg.norm((point - c) / np.array(radii), axis=-1)
+            flush = np.maximum(flush, smoothstep(0.0, 1.0, 1.0 - q))
+    flush *= cover
+    out = out * (1 - flush[..., None]) + out * FLUSH_SHADE * flush[..., None]
+    # His nostrils in shadow, not black.
+    c = np.array([HEAD_MIDLINE_X + NOSTRILS[0][0], NOSTRILS[0][1], NOSTRILS[0][2]])
+    near = smoothstep(0.0, 0.3, 1.0 - np.linalg.norm((point - c) / np.array(NOSTRILS[1]), axis=-1))
+    lift = near * np.clip((NOSTRIL_BELOW - out.mean(-1)) / 50.0, 0.0, 1.0) * 0.7 * cover
+    out = out * (1 - lift[..., None]) + NOSTRIL_FLOOR * lift[..., None]
 
     # The beard, over the photo and Cody's skin alike: drawn only where the
     # photo reached, it ended in a seam where the projection faded out.
