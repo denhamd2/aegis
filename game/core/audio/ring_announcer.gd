@@ -1,6 +1,6 @@
 class_name RingAnnouncer
 extends Node
-## The ring announcer: Justin Roberts' three calls (assets/audio/announcer,
+## The ring announcer: Justin Roberts' calls (assets/audio/announcer,
 ## owner-supplied) -- the main-event intro at the start of the first entrance,
 ## and each man's "From ... weighing ..." call during his entrance.
 ##
@@ -24,11 +24,15 @@ const CLIPS := {
 	"intro": "res://assets/audio/announcer/intro.ogg",
 	"roman": "res://assets/audio/announcer/roman.ogg",
 	"cody": "res://assets/audio/announcer/cody.ogg",
+	"kenny": "res://assets/audio/announcer/kenny.ogg",
 }
 ## Where in each call the man's name starts, in seconds: measured with an
 ## offline speech recogniser off the shipped files ("roman" 16.98-17.88,
-## "reigns" 18.09-19.26; "cody" 7.26-8.01).
-const NAME_AT := {"roman": 16.98, "cody": 7.26}
+## "reigns" 18.09-19.26; "cody" 7.26-8.01). Kenny's: the recogniser has
+## "he is" ending at 18.39 and the name drawn out from 18.87 to the end (the
+## name itself it mishears); the call is silent from 18.35 and comes back up
+## at 18.87 (50 ms loudness windows).
+const NAME_AT := {"roman": 16.98, "cody": 7.26, "kenny": 18.87}
 ## The calls are normalised to -12 LUFS; the entrance music runs to -11.9.
 ## Lifted VOICE_GAIN_DB into the limiter: he sits about 6 dB over the music.
 const VOICE_DB := 0.0

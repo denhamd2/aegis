@@ -85,6 +85,13 @@ const COMMENTARY_CLIPS := {
 	"tony_roman_heel": ["res://assets/audio/commentary/tony_roman_heel.ogg"],
 	"tony_title_match": ["res://assets/audio/commentary/tony_title_match.ogg"],
 	"cody_return": ["res://assets/audio/commentary/tony_cody_return.ogg"],
+	# Tony on Kenny walking out, after Justin has called him (the owner's
+	# clip, 26 Oct): "Look at him. Just look at the focus in the eyes of
+	# Kenny Omega ..."
+	"tony_kenny_focus": ["res://assets/audio/commentary/tony_kenny_focus.ogg"],
+	# And Excalibur straight after him (26 Oct): "Indeed, Tony. A man whose
+	# big-match resume speaks entirely for itself ..."
+	"excalibur_kenny_resume": ["res://assets/audio/commentary/excalibur_kenny_resume.ogg"],
 	"excalibur_cody_career": ["res://assets/audio/commentary/excalibur_cody_career.ogg"],
 	"roman_record": ["res://assets/audio/commentary/tony_roman_record.ogg"],
 	"roman_spear": ["res://assets/audio/commentary/tony_roman_spear.ogg"],
@@ -309,6 +316,14 @@ static func enda_easter_egg_for_seed(_match_seed: int) -> bool:
 	return true
 
 
+## Lines that belong to one man's entrance, by entrance style. Queued
+## behind Justin's call, they wait in the voice lane; if the next man is
+## already walking out by then (Kenny walking first: Justin's intro and his
+## 22.7 s call fill the lane past the end of his entrance), they are dropped
+## rather than played over the other man's.
+const ENTRANCE_LINES := {"kenny": ["tony_kenny_focus", "excalibur_kenny_resume"]}
+
+
 static func commentator_for_event(event: String) -> String:
 	if event.begins_with("tony_") or event in [
 			"gunshot", "cody_return", "roman_record", "roman_spear", "enda_easter_egg"]:
@@ -342,6 +357,12 @@ func opening_bell() -> void:
 
 
 func _on_cue(what: String) -> void:
+	if what.begins_with("entrance_"):
+		var style := what.trim_prefix("entrance_")
+		for other: String in ENTRANCE_LINES:
+			if other != style:
+				for line: String in ENTRANCE_LINES[other]:
+					_commentary_queue.erase(line)
 	var commentary_event := commentary_event_for_cue(what)
 	if commentary_event != "":
 		_queue_commentary(commentary_event)
@@ -366,6 +387,9 @@ func _on_cue(what: String) -> void:
 	if what == "cody_appear":
 		# Excalibur answers Tony's Cody return call during Cody's entrance.
 		_queue_commentary("excalibur_cody_career")
+	if what == "called_kenny":
+		# Excalibur answers Tony's line on Kenny, which answers Justin's call.
+		_queue_commentary("excalibur_kenny_resume")
 	match what:
 		"pyro_opening":
 			# A fuller launch-and-burst hit under the entrance-video theme.
@@ -504,6 +528,8 @@ static func commentary_event_for_cue(cue: String) -> String:
 			return "excalibur_crowd"
 		"faceoff_tension":
 			return "tony_tension"
+		"called_kenny":
+			return "tony_kenny_focus"
 	return ""
 
 

@@ -841,6 +841,11 @@ func _build_timeline() -> void:
 			var entrance_open: Dictionary = _beats[first_beat]
 			entrance_open["events"] = (entrance_open.get("events", []) as Array).duplicate() \
 					+ [[1, "announce_intro"]]
+		# Whose entrance this is, from its first tick: commentary queued for
+		# the last man's that has not been reached yet is dropped (MatchAudio).
+		var opening: Dictionary = _beats[first_beat]
+		opening["events"] = (opening.get("events", []) as Array).duplicate() \
+				+ [[1, "entrance_" + w.entrance_style]]
 		_schedule_call(w, first_beat)
 		if w == _b:
 			# The handover: he is on his mark and his music fades under the
@@ -863,10 +868,11 @@ const NAME_CARD_TICKS := RAMP_CARD_TICKS
 ## beats from that moment and drops an "announce" cue in the beat it lands in.
 func _schedule_call(w: WrestlerController, first_beat: int) -> void:
 	var style := w.entrance_style
-	if not RingAnnouncer.has_call(style) or RingAnnouncer.name_at(style) <= 0.0:
-		return
 	var target := _name_moment(w, first_beat)
 	if target.is_empty():
+		return
+	if not RingAnnouncer.has_call(style) or RingAnnouncer.name_at(style) <= 0.0:
+		_card_at(w, target)
 		return
 	var idx: int = target[0]
 	var tick: int = int(target[1]) - int(round(RingAnnouncer.name_at(style) * TPS))
@@ -876,7 +882,39 @@ func _schedule_call(w: WrestlerController, first_beat: int) -> void:
 	tick = maxi(tick, 1)
 	var beat: Dictionary = _beats[idx]
 	beat["events"] = (beat.get("events", []) as Array).duplicate() + [[tick, "announce"]]
-	_called[w] = true
+	# Said inside his own entrance, the name puts his card up. Kenny's is
+	# 18.9 s in, and walking first he waits behind Justin's intro besides:
+	# his name would come out over the other man's walk. Justin still calls
+	# him, but his card goes up on the ramp, as for a man not announced.
+	var at := 0
+	var start := 0
+	var end := 0
+	for i in _beats.size():
+		if i == idx:
+			start = at + tick
+		if _beats[i].get("who") == w:
+			end = at + beat_ticks(_beats[i])
+		at += beat_ticks(_beats[i])
+	if w == _b:
+		end += HANDOVER_TICKS
+	var said := start + int(round(RingAnnouncer.name_at(style) * TPS))
+	if w == _b and RingAnnouncer.has_call("intro"):
+		said += int(round(RingAnnouncer.length_of("intro") * TPS))
+	if said <= end:
+		_called[w] = true
+	else:
+		_card_at(w, target)
+
+
+## His card at `target` ([beat, tick]) for a man whose name does not put it
+## up. A walk that crosses half way puts it up itself (_tick_ramp_card); the
+## plain entrance's never does -- its tracking shot stops 1.5 m short -- so
+## until 27 Oct a man without an entrance of his own (Kenny) had no card.
+func _card_at(w: WrestlerController, target: Array) -> void:
+	var beat: Dictionary = _beats[int(target[0])]
+	if beat.get("ramp_card", false):
+		return
+	beat["events"] = (beat.get("events", []) as Array).duplicate() + [[int(target[1]), "name_card"]]
 
 
 ## [beat index, tick] at which `w`'s name should be said, or [].
@@ -898,6 +936,16 @@ func _name_moment(w: WrestlerController, first_beat: int) -> Array:
 		var frac := 0.0 if is_equal_approx(a.z, b.z) else (halfway - a.z) / (b.z - a.z)
 		var speed: float = beat.get("speed", WALK_SPEED)
 		return [i, maxi(1, int(round(_flat(a).distance_to(_flat(b)) * frac / speed * TPS)))]
+	# The plain entrance's tracking shot stops short of half way (6 s down
+	# the ramp, RAMP_SHOWN_SECONDS) and cuts to him at CUT_TO_Z, already past
+	# it: his card has always gone up on the walk after the cut
+	# (_tick_ramp_card), so that is where the name is said.
+	for i in range(first_beat, _beats.size()):
+		var beat: Dictionary = _beats[i]
+		if beat.get("who") == w and beat["kind"] == "walk" and beat.get("cut", false):
+			var z: float = (beat["path"][0] as Vector3).z
+			if z >= halfway and z <= CUT_TO_Z + 0.5:
+				return [i, 1]
 	return []
 
 
@@ -918,7 +966,8 @@ func beat_ticks(beat: Dictionary) -> int:
 ## The announcer is saying his name: his card, now.
 func _on_name_called(style: String) -> void:
 	for w: WrestlerController in [_a, _b]:
-		if w.entrance_style == style and _called.has(w):
+		if w.entrance_style == style and _called.has(w) and _beats.size() > 0 \
+				and _beats[mini(_beat, _beats.size() - 1)].get("who") == w:
 			_card.show_card(w.display_name if w.display_name != "" else String(w.name),
 					w.entrance_subtitle)
 			_name_card_ticks = NAME_CARD_TICKS
@@ -1926,9 +1975,18 @@ func _event(w: WrestlerController, what: String) -> void:
 		"announce_intro":
 			if _announcer:
 				_announcer.play("intro")
+		"name_card":
+			if w:
+				_card.show_card(w.display_name if w.display_name != "" else String(w.name),
+						w.entrance_subtitle)
+				_name_card_ticks = NAME_CARD_TICKS
 		"announce":
 			if _announcer and w:
 				_announcer.play(w.entrance_style)
+				# Whose call it was, for a commentator who answers it (Tony
+				# after Kenny's, MatchAudio): queued now, he waits in the
+				# voice lane until Justin has finished.
+				cue.emit("called_" + w.entrance_style)
 		"lights_up":
 			_dim_house(false)
 		"title_held":

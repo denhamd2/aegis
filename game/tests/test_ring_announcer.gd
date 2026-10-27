@@ -23,11 +23,11 @@ func _abs_tick(director: EntranceDirector, index: int, tick: int) -> int:
 	return at + tick
 
 
-func test_the_three_calls_ship_and_each_name_is_inside_its_call() -> void:
-	for style in ["intro", "roman", "cody"]:
+func test_the_calls_ship_and_each_name_is_inside_its_call() -> void:
+	for style in ["intro", "roman", "cody", "kenny"]:
 		assert_bool(RingAnnouncer.has_call(style)).override_failure_message(
 				"no %s call" % style).is_true()
-	for style in ["roman", "cody"]:
+	for style in ["roman", "cody", "kenny"]:
 		assert_float(RingAnnouncer.name_at(style)).is_greater(0.0)
 		assert_float(RingAnnouncer.name_at(style)) \
 				.is_less(RingAnnouncer.length_of(style) - 1.0)
@@ -57,10 +57,11 @@ func test_justins_intro_starts_with_the_first_entrance() -> void:
 
 
 ## Each man's call starts so that his name lands on his card's moment, to
-## the tick: Cody's on the low WHOA's arms going wide, Roman's half way down
-## the ramp.
+## the tick: Cody's on the low WHOA's arms going wide, Roman's and Kenny's
+## half way down the ramp.
 func test_each_name_is_said_on_his_card() -> void:
-	for styles: Array in [["roman", "cody"], ["cody", "roman"]]:
+	for styles: Array in [["roman", "cody"], ["cody", "roman"], ["kenny", "cody"],
+			["roman", "kenny"]]:
 		var scene := _match(styles[0], styles[1])
 		var director: EntranceDirector = scene.get_node("EntranceDirector")
 		for w: WrestlerController in [scene.get_node("WrestlerA"), scene.get_node("WrestlerB")]:
@@ -76,6 +77,27 @@ func test_each_name_is_said_on_his_card() -> void:
 			var name_tick := _abs_tick(director, int(moment[0]), int(moment[1]))
 			var said := int(starts[0]) + int(round(RingAnnouncer.name_at(w.entrance_style)
 					* EntranceDirector.TPS))
+			if w.entrance_style == "kenny":
+				# "Making his way to the ring ...": 18.9 s to his name, longer
+				# than his walk to the card. The call starts as he walks out,
+				# and the card waits for the name (name_called).
+				var first := -1
+				for i in director._beats.size():
+					if first < 0 and director._beats[i].get("who") == w:
+						first = i
+				assert_int(int(starts[0])).is_equal(_abs_tick(director, first, 1))
+				assert_int(said).is_greater(name_tick)
+				# Walking first, behind Justin's intro, his name comes after
+				# his entrance: the ramp puts his card up, not the call.
+				var walks_first: bool = w == scene.get_node("WrestlerB")
+				assert_bool(director._called.has(w)).is_equal(not walks_first)
+				var card_cues := 0
+				for beat: Dictionary in director._beats:
+					for cue: Array in beat.get("events", []):
+						if cue[1] == "name_card" and beat.get("who") == w:
+							card_cues += 1
+				assert_int(card_cues).is_equal(1 if walks_first else 0)
+				continue
 			assert_int(absi(said - name_tick)).override_failure_message(
 					"%s's name is said %d ticks off his card" % [w.entrance_style, said - name_tick]
 			).is_less_equal(1)
@@ -89,6 +111,13 @@ func test_the_card_goes_up_when_the_name_is_called() -> void:
 	var cody: WrestlerController = scene.get_node("WrestlerB")
 	director._tick_ramp_card(cody)
 	assert_bool(director._card.is_showing()).is_false()
+	# Said before his entrance has started, the name puts nothing up.
+	director.voice_announcer().name_called.emit("cody")
+	assert_bool(director._card.is_showing()).is_false()
+	for i in director._beats.size():
+		if director._beats[i].get("who") == cody:
+			director._beat = i
+			break
 	director.voice_announcer().name_called.emit("cody")
 	assert_bool(director._card.is_showing()).is_true()
 	assert_int(director._name_card_ticks).is_equal(EntranceDirector.NAME_CARD_TICKS)
@@ -150,3 +179,18 @@ func test_justin_and_commentary_share_one_serial_voice_lane() -> void:
 	assert_object(announcer._player.stream).is_same(load(RingAnnouncer.CLIPS["roman"]))
 	assert_bool(announcer._player.playing).is_true()
 	assert_str(announcer._style).is_equal("roman")
+
+
+## Tony answers Justin's call for Kenny: the director names whose call it was,
+## and Tony's line waits in the voice lane until Justin has finished.
+func test_tony_follows_justins_call_for_kenny() -> void:
+	var scene := _match("cody", "kenny")
+	var director: EntranceDirector = scene.get_node("EntranceDirector")
+	var kenny: WrestlerController = scene.get_node("WrestlerB")
+	var cues: Array[String] = []
+	director.cue.connect(func(what: String) -> void: cues.append(what))
+	director._event(kenny, "announce")
+	assert_array(cues).is_equal(["announce", "called_kenny"])
+	assert_str(MatchAudio.commentary_event_for_cue("called_kenny")).is_equal("tony_kenny_focus")
+	assert_str(MatchAudio.commentator_for_event("tony_kenny_focus")).is_equal("tony")
+	assert_bool(director.voice_announcer().has_voice()).is_true()

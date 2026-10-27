@@ -52,13 +52,17 @@ metadata stripped. It plays under the Dynamite broadcast opening and is not
 used on the title screen. Same caveats as the entrance music:
 owner-supplied, not a licensed or CC0 source.
 
-`announcer/` holds three ring-announcer calls (Justin Roberts): the main-event
-intro, Roman Reigns' and Cody Rhodes'. Owner-supplied mp3s (2026-10-06),
-loudness-normalised to -12 LUFS and transcoded to Vorbis q6, mono. The name in
-each was found with an offline speech recogniser (Roman 16.98 s, Cody 7.26 s)
-and the director starts each call so the card goes up on that moment
-(`RingAnnouncer.NAME_AT`). Same caveats as the entrance music:
-owner-supplied, not a licensed or CC0 source.
+`announcer/` holds four ring-announcer calls (Justin Roberts): the main-event
+intro, Roman Reigns' and Cody Rhodes' (owner-supplied mp3s, 2026-10-06) and
+Kenny Omega's (2026-10-26: "Making his way to the ring ... he is the best bout
+machine, the god of pro wrestling ..."), loudness-normalised to -12 LUFS
+(Kenny's to -13; a -1.5 dBTP ceiling holds it there) and transcoded to Vorbis
+q6, mono. The name in each was found with an offline speech recogniser
+(Roman 16.98 s, Cody 7.26 s, Kenny 18.87 s, the last checked against the
+loudness, since the recogniser mishears the name itself) and the director
+starts each call so the card goes up on that moment (`RingAnnouncer.NAME_AT`).
+Same caveats as the entrance music: owner-supplied, not a licensed or CC0
+source.
 
 ## Match commentary
 
@@ -142,6 +146,22 @@ from the supplied MP3 to mono Vorbis q6 at 48 kHz with metadata stripped, a
 an AEW ring. What a prick he turned out to be!" It is transcoded from the
 supplied MP3 with a -12 LUFS target and -1.5 dBTP peak ceiling (the source
 dynamics yield -14.5 LUFS). The same rights caveat applies.
+
+`commentary/tony_kenny_focus.ogg` is the owner-supplied Tony Schiavone call
+(2026-10-26), "Look at him. Just look at the focus in the eyes of Kenny Omega.
+You can say whatever you want, but when that bell rings, there is nobody on
+planet earth better between those ropes. We are in for something truly
+special ..." It plays during Kenny's entrance, straight after Justin's call
+for him. Transcoded from the supplied MP3 to mono Vorbis q6 at 48 kHz with
+metadata stripped, a -12 LUFS target and -1.5 dBTP peak ceiling (the source
+dynamics yield -14.0 LUFS). The same rights caveat applies.
+
+`commentary/excalibur_kenny_resume.ogg` is the owner-supplied Excalibur reply
+(2026-10-26), "Indeed, Tony. A man whose big-match resume speaks entirely for
+itself. He steps into the ring tonight ..." It follows Tony's Kenny line
+during Kenny's entrance.
+Transcoded the same way (mono Vorbis q6, 48 kHz, metadata stripped, -12 LUFS
+target, -1.5 dBTP ceiling). The same rights caveat applies.
 
 `commentary/tony_roman_record.ogg` is the owner-supplied Tony Schiavone call
 about Roman Reigns' undefeated run and being without The Bloodline tonight. It

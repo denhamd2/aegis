@@ -343,6 +343,28 @@ func test_cody_return_call_only_queues_on_his_entrance_cue() -> void:
 	assert_str(MatchAudio.commentary_event_for_cue("pyro_cody_hit")).is_empty()
 
 
+func test_tony_answers_only_kennys_call() -> void:
+	var audio: MatchAudio = auto_free(MatchAudio.new())
+	add_child(audio)
+	audio._on_cue("called_roman")
+	audio._on_cue("called_cody")
+	assert_array(audio._commentary_queue).is_empty()
+	audio._on_cue("called_kenny")
+	assert_array(audio._commentary_queue).is_equal(["tony_kenny_focus", "excalibur_kenny_resume"])
+
+
+## Kenny's lines belong to his entrance: still waiting when the next man
+## walks out, they are dropped, not played over him.
+func test_kennys_lines_are_dropped_when_the_next_entrance_starts() -> void:
+	var audio: MatchAudio = auto_free(MatchAudio.new())
+	add_child(audio)
+	audio._on_cue("called_kenny")
+	audio._on_cue("entrance_kenny")
+	assert_array(audio._commentary_queue).is_equal(["tony_kenny_focus", "excalibur_kenny_resume"])
+	audio._on_cue("entrance_cody")
+	assert_array(audio._commentary_queue).is_empty()
+
+
 func test_roman_landed_moves_route_the_history_or_spear_call() -> void:
 	assert_str(MatchAudio.commentary_event_for_landed_move("roman", "strike_jab")) \
 			.is_equal("roman_record")
