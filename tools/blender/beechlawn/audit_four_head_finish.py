@@ -21,11 +21,15 @@ PROJECT = ROOT/'games/beechlawn_rovers'
 BASE_EVIDENCE = PROJECT/'docs/art_briefs/four_head_finish'
 parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--output',type=Path,default=BASE_EVIDENCE)
+parser.add_argument('--include-new',action='store_true',help='Also audit Robbie and David against their saved sources')
 args=parser.parse_args(sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else [])
 OUT=args.output
 OUT.mkdir(parents=True,exist_ok=True)
 sys.path.insert(0, str(HERE))
 from author_four_head_finish import SOURCES
+if args.include_new:
+    SOURCES={**SOURCES,'robbie_roden':'robbie_roden_head.blend',
+             'david_murray':'david_murray_head.blend'}
 
 
 def load_glb(path):
@@ -67,9 +71,15 @@ report = {'result': 'PASS', 'heads': {}, 'scope': 'Neutral source/export geometr
 for identity, source in SOURCES.items():
     bpy.ops.wm.open_mainfile(filepath=str(HERE/source))
     assert bpy.context.scene['head_player_id'] == identity
-    assert bpy.context.scene['head_finish_revision'] == 'four-head-reference-v2'
+    if identity not in ('robbie_roden','david_murray'):
+        assert bpy.context.scene['head_finish_revision'] == 'four-head-reference-v2'
+    else:
+        assert bpy.context.scene.get('br022_followup_form',False), identity
     asset = PROJECT/f'assets/characters/shared/heads/players/{identity}.glb'
     raw, document, binary = load_glb(asset)
+    if identity in ('robbie_roden','david_murray'):
+        assert not any(mesh['name'].startswith('Mouth_') for mesh in document['meshes']), \
+            (identity,'unfitted tooth-showing experiment entered release asset')
     parts = {}
     for name in ('Skin_Head', 'Eye_l', 'Eye_r'):
         mesh = next(m for m in document['meshes'] if m['name'] == name)

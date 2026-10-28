@@ -11,17 +11,22 @@
     "Kit_Shane_ContinuousVBinding": {
       "vertices": 1008,
       "max_fullness_cm": 2.0156022891162397,
-      "max_athletic_cm": 1.425189216708425
+      "max_athletic_cm": 1.1234639174005825
+    },
+    "Kit_shirt_BoundHems": {
+      "vertices": 352,
+      "max_fullness_cm": 0.0,
+      "max_athletic_cm": 0.1680040821352224
     },
     "Kit_Shirt_ShortSleeve": {
       "vertices": 7787,
       "max_fullness_cm": 6.117113602582863,
-      "max_athletic_cm": 1.6469305990432177
+      "max_athletic_cm": 4.059594215541098
     },
     "Kit_Shorts": {
       "vertices": 1015,
       "max_fullness_cm": 5.793041514314589,
-      "max_athletic_cm": 1.0980337858013642
+      "max_athletic_cm": 3.86299364429191
     },
     "Kit_Shorts_FoldedHems": {
       "vertices": 320,
@@ -41,17 +46,17 @@
     "Skin_Hands": {
       "vertices": 3092,
       "max_fullness_cm": 0.0,
-      "max_athletic_cm": 2.149695730287954
+      "max_athletic_cm": 4.260525789807741
     },
     "YBot_Joints": {
       "vertices": 1103,
       "max_fullness_cm": 1.6183700819585531,
-      "max_athletic_cm": 0.910656824617017
+      "max_athletic_cm": 0.5055163041257837
     },
     "YBot_Surface": {
       "vertices": 10061,
       "max_fullness_cm": 6.117113602582863,
-      "max_athletic_cm": 1.6469305990432177
+      "max_athletic_cm": 4.059594215541098
     }
   },
   "athletic_form": "shared runtime corrective at weight 1.0"

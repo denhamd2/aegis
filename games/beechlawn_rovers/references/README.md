@@ -160,6 +160,18 @@ evidence is in `../docs/art_briefs/shane_john_refinement/brief.md`.
 
 ## Supplied landing-screen wordmark, 21 October 2026
 
+## Robbie Roden and David Murray original portraits, 28 October 2026
+
+`source_uploads/chat_attachments/br022_realism_followup/70467.jpg` shows
+Robbie (Robert) Roden, as confirmed by the owner despite the social screenshot
+caption naming its poster Dermot Tallon. `70466.jpg` shows David Murray. Both
+are owner-supplied smiling near-frontal photos and supersede the generated
+roster-sheet faces for identity work; the sheets still guide outfit and
+estimated side/back views. The unchanged originals, hashes and provenance are
+in the same folder. See the BR-022 follow-up art brief for the runtime review.
+
+## Supplied landing-screen wordmark, 21 October 2026
+
 `source_uploads/chat_attachments/title_logo/69668.jpg` is the authoritative
 Beechlawn Rovers 27 title wordmark and red/black/white menu direction. Preserve
 the original white italic lettering and red 27. This changes the landing and

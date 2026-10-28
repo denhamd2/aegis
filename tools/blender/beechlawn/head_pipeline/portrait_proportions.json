@@ -6,14 +6,16 @@
                  "nose_width": 0.98, "mouth_y": 1.0, "chin_y": 0.99, "nose_y": 1.0},
       "weight": 0.65,
       "reference_sha256": "d6e329c11ddd6ee2f5b0654941a869e3ebb56257ebb9923ee10b56e09981fe6b",
-      "reference_limit": "Generated roster sheet; no original portrait supplied. Hidden profile is estimated."
+      "reference_photo_sha256": "7e61bcf811d0f81b2fe3845a4ae793c003dd464d3334d2b7b50f652214abe79f",
+      "reference_limit": "Ratios were estimated from the generated roster sheet. New owner-confirmed original near-frontal smiling portrait supersedes it for identity; hidden profile is estimated."
     },
     "david_murray": {
       "ratios": {"face_width": 0.91, "jaw_width": 0.86, "mouth_width": 0.90,
                  "nose_width": 0.91, "mouth_y": 0.98, "chin_y": 1.01, "nose_y": 0.98},
       "weight": 0.65,
       "reference_sha256": "b8c7662519a815eb3c81da10eea56a7d4136f15e2735f578485c65baf86006b7",
-      "reference_limit": "Generated roster sheet; no original portrait supplied. Hidden profile is estimated."
+      "reference_photo_sha256": "51f0916267649420cb10f64245ee17da9e8516a470a44d7837a7784b3e382f31",
+      "reference_limit": "Ratios were estimated from the generated roster sheet. New owner-supplied original near-frontal smiling portrait supersedes it for identity; hidden profile is estimated."
     },
     "shane_denham": {
       "ratios": {

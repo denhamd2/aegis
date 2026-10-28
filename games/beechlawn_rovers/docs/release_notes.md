@@ -1,3 +1,20 @@
+# Beechlawn Rovers 27 — v0.5.10
+
+Robbie Roden and David Murray have revised faces guided by the original
+portraits supplied by the owner. Robbie's short stubble, David's fuller lower
+face, and the six selected players' skin and hairline finish are updated.
+The shared player body has a narrower waist and shorter hands across the live
+roster, with the existing football rig and actions retained. Native Forward+
+review and source/export checks are recorded with BR-022.
+
+These are incremental art improvements. Close-up faces and garments still need
+substantial anatomical and groom work for a 20/20 likeness. BR-022 remains in
+progress; target-Mac appearance and sustained 1080p60 remain BR-025 acceptance
+checks. The v0.5.9 work and earlier gameplay are included. Universal Apple
+Silicon/Intel Mac build.
+
+---
+
 # Beechlawn Rovers 27 — v0.5.9
 
 Six key character heads have individual four-pass form and surface work:

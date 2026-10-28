@@ -12,6 +12,18 @@ and [`../references/README.md`](../references/README.md) before implementation.
 
 ## Character realism review — 28 October 2026
 
+BR-022 (22/27, in progress), v0.5.10 follow-up: the original Robbie Roden and
+David Murray smiling photos are now archived and identified; their saved heads
+have photo-guided cheek/jaw and hairline revisions, with short stubble for
+Robbie. All six selected faces received a bounded eyelid/mouth/skin/groom
+refresh, and the shared body corrective further tapers the belly, sleeves,
+hands and boots. The [follow-up review](art_briefs/br022_realism_followup_2026_10_28/brief.md)
+records source/export audits, native captures and candid scores. A tooth-showing
+test was rejected because the inherited oral topology made it read as clenched
+teeth. A new anatomical body/kit source, expressive mouth topology, denser
+identity-specific facial sculpt and stronger groom remain necessary for a
+20/20 finish. BR-022 stays in progress.
+
 BR-022 (22/27, in progress): six key heads now have four authored form and
 surface passes, with independent source and runtime assets for Robbie Roden
 and David Murray. A single shared body corrective reduces the blocky torso,

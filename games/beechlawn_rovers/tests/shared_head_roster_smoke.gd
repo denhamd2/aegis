@@ -37,8 +37,10 @@ func _run() -> void:
 	var david_package := (load("res://assets/characters/shared/heads/players/david_murray.glb") as PackedScene).instantiate()
 	var robbie_hair_package := (load("res://assets/characters/shared/heads/robbie_crop.glb") as PackedScene).instantiate()
 	var david_hair_package := (load("res://assets/characters/shared/heads/david_crop.glb") as PackedScene).instantiate()
-	assert(_head_width(_part(robbie_package,"Skin_Head").mesh) > _head_width(_part(david_package,"Skin_Head").mesh) + .025,
-		"Robbie's rounder face and David's narrow face must have distinct silhouettes")
+	assert(_head_width(_part(robbie_package,"Skin_Head").mesh) > _head_width(_part(david_package,"Skin_Head").mesh) + .01,
+		"Both original portraits have broad cheeks; retain distinct Robbie and David lower-face silhouettes")
+	assert(_part(robbie_package,"Mouth_UpperTeeth") == null and _part(david_package,"Mouth_UpperTeeth") == null,
+		"The unconvincing tooth-showing experiment must stay out of the shipped heads")
 	var game := (load("res://scenes/match_11v11.tscn") as PackedScene).instantiate()
 	root.add_child(game)
 	await process_frame

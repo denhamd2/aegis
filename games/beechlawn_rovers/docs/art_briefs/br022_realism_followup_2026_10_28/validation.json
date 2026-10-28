@@ -1,0 +1,60 @@
+{
+  "result": "PASS_WITH_OPEN_ART_GATES",
+  "source_baseline": "e95590314348349e04d9bc4c0ac4916aec99c65a",
+  "references": {
+    "70466.jpg": "51f0916267649420cb10f64245ee17da9e8516a470a44d7837a7784b3e382f31",
+    "70467.jpg": "7e61bcf811d0f81b2fe3845a4ae793c003dd464d3334d2b7b50f652214abe79f"
+  },
+  "six_head_export_audit": "PASS",
+  "smoke_tests": [
+    {
+      "name": "realism_systems_smoke.gd",
+      "duration": "7.1s"
+    },
+    {
+      "name": "shared_head_roster_smoke.gd",
+      "duration": "6.6s"
+    },
+    {
+      "name": "shared_pose_safety_smoke.gd",
+      "duration": "8.8s"
+    },
+    {
+      "name": "shane_head_variant_smoke.gd",
+      "duration": "6.7s"
+    },
+    {
+      "name": "shane_denham_import_smoke.gd",
+      "duration": "1.1s"
+    },
+    {
+      "name": "footballer_animation_tree_smoke.gd",
+      "duration": "6.9s"
+    },
+    {
+      "name": "recorded_face_replay_smoke.gd",
+      "duration": "6.4s"
+    }
+  ],
+  "animation_export": "PASS: eight unchanged BR-019 clips, 65-bone rest, 60 Hz contacts",
+  "native_forward_plus": {
+    "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+    "resolution": [
+      640,
+      360
+    ],
+    "draw_calls": 1209,
+    "primitives": 1158202,
+    "peak_process_rss_kib": 4379964,
+    "head_captures": 6,
+    "sprint_captures": 2,
+    "slide_captures": 1
+  },
+  "changed_glb_count": 19,
+  "changed_glb_bytes_before": 106374332,
+  "changed_glb_bytes_after": 96926120,
+  "open": [
+    "BR-022 high-end body/kit source, mouth topology, face likeness, groom",
+    "BR-025 target-Mac appearance and sustained 1080p60; cloud software renderer is not proof"
+  ]
+}

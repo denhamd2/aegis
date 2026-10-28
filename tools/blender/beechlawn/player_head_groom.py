@@ -115,9 +115,9 @@ def build_groom(head, rig, identity):
             bpy.data.objects.remove(old, do_unlink=True)
     colours = {
         'shane_denham': ((.038, .019, .009), (.057, .029, .014), (.078, .043, .022)),
-        'john_orourke': ((.065, .030, .013), (.095, .048, .022), (.135, .075, .038)),
-        'bordeaux_09': ((.012, .007, .004), (.020, .012, .007), (.034, .022, .013)),
-        'des_feeney_sr': ((.055, .051, .046), (.115, .110, .100), (.235, .225, .210)),
+        'john_orourke': ((.11, .065, .035), (.16, .10, .055), (.22, .14, .08)),
+        'bordeaux_09': ((.035, .021, .012), (.055, .035, .020), (.080, .050, .030)),
+        'des_feeney_sr': ((.15, .14, .13), (.24, .23, .22), (.34, .33, .32)),
         'robbie_roden': ((.035,.020,.011),(.055,.034,.018),(.080,.051,.029)),
         'david_murray': ((.085,.052,.026),(.125,.080,.041),(.19,.135,.075)),
     }[identity]
@@ -214,9 +214,9 @@ def build_groom(head, rig, identity):
             cumulative[kind].append(totals[kind])
             distributions[kind].append((a.copy(), b.copy(), c.copy(), *[float(vertex_masks[i,kind]) for i in tri.vertices]))
     counts = {
-        'shane_denham': (6000, 0, 720), 'john_orourke': (5200, 7000, 680),
-        'bordeaux_09': (5200, 6000, 680), 'des_feeney_sr': (1400, 3500, 640),
-        'robbie_roden': (5500, 0, 680), 'david_murray': (4200, 0, 620),
+        'shane_denham': (4800, 0, 480), 'john_orourke': (4000, 4600, 480),
+        'bordeaux_09': (4200, 3400, 480), 'des_feeney_sr': (1100, 2100, 440),
+        'robbie_roden': (4100, 0, 480), 'david_murray': (3400, 0, 440),
     }[identity]
     vertices, faces, face_materials, emitted_counts = [], [], [], []
     for kind, count in enumerate(counts):
@@ -260,26 +260,34 @@ def build_groom(head, rig, identity):
                     flow += Vector((.10*math.sin(root.z*1.3),0,.12*math.sin(root.x*.85)))
                 if identity == 'bordeaux_09':
                     flow = Vector((-.08*root.x, -.90, -.40))
-                    length, width, lift, rows = rng.uniform(.55, 1.05), rng.uniform(.014, .027), .075, 4
+                    length, width, lift, rows = rng.uniform(.55, 1.05), rng.uniform(.032, .055), .075, 4
                 elif identity == 'des_feeney_sr':
                     length, width, lift, rows = rng.uniform(.20, .42), rng.uniform(.012, .024), .035, 3
                 else:
                     length = rng.uniform(1.2, 2.4) if top else rng.uniform(.35, .80)
-                    if identity in ('shane_denham','robbie_roden','david_murray'):
+                    if identity == 'shane_denham':
                         length = rng.uniform(.65, 1.15) if top else rng.uniform(.25, .55)
+                    elif identity == 'robbie_roden':
+                        # The roster sheet has a dense, tousled crown rather
+                        # than Shane's close buzz crop.
+                        length = rng.uniform(1.7, 2.8) if top else rng.uniform(.38, .72)
+                    elif identity == 'david_murray':
+                        length = rng.uniform(1.0, 1.65) if top else rng.uniform(.28, .60)
                     if identity == 'john_orourke' and top:
                         length *= 1.65
-                    width = rng.uniform(.055, .095) if top else rng.uniform(.018, .038)
+                    width = rng.uniform(.055, .095) if top else rng.uniform(.025, .046)
                     lift = rng.uniform(.34, .70) if top else rng.uniform(.04, .12)
-                    if identity in ('shane_denham','robbie_roden','david_murray') and top:
+                    if identity in ('shane_denham','david_murray') and top:
                         lift = rng.uniform(.14, .30)
+                    if identity == 'robbie_roden' and top:
+                        lift = rng.uniform(.35,.65)
                     if identity in ('shane_denham','robbie_roden','david_murray'):
-                        width = rng.uniform(.020,.045) if top else rng.uniform(.012,.025)
+                        width = rng.uniform(.075,.14) if identity=='robbie_roden' and top else rng.uniform(.045,.080) if top else rng.uniform(.024,.042)
                         # Short irregular crop, without a uniform opaque cap.
                         flow += Vector((.16*math.sin(root.z*1.7),0,.12*math.sin(root.x*1.4)))
                     if identity == 'john_orourke' and top:
                         lift *= 1.65
-                        width = rng.uniform(.030,.065)
+                        width = rng.uniform(.075,.12)
                         if root.z>7.8: length *= .65
                     rows = 5
             elif kind == 1:
@@ -297,12 +305,12 @@ def build_groom(head, rig, identity):
                     # equally dense fibres formed a rigid chin curtain.
                     coverage=ma*(1-r)+mb*r*(1-t)+mc*r*t
                     length *= .75+min(1.,coverage)*.65
-                width, lift, rows = rng.uniform(.009, .019), rng.uniform(.015, .045), 3
+                width, lift, rows = rng.uniform(.028, .048), rng.uniform(.015, .045), 3
                 if identity == 'john_orourke':
                     lift = rng.uniform(.025, .10)
             else:
                 flow = Vector((math.copysign(1, root.x), .12, 0))
-                length, width, lift, rows = rng.uniform(.19, .36), rng.uniform(.011, .020), .018, 3
+                length, width, lift, rows = rng.uniform(.23, .42), rng.uniform(.032, .052), .018, 3
             tangent = flow-normal*flow.dot(normal)
             if tangent.length < 1e-7:
                 continue

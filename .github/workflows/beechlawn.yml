@@ -60,6 +60,7 @@ jobs:
           python3 games/beechlawn_rovers/tools/test_arena_seating_alignment.py
           python3 games/beechlawn_rovers/tools/run_smoke_tests.py graphics_budget_smoke.gd frame_profiler_smoke.gd supporter_crowd_smoke.gd stadium_presentation_smoke.gd pitch_audio_smoke.gd recorded_audio_smoke.gd free_kick_planner_smoke.gd free_kick_contact_smoke.gd left_strike_smoke.gd ai_attack_choice_smoke.gd br019_aerial_duel_smoke.gd aerial_contact_smoke.gd aerial_safety_smoke.gd advanced_shots_smoke.gd cross_to_header_smoke.gd keeper_diving_high_smoke.gd
           python3 games/beechlawn_rovers/tools/run_smoke_tests.py p1_debug_overlay_smoke.gd keeper_distribution_smoke.gd keeper_distribution_hand_smoke.gd p2_formations_tactics_smoke.gd
+          python3 games/beechlawn_rovers/tools/run_smoke_tests.py realism_systems_smoke.gd shared_head_roster_smoke.gd shared_pose_safety_smoke.gd shane_denham_import_smoke.gd
           python3 games/beechlawn_rovers/tools/run_smoke_tests.py moving_receive_smoke.gd contextual_receive_smoke.gd receive_edge_cases_smoke.gd receive_layer_physics_smoke.gd first_time_pass_timing_smoke.gd first_time_shot_smoke.gd
           python3 games/beechlawn_rovers/tools/run_smoke_tests.py ball_selection_smoke.gd stadium_seating_smoke.gd player_selection_smoke.gd receiver_selection_pass_types_smoke.gd venue_selection_smoke.gd hud_layout_smoke.gd
       - name: Import and verify football project

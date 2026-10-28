@@ -38,7 +38,7 @@ def fullness(point):
 
 
 def athletic_form(point):
-    """A small, shared silhouette correction in the source's centimetre space.
+    """Reference-led shared body and kit contour in centimetres.
 
     Apply one continuous field to skin and kit so cuffs, hems and exposed
     joints retain their interfaces. The neutral cage, UVs and weights stay
@@ -47,21 +47,33 @@ def athletic_form(point):
     x, y, z = point
     ax = abs(x)
     torso = math.exp(-((y-122.)/24.)**4) * math.exp(-(ax/24.)**8)
-    # Remove the boxy shirt/barrel profile while retaining shoulder and waist.
+    # The inherited shirt projected farther forward at the waist (17.6 cm at
+    # y=110) than at the chest (15.8 cm at y=130). The original roster sheet
+    # has a clear upper-chest plane and a softer, narrower abdominal drape.
+    waist = math.exp(-((y-108.)/13.)**4) * math.exp(-(ax/22.)**8)
+    chest = math.exp(-((y-130.)/10.)**4) * math.exp(-(ax/22.)**8)
+    front = .5 + .5*math.tanh((z-1.)/3.)
     x *= 1. - .085 * torso
-    z *= 1. - .065 * torso
+    x *= 1. - .035 * waist
+    z *= 1. - .045 * torso
+    z -= 3.2*waist*front
+    z += .6*waist*(1.-front)+.55*chest*front
     thigh = math.exp(-((y-84.)/17.)**4) * math.exp(-((ax-9.)/13.)**6)
     x -= math.copysign(.070 * (ax-9.) * thigh, x)
     z *= 1. - .065 * thigh
-    arm = math.exp(-((ax-34.)/17.)**4) * math.exp(-((y-143.)/13.)**4)
-    y = 143. + (y-143.)*(1. - .075*arm)
-    z *= 1. - .08*arm
+    # Taper the long sleeves around the actual arm centre instead of the
+    # world origin. Keep the shoulder seam and wrists continuous with skin.
+    arm = math.exp(-((ax-42.)/18.)**4) * math.exp(-((y-143.)/13.)**4)
+    forearm = math.exp(-((ax-62.)/12.)**4) * math.exp(-((y-143.)/11.)**4)
+    y = 143. + (y-143.)*(1. - .065*arm-.055*forearm)
+    z = -6. + (z+6.)*(1. - .055*arm-.055*forearm)
     # Footballers' palms and fingers read oversized beside their faces.
     # Fade the reduction in after the wrist to preserve the arm join.
-    hand = max(0., min(1., (ax-73.)/10.))
-    x -= math.copysign(.085 * max(0., ax-73.) * hand, x)
-    y = 143. + (y-143.) * (1. - .12*hand)
-    z *= 1. - .12*hand
+    hand = max(0., min(1., (ax-74.)/12.))
+    hand = hand*hand*(3.-2.*hand)
+    x -= math.copysign(.20 * max(0., ax-74.) * hand, x)
+    y = 143. + (y-143.) * (1. - .08*hand)
+    z = -6. + (z+6.)*(1. - .11*hand)
     # Taper boot toes, leaving the ankle/socket unchanged.
     toe = math.exp(-((y-7.)/6.)**4) * math.exp(-((ax-11.)/12.)**6)
     z *= 1. - .07*toe

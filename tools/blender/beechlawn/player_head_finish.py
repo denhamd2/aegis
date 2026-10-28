@@ -247,17 +247,19 @@ def hair_regions(points, identity):
     rear = _smooth(1.6, 3.1, angle)
     front = _smooth(4.5, 8.5, z)
     if identity == 'shane_denham':
-        line = 172.65-6.3*side-3.0*rear+.10*np.sin(x*1.9)
+        line = 172.65-6.3*side-3.0*rear+.07*np.sin(x*1.9)+.025*np.sin(x*5.1)
+        line += .32*np.exp(-((ax-6.4)/1.4)**2)
         scalp = _smooth(line-.15, line+.25, y)
     elif identity == 'john_orourke':
         line = 171.85+.55*_smooth(0, 3, -x)-.28*_smooth(0, 3, x)-3.7*side-2.5*rear+.09*np.sin(x*2.8)
         scalp = _smooth(line-.17, line+.22, y)
     elif identity == 'robbie_roden':
-        line = 172.35-5.0*side-2.6*rear+.10*np.sin(x*2.3)
+        line = 172.35-5.0*side-2.6*rear+.07*np.sin(x*2.3)+.025*np.sin(x*5.3)
         scalp = _smooth(line-.18, line+.25, y)
     elif identity == 'david_murray':
-        # Receding fair crop from the roster sheet, with exposed front temples.
-        line = 173.0-6.7*side-2.7*rear-1.0*np.exp(-((ax-5.8)/1.5)**2)
+        # The owner portrait shows open temples and an uneven fair hairline.
+        line = 173.0-6.7*side-2.7*rear+1.05*np.exp(-((ax-5.8)/1.5)**2)
+        line += .06*np.sin(x*2.0)+.02*np.sin(x*5.3)
         scalp = _smooth(line-.18, line+.27, y)
     elif identity == 'bordeaux_09':
         # Original side views 69911/69910: a high temporal wedge joins the
@@ -313,11 +315,17 @@ def hair_regions(points, identity):
         facial = np.maximum.reduce((beard, moustache, sideburn*.62))
     elif identity == 'des_feeney_sr':
         facial = moustache
+    elif identity == 'robbie_roden':
+        # The confirmed original has a short beard shadow around the jaw and
+        # lip. Keep it below the cheeks and clear of the oral contact loops.
+        jaw = _smooth(154.8,155.8,y)*(1-_smooth(160.1,161.6,y))*front
+        jaw *= 1-np.exp(-(x/3.1)**6-((y-159.85)/.48)**4)
+        facial = np.maximum(jaw*.30,moustache*.24)
     else:
         facial = np.zeros_like(x)
     brow_y = 167.95+.10*np.exp(-((ax-3.45)/1.45)**2)-.06*(ax-3.45)
     if identity=='shane_denham': brow_y -= .16
-    brow = np.exp(-((ax-3.45)/1.75)**6-((y-brow_y)/.23)**2)*_smooth(7.4, 8.6, z)
+    brow = np.exp(-((ax-3.45)/1.75)**6-((y-brow_y)/.31)**2)*_smooth(7.4, 8.6, z)
     return np.stack((scalp, facial, brow), axis=1)
 
 
@@ -349,8 +357,8 @@ def finish_head(head, identity):
         nose = np.exp(-(x/1.5)**4-((y-162.1)/1.5)**2)*front
         result += cheek[:, None]*np.array([.025, -.014, -.010])
         result += nose[:, None]*np.array([.020, -.012, -.010])
-        lip = np.exp(-(x/3.1)**6-((y-159.85)/.38)**2)*front
-        result += lip[:, None]*np.array([.020, -.052, -.032])
+        lip = np.exp(-(x/3.1)**6-((y-159.85)/.40)**2)*front
+        result += lip[:, None]*np.array([.028, -.071, -.046])
         under = np.exp(-((ax-3.45)/1.75)**4-((y-165.4)/.55)**2)*front
         result -= under[:, None]*np.array([.014, .016, .012])
         regions = hair_regions(points, identity)
@@ -358,8 +366,9 @@ def finish_head(head, identity):
         tones = {'shane_denham': (.17, .12, .08), 'john_orourke': (.32, .22, .15),
                  'bordeaux_09': (.10, .075, .055), 'des_feeney_sr': (.38, .36, .32),
                  'robbie_roden': (.14, .09, .06), 'david_murray': (.32, .22, .13)}
-        facial_strength = {'john_orourke':.85,'bordeaux_09':.72,'des_feeney_sr':.72}.get(identity,.40)
-        root = np.maximum(regions[:, 1]*facial_strength, regions[:, 2]*.62)
+        facial_strength = {'john_orourke':.92,'bordeaux_09':.86,
+                           'des_feeney_sr':.88,'robbie_roden':.35}.get(identity,.40)
+        root = np.maximum(regions[:, 1]*facial_strength, regions[:, 2]*.88)
         result = result*(1-root[:, None])+np.asarray(tones[identity])*root[:, None]
         # Sparse original pigment variation; no source portrait illumination.
         freckles = np.maximum(0, np.sin(x*71+y*37)*np.sin(y*43+z*57)-.89)*front
@@ -411,7 +420,8 @@ def finish_head(head, identity):
         forehead = np.exp(-(x/5.0)**6-((y-170.0)/2.1)**4)*front
         cheeks = np.exp(-((abs(x)-4.3)/2.0)**4-((y-162.4)/2.0)**4)*front
         fine = np.sin(x*53+y*31)*np.sin(y*47-z*59)*.008
-        value = .58-.13*nose-.055*forehead+.045*cheeks+fine
+        lips = np.exp(-(x/3.15)**6-((y-159.85)/.48)**2)*front
+        value = .58-.13*nose-.055*forehead+.045*cheeks-.065*lips+fine
         if identity in ('shane_denham','john_orourke','robbie_roden','david_murray'):
             # Real skin has an oilier T-zone and broken cheek response, not a
             # single wax-like lobe. Keep restrained variation at pore scale.
@@ -427,7 +437,8 @@ def finish_head(head, identity):
         skin.bake_skin(head, None, mat, eyes, head_only=True, image_prefix=identity+'_finish',
                        detail_only=True, retained_neck_albedo=shared_neck,
                        roughness_callback=roughness,
-                       pore_amplitude=.0022 if identity in ('shane_denham','john_orourke','robbie_roden','david_murray') else .00055)
+                       pore_amplitude=.0022 if identity in ('shane_denham','john_orourke','robbie_roden','david_murray') else .00055,
+                       detail_strength=.72)
     finally:
         skin.SKIN_PIGMENT, skin.skin_colour, skin.reference_skin_relief = previous
     bsdf = mat.node_tree.nodes['Principled BSDF']
@@ -442,10 +453,10 @@ def finish_head(head, identity):
     r = np.sqrt(ex*ex+ey*ey)
     angle = np.arctan2(ey, ex)
     rgb = np.tile(np.array([.72, .715, .69]), (512, 512, 1))
-    iris_colour = {'shane_denham': (.245, .165, .085), 'john_orourke': (.16, .27, .30),
-                   'bordeaux_09': (.18, .115, .065), 'des_feeney_sr': (.25, .20, .12),
-                   'robbie_roden': (.19, .13, .08), 'david_murray': (.17, .25, .31)}[identity]
-    iris_radius = .208 if identity == 'shane_denham' else .212 if identity == 'john_orourke' else .172
+    iris_colour = {'shane_denham': (.30, .22, .13), 'john_orourke': (.21, .34, .38),
+                   'bordeaux_09': (.24, .16, .09), 'des_feeney_sr': (.29, .24, .16),
+                   'robbie_roden': (.25, .17, .10), 'david_murray': (.22, .34, .39)}[identity]
+    iris_radius = .235 if identity == 'shane_denham' else .242 if identity == 'john_orourke' else .214
     iris = r < iris_radius
     grain = (np.sin(angle*83+r*179)+np.sin(angle*47-r*131))*.018
     for channel, base in enumerate(iris_colour):
@@ -466,7 +477,10 @@ def finish_head(head, identity):
     head['pigment_policy'] = 'anatomical UV pigment and original groom; no projected portrait'
     if identity=='shane_denham':
         from player_oral_geometry import build_upper_teeth
-        build_upper_teeth(bpy.data.objects['YBot_Armature'])
+        build_upper_teeth(bpy.data.objects['YBot_Armature'],identity)
+    else:
+        old=bpy.data.objects.get('Mouth_UpperTeeth')
+        if old: bpy.data.objects.remove(old,do_unlink=True)
     return mat
 
 

@@ -1,0 +1,19 @@
+{
+  "received_utc_date": "2026-10-28",
+  "source": "Owner attachment in BR-022 realism follow-up conversation",
+  "files": {
+    "70466.jpg": {
+      "sha256": "51f0916267649420cb10f64245ee17da9e8516a470a44d7837a7784b3e382f31",
+      "dimensions": [576, 1280],
+      "subject": "David Murray",
+      "use": "Primary face reference; frontal smiling indoor portrait, hidden side anatomy estimated"
+    },
+    "70467.jpg": {
+      "sha256": "7e61bcf811d0f81b2fe3845a4ae793c003dd464d3334d2b7b50f652214abe79f",
+      "dimensions": [576, 1280],
+      "subject": "Robbie (Robert) Roden, confirmed by owner in the follow-up conversation",
+      "use": "Primary face reference; frontal smiling outdoor portrait, hidden side anatomy estimated. Screenshot caption names Dermot Tallon as poster and mentions Robert Roden."
+    }
+  },
+  "policy": "Unchanged originals; derivatives belong under the BR-022 art brief"
+}

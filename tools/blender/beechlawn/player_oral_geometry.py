@@ -43,12 +43,12 @@ def upper_lip_weights(head):
     return {i:b[i]/(a[i]+b[i]) for i in region if math.isfinite(a[i]+b[i]) and a[i]+b[i]>1e-8}
 
 
-def build_upper_teeth(rig):
+def build_upper_teeth(rig, identity='shane_denham'):
     from shane_player_finish import bound_mesh
     name='Mouth_UpperTeeth'
     old=bpy.data.objects.get(name)
     if old:bpy.data.objects.remove(old,do_unlink=True)
-    material=bpy.data.materials.new('MAT_Shane_NaturalEnamel')
+    material=bpy.data.materials.new('MAT_NaturalEnamel_'+identity)
     material.use_nodes=True
     shader=material.node_tree.nodes['Principled BSDF']
     shader.inputs['Base Color'].default_value=(.57,.53,.45,1)

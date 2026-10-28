@@ -185,7 +185,7 @@ def reference_skin_relief(points,eyes):
     return height
 
 
-def bake_skin(head, body, material, eyes, *, head_only=False, image_prefix="shane", color_overlay=None, neutral_base=False, detail_only=False, retained_neck_albedo=None, roughness_callback=None, pore_amplitude=.00055):
+def bake_skin(head, body, material, eyes, *, head_only=False, image_prefix="shane", color_overlay=None, neutral_base=False, detail_only=False, retained_neck_albedo=None, roughness_callback=None, pore_amplitude=.00055, detail_strength=.5):
     """Rasterize anatomical pigment onto the original licensed body UVs."""
     size = 2048 if head_only else 512
     from shane_skin_source import sample_skin,skin_tint
@@ -216,7 +216,7 @@ def bake_skin(head, body, material, eyes, *, head_only=False, image_prefix="shan
                 array=(sums[tuple(right)]-sums[tuple(left)])/(radius*2+1)
             return array
         low=box_blur(box_blur(photo,8),8)
-        photo=SKIN_PIGMENT*np.clip(photo/np.maximum(low,.025),.85,1.15)**.5
+        photo=SKIN_PIGMENT*np.clip(photo/np.maximum(low,.025),.82,1.18)**detail_strength
     atlas = np.tile(SKIN_PIGMENT, (size, size, 1))
     relief=np.zeros((size,size),dtype=np.float32) if head_only else None
     filled = np.zeros((size, size), dtype=bool)

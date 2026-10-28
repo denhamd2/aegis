@@ -1,0 +1,122 @@
+{
+  "changed_glb_count": 19,
+  "total_before_bytes": 106374332,
+  "total_after_bytes": 96926120,
+  "changed_glbs": {
+    "assets/characters/shared/body_shapes.glb": {
+      "before_bytes": 3574240,
+      "after_bytes": 3610200,
+      "vertices": 33807,
+      "triangles": 54740
+    },
+    "assets/characters/shared/heads/david_crop.glb": {
+      "before_bytes": 5025768,
+      "after_bytes": 4040416,
+      "vertices": 58407,
+      "triangles": 29732
+    },
+    "assets/characters/shared/heads/des_side_hair.glb": {
+      "before_bytes": 9233688,
+      "after_bytes": 6618440,
+      "vertices": 82060,
+      "triangles": 41630
+    },
+    "assets/characters/shared/heads/john_swept.glb": {
+      "before_bytes": 10618496,
+      "after_bytes": 7687924,
+      "vertices": 104967,
+      "triangles": 52853
+    },
+    "assets/characters/shared/heads/near/bordeaux_09.glb": {
+      "before_bytes": 2839708,
+      "after_bytes": 2840356,
+      "vertices": 24561,
+      "triangles": 35504
+    },
+    "assets/characters/shared/heads/near/david_murray.glb": {
+      "before_bytes": 2842360,
+      "after_bytes": 2843212,
+      "vertices": 24561,
+      "triangles": 35504
+    },
+    "assets/characters/shared/heads/near/des_feeney_sr.glb": {
+      "before_bytes": 2849928,
+      "after_bytes": 2851372,
+      "vertices": 24561,
+      "triangles": 35504
+    },
+    "assets/characters/shared/heads/near/john_orourke.glb": {
+      "before_bytes": 2843352,
+      "after_bytes": 2845444,
+      "vertices": 24561,
+      "triangles": 35504
+    },
+    "assets/characters/shared/heads/near/robbie_roden.glb": {
+      "before_bytes": 2833596,
+      "after_bytes": 2835000,
+      "vertices": 24561,
+      "triangles": 35504
+    },
+    "assets/characters/shared/heads/near/shane_denham.glb": {
+      "before_bytes": 2843104,
+      "after_bytes": 2847116,
+      "vertices": 24561,
+      "triangles": 35504
+    },
+    "assets/characters/shared/heads/players/bordeaux_09.glb": {
+      "before_bytes": 7122992,
+      "after_bytes": 7336236,
+      "vertices": 4663,
+      "triangles": 8876
+    },
+    "assets/characters/shared/heads/players/david_murray.glb": {
+      "before_bytes": 7737840,
+      "after_bytes": 7970540,
+      "vertices": 4663,
+      "triangles": 8876
+    },
+    "assets/characters/shared/heads/players/des_feeney_sr.glb": {
+      "before_bytes": 6705152,
+      "after_bytes": 6910236,
+      "vertices": 4663,
+      "triangles": 8876
+    },
+    "assets/characters/shared/heads/players/john_orourke.glb": {
+      "before_bytes": 7793028,
+      "after_bytes": 8005688,
+      "vertices": 4663,
+      "triangles": 8876
+    },
+    "assets/characters/shared/heads/players/robbie_roden.glb": {
+      "before_bytes": 7302064,
+      "after_bytes": 7511100,
+      "vertices": 4663,
+      "triangles": 8876
+    },
+    "assets/characters/shared/heads/players/shane_denham.glb": {
+      "before_bytes": 7379516,
+      "after_bytes": 7566848,
+      "vertices": 5399,
+      "triangles": 9356
+    },
+    "assets/characters/shared/heads/referee_grey.glb": {
+      "before_bytes": 3396024,
+      "after_bytes": 2219900,
+      "vertices": 29123,
+      "triangles": 14561
+    },
+    "assets/characters/shared/heads/robbie_crop.glb": {
+      "before_bytes": 6401828,
+      "after_bytes": 4790184,
+      "vertices": 69822,
+      "triangles": 35346
+    },
+    "assets/characters/shared/heads/shane_crop.glb": {
+      "before_bytes": 7031648,
+      "after_bytes": 5595908,
+      "vertices": 81102,
+      "triangles": 41063
+    }
+  },
+  "scope": "Changed packages only; current exported mesh counts. Draw/memory measured separately."
+}
