@@ -50,6 +50,9 @@ func _run() -> void:
 		var shape := live.find_blend_shape_by_name("Fullness")
 		assert(shape >= 0 and is_equal_approx(live.get_blend_shape_value(shape),.42))
 		assert(is_zero_approx(shared.get_blend_shape_value(shape)), "A teammate inherited John's shape")
+		var athletic := live.find_blend_shape_by_name("AthleticForm")
+		assert(athletic >= 0 and is_equal_approx(live.get_blend_shape_value(athletic),1.0))
+		assert(is_equal_approx(shared.get_blend_shape_value(athletic),1.0), "Shared athletic corrective lost")
 		assert(live.skin.get_bind_count() == node.skin.get_bind_count())
 		for bind in live.skin.get_bind_count():
 			assert(live.skin.get_bind_name(bind)==node.skin.get_bind_name(bind), "Morph joint order changed")

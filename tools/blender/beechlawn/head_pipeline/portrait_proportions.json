@@ -1,6 +1,20 @@
 {
   "method": "Eye-line-normalized portrait landmark ratios guide bounded sculpt corrections; expressions and hidden depth remain estimates",
   "players": {
+    "robbie_roden": {
+      "ratios": {"face_width": 1.05, "jaw_width": 1.12, "mouth_width": 0.92,
+                 "nose_width": 0.98, "mouth_y": 1.0, "chin_y": 0.99, "nose_y": 1.0},
+      "weight": 0.65,
+      "reference_sha256": "d6e329c11ddd6ee2f5b0654941a869e3ebb56257ebb9923ee10b56e09981fe6b",
+      "reference_limit": "Generated roster sheet; no original portrait supplied. Hidden profile is estimated."
+    },
+    "david_murray": {
+      "ratios": {"face_width": 0.91, "jaw_width": 0.86, "mouth_width": 0.90,
+                 "nose_width": 0.91, "mouth_y": 0.98, "chin_y": 1.01, "nose_y": 0.98},
+      "weight": 0.65,
+      "reference_sha256": "b8c7662519a815eb3c81da10eea56a7d4136f15e2735f578485c65baf86006b7",
+      "reference_limit": "Generated roster sheet; no original portrait supplied. Hidden profile is estimated."
+    },
     "shane_denham": {
       "ratios": {
         "face_width": 0.9208419523205873,

@@ -1,3 +1,20 @@
+# Beechlawn Rovers 27 — v0.5.9
+
+Six key character heads have individual four-pass form and surface work:
+Shane Denham, John O’Rourke, player Des Feeney, referee Des Feeney Sr.,
+Robbie Roden and David Murray. Robbie and David now have their own head,
+complexion and short-hair assets. A shared body corrective softens the boxy
+torso, limb and hand silhouettes for all players and the referee while retaining
+the existing rig, animation and per-player fullness.
+
+The art review includes before/after native Forward+ captures and candid
+body/face realism scores. Exact likeness, hair finish and target-Mac appearance
+and 1080p60 performance remain open BR-022/BR-025 checks. The v0.5.8 tactics,
+v0.5.5 crowd and earlier gameplay remain included. Universal Apple Silicon/Intel
+Mac build.
+
+---
+
 # Beechlawn Rovers 27 — v0.5.8
 
 Full teams can now use 4-4-2, 4-3-3, 4-2-3-1 or 4-5-1. Team resources expose

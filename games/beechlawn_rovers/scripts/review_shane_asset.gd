@@ -21,6 +21,9 @@ func _ready() -> void:
 	if str(_option("ablation")) == "transmittance": FootballCharacterLook.transmittance_enabled = false
 	var source := MATCH_SCENE.instantiate()
 	source.set("terrain_enabled", true)
+	# The review builds markings before the match node enters the tree. Supply
+	# the venue normally installed by TrainingGround._ready() first.
+	source.set("venue", FootballMatchVenue.from_id(&"kilmore_drive"))
 	var markings_mesh: Mesh = source.call("_build_line_mesh")
 	add_child(source.get_node("WorldEnvironment").duplicate())
 	add_child(source.get_node("Sun").duplicate())
@@ -108,6 +111,8 @@ func _ready() -> void:
 		# Explicit review-only allowlist; use the real roster appearance path.
 		match str(requested):
 			"john": profile = load("res://data/squads/home_01.tres")
+			"robbie": profile = load("res://data/squads/home_10.tres")
+			"david": profile = load("res://data/squads/home_05.tres")
 			"away_keeper": profile = load("res://data/squads/away_01.tres")
 			"des": profile = load("res://data/squads/away_09.tres")
 			"referee": profile = load("res://data/officials/referee.tres")

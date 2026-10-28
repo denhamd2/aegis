@@ -13,7 +13,9 @@ HERE=Path(__file__).resolve().parent
 ROOT=HERE.parents[2]
 PROJECT=ROOT/'games/beechlawn_rovers'
 sys.path.insert(0,str(HERE))
-from author_four_head_finish import SOURCES
+from author_four_head_finish import SOURCES as FOUR_SOURCES
+SOURCES={**FOUR_SOURCES,'robbie_roden':'robbie_roden_head.blend',
+         'david_murray':'david_murray_head.blend'}
 from build_roster_heads import export,PARTS
 
 

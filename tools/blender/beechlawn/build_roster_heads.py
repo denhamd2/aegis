@@ -176,7 +176,9 @@ def saved_finish(identity):
     atlases. Source/delta disagreement is an error requiring explicit capture.
     """
     from author_four_head_finish import SOURCES
-    source = Path(__file__).parent/SOURCES[identity]
+    sources = {**SOURCES, 'robbie_roden':'robbie_roden_head.blend',
+               'david_murray':'david_murray_head.blend'}
+    source = Path(__file__).parent/sources[identity]
     if not source.exists():
         from player_head_finish import finish_head
         finish_head(bpy.data.objects['Skin_Head'],identity)
@@ -242,7 +244,8 @@ def patch_profile(path, head_path, hair):
         text = text.replace('[sub_resource', '[ext_resource type="Script" path="res://scripts/data/football_appearance.gd" id="head_pipeline_appearance"]\n[sub_resource', 1)
     declarations = '[ext_resource type="PackedScene" path="res://' + str(head_path.relative_to(PROJECT)) + '" id="head_pipeline_head"]\n'
     hair_packages = {"shane_crop": "shane_crop.glb", "des_side_hair": "des_side_hair.glb",
-                     "john_swept": "john_swept.glb", "referee_grey": "referee_grey.glb"}
+                     "john_swept": "john_swept.glb", "referee_grey": "referee_grey.glb",
+                     "robbie_crop": "robbie_crop.glb", "david_crop": "david_crop.glb"}
     if hair in hair_packages:
         declarations += '[ext_resource type="PackedScene" path="res://assets/characters/shared/heads/' + hair_packages[hair] + '" id="head_pipeline_hair"]\n'
     text = text.replace('[sub_resource', declarations + '[sub_resource', 1)
@@ -333,7 +336,7 @@ def main():
                 open_master();apply_sculpt(data)
                 from player_head_finish import IDENTITIES
                 supplemental=[]
-                if identity in IDENTITIES:
+                if identity in (*IDENTITIES,'robbie_roden','david_murray'):
                     supplemental=saved_finish(identity)
                 export(outputs[identity], (*PARTS,*supplemental))
             else:
@@ -350,6 +353,15 @@ def main():
         open_master();apply_sculpt(sculpts[identity])
         build_groom(bpy.data.objects['Skin_Head'], bpy.data.objects['YBot_Armature'], identity)
         export(ASSETS / filename, ('Hair_Shane_ShortCropRoots', 'Hair_Shane_ShortCropCards'))
+    # New identities use short crops and their own scalp fields/pigment.
+    for identity, filename in (
+            ('robbie_roden','robbie_crop.glb'),
+            ('david_murray','david_crop.glb')):
+        if args.only_player and identity not in args.only_player:
+            continue
+        open_master();apply_sculpt(sculpts[identity])
+        build_groom(bpy.data.objects['Skin_Head'],bpy.data.objects['YBot_Armature'],identity)
+        export(ASSETS/filename,('Hair_Shane_ShortCropRoots','Hair_Shane_ShortCropCards'))
     for identity, entry in entries.items():
         output = outputs[entry.get('identity_source', identity)]
         for profile in entry['profiles']:

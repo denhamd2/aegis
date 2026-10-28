@@ -10,6 +10,22 @@ items, use the archived references and skill workflow in
 [`art_reference_implementation_plan.md`](art_reference_implementation_plan.md)
 and [`../references/README.md`](../references/README.md) before implementation.
 
+## Character realism review — 28 October 2026
+
+BR-022 (22/27, in progress): six key heads now have four authored form and
+surface passes, with independent source and runtime assets for Robbie Roden
+and David Murray. A single shared body corrective reduces the blocky torso,
+thigh, arm, hand and boot proportions across the 22 players and referee while
+retaining the existing rig, animation, UVs and individual Fullness. The
+[BR-022 art review](art_briefs/br022_realism_2026_10_28/brief.md) records
+before/after native Forward+ images, art-director scores and remaining gaps.
+The bodies and faces are improved prototypes; exact reference likeness and
+high-end hair/skin finish are still open.
+
+Next acceptance: BR-025 (25/27, in progress), inspect these players and the
+combined match on the packaged M1 Pro Mac and measure sustained 1080p60 there.
+Linux software Forward+ captures cannot establish target-Mac performance.
+
 ## P1 match validation — 27 October 2026
 
 BR-010 (10/27, complete): F3 now reveals live player/ball velocity,
@@ -1152,6 +1168,12 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
 ### P5 — Art direction, presentation and shipping
 
 - [ ] **BR-022 — Character and kit production**
+  - 2026-10-28 realism review (22/27): four staged form/surface passes on six
+    key faces, with distinct Robbie/David head and groom assets, plus one shared
+    body corrective used by all players and the referee. Native before/after
+    images, source/export and motion checks, art-director scores, and remaining
+    limitations are in `art_briefs/br022_realism_2026_10_28/brief.md`. Exact
+    likeness, finer hair/skin and M1 appearance/performance remain open.
   - 2026-10-24 Shane/John refinement (22/27): corrected portrait roll
     measurements guide individual cheek/jaw/brow/nose/lip forms, larger fitted
     irises, skin relief/roughness and matching scalp/beard boundaries. Shane's

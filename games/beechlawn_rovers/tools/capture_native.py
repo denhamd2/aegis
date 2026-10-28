@@ -20,6 +20,7 @@ import time
 
 PROJECT = Path(__file__).resolve().parents[1]
 IDENTITIES = {'shane':'shane_denham', 'john':'john_orourke', 'des':'bordeaux_09',
+              'robbie':'robbie_roden', 'david':'david_murray',
               'referee':'des_feeney_sr', 'away_keeper':'bordeaux_01', 'paddy':'paddy_mason'}
 
 
@@ -117,7 +118,7 @@ def main():
     parser.add_argument('--project', type=Path, default=PROJECT, help='Explicit isolated football snapshot for before/after review')
     parser.add_argument('--receive-baseline', action='store_true')
     parser.add_argument('--match',action='store_true',help='Capture the actual 22-player match and broadcast camera')
-    parser.add_argument('--players', nargs='+', choices=['shane','john','des','referee','away_keeper','paddy'],
+    parser.add_argument('--players', nargs='+', choices=['shane','john','des','referee','robbie','david','away_keeper','paddy'],
                         default=['shane','john','des','referee'])
     parser.add_argument('--views', nargs='+', default=['portrait'], choices=[
         'portrait','head_detail','threequarter_portrait','threequarter_opposite',

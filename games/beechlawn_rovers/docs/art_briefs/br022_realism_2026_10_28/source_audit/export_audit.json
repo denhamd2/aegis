@@ -1,0 +1,226 @@
+{
+  "result": "PASS",
+  "heads": {
+    "shane_denham": {
+      "source": "shane_denham_head.blend",
+      "sha256": "35bf0d5e95593728749aaa5c1e0b33a418cd5c2ddc71a7bc63bacf9d8a4f6a7f",
+      "parts": {
+        "Skin_Head": {
+          "source_vertices": 4326,
+          "exported_vertices": 4519,
+          "max_error_m": 1.794337407545754e-07
+        },
+        "Eye_l": {
+          "source_vertices": 72,
+          "exported_vertices": 72,
+          "max_error_m": 1.7393556106526376e-07
+        },
+        "Eye_r": {
+          "source_vertices": 72,
+          "exported_vertices": 72,
+          "max_error_m": 1.7393556106526376e-07
+        }
+      },
+      "textures": [
+        {
+          "name": "shane_denham_finish_eyes_albedo",
+          "dimensions": [
+            512,
+            512
+          ]
+        },
+        {
+          "name": "shane_denham_finish_head_detail_normal_1k",
+          "dimensions": [
+            1024,
+            1024
+          ]
+        },
+        {
+          "name": "shane_denham_finish_head_anatomical_albedo_2k",
+          "dimensions": [
+            2048,
+            2048
+          ]
+        },
+        {
+          "name": "shane_denham_finish_skin_roughness",
+          "dimensions": [
+            1024,
+            1024
+          ]
+        }
+      ],
+      "protected_neck_vertices": 166,
+      "frontal_lip_triangles": 293,
+      "inverted_frontal_lip_triangles": 0
+    },
+    "john_orourke": {
+      "source": "john_orourke_head.blend",
+      "sha256": "31191bd5ae4690003c720ef8d526dbcd1f67f747d72f538f87a59000cdb35aee",
+      "parts": {
+        "Skin_Head": {
+          "source_vertices": 4326,
+          "exported_vertices": 4519,
+          "max_error_m": 1.794337407545754e-07
+        },
+        "Eye_l": {
+          "source_vertices": 72,
+          "exported_vertices": 72,
+          "max_error_m": 1.7393556106526376e-07
+        },
+        "Eye_r": {
+          "source_vertices": 72,
+          "exported_vertices": 72,
+          "max_error_m": 1.7393556106526376e-07
+        }
+      },
+      "textures": [
+        {
+          "name": "john_orourke_finish_eyes_albedo",
+          "dimensions": [
+            512,
+            512
+          ]
+        },
+        {
+          "name": "john_orourke_finish_head_detail_normal_1k",
+          "dimensions": [
+            1024,
+            1024
+          ]
+        },
+        {
+          "name": "john_orourke_finish_head_anatomical_albedo_2k",
+          "dimensions": [
+            2048,
+            2048
+          ]
+        },
+        {
+          "name": "john_orourke_finish_skin_roughness",
+          "dimensions": [
+            1024,
+            1024
+          ]
+        }
+      ],
+      "protected_neck_vertices": 166,
+      "frontal_lip_triangles": 293,
+      "inverted_frontal_lip_triangles": 0
+    },
+    "bordeaux_09": {
+      "source": "des_feeney_head.blend",
+      "sha256": "cef1c8aac649feb7c4103f4d9ac474ce48ddbe421658feafaccb06f34aed4b02",
+      "parts": {
+        "Skin_Head": {
+          "source_vertices": 4326,
+          "exported_vertices": 4519,
+          "max_error_m": 1.794337407545754e-07
+        },
+        "Eye_l": {
+          "source_vertices": 72,
+          "exported_vertices": 72,
+          "max_error_m": 1.7393556106526376e-07
+        },
+        "Eye_r": {
+          "source_vertices": 72,
+          "exported_vertices": 72,
+          "max_error_m": 1.7393556106526376e-07
+        }
+      },
+      "textures": [
+        {
+          "name": "bordeaux_09_finish_eyes_albedo",
+          "dimensions": [
+            512,
+            512
+          ]
+        },
+        {
+          "name": "bordeaux_09_finish_head_detail_normal_1k",
+          "dimensions": [
+            1024,
+            1024
+          ]
+        },
+        {
+          "name": "bordeaux_09_finish_head_anatomical_albedo_2k",
+          "dimensions": [
+            2048,
+            2048
+          ]
+        },
+        {
+          "name": "bordeaux_09_finish_skin_roughness",
+          "dimensions": [
+            1024,
+            1024
+          ]
+        }
+      ],
+      "protected_neck_vertices": 166,
+      "frontal_lip_triangles": 293,
+      "inverted_frontal_lip_triangles": 0
+    },
+    "des_feeney_sr": {
+      "source": "referee_des_feeney_head.blend",
+      "sha256": "195e51af6a0d940326ff8697039c49d3367c3466763476f882da6485da147164",
+      "parts": {
+        "Skin_Head": {
+          "source_vertices": 4326,
+          "exported_vertices": 4519,
+          "max_error_m": 1.794337407545754e-07
+        },
+        "Eye_l": {
+          "source_vertices": 72,
+          "exported_vertices": 72,
+          "max_error_m": 1.7393556106526376e-07
+        },
+        "Eye_r": {
+          "source_vertices": 72,
+          "exported_vertices": 72,
+          "max_error_m": 1.7393556106526376e-07
+        }
+      },
+      "textures": [
+        {
+          "name": "des_feeney_sr_finish_eyes_albedo",
+          "dimensions": [
+            512,
+            512
+          ]
+        },
+        {
+          "name": "des_feeney_sr_finish_head_detail_normal_1k",
+          "dimensions": [
+            1024,
+            1024
+          ]
+        },
+        {
+          "name": "des_feeney_sr_finish_head_anatomical_albedo_2k",
+          "dimensions": [
+            2048,
+            2048
+          ]
+        },
+        {
+          "name": "des_feeney_sr_finish_skin_roughness",
+          "dimensions": [
+            1024,
+            1024
+          ]
+        }
+      ],
+      "protected_neck_vertices": 166,
+      "frontal_lip_triangles": 293,
+      "inverted_frontal_lip_triangles": 0
+    }
+  },
+  "scope": "Neutral source/export geometry, UV/neck preservation, lip winding and package materials; runtime binds/poses checked separately.",
+  "protected_shared_assets": {
+    "games/beechlawn_rovers/assets/characters/shared/footballer_base.glb": "605440e6f6f6458f4d11c311d2d79583995ca03f313da71177de8000e16e801a",
+    "tools/blender/beechlawn/footballer_shared.blend": "5c61518d38f9bd0e9c4aa4e60e2d04719c6487b2dfc13f96e485af860739ebd4"
+  }
+}

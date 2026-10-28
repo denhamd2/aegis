@@ -1,0 +1,51 @@
+{
+  "result": "PASS",
+  "captures": [
+    {
+      "image": "robbie_portrait.png",
+      "report": "robbie_portrait.json",
+      "sha256": "66083d779b16c62074fd116f1e85095acb765b439ce1b86b78b6752c239cc996",
+      "process_cleanup": "normal",
+      "peak_rss_kib": 2785948,
+      "capture_seconds": 15.26,
+      "command": [
+        "/usr/local/bin/godot",
+        "--path",
+        "/workspace/aegis-checkout/games/beechlawn_rovers",
+        "--rendering-method",
+        "forward_plus",
+        "--resolution",
+        "960x540",
+        "--fixed-fps",
+        "60",
+        "--disable-vsync",
+        "--audio-driver",
+        "Dummy",
+        "--display-driver",
+        "x11",
+        "--rendering-driver",
+        "vulkan",
+        "res://scenes/review/shane_asset_review.tscn",
+        "--",
+        "--capture-dir=/workspace/aegis-checkout/games/beechlawn_rovers/docs/art_briefs/br022_realism_2026_10_28/native_final_robbie",
+        "--player=robbie",
+        "--view=portrait",
+        "--lighting=match",
+        "--sky=match",
+        "--clean=1",
+        "--setup-preview=0",
+        "--venue=kilmore_drive",
+        "--venue-view=broadcast",
+        "--ablation=none",
+        "--weather=sunny",
+        "--graphics=balanced_60",
+        "--ball=ucl_26_27_league",
+        "--free-kick-style=standard",
+        "--free-kick-view=wide",
+        "--expression=neutral"
+      ]
+    }
+  ],
+  "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+  "scope": "Forward+ appearance stills; software Vulkan does not measure Mac performance."
+}

@@ -36,7 +36,8 @@ def portrait_root_material(identity):
         grain=(grain.reshape(height,width)*(1-top)+swept*top).ravel()
     # PNG pigment is sRGB. Reusing a linear material factor here made the
     # imported undercoat nearly black (9/5/3 and 21/14/7 in the saved PNG).
-    pigment = (.23,.16,.105) if identity=='shane_denham' else (.37,.285,.175)
+    pigment = {'shane_denham':(.23,.16,.105), 'robbie_roden':(.18,.12,.085),
+               'david_murray':(.35,.26,.16), 'john_orourke':(.37,.285,.175)}[identity]
     rgba = np.ones((width*height,4),dtype=np.float32)
     rgba[:,:3] = np.array(pigment)*(.8+.45*grain[:,None])
     rgba[:,3] = coverage
@@ -73,13 +74,15 @@ def des_root_material():
     # Continuous density stays stable through mips. Binary noise made the
     # band look like scattered black dots in the native medium close-up.
     # Column-wise grain follows short hairs; fitted fibres supply relief.
-    alpha=coverage.astype(np.float32)
+    # Keep the fitted side band translucent so the exposed temples read as
+    # short hair over skin, rather than a black rectangular cap in profile.
+    alpha=(coverage*.42).astype(np.float32)
     columns=rng.random(width)
     shift=(np.sin(y*1.7)*2).astype(np.int32)
     grain=columns[(np.arange(width)[None,:]+shift[:,None])%width].ravel()
     tone=.75+.45*grain+.06*rng.random(width*height)
     rgba=np.ones((width*height,4),dtype=np.float32)
-    rgba[:,:3]=tone[:,None]*np.array((.045,.032,.023))
+    rgba[:,:3]=tone[:,None]*np.array((.085,.062,.045))
     rgba[:,3]=alpha
     name='Des_side_back_root_clusters'
     old=bpy.data.images.get(name)
@@ -115,6 +118,8 @@ def build_groom(head, rig, identity):
         'john_orourke': ((.065, .030, .013), (.095, .048, .022), (.135, .075, .038)),
         'bordeaux_09': ((.012, .007, .004), (.020, .012, .007), (.034, .022, .013)),
         'des_feeney_sr': ((.055, .051, .046), (.115, .110, .100), (.235, .225, .210)),
+        'robbie_roden': ((.035,.020,.011),(.055,.034,.018),(.080,.051,.029)),
+        'david_murray': ((.085,.052,.026),(.125,.080,.041),(.19,.135,.075)),
     }[identity]
     # John's beard/brows retain their approved warm brown palette. His scalp
     # has a separate dark-blonde base and brighter wheat highlights.
@@ -149,7 +154,7 @@ def build_groom(head, rig, identity):
     root_points, root_faces, root_indices, root_tones = [], [], {}, []
     def root_region(kind):
         for tri in triangles:
-            boundary=.025 if identity in ('bordeaux_09','shane_denham','john_orourke') and kind==0 else .5
+            boundary=.025 if identity in ('bordeaux_09','shane_denham','john_orourke','robbie_roden','david_murray') and kind==0 else .5
             poly = [(mesh.vertices[i].co.copy(),float(vertex_masks[i,kind])-boundary) for i in tri.vertices]
             clipped = []
             for (start,a), (end,b) in zip(poly, poly[1:]+poly[:1]):
@@ -173,7 +178,7 @@ def build_groom(head, rig, identity):
             if len(set(face)) >= 3:
                 root_faces.append(face)
                 root_tones.append(3 if identity in ('john_orourke','bordeaux_09') and kind == 0 else 1 if identity == 'des_feeney_sr' else 0)
-    if identity in ('shane_denham', 'john_orourke', 'bordeaux_09'): root_region(0)
+    if identity in ('shane_denham', 'john_orourke', 'bordeaux_09','robbie_roden','david_murray'): root_region(0)
     # Facial hair is pigment plus dense tapered fibres. An opaque fitted
     # undercoat produced a conspicuous solid trapezoid on the chin in Godot.
     if not root_faces:
@@ -182,7 +187,7 @@ def build_groom(head, rig, identity):
     root_uvs=[((math.atan2(p.x,p.z+1)+math.pi)/(2*math.pi),(p.y-155.)/24.) for p in root_points]
     roots = bound_mesh(names[0], root_points, root_faces, rig, materials[3] if identity == 'john_orourke' else materials[0],uvs=root_uvs)
     roots.data.materials.clear()
-    if identity in ('bordeaux_09','shane_denham','john_orourke'):
+    if identity in ('bordeaux_09','shane_denham','john_orourke','robbie_roden','david_murray'):
         roots.data.materials.append(des_root_material() if identity=='bordeaux_09' else portrait_root_material(identity))
         for polygon in roots.data.polygons: polygon.material_index=0
     else:
@@ -209,8 +214,9 @@ def build_groom(head, rig, identity):
             cumulative[kind].append(totals[kind])
             distributions[kind].append((a.copy(), b.copy(), c.copy(), *[float(vertex_masks[i,kind]) for i in tri.vertices]))
     counts = {
-        'shane_denham': (6000, 0, 720), 'john_orourke': (5200, 12000, 680),
-        'bordeaux_09': (5200, 13000, 680), 'des_feeney_sr': (1400, 6500, 640),
+        'shane_denham': (6000, 0, 720), 'john_orourke': (5200, 7000, 680),
+        'bordeaux_09': (5200, 6000, 680), 'des_feeney_sr': (1400, 3500, 640),
+        'robbie_roden': (5500, 0, 680), 'david_murray': (4200, 0, 620),
     }[identity]
     vertices, faces, face_materials, emitted_counts = [], [], [], []
     for kind, count in enumerate(counts):
@@ -259,15 +265,15 @@ def build_groom(head, rig, identity):
                     length, width, lift, rows = rng.uniform(.20, .42), rng.uniform(.012, .024), .035, 3
                 else:
                     length = rng.uniform(1.2, 2.4) if top else rng.uniform(.35, .80)
-                    if identity == 'shane_denham':
+                    if identity in ('shane_denham','robbie_roden','david_murray'):
                         length = rng.uniform(.65, 1.15) if top else rng.uniform(.25, .55)
                     if identity == 'john_orourke' and top:
                         length *= 1.65
                     width = rng.uniform(.055, .095) if top else rng.uniform(.018, .038)
                     lift = rng.uniform(.34, .70) if top else rng.uniform(.04, .12)
-                    if identity == 'shane_denham' and top:
+                    if identity in ('shane_denham','robbie_roden','david_murray') and top:
                         lift = rng.uniform(.14, .30)
-                    if identity == 'shane_denham':
+                    if identity in ('shane_denham','robbie_roden','david_murray'):
                         width = rng.uniform(.020,.045) if top else rng.uniform(.012,.025)
                         # Short irregular crop, without a uniform opaque cap.
                         flow += Vector((.16*math.sin(root.z*1.7),0,.12*math.sin(root.x*1.4)))
@@ -318,10 +324,10 @@ def build_groom(head, rig, identity):
                     fitted, fitted_normal = near, normal
                 # Root and entire fibre follow the anatomical surface, avoiding
                 # floating chin spikes when a straight strand crosses the jaw.
-                base_lift = .09 if kind == 0 and identity in ('shane_denham', 'john_orourke') else .018
+                base_lift = .09 if kind == 0 and identity in ('shane_denham', 'john_orourke','robbie_roden','david_murray') else .018
                 if kind == 0 and identity == 'bordeaux_09':
                     base_lift = .065
-                if kind == 0 and identity in ('shane_denham', 'john_orourke'):
+                if kind == 0 and identity in ('shane_denham', 'john_orourke','robbie_roden','david_murray'):
                     crown = max(0, min(1, (fitted.y-170)/5))
                     base_lift += (.30 if identity == 'john_orourke' else .12)*crown+.04
                 centre = fitted+fitted_normal*(base_lift+lift*math.sin(math.pi*u*.8))

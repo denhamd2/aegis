@@ -207,6 +207,9 @@ func configure_appearance(profile: FootballerProfile, team: FootballTeam = null)
 			var fullness := part.find_blend_shape_by_name("Fullness")
 			if fullness >= 0:
 				part.set_blend_shape_value(fullness, appearance.body_fullness)
+			var athletic_form := part.find_blend_shape_by_name("AthleticForm")
+			if athletic_form >= 0:
+				part.set_blend_shape_value(athletic_form, 1.0)
 		if part_name == "Skin_Head": _face_mesh = part
 		if part_name == "Skin_Head" or part_name.begins_with("Eye_") or part_name.begins_with("Hair_"):
 			if not _base_head_parts.has(part_name):

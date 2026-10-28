@@ -155,8 +155,8 @@
         "data/players/david_murray.tres"
       ],
       "sculpt": "deltas/david_murray.json",
-      "hair": "legacy_crop",
-      "likeness": "starting head; individual likeness pending"
+      "hair": "david_crop",
+      "likeness": "BR-022 individual sculpt and fitted fair crop from generated roster sheet; original portrait unavailable"
     },
     "deco_mccabe": {
       "display_name": "Deco McCabe",
@@ -202,8 +202,8 @@
         "data/players/robbie_roden.tres"
       ],
       "sculpt": "deltas/robbie_roden.json",
-      "hair": "legacy_crop",
-      "likeness": "starting head; individual likeness pending"
+      "hair": "robbie_crop",
+      "likeness": "BR-022 individual sculpt and fitted dark crop from generated roster sheet; original portrait unavailable"
     },
     "michael_mccabe": {
       "display_name": "Michael McCabe",

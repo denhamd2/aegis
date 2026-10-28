@@ -6,6 +6,17 @@ func _initialize() -> void:
 func _part(rig: Node, name: String) -> MeshInstance3D:
 	return rig.find_child(name, true, false) as MeshInstance3D
 
+func _head_width(mesh: Mesh) -> float:
+	var points: PackedVector3Array = mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+	var left := INF
+	var right := -INF
+	for point in points:
+		if point.y < 1.60 or point.y > 1.65 or point.z < .07:
+			continue
+		left = minf(left, point.x)
+		right = maxf(right, point.x)
+	return right - left
+
 func _run() -> void:
 	var package := (load("res://assets/characters/shared/heads/master.glb") as PackedScene).instantiate()
 	var master := _part(package, "Skin_Head").mesh
@@ -22,6 +33,12 @@ func _run() -> void:
 	var referee_head := _part(referee_package, "Skin_Head").mesh
 	var referee_hair_package := (load("res://assets/characters/shared/heads/referee_grey.glb") as PackedScene).instantiate()
 	var referee_hair := _part(referee_hair_package, "Hair_Shane_ShortCropCards").mesh
+	var robbie_package := (load("res://assets/characters/shared/heads/players/robbie_roden.glb") as PackedScene).instantiate()
+	var david_package := (load("res://assets/characters/shared/heads/players/david_murray.glb") as PackedScene).instantiate()
+	var robbie_hair_package := (load("res://assets/characters/shared/heads/robbie_crop.glb") as PackedScene).instantiate()
+	var david_hair_package := (load("res://assets/characters/shared/heads/david_crop.glb") as PackedScene).instantiate()
+	assert(_head_width(_part(robbie_package,"Skin_Head").mesh) > _head_width(_part(david_package,"Skin_Head").mesh) + .025,
+		"Robbie's rounder face and David's narrow face must have distinct silhouettes")
 	var game := (load("res://scenes/match_11v11.tscn") as PackedScene).instantiate()
 	root.add_child(game)
 	await process_frame
@@ -44,8 +61,10 @@ func _run() -> void:
 		var is_bordeaux: bool = actor is FootballPlayer and String((actor as FootballPlayer).profile.player_id).begins_with("bordeaux_")
 		var is_john: bool = actor is FootballPlayer and String((actor as FootballPlayer).profile.player_id) == "john_orourke"
 		var is_shane: bool = actor is FootballPlayer and String((actor as FootballPlayer).profile.player_id) == "shane_denham"
+		var is_robbie: bool = actor is FootballPlayer and String((actor as FootballPlayer).profile.player_id) == "robbie_roden"
+		var is_david: bool = actor is FootballPlayer and String((actor as FootballPlayer).profile.player_id) == "david_murray"
 		var is_referee: bool = actor == officials[0]
-		var expected_head_package := des_package if is_bordeaux else (john_package if is_john else (referee_package if is_referee else (shane_package if is_shane else package)))
+		var expected_head_package := des_package if is_bordeaux else (john_package if is_john else (referee_package if is_referee else (shane_package if is_shane else (robbie_package if is_robbie else (david_package if is_david else package)))))
 		if is_bordeaux:
 			des_away_count += 1
 			assert(_part(rig, "Skin_Head").mesh == des_head, "Boardeaux players must reuse Des Feeney's individual head")
@@ -58,11 +77,17 @@ func _run() -> void:
 			assert(_part(rig, "Hair_Shane_ShortCropCards").mesh == referee_hair, "Referee must retain his separate grey moustache/side groom")
 		elif is_shane:
 			assert(_part(rig, "Skin_Head").mesh == _part(shane_package, "Skin_Head").mesh, "Shane must use his independent refined head")
+		elif is_robbie:
+			assert(_part(rig, "Skin_Head").mesh == _part(robbie_package, "Skin_Head").mesh, "Robbie must use his independent head")
+			assert(_part(rig, "Hair_Shane_ShortCropCards").mesh == _part(robbie_hair_package, "Hair_Shane_ShortCropCards").mesh)
+		elif is_david:
+			assert(_part(rig, "Skin_Head").mesh == _part(david_package, "Skin_Head").mesh, "David must use his independent head")
+			assert(_part(rig, "Hair_Shane_ShortCropCards").mesh == _part(david_hair_package, "Hair_Shane_ShortCropCards").mesh)
 		else:
 			assert(_part(rig, "Skin_Head").mesh == master, "Unedited players must share master")
 		for eye in ["Eye_l", "Eye_r"]:
 			assert(_part(rig, eye).mesh == _part(expected_head_package, eye).mesh)
-		if is_bordeaux or is_john or is_shane or is_referee:
+		if is_bordeaux or is_john or is_shane or is_referee or is_robbie or is_david:
 			var face := _part(rig, "Skin_Head")
 			assert(face.find_blend_shape_by_name("Blink") >= 0 and face.find_blend_shape_by_name("Smile") >= 0)
 			var shift := float(absi(hash(visual._appearance_profile.player_id)) % 310) / 100.0
@@ -126,5 +151,9 @@ func _run() -> void:
 	john_hair_package.free()
 	referee_package.free()
 	referee_hair_package.free()
+	robbie_package.free()
+	david_package.free()
+	robbie_hair_package.free()
+	david_hair_package.free()
 	game.free()
 	quit(0)

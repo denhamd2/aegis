@@ -37,6 +37,37 @@ def fullness(point):
     return Vector((x+dx, y, z+dz))
 
 
+def athletic_form(point):
+    """A small, shared silhouette correction in the source's centimetre space.
+
+    Apply one continuous field to skin and kit so cuffs, hems and exposed
+    joints retain their interfaces. The neutral cage, UVs and weights stay
+    untouched; Godot sets this corrective to one for every player.
+    """
+    x, y, z = point
+    ax = abs(x)
+    torso = math.exp(-((y-122.)/24.)**4) * math.exp(-(ax/24.)**8)
+    # Remove the boxy shirt/barrel profile while retaining shoulder and waist.
+    x *= 1. - .085 * torso
+    z *= 1. - .065 * torso
+    thigh = math.exp(-((y-84.)/17.)**4) * math.exp(-((ax-9.)/13.)**6)
+    x -= math.copysign(.070 * (ax-9.) * thigh, x)
+    z *= 1. - .065 * thigh
+    arm = math.exp(-((ax-34.)/17.)**4) * math.exp(-((y-143.)/13.)**4)
+    y = 143. + (y-143.)*(1. - .075*arm)
+    z *= 1. - .08*arm
+    # Footballers' palms and fingers read oversized beside their faces.
+    # Fade the reduction in after the wrist to preserve the arm join.
+    hand = max(0., min(1., (ax-73.)/10.))
+    x -= math.copysign(.085 * max(0., ax-73.) * hand, x)
+    y = 143. + (y-143.) * (1. - .12*hand)
+    z *= 1. - .12*hand
+    # Taper boot toes, leaving the ankle/socket unchanged.
+    toe = math.exp(-((y-7.)/6.)**4) * math.exp(-((ax-11.)/12.)**6)
+    z *= 1. - .07*toe
+    return Vector((x,y,z))
+
+
 def main():
     source = HERE/'footballer_shared.blend'
     before = hashlib.sha256(source.read_bytes()).hexdigest()
@@ -51,16 +82,22 @@ def main():
     selected = []
     audit = {}
     for obj in list(bpy.data.objects):
-        if obj.type != 'MESH' or obj.name.startswith(('Hair_', 'Eye_')) or obj.name in ('Skin_Head','Skin_Hands','Kit_Boots'):
+        if obj.type != 'MESH' or obj.name.startswith(('Hair_', 'Eye_')) or obj.name == 'Skin_Head':
             continue
-        if not any((fullness(v.co)-v.co).length > .0001 for v in obj.data.vertices):
+        has_fullness = any((fullness(v.co)-v.co).length > .0001 for v in obj.data.vertices)
+        has_form = any((athletic_form(v.co)-v.co).length > .0001 for v in obj.data.vertices)
+        if not (has_fullness or has_form):
             continue
         basis = obj.shape_key_add(name='Basis')
         shape = obj.shape_key_add(name='Fullness')
         for point, base in zip(shape.data, basis.data):
             point.co = fullness(base.co)
+        form = obj.shape_key_add(name='AthleticForm')
+        for point, base in zip(form.data, basis.data):
+            point.co = athletic_form(base.co)
         audit[obj.name] = {'vertices':len(obj.data.vertices),
-            'max_delta_cm':max((p.co-b.co).length for p,b in zip(shape.data,basis.data))}
+            'max_fullness_cm':max((p.co-b.co).length for p,b in zip(shape.data,basis.data)),
+            'max_athletic_cm':max((p.co-b.co).length for p,b in zip(form.data,basis.data))}
         selected.append(obj)
     assert len(rig.data.bones) == 65 and len(selected) >= 6
     bpy.ops.object.select_all(action='DESELECT')
@@ -84,7 +121,8 @@ def main():
     out = PROJECT/'docs/art_briefs/realism_finish'
     out.mkdir(parents=True,exist_ok=True)
     (out/'body_shapes.json').write_text(json.dumps({'source_sha256':before,'rig_bones':65,
-        'neutral_source_unchanged':True,'parts':audit},indent=2)+'\n')
+        'neutral_source_unchanged':True,'parts':audit,
+        'athletic_form':'shared runtime corrective at weight 1.0'},indent=2)+'\n')
     print('BODY_FULLNESS_EXPORT', len(selected), 'shared morph meshes', flush=True)
 
 
