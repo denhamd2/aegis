@@ -921,25 +921,42 @@ without AI stalls. Validate the same actions with human-vs-AI and AI-vs-AI.
 
 ### P2 — Scale the validated systems to 11v11
 
-- [ ] **BR-011 — Formation and role positioning**
-  - 2026-10-18: full 4-4-2 team-relative slots and role-aware support/cover are
-    active in 11v11. Additional formations and tactical tuning remain open.
+- [x] **BR-011 — Formation and role positioning**
+  - 2026-10-28: match-local 4-4-2, 4-3-3, 4-2-3-1 and 4-5-1 layouts assign
+    eleven team-relative positions without mutating the saved squads or 4v4
+    fixture. Defensive and attacking midfielders now have distinct support
+    and cover targets; lineup cards follow each formation. See
+    [`art_briefs/p2_2026_10_28/brief.md`](art_briefs/p2_2026_10_28/brief.md).
   Add 4-4-2, 4-3-3, 4-2-3-1 and 4-5-1 using team-relative coordinates. Implement
   goalkeeper, centre-back, fullback, defensive/central/attacking midfielder,
   winger and striker responsibilities.
-- [ ] **BR-012 — Team tactics and transitions**
+- [x] **BR-012 — Team tactics and transitions**
+  - 2026-10-28: editable team width, depth, pressing, directness and tempo now
+    drive formation spacing, second-press range, forward runs, pass decisions
+    and AI action cadence. Midfield/forward second press keeps the back line
+    and holding midfielder in cover. Existing ball-side shift, outlet/runner
+    passing triangles and late lead protection remain active. Full default,
+    4-3-3/4-2-3-1 and 4-5-1/4-4-2 AI matches reached full time without stalls.
   Add width, depth, pressing, directness and tempo settings. Shift defensive
   shape to the ball, preserve cover, create passing triangles, counterpress
   selectively and make late-game score-aware adjustments.
 - [ ] **BR-013 — Efficient 22-player simulation**
   - 2026-10-18: 22 shared human actors plus separate referee validated; teams
     alternate 5 Hz tactical decisions, movement/ball remain fixed 60 Hz. Shared
-    mesh/material propagation and independent playback are tested. Native
-    frame-time, draw-call and memory budgets remain unmeasured.
+    mesh/material propagation and independent playback are tested. Target-Mac
+    physics/animation frame-time, draw-call and memory budgets remain unmeasured.
+  - 2026-10-28: matched 640×360 Linux Forward+ kickoff capture measured 1,208
+    draws and 1,157,084 primitives, unchanged from v0.5.7; peak process RSS
+    was 4,311,156 KiB (v0.5.7: 4,289,380 KiB). This is software Vulkan and
+    does not establish target-Mac sustained 1080p60, physics or animation timing.
   Expand from the validated 4v4 architecture, not a monolithic AI function. Stagger
   tactical decisions, use primitive collisions and shared resources, and
   measure physics, animation, draw calls and memory before adding detail.
 - [ ] **BR-014 — Broadcast camera, HUD and radar**
+  - 2026-10-28: all nine camera presets, camera direction and HUD/radar
+    layout checks pass with the four-formation match. Native Forward+ 720p
+    stadium and matched 360p captures retain the supplied 69022/70060
+    composition goals; target-Mac camera/input QA remains open.
   - 2026-10-24: native vector black/white match HUD follows `70060.jpg`;
     real identities/stamina/charge, team crests, camera-oriented radar, responsive
     safe margins and F1 help. Existing blue intro graphics remain separate.
@@ -976,8 +993,10 @@ without AI stalls. Validate the same actions with human-vs-AI and AI-vs-AI.
   radar and debug-only touchline, goal and corner capture cameras. Native M1
   camera/input QA remains open.
 
-**P2 exit check:** both full teams preserve recognizable shape, support attacks,
-recover on loss, create and defend chances, and remain readable from the camera.
+**P2 exit check:** cloud checks show both full teams preserving recognizable
+shape, supporting attacks, recovering on loss, creating and defending chances,
+and remaining readable from the camera. Target-Mac camera/input QA and sustained
+1080p60 physics/animation/rendering acceptance remain open in BR-013/014/025.
 
 ### P3 — Complete match rules and team management
 

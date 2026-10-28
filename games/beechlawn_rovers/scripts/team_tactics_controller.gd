@@ -16,7 +16,7 @@ func update_team_targets(team_players: Array[FootballPlayer], chaser: FootballPl
 	var marking_assignments := assign_defensive_marks(team_players, chaser, opponents,
 		ball_position, secondary_presser) if not in_possession else {}
 	var decisions := {}
-	var support_plan := _support_targets(team_players, chaser, ball_position, opponents) if in_possession and team_players.size() >= 7 else {}
+	var support_plan := _support_targets(team_players, chaser, ball_position, opponents, context) if in_possession and team_players.size() >= 7 else {}
 	# Last touch survives passes and loose deflections. Press an actual nearby
 	# carrier; otherwise the primary chaser must reach the loose ball itself.
 	var opponent_in_control_range := false
@@ -50,13 +50,13 @@ func update_team_targets(team_players: Array[FootballPlayer], chaser: FootballPl
 					carry_direction = carry_direction.lerp(goalward.normalized(), turn_in).normalized()
 				if team_players.size() >= 7:
 					carry_direction = _open_carry_direction(ball_position, carry_direction, opponents)
-				target = ball_position + carry_direction * carry_push
+				target = ball_position + carry_direction * carry_push * (0.8 + 0.4 * float(context.get("tempo", 0.5)))
 			else:
 				target = interception_position
 		elif in_possession:
 			target = support_plan.get(actor.get_instance_id(), {}).get("target",
 				attacking_support_position(actor, ball_position,
-					actor.team_name == transition_team and transition_time_left > 0.0))
+					actor.team_name == transition_team and transition_time_left > 0.0, context))
 		elif actor == chaser or actor == secondary_presser:
 			if actor == chaser and not opponent_in_control_range:
 				target = interception_position
@@ -68,7 +68,7 @@ func update_team_targets(team_players: Array[FootballPlayer], chaser: FootballPl
 					side * lateral_offset)
 		else:
 			target = defensive_shape_position(actor, ball_position,
-				float(context.get("late_lead_depth", 0.0)))
+				float(context.get("late_lead_depth", 0.0)), context)
 			mark = marking_assignments.get(actor.get_instance_id()) as FootballPlayer
 			if mark != null:
 				target = marking_position(actor, mark, ball_position, target)
@@ -91,7 +91,7 @@ func update_team_targets(team_players: Array[FootballPlayer], chaser: FootballPl
 	return decisions
 
 func _support_targets(team: Array[FootballPlayer], carrier: FootballPlayer,
-		ball: Vector2, opponents: Array[FootballPlayer]) -> Dictionary:
+		ball: Vector2, opponents: Array[FootballPlayer], context: Dictionary = {}) -> Dictionary:
 	if carrier == null:
 		return {}
 	var result := {}
@@ -103,7 +103,7 @@ func _support_targets(team: Array[FootballPlayer], carrier: FootballPlayer,
 	var outlet: FootballPlayer
 	var outlet_target := Vector2.ZERO
 	var best_cost := INF
-	var gap := carrier.tuning.ai_support_distance
+	var gap := carrier.tuning.ai_support_distance * (0.75 + 0.5 * float(context.get("width", 0.5)))
 	for actor in candidates:
 		if actor.profile.tactical_role == "centre_back":
 			continue
@@ -122,10 +122,11 @@ func _support_targets(team: Array[FootballPlayer], carrier: FootballPlayer,
 	var runner_target := Vector2.ZERO
 	best_cost = INF
 	for actor in candidates:
-		if actor == outlet or actor.profile.tactical_role not in ["striker", "winger"]:
+		if actor == outlet or actor.profile.tactical_role not in ["striker", "winger", "attacking_midfielder"]:
 			continue
 		var lane := clampf(actor.profile.starting_position.y, -14.0,14.0)
-		var target := ball + Vector2(carrier.attack_sign * carrier.tuning.ai_forward_run_distance, 0)
+		var target := ball + Vector2(carrier.attack_sign * carrier.tuning.ai_forward_run_distance
+			* (0.8 + 0.4 * float(context.get("directness", 0.5))), 0)
 		target.y = clampf(lerpf(lane,ball.y,.25),-25,25)
 		target.x = clampf(target.x,-46,46)
 		var cost := Vector2(actor.position.x,actor.position.z).distance_to(target)
@@ -234,9 +235,9 @@ func marking_position(defender: FootballPlayer, opponent: FootballPlayer,
 	return Vector2(target_forward * defender.attack_sign, target_lateral)
 
 func attacking_support_position(actor: FootballPlayer, ball_position: Vector2,
-		transition_push := false) -> Vector2:
+		transition_push := false, context: Dictionary = {}) -> Vector2:
 	if actor.profile.starting_slot not in ["left", "center", "right", "keeper"]:
-		return formation_position(actor, ball_position, true, transition_push)
+		return formation_position(actor, ball_position, true, transition_push, 0.0, context)
 	var slot := actor.profile.starting_slot
 	var forward_ball := ball_position.x * actor.attack_sign
 	var base_forward := actor.profile.starting_position.x
@@ -252,9 +253,9 @@ func attacking_support_position(actor: FootballPlayer, ball_position: Vector2,
 	return Vector2(forward * actor.attack_sign, lateral)
 
 func defensive_shape_position(actor: FootballPlayer, ball_position: Vector2,
-		late_lead_depth: float) -> Vector2:
+		late_lead_depth: float, context: Dictionary = {}) -> Vector2:
 	if actor.profile.starting_slot not in ["left", "center", "right", "keeper"]:
-		return formation_position(actor, ball_position, false, false, late_lead_depth)
+		return formation_position(actor, ball_position, false, false, late_lead_depth, context)
 	var slot := actor.profile.starting_slot
 	var forward_ball := ball_position.x * actor.attack_sign
 	var base_forward := actor.profile.starting_position.x
@@ -271,24 +272,29 @@ func defensive_shape_position(actor: FootballPlayer, ball_position: Vector2,
 	return Vector2(forward * actor.attack_sign, lateral)
 
 func formation_position(actor: FootballPlayer, ball: Vector2, attacking: bool,
-		transition: bool, lead_depth := 0.0) -> Vector2:
+		transition: bool, lead_depth := 0.0, context: Dictionary = {}) -> Vector2:
 	var base := actor.profile.starting_position
 	var role := actor.profile.tactical_role
 	var forward_ball := ball.x * actor.attack_sign
-	var shift := clampf(forward_ball * 0.38, -16.0, 21.0)
+	var depth := float(context.get("depth", 0.5))
+	var width := float(context.get("width", 0.5))
+	var shift := clampf(forward_ball * 0.38, -16.0, 21.0) + (depth - 0.5) * 8.0
 	var forward := base.x + shift
-	var lane := base.y + ball.y * 0.16
+	var lane := base.y * (0.75 + 0.5 * width) + ball.y * 0.16
 	if attacking:
 		match role:
 			"centre_back": forward = minf(forward, forward_ball - 13.0)
 			"fullback": forward = minf(forward + 7.0, forward_ball - 6.0)
+			"defensive_midfielder": forward = minf(forward, forward_ball - 8.0)
 			"central_midfielder": forward = lerpf(base.x + shift, forward_ball - 4.5, 0.55)
+			"attacking_midfielder": forward = maxf(forward, forward_ball + (5.0 if transition else 2.0))
 			"winger":
 				forward = maxf(forward, forward_ball + (9.0 if transition else 5.0))
-				lane = base.y * 0.94 + ball.y * 0.06
+				lane = base.y * (0.75 + 0.5 * width) * 0.94 + ball.y * 0.06
 			"striker": forward = maxf(forward, forward_ball + (12.0 if transition else 8.0))
 	else:
-		var role_gap := 16.0 if role in ["centre_back", "fullback"] else 7.0 if role != "striker" else 1.5
+		var role_gap := 16.0 if role in ["centre_back", "fullback"] else 10.0 if role == "defensive_midfielder" else 5.0 if role == "attacking_midfielder" else 7.0 if role != "striker" else 1.5
+		role_gap -= (depth - 0.5) * 8.0
 		forward = minf(forward - lead_depth, forward_ball - role_gap)
-		lane = base.y * 0.78 + ball.y * 0.22
+		lane = base.y * (0.75 + 0.5 * width) * 0.78 + ball.y * 0.22
 	return Vector2(clampf(forward, -46.0, 46.0) * actor.attack_sign, clampf(lane, -29.0, 29.0))

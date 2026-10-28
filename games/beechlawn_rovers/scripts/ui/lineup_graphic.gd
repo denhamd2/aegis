@@ -10,6 +10,29 @@ const ROWS := [
 	["left_back", "left_center_back", "right_center_back", "right_back"],
 	["keeper"],
 ]
+const FORMATION_ROWS := {
+	"4-4-2": ROWS,
+	"4-3-3": [
+		["left_wing", "striker_left", "right_wing"],
+		["striker_right", "left_midfield", "right_midfield"],
+		["left_back", "left_center_back", "right_center_back", "right_back"],
+		["keeper"],
+	],
+	"4-2-3-1": [
+		["striker_left"],
+		["left_wing", "striker_right", "right_wing"],
+		["left_midfield", "right_midfield"],
+		["left_back", "left_center_back", "right_center_back", "right_back"],
+		["keeper"],
+	],
+	"4-5-1": [
+		["striker_left"],
+		["left_wing", "striker_right", "right_midfield", "right_wing"],
+		["left_midfield"],
+		["left_back", "left_center_back", "right_center_back", "right_back"],
+		["keeper"],
+	],
+}
 var teams: Array[FootballTeam] = []
 var displayed_team := -1
 var displayed_profiles: Array[FootballerProfile] = []
@@ -53,19 +76,22 @@ func _rebuild(index: int) -> void:
 	var accent := Color(0.48, 0.83, 1.0) if index == 1 else Color(0.58, 0.77, 1.0)
 	_label(_content, "HOME  /  STARTING XI" if index == 0 else "AWAY  /  STARTING XI", Vector2(128, 18), Vector2(550, 22), 17, accent)
 	_label(_content, team.display_name.to_upper(), Vector2(126, 41), Vector2(570, 50), 39, Color.WHITE)
-	_label(_content, "4–4–2", Vector2(700, 39), Vector2(120, 42), 31, accent)
+	_label(_content, team.formation.replace("-", "–"), Vector2(685, 39), Vector2(150, 42), 31, accent)
 	_add_crest(index)
 	var profiles := {}
 	for profile in team.roster:
 		profiles[profile.starting_slot] = profile
-	for row_index in ROWS.size():
-		var row: Array = ROWS[row_index]
+	var rows: Array = FORMATION_ROWS.get(team.formation, ROWS)
+	for row_index in rows.size():
+		var row: Array = rows[row_index]
 		for column in row.size():
 			var profile := profiles.get(row[column]) as FootballerProfile
 			if profile == null:
 				continue
-			var center_x := 425.0 if row.size() == 1 else (280.0 + column * 290.0 if row.size() == 2 else 115.0 + column * 205.0)
-			_add_card(profile, Vector2(center_x - 95.0, 125.0 + row_index * 145.0), accent)
+			var spacing := 290.0 if row.size() == 2 else 205.0
+			var center_x := 425.0 + (float(column) - float(row.size() - 1) * 0.5) * spacing
+			_add_card(profile, Vector2(center_x - 95.0,
+				(100.0 if rows.size() == 5 else 125.0) + row_index * (118.0 if rows.size() == 5 else 145.0)), accent)
 	manager_label = _label(_content, "PLAYER-MANAGER  ·  " + team.manager_name.to_upper(), Vector2(34, 708), Vector2(780, 32), 23, Color.WHITE)
 	if OS.has_feature("web") and OS.has_feature("debug"):
 		JavaScriptBridge.eval("window.BEECHLAWN_LINEUP_TEAM = '%s'" % team.display_name)
@@ -76,7 +102,7 @@ func _rebuild(index: int) -> void:
 			identities.append(profile.display_name)
 		JavaScriptBridge.eval("window.BEECHLAWN_LINEUP_STATE = " + JSON.stringify({
 			"team": team.display_name, "manager": team.manager_name,
-			"numbers": numbers, "identities": identities, "formation": "4-4-2"}))
+			"numbers": numbers, "identities": identities, "formation": team.formation}))
 
 func _add_card(profile: FootballerProfile, at: Vector2, accent: Color) -> void:
 	var card := Control.new()

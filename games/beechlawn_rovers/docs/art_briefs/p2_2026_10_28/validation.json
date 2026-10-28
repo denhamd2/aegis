@@ -1,0 +1,23 @@
+{
+  "baseline_commit": "2c7e3e846ec064a054cbeb7cd9bb26efdca111e0",
+  "godot": "4.6.3",
+  "formation_role_and_match_smoke": "pass",
+  "default_4_4_2": {"shots": [2, 7], "goals": [1, 1], "stationary_ball_stall_seconds": 0},
+  "4_3_3_vs_4_2_3_1": {"shots": [4, 2], "goals": [1, 1], "stationary_ball_stall_seconds": 0, "longest_stationary_sample_seconds": 1},
+  "4_5_1_vs_4_4_2": {"shots": [2, 7], "goals": [0, 2], "stationary_ball_stall_seconds": 0},
+  "matched_arena_640x360": {
+    "renderer": "Linux software Vulkan Forward+ (llvmpipe)",
+    "draw_calls": 1208,
+    "baseline_draw_calls": 1208,
+    "primitives": 1157084,
+    "baseline_primitives": 1157084,
+    "peak_linux_rss_kib": 4311156,
+    "baseline_peak_linux_rss_kib": 4289380
+  },
+  "native_forward_plus_motion": {"frames": 24, "physics_steps_per_draw": 6, "shot_contact_tick": 19, "goal_by_tick": 144, "fixture": "staged live attack_home"},
+  "remaining_acceptance": [
+    "BR-013 target-Mac sustained physics, animation, rendering and memory timing",
+    "BR-014 target-Mac camera/input feel",
+    "BR-025 target-Mac sustained 1080p60"
+  ]
+}

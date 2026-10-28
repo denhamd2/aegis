@@ -1,3 +1,18 @@
+# Beechlawn Rovers 27 — v0.5.8
+
+Full teams can now use 4-4-2, 4-3-3, 4-2-3-1 or 4-5-1. Team resources expose
+width, depth, pressing, directness and tempo. Defensive and attacking
+midfielders have distinct support and cover positions, while a second presser
+leaves the back line and holding midfielders in cover. The pre-match lineup
+cards follow the selected formation. The default remains 4-4-2, and Kilmore's
+4v4 fixture is unchanged.
+
+Automated full matches and native Forward+ cloud captures verify these changes.
+Target-Mac camera/input feel and sustained 1080p60 performance remain open.
+Universal Apple Silicon/Intel Mac build.
+
+---
+
 # Beechlawn Rovers 27 — v0.5.7
 
 The first goalkeeper now gathers and distributes with an authored sidearm

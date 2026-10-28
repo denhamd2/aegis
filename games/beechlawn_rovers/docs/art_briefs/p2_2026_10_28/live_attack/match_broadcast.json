@@ -1,0 +1,595 @@
+{
+  "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+  "aerial_events": [],
+  "api": "1.4.305",
+  "away_players": 11,
+  "camera_position": "(48.93566, 12.38098, -28.63903)",
+  "display_server": "X11",
+  "fixture_setup": "attack_home",
+  "fov_degrees": 50.0,
+  "frames": [
+    {
+      "aerial_actor": "",
+      "ball": "(35.6, 0.11, 6.002606)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.000029, -0.171288, 0.048645)",
+      "file": "frame_000.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "attack_home",
+      "player": "(35.00002, 0.000991, 6.013191)",
+      "player_velocity": "(0.000432, 0.0, 0.159919)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 6
+    },
+    {
+      "aerial_actor": "",
+      "ball": "(35.60002, 0.11, 6.011558)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.000545, 0.0, 0.122385)",
+      "file": "frame_001.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "attack_home",
+      "player": "(35.0002, 0.000991, 6.035626)",
+      "player_velocity": "(0.003515, 0.0, 0.281451)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 12
+    },
+    {
+      "aerial_actor": "",
+      "ball": "(35.60019, 0.11, 6.02951)",
+      "ball_action": "dribble",
+      "ball_velocity": "(0.002646, 0.0, 0.220891)",
+      "file": "frame_002.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "attack_home",
+      "player": "(35.00088, 0.000991, 6.069169)",
+      "player_velocity": "(0.009238, 0.0, 0.367942)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 18
+    },
+    {
+      "aerial_actor": "",
+      "ball": "(37.13706, 0.604208, 5.245672)",
+      "ball_action": "shot",
+      "ball_velocity": "(18.33459, 5.487955, -9.45702)",
+      "file": "frame_003.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "attack_home",
+      "player": "(35.0518, 0.000991, 6.104029)",
+      "player_velocity": "(1.008035, 0.0, 0.314338)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [
+        {
+          "ball": "(35.60024, 0.11, 6.033467)",
+          "team": "Beechlawn Rovers",
+          "tick": 19
+        }
+      ],
+      "tick": 24
+    },
+    {
+      "aerial_actor": "",
+      "ball": "(38.95146, 1.076596, 4.2998)",
+      "ball_action": "shot",
+      "ball_velocity": "(18.0067, 4.182115, -9.458253)",
+      "file": "frame_004.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "attack_home",
+      "player": "(35.21696, 0.000991, 6.114524)",
+      "player_velocity": "(2.073732, 0.0, -0.155338)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [
+        {
+          "ball": "(35.60024, 0.11, 6.033467)",
+          "team": "Beechlawn Rovers",
+          "tick": 19
+        }
+      ],
+      "tick": 30
+    },
+    {
+      "aerial_actor": "",
+      "ball": "(40.73264, 1.420074, 3.354498)",
+      "ball_action": "shot",
+      "ball_velocity": "(17.67152, 2.90491, -9.447701)",
+      "file": "frame_005.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "attack_home",
+      "player": "(35.48264, 0.000991, 6.060275)",
+      "player_velocity": "(3.073447, 0.0, -0.819092)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [
+        {
+          "ball": "(35.60024, 0.11, 6.033467)",
+          "team": "Beechlawn Rovers",
+          "tick": 19
+        }
+      ],
+      "tick": 36
+    },
+    {
+      "aerial_actor": "",
+      "ball": "(42.4799, 1.637477, 2.410908)",
+      "ball_action": "shot",
+      "ball_velocity": "(17.3299, 1.655857, -9.425958)",
+      "file": "frame_006.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "attack_home",
+      "player": "(35.84626, 0.000991, 5.937055)",
+      "player_velocity": "(4.012004, 0.0, -1.560344)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [
+        {
+          "ball": "(35.60024, 0.11, 6.033467)",
+          "team": "Beechlawn Rovers",
+          "tick": 19
+        }
+      ],
+      "tick": 42
+    },
+    {
+      "aerial_actor": "",
+      "ball": "(44.19268, 1.731593, 1.470116)",
+      "ball_action": "shot",
+      "ball_velocity": "(16.98261, 0.434465, -9.393599)",
+      "file": "frame_007.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "attack_home",
+      "player": "(36.29863, 0.000991, 5.733249)",
+      "player_velocity": "(4.888988, 0.0, -2.379428)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [
+        {
+          "ball": "(35.60024, 0.11, 6.033467)",
+          "team": "Beechlawn Rovers",
+          "tick": 19
+        }
+      ],
+      "tick": 48
+    },
+    {
+      "aerial_actor": "",
+      "ball": "(45.87043, 1.705158, 0.533151)",
+      "ball_action": "shot",
+      "ball_velocity": "(16.63043, -0.759763, -9.351182)",
+      "file": "frame_008.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "attack_home",
+      "player": "(36.83883, 0.000991, 5.447689)",
+      "player_velocity": "(5.772943, 0.0, -3.190812)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [
+        {
+          "ball": "(35.60024, 0.11, 6.033467)",
+          "team": "Beechlawn Rovers",
+          "tick": 19
+        }
+      ],
+      "tick": 54
+    },
+    {
+      "aerial_actor": "",
+      "ball": "(47.51271, 1.56086, -0.399013)",
+      "ball_action": "shot",
+      "ball_velocity": "(16.27405, -1.927323, -9.299253)",
+      "file": "frame_009.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "attack_home",
+      "player": "(37.46855, 0.000991, 5.082226)",
+      "player_velocity": "(6.671376, 0.0, -3.98631)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [
+        {
+          "ball": "(35.60024, 0.11, 6.033467)",
+          "team": "Beechlawn Rovers",
+          "tick": 19
+        }
+      ],
+      "tick": 60
+    },
+    {
+      "aerial_actor": "",
+      "ball": "(49.11915, 1.301336, -1.325455)",
+      "ball_action": "shot",
+      "ball_velocity": "(15.91414, -3.068717, -9.238337)",
+      "file": "frame_010.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "attack_home",
+      "player": "(38.17693, 0.000991, 4.648522)",
+      "player_velocity": "(7.223693, 0.0, -4.371569)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [
+        {
+          "ball": "(35.60024, 0.11, 6.033467)",
+          "team": "Beechlawn Rovers",
+          "tick": 19
+        }
+      ],
+      "tick": 66
+    },
+    {
+      "aerial_actor": "",
+      "ball": "(50.68942, 0.929174, -2.245307)",
+      "ball_action": "shot",
+      "ball_velocity": "(15.55133, -4.184447, -9.168941)",
+      "file": "frame_011.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "attack_home",
+      "player": "(38.89811, 0.000991, 4.212092)",
+      "player_velocity": "(7.203092, 0.0, -4.359101)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [
+        {
+          "ball": "(35.60024, 0.11, 6.033467)",
+          "team": "Beechlawn Rovers",
+          "tick": 19
+        }
+      ],
+      "tick": 72
+    },
+    {
+      "aerial_actor": "",
+      "ball": "(52.22327, 0.446911, -3.15775)",
+      "ball_action": "shot",
+      "ball_velocity": "(15.18621, -5.275015, -9.091559)",
+      "file": "frame_012.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "attack_home",
+      "player": "(39.61722, 0.000991, 3.77691)",
+      "player_velocity": "(7.182491, 0.0, -4.346634)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [
+        {
+          "ball": "(35.60024, 0.11, 6.033467)",
+          "team": "Beechlawn Rovers",
+          "tick": 19
+        }
+      ],
+      "tick": 78
+    },
+    {
+      "aerial_actor": "",
+      "ball": "(53.5486, 0.149118, -3.442181)",
+      "ball_action": "shot",
+      "ball_velocity": "(13.56495, 0.824109, 1.905087)",
+      "file": "frame_013.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "attack_home",
+      "player": "(39.73465, 0.000991, 3.700976)",
+      "player_velocity": "(7.045875, 0.0, -4.556005)",
+      "score": [
+        1,
+        0
+      ],
+      "shot_contacts": [
+        {
+          "ball": "(35.60024, 0.11, 6.033467)",
+          "team": "Beechlawn Rovers",
+          "tick": 19
+        }
+      ],
+      "tick": 84
+    },
+    {
+      "aerial_actor": "",
+      "ball": "(54.44888, 0.191856, -3.270067)",
+      "ball_action": "shot",
+      "ball_velocity": "(-3.067261, 0.919764, 2.309825)",
+      "file": "frame_014.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "attack_home",
+      "player": "(39.73465, 0.000991, 3.700976)",
+      "player_velocity": "(7.045875, 0.0, -4.556005)",
+      "score": [
+        1,
+        0
+      ],
+      "shot_contacts": [
+        {
+          "ball": "(35.60024, 0.11, 6.033467)",
+          "team": "Beechlawn Rovers",
+          "tick": 19
+        }
+      ],
+      "tick": 90
+    },
+    {
+      "aerial_actor": "",
+      "ball": "(54.14518, 0.226027, -3.041364)",
+      "ball_action": "shot",
+      "ball_velocity": "(-3.015486, -0.068847, 2.270835)",
+      "file": "frame_015.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "attack_home",
+      "player": "(39.73465, 0.000991, 3.700976)",
+      "player_velocity": "(7.045875, 0.0, -4.556005)",
+      "score": [
+        1,
+        0
+      ],
+      "shot_contacts": [
+        {
+          "ball": "(35.60024, 0.11, 6.033467)",
+          "team": "Beechlawn Rovers",
+          "tick": 19
+        }
+      ],
+      "tick": 96
+    },
+    {
+      "aerial_actor": "",
+      "ball": "(53.84661, 0.162313, -2.816522)",
+      "ball_action": "shot",
+      "ball_velocity": "(-2.964585, -1.040769, 2.232504)",
+      "file": "frame_016.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "attack_home",
+      "player": "(39.73465, 0.000991, 3.700976)",
+      "player_velocity": "(7.045875, 0.0, -4.556005)",
+      "score": [
+        1,
+        0
+      ],
+      "shot_contacts": [
+        {
+          "ball": "(35.60024, 0.11, 6.033467)",
+          "team": "Beechlawn Rovers",
+          "tick": 19
+        }
+      ],
+      "tick": 102
+    },
+    {
+      "aerial_actor": "",
+      "ball": "(53.56345, 0.119524, -2.60219)",
+      "ball_action": "shot",
+      "ball_velocity": "(-2.747659, -0.246383, 2.085486)",
+      "file": "frame_017.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "attack_home",
+      "player": "(39.73465, 0.000991, 3.700976)",
+      "player_velocity": "(7.045875, 0.0, -4.556005)",
+      "score": [
+        1,
+        0
+      ],
+      "shot_contacts": [
+        {
+          "ball": "(35.60024, 0.11, 6.033467)",
+          "team": "Beechlawn Rovers",
+          "tick": 19
+        }
+      ],
+      "tick": 108
+    },
+    {
+      "aerial_actor": "",
+      "ball": "(53.29959, 0.11, -2.401218)",
+      "ball_action": "shot",
+      "ball_velocity": "(-2.562226, 0.0, 1.956469)",
+      "file": "frame_018.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "attack_home",
+      "player": "(39.73465, 0.000991, 3.700976)",
+      "player_velocity": "(7.045875, 0.0, -4.556005)",
+      "score": [
+        1,
+        0
+      ],
+      "shot_contacts": [
+        {
+          "ball": "(35.60024, 0.11, 6.033467)",
+          "team": "Beechlawn Rovers",
+          "tick": 19
+        }
+      ],
+      "tick": 114
+    },
+    {
+      "aerial_actor": "",
+      "ball": "(53.05303, 0.11, -2.212369)",
+      "ball_action": "shot",
+      "ball_velocity": "(-2.39712, 0.0, 1.840276)",
+      "file": "frame_019.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "attack_home",
+      "player": "(39.73465, 0.000991, 3.700976)",
+      "player_velocity": "(7.045875, 0.0, -4.556005)",
+      "score": [
+        1,
+        0
+      ],
+      "shot_contacts": [
+        {
+          "ball": "(35.60024, 0.11, 6.033467)",
+          "team": "Beechlawn Rovers",
+          "tick": 19
+        }
+      ],
+      "tick": 120
+    },
+    {
+      "aerial_actor": "",
+      "ball": "(52.82278, 0.11, -2.034996)",
+      "ball_action": "shot",
+      "ball_velocity": "(-2.235421, 0.0, 1.726543)",
+      "file": "frame_020.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "attack_home",
+      "player": "(39.73465, 0.000991, 3.700976)",
+      "player_velocity": "(7.045875, 0.0, -4.556005)",
+      "score": [
+        1,
+        0
+      ],
+      "shot_contacts": [
+        {
+          "ball": "(35.60024, 0.11, 6.033467)",
+          "team": "Beechlawn Rovers",
+          "tick": 19
+        }
+      ],
+      "tick": 126
+    },
+    {
+      "aerial_actor": "",
+      "ball": "(52.6085, 0.11, -1.868855)",
+      "ball_action": "shot",
+      "ball_velocity": "(-2.077054, 0.0, 1.615235)",
+      "file": "frame_021.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "attack_home",
+      "player": "(39.73465, 0.000991, 3.700976)",
+      "player_velocity": "(7.045875, 0.0, -4.556005)",
+      "score": [
+        1,
+        0
+      ],
+      "shot_contacts": [
+        {
+          "ball": "(35.60024, 0.11, 6.033467)",
+          "team": "Beechlawn Rovers",
+          "tick": 19
+        }
+      ],
+      "tick": 132
+    },
+    {
+      "aerial_actor": "",
+      "ball": "(52.40987, 0.11, -1.713703)",
+      "ball_action": "shot",
+      "ball_velocity": "(-1.921938, 0.0, 1.506329)",
+      "file": "frame_022.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "attack_home",
+      "player": "(39.73465, 0.000991, 3.700976)",
+      "player_velocity": "(7.045875, 0.0, -4.556005)",
+      "score": [
+        1,
+        0
+      ],
+      "shot_contacts": [
+        {
+          "ball": "(35.60024, 0.11, 6.033467)",
+          "team": "Beechlawn Rovers",
+          "tick": 19
+        }
+      ],
+      "tick": 138
+    },
+    {
+      "aerial_actor": "",
+      "ball": "(52.22657, 0.11, -1.569303)",
+      "ball_action": "shot",
+      "ball_velocity": "(-1.769988, 0.0, 1.399814)",
+      "file": "frame_023.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "attack_home",
+      "player": "(39.73465, 0.000991, 3.700976)",
+      "player_velocity": "(7.045875, 0.0, -4.556005)",
+      "score": [
+        1,
+        0
+      ],
+      "shot_contacts": [
+        {
+          "ball": "(35.60024, 0.11, 6.033467)",
+          "team": "Beechlawn Rovers",
+          "tick": 19
+        }
+      ],
+      "tick": 144
+    }
+  ],
+  "godot": "4.6.3-stable (official)",
+  "graphics_profile": "balanced_60",
+  "home_players": 11,
+  "keeper_contacts": [],
+  "msaa_3d": 1,
+  "officials": 1,
+  "physics_steps_per_draw": 6,
+  "rendering_method": "forward_plus",
+  "requested_strike_foot": "right",
+  "resolution": [
+    640,
+    360
+  ],
+  "review_mode": "attack_home",
+  "scope": "Actual native Forward+ controllers and assets; accelerated simulated time, software GPU, no Mac performance claim.",
+  "sequence_fps": 10.0,
+  "shot_contacts": [
+    {
+      "ball": "(35.60024, 0.11, 6.033467)",
+      "team": "Beechlawn Rovers",
+      "tick": 19
+    }
+  ],
+  "skill_events": [],
+  "vendor": "Unknown"
+}

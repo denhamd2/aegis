@@ -10,7 +10,7 @@ const SHOT_BLOCK_CHECK_DISTANCE := 6.0
 const SHOT_BLOCK_HALF_WIDTH := 0.8
 
 func choose_carrier_action(carrier: FootballPlayer, teammates: Array[FootballPlayer],
-		opponents: Array[FootballPlayer], ball: FootballBall) -> Dictionary:
+		opponents: Array[FootballPlayer], ball: FootballBall, directness := 0.5) -> Dictionary:
 	if carrier == null or carrier.controlled_by_human or carrier.profile == null \
 			or carrier.profile.role != "outfield" or carrier.ai_action_cooldown > 0.0 \
 			or ball == null or ball.last_touch != carrier.team_name \
@@ -64,7 +64,8 @@ func choose_carrier_action(carrier: FootballPlayer, teammates: Array[FootballPla
 	if not shot.is_empty(): return shot
 	# A midfielder can release a genuinely open progressive lane before the
 	# challenge arrives. An unopposed carrier still uses the available space.
-	if teammates.size()>=7 and nearest_action_pressure>PRESSURE_RANGE and nearest_forward_defender<8:
+	if teammates.size()>=7 and nearest_action_pressure>PRESSURE_RANGE \
+			and nearest_forward_defender < lerpf(5.0, 11.0, directness):
 		var progressive := _progressive_option(carrier,teammates)
 		if not progressive.is_empty(): return progressive
 	# Under pressure, release the ball into a forward run if a teammate and lane

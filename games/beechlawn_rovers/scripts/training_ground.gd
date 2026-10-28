@@ -86,8 +86,8 @@ func _ready() -> void:
 		_capture_callback=JavaScriptBridge.create_callback(_freeze_capture)
 		JavaScriptBridge.get_interface("window").BEECHLAWN_FREEZE_FRAME=_capture_callback
 	_remaining_time = short_match_seconds
-	_home_team = home_team_resource
-	_away_team = away_team_resource
+	_home_team = home_team_resource.match_copy()
+	_away_team = away_team_resource.match_copy()
 	for team in [_home_team, _away_team]:
 		var errors: PackedStringArray = team.validate_roster()
 		if not errors.is_empty():
@@ -774,12 +774,13 @@ func _update_team_ai(team_players: Array[FootballPlayer], chaser: FootballPlayer
 	var counterpress_requested := not in_possession and transition_time_left > 0.0 \
 		and transition_team != &"none" and team_name != transition_team \
 		and ball_position.x * _team_attack_sign(team_name) > -5.0 \
-		and not bool(context.get("protect_lead", false))
+		and not bool(context.get("protect_lead", false)) and float(context.get("pressing", 0.5)) >= 0.25
 	var wants_second_presser := not in_possession and (bool(context.get("high_press", false)) or counterpress_requested)
 	if wants_second_presser:
 		var candidate := _nearest_support_presser(team_players, chaser, ball_position)
 		if candidate != null and Vector2(candidate.global_position.x - ball_position.x,
-				candidate.global_position.z - ball_position.y).length() <= SECOND_PRESS_RANGE:
+				candidate.global_position.z - ball_position.y).length() <= SECOND_PRESS_RANGE \
+				* (0.6 + 0.8 * float(context.get("pressing", 0.5))):
 			secondary_presser = candidate
 	var counterpress_active := counterpress_requested and secondary_presser != null
 	if in_possession and snapshot.state == &"controlled":
@@ -792,8 +793,10 @@ func _update_team_ai(team_players: Array[FootballPlayer], chaser: FootballPlayer
 func _apply_carrier_action(carrier: FootballPlayer, team_players: Array[FootballPlayer],
 		opponents: Array[FootballPlayer]) -> void:
 	if carrier.skills.active != &"": return
+	var team := _home_team if carrier.team_name == &"Beechlawn Rovers" else _away_team
+	var pace_scale := 1.3 - 0.6 * team.tempo if team_players.size() >= 7 else 1.0
 	var action: Dictionary = _player_decisions.choose_carrier_action(carrier,
-		team_players, opponents, ball)
+		team_players, opponents, ball, team.directness if team_players.size() >= 7 else 0.5)
 	var previous_serial := ball.action_serial
 	var action_type: StringName = action.get("type", &"none")
 	if action_type not in [&"none", &"carry"]:
@@ -802,23 +805,23 @@ func _apply_carrier_action(carrier: FootballPlayer, team_players: Array[Football
 		&"shoot":
 			carrier._do_shot(float(action.get("charge", 0.42)), 1.0, action.get("direction", Vector3.ZERO), ShotPlanner.ai_style(carrier))
 			if carrier._visual_shot_pending or ball.action_serial != previous_serial:
-				carrier.ai_action_cooldown = 1.1
+				carrier.ai_action_cooldown = 1.1 * pace_scale
 		&"through_pass":
 			carrier._do_pass(true, action.get("direction", Vector3.RIGHT), false, 1.0,
 				instance_from_id(int(action.receiver_id)) as FootballPlayer if action.has("receiver_id") else null)
 			if carrier._visual_pass_pending or ball.action_serial != previous_serial:
-				carrier.ai_action_cooldown = 0.85
+				carrier.ai_action_cooldown = 0.85 * pace_scale
 		&"short_pass":
 			carrier._do_pass(false, action.get("direction", Vector3.RIGHT), false, 1.0,
 				instance_from_id(int(action.receiver_id)) as FootballPlayer if action.has("receiver_id") else null)
 			if carrier._visual_pass_pending or ball.action_serial != previous_serial:
-				carrier.ai_action_cooldown = 0.85
+				carrier.ai_action_cooldown = 0.85 * pace_scale
 		&"lofted_pass", &"cross":
 			carrier._do_pass(false, action.direction, false, 1.0,
 				instance_from_id(int(action.receiver_id)) as FootballPlayer if action.has("receiver_id") else null,
 				action_type, float(action.get("power", .65)), action.get("variant", &"standard"))
 			if carrier._visual_pass_pending or ball.action_serial != previous_serial:
-				carrier.ai_action_cooldown = 1.0
+				carrier.ai_action_cooldown = 1.0 * pace_scale
 		&"carry":
 			carrier.skills.try_ai_skill()
 
@@ -870,13 +873,20 @@ func _defensive_shape_position(actor: FootballPlayer, ball_position: Vector2) ->
 		_late_lead_depth(actor.team_name))
 
 func _team_tactical_context(team_name: StringName, ball_position: Vector2) -> Dictionary:
+	var team := _home_team if team_name == &"Beechlawn Rovers" else _away_team
 	var score_delta := _score_delta(team_name)
 	var late_game_urgency := clampf(1.0 - _remaining_time / 45.0, 0.0, 1.0)
 	var ball_in_opponent_half := ball_position.x * _team_attack_sign(team_name) > 2.0
 	return {
+		"width": team.tactical_width if team.active_player_count >= 7 else 0.5,
+		"depth": team.tactical_depth if team.active_player_count >= 7 else 0.5,
+		"pressing": team.pressing if team.active_player_count >= 7 else 0.5,
+		"directness": team.directness if team.active_player_count >= 7 else 0.5,
+		"tempo": team.tempo if team.active_player_count >= 7 else 0.5,
 		"score_delta": score_delta,
 		"urgency": late_game_urgency,
-		"high_press": score_delta < 0 and late_game_urgency >= 0.25 and ball_in_opponent_half,
+		"high_press": ball_in_opponent_half and (team.pressing >= 0.75 and score_delta <= 0 \
+			or team.pressing >= 0.25 and score_delta < 0 and late_game_urgency >= 0.25),
 		"protect_lead": score_delta > 0 and late_game_urgency > 0.0,
 		"late_lead_depth": _late_lead_depth(team_name),
 	}
@@ -888,6 +898,9 @@ func _nearest_support_presser(team_players: Array[FootballPlayer], chaser: Footb
 	for actor in team_players:
 		if actor == chaser or actor.controlled_by_human or actor.profile == null \
 				or actor.profile.role != "outfield":
+			continue
+		if team_players.size() >= 7 and actor.profile.tactical_role in [
+			"centre_back", "fullback", "defensive_midfielder"]:
 			continue
 		var distance := Vector2(actor.global_position.x - ball_position.x,
 			actor.global_position.z - ball_position.y).length_squared()

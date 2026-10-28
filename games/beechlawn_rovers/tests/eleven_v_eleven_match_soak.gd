@@ -75,6 +75,14 @@ func _run() -> void:
 	Engine.physics_ticks_per_second=360
 	Engine.max_physics_steps_per_frame=64
 	var game := (load("res://scenes/match_11v11.tscn") as PackedScene).instantiate()
+	var home_formation := OS.get_environment("BEECHLAWN_HOME_FORMATION")
+	var away_formation := OS.get_environment("BEECHLAWN_AWAY_FORMATION")
+	if not home_formation.is_empty():
+		game.home_team_resource = game.home_team_resource.duplicate(false)
+		game.home_team_resource.formation = home_formation
+	if not away_formation.is_empty():
+		game.away_team_resource = game.away_team_resource.duplicate(false)
+		game.away_team_resource.formation = away_formation
 	# Asset loading must not let Watch kickoff advance before instrumentation.
 	game.set_physics_process(false)
 	root.add_child(game)
@@ -209,7 +217,9 @@ func _run() -> void:
 		metrics[str(team)].sampled_decisions = decision_counts[team]
 		metrics[str(team)].erase("in_final_third")
 	print("AI_MATCH_METRICS ", JSON.stringify({"kickoff": kickoff_team if kickoff_team != "" else "Beechlawn Rovers",
-		"variation": starting_variation, "weather": str(session.weather_preset), "teams": metrics, "statuses": shot_status_counts,
+		"variation": starting_variation, "weather": str(session.weather_preset),
+		"formations": [game._home_team.formation, game._away_team.formation],
+		"teams": metrics, "statuses": shot_status_counts,
 		"ball_travel_m": travelled, "longest_stationary_s": max_still, "goals": [game._home_score, game._away_score]}))
 	if max_still >= 12:
 		push_error("AI left the live ball stationary for twelve seconds")
