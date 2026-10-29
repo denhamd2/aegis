@@ -10,6 +10,22 @@ items, use the archived references and skill workflow in
 [`art_reference_implementation_plan.md`](art_reference_implementation_plan.md)
 and [`../references/README.md`](../references/README.md) before implementation.
 
+## Six-player likeness refinement — 29 October 2026
+
+BR-022 (22/27, in progress): the six saved head sculpts received another
+reference-led form, eyelid, lower-face and groom pass. The neutral sources,
+individual deltas, normal/near exports and skin maps were regenerated while
+the shared body, 65-bone rig and player/referee identities stayed intact.
+The [29 October review](art_briefs/br022_likeness_2026_10_29/brief.md) records
+source audits, before/after native portraits, art scores and a rejected
+tooth-showing smile trial. The native portraits still fail the requested
+20/20 likeness target; expressive mouth anatomy, more individual facial
+sculpting and groom/skin realism remain open under BR-022. This revision has
+not been released on Mac because the visual gate remains open.
+
+Next acceptance: BR-022 likeness review against the archived photos, then
+BR-025 (25/27, in progress) target-Mac appearance and 1080p60 performance.
+
 ## Character realism review — 28 October 2026
 
 BR-022 (22/27, in progress), v0.5.10 follow-up: the original Robbie Roden and

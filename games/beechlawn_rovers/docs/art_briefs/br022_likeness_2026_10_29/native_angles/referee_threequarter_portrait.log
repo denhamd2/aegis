@@ -1,0 +1,10 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Vulkan 1.4.305 - Forward+ - Using Device #0: Unknown - llvmpipe (LLVM 19.1.7, 256 bits)
+
+SHANE_ASSET_REVIEW_READY view=threequarter_portrait renderer=forward_plus
+NATIVE_FIRST_DRAW_COMPLETE
+NATIVE_WARMUP_FRAME 1
+NATIVE_WARMUP_FRAME 2
+NATIVE_WARMUP_FRAME 3
+NATIVE_WARMUP_FRAME 4
+BEECHLAWN_NATIVE_CAPTURE {"ablation":"none","adapter":"llvmpipe (LLVM 19.1.7, 256 bits)","api":"1.4.305","body_fullness":0.0,"closeup_detail":true,"display_server":"X11","expression":"neutral","godot":"4.6.3-stable (official)","lighting":"default","msaa_3d":1,"name":"Des Feeney Sr.","normal_bias":1.79999995231628,"normal_maps":true,"player_id":"des_feeney_sr","pose":"<null>","rendering_method":"forward_plus","resolution":[1280,720],"runtime_head_mesh":"res://assets/characters/shared/heads/near/des_feeney_sr.glb::ArrayMesh_le25d","scope":"Native Forward+ still; hardware-specific Mac appearance and performance remain unmeasured.","shadow_bias":0.100000001490116,"shadow_distance":150.0,"skin_scattering":true,"skin_transmittance":false,"sky":"match","sun_shadows":true,"temporal_aa":false,"vendor":"Unknown","view":"threequarter_portrait","warmup_frames":4}

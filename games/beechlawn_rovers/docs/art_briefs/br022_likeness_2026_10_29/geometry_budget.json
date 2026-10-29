@@ -1,0 +1,310 @@
+{
+  "baseline_commit": "a08bd13",
+  "scope": "Changed six normal/near heads and six grooms; glTF exported mesh/primitive counts and compressed package bytes; not GPU residency",
+  "assets": {
+    "assets/characters/shared/heads/david_crop.glb": {
+      "before": {
+        "bytes": 4040416,
+        "meshes": 2,
+        "surfaces": 4,
+        "vertices": 58407,
+        "triangles": 29732
+      },
+      "after": {
+        "bytes": 4024172,
+        "meshes": 2,
+        "surfaces": 4,
+        "vertices": 58286,
+        "triangles": 29533
+      }
+    },
+    "assets/characters/shared/heads/des_side_hair.glb": {
+      "before": {
+        "bytes": 6618440,
+        "meshes": 2,
+        "surfaces": 7,
+        "vertices": 82060,
+        "triangles": 41630
+      },
+      "after": {
+        "bytes": 6618328,
+        "meshes": 2,
+        "surfaces": 7,
+        "vertices": 82060,
+        "triangles": 41630
+      }
+    },
+    "assets/characters/shared/heads/john_swept.glb": {
+      "before": {
+        "bytes": 7687924,
+        "meshes": 2,
+        "surfaces": 7,
+        "vertices": 104967,
+        "triangles": 52853
+      },
+      "after": {
+        "bytes": 7687892,
+        "meshes": 2,
+        "surfaces": 7,
+        "vertices": 104971,
+        "triangles": 52857
+      }
+    },
+    "assets/characters/shared/heads/near/bordeaux_09.glb": {
+      "before": {
+        "bytes": 2840356,
+        "meshes": 3,
+        "surfaces": 3,
+        "vertices": 24561,
+        "triangles": 35504
+      },
+      "after": {
+        "bytes": 2840536,
+        "meshes": 3,
+        "surfaces": 3,
+        "vertices": 24561,
+        "triangles": 35504
+      }
+    },
+    "assets/characters/shared/heads/near/david_murray.glb": {
+      "before": {
+        "bytes": 2843212,
+        "meshes": 3,
+        "surfaces": 3,
+        "vertices": 24561,
+        "triangles": 35504
+      },
+      "after": {
+        "bytes": 2840200,
+        "meshes": 3,
+        "surfaces": 3,
+        "vertices": 24561,
+        "triangles": 35504
+      }
+    },
+    "assets/characters/shared/heads/near/des_feeney_sr.glb": {
+      "before": {
+        "bytes": 2851372,
+        "meshes": 3,
+        "surfaces": 3,
+        "vertices": 24561,
+        "triangles": 35504
+      },
+      "after": {
+        "bytes": 2849776,
+        "meshes": 3,
+        "surfaces": 3,
+        "vertices": 24561,
+        "triangles": 35504
+      }
+    },
+    "assets/characters/shared/heads/near/john_orourke.glb": {
+      "before": {
+        "bytes": 2845444,
+        "meshes": 3,
+        "surfaces": 3,
+        "vertices": 24561,
+        "triangles": 35504
+      },
+      "after": {
+        "bytes": 2849340,
+        "meshes": 3,
+        "surfaces": 3,
+        "vertices": 24561,
+        "triangles": 35504
+      }
+    },
+    "assets/characters/shared/heads/near/robbie_roden.glb": {
+      "before": {
+        "bytes": 2835000,
+        "meshes": 3,
+        "surfaces": 3,
+        "vertices": 24561,
+        "triangles": 35504
+      },
+      "after": {
+        "bytes": 2832052,
+        "meshes": 3,
+        "surfaces": 3,
+        "vertices": 24561,
+        "triangles": 35504
+      }
+    },
+    "assets/characters/shared/heads/near/shane_denham.glb": {
+      "before": {
+        "bytes": 2847116,
+        "meshes": 3,
+        "surfaces": 3,
+        "vertices": 24561,
+        "triangles": 35504
+      },
+      "after": {
+        "bytes": 2847712,
+        "meshes": 3,
+        "surfaces": 3,
+        "vertices": 24561,
+        "triangles": 35504
+      }
+    },
+    "assets/characters/shared/heads/players/bordeaux_09.glb": {
+      "before": {
+        "bytes": 7336236,
+        "meshes": 3,
+        "surfaces": 3,
+        "vertices": 4663,
+        "triangles": 8876
+      },
+      "after": {
+        "bytes": 7339208,
+        "meshes": 3,
+        "surfaces": 3,
+        "vertices": 4663,
+        "triangles": 8876
+      }
+    },
+    "assets/characters/shared/heads/players/david_murray.glb": {
+      "before": {
+        "bytes": 7970540,
+        "meshes": 3,
+        "surfaces": 3,
+        "vertices": 4663,
+        "triangles": 8876
+      },
+      "after": {
+        "bytes": 7977260,
+        "meshes": 3,
+        "surfaces": 3,
+        "vertices": 4663,
+        "triangles": 8876
+      }
+    },
+    "assets/characters/shared/heads/players/des_feeney_sr.glb": {
+      "before": {
+        "bytes": 6910236,
+        "meshes": 3,
+        "surfaces": 3,
+        "vertices": 4663,
+        "triangles": 8876
+      },
+      "after": {
+        "bytes": 6913800,
+        "meshes": 3,
+        "surfaces": 3,
+        "vertices": 4663,
+        "triangles": 8876
+      }
+    },
+    "assets/characters/shared/heads/players/john_orourke.glb": {
+      "before": {
+        "bytes": 8005688,
+        "meshes": 3,
+        "surfaces": 3,
+        "vertices": 4663,
+        "triangles": 8876
+      },
+      "after": {
+        "bytes": 8011208,
+        "meshes": 3,
+        "surfaces": 3,
+        "vertices": 4663,
+        "triangles": 8876
+      }
+    },
+    "assets/characters/shared/heads/players/robbie_roden.glb": {
+      "before": {
+        "bytes": 7511100,
+        "meshes": 3,
+        "surfaces": 3,
+        "vertices": 4663,
+        "triangles": 8876
+      },
+      "after": {
+        "bytes": 7515188,
+        "meshes": 3,
+        "surfaces": 3,
+        "vertices": 4663,
+        "triangles": 8876
+      }
+    },
+    "assets/characters/shared/heads/players/shane_denham.glb": {
+      "before": {
+        "bytes": 7566848,
+        "meshes": 4,
+        "surfaces": 4,
+        "vertices": 5399,
+        "triangles": 9356
+      },
+      "after": {
+        "bytes": 7571200,
+        "meshes": 4,
+        "surfaces": 4,
+        "vertices": 5399,
+        "triangles": 9356
+      }
+    },
+    "assets/characters/shared/heads/referee_grey.glb": {
+      "before": {
+        "bytes": 2219900,
+        "meshes": 2,
+        "surfaces": 4,
+        "vertices": 29123,
+        "triangles": 14561
+      },
+      "after": {
+        "bytes": 2562168,
+        "meshes": 2,
+        "surfaces": 4,
+        "vertices": 33923,
+        "triangles": 16961
+      }
+    },
+    "assets/characters/shared/heads/robbie_crop.glb": {
+      "before": {
+        "bytes": 4790184,
+        "meshes": 2,
+        "surfaces": 4,
+        "vertices": 69822,
+        "triangles": 35346
+      },
+      "after": {
+        "bytes": 4791772,
+        "meshes": 2,
+        "surfaces": 4,
+        "vertices": 69828,
+        "triangles": 35354
+      }
+    },
+    "assets/characters/shared/heads/shane_crop.glb": {
+      "before": {
+        "bytes": 5595908,
+        "meshes": 2,
+        "surfaces": 4,
+        "vertices": 81102,
+        "triangles": 41063
+      },
+      "after": {
+        "bytes": 5591156,
+        "meshes": 2,
+        "surfaces": 4,
+        "vertices": 81098,
+        "triangles": 41049
+      }
+    }
+  },
+  "totals": {
+    "before": {
+      "bytes": 93315920,
+      "meshes": 49,
+      "surfaces": 67,
+      "vertices": 601561,
+      "triangles": 481945
+    },
+    "after": {
+      "bytes": 93662968,
+      "meshes": 49,
+      "surfaces": 67,
+      "vertices": 606246,
+      "triangles": 484144
+    }
+  }
+}

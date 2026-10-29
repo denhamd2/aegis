@@ -1,0 +1,103 @@
+{
+  "result": "PASS_WITH_OPEN_VISUAL_GATE",
+  "baseline_commit": "a08bd13923edaafc1ec77880384863b01e9acc3f",
+  "item": "BR-022 (22/27), in progress",
+  "reference_sha256": {
+    "70466.jpg": "51f0916267649420cb10f64245ee17da9e8516a470a44d7837a7784b3e382f31",
+    "70467.jpg": "7e61bcf811d0f81b2fe3845a4ae793c003dd464d3334d2b7b50f652214abe79f"
+  },
+  "six_head_source_export_audit": "PASS",
+  "six_head_expression_fit": "PASS",
+  "smoke_tests": [
+    {
+      "name": "shared_head_roster_smoke.gd",
+      "duration_s": 5.9,
+      "result": "PASS"
+    },
+    {
+      "name": "shane_head_variant_smoke.gd",
+      "duration_s": 6.0,
+      "result": "PASS"
+    },
+    {
+      "name": "recorded_face_replay_smoke.gd",
+      "duration_s": 6.5,
+      "result": "PASS"
+    },
+    {
+      "name": "shared_roster_resources_smoke.gd",
+      "duration_s": 5.9,
+      "result": "PASS"
+    },
+    {
+      "name": "realism_systems_smoke.gd",
+      "duration_s": 6.2,
+      "result": "PASS"
+    },
+    {
+      "name": "shared_pose_safety_smoke.gd",
+      "duration_s": 7.8,
+      "result": "PASS"
+    },
+    {
+      "name": "shane_denham_import_smoke.gd",
+      "duration_s": 0.9,
+      "result": "PASS"
+    },
+    {
+      "name": "footballer_animation_tree_smoke.gd",
+      "duration_s": 6.7,
+      "result": "PASS"
+    }
+  ],
+  "native_forward_plus": {
+    "baseline": {
+      "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+      "resolution": [
+        640,
+        360
+      ],
+      "draw_calls": 1209,
+      "primitives": 1158202,
+      "home_players": 11,
+      "away_players": 11,
+      "officials": 1,
+      "peak_process_rss_kib": 4379964
+    },
+    "current": {
+      "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+      "resolution": [
+        640,
+        360
+      ],
+      "draw_calls": 1209,
+      "primitives": 1156614,
+      "home_players": 11,
+      "away_players": 11,
+      "officials": 1,
+      "peak_process_rss_kib": 4370860
+    },
+    "final_head_details": 6,
+    "final_threequarter_and_profile_views": 12,
+    "adapter_scope": "Linux llvmpipe visual/integration capture; no M1 Pro frame-time conclusion"
+  },
+  "source_validation": [
+    "Six saved Blender sources and individual deltas generated against unchanged head master",
+    "65-bone shared body/UV/neck preserved",
+    "git diff --check PASS",
+    "Python source compile PASS"
+  ],
+  "visual_scores_out_of_20": {
+    "shane_denham": 6,
+    "john_orourke": 7,
+    "bordeaux_09": 6,
+    "des_feeney_sr": 4,
+    "robbie_roden": 5,
+    "david_murray": 6
+  },
+  "open": [
+    "BR-022 20/20 reference likeness, anatomical mouth and more realistic skin/groom",
+    "BR-025 packaged M1 Pro appearance and sustained 1080p60"
+  ],
+  "known_diagnostic": "Some prior smoke scripts emit cached-resource/ObjectDB messages on exit after their PASS marker; no new parse, shader or assertion failure."
+}

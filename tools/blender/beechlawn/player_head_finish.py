@@ -254,12 +254,12 @@ def hair_regions(points, identity):
         line = 171.85+.55*_smooth(0, 3, -x)-.28*_smooth(0, 3, x)-3.7*side-2.5*rear+.09*np.sin(x*2.8)
         scalp = _smooth(line-.17, line+.22, y)
     elif identity == 'robbie_roden':
-        line = 172.35-5.0*side-2.6*rear+.07*np.sin(x*2.3)+.025*np.sin(x*5.3)
+        line = 172.35-5.0*side-2.6*rear+.16*np.sin(x*1.3)+.09*np.sin(x*4.1)
         scalp = _smooth(line-.18, line+.25, y)
     elif identity == 'david_murray':
         # The owner portrait shows open temples and an uneven fair hairline.
-        line = 173.0-6.7*side-2.7*rear+1.05*np.exp(-((ax-5.8)/1.5)**2)
-        line += .06*np.sin(x*2.0)+.02*np.sin(x*5.3)
+        line = 174.0-7.0*side-2.7*rear+1.75*np.exp(-((ax-5.6)/1.6)**2)
+        line += .16*np.sin(x*1.7)+.06*np.sin(x*4.7)
         scalp = _smooth(line-.18, line+.27, y)
     elif identity == 'bordeaux_09':
         # Original side views 69911/69910: a high temporal wedge joins the
@@ -274,18 +274,19 @@ def hair_regions(points, identity):
         sideburn *= 1-_smooth(7.0, 7.7, ax)
         scalp = np.maximum(band, sideburn*.85)
     else:
-        line = 169.7-3.1*side-2.0*rear
-        scalp = _smooth(1.00, 1.5, angle)*_smooth(line-.3, line+.7, y)*(1-_smooth(172.2, 174., y))
+        line = 170.1-3.1*side-2.0*rear
+        scalp = _smooth(.83, 1.34, angle)*_smooth(line-.3, line+.7, y)*(1-_smooth(172.8, 174.3, y))
     # Facial-hair roots never sample the projecting nose or the oral cavity.
     x, y, z = pigment_coordinates(p, identity).T
     ax = abs(x)
     face = front*(1-_smooth(11.15, 11.65, z))
     arch = 160.83-.12*(ax/2.8)**2
-    moustache_height = .72 if identity == 'des_feeney_sr' else .37
-    moustache = np.exp(-(x/2.85)**6-((y-arch)/moustache_height)**4)*face
+    moustache_height = .85 if identity == 'des_feeney_sr' else .37
+    moustache_width = 3.25 if identity == 'des_feeney_sr' else 2.85
+    moustache = np.exp(-(x/moustache_width)**6-((y-arch)/moustache_height)**4)*face
     moustache *= (1-.28*np.exp(-(x/.30)**2))
     if identity == 'bordeaux_09':
-        beard = np.exp(-(x/3.15)**2-((y-156.7)/1.65)**2)*front
+        beard = np.exp(-(x/3.45)**2-((y-156.4)/2.05)**2)*front
         connectors = np.exp(-((ax-2.45)/.30)**2-((y-158.65)/1.05)**2)*face*.48
         soul = np.exp(-(x/.8)**6-((y-158.85)/.45)**4)*face*.6
         facial = np.maximum.reduce((beard, moustache*.28, connectors*.55, soul))
@@ -480,7 +481,7 @@ def finish_head(head, identity):
         build_upper_teeth(bpy.data.objects['YBot_Armature'],identity)
     else:
         old=bpy.data.objects.get('Mouth_UpperTeeth')
-        if old: bpy.data.objects.remove(old,do_unlink=True)
+        if old:bpy.data.objects.remove(old,do_unlink=True)
     return mat
 
 
@@ -499,7 +500,8 @@ def facial_shapes(head):
     globes={side:BVHTree.FromPolygons([v.co for v in bpy.data.objects['Eye_'+side].data.vertices],
             [list(p.vertices) for p in bpy.data.objects['Eye_'+side].data.polygons]) for side in centres}
     oral_weights={}
-    if bpy.context.scene.get('head_player_id')=='shane_denham':
+    identity=bpy.context.scene.get('head_player_id')
+    if identity=='shane_denham':
         from player_oral_geometry import upper_lip_weights
         oral_weights=upper_lip_weights(head)
     for index, point in enumerate(basis.data):
@@ -514,10 +516,9 @@ def facial_shapes(head):
         front = smooth(5., 8., z)
         corner = field(x, y, 2.8, 159.9, 1.2, .85) * front
         cheek = field(x, y, 4.0, 161.7, 2.0, 1.5) * front
-        smile.data[index].co += Vector((math.copysign(.11*corner, x), .23*corner+.09*cheek, .08*cheek))
-        if bpy.context.scene.get('head_player_id')=='shane_denham':
-            # Separate the original tooth-showing reference smile from neutral
-            # identity. Smooth jaw/lip support avoids crossing the lip loops.
+        smile.data[index].co += Vector((math.copysign(.11*corner,x),.23*corner+.09*cheek,.08*cheek))
+        if oral_weights:
+            # Retain the previously validated restrained Shane smile.
             oral=math.exp(-(x/3.45)**6-((y-159.8)/1.35)**4)*front
             upper=oral_weights.get(index,.5)
             smile.data[index].co += Vector((math.copysign(.11*corner,x),.27*corner+.11*cheek+(.60*upper-.28*(1-upper))*oral,.025*cheek))
@@ -528,7 +529,8 @@ def facial_shapes(head):
         if abs(dx)<1.75 and abs(dy)<1.35 and z>centre.z-2.1:
             weight=(1-smooth(1.25,1.75,abs(dx)))*(1-smooth(.65,1.35,abs(dy)))
             lid=blink.data[index].co
-            lid.y+=(centre.y-.035-y)*weight*.75
+            blink_factor=1.12 if identity=='bordeaux_09' else .75
+            lid.y+=(centre.y-.035-y)*weight*blink_factor
             hit,_,_,_=globes[side].ray_cast(Vector((x,lid.y,30)),Vector((0,0,-1)))
             if hit is not None:
                 # Include the inset orbital surface behind the globe: only

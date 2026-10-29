@@ -1,0 +1,10 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Vulkan 1.4.305 - Forward+ - Using Device #0: Unknown - llvmpipe (LLVM 19.1.7, 256 bits)
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=rovers_arena ball=ucl_26_27_league
+NATIVE_MATCH_DRAW 1
+NATIVE_MATCH_DRAW 2
+NATIVE_MATCH_DRAW 3
+BEECHLAWN_NATIVE_CAPTURE {"adapter":"llvmpipe (LLVM 19.1.7, 256 bits)","api":"1.4.305","away_players":11,"ball_id":"ucl_26_27_league","camera":"close_broadcast","display_server":"X11","draw_calls":1209,"extra_views":[],"godot":"4.6.3-stable (official)","home_players":11,"msaa_3d":1,"officials":1,"phase":"stationary kickoff","primitives":1156614,"rendering_method":"forward_plus","resolution":[640,360],"scene":"res://scenes/match_11v11.tscn","scope":"Actual Forward+ match still; no native Mac timing or graphics parity claim.","seating_audit":{"errors":0,"sampled_seats":3837,"scope":"Actual GPU buffers: centred blocks, supported level rows, inward chairs, straight/radial aisles, identical near/far transforms"},"sun_shadows":true,"turf_triangles":32768,"vendor":"Unknown","venue":"rovers_arena","venue_view":"broadcast","warmup_frames":3,"weather":"sunny"}
+WARNING: 7 RIDs of type "Texture" were leaked.
+   at: finalize (servers/rendering/rendering_device.cpp:7505)

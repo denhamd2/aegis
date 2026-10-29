@@ -71,15 +71,19 @@ report = {'result': 'PASS', 'heads': {}, 'scope': 'Neutral source/export geometr
 for identity, source in SOURCES.items():
     bpy.ops.wm.open_mainfile(filepath=str(HERE/source))
     assert bpy.context.scene['head_player_id'] == identity
+    if args.include_new:
+        assert bpy.context.scene.get('identity_revision') == 'six-portrait-form-and-oral-v1', identity
     if identity not in ('robbie_roden','david_murray'):
         assert bpy.context.scene['head_finish_revision'] == 'four-head-reference-v2'
     else:
         assert bpy.context.scene.get('br022_followup_form',False), identity
     asset = PROJECT/f'assets/characters/shared/heads/players/{identity}.glb'
     raw, document, binary = load_glb(asset)
-    if identity in ('robbie_roden','david_murray'):
-        assert not any(mesh['name'].startswith('Mouth_') for mesh in document['meshes']), \
-            (identity,'unfitted tooth-showing experiment entered release asset')
+    mouths=[mesh['name'] for mesh in document['meshes'] if mesh['name'].startswith('Mouth_')]
+    if identity=='shane_denham':
+        assert mouths==['Mouth_UpperTeeth'],(identity,mouths)
+    else:
+        assert not mouths,(identity,'unfitted tooth-showing experiment entered export',mouths)
     parts = {}
     for name in ('Skin_Head', 'Eye_l', 'Eye_r'):
         mesh = next(m for m in document['meshes'] if m['name'] == name)

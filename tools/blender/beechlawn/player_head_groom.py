@@ -215,7 +215,7 @@ def build_groom(head, rig, identity):
             distributions[kind].append((a.copy(), b.copy(), c.copy(), *[float(vertex_masks[i,kind]) for i in tri.vertices]))
     counts = {
         'shane_denham': (4800, 0, 480), 'john_orourke': (4000, 4600, 480),
-        'bordeaux_09': (4200, 3400, 480), 'des_feeney_sr': (1100, 2100, 440),
+        'bordeaux_09': (4200, 3400, 480), 'des_feeney_sr': (1500, 2300, 440),
         'robbie_roden': (4100, 0, 480), 'david_murray': (3400, 0, 440),
     }[identity]
     vertices, faces, face_materials, emitted_counts = [], [], [], []
@@ -270,7 +270,7 @@ def build_groom(head, rig, identity):
                     elif identity == 'robbie_roden':
                         # The roster sheet has a dense, tousled crown rather
                         # than Shane's close buzz crop.
-                        length = rng.uniform(1.7, 2.8) if top else rng.uniform(.38, .72)
+                        length = rng.uniform(1.0, 1.8) if top else rng.uniform(.38, .72)
                     elif identity == 'david_murray':
                         length = rng.uniform(1.0, 1.65) if top else rng.uniform(.28, .60)
                     if identity == 'john_orourke' and top:
@@ -282,7 +282,7 @@ def build_groom(head, rig, identity):
                     if identity == 'robbie_roden' and top:
                         lift = rng.uniform(.35,.65)
                     if identity in ('shane_denham','robbie_roden','david_murray'):
-                        width = rng.uniform(.075,.14) if identity=='robbie_roden' and top else rng.uniform(.045,.080) if top else rng.uniform(.024,.042)
+                        width = rng.uniform(.045,.085) if identity=='robbie_roden' and top else rng.uniform(.045,.080) if top else rng.uniform(.024,.042)
                         # Short irregular crop, without a uniform opaque cap.
                         flow += Vector((.16*math.sin(root.z*1.7),0,.12*math.sin(root.x*1.4)))
                     if identity == 'john_orourke' and top:
