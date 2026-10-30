@@ -1,0 +1,7 @@
+ORAL_V2_AUDIT {"identity": "robbie_roden", "frontal_lip_triangles": 757, "inverted_smile_lip_triangles": 0, "visibility_samples": {"Basis": {"teeth": 0, "cavity": 0}, "Quarter": {"teeth": 28, "cavity": 95}, "Half": {"teeth": 487, "cavity": 443}, "ThreeQuarter": {"teeth": 1047, "cavity": 952}, "Smile": {"teeth": 1481, "cavity": 1721}}}
+ORAL_V2_AUDIT {"identity": "david_murray", "frontal_lip_triangles": 780, "inverted_smile_lip_triangles": 0, "visibility_samples": {"Basis": {"teeth": 0, "cavity": 1}, "Quarter": {"teeth": 1, "cavity": 2}, "Half": {"teeth": 339, "cavity": 232}, "ThreeQuarter": {"teeth": 1280, "cavity": 883}, "Smile": {"teeth": 1678, "cavity": 1870}}}
+Blender 4.3.2
+Read blend: "/workspace/aegis-checkout/games/beechlawn_rovers/build/br022_oral_v2/robbie_roden/oral_v2.blend"
+Read blend: "/workspace/aegis-checkout/games/beechlawn_rovers/build/br022_oral_v2/david_murray/oral_v2.blend"
+
+Blender quit

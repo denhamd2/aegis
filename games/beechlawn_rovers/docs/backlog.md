@@ -10,6 +10,21 @@ items, use the archived references and skill workflow in
 [`art_reference_implementation_plan.md`](art_reference_implementation_plan.md)
 and [`../references/README.md`](../references/README.md) before implementation.
 
+## Mouth topology and native integration study — 30 October 2026
+
+BR-022 (22/27, in progress): the current neutral face has no mouth opening.
+An isolated recess-and-dental candidate passed source geometry checks but
+failed imported native smile appearance; a genuine 53-face opening and UV-fit
+lip overlay also failed visual review. The
+[source and native study](art_briefs/br022_oral_topology_2026_10_30/brief.md)
+preserves the repeatable pilots, captures and precise topology fault. No
+production character asset was changed. Next: author a clean individual lip
+loop/cavity topology and neutral-to-smile sculpt, then individual eye/cheek
+forms for all six before a new native likeness review.
+
+Next acceptance: BR-022 (22/27, in progress) six-identity photo/native gate;
+then BR-025 (25/27, in progress) packaged target-Mac appearance and 1080p60.
+
 ## Five further likeness studies — 30 October 2026
 
 BR-022 (22/27, in progress): five additional bounded Blender previews tested
