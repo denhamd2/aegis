@@ -10,6 +10,22 @@ items, use the archived references and skill workflow in
 [`art_reference_implementation_plan.md`](art_reference_implementation_plan.md)
 and [`../references/README.md`](../references/README.md) before implementation.
 
+## Five further likeness studies — 30 October 2026
+
+BR-022 (22/27, in progress): five additional bounded Blender previews tested
+lower-face form, Smile deformation, registered photo skin detail, Robbie's
+groom and neutral eyelids. None passed comparison with the supplied original
+photos; the current strict likeness scores remain 4–7/20. The
+[five-round review](art_briefs/br022_five_rounds_2026_10_30/brief.md) preserves
+the previews, scripts and reasons for rejection. No new head source or GLB
+entered the game, and no new Mac version was published. The next production
+step is a mouth-capable head topology and individual eye/cheek sculpt, followed
+by six native portrait reviews against the original photos.
+
+Next acceptance: BR-022 (22/27, in progress) six-identity photo and native
+likeness gate; then BR-025 (25/27, in progress) packaged target-Mac appearance
+and sustained 1080p60.
+
 ## Original-photo landmark fit — 29 October 2026
 
 BR-022 (22/27, in progress): the six saved hero heads now have a repeatable
