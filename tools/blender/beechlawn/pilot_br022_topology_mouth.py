@@ -82,7 +82,7 @@ def build_lips(head, rig):
     return obj
 
 
-def open_mouth(head):
+def open_mouth(head, collapse_boundary=True, broad=False):
     old=head.data
     keys=old.shape_keys.key_blocks
     old.calc_loop_triangles()
@@ -92,10 +92,35 @@ def open_mouth(head):
     retained=[];removed=[]
     for poly in old.polygons:
         centre=poly.center
-        if (abs(centre.x)<3.1 and 158.94<centre.y<159.35
+        if (abs(centre.x)<(4.0 if broad else 3.1) and
+                (158.40 if broad else 158.94)<centre.y<(160.0 if broad else 159.35)
                 and centre.z>9.48 and poly.normal.z>.04):
             removed.append(poly.index)
         else:retained.append(poly.index)
+    if broad:
+        # A few saved heads contain isolated lip islands within the spatial
+        # crop. Keep only the main connected cut so the new aperture has one
+        # manifold boundary.
+        edge_faces={}
+        for index in removed:
+            vertices=list(old.polygons[index].vertices)
+            for a,b in zip(vertices,vertices[1:]+vertices[:1]):
+                edge_faces.setdefault(tuple(sorted((a,b))),[]).append(index)
+        neighbors={index:set() for index in removed}
+        for faces in edge_faces.values():
+            if len(faces)==2:
+                a,b=faces;neighbors[a].add(b);neighbors[b].add(a)
+        components=[];remaining=set(removed)
+        while remaining:
+            todo=[remaining.pop()];component=set(todo)
+            while todo:
+                for other in neighbors[todo.pop()]&remaining:
+                    remaining.remove(other);component.add(other);todo.append(other)
+            components.append(component)
+        main=max(components,key=len)
+        retained.extend(index for index in removed if index not in main)
+        removed=sorted(main)
+        retained.sort()
     assert 15<len(removed)<250,('Unexpected mouth face selection',len(removed))
     new=bpy.data.meshes.new('Skin_Head_OralTopology')
     new.from_pydata(verts,[],[list(old.polygons[i].vertices) for i in retained])
@@ -124,7 +149,7 @@ def open_mouth(head):
     mouth_vertices={v.index for edge in boundary for v in edge.verts}
     bm.free()
     shape_keys=new.shape_keys.key_blocks
-    for index in mouth_vertices:
+    for index in mouth_vertices if collapse_boundary else ():
         basis=shape_keys['Basis'].data[index].co
         ax=abs(basis.x)
         upper=basis.y>=159.14

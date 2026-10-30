@@ -10,6 +10,19 @@ items, use the archived references and skill workflow in
 [`art_reference_implementation_plan.md`](art_reference_implementation_plan.md)
 and [`../references/README.md`](../references/README.md) before implementation.
 
+## Dense face form and connected smile study — 30 October 2026
+
+BR-022 (22/27, in progress): a six-identity dense landmark sculpt preview did
+not improve photographic likeness; the stronger version distorted neutral
+faces. A connected, weighted lip-loop pilot on Robbie and David created a real
+mouth opening but produced visible neutral seams and unnatural smiles. The
+[source and comparison review](art_briefs/br022_dense_form_connected_mouth_2026_10_30/brief.md)
+records the rejected previews. Shipping scores remain 4–7/20, and v0.5.10
+remains the Mac release. Next: individual mouth, eye, cheek, skin and groom
+sculpting against stronger multi-angle references, then front/turned native
+likeness review. BR-025 (25/27, in progress) still owns target-Mac appearance
+and sustained 1080p60 acceptance.
+
 ## Mouth topology and native integration study — 30 October 2026
 
 BR-022 (22/27, in progress): the current neutral face has no mouth opening.
