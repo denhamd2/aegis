@@ -1,0 +1,219 @@
+{
+  "schema_version": 1,
+  "method": "MediaPipe Face Landmarker, eye-line normalized portrait measurements; ratios guide sculpt, not an exact 3D scan",
+  "tool": "mediapipe 0.10.21 / Apache-2.0",
+  "model_url": "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
+  "model_sha256": "64184e229b263107bc2b804c6625db1341ff2bb731874b0bcc2fe6544e0bc9ff",
+  "players": {
+    "shane_denham": {
+      "reference": {
+        "source": "games/beechlawn_rovers/references/source_uploads/chat_attachments/shane_face_photo/69012.jpg",
+        "sha256": "6649633b8e0e6697352e863f107ddab8b20196dde905b39d70076e2e668adb27",
+        "crop": [
+          0,
+          130,
+          576,
+          1080
+        ],
+        "metrics": {
+          "face_width": 2.180882153785338,
+          "jaw_width": 1.7920253034510254,
+          "mouth_width": 0.981330668551561,
+          "nose_width": 0.574469453850984,
+          "mouth_y": -1.0371464046125118,
+          "chin_y": -1.7619541742229894,
+          "nose_y": -0.6659591403872938
+        }
+      },
+      "model": {
+        "source": "games/beechlawn_rovers/build/head-fit-model/current/shane_denham/front.png",
+        "sha256": "c845185e8abc9eee451ae14b93f371d48e7ac3c7c9488c4f84b2f7d345d678f5",
+        "crop": null,
+        "metrics": {
+          "face_width": 2.1611312005193737,
+          "jaw_width": 1.821199583299529,
+          "mouth_width": 0.9314540836781893,
+          "nose_width": 0.6535545259486895,
+          "mouth_y": -1.0637676756237875,
+          "chin_y": -1.7117773251985757,
+          "nose_y": -0.6658364311118992
+        }
+      }
+    },
+    "john_orourke": {
+      "reference": {
+        "source": "games/beechlawn_rovers/references/source_uploads/chat_attachments/john_orourke_photo/69010.jpg",
+        "sha256": "114bc417c7e1fb29945a2664a7a95189f63b83bc4011168255313a8c967a8d2d",
+        "crop": [
+          0,
+          230,
+          576,
+          1080
+        ],
+        "metrics": {
+          "face_width": 2.102108497991333,
+          "jaw_width": 1.8067142728964334,
+          "mouth_width": 0.9129264551414717,
+          "nose_width": 0.5420314551410477,
+          "mouth_y": -0.9051464717788338,
+          "chin_y": -1.6382829326195905,
+          "nose_y": -0.47527707913786765
+        }
+      },
+      "model": {
+        "source": "games/beechlawn_rovers/build/head-fit-model/current/john_orourke/front.png",
+        "sha256": "d9ef12615477fd8e794f680e2a73c0dd40c6e622f42b45cfc93003a583802679",
+        "crop": null,
+        "metrics": {
+          "face_width": 2.048588777047831,
+          "jaw_width": 1.7788710409419604,
+          "mouth_width": 0.8390612732688731,
+          "nose_width": 0.5586884048505183,
+          "mouth_y": -0.8997251939541574,
+          "chin_y": -1.593381626268982,
+          "nose_y": -0.5197486661495734
+        }
+      }
+    },
+    "bordeaux_09": {
+      "reference": {
+        "source": "games/beechlawn_rovers/references/source_uploads/chat_attachments/boardeaux_des_photo/69016.jpg",
+        "sha256": "e57a40a15b33a8fe4f9da1ae38945fb5c52f8a7e85eb1f6b889da86ffd68101b",
+        "crop": [
+          0,
+          140,
+          576,
+          1120
+        ],
+        "metrics": {
+          "face_width": 2.2165978390032883,
+          "jaw_width": 1.746325723805674,
+          "mouth_width": 0.7326518940753706,
+          "nose_width": 0.5019421485196129,
+          "mouth_y": -1.143343529765772,
+          "chin_y": -1.8729311580658923,
+          "nose_y": -0.6889100694922308
+        }
+      },
+      "model": {
+        "source": "games/beechlawn_rovers/build/head-fit-model/current/bordeaux_09/front.png",
+        "sha256": "ef1460a06d9b878bd861b72d5e7a32e2723592f5e2fb72558b1fb316858a1498",
+        "crop": null,
+        "metrics": {
+          "face_width": 2.300923412934006,
+          "jaw_width": 1.9085894320254897,
+          "mouth_width": 0.8029511945196481,
+          "nose_width": 0.5909643863352904,
+          "mouth_y": -1.1897788514788585,
+          "chin_y": -1.7697308518376338,
+          "nose_y": -0.688453335496603
+        }
+      }
+    },
+    "des_feeney_sr": {
+      "reference": {
+        "source": "games/beechlawn_rovers/references/source_uploads/chat_attachments/des_feeney_referee_likeness/69015.jpg",
+        "sha256": "7aa05a728244587ba89ce8d35f2211601393303f34bd51d07eb9aa5cf1edb2f0",
+        "crop": [
+          0,
+          70,
+          576,
+          1060
+        ],
+        "metrics": {
+          "face_width": 2.2418615143275726,
+          "jaw_width": 1.7478663377241968,
+          "mouth_width": 0.7446846328344424,
+          "nose_width": 0.5636148851505711,
+          "mouth_y": -1.1309115839971788,
+          "chin_y": -1.895689326198234,
+          "nose_y": -0.7000393929308347
+        }
+      },
+      "model": {
+        "source": "games/beechlawn_rovers/build/head-fit-model/current/des_feeney_sr/front.png",
+        "sha256": "bb580d93eb952fa8aa3e2a503a88d3c392ed866521feae3d90bbeee9c54c5658",
+        "crop": null,
+        "metrics": {
+          "face_width": 2.2320410605604355,
+          "jaw_width": 1.9589865682333423,
+          "mouth_width": 0.8552137302222207,
+          "nose_width": 0.5616759954120956,
+          "mouth_y": -1.065683414227721,
+          "chin_y": -1.6989226008495009,
+          "nose_y": -0.6131737228681693
+        }
+      }
+    },
+    "robbie_roden": {
+      "reference": {
+        "source": "games/beechlawn_rovers/references/source_uploads/chat_attachments/br022_realism_followup/70467.jpg",
+        "sha256": "7e61bcf811d0f81b2fe3845a4ae793c003dd464d3334d2b7b50f652214abe79f",
+        "crop": [
+          0,
+          100,
+          576,
+          1120
+        ],
+        "metrics": {
+          "face_width": 2.25833612860324,
+          "jaw_width": 1.8748926524875151,
+          "mouth_width": 1.0593343295334807,
+          "nose_width": 0.6480549349975104,
+          "mouth_y": -1.0332788720533905,
+          "chin_y": -1.851352330644181,
+          "nose_y": -0.5399948330026972
+        }
+      },
+      "model": {
+        "source": "games/beechlawn_rovers/build/head-fit-model/current/robbie_roden/front.png",
+        "sha256": "b4f0c878a659db76c04666496edf906d0b04af5db5410b032bc6a85d8ee0911b",
+        "crop": null,
+        "metrics": {
+          "face_width": 2.4877425805828137,
+          "jaw_width": 2.138122582081218,
+          "mouth_width": 0.9605845720364458,
+          "nose_width": 0.6421754657626132,
+          "mouth_y": -1.1085564119114855,
+          "chin_y": -1.725139222465919,
+          "nose_y": -0.6606472050688539
+        }
+      }
+    },
+    "david_murray": {
+      "reference": {
+        "source": "games/beechlawn_rovers/references/source_uploads/chat_attachments/br022_realism_followup/70466.jpg",
+        "sha256": "51f0916267649420cb10f64245ee17da9e8516a470a44d7837a7784b3e382f31",
+        "crop": [
+          0,
+          150,
+          576,
+          1150
+        ],
+        "metrics": {
+          "face_width": 2.2429536044020817,
+          "jaw_width": 1.8666230077761,
+          "mouth_width": 1.0716425967509262,
+          "nose_width": 0.5581690972371671,
+          "mouth_y": -1.0865267606298281,
+          "chin_y": -1.9522805884376622,
+          "nose_y": -0.5098236341889326
+        }
+      },
+      "model": {
+        "source": "games/beechlawn_rovers/build/head-fit-model/current/david_murray/front.png",
+        "sha256": "6d685318161132b7f3dda11c159777839ae9aa5c626118062cb8d4e3fd5fe8b1",
+        "crop": null,
+        "metrics": {
+          "face_width": 2.3027791668367508,
+          "jaw_width": 1.85811758894059,
+          "mouth_width": 0.8276961614098728,
+          "nose_width": 0.5162590651458796,
+          "mouth_y": -1.1016399154210483,
+          "chin_y": -1.723752242717815,
+          "nose_y": -0.6363982867054899
+        }
+      }
+    }
+  }
+}

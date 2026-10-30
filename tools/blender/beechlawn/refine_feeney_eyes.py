@@ -53,8 +53,11 @@ def aperture(head,eye,positions=None,allow_closed=False):
     assert visible,'Eye is completely hidden'
     width=max(p[0] for p in visible)-min(p[0] for p in visible)
     height=max(p[1] for p in visible)-min(p[1] for p in visible)
+    # A fully closed lid can leave a single sub-sample of globe visibility.
+    # Its measured width is zero; retain that result instead of dividing by it.
     return {'width_cm':round(width,3),'height_cm':round(height,3),
-            'height_width':round(height/width,4),'visible_samples':len(visible)}
+            'height_width':round(height/width,4) if width > 1e-8 else 0,
+            'visible_samples':len(visible)}
 
 
 def round_lid(point,centres,identity):

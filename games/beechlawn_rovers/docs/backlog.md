@@ -10,6 +10,21 @@ items, use the archived references and skill workflow in
 [`art_reference_implementation_plan.md`](art_reference_implementation_plan.md)
 and [`../references/README.md`](../references/README.md) before implementation.
 
+## Original-photo landmark fit — 29 October 2026
+
+BR-022 (22/27, in progress): the six saved hero heads now have a repeatable
+original-photo landmark fit. It adjusts bounded face, jaw, nose and lower-face
+forms while keeping the shared master, rig, UVs and neck join intact. Six
+normal/near heads and grooms were rebuilt and audited. The
+[fit review](art_briefs/br022_landmark_fit_2026_10_29/brief.md) records the
+measurements, Blender comparisons and imported Forward+ portraits. Landmark
+error fell, but the faces still fail the requested 20/20 likeness gate. The
+failed open-mouth prototype did not enter the game. The next Mac build is
+deferred until the owner reviews an actually convincing likeness pass.
+
+Next acceptance: BR-022 six-identity mouth, skin and groom visual review,
+then BR-025 (25/27, in progress) packaged target-Mac appearance and 1080p60.
+
 ## Six-player likeness refinement — 29 October 2026
 
 BR-022 (22/27, in progress): the six saved head sculpts received another

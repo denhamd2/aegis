@@ -1,0 +1,202 @@
+{
+  "result": "PASS",
+  "players": {
+    "shane_denham": {
+      "eyes": {
+        "l": {
+          "open": {
+            "width_cm": 2.4,
+            "height_cm": 0.63,
+            "height_width": 0.2625,
+            "visible_samples": 1367
+          },
+          "closed": {
+            "width_cm": 0.27,
+            "height_cm": 0.06,
+            "height_width": 0.2222,
+            "visible_samples": 23
+          }
+        },
+        "r": {
+          "open": {
+            "width_cm": 2.4,
+            "height_cm": 0.63,
+            "height_width": 0.2625,
+            "visible_samples": 1374
+          },
+          "closed": {
+            "width_cm": 0.27,
+            "height_cm": 0.06,
+            "height_width": 0.2222,
+            "visible_samples": 23
+          }
+        }
+      },
+      "dental_visibility_samples": {
+        "Basis": 0,
+        "Smile": 1554
+      }
+    },
+    "john_orourke": {
+      "eyes": {
+        "l": {
+          "open": {
+            "width_cm": 2.31,
+            "height_cm": 0.63,
+            "height_width": 0.2727,
+            "visible_samples": 1388
+          },
+          "closed": {
+            "width_cm": 0.0,
+            "height_cm": 0.0,
+            "height_width": 0,
+            "visible_samples": 1
+          }
+        },
+        "r": {
+          "open": {
+            "width_cm": 2.31,
+            "height_cm": 0.63,
+            "height_width": 0.2727,
+            "visible_samples": 1387
+          },
+          "closed": {
+            "width_cm": 0.0,
+            "height_cm": 0.0,
+            "height_width": 0,
+            "visible_samples": 1
+          }
+        }
+      }
+    },
+    "bordeaux_09": {
+      "eyes": {
+        "l": {
+          "open": {
+            "width_cm": 2.37,
+            "height_cm": 0.93,
+            "height_width": 0.3924,
+            "visible_samples": 2000
+          },
+          "closed": {
+            "width_cm": 0.09,
+            "height_cm": 0.09,
+            "height_width": 1.0,
+            "visible_samples": 10
+          }
+        },
+        "r": {
+          "open": {
+            "width_cm": 2.37,
+            "height_cm": 0.93,
+            "height_width": 0.3924,
+            "visible_samples": 2005
+          },
+          "closed": {
+            "width_cm": 0.12,
+            "height_cm": 0.09,
+            "height_width": 0.75,
+            "visible_samples": 11
+          }
+        }
+      }
+    },
+    "des_feeney_sr": {
+      "eyes": {
+        "l": {
+          "open": {
+            "width_cm": 2.37,
+            "height_cm": 0.6,
+            "height_width": 0.2532,
+            "visible_samples": 1234
+          },
+          "closed": {
+            "width_cm": 0.3,
+            "height_cm": 0.09,
+            "height_width": 0.3,
+            "visible_samples": 24
+          }
+        },
+        "r": {
+          "open": {
+            "width_cm": 2.37,
+            "height_cm": 0.6,
+            "height_width": 0.2532,
+            "visible_samples": 1237
+          },
+          "closed": {
+            "width_cm": 0.3,
+            "height_cm": 0.09,
+            "height_width": 0.3,
+            "visible_samples": 24
+          }
+        }
+      }
+    },
+    "robbie_roden": {
+      "eyes": {
+        "l": {
+          "open": {
+            "width_cm": 2.46,
+            "height_cm": 0.6,
+            "height_width": 0.2439,
+            "visible_samples": 1349
+          },
+          "closed": {
+            "width_cm": 0.3,
+            "height_cm": 0.15,
+            "height_width": 0.5,
+            "visible_samples": 39
+          }
+        },
+        "r": {
+          "open": {
+            "width_cm": 2.49,
+            "height_cm": 0.6,
+            "height_width": 0.241,
+            "visible_samples": 1353
+          },
+          "closed": {
+            "width_cm": 0.3,
+            "height_cm": 0.12,
+            "height_width": 0.4,
+            "visible_samples": 38
+          }
+        }
+      }
+    },
+    "david_murray": {
+      "eyes": {
+        "l": {
+          "open": {
+            "width_cm": 2.7,
+            "height_cm": 0.69,
+            "height_width": 0.2556,
+            "visible_samples": 1551
+          },
+          "closed": {
+            "width_cm": 2.49,
+            "height_cm": 0.18,
+            "height_width": 0.0723,
+            "visible_samples": 6
+          }
+        },
+        "r": {
+          "open": {
+            "width_cm": 2.7,
+            "height_cm": 0.66,
+            "height_width": 0.2444,
+            "visible_samples": 1539
+          },
+          "closed": {
+            "width_cm": 0.81,
+            "height_cm": 0.06,
+            "height_width": 0.0741,
+            "visible_samples": 5
+          }
+        }
+      }
+    }
+  },
+  "scope": "Source geometry visibility; native expression appearance remains separate"
+}

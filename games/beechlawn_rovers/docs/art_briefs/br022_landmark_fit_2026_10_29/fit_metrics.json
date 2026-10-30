@@ -1,0 +1,306 @@
+{
+  "schema_version": 1,
+  "method": "Same MediaPipe Face Landmarker and original-photo crop; absolute eye-distance-normalized errors, before and after fitted Blender front renders",
+  "players": {
+    "shane_denham": {
+      "reference_sha256": "6649633b8e0e6697352e863f107ddab8b20196dde905b39d70076e2e668adb27",
+      "original_model_render_sha256": "c845185e8abc9eee451ae14b93f371d48e7ac3c7c9488c4f84b2f7d345d678f5",
+      "fitted_model_render_sha256": "256dd460b07241ed98e6a609017027f487855c3e342611c55f3fccf6104bae4e",
+      "reference": {
+        "face_width": 2.180882153785338,
+        "jaw_width": 1.7920253034510254,
+        "mouth_width": 0.981330668551561,
+        "nose_width": 0.574469453850984,
+        "mouth_y": -1.0371464046125118,
+        "chin_y": -1.7619541742229894,
+        "nose_y": -0.6659591403872938
+      },
+      "before": {
+        "face_width": 2.1611312005193737,
+        "jaw_width": 1.821199583299529,
+        "mouth_width": 0.9314540836781893,
+        "nose_width": 0.6535545259486895,
+        "mouth_y": -1.0637676756237875,
+        "chin_y": -1.7117773251985757,
+        "nose_y": -0.6658364311118992
+      },
+      "after": {
+        "face_width": 2.1627929426134154,
+        "jaw_width": 1.8237466644071565,
+        "mouth_width": 0.9386673867684034,
+        "nose_width": 0.6393684610075303,
+        "mouth_y": -1.0521264855328587,
+        "chin_y": -1.7184151273856811,
+        "nose_y": -0.6648625850546164
+      },
+      "absolute_error_before": {
+        "face_width": 0.019751,
+        "jaw_width": 0.029174,
+        "mouth_width": 0.049877,
+        "nose_width": 0.079085,
+        "nose_y": 0.000123,
+        "mouth_y": 0.026621,
+        "chin_y": 0.050177
+      },
+      "absolute_error_after": {
+        "face_width": 0.018089,
+        "jaw_width": 0.031721,
+        "mouth_width": 0.042663,
+        "nose_width": 0.064899,
+        "nose_y": 0.001097,
+        "mouth_y": 0.01498,
+        "chin_y": 0.043539
+      }
+    },
+    "john_orourke": {
+      "reference_sha256": "114bc417c7e1fb29945a2664a7a95189f63b83bc4011168255313a8c967a8d2d",
+      "original_model_render_sha256": "d9ef12615477fd8e794f680e2a73c0dd40c6e622f42b45cfc93003a583802679",
+      "fitted_model_render_sha256": "d4ca5a93fc674c74a909aafa6ab2824e90c2c55407ca7f372706e2636a7e2697",
+      "reference": {
+        "face_width": 2.102108497991333,
+        "jaw_width": 1.8067142728964334,
+        "mouth_width": 0.9129264551414717,
+        "nose_width": 0.5420314551410477,
+        "mouth_y": -0.9051464717788338,
+        "chin_y": -1.6382829326195905,
+        "nose_y": -0.47527707913786765
+      },
+      "before": {
+        "face_width": 2.048588777047831,
+        "jaw_width": 1.7788710409419604,
+        "mouth_width": 0.8390612732688731,
+        "nose_width": 0.5586884048505183,
+        "mouth_y": -0.8997251939541574,
+        "chin_y": -1.593381626268982,
+        "nose_y": -0.5197486661495734
+      },
+      "after": {
+        "face_width": 2.0791924593520132,
+        "jaw_width": 1.7879880254305056,
+        "mouth_width": 0.8564760267270308,
+        "nose_width": 0.5655801251729988,
+        "mouth_y": -0.8947221638029619,
+        "chin_y": -1.6020096361714362,
+        "nose_y": -0.4914736569872877
+      },
+      "absolute_error_before": {
+        "face_width": 0.05352,
+        "jaw_width": 0.027843,
+        "mouth_width": 0.073865,
+        "nose_width": 0.016657,
+        "nose_y": 0.044472,
+        "mouth_y": 0.005421,
+        "chin_y": 0.044901
+      },
+      "absolute_error_after": {
+        "face_width": 0.022916,
+        "jaw_width": 0.018726,
+        "mouth_width": 0.05645,
+        "nose_width": 0.023549,
+        "nose_y": 0.016197,
+        "mouth_y": 0.010424,
+        "chin_y": 0.036273
+      }
+    },
+    "bordeaux_09": {
+      "reference_sha256": "e57a40a15b33a8fe4f9da1ae38945fb5c52f8a7e85eb1f6b889da86ffd68101b",
+      "original_model_render_sha256": "ef1460a06d9b878bd861b72d5e7a32e2723592f5e2fb72558b1fb316858a1498",
+      "fitted_model_render_sha256": "eccbde90d4018228520bf293caab648488a22dc25900feb72ae1ad652050af24",
+      "reference": {
+        "face_width": 2.2165978390032883,
+        "jaw_width": 1.746325723805674,
+        "mouth_width": 0.7326518940753706,
+        "nose_width": 0.5019421485196129,
+        "mouth_y": -1.143343529765772,
+        "chin_y": -1.8729311580658923,
+        "nose_y": -0.6889100694922308
+      },
+      "before": {
+        "face_width": 2.300923412934006,
+        "jaw_width": 1.9085894320254897,
+        "mouth_width": 0.8029511945196481,
+        "nose_width": 0.5909643863352904,
+        "mouth_y": -1.1897788514788585,
+        "chin_y": -1.7697308518376338,
+        "nose_y": -0.688453335496603
+      },
+      "after": {
+        "face_width": 2.253703453399544,
+        "jaw_width": 1.8836071982309308,
+        "mouth_width": 0.8261196806162823,
+        "nose_width": 0.5929349758748539,
+        "mouth_y": -1.209676713953535,
+        "chin_y": -1.776540689452622,
+        "nose_y": -0.686116834217227
+      },
+      "absolute_error_before": {
+        "face_width": 0.084326,
+        "jaw_width": 0.162264,
+        "mouth_width": 0.070299,
+        "nose_width": 0.089022,
+        "nose_y": 0.000457,
+        "mouth_y": 0.046435,
+        "chin_y": 0.1032
+      },
+      "absolute_error_after": {
+        "face_width": 0.037106,
+        "jaw_width": 0.137281,
+        "mouth_width": 0.093468,
+        "nose_width": 0.090993,
+        "nose_y": 0.002793,
+        "mouth_y": 0.066333,
+        "chin_y": 0.09639
+      }
+    },
+    "des_feeney_sr": {
+      "reference_sha256": "7aa05a728244587ba89ce8d35f2211601393303f34bd51d07eb9aa5cf1edb2f0",
+      "original_model_render_sha256": "bb580d93eb952fa8aa3e2a503a88d3c392ed866521feae3d90bbeee9c54c5658",
+      "fitted_model_render_sha256": "a6c3826902acbdcf556913038f3e433ec80d3fb139bdbe34e5788381d78f7f59",
+      "reference": {
+        "face_width": 2.2418615143275726,
+        "jaw_width": 1.7478663377241968,
+        "mouth_width": 0.7446846328344424,
+        "nose_width": 0.5636148851505711,
+        "mouth_y": -1.1309115839971788,
+        "chin_y": -1.895689326198234,
+        "nose_y": -0.7000393929308347
+      },
+      "before": {
+        "face_width": 2.2320410605604355,
+        "jaw_width": 1.9589865682333423,
+        "mouth_width": 0.8552137302222207,
+        "nose_width": 0.5616759954120956,
+        "mouth_y": -1.065683414227721,
+        "chin_y": -1.6989226008495009,
+        "nose_y": -0.6131737228681693
+      },
+      "after": {
+        "face_width": 2.2703447609599117,
+        "jaw_width": 1.9494784565731418,
+        "mouth_width": 0.860355834352589,
+        "nose_width": 0.5768355785583938,
+        "mouth_y": -1.1345781036645373,
+        "chin_y": -1.7912946339727234,
+        "nose_y": -0.678559263357821
+      },
+      "absolute_error_before": {
+        "face_width": 0.00982,
+        "jaw_width": 0.21112,
+        "mouth_width": 0.110529,
+        "nose_width": 0.001939,
+        "nose_y": 0.086866,
+        "mouth_y": 0.065228,
+        "chin_y": 0.196767
+      },
+      "absolute_error_after": {
+        "face_width": 0.028483,
+        "jaw_width": 0.201612,
+        "mouth_width": 0.115671,
+        "nose_width": 0.013221,
+        "nose_y": 0.02148,
+        "mouth_y": 0.003667,
+        "chin_y": 0.104395
+      }
+    },
+    "robbie_roden": {
+      "reference_sha256": "7e61bcf811d0f81b2fe3845a4ae793c003dd464d3334d2b7b50f652214abe79f",
+      "original_model_render_sha256": "b4f0c878a659db76c04666496edf906d0b04af5db5410b032bc6a85d8ee0911b",
+      "fitted_model_render_sha256": "bebdd2126d66d5b8754caa5b548493cf2f3cd550b5b30bef0f5ef16640bcb269",
+      "reference": {
+        "face_width": 2.25833612860324,
+        "jaw_width": 1.8748926524875151,
+        "mouth_width": 1.0593343295334807,
+        "nose_width": 0.6480549349975104,
+        "mouth_y": -1.0332788720533905,
+        "chin_y": -1.851352330644181,
+        "nose_y": -0.5399948330026972
+      },
+      "before": {
+        "face_width": 2.4877425805828137,
+        "jaw_width": 2.138122582081218,
+        "mouth_width": 0.9605845720364458,
+        "nose_width": 0.6421754657626132,
+        "mouth_y": -1.1085564119114855,
+        "chin_y": -1.725139222465919,
+        "nose_y": -0.6606472050688539
+      },
+      "after": {
+        "face_width": 2.3980481929960344,
+        "jaw_width": 2.1024657254432535,
+        "mouth_width": 0.9703766735894062,
+        "nose_width": 0.618582500877469,
+        "mouth_y": -1.109811143405588,
+        "chin_y": -1.7278765626926742,
+        "nose_y": -0.5774249495298869
+      },
+      "absolute_error_before": {
+        "face_width": 0.229406,
+        "jaw_width": 0.26323,
+        "mouth_width": 0.09875,
+        "nose_width": 0.005879,
+        "nose_y": 0.120652,
+        "mouth_y": 0.075278,
+        "chin_y": 0.126213
+      },
+      "absolute_error_after": {
+        "face_width": 0.139712,
+        "jaw_width": 0.227573,
+        "mouth_width": 0.088958,
+        "nose_width": 0.029472,
+        "mouth_y": 0.076532,
+        "chin_y": 0.123476,
+        "nose_y": 0.03743
+      }
+    },
+    "david_murray": {
+      "reference_sha256": "51f0916267649420cb10f64245ee17da9e8516a470a44d7837a7784b3e382f31",
+      "original_model_render_sha256": "6d685318161132b7f3dda11c159777839ae9aa5c626118062cb8d4e3fd5fe8b1",
+      "fitted_model_render_sha256": "780691d89812bb6096848d603d5e0d77c0c11f9f6ec4209c218835664b273960",
+      "reference": {
+        "face_width": 2.2429536044020817,
+        "jaw_width": 1.8666230077761,
+        "mouth_width": 1.0716425967509262,
+        "nose_width": 0.5581690972371671,
+        "mouth_y": -1.0865267606298281,
+        "chin_y": -1.9522805884376622,
+        "nose_y": -0.5098236341889326
+      },
+      "before": {
+        "face_width": 2.3027791668367508,
+        "jaw_width": 1.85811758894059,
+        "mouth_width": 0.8276961614098728,
+        "nose_width": 0.5162590651458796,
+        "mouth_y": -1.1016399154210483,
+        "chin_y": -1.723752242717815,
+        "nose_y": -0.6363982867054899
+      },
+      "after": {
+        "face_width": 2.2579641189445425,
+        "jaw_width": 1.8504127427781887,
+        "mouth_width": 0.8065609501710795,
+        "nose_width": 0.5356704669206653,
+        "mouth_y": -1.1171312490862593,
+        "chin_y": -1.7330472324071293,
+        "nose_y": -0.565493343146506
+      },
+      "absolute_error_before": {
+        "face_width": 0.059826,
+        "jaw_width": 0.008505,
+        "mouth_width": 0.243946,
+        "nose_width": 0.04191,
+        "nose_y": 0.126575,
+        "mouth_y": 0.015113,
+        "chin_y": 0.228528
+      },
+      "absolute_error_after": {
+        "face_width": 0.015011,
+        "jaw_width": 0.01621,
+        "mouth_width": 0.265082,
+        "nose_width": 0.022499,
+        "mouth_y": 0.030604,
+        "chin_y": 0.219233,
+        "nose_y": 0.05567
+      }
+    }
+  }
+}
