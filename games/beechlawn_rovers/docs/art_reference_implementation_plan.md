@@ -4,12 +4,14 @@ Current shared receiving follow-up: [contextual control](art_briefs/contextual_c
 
 Current sports-prop follow-up: [UCL 26/27 League ball](art_briefs/ucl_ball_2026_10_25/brief.md), BR-023 (23/27, in progress). The owner approved the latest **League size-5** photographs (70119/70118/70117/70116), with black branding, as the new default. Earlier mini photos are supplementary only; do not substitute their pink logos/MINI label or the Pro variant. Retrieve `references/source_uploads/chat_attachments/ucl_26_27_ball/`; use Blender director → prop artist → UV/texturing → PBR → optimization/export, then matched studio and native Forward+ ball rotations. The original worn ball remains a saved option; gameplay physics are shared. Delivery/target-Mac acceptance stays BR-025 (25/27).
 
-Current gameplay motion follow-up: [stride/foot plants](art_briefs/br021_stride_2026_10_24/brief.md),
-BR-021 (21/27, in progress), adds five original shared gaits with measured
-stance travel, natural arm/wrist motion and stepping through deceleration.
-All body/head/kit sources remain intact. Native pitch-side motion and live-ball
-checks pass; broader motion and M1 acceptance remain open. Next delivery action
-is BR-025 (25/27), a fresh Mac package for combined playtesting.
+Current gameplay motion follow-up: [live starts and turns](art_briefs/br021_transition_2026_10_31/brief.md),
+BR-021 (21/27, in progress), reduces measured toe sliding through acceleration,
+90-degree moving turns and reversals by blending the existing
+[five shared gaits](art_briefs/br021_stride_2026_10_24/brief.md) promptly and
+orienting ordinary movement toward the real travel arc. The body/head/kit
+sources and contact markers remain intact. Native pitch-side motion and
+live-ball checks pass; human input feel and M1 acceptance remain open. Next
+delivery action is BR-025 (25/27), a fresh Mac package for combined playtesting.
 
 Current keeper motion follow-up: [high-shot saves](art_briefs/br009_high_shots_2026_10_24/brief.md),
 BR-009 (9/27, in progress), adds three original shared-rig overhead/high-dive

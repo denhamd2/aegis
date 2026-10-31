@@ -80,6 +80,24 @@ python3 games/beechlawn_rovers/tools/capture_native.py build/crowd-motion \
 Linux software Vulkan demonstrates the body and flag motion in Forward+ but
 does not establish target-Mac colours, detail or 1080p60 performance.
 
+## Moving gait and turn review
+
+`stride_brake` captures a real Shane #8 acceleration, sprint and braking
+sequence. `stride_turn` captures a start, 90-degree moving turn and reversal
+with the normal CharacterBody controller and final shared footballer rig.
+Both step 60 Hz physics twice per 30 Hz saved frame and retain the renderer,
+adapter, actor ID, speed and turn labels in the native report. The turn fixture
+parks the other actors and ball so it isolates body footwork, not dribble feel.
+
+```sh
+python3 games/beechlawn_rovers/tools/capture_native.py build/br021-turn \
+  --review-mode stride_turn --resolution 640x360 --deadline 300
+```
+
+See `art_briefs/br021_transition_2026_10_31/` for the measured before/after
+foot traces and native review. Mac motion feel and sustained 1080p60 still
+need the target device.
+
 `--review-mode movement|throw|net|montage` records numbered native PNG frames
 plus metadata in `match_broadcast.json`. Movement/throw/net use six real 60 Hz
 simulation steps per draw; assemble at 10 fps to review simulated timing, not

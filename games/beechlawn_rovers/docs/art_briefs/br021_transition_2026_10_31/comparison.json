@@ -1,0 +1,35 @@
+{
+  "phases": {
+    "start": {
+      "baseline_mean_mps": 0.786339400656288,
+      "candidate_mean_mps": 0.473656272351155,
+      "baseline_p90_mps": 2.57164478302002,
+      "candidate_p90_mps": 1.50169596076012,
+      "baseline_samples": 24,
+      "candidate_samples": 23,
+      "mean_reduction_percent": 39.76439792336033
+    },
+    "turn": {
+      "baseline_mean_mps": 1.55725467426237,
+      "candidate_mean_mps": 0.571227990474333,
+      "baseline_p90_mps": 3.06726984679699,
+      "candidate_p90_mps": 1.02992825210094,
+      "baseline_samples": 16,
+      "candidate_samples": 17,
+      "mean_reduction_percent": 63.318267723620195
+    },
+    "reverse": {
+      "baseline_mean_mps": 1.84565956637795,
+      "candidate_mean_mps": 0.783737021583048,
+      "baseline_p90_mps": 3.64297538995743,
+      "candidate_p90_mps": 1.94711521267891,
+      "baseline_samples": 21,
+      "candidate_samples": 22,
+      "mean_reduction_percent": 57.53620895964537
+    }
+  },
+  "max_root_delta_m": 5.215406419928348e-08,
+  "max_speed_delta_mps": 0.0,
+  "controller_path_preserved": true,
+  "measurement": "Low, vertically quiet world-space toe samples at 60 Hz; not boot sole."
+}

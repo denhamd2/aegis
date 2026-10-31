@@ -247,6 +247,13 @@ func _update_locomotion(delta: float) -> void:
 	else:
 		stamina = minf(tuning.stamina_max, stamina + tuning.stamina_recovery * delta)
 	var facing_intent := desired
+	# Through a fast corner the capsule still travels along its previous arc.
+	# Lead the actual velocity by a small amount so the in-place stance foot
+	# turns with that arc instead of facing across it and skating sideways.
+	if not recovering and not sliding and not (_visual_pass_pending or _visual_shot_pending) \
+			and horizontal.length() > 1.8 and desired.length_squared() > .5 \
+			and horizontal.normalized().dot(desired.normalized()) < .8:
+		facing_intent = horizontal.normalized().lerp(desired.normalized(), .25).normalized()
 	if skills.facing.length_squared() > .01: facing_intent = skills.facing
 	if _aerial_controller.facing.length_squared() > .01:
 		facing_intent = _aerial_controller.facing

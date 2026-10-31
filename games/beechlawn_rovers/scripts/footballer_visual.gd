@@ -574,7 +574,10 @@ func set_locomotion_speed(speed_mps: float, _sprinting: bool = false,
 	var locomotion := 0.55 * clampf(speed_mps / jog_speed, 0.0, 1.0)
 	if speed_mps > jog_speed:
 		locomotion = lerpf(0.55, 1.0, clampf((speed_mps - jog_speed) / (sprint_speed - jog_speed), 0.0, 1.0))
-	_blend_position = lerpf(_blend_position, locomotion, 1.0 - exp(-10.0 * delta))
+	# Follow an accelerating body promptly; a 10/s visual lag made planted
+	# feet skate while the controller was already several metres per second.
+	# 24/s retains a short pose blend without the abrupt stance jump at 60/s.
+	_blend_position = lerpf(_blend_position, locomotion, 1.0 - exp(-24.0 * delta))
 	_close_control_blend = lerpf(_close_control_blend,
 		1.0 if close_control and speed_mps > 0.35 else 0.0,
 		1.0 - exp(-12.0 * delta))

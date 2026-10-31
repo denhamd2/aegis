@@ -29,7 +29,9 @@ func _run() -> void:
 	var preparation_yaw := absf(angle_difference(before_yaw, player.rotation.y))
 	# The real contact callback clears the commitment and applies the kick.
 	var visual := player.get_node("Visual") as FootballerVisual
-	visual.animation_player.seek(visual.action_contact_time(&"shot"), true)
+	# Stay before the method track. Seeking to the exact marker evaluates it
+	# immediately, before this fixture has positioned the live ball at the toe.
+	visual.animation_player.seek(visual.action_contact_time(&"shot") - 0.02, true)
 	ball.global_position = player._receive_contact_position() + Vector3.UP * 0.06
 	visual.on_action_contact_marker()
 	var contact := ball.last_action == &"shot"

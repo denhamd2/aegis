@@ -1192,6 +1192,14 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
   fake shot, drag-back and directional skill turn. Each move must affect control
   or ball position, not just play a cosmetic clip.
 - [ ] **BR-021 — Animation contact and blending pass**
+  - 2026-10-31 (21/27, in progress): real 11v11 start, moving 90-degree turn
+    and reversal toe traces now have a faster but bounded gait blend and
+    velocity-led facing during sharp turns. Mean low-foot slip falls
+    0.786→0.474, 1.557→0.571 and 1.846→0.784 m/s respectively, with unchanged
+    sampled controller path/speed. Native Forward+ moving review, live contact
+    checks and seeded match results are in
+    `art_briefs/br021_transition_2026_10_31/`. Human play feel, any remaining
+    start/turn/intro animation polish and target-Mac acceptance remain open.
   - 2026-10-25, v0.4.2: four original 60 Hz receive add-on clips on the unchanged 65-bone rig; selected leg/upper-body overlay retains supporting gait and phase. One shared-content layer with actor-local selection/filtering replaces costly serial branches. Receive-to-run, both feet, contact and cleanup checks extend the existing stride/turn/brake coverage. Native before/after evidence is retained; broader authored turn/intro motion and M1 acceptance remain open.
   - 2026-10-24 stride/plant pass (21/27, in progress): five original normalized
     shared-rig walk/slow-jog/jog/sprint/close-control loops match stance travel

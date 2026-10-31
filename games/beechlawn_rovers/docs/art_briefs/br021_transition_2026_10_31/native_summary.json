@@ -1,0 +1,57 @@
+{
+  "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+  "api": "1.4.305",
+  "display_server": "X11",
+  "fixture_setup": "stride_turn",
+  "godot": "4.6.3-stable (official)",
+  "graphics_profile": "balanced_60",
+  "home_players": 11,
+  "away_players": 11,
+  "officials": 1,
+  "physics_steps_per_draw": 2,
+  "rendering_method": "forward_plus",
+  "resolution": [
+    640,
+    360
+  ],
+  "review_mode": "stride_turn",
+  "scope": "Actual native Forward+ controllers and assets; accelerated simulated time, software GPU, no Mac performance claim.",
+  "sequence_fps": 30.0,
+  "peak_rss_kib": 4925008,
+  "capture_seconds": 60.07,
+  "files": {
+    "baseline_turn_070.png": "55c3737cd6e8b979f8f80fda909e9e54e79076e4b16bf64f3edf3107bef7727d",
+    "baseline_turn_review.mp4": "72dd953b6e1399a8a07875c956f87e156aae8ca0e447f5c85832a71287c66ad5",
+    "match_broadcast.png": "93d6f5c37d88f326599692fe9127c49e5e848db72176c3f44218d79fafde6aa8",
+    "matched_turn_comparison.mp4": "05bcd7a2aa653d66f57330157c3cb01cb2d995c384d179f33191bd1a32a2162c",
+    "native_turn_018.png": "3780b90a3e8cb09c9684f88460a117b435a04076ec6e44b46e19db78c58268a7",
+    "native_turn_050.png": "71d0ce871a83434079bdaaff52faddccb4bd328b93760b5c8847d87fc6e9a786",
+    "native_turn_068.png": "2cbb86e222707c0bba01d05f9c76bf0ee130bca7a74b9de139abce910e88cc82",
+    "native_turn_070.png": "f5cef8c8f953a59349aff90592094c9dcb71017496a9e68358f057f19a3dcad2",
+    "native_turn_080.png": "180ca228016e24162563ff05b6820fcb46a72c534844dcc400943bf691abef95",
+    "native_turn_092.png": "2df60bbe8e99cf9380321103c0926b09f954daf6e1fbfa5df5a9a774772e140b",
+    "native_turn_review.mp4": "95870e22e9ca59e225f4ca67367a2b082f757632557041b9fa7b013d833073d9",
+    "stride_brake_review.mp4": "72e6d5405243bc1d7756717c478feb1f23a74f210cee17a9829bd60eedf42c76"
+  },
+  "frame_count": 93,
+  "stages": {
+    "90-degree moving turn": {
+      "first_tick": 66,
+      "last_tick": 120
+    },
+    "moving reversal": {
+      "first_tick": 122,
+      "last_tick": 186
+    },
+    "start": {
+      "first_tick": 2,
+      "last_tick": 64
+    }
+  },
+  "matched_baseline": {
+    "frame_count": 93,
+    "peak_rss_kib": 4912624,
+    "capture_seconds": 59.09,
+    "comparison_layout": "baseline left, updated right; same scripted ticks and camera"
+  }
+}

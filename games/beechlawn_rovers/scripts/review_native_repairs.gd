@@ -28,7 +28,17 @@ func _physics_step() -> void:
 	tick+=1
 	if mode.begins_with("cross_duel_") and tick % 12 == 0:
 		game._update_ai(.2)
-	if mode.begins_with("stride_"):
+	if mode=="stride_turn":
+		if tick==1:
+			review_actor.reset_for_stoppage()
+			review_actor.position=Vector3(-8,game.surface_height(-8,0)+.005,0)
+			review_actor.rotation.y=-PI/2
+			review_actor.controlled_by_human=false
+			review_actor.tuning.jog_speed=6.0
+			review_actor.tuning.sprint_speed=8.6
+		review_actor.ai_move_direction=Vector3.RIGHT if tick<=65 else Vector3.FORWARD if tick<=120 else Vector3.LEFT
+		stride_case="start" if tick<=65 else "90-degree moving turn" if tick<=120 else "moving reversal"
+	elif mode.begins_with("stride_"):
 		var local_tick := (tick-1)%120
 		var stage := (tick-1)/120+(5 if mode=="stride_brake" else 0)
 		if local_tick==0:
@@ -140,6 +150,7 @@ func _save(label: String) -> void:
 	if mode.begins_with("stride_"):
 		sequence.back()["stride_case"]=stride_case
 		sequence.back()["player_id"]=str(review_actor.profile.player_id)
+		sequence.back()["heading_yaw"]=review_actor.rotation.y
 	if mode in ["keeper_high_shots","keeper_full_dives"]:
 		sequence.back()["keeper_case"]=keeper_case
 		sequence.back()["keeper_clip"]=str(review_keeper._footballer_visual.animation_player.current_animation)
@@ -389,6 +400,7 @@ func _capture() -> void:
 		var frames:=360 if mode.begins_with("stride_") else (144 if mode=="keeper_full_dives" else (64 if mode=="keeper_high_shots" else (16 if mode == "skills_moving" else (56 if mode == "skills" else (72 if mode in ["volley_close", "half_volley_close"] else (30 if mode.begins_with("cross_") or mode.begins_with("shot_") else (12 if mode in ["header_close", "chest_close"] else 24)))))))
 		if mode.begins_with("cross_duel_"):frames=24
 		if mode=="stride_brake":frames=60
+		if mode=="stride_turn":frames=93
 		for index in frames:
 			for f in frame_steps:await physics_frame
 			if mode.begins_with("stride_"):
@@ -468,7 +480,7 @@ func _capture() -> void:
 		assert(validated_left,"Native review must show a physical selected-left-boot strike")
 	game.set_physics_process(false);game._set_players_physics_enabled(false)
 	paused=true
-	var primary:=(40 if mode=="stride_brake" else 145) if mode.begins_with("stride_") else (2 if mode.begins_with("skills") else (1 if mode=="montage" else 0))
+	var primary:=(40 if mode=="stride_brake" else 45 if mode=="stride_turn" else 145) if mode.begins_with("stride_") else (2 if mode.begins_with("skills") else (1 if mode=="montage" else 0))
 	if mode in ["keeper_high_shots","keeper_full_dives"] and not keeper_contacts.is_empty():
 		for index in sequence.size():
 			if sequence[index].tick>=keeper_contacts[0].tick:
