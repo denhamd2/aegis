@@ -284,6 +284,10 @@ func watch(referee: MatchReferee, wrestlers: Array, crowd: CrowdReaction, match_
 			sfx.play("pyro_bang", -12.0, 1.4)
 			sfx.play_any("crowd_ooh", 0.0)
 			_register_chaos_activity(3.0))
+		w.through_desk.connect(func(_who: WrestlerController) -> void:
+			# the desk going: the boards, the monitors' glass and the steel
+			# (desk_crash_0, made for it). The crowd's pop is set_piece_landed's.
+			sfx.play_any("desk_crash", 2.0))
 		_cooldown[w] = 0.0
 		_falls[w] = []
 	referee.match_won.connect(_on_match_won)

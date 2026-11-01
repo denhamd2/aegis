@@ -706,7 +706,7 @@ func begin(match_root: Node) -> void:
 			_keeper = Timekeeper.new()
 			_keeper.name = "Timekeeper"
 			match_root.add_child(_keeper)
-			_keeper.setup(PropHandoff.KEEPER_POST, Vector3(-1, 0, 0), PropHandoff.TABLE_AT)
+			_keeper.setup(PropHandoff.KEEPER_POST, Timekeeper.FACE, PropHandoff.TABLE_AT)
 		_handoff = PropHandoff.new()
 		_handoff.name = "PropHandoff"
 		match_root.add_child(_handoff)

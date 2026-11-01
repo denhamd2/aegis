@@ -3490,6 +3490,118 @@ CLIPS["Backbreaker_Defender"] = [k for k in CLIPS["Bodyslam_Defender"] if k[0] <
     (36, S()),
 ]
 
+# No Holds Barred: laid out on a table (the owner, 1 Nov: "lay him on the
+# table, then dive off the top rope through him"). The body slam's lift --
+# the same first 24 frames, as the backbreaker shares them -- and then,
+# instead of the slam, the man is carried out over a table standing in front
+# of the attacker and set down on it on his back, ready for the dive
+# (TopRopeSpot, the table). 54 frames, 1.8 s.
+#
+# Where the table is: GrappleRig stands the pair frame on it for this move,
+# its length along the man's body and its middle under his pelvis where the
+# trajectory leaves him (paired_recipes.gd, table_lay: 0.68 m in front of
+# the attacker, whose toes then stay clear of its near edge, 0.39 m nearer).
+#
+# He ends exactly as Down_Supine lies, raised to the table's top
+# (TABLE_SUPINE), because that is what plays next: the man is DOWN on the
+# table with his root lifted to its top, and the handoff is a settle, not a
+# drop.
+TABLE_TOP = 0.741       # Table_Up's top (assets/weapons/table.glb)
+
+
+def _on_table(spec):
+    """A man lying on the mat, put on the table: every position target up by
+    its top. Pole vectors and angles are directions, not places, and stay."""
+    out = dict(spec)
+    for k in ("pelvis", "hand_r", "hand_l", "foot_r", "foot_l"):
+        x, y, z = out[k]
+        out[k] = (x, y, z + TABLE_TOP)
+    return out
+
+
+TABLE_SUPINE = _on_table(SUPINE)
+
+CLIPS["Table_Lay_Attacker"] = [k for k in CLIPS["Bodyslam_Attacker"] if k[0] <= 24] + [
+    # Carries him out over the table, lowering him, a half-step in.
+    (30, P(pelvis=(0.0, 0.04, 0.840), hips=(-8, 0, 0), spine=(-16, 0, 0),
+           head=(-14, 0, 0),
+           hand_r=(0.28, 0.44, 0.94), hand_l=(-0.34, 0.42, 0.92),
+           elbow_r=(0.5, -0.4, -0.7), elbow_l=(-0.5, -0.4, -0.7),
+           fist_r=0.6, fist_l=0.6,
+           foot_r=(0.22, -0.12, 0.104), foot_l=(-0.20, 0.22, 0.104))),
+    # Bent over the table, setting him down on it; the arms come out from
+    # under him, to his near side (fwd 0.40 against his side at 0.51: the
+    # grip ends here, attacker_grips_until 0.62, and from here nothing of
+    # the attacker's is in him -- a hand left in him, the hold's separation
+    # (GrappleRig) kept him 0.2 m up off the table to the end).
+    (34, P(pelvis=(0.0, 0.06, 0.810), hips=(-14, 0, 0), spine=(-26, 0, 0),
+           head=(-18, 0, 0),
+           hand_r=(0.30, 0.40, 0.98), hand_l=(-0.36, 0.40, 0.96),
+           elbow_r=(0.5, -0.3, -0.8), elbow_l=(-0.5, -0.3, -0.8),
+           fist_r=0.4, fist_l=0.4,
+           foot_r=(0.22, -0.12, 0.104), foot_l=(-0.20, 0.22, 0.104))),
+    # He is down on it: the hands come up off him, open over him -- stay
+    # there. Clear of his chest (its capsule tops out at 1.05 m, and the
+    # cradle's separation still has him a little up): a hand left on him
+    # pressed into him tick after tick, and the separation answered by
+    # carrying him up off the table, 0.2 m, to the end.
+    (38, P(pelvis=(0.0, 0.06, 0.820), hips=(-14, 0, 0), spine=(-24, 0, 0),
+           head=(-20, 0, 0),
+           hand_r=(0.28, 0.46, 1.28), hand_l=(-0.30, 0.44, 1.26),
+           elbow_r=(0.6, -0.2, -0.8), elbow_l=(-0.6, -0.2, -0.8),
+           fist_r=0.2, fist_l=0.2,
+           foot_r=(0.22, -0.12, 0.104), foot_l=(-0.20, 0.22, 0.104))),
+    # Up off him, still looking down at him: where he is going next.
+    (45, P(pelvis=(0.0, 0.03, 0.840), hips=(-6, 0, 0), spine=(-12, 0, 0),
+           head=(-16, 0, 0),
+           hand_r=(0.26, 0.34, 1.10), hand_l=(-0.24, 0.36, 1.12),
+           fist_r=0.6, fist_l=0.6)),
+    (54, P(head=(-6, 0, 0))),
+]
+
+def _blend_pose(a, b, w):
+    """Part of the way from pose `a` to pose `b`: every position, pole and
+    angle given in both, `w` of the way; anything else (a flag, a field only
+    one of them sets) is `b`'s, so it lands at the first key of the blend."""
+    out = dict(b)
+    for k, va in a.items():
+        vb = b.get(k)
+        if isinstance(va, tuple) and isinstance(vb, tuple) and len(va) == len(vb):
+            out[k] = tuple(x + (y - x) * w for x, y in zip(va, vb))
+        elif isinstance(va, (int, float)) and isinstance(vb, (int, float)) \
+                and not isinstance(va, bool):
+            out[k] = va + (vb - va) * w
+    return out
+
+
+# Frame 24 of the body slam: flat on his back across the chest.
+_LAY_CRADLED = dict(next(k[1] for k in CLIPS["Bodyslam_Defender"] if k[0] == 24))
+
+
+def _lowered(w, pelvis_up):
+    """Off the chest and down onto the table, `w` of the way into lying on
+    it, his pelvis at `pelvis_up`."""
+    pose = _blend_pose(_LAY_CRADLED, TABLE_SUPINE, w)
+    pose["pelvis"] = (0.0, 0.0, pelvis_up)
+    return pose
+
+
+# Lowered over twelve frames, not four: from the cradle -- limp, hanging off
+# the attacker's arms -- to lying flat on the table is most of a body's
+# worth of turning, and keyed 30 to 34 it went at 330 degrees a frame
+# against 60 around it (tests/test_clip_cadence.gd, three snaps).
+CLIPS["Table_Lay_Defender"] = [k for k in CLIPS["Bodyslam_Defender"] if k[0] <= 24] + [
+    # Carried out and down, settling flat as he goes.
+    (28, _lowered(0.25, 1.090)),
+    (32, _lowered(0.62, 1.020)),
+    # Just over the top, the arms out from under him.
+    (36, _lowered(0.92, 0.950)),
+    # On it.
+    (40, TABLE_SUPINE),
+    (46, dict(TABLE_SUPINE, head=(-18, 0, 0))),
+    (54, TABLE_SUPINE),
+]
+
 def _yawed(spec):
     """The same pose turned half round about the vertical, in place: every
     target mirrored through the origin, the hips yawed 180. Spine, head and

@@ -2073,6 +2073,37 @@ tracks/3/interp = 2
 tracks/3/loop_wrap = true
 tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 1.4, 1, 0, -0.7071068, 0, 0.7071068)
 
+[sub_resource type="Animation" id="Animation_fb2kp"]
+length = 1.8
+tracks/0/type = "position_3d"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("../WrestlerA")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = PackedFloat32Array(0, 1, 0.4, 0, 0, 0.23, 1, 0.326, 0.001, 0.019, 0.43, 1, 0.383, 0, 0.044, 0.63, 1, 0.428, 0, 0.043, 1.8, 1, 0.399, 0, 0.028)
+tracks/1/type = "rotation_3d"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("../WrestlerA")
+tracks/1/interp = 2
+tracks/1/loop_wrap = true
+tracks/1/keys = PackedFloat32Array(0, 1, 0, 0.7071068, 0, 0.7071068, 0.23, 1, 0, 0.6946584, 0, 0.7193398, 0.43, 1, 0, 0.34202015, 0, 0.93969274, 0.63, 1, 0, 0, 0, 1, 1.8, 1, 0, 0, 0, 1)
+tracks/2/type = "position_3d"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("../WrestlerB")
+tracks/2/interp = 2
+tracks/2/loop_wrap = true
+tracks/2/keys = PackedFloat32Array(0, 1, -0.4, 0, 0, 0.1, 1, -0.26, 0.121, -0.042, 0.23, 1, -0.188, 0.181, -0.124, 0.35, 1, -0.085, 0.283, -0.267, 0.43, 1, 0.156, 0.274, -0.301, 0.63, 1, 0.551, 0.172, -0.185, 0.8, 1, 0.6, 0.172, -0.225, 1, 1, 0.671, 0.16, -0.387, 1.13, 1, 0.703, 0.167, -0.501, 1.27, 1, 0.704, 0.154, -0.582, 1.8, 1, 0.424, 0.037, -0.659)
+tracks/3/type = "rotation_3d"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("../WrestlerB")
+tracks/3/interp = 2
+tracks/3/loop_wrap = true
+tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 1.8, 1, 0, -0.7071068, 0, 0.7071068)
+
 [resource]
 _data = {
 &"chain_headlock": SubResource("Animation_7b2p4"),
@@ -2141,5 +2172,6 @@ _data = {
 &"signature_disaster_kick": SubResource("Animation_vqwmo"),
 &"signature_neckbreaker": SubResource("Animation_e57ap"),
 &"signature_pedigree": SubResource("Animation_kmhji"),
-&"signature_superman_punch": SubResource("Animation_6dacy")
+&"signature_superman_punch": SubResource("Animation_6dacy"),
+&"table_lay": SubResource("Animation_fb2kp")
 }

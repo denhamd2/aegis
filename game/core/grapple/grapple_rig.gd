@@ -276,6 +276,74 @@ func _restore_original_animation() -> void:
 ## attacker's facing opened the clip 0.8 m apart ACROSS it, both men having
 ## swung 90 degrees round their midpoint in the lead-in.
 ## The ring side (a unit axis) a point on the floor is beside.
+## The announce desk's bay, as far as a pair frame goes: the floor in front
+## of the desk that only its bay opens up (past the lane's barricade line,
+## within WrestlerController.DESK_BAY_KEEP_X of its middle).
+const DESK_BAY_FROM_Z := 5.0
+const DESK_BAY_MIN_Z := 5.4
+
+
+static func in_desk_bay(p: Vector3) -> bool:
+	return p.z >= DESK_BAY_FROM_Z and absf(p.x - ArenaBuilder.DESK_X) <= WrestlerController.DESK_BAY_KEEP_X
+
+
+## The table lay (No Holds Barred; WrestlerAI's table dive): played on the
+## table, not where the two of them stand. The man is set down on it on his
+## back, so the frame is stood with his body over it -- its length along the
+## move's X, which is along him (he faces +X, his head that way), and its
+## middle under his body's, TABLE_BODY_MID back from where his root ends
+## toward his feet. Of the two ways round, the one that starts nearer where
+## the two of them are standing; the lead-in slides them the rest.
+const TABLE_LAY := &"table_lay"
+## A table this near the attacker is the one he lays the man on.
+const TABLE_LAY_REACH := 2.5
+## A man lying on his back runs about 0.85 m from his pelvis to the top of his
+## head and 0.95 m to his heels.
+const TABLE_BODY_MID := 0.05
+
+
+## The table standing within TABLE_LAY_REACH of `near`, nearest first, or null.
+static func lay_table(near: Node3D) -> WeaponActor:
+	var stock := WeaponStock.of(near)
+	if stock == null:
+		return null
+	var best: WeaponActor = null
+	var best_d := TABLE_LAY_REACH
+	for a in stock.set_up_pieces():
+		if a.def.id != &"table":
+			continue
+		var d := Vector2(a.global_position.x - near.global_position.x,
+				a.global_position.z - near.global_position.z).length()
+		if d <= best_d:
+			best_d = d
+			best = a
+	return best
+
+
+## The pair frame that lays the man on `table`: `end` is where his root ends,
+## in the frame (the defender's last root key). `attacker_at` and
+## `defender_at` pick which way round.
+static func table_lay_frame(table: Node3D, end: Vector2, attacker_at: Vector3,
+		defender_at: Vector3) -> Transform3D:
+	var along := table.global_transform.basis.x
+	along.y = 0.0
+	along = along.normalized() if along.length() > 0.001 else Vector3.RIGHT
+	var body := Vector3(end.x - TABLE_BODY_MID, 0.0, end.y)
+	var best := Transform3D()
+	var best_d := INF
+	for way: float in [1.0, -1.0]:
+		# rotY(theta) takes +X to (cos theta, 0, -sin theta)
+		var basis := Basis(Vector3.UP, atan2(-along.z * way, along.x * way))
+		var origin := table.global_position - basis * body
+		var xform := Transform3D(basis, origin)
+		var d := (xform * Vector3(0.40, 0.0, 0.0)).distance_to(attacker_at) \
+				+ (xform * Vector3(-0.40, 0.0, 0.0)).distance_to(defender_at)
+		if d < best_d:
+			best_d = d
+			best = xform
+	return best
+
+
 static func _outside_side(p: Vector3) -> Vector3:
 	if absf(p.x) >= absf(p.z):
 		return Vector3(1.0 if p.x >= 0.0 else -1.0, 0.0, 0.0)
@@ -283,13 +351,27 @@ static func _outside_side(p: Vector3) -> Vector3:
 
 
 func _compute_pair_transform(attacker: Node3D, defender: Node3D) -> Transform3D:
+	if _move and _move.animation_pair_id == TABLE_LAY:
+		var table := lay_table(attacker)
+		if table:
+			return table_lay_frame(table, role_end_xz(_move, false), attacker.global_position,
+					defender.global_position)
 	var midpoint := (attacker.global_position + defender.global_position) * 0.5
 	# Y comes from the anchor, not the pair: a clip's vertical keys are
 	# authored against mat level, and either wrestler may be mid-drift.
 	midpoint.y = anchor.global_position.y if anchor else 0.0
 	var outside := attacker is WrestlerController and (attacker as WrestlerController).outside_ring
 	var up_the_ramp := outside and ArenaBuilder.in_entrance_way(midpoint)
-	if up_the_ramp:
+	var at_desk := outside and not up_the_ramp and in_desk_bay(midpoint)
+	if at_desk:
+		# In front of the announce desk, in its bay: played where they stand,
+		# into the bay or back out of it -- a man is put through the desk from
+		# here (WrestlerAI's desk spot) -- never slid off to the lane and
+		# turned along it, which threw him away from the desk. Kept far
+		# enough out that a throw back toward the ring clears the apron.
+		midpoint.y = WrestlerController.FLOOR_LEVEL
+		midpoint.z = maxf(midpoint.z, DESK_BAY_MIN_Z)
+	elif up_the_ramp:
 		# Up the ramp or on the deck: played where they stand, at the height
 		# of what they stand on, kept a throw's length inside the walkway.
 		midpoint = ArenaBuilder.entrance_way_point(midpoint, ENTRANCE_WAY_MARGIN)
@@ -313,7 +395,10 @@ func _compute_pair_transform(attacker: Node3D, defender: Node3D) -> Transform3D:
 
 	var facing := defender.global_position - attacker.global_position
 	facing.y = 0.0
-	if up_the_ramp and ArenaBuilder.is_match_ramp(midpoint):
+	if at_desk:
+		# into the bay, at the desk, or straight back out of it
+		facing = Vector3(0.0, 0.0, 1.0 if facing.z >= 0.0 else -1.0)
+	elif up_the_ramp and ArenaBuilder.is_match_ramp(midpoint):
 		# the ramp is a corridor: the move runs along it
 		facing = Vector3(0.0, 0.0, 1.0 if facing.z >= 0.0 else -1.0)
 	elif outside and not up_the_ramp:
@@ -400,6 +485,22 @@ func _role_start(move: MoveDef, is_attacker: bool) -> Transform3D:
 				var rot: Quaternion = value
 				start.basis = Basis(defender_root_yaw(rot) if not is_attacker else rot)
 	return start
+
+
+## Where a role's root ends, in the pair frame, on the mat: the last key of
+## its position track, as fitted.
+func role_end_xz(move: MoveDef, is_attacker: bool) -> Vector2:
+	if not animation_player or not move or not animation_player.has_animation(move.animation_pair_id):
+		return Vector2.ZERO
+	var anim := animation_player.get_animation(move.animation_pair_id)
+	var role := "WrestlerA" if is_attacker else "WrestlerB"
+	for i in anim.get_track_count():
+		if anim.track_get_type(i) == Animation.TYPE_POSITION_3D \
+				and String(anim.track_get_path(i)).ends_with(role) \
+				and anim.track_get_key_count(i) > 0:
+			var pos: Vector3 = anim.track_get_key_value(i, anim.track_get_key_count(i) - 1)
+			return Vector2(pos.x, pos.z)
+	return Vector2.ZERO
 
 
 func _authored_role_start_height(move: MoveDef, is_attacker: bool) -> float:

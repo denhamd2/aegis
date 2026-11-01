@@ -59,6 +59,9 @@ const SHARED_RUNNING_POOL := 25
 const SCOPED_CHAIN := 3
 ## No Holds Barred's top-of-ladder diving elbow.
 const SCOPED_LADDER := 1
+## No Holds Barred's table lay: the body slam's lift, set down on a table for
+## the dive off the top through him (GrappleRig.TABLE_LAY).
+const SCOPED_TABLE := 1
 
 func _paired_move_names() -> Array[String]:
 	var names: Array[String] = []
@@ -99,6 +102,7 @@ func test_the_moveset_covers_everything_architecture_scopes() -> void:
 	var running := 0
 	var chain := 0
 	var ladder := 0
+	var table := 0
 	var cut: Array[String] = []
 	for name in _paired_move_names():
 		if name.begins_with("grapple_"):
@@ -115,6 +119,8 @@ func test_the_moveset_covers_everything_architecture_scopes() -> void:
 			chain += 1
 		elif name.begins_with("ladder_"):
 			ladder += 1
+		elif name.begins_with("table_"):
+			table += 1
 		elif name.begins_with("ff_") and FFMoveLibrary.MOVES.has(name.trim_prefix("ff_")):
 			pass  # the Fight Forever library, which grows move by move
 		else:
@@ -128,6 +134,7 @@ func test_the_moveset_covers_everything_architecture_scopes() -> void:
 	assert_int(running).is_equal(SCOPED_RUNNING)
 	assert_int(chain).is_equal(SCOPED_CHAIN)
 	assert_int(ladder).is_equal(SCOPED_LADDER)
+	assert_int(table).is_equal(SCOPED_TABLE)
 	# The removed family leaves nothing behind: a reversal clip still in the
 	# library would be an animation no MoveDef names and nothing can play.
 	assert_array(cut).override_failure_message(
@@ -274,6 +281,9 @@ func test_the_match_scene_gives_both_wrestlers_the_whole_moveset() -> void:
 	# The ladder aerial is selected directly from the ladder-climb state when
 	# the AI or player requests the top interaction, rather than from a tier.
 	reachable["ladder_aerial"] = true
+	# The table lay is the AI's table spot's (WrestlerAI._table_lay_input):
+	# chosen for the hold beside a table in the ring, never from a tier.
+	reachable["table_lay"] = true
 	var unreachable: Array[String] = []
 	for name in _paired_move_names():
 		if not reachable.has(name):

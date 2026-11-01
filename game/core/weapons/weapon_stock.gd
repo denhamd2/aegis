@@ -144,9 +144,10 @@ func loose_near(at: Vector3) -> WeaponActor:
 	return best
 
 
-## Every tick, with a set piece standing: anyone coming down on it lands on it.
+## Every tick, with a set piece standing (or the announce desk): anyone coming
+## down on it lands on it.
 func _physics_process(delta: float) -> void:
-	if set_up_pieces().is_empty() or get_parent() == null:
+	if (set_up_pieces().is_empty() and desk_broken) or get_parent() == null:
 		return
 	for n in get_parent().get_children():
 		if n is WrestlerController:
@@ -183,6 +184,30 @@ static func _over(a: WeaponActor, p: Vector3) -> bool:
 	var box := (a.global_transform * a.local_bounds()).grow(LAND_PAD)
 	return p.x >= box.position.x and p.x <= box.end.x and p.z >= box.position.z \
 			and p.z <= box.end.z and p.y <= box.end.y + LAND_ABOVE
+
+
+## The announce desk is a set piece too -- the building's (ArenaBuilder.DESK_*),
+## not one of these -- and a man thrown down onto its worktop goes through it
+## (the owner: "announce table: lay him on it, powerbomb through, smash and
+## flatten"). Once a match. The simulation's half of it; VenueDamage draws
+## the wreck.
+var desk_broken := false
+## Over its worktop counts this far out (less than a table's LAND_PAD: only a
+## man thrown up and over it comes down on it -- WrestlerController).
+const DESK_PAD := 0.15
+
+
+## The worktop's height.
+static func desk_top_y() -> float:
+	return ArenaBuilder.FLOOR_Y + ArenaBuilder.DESK_RISER + ArenaBuilder.DESK_HEIGHT
+
+
+## The desk, still standing, under `p`.
+func desk_under(p: Vector3) -> bool:
+	return not desk_broken \
+			and absf(p.x - ArenaBuilder.DESK_X) <= ArenaBuilder.DESK_LENGTH * 0.5 + DESK_PAD \
+			and absf(p.z - ArenaBuilder.DESK_Z) <= ArenaBuilder.DESK_DEPTH * 0.5 + DESK_PAD \
+			and p.y <= desk_top_y() + LAND_ABOVE
 
 
 ## Set pieces stood up somewhere: [actor, ...].

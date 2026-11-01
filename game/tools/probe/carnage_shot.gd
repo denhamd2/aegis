@@ -11,6 +11,14 @@ extends Node
 ##                  smash, the sparks, the wall dead
 ##   --spot breath  Roman with the fire torch spits a fireball over it, and
 ##                  Cody goes up
+##   --spot desk    out on the floor in front of the announce desk, Roman
+##                  powerbombs Cody through it: the lift, the crash, the wreck
+##   --spot desk_suplex  the same, by the vertical suplex, Roman's back to it
+##   --spot ladder  a ladder stood up mid-ring, Cody down beyond it: Roman
+##                  climbs to the top and dives onto him (ladder_aerial)
+##   --spot table_dive  a table up in the ring: Cody lays Roman out on it
+##                  (table_lay), climbs the corner and moonsaults onto him
+##                  through it (TopRopeSpot, the table)
 ##
 ##   xvfb-run -a godot --path game --rendering-driver vulkan --resolution 1280x720 \
 ##       --fixed-fps 30 tools/probe/carnage_shot.tscn -- --spot table --out /tmp/carnage
@@ -61,6 +69,14 @@ func _ready() -> void:
 			await _wall()
 		"breath":
 			await _breath()
+		"desk":
+			await _desk("res://resources/moves/ff/powerbomb_1.tres", true)
+		"desk_suplex":
+			await _desk("res://resources/moves/grapple_vertical_suplex.tres", false)
+		"ladder":
+			await _ladder()
+		"table_dive":
+			await _table_dive()
 	print("CARNAGE SHOT DONE ", _spot)
 	get_tree().quit()
 
@@ -177,6 +193,215 @@ func _wall() -> void:
 	await _save("wall_3_dead.png")
 
 
+## Where WrestlerAI lines it up: the powerbomb from POWERBOMB_DROP out facing
+## the desk, Cody between; the suplex from SUPLEX_DROP out with his back to it.
+func _desk(move_path: String, bomb: bool) -> void:
+	var y := WrestlerController.FLOOR_LEVEL
+	var landing := Vector3(ArenaBuilder.DESK_X, y, ArenaBuilder.DESK_Z)
+	for w: WrestlerController in [_a, _b]:
+		w.outside_ring = true
+	var drop := WrestlerAI.POWERBOMB_DROP if bomb else WrestlerAI.SUPLEX_DROP
+	_a.global_position = landing - Vector3(0.0, 0.0, drop)
+	_b.global_position = _a.global_position + Vector3(0.0, 0.0, 0.9 if bomb else -0.9)
+	_a.look_at(_b.global_position, Vector3.UP)
+	_b.look_at(_a.global_position, Vector3.UP)
+	# from the ring side, off the far end of the desk and above head height
+	# (from the near end a seated figure at ringside fills the corner); the
+	# bay is dim under the arena's light, so a fill from the camera (the
+	# probe's only)
+	_cam.global_position = Vector3(-3.2, y + 2.2, 4.4)
+	_cam.look_at(Vector3(0.0, y + 0.8, 7.0))
+	_cam.fov = 55.0
+	var fill := DirectionalLight3D.new()
+	_scene.add_child(fill)
+	fill.light_energy = 1.6
+	fill.global_transform = _cam.global_transform
+	# Drawn only for the frames saved (paired_shot.gd): under a software
+	# rasteriser the whole arena drawn every tick took ten minutes a frame.
+	Engine.max_physics_steps_per_frame = 1
+	RenderingServer.render_loop_enabled = false
+	await _frames(20)
+	# the whole bay from the ring first: the desk, the commentators at it,
+	# and the timekeeper's table off its +X end
+	var close := _cam.global_transform
+	_cam.global_position = Vector3(0.6, y + 2.0, 3.4)
+	_cam.look_at(Vector3(0.9, y + 0.8, 7.9))
+	_cam.fov = 62.0
+	fill.global_transform = _cam.global_transform
+	await _save("desk_00_bay.png")
+	_cam.global_transform = close
+	_cam.fov = 55.0
+	fill.global_transform = _cam.global_transform
+	await _save("desk_0_lined_up.png")
+	var rig: GrappleRig = _scene.get_node("GrappleRig")
+	_a._is_grapple_attacker = true
+	_b._is_grapple_attacker = false
+	_a.opponent = _b
+	_b.opponent = _a
+	_a.fsm.transition_to(WrestlerFSM.State.GRAPPLE_HOLD)
+	_b.fsm.transition_to(WrestlerFSM.State.GRAPPLE_HOLD)
+	var move := load(move_path) as MoveDef
+	# the move's end handed to his controller, as a match does
+	# (begin_ladder_aerial): without it the two are left locked up, and a
+	# beat later he throws a second one
+	_a._active_move = move
+	rig.begin(_a, _b, move)
+	rig.grapple_finished.connect(_a._on_grapple_finished, CONNECT_ONE_SHOT)
+	var stock := WeaponStock.of(_a)
+	var shots := [0.35, 0.55, 0.65, 0.75, 1.0, 1.6]
+	var total := int(move.total_frames()) + int(rig.get("lead_in_ticks"))
+	var taken := 0
+	for t in int(total * 1.7):
+		await _frames(1)
+		var frac := float(t) / float(total)
+		if taken < shots.size() and frac >= shots[taken]:
+			await _save("desk_%d_%02d.png" % [taken + 1, int(shots[taken] * 100)])
+			taken += 1
+	print("DESK through: %s" % stock.desk_broken)
+	# the wreck, close
+	_cam.global_position = Vector3(-1.6, y + 1.8, 5.2)
+	_cam.look_at(Vector3(0.0, y + 0.4, 7.4))
+	fill.global_transform = _cam.global_transform
+	await _save("desk_9_wreck.png")
+	# and the whole of it, end to end, from the ring
+	_cam.global_position = Vector3(0.6, y + 2.0, 3.4)
+	_cam.look_at(Vector3(0.9, y + 0.5, 7.9))
+	_cam.fov = 62.0
+	fill.global_transform = _cam.global_transform
+	await _save("desk_99_wreck_wide.png")
+
+
+func _ladder() -> void:
+	var ladder := WeaponStock.of(_a).pull(WeaponCatalog.by_id(&"ladder"))
+	ladder.set_up_at(Vector3.ZERO, 0.0, "Ladder_Open")
+	# the climber mounts on the ladder's -Z side and dives out over it: Cody
+	# down on the far side, in reach
+	_b.global_position = Vector3(0.0, 0.0, 1.4)
+	_b.rotation.y = PI * 0.5
+	_a.global_position = Vector3(0.0, 0.0, -WrestlerController.LADDER_FRONT_OFFSET)
+	_a.opponent = _b
+	_b.opponent = _a
+	_cam.global_position = Vector3(4.2, 2.4, 1.0)
+	_cam.look_at(Vector3(0.0, 1.4, 0.5))
+	_cam.fov = 55.0
+	Engine.max_physics_steps_per_frame = 1
+	RenderingServer.render_loop_enabled = false
+	await _frames(10)
+	_b._go_down()
+	await _frames(2)
+	_b._move_ticks_remaining = 100000          # he stays down for the dive
+	if not _a.begin_ladder_climb(ladder):
+		print("LADDER: could not mount")
+		return
+	await _save("ladder_0_mount.png")
+	var shot := 1
+	for t in 600:
+		if _a.fsm.current_state != WrestlerFSM.State.LADDER_CLIMB:
+			break
+		if _a.can_start_ladder_aerial():
+			break
+		_a._tick_ladder_climb({"move": Vector2(0.0, -1.0)})
+		await _frames(1)
+		if t % 40 == 20:
+			await _save("ladder_%d_climb.png" % shot)
+			shot += 1
+	print("LADDER at the top: %.2f, aerial ok %s" % [_a.ladder_climb_progress(), _a.can_start_ladder_aerial()])
+	_a._tick_ladder_climb({"grapple": true})
+	var rig: GrappleRig = _scene.get_node("GrappleRig")
+	var total := int(GrappleRig.LEAD_IN_TICKS) + int(WrestlerController.LADDER_AERIAL_MOVE.total_frames())
+	for t in int(total * 1.5):
+		await _frames(1)
+		if t % 8 == 0:
+			await _save("ladder_%d_dive.png" % shot)
+			shot += 1
+	print("LADDER dive done, rig active %s" % rig.is_active())
+
+
+## Cody (B) lays Roman (A) on a table a step off the middle toward the (1, 1)
+## corner, its length along x, then the spot takes him up that corner and
+## off it through the table. Shot side-on to the line from the corner to the
+## table.
+func _table_dive() -> void:
+	var at := Vector3(0.6, 0.0, 0.9)
+	var table := WeaponStock.of(_a).pull(WeaponCatalog.by_id(&"table"))
+	table.set_up_at(at, 0.0)
+	var cody := _b
+	var roman := _a
+	cody.global_position = at + Vector3(0.4, 0.0, 0.7)
+	roman.global_position = at + Vector3(-0.4, 0.0, 0.7)
+	cody.look_at(roman.global_position, Vector3.UP)
+	roman.look_at(cody.global_position, Vector3.UP)
+	cody.opponent = roman
+	roman.opponent = cody
+	# High over the ropes, side-on to the line from the corner to the table;
+	# the ring's lights are not up this early, so a fill from the camera (as
+	# the desk's)
+	_cam.global_position = Vector3(3.8, 3.2, -0.8)
+	_cam.look_at(Vector3(1.5, 1.0, 1.5))
+	_cam.fov = 58.0
+	var fill := DirectionalLight3D.new()
+	_scene.add_child(fill)
+	fill.light_energy = 1.4
+	fill.global_transform = _cam.global_transform
+	Engine.max_physics_steps_per_frame = 1
+	RenderingServer.render_loop_enabled = false
+	await _frames(10)
+	await _save("dive_0_lined_up.png")
+	var rig: GrappleRig = _scene.get_node("GrappleRig")
+	cody._is_grapple_attacker = true
+	roman._is_grapple_attacker = false
+	cody.fsm.transition_to(WrestlerFSM.State.GRAPPLE_HOLD)
+	roman.fsm.transition_to(WrestlerFSM.State.GRAPPLE_HOLD)
+	var lay := load("res://resources/moves/table_lay.tres") as MoveDef
+	cody._active_move = lay
+	rig.begin(cody, roman, lay)
+	rig.grapple_finished.connect(cody._on_grapple_finished, CONNECT_ONE_SHOT)
+	var total := GrappleRig.LEAD_IN_TICKS + int(lay.total_frames())
+	var lay_shots := [0.45, 0.72, 0.9]
+	var taken := 0
+	var spot: TopRopeSpot = null
+	for t in total + 20:
+		await _frames(1)
+		spot = _scene.get_node_or_null("TopRopeSpot") as TopRopeSpot
+		if spot:
+			break
+		var frac := float(t) / float(total)
+		if taken < lay_shots.size() and frac >= lay_shots[taken]:
+			await _save("dive_%d_lay_%02d.png" % [taken + 1, int(lay_shots[taken] * 100)])
+			taken += 1
+	if spot == null:
+		print("TABLE DIVE: no spot")
+		return
+	_cam.make_current()
+	await _save("dive_4_on_the_table.png")
+	# The spot from here: on the top rope, the flight, the contact, through.
+	var wants := {"top": false, 30: false, 46: false, 52: false, 60: false}
+	var n := 5
+	var done := [false]
+	spot.finished.connect(func() -> void: done[0] = true)
+	for t in 900:
+		await _frames(1)
+		if done[0]:
+			break
+		_cam.make_current()
+		if spot._seg == spot._dive_seg - 1 and spot._tick == 100 and not wants["top"]:
+			wants["top"] = true
+			await _save("dive_%d_top_rope.png" % n)
+			n += 1
+		if spot._seg == spot._dive_seg and wants.has(spot._tick) and not wants[spot._tick]:
+			wants[spot._tick] = true
+			await _save("dive_%d_moonsault_%d.png" % [n, spot._tick])
+			n += 1
+	await _frames(20)
+	print("TABLE DIVE through: %s, roman y %.2f, state %d" % [table.mode != WeaponActor.Mode.SET_UP,
+			roman.global_position.y, roman.fsm.current_state])
+	_cam.make_current()
+	_cam.global_position = Vector3(2.8, 1.6, -0.6)
+	_cam.look_at(Vector3(0.6, 0.3, 0.9))
+	fill.global_transform = _cam.global_transform
+	await _save("dive_%d_wreck.png" % n)
+
+
 func _breath() -> void:
 	_a.global_position = Vector3(-0.8, 0.0, 0.0)
 	_b.global_position = Vector3(0.7, 0.0, 0.0)
@@ -207,7 +432,10 @@ func _frames(n: int) -> void:
 
 
 func _save(file: String) -> void:
+	var was := RenderingServer.render_loop_enabled
+	RenderingServer.render_loop_enabled = true
 	for _i in 2:
 		await RenderingServer.frame_post_draw
 	get_viewport().get_texture().get_image().save_png(_out.path_join(file))
+	RenderingServer.render_loop_enabled = was
 	print("saved ", file)

@@ -36,9 +36,13 @@ func setup(who: String, seat_position: Vector3) -> bool:
 	_left_arm = model.find_child("ArmLeftPivot", true, false) as Node3D
 	_right_arm = model.find_child("ArmRightPivot", true, false) as Node3D
 	position = seat_position
-	# The GLB's face points along Godot's -Z convention, the same direction
-	# the commentary desk's ring-facing chairs use.
-	rotation.y = 0.0
+	# Turned half round to the ring. The GLB's face points +Z, not -Z
+	# (commentators.py builds the front at Blender's -Y, which the glTF export
+	# carries to +Z): measured on the export, the eyes sit 0.10 m to +Z of the
+	# head's middle and the seated torso 0.11-0.40 m to -Z of the face. Set at
+	# 0 on the belief that it faced -Z, Tony and Excalibur sat with their
+	# backs to the ring, facing their own chair backs (the owner, 1 Nov).
+	rotation.y = PI
 	add_to_group("commentators")
 	return _head != null and _left_arm != null and _right_arm != null
 

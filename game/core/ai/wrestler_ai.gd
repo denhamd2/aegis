@@ -1606,6 +1606,13 @@ const WEAPON_COOLDOWN_SCALE := 2.0
 ## him within LINE_UP_CONE_DEG of the line.
 const LINE_UP_FROM := 4.0
 const SUPLEX_DROP := 1.3
+## The powerbomb brings a man's hips down through a table's top this far in
+## front of the man throwing it (tools/probe/drop_probe: 1.46-1.49 m for these,
+## Roman, Cody and Kenny alike), so he stands this far out from the table,
+## facing it, the other man between them.
+const POWERBOMB_DROP := 1.48
+const TABLE_POWERBOMBS: Array[StringName] = [&"ff_powerbomb_1", &"ff_sit_out_powerbomb_2"]
+const TABLE_POWERBOMB := "res://resources/moves/ff/powerbomb_1.tres"
 const LINE_UP_THERE := 0.3
 const LINE_UP_CONE_DEG := 30.0
 ## A set piece is set down from this far from him (it lands 0.95 m in front
@@ -1791,6 +1798,8 @@ func _wants_weapon() -> bool:
 		return false
 	if controller.combat.can_finisher() and _opponent_is_ripe():
 		return false                    # he has the finish in hand: no detours
+	if _line_up_ticks < LINE_UP_PATIENCE and (_spot_piece() != null or _desk_spot()):
+		return false                    # a table up beside him: him through it first
 	var down := target.fsm.current_state == WrestlerFSM.State.DOWN
 	_weapon_roll = int(WEAPON_ROLL_TICKS / (WEAPON_ROLL_DOWN_SCALE if down else 1.0))
 	return _weapon_rng().randf() < (WEAPON_CHANCE_HEEL if _is_heel() else WEAPON_CHANCE)
@@ -1926,8 +1935,10 @@ func _use_input(input: Dictionary, to_target: Vector3, distance: float) -> Dicti
 ## A table standing near them: get between it and the other man with it at
 ## his back, lock up, and if he wins it, the vertical suplex -- it drops a man
 ## 1.3 m behind the man throwing it (nhb_weapon_probe --spear), on the table.
-## While the other man is down or getting up he waits on that spot. {} when
-## there is no table, or nothing to do about it this tick.
+## Or, the other man nearer the table than that, stand past him with the
+## table ahead and powerbomb him through it (POWERBOMB_DROP). While the other
+## man is down or getting up he waits on that spot. {} when there is no
+## table, or nothing to do about it this tick.
 func _line_up_input(input: Dictionary, to_target: Vector3, distance: float) -> Dictionary:
 	controller.prefer_hold_move = null
 	if not _opening_grapple_done():
@@ -1941,18 +1952,21 @@ func _line_up_input(input: Dictionary, to_target: Vector3, distance: float) -> D
 	var suplex := _suplex()
 	if suplex == null:
 		return {}
-	var stock := controller.get_parent().get_node_or_null("WeaponStock") as WeaponStock
-	if stock == null:
+	# Where he is to come down, and on what: a set piece stood up beside them,
+	# or the announce desk.
+	var piece := _spot_piece()
+	var at := Vector3.INF
+	var kind := &""
+	if piece:
+		at = piece.global_position
+		kind = piece.def.id
+	elif _desk_spot():
+		at = desk_landing(target.global_position)
+		kind = &"desk"
+	else:
+		_line_up_ticks = 0
 		return {}
-	var piece: WeaponActor = null
-	for a in stock.set_up_pieces():
-		if a.def.set_piece and a.def.landing_damage > 0.0 \
-				and _flat(a.global_position - target.global_position).length() <= LINE_UP_FROM \
-				and _flat(a.global_position - controller.global_position).length() <= LINE_UP_FROM:
-			piece = a
-			break
-	if piece == null:
-		return {}
+	_line_up_ticks += 1
 	# A ladder uses a distinct MoveDef for its damage/recovery tuning while
 	# reusing the proven paired suplex lift and root arc. Its landing response
 	# is ladder-specific in ImpactSell.
@@ -1960,7 +1974,7 @@ func _line_up_input(input: Dictionary, to_target: Vector3, distance: float) -> D
 	# first (the owner, 19 Oct: "the flaming table"): to its side, and a
 	# taunt there lights it (WrestlerController.begin_light). Rolled once a
 	# table.
-	if piece.can_set_ablaze() and rising and _wants_to_light(piece):
+	if piece and piece.can_set_ablaze() and rising and _wants_to_light(piece):
 		var side := piece.global_position + _flat(controller.global_position - piece.global_position).normalized() \
 				* LIGHT_FROM
 		var to_side := _flat(side - controller.global_position)
@@ -1970,15 +1984,32 @@ func _line_up_input(input: Dictionary, to_target: Vector3, distance: float) -> D
 		input["move"] = Vector2.ZERO
 		input["taunt"] = true
 		return input
+	# Laid out on it, for the dive off the top through him (the owner, 1 Nov:
+	# "lay him on the table, then dive off the top rope through him"): a man
+	# with a dive off the top, and the table up in the ring where a corner
+	# suits a dive onto a man lying on it. Rolled once a table.
+	if kind == &"table" and _wants_table_lay(piece):
+		return _table_lay_input(input, piece, to_target, distance, rising)
 	var spot_move := suplex
-	if piece.def.id == &"ladder":
+	if kind == &"ladder":
 		spot_move = load("res://resources/moves/weapon_ladder_slam.tres") as MoveDef
 		if spot_move == null:
 			return {}
-	var out := _flat(target.global_position - piece.global_position)
+	var out := _flat(target.global_position - at)
 	if out.length() < 0.05:
 		return {}
-	var spot := piece.global_position + out.normalized() * SUPLEX_DROP
+	# Up beside a table -- nearer it than he would stand for the suplex -- the
+	# other man goes through it the other way: powerbombed, the table in front
+	# of the man throwing it and the other man between them (the owner:
+	# "powerbomb through"). Both spots are on the line from the table out to
+	# him; which side of the thrower he is on picks the move. The announce
+	# desk the same.
+	var bomb: MoveDef = null
+	if kind in [&"table", &"desk"] and out.length() < SUPLEX_DROP:
+		bomb = _table_powerbomb()
+	if bomb:
+		spot_move = bomb
+	var spot := at + out.normalized() * (POWERBOMB_DROP if bomb else SUPLEX_DROP)
 	if not controller.outside_ring:
 		spot.x = clampf(spot.x, -WrestlerController.RING_KEEP_IN, WrestlerController.RING_KEEP_IN)
 		spot.z = clampf(spot.z, -WrestlerController.RING_KEEP_IN, WrestlerController.RING_KEEP_IN)
@@ -1987,12 +2018,15 @@ func _line_up_input(input: Dictionary, to_target: Vector3, distance: float) -> D
 		if rising:
 			input["move"] = Vector2.ZERO  # waiting for him, not covering him
 			return input
-		var facing := _flat(controller.global_position - piece.global_position).normalized()
+		var facing := _flat(controller.global_position - at).normalized()
+		if bomb:
+			facing = -facing        # the table ahead of him, past the other man
 		if distance <= tie_up_range and to_target.normalized().dot(facing) >= cos(deg_to_rad(LINE_UP_CONE_DEG)):
-			# him in front, the table at his back: lock up for the suplex
+			# him in front, the table at his back (the suplex) or past him (the
+			# powerbomb): lock up for it
 			input["move"] = Vector2(to_target.x, to_target.z).normalized() * 0.05
 			input["grapple"] = true
-			controller.tie_up_rung_cap = CombatSystem.Tier.GRAPPLE
+			controller.tie_up_rung_cap = CombatSystem.Tier.POWER if bomb else CombatSystem.Tier.GRAPPLE
 			controller.prefer_hold_move = spot_move
 			return input
 		# there: hold it, square to him, and let him come -- he closes on
@@ -2005,6 +2039,68 @@ func _line_up_input(input: Dictionary, to_target: Vector3, distance: float) -> D
 		dir = (dir + Vector3.UP.cross(to_target.normalized()) * 0.9).normalized()
 	input["move"] = Vector2(dir.x, dir.z)
 	return input
+
+
+## A set piece standing within LINE_UP_FROM of both men, to put the other man
+## through or onto, or null.
+func _spot_piece() -> WeaponActor:
+	var stock := controller.get_parent().get_node_or_null("WeaponStock") as WeaponStock \
+			if controller.get_parent() else null
+	if stock == null:
+		return null
+	for a in stock.set_up_pieces():
+		if a.def.set_piece and a.def.landing_damage > 0.0 \
+				and _flat(a.global_position - target.global_position).length() <= LINE_UP_FROM \
+				and _flat(a.global_position - controller.global_position).length() <= LINE_UP_FROM:
+			return a
+	return null
+
+
+## The announce desk as a spot (the owner: "announce table ... powerbomb
+## through, smash and flatten"): both men out on the floor by it, the desk
+## still standing, and this man the sort to do it -- rolled once a match,
+## DESK_CHANCE_HEEL / DESK_CHANCE. The fight is all round the ring; the desk
+## is on one side of it, so this is a spot for when the fight comes by.
+const DESK_FROM := 4.0
+const DESK_CHANCE_HEEL := 0.8
+const DESK_CHANCE := 0.45
+## The landing aimed along the desk no further than this from its middle
+## (the wreck's break slides at most VenueDamage.DESK_BREAK_SHIFT).
+const DESK_AIM_X := 0.8
+var _desk_roll := -1
+
+
+func _desk_spot() -> bool:
+	if not (controller.outside_ring and target.outside_ring):
+		return false
+	if ArenaBuilder.in_entrance_way(controller.global_position) or ArenaBuilder.in_entrance_way(target.global_position):
+		return false
+	var stock := controller.get_parent().get_node_or_null("WeaponStock") as WeaponStock \
+			if controller.get_parent() else null
+	if stock == null or stock.desk_broken:
+		return false
+	var landing := desk_landing(target.global_position)
+	if _flat(landing - target.global_position).length() > DESK_FROM \
+			or _flat(landing - controller.global_position).length() > DESK_FROM:
+		return false
+	if _desk_roll < 0:
+		_desk_roll = 1 if _weapon_rng().randf() < (DESK_CHANCE_HEEL if _is_heel() else DESK_CHANCE) else 0
+	return _desk_roll == 1
+
+
+## Where on the desk a man by `near` is put down: its middle line, as near
+## along it as DESK_AIM_X lets.
+static func desk_landing(near: Vector3) -> Vector3:
+	return Vector3(clampf(near.x, ArenaBuilder.DESK_X - DESK_AIM_X, ArenaBuilder.DESK_X + DESK_AIM_X),
+			ArenaBuilder.FLOOR_Y, ArenaBuilder.DESK_Z)
+
+
+## With a set piece up beside them he works the spot rather than going off
+## for another weapon (nhb_weapon_probe seed 2: Roman set a table up and was
+## away under the ring a second later) -- for this long, then as before, so a
+## spot that never comes together does not hold up the match.
+const LINE_UP_PATIENCE := 1200
+var _line_up_ticks := 0
 
 
 ## How often a heel lights a table he has up, and how far from it he stands
@@ -2022,6 +2118,82 @@ func _wants_to_light(table: WeaponActor) -> bool:
 	if not _light_rolls.has(id):
 		_light_rolls[id] = _weapon_rng().randf() < LIGHT_CHANCE
 	return bool(_light_rolls[id])
+
+
+## The table dive's lay (GrappleRig.TABLE_LAY, TopRopeSpot's table): how often
+## a man with a dive off the top takes it, a table up where it suits.
+const TABLE_LAY_MOVE := "res://resources/moves/table_lay.tres"
+const TABLE_LAY_CHANCE := 0.7
+## Tables rolled for the lay: instance id -> lays him on it.
+var _lay_rolls := {}
+
+
+func _wants_table_lay(table: WeaponActor) -> bool:
+	if controller.outside_ring or target.outside_ring or controller.top_rope_move == null \
+			or controller._top_rope_used or controller.grapple_rig == null:
+		return false
+	if absf(table.global_position.x) > WrestlerController.RING_KEEP_IN \
+			or absf(table.global_position.z) > WrestlerController.RING_KEEP_IN:
+		return false
+	var lay := load(TABLE_LAY_MOVE) as MoveDef
+	if lay == null or TopRopeSpot.pick_corner(_laid_on(table, lay)).is_empty():
+		return false
+	var id := table.get_instance_id()
+	if not _lay_rolls.has(id):
+		_lay_rolls[id] = _weapon_rng().randf() < TABLE_LAY_CHANCE
+	return bool(_lay_rolls[id])
+
+
+## The pair frame the lay would play in on `table`, as GrappleRig stands it.
+func _lay_frame(table: WeaponActor, lay: MoveDef) -> Transform3D:
+	return GrappleRig.table_lay_frame(table, controller.grapple_rig.role_end_xz(lay, false),
+			controller.global_position, target.global_position)
+
+
+## Where the man would lie on `table` once laid on it: his root, facing along
+## it, head first (the lay's last defender key).
+func _laid_on(table: WeaponActor, lay: MoveDef) -> Transform3D:
+	var frame := _lay_frame(table, lay)
+	var end := controller.grapple_rig.role_end_xz(lay, false)
+	return Transform3D(frame.basis * Basis(Vector3.UP, -PI * 0.5), frame * Vector3(end.x, 0.0, end.y))
+
+
+## To where the lay starts -- beside the table's long side, the other man
+## along it from him -- and lock up there for it.
+func _table_lay_input(input: Dictionary, table: WeaponActor, to_target: Vector3,
+		distance: float, rising: bool) -> Dictionary:
+	var lay := load(TABLE_LAY_MOVE) as MoveDef
+	var spot := _lay_frame(table, lay) * Vector3(0.40, 0.0, 0.0)
+	var to_spot := _flat(spot - controller.global_position)
+	if to_spot.length() <= LINE_UP_THERE:
+		if rising:
+			input["move"] = Vector2.ZERO      # waiting for him, not covering him
+			return input
+		if distance <= tie_up_range:
+			input["move"] = Vector2(to_target.x, to_target.z).normalized() * 0.05
+			input["grapple"] = true
+			controller.tie_up_rung_cap = CombatSystem.Tier.POWER
+			controller.prefer_hold_move = lay
+			return input
+		input["move"] = Vector2(to_target.x, to_target.z).normalized() * 0.05 if distance > 0.01 else Vector2.ZERO
+		return input
+	# round him, not through him
+	var dir := to_spot.normalized()
+	if to_target.length() > 0.001 and dir.dot(to_target.normalized()) > 0.3 and distance < to_spot.length():
+		dir = (dir + Vector3.UP.cross(to_target.normalized()) * 0.9).normalized()
+	input["move"] = Vector2(dir.x, dir.z)
+	return input
+
+
+## His powerbomb to put a man through a table: his own if it is one measured
+## onto a table (TABLE_POWERBOMBS -- Roman's, Cody's sit-out), else the plain
+## one. (Kenny's comes with a knee after it, which a man through a table is
+## past taking.)
+func _table_powerbomb() -> MoveDef:
+	for m: MoveDef in [controller.power_move] + controller.power_move_pool:
+		if m and TABLE_POWERBOMBS.has(m.animation_pair_id):
+			return m
+	return load(TABLE_POWERBOMB) as MoveDef
 
 
 ## His vertical suplex, or null.

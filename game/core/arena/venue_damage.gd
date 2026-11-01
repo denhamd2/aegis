@@ -439,6 +439,74 @@ func _damage(t: Target, at: Vector3) -> void:
 	damaged.emit(t.kind, t.name, at)
 
 
+## A man thrown through the announce desk at `at` (WrestlerController
+## ._land_on_desk): the desk cut out and the wreck put in -- collapsed end to
+## end, broken through the middle, the monitors off -- slid along a little
+## toward him, and in the desk's own finish, not the rocket's char. No
+## scorch, no rubble, no fire: nothing went off.
+signal desk_broken(at: Vector3)
+## How far the wreck slides along the desk toward where he went through. The
+## whole desk is down now, end to end, so a wreck slid further put its ends
+## out past where the desk stood; 0.5 m did when only the middle went.
+const DESK_BREAK_SHIFT := 0.2
+## The wreck's parts (venue_damage.glb, by name suffix) and the standing
+## desk's (ArenaBuilder) whose finish each takes.
+const DESK_FINISH := {
+	"_b-1": "CommentaryDesk", "_b1": "CommentaryDesk", "_body": "CommentaryDesk",
+	"_top-1": "CommentaryDeskTop", "_top1": "CommentaryDeskTop",
+	"_led": "CommentaryDeskLed", "_kit": "CommentaryKit",
+}
+
+
+func break_desk(at: Vector3) -> void:
+	ensure_targets()
+	for t: Target in targets:
+		if t.kind != Kind.DESK or t.damaged:
+			continue
+		t.damaged = true
+		t.hits += 1
+		for mi in _cuttable:
+			if is_instance_valid(mi):
+				cut_box(mi, t.box, t.half + Vector3.ONE * 0.04)
+		var shift := clampf(at.x - t.place.origin.x, -DESK_BREAK_SHIFT, DESK_BREAK_SHIFT)
+		var wreck := _place(KIND_MODEL[Kind.DESK], t.place.translated(Vector3(shift, 0.0, 0.0)), t.name)
+		if wreck:
+			_desk_finish(wreck)
+		history.append([Kind.keys()[t.kind], t.name, at])
+		damaged.emit(t.kind, t.name, at)
+		desk_broken.emit(at)
+		return
+
+
+## The wreck's charred surfaces given the standing desk's own materials.
+func _desk_finish(wreck: Node3D) -> void:
+	var ringside := get_tree().get_first_node_in_group(RINGSIDE_GROUP) as Node3D
+	if ringside == null:
+		return
+	for mi: MeshInstance3D in wreck.find_children("", "MeshInstance3D", true, false):
+		for suffix: String in DESK_FINISH:
+			if not String(mi.name).ends_with(suffix):
+				continue
+			var source := ringside.find_child(DESK_FINISH[suffix], true, false) as MeshInstance3D
+			if source == null:
+				break
+			var mat := source.material_override
+			if mat == null and source.mesh and source.mesh.get_surface_count() > 0:
+				mat = source.get_active_material(0)
+			if mat and suffix == "_led" and mat is BaseMaterial3D:
+				# The wreck's LED panels are unwrapped mirror-image to the
+				# standing desk's: of its 40 faces toward the ring 30 run U
+				# right to left (measured off venue_damage.glb), and the
+				# printed DYNAMITE and AEW read backwards on them. Its own
+				# copy, flipped in U; the standing desk keeps the original.
+				mat = mat.duplicate()
+				(mat as BaseMaterial3D).uv1_scale.x *= -1.0
+				(mat as BaseMaterial3D).uv1_offset.x += 1.0
+			if mat:
+				mi.material_override = mat
+			break
+
+
 ## The damage laid over a skin at `local` (box-local, x and y on its face):
 ## a blown hole in the apron, a smashed patch of LED wall with a fire in it.
 func _smash_skin(t: Target, local: Vector3, lit := true, fire := true) -> void:

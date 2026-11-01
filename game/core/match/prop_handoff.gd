@@ -27,9 +27,12 @@ const KEEPER_PASS_X := 3.68
 const PASS_Z := 2.2
 const KEEPER_POST := Timekeeper.CHAIR_AT
 ## Stand behind the table, facing the ring, to set down props before sitting.
-const KEEPER_PLACE := Vector3(1.85, FLOOR_Y, 6.4)
-## Set back in the commentary bay, beside the announce desk with a clear gap.
-const TABLE_AT := Vector3(1.0, FLOOR_Y, 6.4)
+const KEEPER_PLACE := Vector3(2.9, FLOOR_Y, 8.15)
+## In the commentary bay, off the announce desk's +X end with a clear gap
+## (0.22 m to its worktop), level with its front and facing the ring --
+## beside it, not in front of it (the owner, 1 Nov). It stood at x 1.0, z 6.4,
+## square in front of the desk. Timekeeper turns it (TABLE_ROTATION_Y).
+const TABLE_AT := Vector3(2.9, FLOOR_Y, 7.35)
 
 ## Contact frames of the clips (30 fps): the prop changes hands on these.
 const GIVE_CONTACT := 26.0 / 30.0   # Prop_Hand_Out_*
@@ -335,7 +338,7 @@ func _pass_tick() -> void:
 		step = Step.PLACE
 		_stage = 0
 		_clock = 0.0
-		_keeper.go(KEEPER_PLACE, Vector3(-1, 0, 0))
+		_keeper.go(KEEPER_PLACE, Timekeeper.FACE)
 
 
 ## --- PLACE: onto the table --------------------------------------------------
@@ -406,7 +409,11 @@ static func _table_holder(kind: String) -> Dictionary:
 		# Folded flat: its long side along the table, lying on its thickness.
 		top.y += FoldingCoatProp.FOLDED_SIZE.y * 0.5 - 0.03
 		basis = Basis(Vector3.UP, PI * 0.5)
-	return {"type": "table", "xform": Transform3D(basis, top + Vector3(slot.x, 0.0, slot.y))}
+	# The slots are the table's own (built front to -X, length along Z):
+	# turned with it.
+	var table_turn := Basis(Vector3.UP, Timekeeper.TABLE_ROTATION_Y)
+	return {"type": "table", "xform": Transform3D(table_turn * basis,
+			top + table_turn * Vector3(slot.x, 0.0, slot.y))}
 
 
 static func _holder_transform(holder: Dictionary) -> Transform3D:

@@ -60,6 +60,26 @@ var _cam_flip := 0.0
 ## man in his own Bump_Back, Cody face down across his chest.
 var _crossbody := false
 var _hit := false
+
+## Through a table (No Holds Barred; the owner, 1 Nov: "lay him on the table,
+## then dive off the top rope through him"): the man was laid out on it
+## (GrappleRig.TABLE_LAY) and lies on its top, his root lifted to it. The same
+## walk, climb and moonsault, but the flight is lifted as it goes, to land
+## across him up there at the moonsault's contact; the table goes under
+## them both on that tick and they fall through it together to the mat.
+var _table: WeaponActor = null
+## His top above the mat the man is lying on, and the mat's height.
+var _table_h := 0.0
+var _mat_y := 0.0
+## Ticks since they went through it, or -1.
+var _since_through := -1
+## The moonsault's segment, and the tick it leaves the top rope (Moonsault
+## frame 5): the lift to the table's height runs from here to the contact.
+var _dive_seg := -1
+const TAKEOFF_TICK := 10
+## Lying in the wreck after the moonsault's own ticks run out, so the fall
+## through (0.39 s from a table's top) finishes on screen before the cover.
+const THROUGH_TAIL_TICKS := 16
 var _meet := Vector3.ZERO
 var _dir := Vector3.FORWARD
 ## The flight reaches a standing man at this range from the corner, best.
@@ -129,8 +149,9 @@ static func can_dive_on(man: WrestlerController) -> bool:
 
 
 func begin(p_attacker: WrestlerController, p_defender: WrestlerController,
-		crossbody := false) -> void:
+		crossbody := false, table: WeaponActor = null) -> void:
 	_crossbody = crossbody
+	_table = table
 	attacker = p_attacker
 	defender = p_defender
 	var match_root := get_parent()
@@ -143,6 +164,9 @@ func begin(p_attacker: WrestlerController, p_defender: WrestlerController,
 			node.set_physics_process(false)
 	for w: WrestlerController in [attacker, defender]:
 		w.velocity = Vector3.ZERO
+	if _table:
+		_mat_y = attacker.global_position.y
+		_table_h = WrestlerController.table_top_y(_table) - _mat_y
 	var pick := pick_corner_standing(defender.global_position) if _crossbody \
 			else pick_corner(defender.global_transform)
 	_corner = pick[0]
@@ -191,8 +215,15 @@ func _build() -> void:
 		return
 	# 4. The moonsault: carried backward along the mat at a constant speed while
 	# the clip turns him over.
+	_dive_seg = _segments.size()
+	var cues := [[MOONSAULT_CONTACT, "landed"]]
+	if _table:
+		cues.append([MOONSAULT_CONTACT, "through"])
 	_seg_add(MOONSAULT_TICKS, {"clip": "strikes/moonsault", "from": _stand, "to": _land,
-			"facing": _out}, "dive", [[MOONSAULT_CONTACT, "landed"]])
+			"facing": _out}, "dive", cues)
+	if _table:
+		_seg_add(THROUGH_TAIL_TICKS, {"clip": "", "from": _land, "to": _land, "facing": _out},
+				"dive")
 
 
 func _seg_add(ticks: int, a: Dictionary, shot: String, events: Array = []) -> void:
@@ -236,12 +267,42 @@ func _physics_process(delta: float) -> void:
 	for cue: Array in seg["events"]:
 		if int(cue[0]) == _tick:
 			_event(cue[1])
+	if _table:
+		_table_heights()
 	_frame_shot(seg, false, delta)
 	if _tick >= int(seg["ticks"]):
 		_next()
 
 
+## The man up on the table until they go through it, then the two of them
+## falling through it from its top; the diver lifted toward it through the
+## flight so he comes down across the man where he lies.
+func _table_heights() -> void:
+	var h := _table_h
+	if _since_through >= 0:
+		_since_through += 1
+		var s := float(_since_through) / TPS
+		h = maxf(0.0, _table_h - 0.5 * WrestlerController.GRAVITY * s * s)
+	defender.global_position.y = _mat_y + h
+	var lift := h
+	if _since_through < 0:
+		lift = _table_h * smoothstep(float(TAKEOFF_TICK), float(MOONSAULT_CONTACT), float(_tick)) \
+				if _seg == _dive_seg else 0.0
+	attacker.global_position.y += lift
+
+
 func _event(what: String) -> void:
+	if what == "through":
+		# The table goes under them here: broken where he lies, his landing
+		# and his hold on the mat after it (_land_on); the diver takes half
+		# of what the man does.
+		_since_through = 0
+		if is_instance_valid(_table) and _table.mode == WeaponActor.Mode.SET_UP:
+			var hips := defender._bone_world("pelvis")
+			defender._on_table = null
+			defender._land_on(_table, hips if hips != Vector3.INF else defender.global_position)
+			attacker.combat.apply_damage(WeaponCatalog.landing_move(_table.def), 0.5)
+		return
 	if what == "crossbody_hit":
 		_hit = true
 		var move := attacker.top_rope_standing_move
@@ -305,7 +366,10 @@ func _finish() -> void:
 	if _crossbody and _hit:
 		attacker.remove_collision_exception_with(defender)
 		defender.remove_collision_exception_with(attacker)
-	if _crossbody:
+	if _table:
+		defender.global_position.y = _mat_y
+		MatchSmoothing.snap(defender)
+	if _crossbody or _table:
 		var referee := get_parent().get_node_or_null("MatchReferee") as MatchReferee
 		if referee:
 			referee.cover_now(attacker, defender)

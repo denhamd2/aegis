@@ -56,6 +56,7 @@ const MOVES := {
 	"running_tilt_a_whirl_backstabber": "waist",
 	# Cradled.
 	"power_bodyslam": "legs",
+	"table_lay": "legs",
 	"power_powerslam": "legs",
 	"power_alabama_slam": "legs",
 	"power_samoan_drop": "legs",

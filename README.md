@@ -10854,3 +10854,112 @@ The narrower jaw lengthens the face a little, where his reads broad.
 The helper, deformation, blood and roster gates and the full suite are green.
 
 **What holds it at about 7:** Cody's brow ridge stands out more than Kenny's in profile, and Kenny's chin is carried further forward. A dozen profile points cannot reshape what lies between them. The crown still reads as streaks.
+
+
+## 1 Nov — Hardcore: powerbombed through a table, through the announce desk, and laid on a table for the dive off the top
+
+The owner asked for every Hardcore item on the backlog. This step closes three:
+- **#89, tables.** A powerbomb through a table.
+- **#89, the announce desk.** "Lay him on it, powerbomb through, smash and flatten."
+- **The table dive.** "Lay him on the table, then dive off the top rope through him." This is a new keyed Blender move.
+
+Review sheet: `gauntlet/refs/nhb/review/hardcore_1_tables_desk_dive.png`.
+
+**Powerbombed through a table** (`WrestlerAI._line_up_input`):
+- **Which move.** With a table stood up and the other man nearer it than the suplex spot (1.3 m), the thrower goes past him: the table is ahead, the man between, `POWERBOMB_DROP` (1.48 m) out. That is where a powerbomb's hips cross the table's top, measured with `tools/probe/drop_probe.tscn`.
+- **Whose powerbomb.** His own if it is one measured onto a table (Roman's Powerbomb 1, Cody's Sit-Out Powerbomb 2). Otherwise the plain one: Kenny's comes with the V-Trigger knee after it, which a man through a table is past taking.
+- **Broke too early: fixed.** A thrown man now comes down on a set piece only once his hips have been lifted 0.5 m above it (`LIFTED_ABOVE`). Bent over for the lift with the table at his back, his hips dipped over its edge at speed, and it broke before he left the ground.
+- **Walked away: fixed.** The thrower gives the spot `LINE_UP_PATIENCE` (20 s) before he goes for another weapon. He used to walk away from the table he had just set up.
+- **In a match.** `nhb_weapon_probe` seed 8: Cody sit-out powerbombs Roman through the table.
+
+**Through the announce desk:**
+- **When.** Both men outside within 4 m of the desk, the desk still standing. It is rolled once a match: 0.8 for a heel, 0.45 otherwise. The landing is along the desk's front, x clamped to ±0.8 m. The powerbomb or the suplex is picked as for a table.
+- **The break.** `WeaponStock.desk_under`, then `WrestlerController._land_on_desk`:
+  - 6 head and 16 torso damage;
+  - he is held down (below);
+  - `VenueDamage.break_desk` cuts the desk out and stands the damaged desk under him, shifted along it by where he landed (capped at 0.5 m);
+  - the crash sound (`desk_crash`) and the camera's set-piece reaction.
+- **For the rest of the match.** The desk stays wrecked, and its bay becomes floor a man can walk into.
+- **Throws at the desk.** `GrappleRig` plays a throw in the desk's bay where they stand, square to the desk. It used to slide every outside move into the lane and turn it along the ring side, which threw him away from the desk.
+- **The wreck's finish.** The wreck wears the standing desk's materials. Its LED panels are unwrapped mirror-image to the standing desk's: 30 of the 40 faces toward the ring run backwards (measured off `venue_damage.glb`). So the wreck gets its own copy of the print, flipped, and DYNAMITE no longer reads backwards.
+
+**The whole desk collapses** (the owner: "the whole announce table should collapse, not just the middle part"):
+- **What it was.** The wreck (`venue_damage.py`, `CommentaryDesk_Damaged`) caved in only round its break. Both ends stood at full height, with the worktop hinged off them.
+- **What it is now.** Caved in end to end:
+  - each half's body crushed to 16% of its height at the break and 38% at the ends, buckled;
+  - both halves of the worktop down on the wreck in a shallow V, its top at 0.43 m (it stood at 0.95);
+  - every LED tile fallen forward toward the ring onto what is left of the front;
+  - all three monitors off.
+- **The shift.** The wreck now slides at most 0.2 m toward where he went through (`DESK_BREAK_SHIFT`, was 0.5). With the whole desk down, a longer slide put its ends out past where the desk stood.
+- **Rebuilt with the bpy 4.2 module.** The committed `venue_damage.glb` was first rebuilt from the unchanged script, byte-identical.
+
+**Tony and Excalibur face the ring** (the owner: "facing the wrong way"):
+- **The fault.** `CommentatorActor` left them unturned, on a note that their models face −Z. Measured on the export, they face +Z: `commentators.py` builds the front at Blender's −Y. So they sat with their backs to the ring, facing their own chair backs.
+- **The fix.** They are turned half round and reseated 0.18 m nearer the desk (`ArenaBuilder.COMMENTATOR_SEAT_Z`), so each torso sits in front of the chair back and the forearms are over the worktop.
+- **The test.** `test_commentator_actor` used to pin the wrong rotation. It now checks that each man's head is on the ring side of his torso.
+
+**The timekeeper's table, off to the side** (the owner: "too close to the announce table ... off to the side, not in front of it ... make more room"):
+- **Where it stood.** At x 1.0, z 6.4, square in front of the desk.
+- **Where it stands now.** Off the desk's +X end with a 0.22 m gap, level with its front, turned so its front faces the ring. He sits behind it, facing the ring.
+- **More room.** The desk's bay is wider (`DESK_BAY_FRONT` / `_BACK` 4.6 / 4.0, were 3.6 / 2.4). The sides keep an angle: at 4.6 / 4.2 they ran so near the ring's own sides that `ArenaLighting` gave them LED faces. The riser stays the desk's width (`ringside.py`).
+- **No walking through it.** The table now stands between his chair and the ring, so `Timekeeper.go` takes him round its outer end on any walk across it. A test follows him through the entrances' errands and back, and he never crosses it.
+- **Props.** The prop slots on the table turn with it.
+
+**Down in the wreck.** Through a table, the desk, a pane of glass or the ladder bridge, a man is now held down 4 s (`THROUGH_DOWN_HOLD`), like a big weapon shot. The quick rise used to stand him up 0.4 s after the desk. Measured: down 4.0 s.
+
+**Laid on a table, then the dive off the top.** This is a new two-man move, keyed in Blender, and a new ending for Cody's moonsault.
+
+**The move** (`table_lay`; `Table_Lay_Attacker` and `_Defender` in `wrestling_clips.py`, 54 frames, 1.8 s):
+- **The lift.** The body slam's first 24 frames, shared as the backbreaker shares them. A fix to that lift is a fix to all three.
+- **The lay.** The man is carried out over a table in front of the attacker and set down on his back on its top. He ends exactly as `Down_Supine` lies, raised by the table's 0.741 m (`TABLE_SUPINE`), so the knockdown that follows is a settle, not a drop.
+- **Built with the bpy 4.2 module.** The committed `.glb` was first rebuilt from the unchanged script and came out byte-identical.
+
+**Three findings on the way:**
+- **The grip.** A grip held to the end let the hold's pull (`GrappleRig._pull_into_reach`) hoist him 0.34 m off the table toward the attacker's hands. The grip now ends as his hands come out from under the man (`attacker_grips_until` 0.62).
+- **The hands.** Hands authored pressing on his chest sat inside it. The separation pushed him up 0.2 m every tick, to the end of the move. They now come up open over him.
+- **The cadence gate.** Lowered in four frames, he turned at 330° a frame against 60° around him: three snaps. He is now lowered over twelve frames, blended from the cradle pose to the table pose.
+
+**Fitted** in two passes, from scratch: the largest correction is 0.15 m, and he ends 3.7 cm up.
+
+**On the table, wherever it stands:**
+- **The rig's frame.** `GrappleRig` stands the move on the table: its length along the man, its middle under his body. Of the two ways round, it takes the one nearer where the two of them stand, and the lead-in slides them there.
+- **The hand-off.** The tick the move ends, he is DOWN with his root on the table's top, held there.
+- **No early break.** The lay never breaks the table: the man is set down, not thrown.
+
+**The dive** (`TopRopeSpot`, the table): Cody's walk, climb and moonsault, with three changes:
+- **The flight.** It is lifted as it goes, so it lands across the man up on the table at the moonsault's contact (frame 25).
+- **The break.** The table is broken under him on that tick (`_land_on`), the same as being thrown through one.
+- **The fall.** The two of them fall through it together to the mat under gravity (0.39 s), and the match covers him there. The diver takes half what the man does.
+
+**In a match:**
+- **The plan.** `WrestlerAI` lines the lay up for a man with a dive off the top, when the table is stood up in the ring where a corner suits the dive. It is rolled once a table, at 0.7. That means Cody: Roman and Kenny have no top-rope move.
+- **Where.** He walks to where the move starts, beside the table's long side, and locks up there.
+- **Once.** It spends his moonsault for the match.
+
+**Probes:**
+- **`drop_probe`:**
+  - where a paired move puts the man it throws;
+  - `--desk`: the desk crash, with how long he stays down;
+  - `--sep`: the runtime separation and the deepest touching segments, every 6 ticks. This is what found the lay's lifted man.
+- **`carnage_shot`:** gains `--spot desk`, `desk_suplex` and `table_dive`.
+- **`down_feet_shot` (new):** close on a downed man's feet. It is ready for the owner's next report, Cody's boots looking warped lying on his back; that report is not yet fixed.
+
+**Gates:**
+- **New: `test_table_dive`.**
+  - The lay is the body slam's lift.
+  - Laid on it, he stays on the table's top for a second: never a frame dropped to the mat or floating over it.
+  - Off the top, he goes through it with Cody: once, both to the mat, and covered.
+  - The AI lines the lay up only for a man with a dive off the top.
+- **Updated: `test_weapon_ai`.** The table powerbomb, the plain powerbomb for a man without a table one, and the desk spot.
+- **Updated: `test_carnage_spots`.**
+  - Through the desk, and it stays wrecked.
+  - Only a man thrown up over it comes down on it.
+  - The bay's floor opens once it is down.
+  - The wreck's print is flipped.
+- **Updated: `test_prop_handoff`.**
+  - The timekeeper's table is beside the desk, facing the ring, with room in the bay.
+  - He walks round it through every errand.
+- **Updated: `test_commentator_actor`.** Both men face the ring.
+- **Updated: `test_paired_moveset`.** The lay is a family of its own, reached by the AI's table spot.
+- **The clip gates pass.** Pair clearance, pose lint and cadence (the lay's snaps fixed, not budgeted). The authoring digest is re-pinned after the review.
+- **The full suite is green.** 1,122 cases, 0 failures. Its last chunk still logs one `Illegal FSM transition: IDLE -> FINISHER` assertion, as it did before this step: it fails no test, and it is on the backlog.

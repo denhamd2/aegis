@@ -163,6 +163,33 @@ const RECIPES := {
 		# his feet.
 		"defender_grips_until": 0.35,
 	},
+	# No Holds Barred: the body slam's lift, and then laid out on a table
+	# standing in front of the attacker, on his back, for the dive through it
+	# (TopRopeSpot, the table). Only ever thrown beside a table: GrappleRig
+	# stands the pair frame on it. See Table_Lay_Attacker in
+	# tools/blender/wrestling_clips.py.
+	"table_lay": {
+		"authored": {"attacker": "Table_Lay_Attacker", "defender": "Table_Lay_Defender"},
+		# Fallback samples, used only if the authored clips are missing.
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.25, "clip": "PickUp_Table", "at": 0.25},
+			{"t": 0.50, "clip": "PickUp_Table", "at": 0.80},
+			{"t": 1.20, "clip": "PickUp_Table", "at": 0.45},
+			{"t": 1.80, "clip": "Idle", "at": 0.00},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.35, "clip": "Jump", "at": 0.50},
+			{"t": 1.20, "clip": "Death01", "at": 1.60},
+			{"t": 1.80, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.35,
+		# His hands come out from under him as he sets him down (frame 34 of
+		# 54): held past it, the hold's pull (GrappleRig._pull_into_reach)
+		# hoisted the man off the table toward them, 0.34 m up.
+		"attacker_grips_until": 0.62,
+	},
 	# The body slam's lift, then down onto one knee with the victim arched
 	# face-up across the other. The samples below are only the fallback --
 	# see Backbreaker_Attacker in tools/blender/wrestling_clips.py.
@@ -1195,6 +1222,33 @@ const TRAJECTORIES := {
 					[0.80, 0.30, 0.00, -0.30], [0.93, 0.30, 0.00, -0.45],
 					[1.20, 0.30, 0.00, -0.45]],
 			"rot": [[0.00, 0.0, -90.0, 0.0], [1.20, 0.0, -90.0, 0.0]],
+		},
+	},
+
+	# The body slam's lift and turn, key for key to 0.80 s; then, where the
+	# slam carries him 0.15 m out and drops him, he is carried out to 0.68 m
+	# in front of the attacker and set down there at the table's height (bone
+	# pose: Table_Lay_Defender). GrappleRig stands this frame on the table,
+	# its middle under where his root ends (TABLE_LAY_END), its length along
+	# X, along the man; the attacker's toes stay 0.28 m short of its near
+	# edge. Neither root leaves the mat.
+	"table_lay": {
+		"length": 1.8,
+		"attacker": {
+			"pos": [[0.00, 0.40, 0.00, 0.00], [0.23, 0.30, 0.00, 0.00],
+					[0.43, 0.34, 0.00, 0.02], [0.63, 0.40, 0.00, 0.02],
+					[1.80, 0.40, 0.00, 0.02]],
+			"rot": [[0.00, 0.0, 90.0, 0.0], [0.23, 0.0, 88.0, 0.0],
+					[0.43, 0.0, 40.0, 0.0], [0.63, 0.0, 0.0, 0.0],
+					[1.80, 0.0, 0.0, 0.0]],
+		},
+		"defender": {
+			"pos": [[0.00, -0.40, 0.00, 0.00], [0.23, -0.28, 0.00, 0.00],
+					[0.43, 0.10, 0.00, -0.20], [0.63, 0.30, 0.00, -0.30],
+					[0.80, 0.30, 0.00, -0.30], [1.00, 0.30, 0.00, -0.50],
+					[1.13, 0.30, 0.00, -0.62], [1.27, 0.30, 0.00, -0.68],
+					[1.80, 0.30, 0.00, -0.68]],
+			"rot": [[0.00, 0.0, -90.0, 0.0], [1.80, 0.0, -90.0, 0.0]],
 		},
 	},
 

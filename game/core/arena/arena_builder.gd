@@ -850,8 +850,16 @@ static func _new_surface() -> SurfaceTool:
 ##
 ## The barricade's corners are cut at 45 degrees by BARRICADE_CHAMFER, as in
 ## the still: the barrier wraps the ring rather than boxing it.
-const DESK_BAY_FRONT := 3.6
-const DESK_BAY_BACK := 2.4
+##
+## Wider than the desk needs, for the timekeeper's table standing beside its
+## +X end on the floor with his chair behind it and a walkway round its outer
+## end (the owner, 1 Nov: "off to the side, not in front of it ... make more
+## room in that area for it"; Timekeeper, PropHandoff.TABLE_AT). It was
+## 3.6 / 2.4, and the table stood in front of the desk. The sides keep an
+## angle: at 4.6 / 4.2 they ran so near the ring's own sides that
+## ArenaLighting took them for ringside runs and gave them LED faces.
+const DESK_BAY_FRONT := 4.6
+const DESK_BAY_BACK := 4.0
 const DESK_BAY_Z := 9.0
 const DESK_X := 0.0
 const BARRICADE_CHAMFER := 1.2
@@ -929,8 +937,16 @@ func _build_ringside() -> void:
 
 ## Seat the two broadcast voices behind the existing desk. The remaining
 ## chair stays available for a guest commentator.
+##
+## Turned to face the ring (CommentatorActor), each model's seated torso runs
+## 0.11 to 0.40 m behind its origin: COMMENTATOR_SEAT_Z behind the desk puts
+## the torso's back just in front of the chair back (ringside.py: seats at
+## 0.42 m, backs from about 0.66 m) and the forearms out over the worktop.
+const COMMENTATOR_SEAT_Z := 0.24
+
+
 func _build_commentators() -> void:
-	var row_z := DESK_Z + DESK_DEPTH * 0.5 + 0.42
+	var row_z := DESK_Z + DESK_DEPTH * 0.5 + COMMENTATOR_SEAT_Z
 	var tony := CommentatorActor.new()
 	tony.name = "TonySchiavone"
 	add_child(tony)

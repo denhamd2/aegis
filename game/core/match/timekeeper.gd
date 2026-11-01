@@ -27,11 +27,22 @@ const MAX_ANIMATION_RATE := 2.1
 ## A black polo, not the referee's stripes.
 const POLO := Color(0.05, 0.06, 0.09)
 
-## Compact desk with its long side along Z; the ring-side front faces -X.
+## Compact desk: built with its long side along Z and its front to -X, and
+## turned so the front faces the ring (-Z) and its length runs along the
+## announce desk beside it (the owner, 1 Nov: "off to the side, not in front
+## of it"). He sits behind it, facing the ring too: FACE.
 const TABLE_SIZE := Vector3(0.65, 0.74, 1.05)
-const TABLE_ROTATION_Y := 0.0
+const TABLE_ROTATION_Y := -PI * 0.5
+const FACE := Vector3(0.0, 0.0, -1.0)
 const CHAIR_SCENE := "res://assets/environment/props/MetalFoldingChair.fbx"
-const CHAIR_AT := Vector3(2.25, -1.1, 6.4)
+## Behind his table (PropHandoff.TABLE_AT), 1.2 m back from its middle.
+const CHAIR_AT := Vector3(2.9, -1.1, 8.55)
+## A walk across his table's line goes round its outer end, this far past it
+## and this far back from its back edge, his side: the table stands between
+## his chair and the ring. Level with its middle, he turned for his place
+## behind it short of the point and cut its back corner (test_prop_handoff).
+const DETOUR_CLEAR := 0.38
+const DETOUR_BACK := 0.15
 const FRONT_ART := "res://assets/environment/materials/ribbon_board.png"
 const FRONT_ART_ASPECT := 7.7236
 
@@ -67,19 +78,21 @@ func setup(post: Vector3, post_face: Vector3, table_at: Vector3) -> void:
 		chair.name = "TimekeeperChair"
 		add_child(chair)
 		chair.global_position = CHAIR_AT
-		chair.global_rotation.y = -PI * 0.5
+		chair.global_rotation.y = atan2(FACE.x, FACE.z)      # its front is its +Z
 	table = _build_table()
 	table.name = "TimekeeperTable"
 	table.top_level = true
 	add_child(table)
 	table.global_position = table_at
 	table.global_rotation.y = TABLE_ROTATION_Y
+	_table_at = table_at
 
 
 ## Walk to `target` (flattened, y kept), then turn to `face_dir`. `arrived`
 ## fires once he is there and squared up.
 func go(target: Vector3, face_dir: Vector3) -> void:
 	_target = Vector3(target.x, global_position.y, target.z)
+	_via = detour(global_position, _target, _table_at)
 	_face = Vector3(face_dir.x, 0.0, face_dir.z)
 	_faced = false
 	_sit_when_arrived = false
@@ -90,7 +103,7 @@ func go(target: Vector3, face_dir: Vector3) -> void:
 
 ## Return to the folding chair beside the timekeeper's table and sit down.
 func go_to_chair() -> void:
-	go(CHAIR_AT, Vector3(-1.0, 0.0, 0.0))
+	go(CHAIR_AT, FACE)
 	_sit_when_arrived = true
 
 
@@ -121,7 +134,10 @@ func _process(delta: float) -> void:
 	if _target == Vector3.INF:
 		return
 	var here := Vector3(global_position.x, 0.0, global_position.z)
-	var flat_target := Vector3(_target.x, 0.0, _target.z)
+	if _via != Vector3.INF and Vector2(_via.x - here.x, _via.z - here.z).length() <= ARRIVED * 2.0:
+		_via = Vector3.INF
+	var going := _via if _via != Vector3.INF else _target
+	var flat_target := Vector3(going.x, 0.0, going.z)
 	var to := flat_target - here
 	if to.length() > ARRIVED:
 		var step := to.normalized() * minf(WALK_SPEED * delta, to.length())
@@ -139,6 +155,39 @@ func _process(delta: float) -> void:
 		if _sit_when_arrived:
 			_sit_when_arrived = false
 			_play(SIT_ENTER_CLIP, 0.2, true)
+
+
+## Where his table stands (setup), and the corner he is walking round to get
+## past it, or INF.
+var _table_at := Vector3.INF
+var _via := Vector3.INF
+
+
+## The point to walk to first on the way from `from` to `to`, round the end
+## of the table at `table_at` -- the end further from the announce desk --
+## when the straight line between them crosses it; else INF.
+static func detour(from: Vector3, to: Vector3, table_at: Vector3) -> Vector3:
+	if table_at == Vector3.INF:
+		return Vector3.INF
+	var basis := Basis(Vector3.UP, TABLE_ROTATION_Y)
+	var a := basis.inverse() * (Vector3(from.x, table_at.y, from.z) - table_at)
+	var b := basis.inverse() * (Vector3(to.x, table_at.y, to.z) - table_at)
+	# The table's own frame: its front to -x, its length along z.
+	var half_x := TABLE_SIZE.x * 0.5 + 0.2
+	var half_z := TABLE_SIZE.z * 0.5 + 0.2
+	if (a.x > 0.0) == (b.x > 0.0) and absf(a.x) > half_x and absf(b.x) > half_x:
+		return Vector3.INF
+	# where the line crosses the table's middle, along it
+	var u := clampf(a.x / (a.x - b.x), 0.0, 1.0) if absf(a.x - b.x) > 1e-4 else 0.0
+	if absf(lerpf(a.z, b.z, u)) > half_z:
+		return Vector3.INF
+	var ends: Array[Vector3] = []
+	for way: float in [1.0, -1.0]:
+		ends.append(table_at + basis * Vector3(TABLE_SIZE.x * 0.5 + DETOUR_BACK, 0.0,
+				way * (TABLE_SIZE.z * 0.5 + DETOUR_CLEAR)))
+	var outer := ends[0] if absf(ends[0].x - ArenaBuilder.DESK_X) > absf(ends[1].x - ArenaBuilder.DESK_X) \
+			else ends[1]
+	return Vector3(outer.x, from.y, outer.z)
 
 
 func _turn(yaw: float, delta: float) -> void:

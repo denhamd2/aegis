@@ -228,8 +228,11 @@ def build_commentary_desk(cfg: dict[str, float], parts: dict[str, Part]) -> None
     # of the bay's ends.
     r_front = front_z - 0.35
     r_back = cfg["DESK_BAY_Z"] - 0.12
-    r_x0 = -(cfg["DESK_BAY_BACK"] - 0.1)
-    r_x1 = cfg["DESK_BAY_BACK"] - 0.1
+    # Its width the desk's, 0.2 m proud at each end -- not the bay's: the bay
+    # is wider than the desk, to stand the timekeeper's table beside it on
+    # the floor (Timekeeper, PropHandoff.TABLE_AT).
+    r_x0 = cfg["DESK_X"] - (cfg["DESK_LENGTH"] * 0.5 + 0.2)
+    r_x1 = cfg["DESK_X"] + cfg["DESK_LENGTH"] * 0.5 + 0.2
     riser.box(Vector(((r_x0 + r_x1) * 0.5, floor_y + cfg["DESK_RISER"] * 0.5,
                       (r_front + r_back) * 0.5)),
               Vector((r_x1 - r_x0, cfg["DESK_RISER"], r_back - r_front)), bevel=0.012)

@@ -13,11 +13,12 @@ Run:  python3 tools/blender/venue_damage.py
                           cap rail snapped, the brace buckled, shards at its
                           foot. Origin on the floor at the panel's centre,
                           +X along it, +Z out (toward the crowd).
-  CommentaryDesk_Damaged  the announce desk (DESK_*) broken in the middle:
-                          the worktop snapped into a V, the body caved in,
-                          the LED face shattered, a monitor knocked flat and
-                          one hanging off the front. Origin on the riser at
-                          the desk's centre, +X along it, +Z its back.
+  CommentaryDesk_Damaged  the announce desk (DESK_*) collapsed end to end:
+                          broken through the middle and caved in along its
+                          whole length, the worktop down on the wreck in a
+                          shallow V, the LED face fallen forward, every
+                          monitor off. Origin on the riser at the desk's
+                          centre, +X along it, +Z its back.
   RingPost_Damaged        a corner after a hit: the post scorched and
                           leaning out a few degrees -- the ropes stay tied to
                           it -- its three pads blown off (one hanging by its
@@ -261,6 +262,15 @@ def build_barricade(root, panel_mat, steel_mat) -> None:
 
 
 def build_desk(root, body_mat, top_mat, led_mat, plastic_mat) -> None:
+    """The whole desk collapsed (the owner, 1 Nov: "the whole announce table
+    should collapse, not just the middle part"): broken through the middle
+    and caved in end to end -- each half's body crushed to a third of its
+    height or less, deepest at the break; both halves of the worktop down on
+    the wreck in a shallow V; every tile of the LED face fallen forward
+    toward the ring onto what is left of the front; all three monitors off.
+    It used to cave in only round the break, with both ends standing at full
+    height and the worktop hinged off them -- broken in the middle, not
+    flattened."""
     rng = np.random.RandomState(kit.seed_of("desk_damaged"))
     length, depth = ARENA["DESK_LENGTH"], ARENA["DESK_DEPTH"]
     height, thick = ARENA["DESK_HEIGHT"], ARENA["DESK_TOP_THICKNESS"]
@@ -268,15 +278,22 @@ def build_desk(root, body_mat, top_mat, led_mat, plastic_mat) -> None:
     gap = 0.34                                    # the broken middle
     body = kit.WeaponPart(root.name + "_body")
     body_h = height - thick
+    # What is left standing, as a fraction of the body: at the break, and at
+    # the ends.
+    keep_break, keep_end = 0.16, 0.38
+
+    def left_at(x: float) -> float:
+        u = min(1.0, max(0.0, (abs(x) - gap) / (length * 0.5 - 0.04 - gap)))
+        return body_h * (keep_break + (keep_end - keep_break) * u)
+
     for side in (-1.0, 1.0):
-        # each half's body, its inner end crushed down toward the break
         x0, x1 = side * gap, side * (length * 0.5 - 0.04)
 
-        def crush(p: Vector, s0=x0, s1=x1) -> Vector:
-            u = (p.x - s0) / (s1 - s0)                    # 0 at the break
+        def crush(p: Vector, s=side) -> Vector:
             q = Vector(p)
-            q.y *= 0.42 + 0.58 * min(1.0, u * 1.6)
-            q.z += (1.0 - min(1.0, u * 2.0)) * 0.08 * (q.y / max(body_h, 0.01))
+            # caved in end to end, buckled rather than planed flat
+            q.y *= left_at(p.x) / body_h * (1.0 + 0.10 * math.sin(p.x * 9.0 + s))
+            q.z += (q.y / max(body_h, 0.01)) * 0.06 * math.sin(p.x * 5.0 + s)
             return q
         half = kit.WeaponPart(root.name + "_b%d" % int(side), deform=crush)
         half.grid_panel(Vector((min(x0, x1), 0.0, -depth * 0.5)), Vector((abs(x1 - x0), 0, 0)),
@@ -286,41 +303,53 @@ def build_desk(root, body_mat, top_mat, led_mat, plastic_mat) -> None:
         half.box(Vector((side * (length * 0.5 - 0.03), body_h * 0.5, 0.0)),
                  Vector((0.06, body_h, depth + 0.04)), bevel=0.01)
         kit.add_mesh(root, half, body_mat, uv_scale=1.0, auto_smooth_deg=35.0)
-        # the worktop slab, hinged at the outer end and dropped into the V
+        # the worktop's half, down on the wreck: lying on the crushed body,
+        # low at the break and higher at the end, slid and twisted
         slab_len = length * 0.5 + over - gap * 0.6
-        drop = 13.0 + rng.uniform(-2, 2)
+        y_in, y_out = left_at(gap), left_at(length * 0.5)
+        drop = math.degrees(math.atan2(y_out - y_in, slab_len)) + rng.uniform(-1.5, 1.5)
         cx = side * (gap * 0.6 + slab_len * 0.5)
-        cy = height - thick * 0.5 - math.sin(math.radians(drop)) * slab_len * 0.5 - 0.03
-        tilted_box(body if False else top_part(root, side), Vector((cx, cy, rng.uniform(-0.03, 0.03))),
-                   Vector((slab_len, thick, depth + over * 2.0)), rng.uniform(-3, 3), 0.0,
-                   side * -drop, bevel=0.015)
+        cy = (y_in + y_out) * 0.5 + thick * 0.5 + 0.01
+        tilted_box(top_part(root, side), Vector((cx, cy, rng.uniform(-0.06, 0.06))),
+                   Vector((slab_len, thick, depth + over * 2.0)), rng.uniform(-4, 4),
+                   rng.uniform(-4, 4), side * -drop, bevel=0.015)
     # what fell through the middle: broken panels and the LED face's pieces
     for i in range(6):
-        tilted_box(body, Vector((rng.uniform(-gap, gap), rng.uniform(0.05, 0.3), rng.uniform(-0.3, 0.3))),
+        tilted_box(body, Vector((rng.uniform(-gap, gap), rng.uniform(0.05, 0.2), rng.uniform(-0.3, 0.3))),
                    Vector((rng.uniform(0.2, 0.45), 0.025, rng.uniform(0.15, 0.4))),
                    rng.uniform(0, 180), rng.uniform(-40, 40), rng.uniform(-40, 40))
     kit.add_mesh(root, body, body_mat, uv_scale=1.0, auto_smooth_deg=35.0)
+    # The LED face: every tile hinged at its foot and fallen forward, toward
+    # the ring, until it rests on what is left of the front -- flat on the
+    # floor where the middle went.
     led = kit.WeaponPart(root.name + "_led")
     led_h = ARENA["DESK_LED_HEIGHT"]
+    foot = 0.12
     tiles = 14
     tile_w = (length - 0.14) / tiles
+    front = -depth * 0.5 - 0.02
     for i in range(tiles):
         x = -length * 0.5 + 0.07 + (i + 0.5) * tile_w
+        rest = left_at(x) - foot
         if abs(x) < gap * 0.8:
-            continue                                   # blown out
-        near = max(0.0, 1.0 - abs(x) / (length * 0.32))
-        sag = near * 0.25
-        tilted_box(led, Vector((x, 0.12 + led_h * 0.5 - sag * 0.6, -depth * 0.5 - 0.02 - near * 0.06)),
-                   Vector((tile_w - 0.01, led_h * (1.0 - near * 0.3), 0.012)),
-                   rng.uniform(-4, 4) * near, rng.uniform(-14, 6) * near, rng.uniform(-10, 10) * near)
+            rest = 0.02                                # nothing left to rest on
+        lean = math.degrees(math.acos(min(1.0, max(0.03, rest / led_h)))) + rng.uniform(-4, 4)
+        lean = min(lean, 88.0)
+        tall = led_h * rng.uniform(0.82, 0.97)
+        a = math.radians(lean)
+        centre = Vector((x + rng.uniform(-0.02, 0.02), foot * (1.0 - a / math.radians(95.0))
+                         + math.cos(a) * tall * 0.5, front - math.sin(a) * tall * 0.5))
+        tilted_box(led, centre, Vector((tile_w - 0.01, tall, 0.012)),
+                   rng.uniform(-6, 6), -lean, rng.uniform(-8, 8))
     kit.add_mesh(root, led, led_mat, uv_scale=1.0, auto_smooth_deg=30.0)
     kit_part = kit.WeaponPart(root.name + "_kit")
     m_w, m_h, m_d = ARENA["DESK_MONITOR_WIDTH"], ARENA["DESK_MONITOR_HEIGHT"], ARENA["DESK_MONITOR_DEPTH"]
-    # one monitor knocked flat on the left slab, one hanging off the front on
-    # the right, the third in pieces on the floor in front
-    tilted_box(kit_part, Vector((-1.25, height - 0.04, 0.05)), Vector((m_w, m_h, m_d)), 12, 82, 0)
-    tilted_box(kit_part, Vector((1.15, height - 0.26, -depth * 0.5 - 0.08)), Vector((m_w, m_h, m_d)),
-               -8, -35, 18)
+    # one monitor face down on the left slab, one off the front and on the
+    # floor, the third in pieces on the floor in front
+    on_slab = left_at(-1.25) + thick + 0.02 + m_d * 0.5
+    tilted_box(kit_part, Vector((-1.25, on_slab, 0.05)), Vector((m_w, m_h, m_d)), 12, 84, 0)
+    tilted_box(kit_part, Vector((1.15, m_d * 0.5 + 0.01, -depth * 0.5 - 0.42)), Vector((m_w, m_h, m_d)),
+               -14, -86, 6)
     for i in range(5):
         tilted_box(kit_part, Vector((rng.uniform(-0.6, 0.6), 0.015, -depth * 0.5 - rng.uniform(0.2, 0.8))),
                    Vector((rng.uniform(0.06, 0.2), 0.02, rng.uniform(0.05, 0.14))),

@@ -284,6 +284,103 @@ func test_with_a_table_at_his_back_he_locks_up_for_the_suplex() -> void:
 	assert_object(roman.prefer_hold_move).is_null()
 
 
+func test_up_beside_the_table_he_powerbombs_him_through_it() -> void:
+	# the owner: "powerbomb through" -- the other man nearer the table than
+	# the suplex spot, so the thrower stands past him with the table ahead
+	var pair := _pair(true)
+	var roman := pair[0]
+	var cody := pair[1]
+	roman.combat.tier_reached = 0
+	roman.grapple_move_pool.append(load("res://resources/moves/grapple_vertical_suplex.tres"))
+	roman.power_move_pool.append(load("res://resources/moves/ff/powerbomb_1.tres"))
+	cody.global_position = Vector3(0.0, 0.0, 0.6)
+	roman.global_position = Vector3(1.5, 0.0, 2.4)
+	await _ticks(2)
+	cody.global_position = Vector3(0.0, 0.0, 0.6)
+	roman.global_position = Vector3(1.5, 0.0, 2.4)
+	var table := WeaponStock.of(cody).pull(WeaponCatalog.by_id(&"table"))
+	table.set_up_at(Vector3.ZERO, 0.0)
+	var to := cody.global_position - roman.global_position
+	var input: Dictionary = roman.ai._line_up_input({}, to, Vector2(to.x, to.z).length())
+	# off the spot: he goes to it -- out past Cody, POWERBOMB_DROP from the table
+	assert_bool(input.get("grapple", false)).is_false()
+	var heading := Vector3(input["move"].x, 0.0, input["move"].y)
+	var spot := Vector3(0.0, 0.0, WrestlerAI.POWERBOMB_DROP)
+	assert_float(heading.normalized().dot((spot - roman.global_position).normalized())).is_greater(0.5)
+	# on it, Cody between him and the table: he locks up for his powerbomb
+	roman.global_position = spot
+	to = cody.global_position - roman.global_position
+	input = roman.ai._line_up_input({}, to, Vector2(to.x, to.z).length())
+	assert_bool(input.get("grapple", false)).is_true()
+	var bomb := roman.prefer_hold_move
+	assert_str(String(bomb.animation_pair_id)).is_equal("ff_powerbomb_1")
+	# and the hold he wins throws it
+	assert_object(roman._pick_hold_move()).is_same(bomb)
+	# Cody further out than the suplex spot: still the suplex, as before
+	roman.prefer_hold_move = null
+	cody.global_position = Vector3(0.0, 0.0, 2.2)
+	roman.global_position = Vector3(0.0, 0.0, WrestlerAI.SUPLEX_DROP)
+	to = cody.global_position - roman.global_position
+	input = roman.ai._line_up_input({}, to, Vector2(to.x, to.z).length())
+	assert_bool(input.get("grapple", false)).is_true()
+	assert_object(roman.prefer_hold_move).is_same(roman.ai._suplex())
+
+
+func test_out_by_the_announce_desk_he_puts_him_through_it() -> void:
+	# the owner: "announce table ... powerbomb through" -- the desk is a spot
+	# like a table: the suplex onto it with his back to it, or past the other
+	# man and the powerbomb, by where the other man stands
+	var pair := _pair(true)
+	var roman := pair[0]
+	var cody := pair[1]
+	roman.combat.tier_reached = 0
+	roman.grapple_move_pool.append(load("res://resources/moves/grapple_vertical_suplex.tres"))
+	roman.power_move_pool.append(load("res://resources/moves/ff/powerbomb_1.tres"))
+	await _ticks(2)
+	var stock := WeaponStock.of(cody)
+	var floor_y := WrestlerController.FLOOR_LEVEL
+	for w: WrestlerController in pair:
+		w.outside_ring = true
+	roman.ai._desk_roll = 1
+	# Cody out from it, in reach: the suplex spot, the desk at Roman's back
+	roman.global_position = Vector3(0.0, floor_y, ArenaBuilder.DESK_Z - WrestlerAI.SUPLEX_DROP)
+	cody.global_position = roman.global_position - Vector3(0.0, 0.0, 0.9)
+	var to := cody.global_position - roman.global_position
+	var input: Dictionary = roman.ai._line_up_input({}, to, Vector2(to.x, to.z).length())
+	assert_bool(input.get("grapple", false)).is_true()
+	assert_object(roman.prefer_hold_move).is_same(roman.ai._suplex())
+	# Cody up against its front: Roman past him, the powerbomb onto it
+	roman.prefer_hold_move = null
+	cody.global_position = Vector3(0.0, floor_y, 6.6)
+	roman.global_position = Vector3(0.0, floor_y, ArenaBuilder.DESK_Z - WrestlerAI.POWERBOMB_DROP)
+	to = cody.global_position - roman.global_position
+	input = roman.ai._line_up_input({}, to, Vector2(to.x, to.z).length())
+	assert_bool(input.get("grapple", false)).is_true()
+	assert_str(String(roman.prefer_hold_move.animation_pair_id)).is_equal("ff_powerbomb_1")
+	# once it is wrecked there is no desk to go through
+	roman.prefer_hold_move = null
+	stock.desk_broken = true
+	input = roman.ai._line_up_input({}, to, Vector2(to.x, to.z).length())
+	assert_bool(input.get("grapple", false)).is_false()
+	assert_object(roman.prefer_hold_move).is_null()
+	# nor from inside the ring
+	stock.desk_broken = false
+	for w: WrestlerController in pair:
+		w.outside_ring = false
+	input = roman.ai._line_up_input({}, to, Vector2(to.x, to.z).length())
+	assert_bool(input.get("grapple", false)).is_false()
+
+
+func test_a_man_without_a_powerbomb_of_his_own_uses_the_plain_one() -> void:
+	# Kenny's powerbomb comes with a knee after it: through a table, the plain one
+	var pair := _pair(true)
+	var roman := pair[0]
+	roman.power_move_pool.append(load("res://resources/moves/ff/powerbomb_v_trigger_combo.tres"))
+	assert_str(String(roman.ai._table_powerbomb().animation_pair_id)).is_equal("ff_powerbomb_1")
+	roman.power_move_pool.append(load("res://resources/moves/ff/sit_out_powerbomb_2.tres"))
+	assert_str(String(roman.ai._table_powerbomb().animation_pair_id)).is_equal("ff_sit_out_powerbomb_2")
+
+
 func test_tacks_and_barbed_wire_board_are_paired_ai_spots_too() -> void:
 	var pair := _pair(true)
 	var roman := pair[0]

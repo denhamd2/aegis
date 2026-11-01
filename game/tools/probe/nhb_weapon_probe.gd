@@ -19,6 +19,11 @@ var _give := ""
 ## --shots DIR: not headless -- a frame through the match's own camera a beat
 ## after each weapon hit and each man through a set piece (DIR/shot_NN.png).
 static var shots_dir := ""
+## --shots-from T: nothing drawn before tick T (a whole match drawn frame by
+## frame under a software rasteriser does not reach tick 3500 in 40 minutes);
+## --shots-every N: from T on, a frame every N ticks as well as the events.
+static var shots_from := -1
+static var shots_every := 0
 
 
 func _ready() -> void:
@@ -33,6 +38,10 @@ func _ready() -> void:
 			"--spear": _spear = float(args[i + 1])
 			"--give": _give = args[i + 1]
 			"--shots": shots_dir = args[i + 1]
+			"--shots-from": shots_from = int(args[i + 1])
+			"--shots-every": shots_every = int(args[i + 1])
+	if shots_from > 0:
+		RenderingServer.render_loop_enabled = false
 	if _spear >= 0.0:
 		await _spear_through(_spear)
 		get_tree().quit()
@@ -70,7 +79,11 @@ static func run(host: Node, seed_value: int, budget: int, wrestlers := "roman,co
 				r["hits"].append("%s:%s@%d" % [by.display_name, def.id, r["ticks"]])
 				shoot_at.append(int(r["ticks"]) + 3))
 		w.set_piece_landed.connect(func(who, weapon, broke):
-			r["set_pieces"].append("%s:%s%s@%d" % [who.display_name, weapon.def.id, "!" if broke else "", r["ticks"]])
+			# and the paired move that put him there, if one did
+			var rig := scene.get_node_or_null("GrappleRig") as GrappleRig
+			var via: MoveDef = rig.current_move() if rig else null
+			r["set_pieces"].append("%s:%s%s@%d%s" % [who.display_name, weapon.def.id, "!" if broke else "",
+					r["ticks"], (" via " + String(via.animation_pair_id)) if via else ""])
 			shoot_at.append(int(r["ticks"]) + 2)
 			shoot_at.append(int(r["ticks"]) + 40))
 	r["finishers"] = []
@@ -123,7 +136,10 @@ static func run(host: Node, seed_value: int, budget: int, wrestlers := "roman,co
 					a.held_weapon.def.id if a.has_weapon() else "-",
 					b.fsm.current_state, b.ai._weapon_plan, b.outside_ring, b.combat.wear, b.combat.can_finisher(),
 					b.held_weapon.def.id if b.has_weapon() else "-"])
-		if shots_dir != "" and shoot_at.has(t):
+		if shots_from > 0 and t == shots_from:
+			RenderingServer.render_loop_enabled = true
+		var every := shots_every > 0 and t >= shots_from and (t - shots_from) % shots_every == 0
+		if shots_dir != "" and (shoot_at.has(t) or every) and (shots_from < 0 or t >= shots_from):
 			await RenderingServer.frame_post_draw
 			var n := DirAccess.get_files_at(shots_dir).size() if DirAccess.dir_exists_absolute(shots_dir) else 0
 			DirAccess.make_dir_recursive_absolute(shots_dir)

@@ -1997,6 +1997,14 @@ func _apply_gravity(delta: float) -> void:
 	if fsm.current_state == WrestlerFSM.State.LADDER_CLIMB:
 		velocity.y = 0.0
 		return
+	# Down on a table he was laid on: held on its top until he gets up or it
+	# goes (TopRopeSpot breaks it under him).
+	if on_table():
+		if fsm.current_state == WrestlerFSM.State.DOWN:
+			velocity = Vector3.ZERO
+			global_position.y = table_top_y(_on_table)
+			return
+		_on_table = null
 	if is_on_floor():
 		# Zero rather than leave it accumulating -- otherwise velocity.y grows
 		# unboundedly while grounded and the first airborne tick launches the
@@ -2196,6 +2204,14 @@ const DECK_KEEP_OUT := RingBuilder.APRON_OUT + BODY_RADIUS
 ## Farthest out: the barricade less his capsule and a hand's clearance, with
 ## the corners chamfered as ArenaBuilder.barricade_path() cuts them.
 const BARRICADE_KEEP_IN := ArenaBuilder.BARRICADE_RADIUS - BODY_RADIUS - 0.15
+## In front of the announce desk, in its bay: up to the worktop's front edge
+## less his capsule and a hand's clearance, across the bay's mouth less the
+## same at its narrowest by there (the bay's sides angle in to DESK_BAY_BACK).
+const DESK_FRONT_KEEP := ArenaBuilder.DESK_Z - ArenaBuilder.DESK_DEPTH * 0.5 \
+		- ArenaBuilder.DESK_TOP_OVERHANG - BODY_RADIUS - 0.05
+const DESK_BAY_KEEP_X := ArenaBuilder.DESK_LENGTH * 0.5 + 0.3
+## The desk wrecked, the floor runs back to where its back stood.
+const DESK_BACK_KEEP := ArenaBuilder.DESK_Z + ArenaBuilder.DESK_DEPTH * 0.5
 const BARRICADE_CORNER_KEEP_IN := 2.0 * ArenaBuilder.BARRICADE_RADIUS \
 		- ArenaBuilder.BARRICADE_CHAMFER - (BODY_RADIUS + 0.15) * 1.41421356
 ## Lying outside, no part of him under the apron.
@@ -2406,7 +2422,7 @@ func is_crossing_ropes() -> bool:
 ## clamp -- one transform, no physics query, only ever pushed up.
 func keep_on_the_floor() -> void:
 	var p := global_position
-	var fixed := ringside_floor_point(p)
+	var fixed := ringside_floor_point(p, _desk_open())
 	if MatchRules.no_holds_barred(self):
 		# Up the ramp and onto the stage, through the barricade's gap: the
 		# nearer of the two standable areas, so the walk from one onto the
@@ -2423,12 +2439,27 @@ func keep_on_the_floor() -> void:
 		velocity.y = 0.0
 
 
+## Whether the announce desk is wrecked this match (WeaponStock.desk_broken).
+func _desk_open() -> bool:
+	if not MatchRules.no_holds_barred(self) or get_parent() == null:
+		return false
+	var stock := get_parent().get_node_or_null("WeaponStock") as WeaponStock
+	return stock != null and stock.desk_broken
+
+
 ## `p` held on the ringside floor: inside the barricade, not under the apron.
-static func ringside_floor_point(p: Vector3) -> Vector3:
+## `desk_open`: the announce desk is wrecked, and where it stood is floor.
+static func ringside_floor_point(p: Vector3, desk_open := false) -> Vector3:
 	var fixed := p
 	fixed.y = maxf(p.y, FLOOR_LEVEL)
 	fixed.x = clampf(p.x, -BARRICADE_KEEP_IN, BARRICADE_KEEP_IN)
 	fixed.z = clampf(p.z, -BARRICADE_KEEP_IN, BARRICADE_KEEP_IN)
+	# The desk's bay: the barricade steps back round the announce desk
+	# (ArenaBuilder.barricade_path), and the floor in front of the desk is the
+	# fight's too, up to the desk's front -- where a man is put through it --
+	# and, once it is wrecked, where it stood: he lies in it.
+	if p.z > BARRICADE_KEEP_IN and absf(p.x) <= DESK_BAY_KEEP_X:
+		fixed.z = minf(p.z, DESK_BACK_KEEP if desk_open else DESK_FRONT_KEEP)
 	var over := absf(fixed.x) + absf(fixed.z) - BARRICADE_CORNER_KEEP_IN
 	if over > 0.0:
 		fixed.x -= signf(fixed.x) * over * 0.5
@@ -4653,6 +4684,48 @@ func _resolve_grapple_move(move: MoveDef) -> void:
 		opponent._start_move(WrestlerFSM.State.HIT_REACT, opponent._timed_stub(HIT_REACT_TICKS))
 	if ai and tier_of(move) == CombatSystem.Tier.SIGNATURE:
 		ai.signature_landed(knocked_down)
+	if move and move.animation_pair_id == GrappleRig.TABLE_LAY:
+		_after_table_lay()
+
+
+## Laid out on a table (GrappleRig.TABLE_LAY; the owner, 1 Nov: "lay him on
+## the table, then dive off the top rope through him"). The clip leaves him on
+## his back at the table's height; from here he is DOWN with his root up on
+## its top, held there (_apply_gravity), and the dive through it starts this
+## same tick -- TopRopeSpot, the table -- before a frame shows him anywhere
+## else. With no dive to take, he lies on it until he gets up, and comes off
+## it as he does.
+func _after_table_lay() -> void:
+	var table := GrappleRig.lay_table(self)
+	if table == null or opponent == null \
+			or opponent.fsm.current_state != WrestlerFSM.State.DOWN:
+		return
+	opponent._on_table = table
+	opponent.global_position.y = table_top_y(table)
+	opponent.velocity = Vector3.ZERO
+	# Placed, not moved: up 0.74 m as his pose comes down by the same.
+	MatchSmoothing.snap(opponent)
+	if top_rope_move and not _top_rope_used and TopRopeSpot.can_dive_on(opponent):
+		_top_rope_used = true
+		var spot := TopRopeSpot.new()
+		spot.name = "TopRopeSpot"
+		get_parent().add_child(spot)
+		spot.begin(self, opponent, false, table)
+
+
+## The table he lies on (_after_table_lay), while he is down on it and it
+## stands.
+var _on_table: WeaponActor = null
+
+
+func on_table() -> WeaponActor:
+	if _on_table and (not is_instance_valid(_on_table) or _on_table.mode != WeaponActor.Mode.SET_UP):
+		_on_table = null
+	return _on_table
+
+
+static func table_top_y(table: WeaponActor) -> float:
+	return (table.global_transform * table.local_bounds()).end.y
 
 ## Turns a man lying on his back half round about his own pelvis, and asks
 ## for the next state's clip to start with no blend.
@@ -4855,13 +4928,14 @@ func _process_down(input: Dictionary) -> void:
 	# never be pinned in time -- measured, Roman's Spears in the finish were
 	# covered after Cody was already back up, and the match never ended.
 	var big_one := knockdown_tier >= CombatSystem.Tier.SIGNATURE
-	var held := fsm.ticks_in_state < int(WEAPON_DOWN_HOLD.get(weapon_down_impact, 0))
+	var held := fsm.ticks_in_state < maxi(int(WEAPON_DOWN_HOLD.get(weapon_down_impact, 0)), _through_hold)
 	var quick_recovery: bool = not held and ((combat != null and combat.is_fired_up()) \
 			or not big_one and (input.get("strike", false)
 					or fsm.ticks_in_state >= QUICK_DOWN_RECOVERY_DELAY_TICKS))
 	if quick_recovery or _move_ticks_remaining <= 0:
 		if not quick_recovery:
 			_set_state_clip(WrestlerFSM.State.GETUP, "strikes/getup_staged")
+		_through_hold = 0
 		fsm.transition_to(WrestlerFSM.State.GETUP)
 		_move_ticks_remaining = GETUP_RISE_FAST_TICKS if quick_recovery else GETUP_STAGED_TICKS
 
@@ -5118,8 +5192,9 @@ static func _standable_outside(p: Vector3) -> Vector3:
 	if ArenaBuilder.in_entrance_way(p):
 		return ArenaBuilder.entrance_way_point(p, BODY_RADIUS)
 	var lim := ArenaBuilder.BARRICADE_RADIUS - 0.4
+	var bay := p.z > lim and absf(p.x) <= DESK_BAY_KEEP_X
 	p.x = clampf(p.x, -lim, lim)
-	p.z = clampf(p.z, -lim, lim)
+	p.z = minf(p.z, DESK_BACK_KEEP) if bay else clampf(p.z, -lim, lim)
 	if absf(p.x) < DECK_KEEP_OUT and absf(p.z) < DECK_KEEP_OUT:
 		if absf(p.x) >= absf(p.z):
 			p.x = signf(p.x if p.x != 0.0 else 1.0) * DECK_KEEP_OUT
@@ -6237,6 +6312,12 @@ var _landing: Array = []
 ## he is coming down on it.
 const FALLING_MPS := 0.8
 const ONTO_ABOVE := 0.15
+## Thrown, his hips this far above a set piece's top at some point in the
+## move before he can come down on it (a man standing has his about 0.25 m
+## over a table's; a powerbomb lifts them about 1 m over it).
+const LIFTED_ABOVE := 0.5
+## The highest his hips have been in the paired move throwing him.
+var _hips_peak := -INF
 ## How far a table's break is moved to be under him.
 const BREAK_CENTRE_M := 0.45
 var _hips_were := INF
@@ -6244,6 +6325,12 @@ var _hips_were := INF
 var _fell_on := false
 ## Ticks more he stays down once he is down, for going through a table.
 var _down_bonus := 0
+## Through a table, the desk, the glass, the bridge: no quick rise for this
+## long, as for a weapon that wipes a man out (WEAPON_DOWN_HOLD). The quick
+## rise came after 0.8 s whatever he went through, so _down_bonus was never
+## reached -- measured, up out of the wrecked desk 0.4 s after the powerbomb.
+const THROUGH_DOWN_HOLD := 240
+var _through_hold := 0
 
 
 ## Just put down: if he is coming down on a set piece, it does its work as
@@ -6308,6 +6395,7 @@ func _land_on(w: WeaponActor, at: Vector3) -> void:
 		# the bridge folds under him and he goes on down through it to the floor
 		w.fold_bridge()
 		_down_bonus = TABLE_DOWN_TICKS
+		_through_hold = THROUGH_DOWN_HOLD
 		broke = true
 	elif w.def.broken != "":
 		# The break centred under him: he comes down near the edge as often as
@@ -6319,6 +6407,7 @@ func _land_on(w: WeaponActor, at: Vector3) -> void:
 		var burning := w.ablaze
 		w.shatter(_weapon_seed(), self)
 		_down_bonus = TABLE_DOWN_TICKS
+		_through_hold = THROUGH_DOWN_HOLD
 		broke = true
 		if burning:
 			var fire := get_node_or_null("ManFire") as ManFire
@@ -6345,8 +6434,16 @@ func tick_fall_onto_set_piece(delta: float) -> void:
 		return
 	var fall := (_hips_were - hips.y) / delta if _hips_were != INF else 0.0
 	_hips_were = hips.y
+	var thrown := grapple_rig != null and grapple_rig.is_active() and grapple_rig.defender() == self
+	_hips_peak = maxf(_hips_peak, hips.y) if thrown else -INF
+	# Set down on a table, not thrown onto it: it goes under the dive, not
+	# the lay (TopRopeSpot, the table).
+	if thrown and grapple_rig.current_move() \
+			and grapple_rig.current_move().animation_pair_id == GrappleRig.TABLE_LAY:
+		return
 	if fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION, WrestlerFSM.State.RUN]):
 		_fell_on = false
+		_through_hold = 0
 		return
 	if _fell_on or fall < FALLING_MPS or not MatchRules.no_holds_barred(self):
 		return
@@ -6355,10 +6452,61 @@ func tick_fall_onto_set_piece(delta: float) -> void:
 		return
 	var w := stock.set_piece_under(hips)
 	if w == null:
+		# The announce desk: its worktop is at his hips' height, so only a man
+		# thrown up over it comes down on it, never one knocked down beside it.
+		var desk := WeaponStock.desk_top_y()
+		if thrown and stock.desk_under(hips) and _hips_peak >= desk + LIFTED_ABOVE \
+				and hips.y <= desk + ONTO_ABOVE:
+			_land_on_desk(stock, hips)
 		return
 	var top := (w.global_transform * w.local_bounds()).end.y
+	# Thrown in a paired move, he comes down on it only once he has been up
+	# over it: bent over for a powerbomb with a table at his back, his hips
+	# dip at speed over its edge, and it broke before he was lifted.
+	if thrown and _hips_peak < top + LIFTED_ABOVE:
+		return
 	if hips.y <= top + ONTO_ABOVE:
 		_land_on(w, hips)
+
+
+## Through the announce desk (the owner: "announce table ... powerbomb
+## through, smash and flatten"): thrown down onto its worktop, he goes through
+## it as through a table but harder -- down as long, sold as the crash -- and
+## it stays wrecked for the match (WeaponStock.desk_broken; VenueDamage draws
+## the wreck under him).
+signal through_desk(wrestler: WrestlerController)
+const DESK_DAMAGE := Vector2(6.0, 16.0)          # head, torso
+static var _desk_move: MoveDef
+
+
+static func desk_move() -> MoveDef:
+	if _desk_move == null:
+		_desk_move = MoveDef.new()
+		_desk_move.resource_name = "desk_crash"
+		_desk_move.startup_frames = 1
+		_desk_move.active_frames = 1
+		_desk_move.recovery_frames = 1
+		_desk_move.damage_head = DESK_DAMAGE.x
+		_desk_move.damage_torso = DESK_DAMAGE.y
+	return _desk_move
+
+
+func _land_on_desk(stock: WeaponStock, at: Vector3) -> void:
+	_fell_on = true
+	stock.desk_broken = true
+	combat.apply_damage(desk_move())
+	_down_bonus = TABLE_DOWN_TICKS
+	_through_hold = THROUGH_DOWN_HOLD
+	var venue := VenueDamage.of(self)
+	if venue:
+		venue.break_desk(at)
+	if impact_sell:
+		impact_sell.react_to_surface(&"table", true)
+	if fsm.current_state == WrestlerFSM.State.DOWN:
+		_move_ticks_remaining += _down_bonus
+		_down_bonus = 0
+	set_piece_landed.emit(self, null, true)
+	through_desk.emit(self)
 
 
 ## A clump of the tacks he landed on, stuck in his back from now on: the

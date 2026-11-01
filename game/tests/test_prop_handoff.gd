@@ -334,19 +334,60 @@ func test_the_timekeeper_has_a_table_with_a_bell() -> void:
 	assert_float(Timekeeper.TABLE_SIZE.x).is_less(0.7)
 	assert_float(Timekeeper.TABLE_SIZE.y).is_less(0.8)
 	assert_float(Timekeeper.TABLE_SIZE.z).is_less(1.1)
-	var announce_centre := Vector3(ArenaBuilder.DESK_X, PropHandoff.FLOOR_Y,
-			ArenaBuilder.DESK_Z)
-	var edge_gap := PropHandoff.TABLE_AT.x - Timekeeper.TABLE_SIZE.x * 0.5 \
-			- ArenaBuilder.DESK_DEPTH * 0.5 - ArenaBuilder.DESK_TOP_OVERHANG
-	assert_float(PropHandoff.TABLE_AT.z).is_between(ArenaBuilder.DESK_Z - ArenaBuilder.DESK_LENGTH * 0.5,
-			ArenaBuilder.DESK_Z + ArenaBuilder.DESK_LENGTH * 0.5)
-	assert_float(PropHandoff.TABLE_AT.x).is_greater(ArenaBuilder.DESK_X)
-	assert_float(edge_gap).override_failure_message(
-			"the timekeeper table needs a visible gap beside commentary").is_greater(0.1)
+	# Beside the announce desk, not in front of it (the owner, 1 Nov): turned
+	# so its length runs along the desk, off its +X end with a gap, level with
+	# its front, its front to the ring.
+	var length_x := Timekeeper.TABLE_SIZE.z
+	var desk_end := ArenaBuilder.DESK_X + ArenaBuilder.DESK_LENGTH * 0.5 \
+			+ ArenaBuilder.DESK_TOP_OVERHANG
+	assert_float(PropHandoff.TABLE_AT.x - length_x * 0.5 - desk_end).override_failure_message(
+			"the timekeeper table needs a visible gap beside commentary").is_between(0.15, 0.6)
+	var desk_front := ArenaBuilder.DESK_Z - ArenaBuilder.DESK_DEPTH * 0.5 \
+			- ArenaBuilder.DESK_TOP_OVERHANG
+	assert_float(PropHandoff.TABLE_AT.z - Timekeeper.TABLE_SIZE.x * 0.5).override_failure_message(
+			"the timekeeper table stands in front of the announce desk").is_greater(desk_front - 0.2)
+	assert_vector(keeper.table.global_transform.basis * Vector3(-1, 0, 0)) \
+			.is_equal_approx(Timekeeper.FACE, Vector3.ONE * 0.01)
 	assert_float(PropHandoff.TABLE_AT.z - RingBuilder.APRON_OUT) \
 			.override_failure_message("the timekeeper table is still in the ringside lane") \
 			.is_greater(3.0)
-	assert_float(keeper.table.global_position.distance_to(announce_centre)).is_less(2.0)
+	# In the desk's bay: his chair, and the walkway round the table's far end
+	# that takes him out to the ring.
+	var out_to_ring := Vector3(PropHandoff.KEEPER_PASS_X, PropHandoff.FLOOR_Y, PropHandoff.PASS_Z)
+	var way := Timekeeper.detour(Timekeeper.CHAIR_AT, out_to_ring, PropHandoff.TABLE_AT)
+	assert_bool(way != Vector3.INF).is_true()
+	assert_float(way.x).is_greater(PropHandoff.TABLE_AT.x + length_x * 0.5)
+	assert_float(_bay_half_width(way.z) - way.x).is_greater(0.4)
+	assert_float(_bay_half_width(Timekeeper.CHAIR_AT.z) - Timekeeper.CHAIR_AT.x).is_greater(0.6)
+
+
+## The desk bay's half-width at depth `z` (ArenaBuilder: its sides run from
+## DESK_BAY_FRONT at the barricade line in to DESK_BAY_BACK at DESK_BAY_Z).
+static func _bay_half_width(z: float) -> float:
+	var t := inverse_lerp(ArenaBuilder.BARRICADE_RADIUS, ArenaBuilder.DESK_BAY_Z, z)
+	return lerpf(ArenaBuilder.DESK_BAY_FRONT, ArenaBuilder.DESK_BAY_BACK, clampf(t, 0.0, 1.0))
+
+
+func test_the_timekeeper_walks_round_his_table_not_through_it() -> void:
+	var m := _both_match()
+	var keeper: Timekeeper = m["keeper"]
+	# its footprint (turned: its length along x), and a hand's width round it
+	var box := AABB(PropHandoff.TABLE_AT - Vector3(Timekeeper.TABLE_SIZE.z, 0.0, Timekeeper.TABLE_SIZE.x) * 0.5
+			- Vector3(0.0, 1.0, 0.0), Vector3(Timekeeper.TABLE_SIZE.z, 3.0, Timekeeper.TABLE_SIZE.x)).grow(0.1)
+	# [through, moved, was]: the entrances' errands, then back to his chair
+	var walk := [0, 0.0, keeper.global_position]
+	var watch := func() -> void:
+		walk[1] += keeper.global_position.distance_to(walk[2])
+		walk[2] = keeper.global_position
+		if box.has_point(keeper.global_position):
+			walk[0] += 1
+	_run(m, watch)
+	for _tick in 1000:
+		_step(m)
+		watch.call()
+	# he went out to the ring and back -- and never across the table
+	assert_float(walk[1]).is_greater(8.0)
+	assert_int(walk[0]).is_equal(0)
 
 
 func test_timekeeper_returns_to_his_chair_and_sits_after_the_entrances() -> void:

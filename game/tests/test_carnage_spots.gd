@@ -218,6 +218,101 @@ func test_whipped_into_a_side_led_wall_he_goes_through_it_and_it_dies() -> void:
 	await get_tree().process_frame
 
 
+# --- the announce desk -------------------------------------------------------
+
+func test_the_floor_runs_up_to_the_desk_and_on_through_it_once_it_is_wrecked() -> void:
+	var y := WrestlerController.FLOOR_LEVEL
+	# in the desk's bay, up to its front
+	assert_float(WrestlerController.ringside_floor_point(Vector3(0.0, y, 6.4)).z).is_equal_approx(6.4, 0.001)
+	assert_float(WrestlerController.ringside_floor_point(Vector3(0.5, y, 7.5)).z) \
+			.is_equal_approx(WrestlerController.DESK_FRONT_KEEP, 0.001)
+	assert_float(WrestlerController.DESK_FRONT_KEEP).is_less(
+			ArenaBuilder.DESK_Z - ArenaBuilder.DESK_DEPTH * 0.5 - WrestlerController.BODY_RADIUS)
+	# wrecked: where it stood is floor
+	assert_float(WrestlerController.ringside_floor_point(Vector3(0.5, y, 7.5), true).z).is_equal_approx(7.5, 0.001)
+	# beside the bay the barricade is where it was
+	assert_float(WrestlerController.ringside_floor_point(Vector3(4.5, y, 6.4)).z) \
+			.is_equal_approx(WrestlerController.BARRICADE_KEEP_IN, 0.001)
+
+
+func test_thrown_onto_the_desk_he_goes_through_it_and_it_stays_wrecked() -> void:
+	var scene := _stage_scene()
+	await _ticks(2)
+	var a: WrestlerController = scene.get_node("WrestlerA")
+	var b: WrestlerController = scene.get_node("WrestlerB")
+	for w: WrestlerController in [a, b]:
+		w.is_ai = false
+		if w.ai:
+			w.ai.set_physics_process(false)
+	var stock := WeaponStock.of(b)
+	var venue := VenueDamage.of(b)
+	var top := WeaponStock.desk_top_y()
+	var over := Vector3(0.2, top + 0.1, ArenaBuilder.DESK_Z)
+	assert_bool(stock.desk_under(over)).is_true()
+	var crashed := []
+	var landed := []
+	b.through_desk.connect(func(who): crashed.append(who))
+	b.set_piece_landed.connect(func(who, weapon, broke): landed.append([weapon, broke]))
+	var health := b.combat.health()
+	b._land_on_desk(stock, over)
+	assert_bool(stock.desk_broken).is_true()
+	assert_int(crashed.size()).is_equal(1)
+	assert_array(landed).is_equal([[null, true]])
+	assert_float(b.combat.health()).is_less(health)
+	# drawn: the desk cut out, the wreck in, in the desk's finish not the char
+	var wreck := venue.get_node_or_null("Damaged_CommentaryDesk") as Node3D
+	assert_object(wreck).is_not_null()
+	for mi: MeshInstance3D in wreck.find_children("", "MeshInstance3D", true, false):
+		assert_object(mi.material_override).override_failure_message(
+				"%s kept the rocket's charred finish" % mi.name).is_not_null()
+		# the wreck's LED panels are unwrapped mirror-image to the desk's:
+		# its print flipped back so DYNAMITE does not read backwards
+		if String(mi.name).ends_with("_led"):
+			assert_float((mi.material_override as BaseMaterial3D).uv1_scale.x).is_less(0.0)
+	# its break under him (slid along by his x, no more than the cap)
+	assert_float(wreck.global_position.x).is_equal_approx(0.2, 0.001)
+	# once: nothing comes down on it again
+	assert_bool(stock.desk_under(over)).is_false()
+	scene.queue_free()
+	await get_tree().process_frame
+
+
+func test_only_a_man_thrown_up_over_the_desk_comes_down_on_it() -> void:
+	var scene := _stage_scene()
+	await _ticks(2)
+	var a: WrestlerController = scene.get_node("WrestlerA")
+	var b: WrestlerController = scene.get_node("WrestlerB")
+	for w: WrestlerController in [a, b]:
+		w.is_ai = false
+		if w.ai:
+			w.ai.set_physics_process(false)
+	var stock := WeaponStock.of(b)
+	var top := WeaponStock.desk_top_y()
+	# knocked down beside it, his hips falling across its edge: nothing
+	b.global_position = Vector3(0.0, WrestlerController.FLOOR_LEVEL, ArenaBuilder.DESK_Z)
+	b.fsm.transition_to(WrestlerFSM.State.HIT_REACT)
+	var hips := b._bone_world("pelvis")
+	assert_float(hips.y).is_less_equal(top + WrestlerController.ONTO_ABOVE)
+	b._hips_were = hips.y + 0.1
+	b.tick_fall_onto_set_piece(1.0 / 60.0)
+	assert_bool(stock.desk_broken).is_false()
+	# thrown in a paired move, but never lifted over it (bent over for the
+	# lift, say): nothing
+	var rig: GrappleRig = scene.get_node("GrappleRig")
+	rig.begin(a, b, load("res://resources/moves/ff/powerbomb_1.tres"))
+	b._hips_peak = top + 0.2
+	b._hips_were = hips.y + 0.1
+	b.tick_fall_onto_set_piece(1.0 / 60.0)
+	assert_bool(stock.desk_broken).is_false()
+	# lifted up over it and coming down: through it
+	b._hips_peak = top + 1.0
+	b._hips_were = b._bone_world("pelvis").y + 0.1
+	b.tick_fall_onto_set_piece(1.0 / 60.0)
+	assert_bool(stock.desk_broken).is_true()
+	scene.queue_free()
+	await get_tree().process_frame
+
+
 func test_no_led_wall_off_the_stage_or_in_a_singles_match() -> void:
 	var scene := _stage_scene()
 	await _ticks(2)

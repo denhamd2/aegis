@@ -53,6 +53,10 @@ var _bare := false
 var _match_cam := false
 var _top := false
 var _weapon_id := ""
+## --weapon-ahead M: the --weapon set up M metres in front of the attacker
+## (a powerbomb's table, WrestlerAI.POWERBOMB_DROP) instead of 1.3 m behind
+## him (the suplex's).
+var _weapon_ahead := -WrestlerAI.SUPLEX_DROP
 var _corner := false
 
 
@@ -83,6 +87,8 @@ func _ready() -> void:
 			_wrestlers = args[i + 1]
 		elif args[i] == "--weapon" and i + 1 < args.size():
 			_weapon_id = args[i + 1]
+		elif args[i] == "--weapon-ahead" and i + 1 < args.size():
+			_weapon_ahead = float(args[i + 1])
 		elif args[i] == "--at" and i + 1 < args.size():
 			_at = []
 			for token: String in args[i + 1].split(","):
@@ -126,8 +132,13 @@ func _ready() -> void:
 	await get_tree().physics_frame
 	var spot_weapon: WeaponActor = null
 	if _weapon_id != "":
+		# Set pieces only take a man's landing in No Holds Barred
+		# (WrestlerController._land_on_set_piece): without it the table never
+		# broke under him.
+		for w: WrestlerController in [attacker, defender]:
+			MatchRules.set_mode(w, MatchRules.Mode.NO_HOLDS_BARRED)
 		spot_weapon = WeaponStock.of(attacker).pull(WeaponCatalog.by_id(StringName(_weapon_id)))
-		spot_weapon.set_up_at(attacker.global_position + attacker.global_basis.z * 1.3,
+		spot_weapon.set_up_at(attacker.global_position - attacker.global_basis.z * _weapon_ahead,
 				attacker.rotation.y)
 
 	# Settled under the match camera before the hold, not during it: two men

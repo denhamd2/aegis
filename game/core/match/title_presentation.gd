@@ -49,7 +49,7 @@ static func set_on_table(match_root: Node) -> TitlePresentation:
 		keeper = Timekeeper.new()
 		keeper.name = "Timekeeper"
 		match_root.add_child(keeper)
-		keeper.setup(PropHandoff.KEEPER_POST, Vector3(-1, 0, 0), PropHandoff.TABLE_AT)
+		keeper.setup(PropHandoff.KEEPER_POST, Timekeeper.FACE, PropHandoff.TABLE_AT)
 	var t := TitlePresentation.new()
 	t.name = "TitlePresentation"
 	t.add_to_group(GROUP)
@@ -124,7 +124,7 @@ func present(winner: WrestlerController, referee: RefereeActor) -> void:
 	var ref_at := PropHandoff.stand_for(keeper_at, -face, PropHandoff.KEEPER_TAKE,
 			PropHandoff.REF_GIVE)
 	_ref.errand_go(Vector3(PropHandoff.REF_PASS_X, 0.0, ref_at.z), face)
-	_keeper.go(PropHandoff.KEEPER_PLACE, Vector3(-1, 0, 0))
+	_keeper.go(PropHandoff.KEEPER_PLACE, Timekeeper.FACE)
 	_go(Step.LIFT)
 
 
