@@ -10793,3 +10793,64 @@ The owner asked again for the judge loop, to match exactly, so a second loop of 
 
 **What is left before "exact":** the mouth is still a little wide, the jaw and chin are Cody's, the flush stops short of the sheet's under the stage spots, and the crown reads as streaks. Past about 7 out of 10 it needs Kenny's own head mesh.
 
+
+## 28 Oct–1 Nov — Kenny's head, loop 3: his head shape photo-fitted from the character sheet (runs 9–12, 6.9 → 7.3)
+
+Loop 2 ended on "past about 7 it needs Kenny's own head mesh". The owner chose the source: the character sheet. So Cody's head is reshaped to Kenny's by a **photo-fit**, the way face-builder tools work. There is no AI generation and no new asset. Cody's mesh, rig, UVs and every texture stay valid, because only vertex positions move. Record: `gauntlet/refs/characters/review/kenny_face_judge.md` (loop 3). Sheet: `kenny_face_judge_loop3.png`.
+
+**`tools/assets/build_kenny_head.py`** (numpy only; the game never runs it):
+- **Landmarks.**
+  - 33 front points on the sheet's head shot. They are the face projection's marks plus the nose's wings, each with its matching pixel on a render of Cody's head through a known camera, cast onto his mesh.
+  - 12 profile points on the sheet's true profile, matched to Cody's own centre-line profile.
+- **The fit.** A camera per photo and a displacement per landmark, solved jointly by regularised least squares:
+  - the front shot's perspective is undone (a pinhole 0.75 m off fits it at 2.9 px against 4.4 px for a distant camera);
+  - a front landmark and its profile twin share one displacement;
+  - the beard comes off each outline as that photo sees it;
+  - the face is solved symmetric;
+  - the eyes are held where Cody's are; ears, temples and brows only place the cameras.
+- **The warp.** A thin-plate spline carries the moves to the face and the mouth's inside. It is held at zero over the scalp (under the curls), round the back and down the neck, and damped round the eyeballs.
+- **The bake.** `game/resources/characters/kenny_head_shape.tres` (`KennyHeadShapeData`): rest position, offset and normal change per moved vertex. Byte-identical on rebuild.
+
+**In the game:** `KennyFaceShape.apply` matches vertices to the bake by rest position (within 0.2 mm, since the import compresses positions). It moves them, normals and tangents with them, then applies the hand moves the photos cannot give:
+- the hooded upper lids;
+- the lower lids, new, up 1.2 mm over the iris;
+- under-eye and cheek fullness;
+- the mouth-corner crease fill.
+
+Loop 2's brow, nose and mouth bumps are retired; the fit does those.
+
+**What the fit changed:**
+- the mouth 3.6 mm narrower a side;
+- the nose's wings 2 mm in a side (his nose is about 0.55 of his eye spacing, Cody's 0.65);
+- the jaw about 3 mm in at the mouth;
+- the subnasale deeper, so the nose projects as his does.
+
+**Texture:** a full auburn moustache (`build_kenny_textures.MOUSTACHE`). The sheet's is the darkest of his face, at 0.59 of the cheek; ours read 0.80 (stubble), now 0.70.
+
+**Fixed: the fit never reached the game.** `KennyFaceShape._index` appended to a packed array read out of a Dictionary. In Godot that is a copy, so every cell of the lookup grid stayed empty and no vertex matched the bake.
+- **What runs 9–12 showed.** Loop 2's bumps removed, plus run 12's moustache and lower lids; never the fit.
+- **What was misjudged.** Runs 9, 10 and 11 rendered the same head, so the gains scored between them were misjudged.
+- **What was true all along.** The fit's own figures are properties of the bake.
+- **The fix.** Each cell is stored back after appending: 18,954 head vertices now move, against about 6,500 from the hand moves alone.
+- **How it was caught.** The rewritten face test, below.
+
+This work was also restored after the session's container was reclaimed before it was committed. The working tree was rebuilt from the session transcript by replaying its recorded edits. The fit then reprinted its recorded report number for number and rebuilt a byte-identical bake.
+
+**Scores,** as recorded at the time, with the fit missing: run 9 6.8, run 10 6.9, run 11 7.0, run 12 7.2. **With the fit applied, run 12 is 7.3.** On screen at last:
+- the mouth 3.5 mm in at each corner;
+- a narrower nose with smaller nostrils;
+- in profile, the nose projecting over a deeper upper lip;
+- no folds or gaps.
+
+The narrower jaw lengthens the face a little, where his reads broad.
+
+**Gates:** `test_kenny_model`'s face test is rewritten for the bake. It checks that:
+- the bake loads;
+- the neck below 1.575 m is held;
+- the eyes are Cody's;
+- on the runtime mesh, the mouth corners come in by more than 2 mm and the nose's wings by more than 1 mm. This failed on the unfixed lookup;
+- the upper lids still come down.
+
+The helper, deformation, blood and roster gates and the full suite are green.
+
+**What holds it at about 7:** Cody's brow ridge stands out more than Kenny's in profile, and Kenny's chin is carried further forward. A dozen profile points cannot reshape what lies between them. The crown still reads as streaks.

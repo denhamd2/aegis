@@ -136,6 +136,15 @@ BEARD_CHEEK = 0.42
 BEARD_SHADE = np.array([0.74, 0.65, 0.66])
 BEARD_WASH = 0.38
 BEARD_STRAND = 0.7
+## His moustache: the sheet's is the darkest of his face, at 0.59 of the
+## cheek beside it (his chin 0.80). Ours read 0.80, stubble over the lip
+## rather than a moustache (loop 3, run 11). Under the nose and out to the
+## mouth's corners the hair is fuller, washes the skin darker and is all
+## auburn. [centre (x from the midline), radii] m, on the head like the beard.
+MOUSTACHE = ((0.0, 1.656, 0.008), (0.026, 0.010, 0.030))
+MOUSTACHE_DENSITY = 0.9
+MOUSTACHE_WASH = 0.7
+MOUSTACHE_STRAND = 0.85
 ## Cody's neck tattoo (head atlas): replaced by the mirror image of the same
 ## patch on the other side of the neck.
 NECK_TATTOO = [(0.130, 0.625), (0.240, 0.615), (0.420, 0.790), (0.420, 0.835),
@@ -420,6 +429,8 @@ def head() -> None:
     # photo reached, it ended in a seam where the projection faded out.
     beard, cheek = beard_masks(point, cover, theta)
     beard *= 1 - ellipse_mask(w, h, LIPS, 6)
+    mc = np.array([HEAD_MIDLINE_X + MOUSTACHE[0][0], MOUSTACHE[0][1], MOUSTACHE[0][2]])
+    tache = smoothstep(0.0, 0.5, 1.0 - np.linalg.norm((point - mc) / np.array(MOUSTACHE[1]), axis=-1)) * beard
     rng = np.random.default_rng(271026)
     # Short strokes growing downward: noise stretched along the texture's
     # vertical, which on the face island is down the face.
@@ -430,16 +441,19 @@ def head() -> None:
     # Patchy, as a real beard is: cover drifts over a couple of centimetres.
     patch = blur(rng.random((h, w)).astype(np.float32), 24)
     patch = (patch - patch.mean()) / patch.std()
-    cover = beard * np.clip(BEARD_DENSITY * (1 - cheek) + BEARD_CHEEK * cheek + 0.08 * patch, 0, 1)
+    density = BEARD_DENSITY * (1 - cheek) + BEARD_CHEEK * cheek
+    density = density * (1 - tache) + MOUSTACHE_DENSITY * tache
+    cover = beard * np.clip(density + 0.08 * patch, 0, 1)
     # A strand where the noise clears the quantile the local cover asks for.
     order = np.clip((noise * 0.5 + 0.5), 0, 1)
     strand = np.clip((order - (1 - cover)) * 6, 0, 1)
     tone = blur(rng.random((h, w)).astype(np.float32), 1.2)
-    blond = (tone > np.quantile(tone, 1 - BEARD_BLOND)).astype(np.float32)
+    blond = (tone > np.quantile(tone, 1 - BEARD_BLOND)).astype(np.float32) * (1 - tache)
     hair_colour = BEARD_DARK * (1 - blond[..., None]) + BEARD_LIGHT * blond[..., None]
-    wash = beard * BEARD_WASH
+    wash = beard * (BEARD_WASH * (1 - tache) + MOUSTACHE_WASH * tache)
     out = out * (1 - wash[..., None]) + out * BEARD_SHADE * wash[..., None]
-    out = out * (1 - (strand * BEARD_STRAND)[..., None]) + hair_colour * (strand * BEARD_STRAND)[..., None]
+    strand = strand * (BEARD_STRAND * (1 - tache) + MOUSTACHE_STRAND * tache)
+    out = out * (1 - strand[..., None]) + hair_colour * strand[..., None]
 
     # His brows, sandy ginger: a brow hair is as dark as it is against the
     # skin a few millimetres round it; that darkness becomes his colour.

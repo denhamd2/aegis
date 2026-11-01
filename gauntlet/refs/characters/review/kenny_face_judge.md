@@ -206,3 +206,124 @@ twice. Each model now gets its own copy (`HipHelpers` and `ShoulderHelpers`
 A full likeness past about 7 needs Kenny's own head mesh. A sculpt of Cody's
 can only move his forms so far before it shows.
 
+## Loop 3 (28 Oct): his head shape, photo-fitted from the sheet -- runs 9-12
+
+The owner chose the source for Kenny's own head shape: the character sheet.
+So Cody's head is reshaped to Kenny's by a photo-fit, the way face-builder
+tools work. No AI generation and no new asset: Cody's mesh, rig, UVs and every
+texture stay valid, because only positions move.
+
+How it works (`tools/assets/build_kenny_head.py`, baked to
+`game/resources/characters/kenny_head_shape.tres`, applied at load by
+`KennyFaceShape`):
+- **Landmarks.** 33 front points on the sheet's head shot, with their matching
+  pixels on a render of Cody's head through a known camera, cast onto his
+  mesh. 12 profile points on the sheet's true profile (HAIR REFERENCES,
+  "SIDE (RIGHT)"), matched to Cody's own centre-line profile.
+- **The fit.** A camera per photo and a displacement per landmark, solved
+  jointly by regularised least squares. The eyes are held where Cody's are.
+- **The warp.** A thin-plate spline carries the landmark moves to every vertex
+  of the face and the mouth's inside. It is held at zero over the scalp
+  (under the curls), round the back of the head and down the neck, and damped
+  round the eyeballs.
+- **Deterministic.** The same marks give a byte-identical bake. Residuals are
+  about a pixel per photo.
+
+**Correction: the fit was not in the renders of runs 9-12.** The game
+matches each vertex to the bake through a lookup grid. `KennyFaceShape._index`
+appended to a packed array read out of a Dictionary. In Godot that is a copy,
+so every cell stayed empty and no vertex matched.
+- **What those renders did show:**
+  - From run 9: loop 2's hand-placed brow, nose and mouth bumps gone (the
+    fit was to replace them).
+  - From run 12: the moustache and the lower lids.
+- **What was misjudged.** Runs 9, 10 and 11 rendered the same head, so the
+  differences scored between them were misjudged. Their rows stand below
+  only as the record of what was scored.
+- **What was true all along.** The fit's own figures (residuals, landmark
+  moves) are properties of the bake.
+- **The fix.** Store each cell back after appending.
+- **How it was caught.** The rewritten face test checks that Kenny's mouth
+  corners and nose wings sit inside Cody's. It failed on the unfixed lookup
+  and passes now. The earlier gates never touched the fit.
+
+Sheet: `kenny_face_judge_loop3.png`:
+- the reference;
+- run 8 (the start);
+- run 12 as rendered (fit missing);
+- run 12 with the fit applied;
+- match light: loop 2's end against the fitted head.
+
+The renders of runs 9-11 were lost when the session's container was
+reclaimed before the sheet was made.
+
+| Run | Shape | Eyes | Beard | Brows | Nose | Mouth | Skin | Hair | Likeness |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 9 (fit missing) | 6.5 | 7.5 | 7 | 6 | 6.5 | 6.5 | 7 | 7 | 6.8 |
+| 10 (fit missing) | 6.5 | 7.5 | 7 | 7 | 7 | 6.5 | 7 | 7 | 6.9 |
+| 11 (fit missing) | 7 | 7.5 | 7 | 7 | 7 | 6.5 | 7 | 7 | 7.0 |
+| 12 (fit missing) | 7 | 8 | 7.5 | 7 | 7 | 7 | 7 | 7 | 7.2 |
+| **12, fit applied** | 7 | 8 | 7.5 | 7 | 7.5 | 7 | 7 | 7 | **7.3** |
+
+What each run changed in the fit (true of the bake), and in the textures and
+hand moves (on screen):
+- **Run 9.** The first fit. It replaced loop 2's hand-placed brow, nose and
+  mouth bumps; the hooded lids, the cheeks and the mouth-corner fill stay. In
+  the fit's report the brows rose 6 mm: on the photo the brow is marked at the
+  top of its hair, on Cody mid-brow.
+- **Run 10.**
+  - The brows now only place the camera.
+  - The nose's wings are marked: the outside of each ala on the photo, and
+    on Cody where the ala overhangs the cheek (measured along a row of rays).
+    His nose is about 0.55 of his eye spacing, Cody's 0.65: about 6 mm
+    narrower. The nostrils are re-marked for the fit.
+- **Run 11: three corrections to the fit.**
+  - **Perspective.** The front shot is a close one. On Cody's rigid
+    landmarks a pinhole camera 0.65-0.8 m away fits it at 2.9 px against
+    4.4 px for a distant one. Solved as distant, its perspective (the nose
+    large against the sides of the face) came out as a jaw and cheeks too
+    narrow. Its marks are now flattened for a 0.75 m camera; the profile
+    shows no such preference.
+  - **Twins.** The nose tip, both lips and the chin are each a front
+    landmark and a profile point a few mm apart. Solved apart, each took
+    only its own photo's word and they pulled up to 11 mm apart. Each pair
+    now shares one displacement, solved from both photos.
+  - **The beard comes off as each photo sees it.** The front's chin comes up
+    off the beard's lower edge; the profile's comes back off its front.
+    Taken off along Cody's 3D normal, the front's chin went back (which the
+    front cannot see) and kept the beard's length as chin.
+  - **Symmetric.** Left and right move as mirror images, so the front
+    photo's slight turn goes to its camera, not into a nose 2 mm off centre.
+  - **Result, in the bake:** the chin no longer grows 9 mm. The jaw comes in
+    about 3 mm a side at the mouth, the mouth 3.6 mm a side, and the nose
+    wings 2 mm a side.
+- **Run 12.**
+  - **Moustache** (`build_kenny_textures.MOUSTACHE`). The sheet's is the
+    darkest part of his face, 0.59 of the cheek beside it; ours read 0.80,
+    stubble over the lip. Under the nose and out to the mouth corners the
+    hair is now fuller, all auburn, and washes the skin darker: 0.70.
+  - **Lower lids** (`KennyFaceShape.TABLE`). Up 1.2 mm over the bottom of
+    the iris, and forward with it to stay on the eyeball. With the upper lid
+    already down, that is his squint, not a stare. Under match light the eye
+    opening is visibly shorter and no eyeball shows through the lids.
+- **Run 12 with the fit applied** (the shipped head). For the first time on
+  screen:
+  - **Mouth:** 3.5 mm in at each corner, measured on the runtime mesh.
+  - **Nose:** narrower, with smaller nostrils, nearer his (the sheet's are
+    mostly hidden under the tip).
+  - **Profile:** the nose projects over a deeper upper lip, as his does.
+  - **Jaw:** in about 3 mm a side.
+  - No folds or gaps at the lips, nose or lids. Nose 7 to 7.5: likeness
+    **7.3**.
+  - Not gained: the narrower jaw lengthens the face a little, where his
+    reads broad. Part of that breadth is his beard.
+
+**What holds it at about 7:**
+- **The profile.** Cody's brow ridge stands out more than Kenny's, and
+  Kenny's chin is carried further forward. A dozen profile points cannot
+  reshape what lies between them.
+- **The renders.** The turnaround's "side" camera is not a true profile, and
+  its single hard key leaves a dark crescent under each lower lid that is
+  not in the texture.
+- **The crown.** It still reads as brushed streaks, not wet curls.
+

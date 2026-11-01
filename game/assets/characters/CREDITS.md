@@ -244,7 +244,14 @@ swapped in at load:
   tape texture's weave).
 - `kenny_curls.glb`, `kenny_curl_cards.png`: original geometry and texture,
   built by `tools/blender/kenny_curls.py` on the supplied model's scalp and
-  painted procedurally. (`cody_coat.glb`, `cody_coat_*.png`) and blond head texture
+  painted procedurally.
+- `game/resources/characters/kenny_head_shape.tres`: Kenny's head shape, as
+  moves of the supplied Cody head's own vertices (the mesh is still Cody's;
+  no new geometry). Photo-fitted by `tools/assets/build_kenny_head.py` from
+  landmarks marked on the same owner-supplied sheet's front head shot and
+  profile, and applied at load by `KennyFaceShape`.
+
+## Cody Rhodes's entrance coat (`cody_coat.glb`, `cody_coat_*.png`) and blond head texture
 
 Original geometry and textures, built by `tools/blender/cody_coat.py` on the
 supplied Cody model's own body (see above) and painted procedurally; the

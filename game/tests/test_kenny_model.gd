@@ -238,15 +238,41 @@ func test_the_hairline_recedes_at_the_temples() -> void:
 	assert_float(lowest).is_greater(1.79)
 
 
-## His face is reshaped from Cody's (KennyFaceShape, judge run 5): the upper
-## lids come down over the eyes -- hooded, the sheet's squint -- and nothing
-## below his jaw moves, so the neck seam and the body hold.
-func test_his_face_is_shaped_and_the_neck_is_not() -> void:
-	var kenny := _head_vertices(_model())
+## His head is photo-fitted from the owner's sheet (tools/assets/
+## build_kenny_head.py, baked to KennyFaceShape.SHAPE; judge loop 3): his
+## mouth and nose narrower than Cody's, the eyeballs and the neck where
+## Cody's are. And the hand moves on top: the upper lids come down over the
+## eyes -- hooded, the sheet's squint -- and nothing below his jaw moves, so
+## the neck seam and the body hold.
+func test_his_head_is_fitted_and_the_neck_is_not() -> void:
+	var shape := load(KennyFaceShape.SHAPE) as KennyHeadShapeData
+	assert_object(shape).is_not_null()
+	assert_int(shape.rest.size()).is_greater(10000)
+	assert_int(shape.offset.size()).is_equal(shape.rest.size())
+	assert_int(shape.normal_offset.size()).is_equal(shape.rest.size())
+	# The body bulk moves the neck on its own, differently for Kenny and Cody,
+	# so at the neck it is the bake that is checked: held at its seam.
+	var neck := 0.0
+	for i in shape.rest.size():
+		if shape.rest[i].y < 1.575:
+			neck = maxf(neck, shape.offset[i].length())
+	assert_float(neck).is_less(0.0001)
+
+	var kenny_model := _model()
 	var cody_model := auto_free(load("res://scenes/cody_model.tscn").instantiate()) as Node
 	add_child(cody_model)
-	var cody := _head_vertices(cody_model)
+	var kenny := _vertices(kenny_model, KennyFaceShape.SKIN_MATERIAL)
+	var cody := _vertices(cody_model, KennyFaceShape.SKIN_MATERIAL)
 	assert_int(kenny.size()).is_equal(cody.size())
+	# The eyeballs are Cody's: the fit is held off them.
+	assert_bool(_vertices(kenny_model, CodyModel.EYE_MATERIAL) \
+			== _vertices(cody_model, CodyModel.EYE_MATERIAL)).is_true()
+	# His mouth and nose narrower: round each corner of Cody's mouth (3.6 mm
+	# in, in the fit) and each wing of his nose (2.1 mm), the skin comes in.
+	assert_float(_inward(kenny, cody, [Vector3(-0.022, 1.6424, -0.0049), Vector3(0.0285, 1.6424, -0.0055)])) \
+			.is_less(-0.002)
+	assert_float(_inward(kenny, cody, [Vector3(-0.0168, 1.6729, -0.0003), Vector3(0.0226, 1.673, 0.0021)])) \
+			.is_less(-0.001)
 	var lid := 0.0
 	var lids := 0
 	for i in kenny.size():
@@ -264,15 +290,29 @@ func test_his_face_is_shaped_and_the_neck_is_not() -> void:
 	assert_float(lid / lids).is_less(-0.001)
 
 
-func _head_vertices(model: Node) -> PackedVector3Array:
+func _vertices(model: Node, material: String) -> PackedVector3Array:
 	for mi: MeshInstance3D in model.find_children("", "MeshInstance3D", true, false):
 		if mi.mesh == null:
 			continue
 		for s in mi.mesh.get_surface_count():
 			var source := mi.mesh.surface_get_material(s)
-			if source and source.resource_name == KennyFaceShape.SKIN_MATERIAL:
+			if source and source.resource_name == material:
 				return mi.mesh.surface_get_arrays(s)[Mesh.ARRAY_VERTEX]
 	return PackedVector3Array()
+
+
+## How far, on average, the skin within 3 mm of `points` (Cody's) sits nearer
+## the centre line on Kenny than on Cody (m; negative is in). 0 if it finds
+## too few vertices to say.
+func _inward(kenny: PackedVector3Array, cody: PackedVector3Array, points: Array) -> float:
+	var sum := 0.0
+	var n := 0
+	for i in cody.size():
+		for p: Vector3 in points:
+			if cody[i].distance_to(p) < 0.003:
+				sum += absf(kenny[i].x - KennyFaceShape.MIDLINE_X) - absf(cody[i].x - KennyFaceShape.MIDLINE_X)
+				n += 1
+	return sum / n if n > 4 else 0.0
 
 
 func _hair(model: Node, hair_name: String) -> MeshInstance3D:
