@@ -72,9 +72,14 @@ PART_COLORS = {
     "CommentaryDeskLed": (0.20, 0.25, 0.80, 1.0),
     "CommentaryRiser": (0.05, 0.05, 0.06, 1.0),
     "CommentaryKit": (0.04, 0.04, 0.045, 1.0),
+    # The chairs' seats and backs, apart from the kit: upholstered in
+    # leather (arena_builder.gd: arena_desk_chair) where the kit -- the
+    # monitors, the headsets, the laptops, the chairs' bases -- is black
+    # plastic (arena_desk_plastic). One part, they were all one steel.
+    "CommentaryChairs": (0.03, 0.03, 0.035, 1.0),
     "CommentaryScreens": (0.30, 0.40, 0.60, 1.0),
 }
-SMOOTH = frozenset({"CommentaryKit"})
+SMOOTH = frozenset({"CommentaryKit", "CommentaryChairs"})
 ## The LED face carries its own UVs (one tile of the ribbon art across the
 ## desk); everything else is cube-projected.
 PROJECTED = frozenset(PART_COLORS) - {"CommentaryDeskLed", "CommentaryScreens"}
@@ -209,6 +214,7 @@ def build_commentary_desk(cfg: dict[str, float], parts: dict[str, Part]) -> None
     led = parts["CommentaryDeskLed"]
     riser = parts["CommentaryRiser"]
     kit = parts["CommentaryKit"]
+    chairs = parts["CommentaryChairs"]
     screens = parts["CommentaryScreens"]
     x0, z = cfg["DESK_X"], cfg["DESK_Z"]
     depth = cfg["DESK_DEPTH"]
@@ -310,11 +316,11 @@ def build_commentary_desk(cfg: dict[str, float], parts: dict[str, Part]) -> None
                              Vector((-leg.z, 0.0, leg.x)), Vector((0.3, 0.03, 0.04)))
         kit.cylinder(Vector((sx, base_y + 0.05, cz)), Y, 0.025, 0.36, sides=8)
         seat_y = base_y + 0.48
-        kit.box(Vector((sx, seat_y, cz)), Vector((0.5, 0.08, 0.48)), bevel=0.025, bevel_segments=2)
+        chairs.box(Vector((sx, seat_y, cz)), Vector((0.5, 0.08, 0.48)), bevel=0.025, bevel_segments=2)
         back_tilt = math.radians(12.0)
         bup = Vector((0.0, math.cos(back_tilt), math.sin(back_tilt)))
         bout = Vector((0.0, -math.sin(back_tilt), math.cos(back_tilt)))
-        _box(kit, Vector((sx, seat_y + 0.38, cz + 0.24 + 0.36 * math.sin(back_tilt))),
+        _box(chairs, Vector((sx, seat_y + 0.38, cz + 0.24 + 0.36 * math.sin(back_tilt))),
              (X, bup, bout), Vector((0.48, 0.68, 0.08)), bevel=0.025, segments=2)
         # A laptop between this seat and the next.
         if i < count - 1:

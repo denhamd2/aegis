@@ -10963,3 +10963,36 @@ Review sheet: `gauntlet/refs/nhb/review/hardcore_1_tables_desk_dive.png`.
 - **Updated: `test_paired_moveset`.** The lay is a family of its own, reached by the AI's table spot.
 - **The clip gates pass.** Pair clearance, pose lint and cadence (the lay's snaps fixed, not budgeted). The authoring digest is re-pinned after the review.
 - **The full suite is green.** 1,122 cases, 0 failures. Its last chunk still logs one `Illegal FSM transition: IDLE -> FINISHER` assertion, as it did before this step: it fails no test, and it is on the backlog.
+
+
+## 2 Nov — Ringside surfaces: padded black vinyl barricades, leather chairs, black plastic monitors
+
+The owner: "Why are those non-LED barriers and the commentators' chairs both a steel texture? ... plain, almost leather-looking barrier, and the chairs should be leather. Also the monitors ... should be black plastic."
+
+**The fault.** All three wore `DiamondPlate009`, a steel tread-plate scan:
+- the plain barricade panels (`arena_barricade`);
+- the whole desk kit, chairs and monitors alike (`arena_tunnel`).
+
+**What they are now:**
+- **New scans.** CC0 `Leather026` and `Plastic011`, from ambientCG through `tools/assets/fetch_cc0.py`. Each comes with a banded roughness map, credited in the materials' `CREDITS.md`.
+- **Three new materials:**
+  - `arena_barricade_pad`: padded black vinyl;
+  - `arena_desk_chair`: black leather;
+  - `arena_desk_plastic`: matte black plastic.
+- **The chairs are their own part.** Their seats and backs moved into a new `CommentaryChairs` part (`ringside.py`; `ringside.glb` rebuilt with the bpy 4.2 module). They can be leather while the monitors, headsets, laptops and chair bases round them are plastic. A rocket still cuts them (`VenueDamage.RINGSIDE_CUT`).
+
+**Found on the way: speckle.**
+- **What it looked like.** The first pass rendered the barricades light grey and speckled, like granite.
+- **Why.** A house-lit material carries its colour map in its emission, divided by the map's mean. The leather scan is very dark (linear mean 0.0097), so every bright speck of grain came up about a hundredfold.
+- **The fix.** The leathers are now normal and roughness only, near-black, as the turnbuckle pads' vinyl already is. The barricade's self-light comes down to the dark ringside parts' level (reach 0.4, was 1.5, which is what had held the old plate at mid-grey).
+
+**Review sheet:** `gauntlet/refs/arena/ringside_surfaces_review.png`, before, first pass and after.
+
+**Probe:** `carnage_shot --spot bay`, the bay's surfaces close.
+
+**Gates:**
+- `test_ringside_desk` gains two tests:
+  - the chairs are their own part, in the bay;
+  - the barricade, chairs and kit are Leather026, Leather026 and Plastic011, with no tread plate left and the leathers' colour maps off.
+- The focused ringside, venue-damage, carnage, stage, ramp-barricade and commentator files pass.
+- The full suite is green.

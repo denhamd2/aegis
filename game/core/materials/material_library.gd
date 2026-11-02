@@ -52,7 +52,8 @@ class_name MaterialLibrary
 ##
 ## Arena hall (called from `core/arena/arena_builder.gd`):
 ##
-##     arena_floor  arena_barricade  arena_bowl  arena_stage_deck
+##     arena_floor  arena_barricade  arena_barricade_pad  arena_desk_chair
+##     arena_desk_plastic  arena_bowl  arena_stage_deck
 ##     arena_stage_backdrop  arena_stage_panel  arena_shell  arena_truss
 ##     arena_tunnel  arena_screen  arena_portal_magenta
 ##     arena_portal_amber  arena_seat  arena_suite_glass  arena_ribbon
@@ -463,6 +464,40 @@ const SPECS := {
 		"asset": "DiamondPlate009", "tint": Color(0.045, 0.046, 0.05),
 		"tile_metres": 1.2, "roughness": 0.7, "house_lit": true,
 		"normal_scale": 1.6,
+	},
+	## Coverage decision: the crowd barricade's plain panels are padded black
+	## vinyl, not painted steel (the owner, 2 Nov: "a plain, almost leather
+	## looking barrier", as AEW's and WWE's are). They wore DiamondPlate009,
+	## the same steel as the desk, and read as tread plate ringing the ring.
+	## Leather026's fine grain and a soft sheen (roughness about 0.5) are what
+	## padded vinyl is at match distance -- carried by its normal and banded
+	## roughness maps only, near-black, as the turnbuckle pads' vinyl is
+	## (`ring_turnbuckle_pad`). With its colour map on, the house light made
+	## that map the emission and divided by its mean (linear 0.0097): every
+	## bright speck in the grain came up a hundredfold and the panels rendered
+	## light grey and speckled, like granite. A dark map's darkness belongs
+	## to the material (`preserve_albedo_mean`'s note). The LED faces and
+	## corner logos are their own overlays (ArenaLighting).
+	"arena_barricade_pad": {
+		"asset": "Leather026", "tint": Color(0.055, 0.055, 0.060),
+		"albedo_map": false, "tile_metres": 0.5, "roughness": 0.85,
+		"normal_scale": 1.0, "house_lit": true,
+	},
+	## The commentary desk's chairs: black leather office chairs, seat and
+	## back (ringside.py's CommentaryChairs). They were the kit's steel. The
+	## barricade pad's leather, normal and roughness only for the same reason.
+	"arena_desk_chair": {
+		"asset": "Leather026", "tint": Color(0.050, 0.050, 0.054),
+		"albedo_map": false, "tile_metres": 0.35, "roughness": 0.8,
+		"house_lit": true,
+	},
+	## The desk's kit -- monitor housings, headsets, laptops, the chairs'
+	## bases -- is matte black plastic, not the tread plate it wore. Plastic011
+	## is a smooth grey moulding (linear mean 0.033); the tint takes it to
+	## near-black.
+	"arena_desk_plastic": {
+		"asset": "Plastic011", "tint": Color(0.330, 0.330, 0.345),
+		"tile_metres": 0.4, "roughness": 0.75, "house_lit": true,
 	},
 	## Coverage decision: carpeted bowl treads and risers. The tile is large
 	## on purpose -- the bowl sits 12-30m out, so a small tile minifies its

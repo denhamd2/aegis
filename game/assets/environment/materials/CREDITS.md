@@ -145,3 +145,21 @@ directory.
 - licence: **CC0 1.0**
 - used for: arena floor (`arena_floor`)
 - files: PavingStones150_1K-PNG_AmbientOcclusion.png, PavingStones150_1K-PNG_Color.png, PavingStones150_1K-PNG_NormalGL.png, PavingStones150_1K-PNG_RoughnessBand.png
+
+
+## Leather026
+
+- source: https://ambientcg.com/view?id=Leather026
+- provider: ambientCG
+- licence: **CC0 1.0**
+- used for: the plain crowd barricade, padded black vinyl (`arena_barricade_pad`), and the commentary chairs (`arena_desk_chair`) -- normal/roughness only
+- files: Leather026_1K-PNG_Color.png, Leather026_1K-PNG_NormalGL.png, Leather026_1K-PNG_RoughnessBand.png (derived: the scan's 0.286-0.459 rescaled into 0.30-0.90)
+
+
+## Plastic011
+
+- source: https://ambientcg.com/view?id=Plastic011
+- provider: ambientCG
+- licence: **CC0 1.0**
+- used for: the commentary desk's monitors, headsets, laptops and chair bases, black plastic (`arena_desk_plastic`)
+- files: Plastic011_1K-PNG_Color.png, Plastic011_1K-PNG_NormalGL.png, Plastic011_1K-PNG_RoughnessBand.png (derived: the scan's 0.255-0.427 rescaled into 0.30-0.90)

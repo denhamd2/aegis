@@ -130,3 +130,40 @@ func test_barricade_faces_follow_the_panels() -> void:
 	assert_int(blanks).is_equal(want_blank)
 	assert_int(want_blank).is_greater(0)
 	assert_int(corners).is_equal(4)
+
+
+## THE SURFACES ARE WHAT THEY ARE (the owner, 2 Nov): the plain barricade is
+## padded black vinyl, the desk's chairs leather, its monitors and kit black
+## plastic. All three wore DiamondPlate009's tread plate. The chairs are a
+## part of their own, inside the bay, so they can be leather while the kit
+## round them is plastic.
+func test_the_chairs_are_their_own_part_in_the_bay() -> void:
+	var root := _model()
+	var chairs := _aabb(root, "CommentaryChairs")
+	assert_float(chairs.end.z).is_less(ArenaBuilder.DESK_BAY_Z - 0.07)
+	assert_float(chairs.position.z).is_greater(ArenaBuilder.DESK_Z)
+	root.free()
+
+
+func test_barricade_chairs_and_kit_are_vinyl_leather_and_plastic() -> void:
+	var want := {
+		"Barricades": "Leather026", "CommentaryChairs": "Leather026",
+		"CommentaryKit": "Plastic011",
+	}
+	for part: String in want:
+		var key: String = ArenaBuilder.RINGSIDE_MATERIALS[part][0]
+		var mat := MaterialLibrary.resolve(key)
+		var maps: Array[Texture2D] = [mat.albedo_texture, mat.normal_texture, mat.roughness_texture]
+		var named := false
+		for tex in maps:
+			if tex == null:
+				continue
+			assert_str(tex.resource_path).override_failure_message(
+					"%s still wears tread plate: %s" % [part, tex.resource_path]) \
+				.not_contains("DiamondPlate")
+			named = named or tex.resource_path.contains(want[part])
+		assert_bool(named).override_failure_message("%s is not %s" % [part, want[part]]).is_true()
+	# The leathers are near-black vinyl: their dark scan's colour map is off
+	# (with it on, the house light lifted every speck of grain to grey).
+	for key: String in ["arena_barricade_pad", "arena_desk_chair"]:
+		assert_object(MaterialLibrary.resolve(key).albedo_texture).is_null()

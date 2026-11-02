@@ -16,6 +16,9 @@ extends Node
 ##   --spot desk_suplex  the same, by the vertical suplex, Roman's back to it
 ##   --spot ladder  a ladder stood up mid-ring, Cody down beyond it: Roman
 ##                  climbs to the top and dives onto him (ladder_aerial)
+##   --spot bay     no spot: the commentary bay and the barricade as they
+##                  stand -- the desk's chairs and monitors close, a plain
+##                  barricade run, the bay from the ring
 ##   --spot table_dive  a table up in the ring: Cody lays Roman out on it
 ##                  (table_lay), climbs the corner and moonsaults onto him
 ##                  through it (TopRopeSpot, the table)
@@ -77,6 +80,8 @@ func _ready() -> void:
 			await _ladder()
 		"table_dive":
 			await _table_dive()
+		"bay":
+			await _bay()
 	print("CARNAGE SHOT DONE ", _spot)
 	get_tree().quit()
 
@@ -400,6 +405,33 @@ func _table_dive() -> void:
 	_cam.look_at(Vector3(0.6, 0.3, 0.9))
 	fill.global_transform = _cam.global_transform
 	await _save("dive_%d_wreck.png" % n)
+
+
+## The commentary bay's surfaces close: the desk's leather chairs and black
+## plastic monitors from behind the desk's +X end, the plain padded
+## barricade of the bay's side wall and the ringside run, and the bay from
+## the ring. The wrestlers are put out of shot, up the far side.
+func _bay() -> void:
+	var y := WrestlerController.FLOOR_LEVEL
+	_a.global_position = Vector3(-2.0, 0.0, -2.0)
+	_b.global_position = Vector3(-2.6, 0.0, -2.4)
+	var fill := DirectionalLight3D.new()
+	_scene.add_child(fill)
+	fill.light_energy = 1.2
+	Engine.max_physics_steps_per_frame = 1
+	RenderingServer.render_loop_enabled = false
+	await _frames(10)
+	var shots := [
+		["bay_1_chairs.png", Vector3(1.9, y + 1.7, 9.6), Vector3(0.2, y + 0.9, 8.2), 50.0],
+		["bay_2_barricade.png", Vector3(1.6, y + 1.5, 4.6), Vector3(4.6, y + 0.6, 6.6), 55.0],
+		["bay_3_from_ring.png", Vector3(0.6, y + 2.0, 3.4), Vector3(0.9, y + 0.8, 7.9), 62.0],
+	]
+	for shot: Array in shots:
+		_cam.global_position = shot[1]
+		_cam.look_at(shot[2])
+		_cam.fov = shot[3]
+		fill.global_transform = _cam.global_transform
+		await _save(shot[0])
 
 
 func _breath() -> void:

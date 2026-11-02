@@ -896,7 +896,10 @@ const RINGSIDE_MATERIALS := {
 	"Floor": ["arena_floor", 1.0],
 	# (RingsideMat, the padded mats, is dressed by _ringside_pads.)
 	"FloorSeams": ["arena_floor", 0.35],
-	"Barricades": ["arena_barricade", 1.5],
+	# Padded black vinyl: the plain panels, the cap rail and the bay's walls.
+	# Self-lit at the dark ringside parts' level, not the tread plate's 1.5,
+	# which is what held the old barricade at mid-grey.
+	"Barricades": ["arena_barricade_pad", 0.4],
 	# The desk fascia takes the barricade's own surface at a lower reach: it
 	# is the same class of ringside steel-and-panel, but it stands in shadow
 	# behind the apron rather than catching the rig side-on the way the cap
@@ -905,10 +908,12 @@ const RINGSIDE_MATERIALS := {
 	# The worktop and the monitor faces are the one bright thing at the desk,
 	# which is what makes it read as a desk and not a second barricade.
 	"CommentaryDeskTop": ["arena_barricade", 1.2],
-	# The riser is carpet, darker than the floor; the chairs, headsets and
-	# monitor housings are black plastic and fabric.
+	# The riser is carpet, darker than the floor. The chairs are leather; the
+	# monitor housings, headsets, laptops and chair bases black plastic. (The
+	# kit, chairs and all, wore arena_tunnel's tread plate.)
 	"CommentaryRiser": ["arena_floor", 0.35],
-	"CommentaryKit": ["arena_tunnel", 0.6],
+	"CommentaryKit": ["arena_desk_plastic", 0.6],
+	"CommentaryChairs": ["arena_desk_chair", 0.6],
 }
 
 

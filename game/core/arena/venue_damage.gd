@@ -63,7 +63,7 @@ const SOLID: Array[int] = [Kind.BARRICADE, Kind.DESK, Kind.RING_POST, Kind.RING_
 ## Ringside parts the barricade and desk boxes cut from. Not the riser or the
 ## floor: a blast on the desk does not take the carpet with it.
 const RINGSIDE_CUT := ["Barricades", "CommentaryDesk", "CommentaryDeskTop", "CommentaryDeskLed",
-		"CommentaryScreens", "CommentaryKit"]
+		"CommentaryScreens", "CommentaryKit", "CommentaryChairs"]
 
 
 class Target:
