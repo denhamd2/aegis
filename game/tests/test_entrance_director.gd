@@ -73,9 +73,11 @@ func test_skipping_rings_the_bell_with_both_men_on_their_marks() -> void:
 	var b: WrestlerController = scene.get_node("WrestlerB")
 	var hud: CanvasLayer = scene.get_node("MatchHUD")
 	assert_bool(hud.visible).is_false()
-	var mark_a := a.global_transform
-	var mark_b := b.global_transform
 	var director: EntranceDirector = scene.get_node("EntranceDirector")
+	# The match starts where the stare-down ends (_add_faceoff), not at the
+	# spawn points: the owner's corners, walk-in and stare (2 Nov).
+	var mark_a: Transform3D = director._mark[a]
+	var mark_b: Transform3D = director._mark[b]
 	var rang := [false]
 	director.bell.connect(func(): rang[0] = true)
 	for _i in 30:
@@ -159,8 +161,6 @@ func test_the_match_intro_and_faceoff_are_kept_brief() -> void:
 	assert_int(EntranceDirector.INTRO_CHECK_TICKS).is_less_equal(120)
 	assert_int(EntranceDirector.INTRO_CLOSE_TICKS).is_less_equal(150)
 	assert_int(EntranceDirector.FACEOFF_STARE_TICKS).is_less_equal(360)
-	assert_str(EntranceDirector.faceoff_shot_at(1.9)).is_equal("profile")
-	assert_str(EntranceDirector.faceoff_shot_at(2.0)).is_equal("ots")
 
 
 func test_broadcast_open_uses_stage_facing_pyro_angles_and_the_sign_cutaway() -> void:
@@ -222,7 +222,7 @@ func test_tension_commentary_cue_lands_at_the_faceoff_stare() -> void:
 	var director: EntranceDirector = scene.get_node("EntranceDirector")
 	var found := false
 	for beat: Dictionary in director._beats:
-		if beat.get("shot", "") != "faceoff_seq":
+		if beat.get("shot", "") != "staredown_push":
 			continue
 		for event: Array in beat.get("events", []):
 			found = found or event[1] == "faceoff_tension"
@@ -342,9 +342,10 @@ func _step_actors(scene: Node) -> void:
 func _assert_continuous(scene: Node, each_tick := Callable()) -> void:
 	var a: WrestlerController = scene.get_node("WrestlerA")
 	var b: WrestlerController = scene.get_node("WrestlerB")
-	var mark_a := a.global_position
-	var mark_b := b.global_position
 	var director: EntranceDirector = scene.get_node("EntranceDirector")
+	# Where the stare-down ends: the bell rings there.
+	var mark_a: Vector3 = (director._mark[a] as Transform3D).origin
+	var mark_b: Vector3 = (director._mark[b] as Transform3D).origin
 	var rang := [false]
 	director.bell.connect(func(): rang[0] = true)
 	var last := {a: a.global_position, b: b.global_position}
@@ -932,3 +933,44 @@ func test_kennys_music_outlasts_his_entrance() -> void:
 		assert_float(length).is_less(stream.get_length() - 20.0)
 		assert_int(silent).override_failure_message("%s: %d silent ticks" % [styles, silent]) \
 			.is_equal(0)
+
+
+## The owner, 2 Nov: "start off in each corner, walk slowly towards each
+## other, camera slowly zooms into their faces for a staredown, bell rings and
+## they immediately grapple". Each man goes to his own corner, the two
+## diagonally opposite; they walk out slowly to FACEOFF_GAP; the stare is the
+## last beat, on the push; and the match starts where the stare ends.
+func test_the_match_starts_from_the_corners_on_the_stare() -> void:
+	var scene := _match(true, "roman", "cody")
+	var a: WrestlerController = scene.get_node("WrestlerA")
+	var b: WrestlerController = scene.get_node("WrestlerB")
+	var director: EntranceDirector = scene.get_node("EntranceDirector")
+	var beats: Array = director._beats
+	var stare: Dictionary = beats[-1]
+	assert_str(stare.get("shot", "")).is_equal("staredown_push")
+	var walk_in: Dictionary = beats[-2]
+	assert_str(walk_in.get("shot", "")).is_equal("faceoff_side")
+	var corners := {}
+	for move: Array in walk_in["moves"]:
+		corners[move[0]] = move[1]
+		var metres := _flat(move[2] - move[1]).length()
+		assert_float(metres / (float(walk_in["ticks"]) / EntranceDirector.TPS)) \
+				.is_less_equal(EntranceDirector.FACEOFF_WALK_SPEED + 0.01)
+	# Diagonally opposite corners, each well inside the ropes.
+	var ca: Vector3 = corners[a]
+	var cb: Vector3 = corners[b]
+	assert_float(_flat(ca + cb).length()).is_less(0.05)
+	for c: Vector3 in [ca, cb]:
+		assert_float(absf(c.x)).is_between(1.5, RingBuilder.TURNBUCKLE_PAD_XZ - 0.5)
+		assert_float(absf(c.z)).is_between(1.5, RingBuilder.TURNBUCKLE_PAD_XZ - 0.5)
+	# The bell finds them where the stare stands them: FACEOFF_GAP apart,
+	# facing, mid-ring.
+	var ma: Transform3D = director._mark[a]
+	var mb: Transform3D = director._mark[b]
+	assert_float(_flat(ma.origin - mb.origin).length()).is_equal_approx(EntranceDirector.FACEOFF_GAP, 0.01)
+	assert_float(_flat((ma.origin + mb.origin) * 0.5).length()).is_less(0.05)
+	assert_float((-ma.basis.z).dot(_flat(mb.origin - ma.origin).normalized())).is_greater(0.99)
+
+
+func _flat(v: Vector3) -> Vector3:
+	return Vector3(v.x, 0.0, v.z)

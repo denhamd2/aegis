@@ -22,7 +22,12 @@ enum Place { BASIC, MID, LATE }
 ## Moves whose place or allowance is not the one their name gives them.
 ## [place, uses a match; 0 is unlimited].
 const OVERRIDES := {
-	&"power_bodyslam": [Place.BASIC, 3],
+	# The owner (2 Nov, AI vs AI): "too many repeating moves, especially
+	# suplexes". Measured over four seeded No Holds Barred matches, the
+	# vertical suplex was the most-thrown move for both men (Roman 10, Cody
+	# 7): every grapple was allowed three a match. Two now; the body slam the
+	# same.
+	&"power_bodyslam": [Place.BASIC, 2],
 	&"ff_powerbomb_1": [Place.MID, 1],
 	&"ff_spinebuster_5": [Place.MID, 1],
 	&"ff_chokeslam_1": [Place.MID, 1],
@@ -57,7 +62,7 @@ static func _entry(move: MoveDef) -> Array:
 	if s.begins_with("strike_") or s.begins_with("ground_"):
 		return [Place.BASIC, 0]
 	if s.begins_with("grapple_"):
-		return [Place.BASIC, 3]
+		return [Place.BASIC, 2]
 	if s.begins_with("running_"):
 		return [Place.BASIC, 2]
 	if s.begins_with("power_"):

@@ -28,11 +28,20 @@ signal commentary_started(speaker: String, duration: float)
 ## actual play -- +3 dB, and another +4 dB on the owner's word (19 Oct: "I want
 ## the crowd noise to be louder during the match"). Commentary stays on its
 ## separate voice bus; the master compressor and limiter hold the sum.
-const CROWD_MIX_GAIN_DB := 7.0
+## The owner, 2 Nov: "way too quiet ... much more lively and loud in general
+## throughout": +2 dB more across the loops, and the walla sits higher at rest.
+const CROWD_MIX_GAIN_DB := 9.0
 const BED_DB := -5.0
 const BED_EXCITED_DB := -1.0
-const WALLA_A_DB := [-15.0, -5.0]
-const WALLA_B_DB := [-28.0, -5.0]
+const WALLA_A_DB := [-12.0, -4.0]
+## The second walla, crowd_swell (tools/audio/build_crowd_swell.py). It
+## replaced a lucha libre recording with a man on a horn over the crowd --
+## the owner's "someone on a megaphone in the distance".
+const SWELL_DB := [-24.0, -4.0]
+## The crowd's one-shot reactions -- pops, oohs, the finish -- ride over the
+## loops. They never had the loops' CROWD_MIX_GAIN_DB, so a big pop played
+## about 3 dB under the bed it was meant to burst out of.
+const CROWD_REACTION_GAIN_DB := 7.0
 const ROAR_MAX_DB := -3.0
 ## Below this the roar is off; it comes in on a curve so a jab does nothing.
 const ROAR_FLOOR := 0.08
@@ -40,8 +49,11 @@ const ROAR_FLOOR := 0.08
 const SLEW_RATE := 1.6
 ## The match builds: a quiet feeling-out, a room that has warmed by the
 ## PHASE_FULL second. Added under the excitement as a floor on the intensity.
-const PHASE_FULL := 300.0
-const PHASE_FLOOR_MAX := 0.32
+## The house is already up at the bell (PHASE_START) -- the owner wanted it
+## lively throughout -- and warmer still once the match is going.
+const PHASE_FULL := 240.0
+const PHASE_START := 0.22
+const PHASE_FLOOR_MAX := 0.55
 ## Boos and cheers die away by half every this many seconds.
 const HEAT_HALF_LIFE := 4.5
 const HEAT_ON_DB := -4.0
@@ -155,7 +167,7 @@ const CHAOS_COMMENTARY_DECAY_PER_SECOND := 0.2
 var sfx: SfxPool
 var _bed: AudioStreamPlayer
 var _walla_a: AudioStreamPlayer
-var _walla_b: AudioStreamPlayer
+var _swell: AudioStreamPlayer
 var _boo_loop: AudioStreamPlayer
 var _cheer_loop: AudioStreamPlayer
 var _roar: AudioStreamPlayer
@@ -229,17 +241,17 @@ func _ready() -> void:
 	add_child(chants)
 	_bed = sfx.make_loop("crowd_bed")
 	_walla_a = sfx.make_loop("crowd_walla_a")
-	_walla_b = sfx.make_loop("crowd_walla_b")
+	_swell = sfx.make_loop("crowd_swell")
 	_boo_loop = sfx.make_loop("crowd_boo")
 	_cheer_loop = sfx.make_loop("crowd_cheer")
 	_roar = sfx.make_loop("crowd_roar")
 	_bed.volume_db = BED_DB
 	# Under the ring announcer when he speaks (RingAnnouncer.DUCK_DB).
-	for p: AudioStreamPlayer in [_bed, _walla_a, _walla_b, _boo_loop, _cheer_loop, _roar]:
+	for p: AudioStreamPlayer in [_bed, _walla_a, _swell, _boo_loop, _cheer_loop, _roar]:
 		p.bus = RingAnnouncer.under_bus()
 	# Out of step from the first frame: each layer starts somewhere else in
 	# its own loop (deterministic -- SfxPool's seeded generator, not the match's).
-	for p: AudioStreamPlayer in [_bed, _walla_a, _walla_b, _boo_loop, _cheer_loop, _roar]:
+	for p: AudioStreamPlayer in [_bed, _walla_a, _swell, _boo_loop, _cheer_loop, _roar]:
 		var length: float = p.stream.get_length()
 		p.seek(fposmod(length * float(hash(String(p.name)) % 1000) / 1000.0, length))
 	_commentary_voice = AudioStreamPlayer.new()
@@ -282,7 +294,7 @@ func watch(referee: MatchReferee, wrestlers: Array, crowd: CrowdReaction, match_
 			sfx.play_any("hit_glass", 3.0)
 			sfx.play_any("hit_metal", 0.0)
 			sfx.play("pyro_bang", -12.0, 1.4)
-			sfx.play_any("crowd_ooh", 0.0)
+			sfx.play_any("crowd_ooh", CROWD_REACTION_GAIN_DB + 0.0)
 			_register_chaos_activity(3.0))
 		w.through_desk.connect(func(_who: WrestlerController) -> void:
 			# the desk going: the boards, the monitors' glass and the steel
@@ -376,18 +388,18 @@ func _on_cue(what: String) -> void:
 		_start_dynamite_opening()
 		if _crowd:
 			_crowd.pop(1.0)
-		sfx.play_any("crowd_pop", -1.0)
+		sfx.play_any("crowd_pop", CROWD_REACTION_GAIN_DB + -1.0)
 	if what == "excalibur_crowd":
 		# Tony answers Excalibur's crowd read before either entrance begins.
 		_queue_commentary("tony_crowd_up")
 		if _crowd:
 			_crowd.pop(1.0)
-		sfx.play_any("crowd_pop", -3.0)
+		sfx.play_any("crowd_pop", CROWD_REACTION_GAIN_DB + -3.0)
 	if what == "announce_intro":
 		# Keep the live-room bed swelling beneath the long welcome exchange.
 		if _crowd:
 			_crowd.pop(0.9)
-		sfx.play_any("crowd_pop", -3.0)
+		sfx.play_any("crowd_pop", CROWD_REACTION_GAIN_DB + -3.0)
 	if what == "cody_appear":
 		# Excalibur answers Tony's Cody return call during Cody's entrance.
 		_queue_commentary("excalibur_cody_career")
@@ -413,7 +425,7 @@ func _on_cue(what: String) -> void:
 		"tron_on":
 			_fade_dynamite_opening()
 			# The music hits: the building goes up around the entrance.
-			sfx.play_any("crowd_pop", -2.0)
+			sfx.play_any("crowd_pop", CROWD_REACTION_GAIN_DB + -2.0)
 			var who: WrestlerController = _director.entrance_owner() if _director else null
 			if who:
 				_heat(who, 1.0)
@@ -497,7 +509,7 @@ static func commentary_event_for_roman_heel_attack(entrance_style: String, move:
 
 func _on_wrestler_taunted(who: WrestlerController) -> void:
 	_heat(who, 0.5)
-	sfx.play_any("crowd_pop", -9.0)
+	sfx.play_any("crowd_pop", CROWD_REACTION_GAIN_DB + -9.0)
 	var event := commentary_event_for_heel_pose(who.entrance_style)
 	if event != "":
 		_queue_commentary(event)
@@ -587,7 +599,7 @@ static func commentary_event_for_landed_strike(move: MoveDef) -> String:
 
 func _on_wrestler_fired_up(who: Variant) -> void:
 	_heat(who, 0.7)
-	sfx.play_any("crowd_pop", -6.0)
+	sfx.play_any("crowd_pop", CROWD_REACTION_GAIN_DB + -6.0)
 	_queue_commentary("excalibur_comeback")
 	_queue_commentary("tony_momentum_shift")
 
@@ -638,7 +650,7 @@ static func favor_of(display_name: String) -> float:
 ## The match's warm-up as a floor under the intensity: 0 at the bell, full by
 ## PHASE_FULL seconds, on a curve that is slow to begin with.
 static func phase_floor(clock: float) -> float:
-	return PHASE_FLOOR_MAX * smoothstep(0.0, 1.0, clock / PHASE_FULL)
+	return lerpf(PHASE_START, PHASE_FLOOR_MAX, smoothstep(0.0, 1.0, clock / PHASE_FULL))
 
 
 ## Each loop's target level for an intensity (0-1), by layer name.
@@ -647,7 +659,7 @@ static func bed_levels(i: float) -> Dictionary:
 	return {
 		"bed": lerpf(BED_DB, BED_EXCITED_DB, i) + CROWD_MIX_GAIN_DB,
 		"walla_a": lerpf(WALLA_A_DB[0], WALLA_A_DB[1], i) + CROWD_MIX_GAIN_DB,
-		"walla_b": lerpf(WALLA_B_DB[0], WALLA_B_DB[1], i * i) + CROWD_MIX_GAIN_DB,
+		"swell": lerpf(SWELL_DB[0], SWELL_DB[1], i * i) + CROWD_MIX_GAIN_DB,
 	}
 
 
@@ -682,7 +694,7 @@ func _on_move_landed(attacker, _defender, move: MoveDef) -> void:
 		sfx.play(sound, hit_volume(move))      # a one-off: the bell, the whoosh
 	var pop := CrowdReaction.move_pop(move)
 	if pop >= POP_MOVE:
-		sfx.play_any("crowd_pop", lerpf(-8.0, -2.0, clampf((pop - POP_MOVE) / (1.0 - POP_MOVE), 0.0, 1.0)))
+		sfx.play_any("crowd_pop", CROWD_REACTION_GAIN_DB + lerpf(-8.0, -2.0, clampf((pop - POP_MOVE) / (1.0 - POP_MOVE), 0.0, 1.0)))
 	if attacker is WrestlerController:
 		var move_id := move.resource_path.get_file().get_basename()
 		if WeaponCatalog.of_move(move) != null:
@@ -716,7 +728,7 @@ func on_weapon_event(weapon: WeaponActor, event: String) -> void:
 	match event:
 		"flash":
 			sfx.play("pyro_bang", GUNSHOT_DB)
-			sfx.play_any("crowd_ooh", -4.0)
+			sfx.play_any("crowd_ooh", CROWD_REACTION_GAIN_DB + -4.0)
 			var commentary_event := commentary_event_for_weapon(weapon.def.id, event)
 			if commentary_event != "":
 				_queue_commentary(commentary_event)
@@ -727,14 +739,14 @@ func on_weapon_event(weapon: WeaponActor, event: String) -> void:
 			# the fuel going up out of his mouth: a roar of flame, and the hall
 			sfx.play("whoosh", 0.0, 0.5)
 			sfx.play("pyro_boom", -8.0, 1.5)
-			sfx.play_any("crowd_ooh", -1.0)
+			sfx.play_any("crowd_ooh", CROWD_REACTION_GAIN_DB + -1.0)
 			_register_chaos_activity(2.5)
 		"rocket":
 			sfx.play("whoosh", ROCKET_LAUNCH_DB, 0.8)
 			sfx.play("pyro_bang", ROCKET_IGNITION_DB, 0.7)
 		"blast":
 			sfx.play("pyro_boom", ROCKET_BLAST_DB)
-			sfx.play_any("crowd_ooh", -2.0)
+			sfx.play_any("crowd_ooh", CROWD_REACTION_GAIN_DB + -2.0)
 			_register_chaos_activity(3.0)
 		"set_up":
 			if weapon.def.id == &"table":
@@ -743,7 +755,7 @@ func on_weapon_event(weapon: WeaponActor, event: String) -> void:
 			# the table going up: the whoosh of the fuel catching, and the hall
 			sfx.play("whoosh", -1.0, 0.6)
 			sfx.play("pyro_boom", -10.0, 1.3)
-			sfx.play_any("crowd_ooh", -2.0)
+			sfx.play_any("crowd_ooh", CROWD_REACTION_GAIN_DB + -2.0)
 			_register_chaos_activity(2.0)
 		"broke":
 			if weapon.def.id == &"table":
@@ -753,7 +765,7 @@ func on_weapon_event(weapon: WeaponActor, event: String) -> void:
 				sfx.play_any("hit_glass", 2.0)
 				sfx.play_any("hit_glass", -2.0)
 				sfx.play_any("table_crack", -8.0)
-				sfx.play_any("crowd_ooh", 0.0)
+				sfx.play_any("crowd_ooh", CROWD_REACTION_GAIN_DB + 0.0)
 			elif not sfx.play_any(weapon.def.sound, -1.0):
 				sfx.play(weapon.def.sound, -1.0)
 
@@ -762,8 +774,8 @@ func on_weapon_event(weapon: WeaponActor, event: String) -> void:
 func _on_set_piece_landed(who: WrestlerController, weapon: WeaponActor, broke: bool) -> void:
 	var by := who.opponent
 	_heat(by, 0.8 if broke else 0.4)
-	sfx.play_any("crowd_pop", -1.0 if broke else -5.0)
-	sfx.play_any("crowd_ooh", -2.0 if broke else -4.0)
+	sfx.play_any("crowd_pop", CROWD_REACTION_GAIN_DB + -1.0 if broke else -5.0)
+	sfx.play_any("crowd_ooh", CROWD_REACTION_GAIN_DB + -2.0 if broke else -4.0)
 	if not broke and weapon != null:
 		sfx.play_any(weapon.def.sound, -3.0)
 	_register_chaos_activity(2.0 if broke else 0.5)
@@ -787,7 +799,7 @@ func _on_match_won(winner: Variant, method: String) -> void:
 		sfx.play_any("count_slap", -1.0)
 		chants.count(3, sfx)
 	sfx.play("bell_end", -1.0, MATCH_BELL_PITCH_SCALE)
-	sfx.play("crowd_finish", 0.0)
+	sfx.play("crowd_finish", CROWD_REACTION_GAIN_DB)
 	_queue_commentary("excalibur_finish")
 	_queue_commentary("excalibur_coolest_job")
 	var w := winner as WrestlerController
@@ -921,7 +933,7 @@ func _process(delta: float) -> void:
 		_duck = lerpf(_duck, THEME_DUCK_DB * _theme_fade, 1.0 - exp(-delta * 2.0))
 	_slew(_bed, levels["bed"] + _duck, delta)
 	_slew(_walla_a, levels["walla_a"] + _duck, delta)
-	_slew(_walla_b, levels["walla_b"] + _duck, delta)
+	_slew(_swell, levels["swell"] + _duck, delta)
 	_slew(_boo_loop, heat_db(boo), delta)
 	_slew(_cheer_loop, heat_db(cheer), delta)
 	if _roar:
@@ -1046,8 +1058,8 @@ func _hear_the_count() -> void:
 	if not pinning and _was_pinning and _count_heard >= 2 and not _over:
 		chants.kicked_out(_count_heard)
 		# A kickout after two: the gasp. (A three is the bell, not this.)
-		sfx.play_any("crowd_ooh", -3.0)
-		sfx.play_any("crowd_pop", -4.0)
+		sfx.play_any("crowd_ooh", CROWD_REACTION_GAIN_DB + -3.0)
+		sfx.play_any("crowd_pop", CROWD_REACTION_GAIN_DB + -4.0)
 	var events := commentary_events_for_kickout(_count_heard, _over,
 			chants.match_time() >= UNBELIEVABLE_LATE_MATCH_AFTER)
 	if not pinning and _was_pinning:

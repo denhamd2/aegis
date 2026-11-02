@@ -900,14 +900,12 @@ const RINGSIDE_MATERIALS := {
 	# Self-lit at the dark ringside parts' level, not the tread plate's 1.5,
 	# which is what held the old barricade at mid-grey.
 	"Barricades": ["arena_barricade_pad", 0.4],
-	# The desk fascia takes the barricade's own surface at a lower reach: it
-	# is the same class of ringside steel-and-panel, but it stands in shadow
-	# behind the apron rather than catching the rig side-on the way the cap
-	# rail does.
-	"CommentaryDesk": ["arena_barricade", 0.7],
-	# The worktop and the monitor faces are the one bright thing at the desk,
+	# The desk's body is the barricade's padded black vinyl, its worktop a
+	# smooth dark laminate (the owner, 2 Nov: both wore the tread plate). The
+	# worktop is still the one surface at the desk that catches the light,
 	# which is what makes it read as a desk and not a second barricade.
-	"CommentaryDeskTop": ["arena_barricade", 1.2],
+	"CommentaryDesk": ["arena_barricade_pad", 0.5],
+	"CommentaryDeskTop": ["arena_desk_top", 1.2],
 	# The riser is carpet, darker than the floor. The chairs are leather; the
 	# monitor housings, headsets, laptops and chair bases black plastic. (The
 	# kit, chairs and all, wore arena_tunnel's tread plate.)

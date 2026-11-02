@@ -248,20 +248,14 @@ func test_codys_walk_gestures_are_each_seen_once() -> void:
 	assert_array(played).contains_exactly_in_any_order(EntranceDirector.CODY_WALK_GESTURES)
 
 
-## Keep the opening stare on the current short broadcast rhythm: a two-second
-## profile, a four-second OTS, then the concise match-card and referee bridge.
+## The owner, 2 Nov: "camera slowly zooms into their faces for a staredown,
+## bell rings". One shot over the whole stare, no cut: it starts on the
+## profile two-shot and ends nearer, on a longer lens.
 func test_the_face_off_and_match_intro_use_broadcast_pacing() -> void:
-	var start := 0.0
-	var stare := float(EntranceDirector.FACEOFF_STARE_TICKS) / EntranceDirector.TPS
-	for step: Array in EntranceDirector.FACEOFF_SEQ:
-		var end := minf(float(step[0]), stare)
-		if start < stare:
-			assert_float(end - start).override_failure_message(
-					"%s holds %.2f s" % [step[1], end - start]) \
-					.is_equal_approx(EntranceDirector.FACEOFF_PROFILE_END if step[1] == "profile"
-					else stare - EntranceDirector.FACEOFF_PROFILE_END, 0.001)
-		assert_bool(String(step[1]).begins_with("eyes")).is_false()
-		start = end
+	assert_float(EntranceDirector.STAREDOWN_CLOSE).is_less(EntranceDirector.FACEOFF_CAM_DISTANCE)
+	assert_float(EntranceDirector.STAREDOWN_FOV).is_less(EntranceDirector.FACEOFF_CAM_FOV)
+	assert_float(float(EntranceDirector.FACEOFF_STARE_TICKS) / EntranceDirector.TPS) \
+			.is_between(4.0, 6.0)
 	# Card, check and corner mediums have distinct short holds before the bell.
 	assert_float(float(EntranceDirector.INTRO_CARD_TICKS) / EntranceDirector.TPS).is_equal(3.0)
 	assert_float(float(EntranceDirector.INTRO_CHECK_TICKS) / EntranceDirector.TPS).is_equal(2.0)
@@ -297,3 +291,24 @@ func test_the_pyro_wide_frames_every_burst() -> void:
 		assert_float(absf(atan2(local.x, -local.z))).override_failure_message(
 				"a burst at %s is cropped horizontally" % p) \
 				.is_less(atan(tan(deg_to_rad(fov) * 0.5) * 16.0 / 9.0))
+
+
+## The walk out of the corners holds both men: from diagonally opposite
+## corners the camera stands back far enough, and closes to the two-shot's
+## distance once they meet.
+func test_the_walk_in_holds_both_men_from_their_corners() -> void:
+	var ca := EntranceDirector.faceoff_corner(Vector3(0.0, 0.0, -1.5), -1.0)
+	var cb := EntranceDirector.faceoff_corner(Vector3(0.0, 0.0, 1.5), 1.0)
+	var bearing := Vector3(-1.0, 0.0, 0.0)
+	var far := EntranceDirector.walk_in_distance(ca, cb, bearing)
+	assert_float(far).is_greater(EntranceDirector.FACEOFF_CAM_DISTANCE)
+	assert_float(far).is_less(EntranceDirector.FACEOFF_WALK_MAX)
+	var half := atan(tan(deg_to_rad(EntranceDirector.FACEOFF_WALK_FOV) * 0.5)
+			* EntranceDirector.FRAME_ASPECT)
+	var cam := (ca + cb) * 0.5 + bearing * far
+	for p: Vector3 in [ca, cb]:
+		assert_float(Vector3(p.x - cam.x, 0.0, p.z - cam.z).normalized().angle_to(-bearing)) \
+				.is_less(half)
+	var gap := EntranceDirector.FACEOFF_GAP * 0.5
+	assert_float(EntranceDirector.walk_in_distance(Vector3(0.0, 0.0, -gap), Vector3(0.0, 0.0, gap),
+			bearing)).is_equal(EntranceDirector.FACEOFF_CAM_DISTANCE)

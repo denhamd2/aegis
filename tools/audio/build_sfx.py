@@ -46,7 +46,6 @@ FREESOUND = {
 	"683101": ("florianreichelt", "quick woosh"),
 	# Indoor arenas and a real wrestling crowd (the crowd round 2 beds).
 	"635492": ("kyles", "crowd int large dense arena stadium hall"),
-	"141704": ("felix.blume", "Mexican Lucha Libre: crowd yelling, whistling"),
 	"504621": ("NeoSpica", "Booing Crowd"),
 	"557189": ("Julien_Matthey", "JM_AMB_INT_Crowd Sport 01 - Booing"),
 	"480725": ("craigsmith", "R08-24-Large Crowd Screaming and Whistling"),
@@ -329,10 +328,10 @@ def build() -> None:
 	save("crowd_bed", lufs_to(loop(bed), CROWD_LUFS))
 	# The hall walla stays at its original pace and width above the softer bed.
 	save("crowd_walla_a", lufs_to(loop(hall_cut), CROWD_LUFS))
-	# The wrestling crowd: lucha libre in Mexico City -- yells, whistles, the
-	# odd scream -- with its long swells levelled out. Rides the excitement.
-	lucha = load(freesound("141704"), 2)
-	save("crowd_walla_b", lufs_to(loop(even_out(cut(lucha, 52.0, 49.0))), CROWD_LUFS))
+	# The second walla, crowd_swell, is built from crowd_walla_a by
+	# tools/audio/build_crowd_swell.py. It replaced a lucha libre recording
+	# (freesound 141704) whose horn over the crowd the owner heard as a
+	# distant megaphone (2 Nov).
 	# The roar: a sustained full-house cheer, faded up with the excitement
 	# CrowdReaction already tracks.
 	roar = load(freesound("397434"), 2)

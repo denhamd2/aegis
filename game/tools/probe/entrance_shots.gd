@@ -77,8 +77,12 @@ func _ready() -> void:
 		for i in director._beats.size():
 			if (director._beats[i] as Dictionary)["kind"] == "pair":
 				for w: WrestlerController in [director._a, director._b]:
-					w.global_transform = director._mark[w]
+					# where his entrance leaves him: _mark is now where the
+					# stare-down ends
+					w.global_transform = director._entrance_mark[w]
 					w.visible = true
+				# the house as the entrances leave it: up
+				director._dim_house(false)
 				director._beat = i
 				director._start_beat()
 				break

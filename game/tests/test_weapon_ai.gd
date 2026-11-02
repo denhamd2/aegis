@@ -107,19 +107,27 @@ func test_the_launcher_is_open_from_the_bell_and_the_gun_from_the_finish() -> vo
 	assert_bool(late_picks.has(&"handgun")).is_true()
 
 
-func test_tables_are_a_common_pick_for_both_wrestlers() -> void:
+## The owner, 2 Nov (AI vs AI): "tables being taken from under the ring too
+## many times, I rarely saw the more dangerous weapons coming out". The table
+## stays in the mix for both men, but the wild weapons together come out far
+## more often than it does.
+func test_tables_stay_a_pick_but_the_wild_weapons_lead() -> void:
 	var pair := _pair(true)
-	var counts := [0, 0]
+	var tables := [0, 0]
+	var wild := [0, 0]
 	for i in 200:
 		for wrestler_index in 2:
 			var rng := RandomNumberGenerator.new()
 			rng.seed = 31000 + i * 2 + wrestler_index
-			if pair[wrestler_index].ai.choose_weapon(rng) == &"table":
-				counts[wrestler_index] += 1
-	# Roman has a researched table preference; table should still be a regular
-	# option for Cody rather than an accidental once-in-a-match draw.
-	assert_float(float(counts[0]) / 200.0).is_greater(0.25)
-	assert_float(float(counts[1]) / 200.0).is_greater(0.10)
+			var pick: StringName = pair[wrestler_index].ai.choose_weapon(rng)
+			if pick == &"table":
+				tables[wrestler_index] += 1
+			elif pick in WrestlerAI.WILD_WEAPONS:
+				wild[wrestler_index] += 1
+	for k in 2:
+		assert_int(tables[k]).is_greater(0)
+		assert_float(float(tables[k]) / 200.0).is_less(0.2)
+		assert_int(wild[k]).is_greater(tables[k] * 3)
 
 
 func test_never_in_a_singles_match() -> void:

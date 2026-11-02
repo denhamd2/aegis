@@ -13,9 +13,13 @@ extends Node
 const CODY_CHANT_FADE_IN := 2.0
 const CODY_CHANT_FADE_OUT := 3.0
 ## Loud: the building chanting is the loudest thing in the room while it
-## lasts (the owner, 19 Oct: louder, especially the chants). +3 dB over unity;
+## lasts (the owner, 19 Oct: louder, especially the chants). The recordings
+## are cut to -20 LUFS against the crowd loops' -16, and the loops play
+## MatchAudio.CROWD_MIX_GAIN_DB up: at +3 dB a chant sat ~5 dB under the bed
+## it was meant to rise out of (the owner, 2 Nov: "way too quiet ...
+## including the crowd noises I provided"). +9 dB puts it ~2 dB over the bed;
 ## the master bus compressor and limiter hold the peaks.
-const CODY_CHANT_LEVEL_DB := 3.0
+const CODY_CHANT_LEVEL_DB := 9.0
 const MATCH_END_FADE := 1.25
 
 var clock := 0.0
@@ -87,12 +91,14 @@ func pick_for(slot: int, at: float) -> Dictionary:
 	return ready[rng.randi_range(0, ready.size() - 1)]
 
 
-## Six potential slots, independently seeded per match: the first soon after
-## the bell, then one every minute or so -- the longest chant (Cody's, 36 s)
-## and a breather. Short matches naturally end before the later slots.
-const CHANT_SLOTS := 6
+## Ten potential slots, independently seeded per match: the first soon after
+## the bell, then one every 40-50 s -- a live house chants far more than once
+## a minute (the owner, 2 Nov: "much more lively"). A slot that comes while a
+## chant is still going waits for it to end. Short matches end before the
+## later slots.
+const CHANT_SLOTS := 10
 const FIRST_CHANT := Vector2(20.0, 28.0)
-const CHANT_GAP := Vector2(62.0, 76.0)
+const CHANT_GAP := Vector2(40.0, 50.0)
 
 
 static func schedule_for_seed(match_seed: int) -> Array[float]:

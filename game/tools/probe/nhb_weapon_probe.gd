@@ -82,12 +82,34 @@ static func run(host: Node, seed_value: int, budget: int, wrestlers := "roman,co
 			# and the paired move that put him there, if one did
 			var rig := scene.get_node_or_null("GrappleRig") as GrappleRig
 			var via: MoveDef = rig.current_move() if rig else null
-			r["set_pieces"].append("%s:%s%s@%d%s" % [who.display_name, weapon.def.id, "!" if broke else "",
+			# the desk has no WeaponActor: it lands with weapon null
+			var piece: String = weapon.def.id if weapon else "desk"
+			r["set_pieces"].append("%s:%s%s@%d%s" % [who.display_name, piece, "!" if broke else "",
 					r["ticks"], (" via " + String(via.animation_pair_id)) if via else ""])
 			shoot_at.append(int(r["ticks"]) + 2)
 			shoot_at.append(int(r["ticks"]) + 40))
 	r["finishers"] = []
 	r["pins"] = []
+	# every paired move landed, "Name:pair_id" -> times (the owner, 2 Nov:
+	# "too many repeating moves, especially suplexes"); through the desk; up
+	# a ladder
+	r["moves"] = {}
+	r["desk"] = []
+	r["climbs"] = []
+	# Roman's Spear (the owner, 2 Nov: "roman didn't land his spear"): each
+	# stalk state change, "Name:state@tick" (1 back, 2 set, 3 charge, 0 off),
+	# with the other man's FSM state and the distance between them.
+	r["spear"] = []
+	var stalk := [0, 0]
+	for w: WrestlerController in [a, b]:
+		w.move_landed.connect(func(by, _d, move):
+			if move and move.animation_pair_id != &"":
+				var key := "%s:%s" % [by.display_name.get_slice(" ", 0), move.animation_pair_id]
+				r["moves"][key] = int(r["moves"].get(key, 0)) + 1)
+		w.through_desk.connect(func(who): r["desk"].append("%s@%d" % [who.display_name, r["ticks"]]))
+		w.fsm.state_changed.connect(func(_from, to):
+			if to == WrestlerFSM.State.LADDER_CLIMB:
+				r["climbs"].append("%s@%d" % [w.display_name, r["ticks"]]))
 	for w: WrestlerController in [a, b]:
 		w.move_landed.connect(func(by, _d, move):
 			if move and by.tier_of(move) == CombatSystem.Tier.FINISHER:
@@ -101,6 +123,13 @@ static func run(host: Node, seed_value: int, budget: int, wrestlers := "roman,co
 	for t in budget:
 		await host.get_tree().physics_frame
 		r["ticks"] = t
+		for k in 2:
+			var sw: WrestlerController = [a, b][k]
+			var sv: WrestlerController = [b, a][k]
+			if sw.ai and sw.ai._spear_stalk != stalk[k]:
+				stalk[k] = sw.ai._spear_stalk
+				r["spear"].append("%s:%d@%d them st%d %.2fm" % [sw.display_name, stalk[k], t,
+						sv.fsm.current_state, sw.global_position.distance_to(sv.global_position)])
 		for k in 2:
 			var w: WrestlerController = [a, b][k]
 			var zone := "ring" if not w.outside_ring else ("stage" if ArenaBuilder.is_match_stage(w.global_position) \

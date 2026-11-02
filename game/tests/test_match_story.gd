@@ -16,7 +16,7 @@ func test_every_move_has_a_place_and_the_big_ones_are_rare() -> void:
 	assert_int(MovePlaybook.place_of(_move("strike_jab.tres"))).is_equal(MovePlaybook.Place.BASIC)
 	assert_int(MovePlaybook.max_uses(_move("strike_jab.tres"))).is_equal(0)
 	assert_int(MovePlaybook.place_of(_move("grapple_vertical_suplex.tres"))).is_equal(MovePlaybook.Place.BASIC)
-	assert_int(MovePlaybook.max_uses(_move("grapple_vertical_suplex.tres"))).is_equal(3)
+	assert_int(MovePlaybook.max_uses(_move("grapple_vertical_suplex.tres"))).is_equal(2)
 	assert_int(MovePlaybook.place_of(_move("power_samoan_drop.tres"))).is_equal(MovePlaybook.Place.MID)
 	assert_int(MovePlaybook.place_of(_move("ff/powerbomb_1.tres"))).is_equal(MovePlaybook.Place.MID)
 	assert_int(MovePlaybook.max_uses(_move("ff/powerbomb_1.tres"))).is_equal(1)

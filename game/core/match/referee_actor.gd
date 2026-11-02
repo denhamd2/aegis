@@ -110,6 +110,8 @@ var _mode_time := 0.0
 var _last_pin_tick := 0
 var _winner: WrestlerController
 var _separated := false
+## Waiting in a neutral corner while they walk out and stare (follow()).
+var _faceoff_wait := false
 var _separating := false
 ## Seconds she has stood between them; she steps clear after SEPARATE_HOLD.
 var _separate_time := 0.0
@@ -149,6 +151,10 @@ func follow(director: EntranceDirector) -> void:
 		# A5: the check walks her to the man nearer her; any other shot sends
 		# her back to her spot by the ropes.
 		_checking = shot == "ref_check" and mode == Mode.PARK
+		# The walk out of the corners and the stare: she waits in a neutral
+		# corner, off the diagonal the two of them walk -- her spot by the
+		# ropes is on it (EntranceDirector._add_faceoff).
+		_faceoff_wait = shot in ["faceoff_side", "staredown_push"]
 		if shot == "faceoff" and mode == Mode.PARK and not _separated:
 			_separated = true
 			_separating = true)
@@ -227,6 +233,19 @@ func go_live() -> void:
 		_set_mode(Mode.FOLLOW)
 
 
+## The neutral corner on her side of the ring (PARK's x) while a man stands
+## in a corner at `man` -- one of the two corners neither of them took
+## (EntranceDirector.faceoff_corner puts them diagonally opposite), the same
+## distance in from the pads.
+static func neutral_corner(man: Vector3) -> Vector3:
+	var taken := signf(man.x) * signf(man.z)
+	if taken == 0.0:
+		taken = 1.0
+	var sx := signf(PARK.x)
+	var c := EntranceDirector.faceoff_corner(Vector3(0.0, 0.0, -taken * sx), sx)
+	return Vector3(c.x, 0.0, c.z)
+
+
 func _process(delta: float) -> void:
 	if _referee == null or _wrestlers.size() < 2:
 		return
@@ -257,7 +276,13 @@ func _process(delta: float) -> void:
 				if not _go(at, WALK_SPEED, delta, false):
 					return
 				_face(_yaw_towards(_flat(man.global_position) - at), delta)
-			elif _flat(global_position).distance_to(PARK) > ARRIVED * 2.0 and _director:
+			elif _faceoff_wait and _flat(global_position).distance_to(neutral_corner(
+					_wrestlers[0].global_position)) > ARRIVED * 2.0:
+				if not _go(neutral_corner(_wrestlers[0].global_position), WALK_SPEED, delta, false):
+					return
+				_face(_yaw_towards(-global_position), delta)
+			elif not _faceoff_wait and _flat(global_position).distance_to(PARK) > ARRIVED * 2.0 \
+					and _director:
 				if not _go(PARK, WALK_SPEED, delta, false):
 					return
 				_face(_yaw_towards(-global_position), delta)

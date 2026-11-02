@@ -3,7 +3,7 @@ extends GdUnitTestSuite
 ## strikes are heard on landing and slams are left to the bump detector, and
 ## a sound can never touch the global RNG a match seed is drawn from.
 
-const NAMED := ["crowd_bed", "crowd_walla_a", "crowd_walla_b", "crowd_boo",
+const NAMED := ["crowd_bed", "crowd_walla_a", "crowd_swell", "crowd_boo",
 		"crowd_cheer", "crowd_roar", "crowd_finish", "bell_start", "bell_end",
 		"bell_ding", "pyro_boom", "pyro_bang", "whoosh", "ui_move", "ui_select", "ui_back"]
 const FAMILIES := ["crowd_pop", "crowd_ooh", "hit_punch", "hit_kick", "hit_chop", "hit_forearm", "bump",
@@ -116,8 +116,9 @@ func test_gunshot_and_rocket_effects_use_the_louder_signature_mix() -> void:
 	audio.on_weapon_event(rpg, "rocket")
 	audio.on_weapon_event(rpg, "blast")
 	assert_array(heard.map(func(entry: Dictionary) -> float: return entry["volume_db"])) \
-		.is_equal([MatchAudio.GUNSHOT_DB, -4.0, MatchAudio.ROCKET_LAUNCH_DB,
-			MatchAudio.ROCKET_IGNITION_DB, MatchAudio.ROCKET_BLAST_DB, -2.0])
+		.is_equal([MatchAudio.GUNSHOT_DB, MatchAudio.CROWD_REACTION_GAIN_DB - 4.0,
+			MatchAudio.ROCKET_LAUNCH_DB, MatchAudio.ROCKET_IGNITION_DB, MatchAudio.ROCKET_BLAST_DB,
+			MatchAudio.CROWD_REACTION_GAIN_DB - 2.0])
 
 
 func test_entrance_pyro_is_lifted_six_db_over_its_previous_mix() -> void:
@@ -448,10 +449,10 @@ func test_two_pools_pick_the_same_sounds() -> void:
 ## Five loops of different lengths: no two seams land together for minutes.
 func test_the_crowd_beds_are_out_of_step() -> void:
 	var lengths := []
-	for n: String in ["crowd_bed", "crowd_walla_a", "crowd_walla_b"]:
+	for n: String in ["crowd_bed", "crowd_walla_a", "crowd_swell"]:
 		var s := SfxPool.stream(n) as AudioStreamOggVorbis
 		lengths.append(int(round(s.get_length())))
-	assert_array(lengths).is_equal([52, 41, 47])
+	assert_array(lengths).is_equal([52, 41, 43])
 	# Pairwise co-prime: the combined pattern repeats only after the product.
 	for i in lengths.size():
 		for j in range(i + 1, lengths.size()):
@@ -473,7 +474,9 @@ func test_the_house_is_for_cody_and_against_roman() -> void:
 
 
 func test_the_room_warms_over_the_match() -> void:
-	assert_float(MatchAudio.phase_floor(0.0)).is_equal(0.0)
+	# Already up at the bell (the owner, 2 Nov: "lively and loud ... throughout").
+	assert_float(MatchAudio.phase_floor(0.0)).is_equal(MatchAudio.PHASE_START)
+	assert_float(MatchAudio.PHASE_START).is_greater(0.15)
 	var prev := 0.0
 	for t in range(0, 360, 10):
 		var f := MatchAudio.phase_floor(float(t))
@@ -481,8 +484,8 @@ func test_the_room_warms_over_the_match() -> void:
 		prev = f
 	assert_float(MatchAudio.phase_floor(MatchAudio.PHASE_FULL)) \
 			.is_equal(MatchAudio.PHASE_FLOOR_MAX)
-	# Quiet in the first minute: well under half the final warmth.
-	assert_float(MatchAudio.phase_floor(60.0)).is_less(MatchAudio.PHASE_FLOOR_MAX * 0.25)
+	# Still building in the first minute.
+	assert_float(MatchAudio.phase_floor(60.0)).is_less(MatchAudio.PHASE_FLOOR_MAX * 0.6)
 
 
 func test_the_beds_rise_with_the_intensity_and_the_new_ones_most() -> void:
@@ -494,7 +497,7 @@ func test_the_beds_rise_with_the_intensity_and_the_new_ones_most() -> void:
 	for k: String in low:
 		assert_float(high[k]).is_greater(low[k])
 	# The added beds swing further than the base one: that is the swell.
-	assert_float(float(high["walla_b"]) - float(low["walla_b"])) \
+	assert_float(float(high["swell"]) - float(low["swell"])) \
 			.is_greater(float(high["bed"]) - float(low["bed"]))
 
 

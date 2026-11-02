@@ -495,6 +495,14 @@ const SPECS := {
 	## bases -- is matte black plastic, not the tread plate it wore. Plastic011
 	## is a smooth grey moulding (linear mean 0.033); the tint takes it to
 	## near-black.
+	## The desk's worktop: a smooth dark laminate with a soft sheen, as a
+	## broadcast desk's is -- not the tread plate it wore (the owner, 2 Nov).
+	## Plastic011's moulding at a lighter tint than the kit, so the worktop is
+	## still the one surface at the desk that catches the light.
+	"arena_desk_top": {
+		"asset": "Plastic011", "tint": Color(0.520, 0.520, 0.540),
+		"tile_metres": 0.8, "roughness": 0.6, "house_lit": true,
+	},
 	"arena_desk_plastic": {
 		"asset": "Plastic011", "tint": Color(0.330, 0.330, 0.345),
 		"tile_metres": 0.4, "roughness": 0.75, "house_lit": true,

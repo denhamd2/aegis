@@ -462,11 +462,43 @@ func is_reading() -> bool:
 
 func poll_input() -> Dictionary:
 	var input := _poll_input()
+	_run_far_outside(input)
 	# Pacing: a worn man walks slower. Not a run -- a charge is a charge.
 	if controller and input.has("move") and not input.get("run", false):
 		input["move"] = (input["move"] as Vector2) * fatigue_walk_scale(
 				controller.combat.total_damage())
 	return input
+
+
+## Going somewhere outside the ring -- up the ramp to the stage's weapons,
+## back down it, round the ring to the desk -- he runs (the owner, 2 Nov:
+## "The wrestlers don't run down the ramp, they walk quickly"): MOVE_SPEED is
+## 3.5 m/s, a jog on a walk cycle. On the ramp or the stage, or bound for
+## them, moving, empty-handed or carrying something light, and the other man
+## more than RUN_TO_FROM away -- near him it is the fight's own pace. Only in
+## the free states: in a hold, run is the Irish whip.
+const RUN_TO_FROM := 4.0
+
+
+func _run_far_outside(input: Dictionary) -> void:
+	if controller == null or target == null or not controller.outside_ring or input.get("run", false):
+		return
+	if not controller.fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION,
+			WrestlerFSM.State.RUN]):
+		return
+	var move: Vector2 = input.get("move", Vector2.ZERO)
+	if move.length() < 0.5:
+		return
+	if controller.has_weapon() and controller.held_weapon.def.set_piece:
+		return
+	var me := controller.global_position
+	var on_the_way := ArenaBuilder.in_entrance_way(me) \
+			or (_weapon_plan == WeaponPlan.FETCH and _fetch_from_stage)
+	if not on_the_way:
+		return
+	if _flat(target.global_position - me).length() <= RUN_TO_FROM:
+		return
+	input["run"] = true
 
 
 ## In-between behaviour (Phase 4): how much slower a man walks, and how much
@@ -1582,16 +1614,31 @@ const WEAPON_ROLL_DOWN_SCALE := 2.0
 const WEAPON_RUNS := 12
 ## A man's own weapons are this much likelier to come out.
 const SIGNATURE_WEIGHT := 7.0
-## Firearms, explosives and hazardous set pieces are scarce, so bias them into
-## the card rather than leaving them to a 1-in-35 flat draw. (The knives and
-## swords are laid out on the stage several deep, WeaponStock.STAGE_LAYOUT.)
+## The dangerous ones -- firearms, explosives, wire, nails, glass, fire, the
+## ladder -- biased into the card rather than left to a 1-in-35 flat draw.
+## The owner (2 Nov, AI vs AI): "tables being taken from under the ring too
+## many times, I rarely saw the more dangerous weapons". The table was one of
+## these at x10 AND Roman's and Kenny's own at x7: 70 against 10 for each
+## dangerous one, near half of their picks. (The knives and swords are laid
+## out on the stage several deep, WeaponStock.STAGE_LAYOUT.)
 const WILD_WEAPONS: Array[StringName] = [
-		&"handgun", &"rpg", &"bed_of_nails", &"table", &"thumbtacks", &"barbed_wire_board"]
-const WILD_WEIGHT := 10.0
-## The carnage pieces (the owner, 19 Oct): out more often than an ordinary
-## weapon, less than the wild ones, so the table stays the common set piece.
-const CARNAGE_WEAPONS: Array[StringName] = [&"glass_pane", &"fire_torch"]
+		&"handgun", &"rpg", &"bed_of_nails", &"thumbtacks", &"barbed_wire_board",
+		&"barbed_wire_bat", &"barbed_wire_chair", &"board_with_nails", &"light_tubes",
+		&"sledgehammer", &"ladder", &"glass_pane", &"fire_torch"]
+const WILD_WEIGHT := 4.0
+## The ladder on top of that: over four seeded No Holds Barred matches it came
+## out once among the wild weapons, and the owner has never seen it climbed.
+const LADDER_WEIGHT := 2.5
+## The table: still the common set piece, no longer the pick. Its owners'
+## bonus is capped at OWNED_SET_PIECE_WEIGHT rather than SIGNATURE_WEIGHT.
+const CARNAGE_WEAPONS: Array[StringName] = [&"table"]
 const CARNAGE_WEIGHT := 3.0
+const OWNED_SET_PIECE_WEIGHT := 2.0
+## Each time a weapon has come out this match its weight is divided by this:
+## a match is a run of different weapons, not the same table four times.
+const REPEAT_WEAPON_DIVISOR := 4.0
+## Weapon id -> times picked this match.
+var _picked_weapons := {}
 ## Swings before he drops it, and how long a fetch may take before he gives up.
 const WEAPON_SWINGS := 4
 const FETCH_GIVE_UP_TICKS := 1500
@@ -1690,11 +1737,16 @@ func choose_weapon(rng: RandomNumberGenerator) -> StringName:
 	for def: WeaponDef in WeaponCatalog.all():
 		if not stock.in_stock(def.id):
 			continue
-		var w := SIGNATURE_WEIGHT if _owns(def) else 1.0
+		var w := 1.0
+		if _owns(def):
+			w = OWNED_SET_PIECE_WEIGHT if def.set_piece else SIGNATURE_WEIGHT
 		if def.id in WILD_WEAPONS:
 			w *= WILD_WEIGHT
+			if def.id == &"ladder":
+				w *= LADDER_WEIGHT
 		elif def.id in CARNAGE_WEAPONS:
 			w *= CARNAGE_WEIGHT
+		w /= pow(REPEAT_WEAPON_DIVISOR, float(_picked_weapons.get(def.id, 0)))
 		ids.append(def.id)
 		weights.append(w)
 		total += w
@@ -1712,6 +1764,7 @@ func choose_weapon(rng: RandomNumberGenerator) -> StringName:
 func _rummage_input() -> Dictionary:
 	if _weapon_pick == &"":
 		_weapon_pick = choose_weapon(_weapon_rng())
+		_picked_weapons[_weapon_pick] = int(_picked_weapons.get(_weapon_pick, 0)) + 1
 	return {"weapon": true, "weapon_pick": _weapon_pick}
 
 
@@ -1798,7 +1851,7 @@ func _wants_weapon() -> bool:
 		return false
 	if controller.combat.can_finisher() and _opponent_is_ripe():
 		return false                    # he has the finish in hand: no detours
-	if _line_up_ticks < LINE_UP_PATIENCE and (_spot_piece() != null or _desk_spot()):
+	if _line_up_ticks < LINE_UP_PATIENCE and (_spot_piece() != null or _desk_spot() or _desk_lead()):
 		return false                    # a table up beside him: him through it first
 	var down := target.fsm.current_state == WrestlerFSM.State.DOWN
 	_weapon_roll = int(WEAPON_ROLL_TICKS / (WEAPON_ROLL_DOWN_SCALE if down else 1.0))
@@ -1832,6 +1885,13 @@ func _start_use() -> void:
 	var from_stage := ArenaBuilder.in_entrance_way(controller.global_position)
 	_use_in_ring = controller.outside_ring and rng.randf() \
 			< (IN_RING_USE_FROM_STAGE if from_stage else IN_RING_USE)
+	# The ladder always goes in: its dive is off the top in the ring
+	# (WrestlerController.can_start_ladder_aerial), and set up on the floor
+	# it was only ever swung (the owner, 2 Nov: "I never saw the ladder used
+	# or being climbed or jumped off of").
+	if controller.held_weapon and controller.held_weapon.def.id == &"ladder" \
+			and controller.outside_ring:
+		_use_in_ring = true
 	_slide_in = _use_in_ring and rng.randf() < SLIDE_IN_SHARE
 
 
@@ -1874,7 +1934,13 @@ func _use_input(input: Dictionary, to_target: Vector3, distance: float) -> Dicti
 	# not the time: he went back through the ropes, or he is on the mat
 	if controller.outside_ring != target.outside_ring:
 		return {}
-	if def.set_up != "" and def.set_piece and not target.is_crossing_ropes():
+	# A ladder with the other man still up is swung at him first: set down
+	# beside a standing man it went down flat like a table, and a flat
+	# ladder is never climbed (the owner, 2 Nov: "I never saw the ladder ...
+	# climbed or jumped off of"). Once he is down it is stood up by him.
+	var ladder_first := def.id == &"ladder" and target.fsm.current_state != WrestlerFSM.State.DOWN \
+			and not controller.outside_ring
+	if def.set_up != "" and def.set_piece and not target.is_crossing_ropes() and not ladder_first:
 		if def.id == &"ladder" and target.fsm.current_state == WrestlerFSM.State.DOWN:
 			var to_ladder := _flat(target.global_position - controller.global_position)
 			if to_ladder.length() > 0.9:
@@ -1949,6 +2015,18 @@ func _line_up_input(input: Dictionary, to_target: Vector3, distance: float) -> D
 		return {}
 	if controller.outside_ring != target.outside_ring:
 		return {}
+	# A ladder stood up in the ring with the other man down beside it: up it,
+	# for the dive off the top (WrestlerController.begin_ladder_aerial). Set
+	# up beside him and left, nobody ever climbed it.
+	var ladder := _ladder_to_climb()
+	if ladder:
+		if controller.climbable_ladder_nearby() == ladder:
+			input["move"] = Vector2.ZERO
+			input["climb_ladder"] = true
+			return input
+		var to_ladder := _flat(ladder.global_position - controller.global_position)
+		input["move"] = Vector2(to_ladder.normalized().x, to_ladder.normalized().z)
+		return input
 	var suplex := _suplex()
 	if suplex == null:
 		return {}
@@ -1963,6 +2041,14 @@ func _line_up_input(input: Dictionary, to_target: Vector3, distance: float) -> D
 	elif _desk_spot():
 		at = desk_landing(target.global_position)
 		kind = &"desk"
+	elif _desk_lead():
+		# Not near it yet: take the fight there, round the ring, and the
+		# other man comes after him.
+		_desk_lead_ticks += 1
+		var goal := desk_landing(controller.global_position) + Vector3(0.0, 0.0, -DESK_LEAD_OUT)
+		input["move"] = _outside_opponent_move(goal)
+		input["run"] = _flat(goal - controller.global_position).length() > RUN_TO_FROM
+		return input
 	else:
 		_line_up_ticks = 0
 		return {}
@@ -2070,22 +2156,71 @@ const DESK_AIM_X := 0.8
 var _desk_roll := -1
 
 
-func _desk_spot() -> bool:
+## Taking the fight to the desk (the owner, 2 Nov, AI vs AI: "they never did
+## an announce table spot"): it came on only when the fight happened by, and
+## the floor fight is all round the ring. Both out on the floor, the desk
+## standing and his roll for it made, he heads there from wherever they are
+## -- for DESK_LEAD_TICKS at most, so a spot that never comes together does
+## not hold up the match -- and within DESK_FROM it is _desk_spot's.
+const DESK_LEAD_TICKS := 900
+## He heads for this far out in front of the desk, in its bay.
+const DESK_LEAD_OUT := 2.0
+var _desk_lead_ticks := 0
+
+
+func _desk_lead() -> bool:
+	if _desk_lead_ticks >= DESK_LEAD_TICKS or not _desk_area_open():
+		return false
+	return _desk_rolled()
+
+
+## Both out on the floor (not up the ramp) and the desk still standing.
+func _desk_area_open() -> bool:
 	if not (controller.outside_ring and target.outside_ring):
 		return false
 	if ArenaBuilder.in_entrance_way(controller.global_position) or ArenaBuilder.in_entrance_way(target.global_position):
 		return false
 	var stock := controller.get_parent().get_node_or_null("WeaponStock") as WeaponStock \
 			if controller.get_parent() else null
-	if stock == null or stock.desk_broken:
+	return stock != null and not stock.desk_broken
+
+
+## His once-a-match roll for the desk spot.
+func _desk_rolled() -> bool:
+	if _desk_roll < 0:
+		_desk_roll = 1 if _weapon_rng().randf() < (DESK_CHANCE_HEEL if _is_heel() else DESK_CHANCE) else 0
+	return _desk_roll == 1
+
+
+func _desk_spot() -> bool:
+	if not _desk_area_open():
 		return false
 	var landing := desk_landing(target.global_position)
 	if _flat(landing - target.global_position).length() > DESK_FROM \
 			or _flat(landing - controller.global_position).length() > DESK_FROM:
 		return false
-	if _desk_roll < 0:
-		_desk_roll = 1 if _weapon_rng().randf() < (DESK_CHANCE_HEEL if _is_heel() else DESK_CHANCE) else 0
-	return _desk_roll == 1
+	return _desk_rolled()
+
+
+## A ladder stood up on the safe part of the mat with the other man down in
+## reach of its landing side, or null (can_start_ladder_aerial's terms).
+func _ladder_to_climb() -> WeaponActor:
+	if controller.outside_ring or target.outside_ring or controller.has_weapon() \
+			or target.fsm.current_state != WrestlerFSM.State.DOWN:
+		return null
+	var stock := controller.get_parent().get_node_or_null("WeaponStock") as WeaponStock \
+			if controller.get_parent() else null
+	if stock == null:
+		return null
+	var keep := WrestlerController.RING_KEEP_IN - 0.75
+	for a in stock.set_up_pieces():
+		if a.def.id != &"ladder" or not a.is_climbable_ladder():
+			continue
+		if absf(a.global_position.x) > keep or absf(a.global_position.z) > keep:
+			continue
+		if _flat(target.global_position - a.global_position).length() <= WrestlerController.LADDER_AERIAL_REACH:
+			return a
+	return null
 
 
 ## Where on the desk a man by `near` is put down: its middle line, as near

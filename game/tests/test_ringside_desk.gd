@@ -148,7 +148,8 @@ func test_the_chairs_are_their_own_part_in_the_bay() -> void:
 func test_barricade_chairs_and_kit_are_vinyl_leather_and_plastic() -> void:
 	var want := {
 		"Barricades": "Leather026", "CommentaryChairs": "Leather026",
-		"CommentaryKit": "Plastic011",
+		"CommentaryKit": "Plastic011", "CommentaryDesk": "Leather026",
+		"CommentaryDeskTop": "Plastic011",
 	}
 	for part: String in want:
 		var key: String = ArenaBuilder.RINGSIDE_MATERIALS[part][0]

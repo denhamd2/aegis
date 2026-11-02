@@ -10996,3 +10996,70 @@ The owner: "Why are those non-LED barriers and the commentators' chairs both a s
   - the barricade, chairs and kit are Leather026, Leather026 and Plastic011, with no tread plate left and the leathers' colour maps off.
 - The focused ringside, venue-damage, carnage, stage, ramp-barricade and commentator files pass.
 - The full suite is green.
+
+
+## 2 Nov — AI vs AI: the desk spot, fewer suplexes, wilder weapons, the ladder; the match starts in the corners; a louder crowd; the desk off diamond plate
+
+The owner played AI vs AI on their Mac and listed what was wrong. This step covers six of those items:
+- 1, the announce desk spot never happened;
+- 2, too many repeated suplexes;
+- 3, tables pulled too often;
+- 5, a walk, not a run, down the ramp;
+- 9, the ladder never climbed;
+- 10, the start before the lock-up.
+
+It also covers the crowd audio, and the desk's diamond-plate body and worktop.
+
+Review sheet: `gauntlet/refs/nhb/review/ai_start_crowd_review.png`.
+
+**Measured** with `nhb_weapon_probe` on four seeded No Holds Barred matches (seeds 1–4, Roman v Cody), before and after:
+
+| | before | after |
+| --- | --- | --- |
+| through the announce desk | 0 | 2 |
+| tables pulled from under the ring | 9 | 0 |
+| Roman's vertical suplex / Cody's | 10 / 7 | 5 / 3 |
+| wild weapons pulled by the AI (wire, nails, glass, fire, sledgehammer) | few | most of the pulls |
+
+The knife, handgun and sword counts are the stock laid out on the stage at tick 0, not the AI's picks.
+
+**The desk spot** (`WrestlerAI`). It needed both men within 4 m of the desk, and the floor fight rarely went there.
+- **The lead.** With the desk rolled and both men outside, the man in control now leads the fight there. He walks or runs to the desk's landing, `DESK_LEAD_OUT` (2 m) off its front. He keeps at it for `DESK_LEAD_TICKS` (15 s) before giving up.
+- **No weapon first.** He doesn't go for a weapon while he's leading.
+
+**Weapons** (`WrestlerAI.choose_weapon`).
+- **The dangerous ones.** The wild weapons (firearms, the RPG, wire, nails, tacks, glass, fire, the sledgehammer, the ladder) carry ×4.
+- **The table.** ×3, and its owners' bonus is capped at ×2. It was ×10, and ×7 again for Roman and Kenny.
+- **No repeats.** Each pick divides that weapon's weight by 4 for the rest of the match.
+
+**Fewer suplexes** (`MovePlaybook`). Every grapple, and the body slam, is now allowed twice a match. It was three times.
+
+**Running outside** (`WrestlerAI._run_far_outside`). Outside the ring, a free man more than 4 m from the other runs on the ramp, on the stage and fetching from the stage. He doesn't run while carrying a set piece.
+
+**The ladder** (`WrestlerAI`).
+- **Into the ring.** A ladder pulled outside is always taken into the ring.
+- **Swung first.** With the other man standing, it is now swung at him first. Set down beside a standing man, it used to lie flat like a table, and a flat ladder is never climbed.
+- **Stood up, then climbed.** With him down it is stood up beside him. A man near a climbable ladder with the other man down in reach of its landing side goes up it for the dive. A climb in a full AI match is not yet measured: the four-seed run before this change pulled the ladder once and never stood it up.
+- **Picked more.** ×2.5 on top of the wild weight.
+
+**The start of the match** (`EntranceDirector._add_faceoff`). The owner: "start off in each corner, walk slowly towards each other, camera slowly zooms into their faces for a staredown, bell rings and they immediately grapple".
+- **The old start.** They walked up, stared, turned, walked back to their marks, and after the bell walked into each other to lock up.
+- **The corners.** From his mark, each man goes to his own corner, the two diagonally opposite, 0.95 m in from the turnbuckle pad. He turns in there.
+- **The intro.** The match card, the referee's check and each man in his corner.
+- **The walk out.** Slowly, at 0.6 m/s, to `FACEOFF_GAP`. The camera stands on the hard camera's side, as far back as holds both men (`walk_in_distance`), and closes in as they come.
+- **The stare-down.** One continuous push from the profile two-shot into both faces, 3.4 m to 1.3 m off them, 34° to 30° (`staredown_push`). It replaces the cut from the profile to an over-the-shoulder. The camera key light is on both faces through the walk and the stare.
+- **The bell.** It rings where they stand. `_mark` becomes the end of the stare, so the first thing either man does is lock up. Skipping a single entrance still puts that man where his entrance ends (`_entrance_mark`).
+- **The referee.** Through the walk out and the stare she waits in a neutral corner (`RefereeActor.neutral_corner`). Her spot by the ropes is on the diagonal the man in that corner walks, and `test_nobody_walks_through_anybody` caught him passing 0.41 m from her.
+- **Lit, not silhouettes** (the owner: "I don't want the wrestlers to be lit dark when standing in the corners or during the faceoff"). The camera key, the soft front light that rides the lens, never stayed on for a two-man beat. With nobody walking, `_aim_follow_spot` ran after every shot and switched it off. That covered the corner intros, the walk out and the stare, including the old over-the-shoulder that aimed it. It now stays on when the frame's shot has it on the men in the ring (`_ring_key_on`), on both faces at once (`_key_on_pair`), at 2.0× in the ring (`CAM_KEY_RING_GAIN`, was 0.5).
+- **Not closed on pixels.** This machine's software renderer (OpenGL compatibility; no Vulkan here) still draws them dark before the bell, though the ring keys and top fills read as on at full match level. It draws them lit after it. Whether that gap is the renderer or the game is the next thing to settle.
+
+**The crowd** (`MatchAudio`, `CrowdChants`). The owner: "some random crowd sound where it sounds like someone on a megaphone in the distance ... way too quiet ... including the crowd noises I provided".
+- **The megaphone.** It was `crowd_walla_b`, a lucha libre field recording with a man on a horn over the crowd. Its spectrogram shows sustained narrow-band tones at 1–8 s and 44–47 s, riding up with the excitement. It is deleted. In its place, `crowd_swell` is the clean arena walla, pitched down 6 %, with a presence lift at 2.5 kHz, cut to 43 s (co-prime with the other loops). It is built deterministically by `tools/audio/build_crowd_swell.py`.
+- **Reactions over the bed.** The pops, the oohs and the finish never had the loops' mix gain, so a big pop played about 3 dB under the bed. They now carry `CROWD_REACTION_GAIN_DB` (+7).
+- **Louder throughout.** The loops are +2 dB (`CROWD_MIX_GAIN_DB` 9), and the walla sits higher at rest. The house is already warm at the bell (`PHASE_START` 0.22) and warmer by four minutes (0.55, was 0.32 at five).
+- **The owner's chants.** They were cut to −20 LUFS and played at +3 dB, about 5 dB under the bed. Now +9 dB, about 2 dB over it. They come every 40–50 s (was 62–76 s), up to ten a match.
+- **Free sounds.** Freesound refuses downloads from the build machine. The CC0 candidates found there are listed for the owner to fetch: hockey and basketball arena crowds, cheering sections, boo loops.
+
+**The announce desk's body and worktop.** They wore the tunnel's diamond plate.
+- **The body.** The barricade's padded black vinyl (`arena_barricade_pad`).
+- **The worktop.** A smooth grey-black plastic (`arena_desk_top`, Plastic011).
