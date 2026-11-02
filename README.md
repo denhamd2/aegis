@@ -11107,3 +11107,25 @@ The owner asked for the five realism recommendations, and added: "I don't want t
 - **First pass, too heavy.** At 30° and three segments, the 10-sided tubes counted as edges: the ladder went ×8 and the handgun ×14.
 - **Within budget.** Every state of every weapon is now under its budget (`test_weapon_catalog`). The barbed-wire chair is left out: its wire is its look, and bevelled it went to 18.4k against 15k.
 - **Determinism.** The other weapons rebuild byte-identical.
+
+## 2 Nov — 60 fps animation: the authored clips sampled at 60, the paired and strike bakes with them, the motion capture cubic
+
+The owner: "I want the gameplay and animations all to be at 60fps. Inspect what they are now, and if they are below this, improve them." Review sheet: `gauntlet/refs/animation/sixty_fps_review.png`.
+
+**What they were** (measured off the files):
+- **Gameplay: already 60.** 60 physics ticks a second, physics interpolation on, the `AnimationTree` on the physics tick.
+- **Animation: 30.** All 275 authored clips (`wrestling_clips.glb`) carried a key per 30 fps frame. The 42 CC0 base clips (`wrestler_base.glb`) are 30 fps motion capture. Godot plays both LINEAR between keys, so a fast arm changed speed abruptly 30 times a second.
+- **What did not count.** The glb's STEP channels are all constant (scale, translation and still bones), not stepped motion.
+
+**What changed:**
+- **The authored clips are sampled at 60** (`wrestling_clips.py EXPORT_FPS`). They are still authored on 30 fps frames, so every key and every contact frame lands on a whole 60 Hz tick. Just before export every action is stretched ×2 in frame number, Bezier handles and all, so the exporter samples the same eased curves twice as often.
+  - Every clip's length in seconds is unchanged: checked for all 275.
+  - The rebuild is byte-identical.
+- **Imported at 60.** `wrestling_clips.glb.import` had `animation/fps=30`, and Godot resamples on import. The first re-bake came out the same size for that reason.
+- **The paired moves and the strikes re-baked from it** (`build_paired_poses.gd`, `build_strike_clips.gd`): 17.7 → 31.4 MB and 19.4 → 28.7 MB of 60 Hz keys. These are what the suplexes, powerbombs and the Samoan drop play.
+- **The motion capture plays cubic** (`WrestlerController.smooth_between_keys`, at load). There is no more data in it to resample. Cubic passes through every key exactly, so poses and contacts on a key are unchanged, and it eases between them. Idempotent on the library the two men share.
+
+**Gates:** pose lint, cadence, readability, downed-body clearance, strike timings and strike contact all pass on the new clips.
+- **Pair clearance moved, the right way.** `power_samoan_drop`'s 7.2 cm, the victim's thigh through the attacker's pelvis at the sit-out that three refit passes had not cleared, measured 3.5 cm. It is off `PairClearanceBaseline.OVER`, which is now empty.
+- **The authoring gate re-pinned** after the review it asks for: the `blender-animation` skill, the landing looked at on `clip_shot`, the rebuild, the import and both bakes.
+- **Pinned.** `test_sixty_fps`.

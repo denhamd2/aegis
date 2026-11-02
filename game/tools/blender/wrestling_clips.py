@@ -60,7 +60,8 @@ the tick the MoveDef declares:
     strike_kick       8/35       -> frame  5 of 20
     strike_kick_heavy 12/57      -> frame  6 of 29
 
-Clips are authored at 30 fps so every frame lands on a whole 60 Hz tick.
+Clips are authored at 30 fps so every frame lands on a whole 60 Hz tick,
+and exported sampled at 60 (EXPORT_FPS: the same curves, twice as often).
 Output is deterministic: the same table produces a byte-identical glb, which
 is what lets it be committed and diffed like the .tres bakes.
 """
@@ -6679,7 +6680,37 @@ def author(poser, arm, name, frames):
     return action
 
 
+## The rate the clips are SAMPLED at on export (the owner, 2 Nov: "I want the
+## gameplay and animations all to be at 60fps"). They are still authored on
+## FPS's 30 fps frames -- every key on a whole 60 Hz tick, the contact
+## frames above -- but the glb used to carry one sample per authored frame,
+## and Godot interpolates LINEARLY between samples: a fast arm changed speed
+## abruptly thirty times a second. Stretched x2 in frame number just before
+## export, Bezier handles and all, the exporter samples the same eased curves
+## twice as often. A clip's length in seconds, and every time in it, is
+## unchanged.
+EXPORT_FPS = 60
+
+
+def retime_for_export():
+    k = EXPORT_FPS / FPS
+    if k == 1:
+        return
+    for action in bpy.data.actions:
+        if action.use_frame_range:
+            action.frame_start *= k
+            action.frame_end *= k
+        for fcurve in action.fcurves:
+            for key in fcurve.keyframe_points:
+                key.co.x *= k
+                key.handle_left.x *= k
+                key.handle_right.x *= k
+            fcurve.update()
+    bpy.context.scene.render.fps = EXPORT_FPS
+
+
 def export(path):
+    retime_for_export()
     bpy.ops.export_scene.gltf(
         filepath=path,
         export_format="GLB",

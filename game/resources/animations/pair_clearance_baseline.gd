@@ -9,14 +9,12 @@ extends RefCounted
 ## move fixed below the limits should be DELETED from here so it stays fixed.
 ## Worst first; the comment is where it was worst.
 const OVER := {
-	# 7.2 cm, 2.2 cm over the body limit, at the landing (0.84): the victim's
-	# left thigh through the attacker's pelvis as he sits out. It appeared when
-	# downed legs were lengthened (stage 8) and three targeted refit passes
-	# traded it between 5.4 and 7.2 cm without clearing it -- the fit cannot
-	# move a leg, only a root. The fix is a knees-up landing key for the
-	# victim in wrestling_clips.py. (Clothesline From Hell, the last entry
-	# before this, measured clean after the same refit.)
-	"power_samoan_drop": [0.08, 0.06],  # A pelvis-spine_03 x B thigh_l-calf_l
+	# Empty. The last entry, power_samoan_drop (7.2 cm at the landing, the
+	# victim's left thigh through the attacker's pelvis), measured clean once
+	# the clips were sampled at 60 fps (wrestling_clips.py EXPORT_FPS, the
+	# owner's 2 Nov "all to be at 60fps"): body 3.5 cm, arm 5.6 cm. At 30 fps
+	# the straight-line step across the sit-out most likely cut the corner
+	# through his thigh; the pose keys themselves did not change.
 }
 
 

@@ -745,6 +745,8 @@ func _ready() -> void:
 		if not anim_player.has_animation_library(StrikeRecipes.LIBRARY):
 			anim_player.add_animation_library(StrikeRecipes.LIBRARY,
 					_adapt_animation_library(STRIKE_CLIPS))
+		if anim_player.has_animation_library(""):
+			smooth_between_keys(anim_player.get_animation_library(""))
 		_build_animation_tree()
 	skeleton = _find_model_skeleton()
 	if skeleton:
@@ -6533,6 +6535,29 @@ func _stick_tacks(at: Vector3) -> void:
 	var bone_world := skeleton.global_transform * skeleton.get_bone_global_pose(bone)
 	tacks.transform = bone_world.affine_inverse() * spot
 	_tacks_in_back = attach
+
+
+## The base library's 42 CC0 clips are motion capture keyed at 30 fps (the
+## owner, 2 Nov: "I want the gameplay and animations all to be at 60fps").
+## There is no more data in them to resample, but played LINEAR the pose
+## changes speed abruptly at every key, 30 times a second; CUBIC passes
+## through every key exactly (contacts and poses on a key are unchanged) and
+## eases between them. The authored clips (wrestling_clips.glb) are sampled
+## at 60 fps on export instead. Idempotent: a library shared between the two
+## wrestlers is only changed once.
+static func smooth_between_keys(library: AnimationLibrary) -> int:
+	var changed := 0
+	for anim_name: StringName in library.get_animation_list():
+		var anim := library.get_animation(anim_name)
+		for t in anim.get_track_count():
+			var kind := anim.track_get_type(t)
+			if kind != Animation.TYPE_ROTATION_3D and kind != Animation.TYPE_POSITION_3D:
+				continue
+			if anim.track_get_interpolation_type(t) == Animation.INTERPOLATION_LINEAR \
+					and anim.track_get_key_count(t) > 2:
+				anim.track_set_interpolation_type(t, Animation.INTERPOLATION_CUBIC)
+				changed += 1
+	return changed
 
 
 func _is_weapon_swing(move: MoveDef) -> bool:
