@@ -13,11 +13,11 @@ const MODEL := "res://scenes/aubrey_model.tscn"
 const WALK_SPEED := 1.4
 const TURN_RATE := 7.0
 const ARRIVED := 0.08
-const WALK_CLIP := "Walk"
-## Planted-foot travel in this retargeted cycle, measured by
-## tools/anim/gait_audit.gd. Matching this to the node's actual pace avoids
-## the foot slide caused by the old unmeasured 1.3 m/s assumption.
-const WALK_CLIP_SPEED := 0.78
+## The referee's own walk (wrestling_clips.py Ref_Walk, 60 fps), authored at
+## his 1.4 m/s -- the CC0 mocap Walk (0.78 m/s) played at 1.8x looked hurried.
+## Planted-foot travel checked by tools/anim/gait_audit.gd.
+const WALK_CLIP := "strikes/ref_walk"
+const WALK_CLIP_SPEED := RefereeActor.WALK_CLIP_SPEED
 const IDLE_CLIP := "strikes/ref_stand"
 const SIT_ENTER_CLIP := "Sitting_Enter"
 const SIT_IDLE_CLIP := "Sitting_Idle"

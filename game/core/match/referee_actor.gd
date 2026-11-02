@@ -76,12 +76,29 @@ const SLAP_LEAD := 24
 ## Standing beside the winner for the hand raise: on her right (-Z when she
 ## faces the hard camera).
 const WINNER_SIDE := Vector3(0.0, 0.0, 0.48)
-## The two base-rig clips she moves in, and their planted-foot travel rates
-## measured by tools/anim/gait_audit.gd after AubreyModel's retargeting.
-const WALK_CLIP := "Walk"
-const WALK_CLIP_SPEED := 0.78
-const JOG_CLIP := "Jog_Fwd"
-const JOG_CLIP_SPEED := 6.04
+## Her own clips (wrestling_clips.py, 60 fps), authored at the speeds she
+## moves, their planted-foot rates checked by tools/anim/gait_audit.gd after
+## AubreyModel's retargeting. The owner, 2 Nov: "a proper referee walk; a
+## side-step shuffle for following the action, which real refs do
+## constantly; a jog matched to the speed she actually moves at, so her feet
+## don't slide". She had walked on the CC0 mocap Walk (0.78 m/s) at 1.8x and
+## jogged on Jog_Fwd (6.0 m/s) at 0.6x.
+const WALK_CLIP := "strikes/ref_walk"
+## Authored at 1.4 m/s; on her retargeted (shorter) legs the planted foot
+## travels at 1.23 (gait_audit), so that is the rate she is matched to.
+const WALK_CLIP_SPEED := 1.23
+const JOG_CLIP := "strikes/ref_jog"
+const JOG_CLIP_SPEED := 3.6
+## Side-stepping, square to the two men she is watching: when the way she
+## has to go is more across her view of them than toward or away from it
+## (the cosine under SHUFFLE_ALONG), she steps sideways instead of turning
+## her back on the action, and at no more than SHUFFLE_MAX.
+const SHUFFLE_R_CLIP := "strikes/ref_shuffle_r"
+const SHUFFLE_L_CLIP := "strikes/ref_shuffle_l"
+## Authored at 0.9 m/s, 0.83 on her legs (gait_audit).
+const SHUFFLE_SPEED := 0.83
+const SHUFFLE_MAX := 1.2
+const SHUFFLE_ALONG := 0.6
 const MIN_ANIMATION_RATE := 0.3
 const MAX_ANIMATION_RATE := 2.1
 
@@ -409,7 +426,7 @@ func _follow(delta: float) -> void:
 	if side.x < 0.0:
 		side = -side
 	var spot := _inside(mid + side * STANDOFF)
-	var arrived := _go(spot, WALK_SPEED, delta, true)
+	var arrived := _go(spot, WALK_SPEED, delta, true, mid)
 	if arrived or not _moving:
 		_face(_yaw_towards(mid - _flat(global_position)), delta)
 		var down := false
@@ -708,7 +725,8 @@ func _on_match_won(winner: WrestlerController, _method: String) -> void:
 
 ## One step towards `spot`; true once she is there. Walks or jogs with the
 ## clip's rate matched to her speed, and turns to where she is going.
-func _go(spot: Vector3, speed: float, delta: float, keep_clear: bool) -> bool:
+func _go(spot: Vector3, speed: float, delta: float, keep_clear: bool,
+		watch := Vector3.INF) -> bool:
 	var here := _flat(global_position)
 	var to := spot - here
 	var far := to.length()
@@ -742,8 +760,17 @@ func _go(spot: Vector3, speed: float, delta: float, keep_clear: bool) -> bool:
 						along = -along
 					velocity += along * absf(into) * 0.8
 				velocity += n * (KEEP_CLEAR_M - d) * 2.0
+	var step := shuffle_side(velocity, _flat(watch - here) if watch != Vector3.INF \
+			else Vector3.ZERO) if speed <= WALK_SPEED else 0
+	if step != 0 and velocity.length() > SHUFFLE_MAX:
+		velocity = velocity.normalized() * SHUFFLE_MAX
 	global_position = _inside_soft(here + velocity * delta)
 	var pace := velocity.length()
+	if step != 0:
+		# Eyes on the action, stepping across it.
+		_face(_yaw_towards(_flat(watch - here)), delta)
+		_play(SHUFFLE_R_CLIP if step > 0 else SHUFFLE_L_CLIP, 0.2, false, pace / SHUFFLE_SPEED)
+		return false
 	if pace > 0.05:
 		_face(_yaw_towards(velocity), delta)
 	if speed > WALK_SPEED:
@@ -751,6 +778,22 @@ func _go(spot: Vector3, speed: float, delta: float, keep_clear: bool) -> bool:
 	else:
 		_play(WALK_CLIP, 0.25, false, pace / WALK_CLIP_SPEED)
 	return false
+
+
+## Which way she side-steps for `velocity` while watching along `look`: +1
+## to her right, -1 to her left, 0 to walk (the way is mostly toward or away
+## from the action, she is barely moving, or there is nothing to watch). Her
+## model faces its +Z, so her right is look x up.
+static func shuffle_side(velocity: Vector3, look: Vector3) -> int:
+	var pace := Vector3(velocity.x, 0.0, velocity.z).length()
+	var flat_look := Vector3(look.x, 0.0, look.z)
+	if pace < 0.05 or flat_look.length() < 0.3:
+		return 0
+	var dir := Vector3(velocity.x, 0.0, velocity.z) / pace
+	var facing := flat_look.normalized()
+	if absf(dir.dot(facing)) >= SHUFFLE_ALONG:
+		return 0
+	return 1 if dir.dot(facing.cross(Vector3.UP)) > 0.0 else -1
 
 
 func _face(yaw: float, delta: float) -> void:

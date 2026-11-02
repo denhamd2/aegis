@@ -48,7 +48,6 @@ func _ready() -> void:
 	man.play_presentation_clip(director._wait_clip(man), true)
 	director._beat = start
 	director._start_beat()
-	var skel := man.find_child("Skeleton3D", true, false) as Skeleton3D
 	var stats := {}
 	var last_yaw := man.rotation.y
 	var tick := 0
@@ -64,10 +63,11 @@ func _ready() -> void:
 			continue
 		var gaps := []
 		for bone: String in ["foot_l", "foot_r"]:
-			var idx := skel.find_bone(bone)
-			if idx < 0:  # Roman's own rig
-				idx = skel.find_bone("J_Foot_" + bone.right(1).to_upper())
-			var p := skel.global_transform * skel.get_bone_global_pose(idx).origin
+			# The skeleton the visible mesh is skinned to (his own rig's
+			# names through the model's map) -- find_child("Skeleton3D")
+			# found the hidden base rig that drives it, and for Roman that
+			# measured the wrong feet.
+			var p := man._bone_world(bone)
 			gaps.append(p.y - ANKLE - surface_at(p))
 		var low: float = minf(gaps[0], gaps[1])
 		var turn := absf(wrapf(man.rotation.y - last_yaw, -PI, PI)) * 60.0
@@ -90,25 +90,4 @@ func _ready() -> void:
 ## The top of whatever is under `p`: the steps' tiers and platform (ring.py
 ## build_steps), the apron, the mat, else the ringside floor.
 static func surface_at(p: Vector3) -> float:
-	var edge := maxf(absf(p.x), absf(p.z))
-	if absf(p.x) <= RingBuilder.APRON_OUT and absf(p.z) <= RingBuilder.APRON_OUT:
-		return 0.0 if edge < 3.0 else RingBuilder.APRON_TOP
-	var floor_y := ArenaBuilder.FLOOR_Y + ArenaBuilder.RINGSIDE_MAT_LIFT
-	var corner := EntranceDirector.ENTRY_CORNER
-	var apron_corner := Vector3(corner.x * RingBuilder.APRON_OUT, 0.0, corner.y * RingBuilder.APRON_OUT)
-	var out := RingBuilder.step_out_dir(corner)
-	var across := Vector3(-corner.y, 0.0, corner.x).normalized()
-	var d := p - apron_corner
-	var o := d.dot(out)
-	var a := d.dot(across)
-	var apex := RingBuilder.STEP_APRON_GAP * sqrt(2.0)
-	if absf(a) > RingBuilder.STEP_WIDTH * 0.5 or o < -absf(a) + apex:
-		return floor_y
-	var top_front := apex + RingBuilder.STEP_PLATFORM
-	var treads := RingBuilder.STEP_TREADS
-	var rise := (RingBuilder.STEP_TOP_Y - RingBuilder.STEP_FLOOR_Y) / treads
-	for i in range(treads - 1, -1, -1):
-		var front := top_front + RingBuilder.STEP_RUN * (treads - 1 - i)
-		if o <= front:
-			return RingBuilder.STEP_FLOOR_Y + rise * (i + 1)
-	return floor_y
+	return EntranceDirector.entry_surface_y(p)

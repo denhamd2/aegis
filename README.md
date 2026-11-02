@@ -11202,3 +11202,49 @@ The owner: "the new corner and staredown didn't work. The camera pan to the corn
 **Tests.** `test_entrance_director`: the walks play clips made for their speed; Aubrey waits from the close-ups; lights up on the walk to the corners.
 
 **Renders.** The "before" frames are the OpenGL preview; the "after" frames of the corners are Forward+.
+
+## 2 Nov — Roman's entrance: the steps, less waiting, the OTC wall, 2K26 shots. Aubrey's own walk, side-step and jog
+
+The owner: "fix Roman's entrance on the steps … improve his entrance overall … too much time spent on crowd shots, and the camera on the video wall goes a bit too far up over the OTC video … WWE 2K standard camera angles throughout". Then: "a proper referee walk; a side-step shuffle for following the action …; a jog matched to the speed she actually moves at". Review sheet: `gauntlet/refs/entrances/roman_entrance_review.png`.
+
+**The steps** (shared by every man's way in; measured tick by tick on a headless run of the route).
+- **"Turns the wrong way."** The floor walk went 0.8 m past the foot of the steps and swung 130° to come back. It is now a curve (`approach_curve`) that arrives on the stairs' own line.
+- **The apron spin.** A separate 76° turn on the spot on the 0.2 m apron, boots sliding through the canvas. He now squares up to the ropes over the apron step's last paces, eased (`face_to`, `APRON_TURN_FROM`).
+- **Boots planted.** Through the entry clips the root's height is corrected each tick by the boot he stands on, against the surface under it (`_plant_offset`, `entry_surface_y`; eased, clamped to ±15 cm, eased back afterwards). It works for any rig's legs.
+- **A measuring fault, found on the way.** `entry_contact` took `find_child("Skeleton3D")`, which for Roman is the hidden base rig, not the skeleton his mesh is skinned to. The "16 cm float" quoted before was that. It now reads the visible feet (`_bone_world`).
+- **Measured** (`entry_contact`):
+  - Roman's climb and apron step are within 1.6 cm every tick; Cody's whole way in is within 1.1 cm.
+  - Left: Roman's long stance on a 0.2 m apron puts a heel past its outer edge for 15 ticks (0.25 s) as he ducks through the ropes.
+
+**Less waiting, the whole song kept** (the owner's choice).
+- **Before.** Roman's entrance opened with 26.4 s of building, his wall and a dark crowd pan. Cody's ring shells were still bursting over the first shot.
+- **Now.**
+  - The building gets 7 s, the OTC wall 6 s (`ROMAN_INTRO_SECONDS` 13), no crowd pan.
+  - Then he stands in his portal, head bowed, on the long lens while the music builds (`ROMAN_PORTAL_HOLD` 7 s).
+  - Then the walk out (long lens, chest-up backing ahead of him, his face), and the lip (push in, the telephoto face, a low three-quarter `lip_hero`). The lip shares out whatever is left.
+- **The finger still goes up on the slam**, within a few ticks.
+- **The second entrance opens clean** (`pyro_clear`).
+
+**The OTC wall.** The shot aimed at the wall's old centre (9.2 m). The wall now sits on the three screens below it (`SCREEN_CENTER_Y` 6.75), so the push rode up into the truss. It is now derived from the wall's constants and holds the whole wall top to bottom, its portals out of frame (`test_the_otc_wall_shot_holds_the_whole_wall`).
+
+**2K26's grammar** (the `entrances.md` table).
+- **Two new shots on the way in, for every man:**
+  - a low rear three-quarter tracking him onto and up the steps (`steps_rear`);
+  - from inside the ring, low, up at him on the apron and through the ropes (`apron_low`).
+- **Shot lengths.** The 11.6 s floor shot is split into two. No shot of his entrance runs over 9 s except the finger held on the slam.
+
+**Aubrey's own feet** (60 fps, `wrestling_clips.py`).
+- **The old clips.** She had walked on the CC0 mocap `Walk` (0.78 m/s) at 1.8× and jogged on `Jog_Fwd` (6.0 m/s) at 0.6×.
+- **The new clips:**
+  - `Ref_Walk`: 1.4 m/s, upright.
+  - `Ref_Jog`: 3.6 m/s, a moment in the air.
+  - `Ref_Shuffle_R`/`_L`: a step-together side-step from a new `_side_step` generator; the feet never cross.
+- **On her retargeted legs** (`gait_audit`, which now measures sideways too): walk 1.23, jog 3.6, side-step 0.83 m/s. She plays each at those rates.
+- **Following the action** she faces the two men and side-steps across (`RefereeActor.shuffle_side`, at most 1.2 m/s). When her way is mostly toward or away from them, she walks.
+- **The timekeeper** walks on the same clip. His sitting clips are still the mocap.
+
+**60 fps is a standing rule** (CLAUDE.md). `test_sixty_fps` now fails on any authored clip below 60.
+
+**Tests.**
+- `test_entrance_director`: on screen by 13 s, finger on the slam, the whole wall in frame, no shot over 9 s.
+- `test_referee_locomotion`; `test_sixty_fps`; `gait_audit` PASS; clip gate re-pinned after the `clip_shot` review.

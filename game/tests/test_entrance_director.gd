@@ -1035,3 +1035,81 @@ func test_the_lights_come_up_as_they_walk_to_their_corners() -> void:
 				lit = i
 	assert_int(first_faceoff).is_greater(0)
 	assert_int(lit).is_equal(first_faceoff)
+
+
+## A beat's length in seconds, as _start_beat sets a walk's: its path at its
+## speed.
+func _beat_seconds(beat: Dictionary) -> float:
+	if beat.get("kind") == "walk":
+		var length := 0.0
+		var path: Array = beat["path"]
+		for i in path.size() - 1:
+			length += _flat((path[i + 1] as Vector3) - (path[i] as Vector3)).length()
+		return float(maxi(1, int(ceil(length / float(beat["speed"]) * EntranceDirector.TPS)))) \
+				/ EntranceDirector.TPS
+	return float(beat.get("ticks", 0)) / EntranceDirector.TPS
+
+
+## The owner, 2 Nov: "too much time spent on crowd shots", the whole song
+## kept. The building has ROMAN_INTRO_SECONDS and no crowd shot; from then to
+## the slam it is him -- and the finger still goes up on the slam.
+func test_roman_is_on_screen_soon_and_the_finger_still_lands_on_the_slam() -> void:
+	var scene := _match(true, "roman", "cody")
+	var director: EntranceDirector = scene.get_node("EntranceDirector")
+	var t := 0.0
+	var started := false
+	var finger_at := -1.0
+	var seen_at := -1.0
+	for beat: Dictionary in director._beats:
+		var w: WrestlerController = beat.get("who")
+		if w == null or w.entrance_style != "roman":
+			continue
+		if not started:
+			started = true
+			assert_str(beat.get("shot", "")).is_equal("intro")
+		assert_bool(String(beat.get("shot", "")).begins_with("crowd")).is_false()
+		if seen_at < 0.0 and beat.get("appear", false):
+			seen_at = t
+		if finger_at < 0.0 and beat.get("clip", "") == "strikes/finger_hold":
+			finger_at = t
+		t += _beat_seconds(beat)
+	assert_float(seen_at).is_less_equal(14.0)
+	var slam := EntranceDirector.ROMAN_MUSIC_HIT - float(EntranceDirector.FINGER_PYRO_AT) / EntranceDirector.TPS
+	# within a few ticks: each walk beat rounds its length up to a whole tick
+	assert_float(finger_at).is_equal_approx(slam, 4.0 / EntranceDirector.TPS)
+	for shot: Array in EntranceDirector.ROMAN_INTRO_SHOTS:
+		assert_float((shot[2] as Vector3).y).is_less(10.0)
+
+
+## "The camera on the video wall goes a bit too far up over the OTC video":
+## the wall shot keeps the whole wall's height in frame, top and bottom, from
+## first frame to last.
+func test_the_otc_wall_shot_holds_the_whole_wall() -> void:
+	var wall: Array = EntranceDirector.ROMAN_INTRO_SHOTS[-1]
+	var top := ArenaBuilder.SCREEN_CENTER_Y + ArenaBuilder.SCREEN_HEIGHT * 0.5
+	var bottom := ArenaBuilder.SCREEN_CENTER_Y - ArenaBuilder.SCREEN_HEIGHT * 0.5
+	for k in [0, 1]:
+		var at: Vector3 = wall[k]
+		var look: Vector3 = wall[2 + k]
+		var half := deg_to_rad(float(wall[4 + k])) * 0.5
+		var tilt := atan2(look.y - at.y, absf(look.z - at.z))
+		var d := absf(ArenaBuilder.SCREEN_FACE_Z - at.z)
+		assert_float(atan2(top - at.y, d)).is_less(tilt + half)
+		assert_float(atan2(bottom - at.y, d)).is_greater(tilt - half)
+
+
+## 2K26's grammar: long holds, never one shot dragging. Every shot of
+## Roman's entrance is under 9 s, but the finger held on the slam (the
+## music's) and the head bowed in his portal while it builds.
+func test_no_shot_of_romans_entrance_drags() -> void:
+	var scene := _match(true, "roman", "cody")
+	var director: EntranceDirector = scene.get_node("EntranceDirector")
+	var long: Array = []
+	for beat: Dictionary in director._beats:
+		var w: WrestlerController = beat.get("who")
+		if w == null or w.entrance_style != "roman" or beat.get("kind") == "hold":
+			continue
+		var secs := _beat_seconds(beat)
+		if secs > 9.0 and beat.get("shot") not in ["ramp_low_wide"]:
+			long.append("%s %.1fs" % [beat.get("shot"), secs])
+	assert_array(long).override_failure_message("long shots: %s" % [long]).is_empty()

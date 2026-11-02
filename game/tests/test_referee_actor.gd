@@ -43,11 +43,13 @@ func test_every_referee_clip_resolves_on_her_skeleton() -> void:
 
 
 func test_referee_and_timekeeper_gait_rates_match_the_measured_cycles() -> void:
-	# gait_audit measures 0.78 m/s for Walk and 6.04 m/s for Jog_Fwd after
-	# AubreyModel retargeting. The constants below are the calibrated clip rates;
-	# every authored movement speed must fit the animator's supported range.
-	assert_float(RefereeActor.WALK_CLIP_SPEED).is_equal_approx(0.78, 0.001)
-	assert_float(RefereeActor.JOG_CLIP_SPEED).is_equal_approx(6.04, 0.001)
+	# Her own clips (Ref_Walk, Ref_Jog, the side-steps): gait_audit measures
+	# 1.23, 3.6 and 0.83 m/s after AubreyModel retargeting (the CC0 mocap she
+	# used to walk on read 0.78 and 6.04). The constants are those rates;
+	# every movement speed must fit the animator's supported range.
+	assert_float(RefereeActor.WALK_CLIP_SPEED).is_equal_approx(1.23, 0.001)
+	assert_float(RefereeActor.JOG_CLIP_SPEED).is_equal_approx(3.6, 0.001)
+	assert_float(RefereeActor.SHUFFLE_SPEED).is_equal_approx(0.83, 0.001)
 	assert_float(RefereeActor.WALK_SPEED / RefereeActor.WALK_CLIP_SPEED) \
 			.is_between(RefereeActor.MIN_ANIMATION_RATE, RefereeActor.MAX_ANIMATION_RATE)
 	assert_float(RefereeActor.JOG_SPEED / RefereeActor.JOG_CLIP_SPEED) \

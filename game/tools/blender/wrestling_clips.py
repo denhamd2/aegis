@@ -864,6 +864,55 @@ def _gait(frames, fps, speed, contacts, plant_up, lift_up, foot_x,
     return out
 
 
+def _side_step(frames, fps, speed, direction, contact, base_x, lift_up,
+               pelvis_up, pelvis_dip):
+    """One looping in-place side-step cycle (the referee's shuffle), keyed
+    every frame: the lead foot (on the `direction` side, +1 right) steps out,
+    the trail foot closes to it. A planted foot travels sideways at exactly
+    `speed`, against the way she moves, so the canvas holds; a swinging one
+    eases across and lifts only a little -- a shuffle, not a march. The feet
+    never cross: with `base_x` either side of centre and `contact` frames
+    planted per foot, the stance runs from closed (about 0.1 m between the
+    ankles) to open, never past. The upper body stays square and still, the
+    eyes on the action. Frame `frames` repeats frame 0 by construction."""
+    lead = "r" if direction > 0 else "l"
+    trail = "l" if lead == "r" else "r"
+    starts = {lead: 0, trail: frames // 2}
+    half = (contact / float(fps)) * speed * 0.5
+    out = []
+    for f in range(frames + 1):
+        phase = (f % frames) / float(frames)
+        over = {}
+        for side, start in starts.items():
+            rel = (f - start) % frames
+            bx = base_x if side == "r" else -base_x
+            if rel <= contact:
+                over["foot_%s" % side] = (
+                    bx + direction * (half - (rel / float(fps)) * speed), 0.0, 0.104)
+            else:
+                swing = (rel - contact) / float(frames - contact)
+                eased = swing * swing * (3.0 - 2.0 * swing)
+                over["foot_%s" % side] = (
+                    bx + direction * (-half + eased * 2.0 * half), 0.0,
+                    0.104 + lift_up * math.sin(math.pi * swing) ** 0.55)
+            over["ankle_%s" % side] = (0.0, 0.0, 0.0)
+        # A small dip on each step, and the weight leaning the way she goes.
+        over["pelvis"] = (direction * 0.012, 0.0, pelvis_up - pelvis_dip * (
+            0.5 - 0.5 * math.cos(4.0 * math.pi * phase)))
+        over["hips"] = (0.0, 0.0, 0.0)
+        over["spine"] = (-4.0, 0.0, 0.0)
+        over["head"] = (-4.0, 0.0, 0.0)
+        # Hands loose by the thighs, a touch out from the body for balance,
+        # rocking a little with the steps.
+        rock = 0.015 * math.cos(4.0 * math.pi * phase)
+        over["hand_r"] = (0.25 + rock, 0.05, 0.90)
+        over["hand_l"] = (-0.25 + rock, 0.05, 0.90)
+        over["elbow_r"] = (0.6, -0.4, -1.0)
+        over["elbow_l"] = (-0.6, -0.4, -1.0)
+        out.append((f, P(**over)))
+    return out
+
+
 # --- the clips ------------------------------------------------------------
 
 def _shifted(base, fwd, up):
@@ -6145,6 +6194,46 @@ REF_DROP = pose(REF_WATCH, pelvis=(0.0, -0.10, 0.600), spine=(-36, 0, 0),
                 # The left foot already coming back off the canvas, so the
                 # kneel that follows never drags it through (_REF_KNEEL_L).
                 foot_l=(-0.18, -0.10, 0.12))
+
+# Her own feet, at the speeds she actually moves (the owner, 2 Nov: "a proper
+# referee walk; a side-step shuffle for following the action, which real refs
+# do constantly; a jog matched to the speed she actually moves at, so her
+# feet don't slide"). She walked on the CC0 mocap Walk (0.78 m/s) played at
+# 1.8x for her 1.4 m/s, and jogged on Jog_Fwd (6.0 m/s) slowed to 0.6x for
+# her 3.6 -- a hurried shuffle and a slow-motion jog, both 30 fps.
+#
+# 28 frames / 0.93 s, looping: an upright, purposeful walk at
+# RefereeActor.WALK_SPEED 1.4 m/s. Contact 16 of 28 per foot (one always
+# down), a 0.65 m step at a brisk cadence, the arms swinging easy and low.
+CLIPS["Ref_Walk"] = _open_hands(_gait(
+    frames=28, fps=FPS, speed=1.4,
+    contacts={"r": (0, 16), "l": (14, 16)},
+    # a clear 10 cm lift: at 7 cm her retargeted boot never left the
+    # planted band on her shorter leg (gait_audit read 0.94 m/s)
+    plant_up=0.104, lift_up=0.10,
+    foot_x={"r": 0.12, "l": -0.11},
+    pelvis_up=0.900, pelvis_dip=0.018,
+    hips_yaw=6.0, spine=(0.0, 2.0), head=(-3, 0, 0),
+    hand_fwd=(-0.10, 0.12), hand_up=(0.86, 0.91),
+    hand_x={"r": 0.23, "l": -0.22}, elbow=None), curl=0.4)
+# 20 frames / 0.67 s, looping: her jog to a cover at RefereeActor.JOG_SPEED
+# 3.6 m/s. Contact 7 of 20 per foot -- a moment in the air each step -- a
+# 1.2 m stride, arms bent and pumping, the chest a little forward.
+CLIPS["Ref_Jog"] = _gait(
+    frames=20, fps=FPS, speed=3.6,
+    contacts={"r": (0, 7), "l": (10, 7)},
+    plant_up=0.104, lift_up=0.20,
+    foot_x={"r": 0.12, "l": -0.12},
+    pelvis_up=0.905, pelvis_dip=0.035,
+    hips_yaw=5.0, spine=(2.0, -7.0), head=(4, 0, 0),
+    hand_fwd=(-0.14, 0.18), hand_up=(1.0, 1.12),
+    hand_x={"r": 0.21, "l": -0.20},
+    elbow={"r": (0.3, -0.9, -0.3), "l": (-0.3, -0.9, -0.3)})
+# 24 frames / 0.8 s, looping: the side-step she follows the action with,
+# square to the two men, at RefereeActor.SHUFFLE_SPEED 0.9 m/s; one to each
+# side (_side_step). Feet 0.23 either side of centre, 14 of 24 frames planted.
+CLIPS["Ref_Shuffle_R"] = _side_step(24, FPS, 0.9, 1.0, 14, 0.23, 0.09, 0.885, 0.012)
+CLIPS["Ref_Shuffle_L"] = _side_step(24, FPS, 0.9, -1.0, 14, 0.23, 0.09, 0.885, 0.012)
 
 CLIPS["Ref_Stand"] = [
     (0,  REF_STAND),

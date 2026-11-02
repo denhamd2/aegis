@@ -39,11 +39,16 @@ const CYCLES := {
 	"run_jog": 4.2,      # JOG_SPEED (outside the ring)
 	"walk_slow": 1.0,    # EntranceDirector.FACEOFF_CORNER_SPEED
 	"walk_staredown": 0.6,  # EntranceDirector.FACEOFF_WALK_SPEED
+	"ref_walk": 1.4,     # RefereeActor.WALK_SPEED, on the base rig
+	"ref_jog": 3.6,      # RefereeActor.JOG_SPEED, on the base rig
 }
 ## The official and timekeeper share AubreyModel's retargeted base-rig
 ## cycles. These rates are measured from their planted feet after retargeting,
 ## not guessed from the source clip's name or nominal speed.
-const OFFICIAL_CYCLES := {"Walk": 0.78, "Jog_Fwd": 6.04}
+const OFFICIAL_CYCLES := {"ref_walk": 1.23, "ref_jog": 3.6}
+## Her side-steps (RefereeActor.SHUFFLE_SPEED): the planted foot travels
+## sideways, so these are measured along the rig's x.
+const OFFICIAL_SIDE_CYCLES := {"ref_shuffle_r": 0.83, "ref_shuffle_l": 0.83}
 ## Clips that loop but carry the body at no speed at all: the feet should not
 ## travel while planted, and the seam still has to close.
 const STATIONARY := ["idle_ready", "tie_up_collar"]
@@ -84,13 +89,16 @@ func _run() -> void:
 	var official_skeleton := official.get_game_skeleton()
 	var official_player := official.get_node("AnimationPlayer") as AnimationPlayer
 	var official_library := AnimationLibrary.new()
-	for clip_name: String in OFFICIAL_CYCLES:
-		official_library.add_animation(clip_name, official_player.get_animation(clip_name))
+	for clip_name: String in OFFICIAL_CYCLES.keys() + OFFICIAL_SIDE_CYCLES.keys():
+		official_library.add_animation(clip_name, official_player.get_animation("strikes/" + clip_name))
 	official_library.add_animation("ref_stand", official_player.get_animation("strikes/ref_stand"))
 	official_library.add_animation("ref_watch", official_player.get_animation("strikes/ref_watch"))
 	for clip_name: String in OFFICIAL_CYCLES:
 		failures += _audit(official_skeleton, official_library, clip_name,
 				OFFICIAL_CYCLES[clip_name])
+	for clip_name: String in OFFICIAL_SIDE_CYCLES:
+		failures += _audit(official_skeleton, official_library, clip_name,
+				OFFICIAL_SIDE_CYCLES[clip_name], true)
 	for clip_name: String in ["ref_stand", "ref_watch"]:
 		failures += _audit(official_skeleton, official_library, clip_name, 0.0)
 	official.free()
@@ -99,7 +107,7 @@ func _run() -> void:
 	quit(1 if failures > 0 else 0)
 
 func _audit(skeleton: Skeleton3D, lib: AnimationLibrary, clip_name: String,
-		speed: float) -> int:
+		speed: float, sideways := false) -> int:
 	if not lib.has_animation(clip_name):
 		push_error("no clip '%s' in %s" % [clip_name, LIB])
 		return 1
@@ -138,6 +146,7 @@ func _audit(skeleton: Skeleton3D, lib: AnimationLibrary, clip_name: String,
 			continue
 		var planted := 0.0
 		var travelled := 0.0
+		var drift := 0.0
 		var previous := 0.0
 		var contiguous := false
 		var t := 0.0
@@ -148,9 +157,11 @@ func _audit(skeleton: Skeleton3D, lib: AnimationLibrary, clip_name: String,
 				if contiguous:
 					# The rig's own forward is +Z, so backward travel -- the
 					# direction a planted foot must move -- is a falling z.
-					travelled += previous - p.z
+					# A side-step's planted foot travels along x, either way.
+					travelled += absf(p.x - previous) if sideways else previous - p.z
+					drift += p.x - previous
 					planted += step
-				previous = p.z
+				previous = p.x if sideways else p.z
 				contiguous = true
 			else:
 				contiguous = false
@@ -169,6 +180,10 @@ func _audit(skeleton: Skeleton3D, lib: AnimationLibrary, clip_name: String,
 			findings += 1
 		print("  %s planted %.3fs, travels %.3f m back -> %.2f m/s  %s"
 				% [foot, planted, travelled, delivered, verdict])
+		if sideways:
+			# Which way the planted foot slides along the rig's x: opposite
+			# to the way she steps (RefereeActor.shuffle_side relies on it).
+			print("    planted foot drifts %+.3f m along x" % drift)
 	return findings
 
 ## Forward kinematics over the clip's own tracks -- neither

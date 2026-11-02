@@ -373,6 +373,15 @@ const RECIPES := {
 	# Roman's entrance (gauntlet/refs/entrances.md). Own lengths, as above.
 	"walk_slow": {"kind": "retime", "source": "Walk_Slow",
 		"seconds": 1.000, "file": AUTHORED, "loop": true},
+	# The referee's own locomotion (RefereeActor), at the speeds she moves.
+	"ref_walk": {"kind": "retime", "source": "Ref_Walk",
+		"seconds": 28.0 / 30.0, "file": AUTHORED, "loop": true},
+	"ref_jog": {"kind": "retime", "source": "Ref_Jog",
+		"seconds": 20.0 / 30.0, "file": AUTHORED, "loop": true},
+	"ref_shuffle_r": {"kind": "retime", "source": "Ref_Shuffle_R",
+		"seconds": 24.0 / 30.0, "file": AUTHORED, "loop": true},
+	"ref_shuffle_l": {"kind": "retime", "source": "Ref_Shuffle_L",
+		"seconds": 24.0 / 30.0, "file": AUTHORED, "loop": true},
 	"walk_staredown": {"kind": "retime", "source": "Walk_Staredown",
 		"seconds": 40.0 / 30.0, "file": AUTHORED, "loop": true},
 	"walk_slow_look": {"kind": "retime", "source": "Walk_Slow_Look",

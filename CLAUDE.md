@@ -21,6 +21,11 @@ not a separate Blender runtime.) The work follows this repo's asset pipeline:
   **deterministic** — the same input table produces a byte-identical file, which
   is what lets it be diffed and reviewed like the `.tres` bakes
 - the game builds, runs and tests without Blender. Keep it that way.
+- **every animation is 60 fps** (the owner's standing rule). Author new clips in
+  `wrestling_clips.py`, whose export samples at `EXPORT_FPS` 60; keep
+  `wrestling_clips.glb.import` at `animation/fps=60`; re-bake the strike and
+  paired libraries after a rebuild. `tests/test_sixty_fps.gd` fails on any
+  authored clip below 60.
 
 Two practical consequences when reading a skill:
 

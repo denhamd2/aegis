@@ -59,3 +59,32 @@ func test_the_base_clips_play_cubic_between_keys() -> void:
 	# Through every key exactly, and idempotent.
 	assert_float(anim.rotation_track_interpolate(t, 1.0 / 3.0).angle_to(Quaternion(Vector3.UP, 0.3))).is_less(0.0001)
 	assert_int(WrestlerController.smooth_between_keys(lib)).is_equal(0)
+
+
+## The owner, 2 Nov: "Ensure this and all future animations will be 60fps".
+## Every authored clip -- today's and any added later to wrestling_clips.py
+## -- carries 60 samples a second wherever a bone moves, and the import keeps
+## them (Godot resamples to its import fps). A clip added any other way, or an
+## import reset to 30, fails here.
+func test_every_authored_clip_is_sampled_at_sixty() -> void:
+	var cfg := ConfigFile.new()
+	assert_int(cfg.load(CLIPS + ".import")).is_equal(OK)
+	assert_int(int(cfg.get_value("params", "animation/fps", 0))).is_equal(60)
+	var scene: Node = auto_free((load(CLIPS) as PackedScene).instantiate())
+	var player := scene.find_child("AnimationPlayer", true, false) as AnimationPlayer
+	var coarse: Array[String] = []
+	var checked := 0
+	for name in player.get_animation_list():
+		var anim := player.get_animation(name)
+		var finest := 1.0e9
+		for t in anim.get_track_count():
+			if anim.track_get_type(t) != Animation.TYPE_ROTATION_3D or anim.track_get_key_count(t) < 3:
+				continue
+			for k in range(1, anim.track_get_key_count(t)):
+				finest = minf(finest, anim.track_get_key_time(t, k) - anim.track_get_key_time(t, k - 1))
+		if finest < 1.0e8:
+			checked += 1
+			if finest > 1.0 / 60.0 + 0.002:
+				coarse.append("%s (%.1f fps)" % [name, 1.0 / finest])
+	assert_int(checked).is_greater(250)
+	assert_array(coarse).override_failure_message("below 60 fps: %s" % [coarse]).is_empty()

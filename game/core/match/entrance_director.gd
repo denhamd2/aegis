@@ -75,6 +75,19 @@ const APRON_STAND := 3.12
 ## Straight out along the diagonal from the climb's start, so he arrives
 ## square to the flight rather than cutting its corner.
 const APPROACH_M := 0.8
+## The way in on camera (2K26's Roman, entrances.md): low behind him onto
+## and up the steps, then from inside the ring, low, up at him on the apron.
+## Far enough back and out to the side that the steps and the corner are in
+## frame past him: at 1.7 m his back filled it (storyboard, 2 Nov).
+const STEPS_REAR_BACK := 2.8
+const STEPS_REAR_SIDE := 1.5
+const STEPS_REAR_HEIGHT := 1.1
+const STEPS_REAR_FOV := 50.0
+const APRON_LOW_IN := 1.2
+const APRON_LOW_HEIGHT := 0.55
+const APRON_LOW_FOV := 52.0
+## How far through the apron step he starts squaring up to the ropes.
+const APRON_TURN_FROM := 0.45
 ## Where the ramp's cut lands him: a few metres short of the ramp foot, in the
 ## ringside shot. The full 24 m ramp at walking pace would be fifteen seconds
 ## of one shot; a broadcast cuts it, and so does this.
@@ -309,8 +322,11 @@ const POSE_TOP_COLOR := Color(0.92, 0.96, 1.0)
 const POSE_RING_DIM := 0.35
 ## On the lip before the finger: the slow push-in while he looks the building
 ## over, then the close-up (R-41 30-40 s, 1:04).
-const ROMAN_LIP_PUSH := 4.0
-const ROMAN_LIP_FACE := 3.0
+## The building before he is seen (the owner, 2 Nov: "too much time spent on
+## crowd shots"), then standing in his portal while the music builds. The lip
+## takes what is left before the finger (_add_roman_entrance).
+const ROMAN_INTRO_SECONDS := 13.0
+const ROMAN_PORTAL_HOLD := 7.0
 ## After the slam: the very wide of the pyro, then the finger held under the
 ## low wide from the ramp until this music time (R-41: 40 s to 58 s).
 const ROMAN_PYRO_WIDE := 3 * ROMAN_BEAT
@@ -339,22 +355,27 @@ const ROMAN_WALK_SHOTS := [["steadicam_front", 8 * ROMAN_BEAT], ["face_walk", 6 
 ## establishing lens), in seconds. [from, to, look_from, look_to, fov_from,
 ## fov_to, seconds]. Lenses as vertical FOV: 53 ~ 24 mm, 38 ~ 35 mm,
 ## 27 ~ 50 mm, 16 ~ 85 mm.
+## How far in front of the wall the camera stands for its shot: at 32 degrees
+## of vertical lens the 6 m wall fills the frame top to bottom with a little
+## over, the bottom edge of the frame stays above the portals (the empty
+## tunnel never in shot -- test_entrance_cameras), and a metre or two of each
+## end is cropped (the wall is 3:1, the frame 16:9).
+const ROMAN_WALL_BACK := 13.5
 const ROMAN_INTRO_SHOTS := [
 	# The building, the stage empty under his light: high in the far end, a
-	# 24 mm wide, trucking across (R-41 0-10 s).
+	# 24 mm wide, trucking across (R-41 0-10 s; 2K26 Roman 1:55).
 	[Vector3(8.5, RIG_CLEAR_Y, 14.0), Vector3(3.0, RIG_CLEAR_Y + 0.1, 14.5),
-		Vector3(0.0, 3.0, -18.0), Vector3(0.0, 3.2, -20.0), 53.0, 50.0, 8.0],
-	# His video on the wall, from up level with it over the ramp, pushing
-	# in: the screen fills the frame and the empty portals below it stay out
-	# of shot (it was taken from low on the ramp, the portals in the bottom
-	# of the frame).
-	[Vector3(0.0, 6.4, -18.0), Vector3(0.0, 6.5, -21.0),
-		Vector3(0.0, 9.2, -36.5), Vector3(0.0, 9.3, -36.5), 30.0, 26.0, 7.0],
-	# The building waiting for him: the hard camera side's crowd from
-	# ringside, panning along the rows -- stretched to fill the wait, so the
-	# next cut is to him already in his portal (the "stage" walk).
-	[Vector3(-3.6, 1.7, -1.5), Vector3(-3.6, 1.8, 1.5),
-		Vector3(-16.0, 4.6, -6.0), Vector3(-16.0, 4.6, 4.0), 40.0, 38.0, 8.0],
+		Vector3(0.0, 3.0, -18.0), Vector3(0.0, 3.2, -20.0), 53.0, 50.0, 7.0],
+	# His video on the wall, square on and level with its centre, pushing in
+	# a little: the whole OTC panel in frame, the portals' tops just under
+	# it. It aimed at the wall's old centre (9.2 m; the wall now sits on the
+	# three screens below it, SCREEN_CENTER_Y 6.75), so the push rode up over
+	# the video into the truss -- the owner, 2 Nov. The last shot of the
+	# montage, held to the end of the intro.
+	[Vector3(0.0, ArenaBuilder.SCREEN_CENTER_Y - 0.3, ArenaBuilder.SCREEN_FACE_Z + ROMAN_WALL_BACK),
+		Vector3(0.0, ArenaBuilder.SCREEN_CENTER_Y - 0.3, ArenaBuilder.SCREEN_FACE_Z + ROMAN_WALL_BACK - 0.6),
+		Vector3(0.0, ArenaBuilder.SCREEN_CENTER_Y - 0.25, ArenaBuilder.SCREEN_FACE_Z),
+		Vector3(0.0, ArenaBuilder.SCREEN_CENTER_Y - 0.25, ArenaBuilder.SCREEN_FACE_Z), 34.0, 33.0, 6.0],
 ]
 ## The owner: no close-ups of an empty tunnel, ever. There used to be a long
 ## lens creeping into the empty portals here -- eleven seconds of it, then
@@ -912,6 +933,10 @@ func _build_timeline() -> void:
 		var opening: Dictionary = _beats[first_beat]
 		opening["events"] = (opening.get("events", []) as Array).duplicate() \
 				+ [[1, "entrance_" + w.entrance_style]]
+		if w == _a:
+			# The second man's entrance opens clean: the first man's ring
+			# shells were still bursting over Roman's building wide (2 Nov).
+			opening["events"] = (opening["events"] as Array) + [[1, "pyro_clear"]]
 		_schedule_call(w, first_beat)
 		if w == _b:
 			# The handover: he is on his mark and his music fades under the
@@ -1338,13 +1363,23 @@ func _physics_process(delta: float) -> void:
 		"clip":
 			var from: Vector3 = beat["from"]
 			var to: Vector3 = beat["to"]
-			w.global_position = from.lerp(to, t)
+			w.global_position = from.lerp(to, t) \
+					+ Vector3.UP * _plant_offset(w, beat.get("plant", false))
 			# Into the clip's heading at the walk's turn rate, not in one
 			# frame: the apron step starts ~60 degrees off the climb, and
 			# the snap read as a glitch on the way in.
 			var face: Vector3 = beat["facing"]
-			w.rotation.y = rotate_toward(w.rotation.y, atan2(-face.x, -face.z),
-					TURN_RATE * delta)
+			var want := atan2(-face.x, -face.z)
+			if beat.has("face_to"):
+				# Squared to the ropes in the step's last paces, eased: it
+				# was a separate 76-degree spin on the spot on the 0.2 m
+				# apron, boots sliding through the canvas.
+				var to_face: Vector3 = beat["face_to"]
+				var k := smoothstep(float(beat["turn_from"]), 1.0, t)
+				want = lerp_angle(want, atan2(-to_face.x, -to_face.z), k)
+				w.rotation.y = rotate_toward(w.rotation.y, want, TURN_RATE * delta)
+			else:
+				w.rotation.y = rotate_toward(w.rotation.y, want, TURN_RATE * delta)
 			if beat["clip"] == "strikes/rope_step_through_apron":
 				_part_ropes(w, t, beat["facing"])
 	_frame(beat, delta)
@@ -1587,42 +1622,58 @@ func _add_roman_entrance(w: WrestlerController, entrance_x: float, side: String)
 	var emerge := Vector3(entrance_x, deck, ArenaBuilder.ENTRANCE_Z)
 	var lip := Vector3(0.0, deck, ArenaBuilder.STAGE_FRONT - 0.6)
 	var blue := {"lights": side, "light_color": ROMAN_BLUE}
-	# Backward from the slam: the finger's arm arrives FINGER_PYRO_AT ticks
-	# into Finger_Hold, so it starts that much before the slam; before it he
-	# stands on the lip (the push-in, then the close-up); before that, the walk
-	# out from the portal at his pace. What is left of the music is the empty
-	# stage.
+	# The owner, 2 Nov: "too much time spent on crowd shots" -- 26 s of the
+	# building, his wall and a dark crowd pan before he was seen -- with the
+	# whole song kept. So the building gets ROMAN_INTRO_SECONDS (2K26: he is
+	# on the stage ~13 s in), and the rest of the build up to the slam
+	# (ROMAN_MUSIC_HIT) is him: standing in his portal, the walk out, the lip.
+	# Built backward from the slam, as before: the finger's arm arrives
+	# FINGER_PYRO_AT ticks into Finger_Hold, so it starts that much early.
 	var finger_start := ROMAN_MUSIC_HIT - float(FINGER_PYRO_AT) / TPS
-	var stand_start := finger_start - ROMAN_LIP_PUSH - ROMAN_LIP_FACE
 	var walk_s := _flat(emerge).distance_to(_flat(lip)) / ROMAN_WALK_SPEED
-	var appear := stand_start - walk_s
+	var portal_end := ROMAN_INTRO_SECONDS + ROMAN_PORTAL_HOLD
+	var lip_s := maxf(finger_start - portal_end - walk_s, 3.0)
 	_beats.append({"kind": "hold", "who": w,
-			"ticks": _secs(0.0, appear), "shot": "intro",
+			"ticks": _secs(0.0, ROMAN_INTRO_SECONDS), "shot": "intro",
 			"events": [[1, "tron_on"], [1, "dim_on"]]})
-	var half := emerge.lerp(lip, 0.5)
-	# He walks out as the first pyro goes off, on the very wide so the burst
-	# reads; then the usual stage cut.
-	var early := emerge.lerp(lip, minf(0.4, ROMAN_FIRST_PYRO_SHOT * ROMAN_WALK_SPEED
-			/ maxf(_flat(emerge).distance_to(_flat(lip)), 0.01)))
-	_beats.append(_with(blue, {"kind": "walk", "who": w, "path": [emerge, early],
-			"speed": ROMAN_WALK_SPEED, "walk_clip": ROMAN_WALK_CLIP,
-			"shot": "stage_wide", "appear": true, "props": true,
+	# In his portal, head bowed, while the music builds: the long lens dead on
+	# the portal, creeping in (2K26 2:08-2:17, him small under his wall).
+	_beats.append(_with(blue, {"kind": "pose", "who": w,
+			"ticks": _secs(ROMAN_INTRO_SECONDS, portal_end),
+			"clip": "strikes/head_bow", "facing": Vector3.BACK,
+			"shot": "portal_long", "portal": emerge, "push_from": 0,
+			"push_over": _secs(ROMAN_INTRO_SECONDS, portal_end),
+			"appear": true, "props": true, "path": [emerge, emerge + Vector3.BACK * 0.1],
 			"events": [[1, "pyro_stage"]]}))
-	_beats.append(_with(blue, {"kind": "walk", "who": w, "path": [early, half],
+	var third := emerge.lerp(lip, 1.0 / 3.0)
+	var two_thirds := emerge.lerp(lip, 2.0 / 3.0)
+	# The walk out: his wall behind him at the long lens, then chest-up at
+	# the lens backing ahead of him (2K26 2:35), then his face.
+	_beats.append(_with(blue, {"kind": "walk", "who": w, "path": [emerge, third],
+			"speed": ROMAN_WALK_SPEED, "walk_clip": ROMAN_WALK_CLIP, "shot": "stage"}))
+	_beats.append(_with(blue, {"kind": "walk", "who": w, "path": [third, two_thirds],
 			"speed": ROMAN_WALK_SPEED, "walk_clip": ROMAN_WALK_CLIP,
-			"shot": "stage"}))
-	_beats.append(_with(blue, {"kind": "walk", "who": w, "path": [half, lip],
+			"shot": "steadicam_front"}))
+	_beats.append(_with(blue, {"kind": "walk", "who": w, "path": [two_thirds, lip],
 			"speed": ROMAN_WALK_SPEED, "walk_clip": ROMAN_WALK_CLIP,
 			"shot": "face_walk"}))
-	# On the lip: the building looked over, then the close-up.
+	# On the lip, the building looked over: the push in, the telephoto
+	# face, the low three-quarter -- sharing what is left before the finger.
+	var push_s := lip_s * 0.42
+	var face_s := lip_s * 0.30
+	var t0 := portal_end + walk_s
 	_beats.append(_with(blue, {"kind": "pose", "who": w,
-			"ticks": _secs(0.0, ROMAN_LIP_PUSH),
+			"ticks": _secs(t0, t0 + push_s),
 			"clip": "strikes/roman_stand", "facing": Vector3.BACK,
 			"shot": "stage_push"}))
 	_beats.append(_with(blue, {"kind": "pose", "who": w,
-			"ticks": _secs(0.0, ROMAN_LIP_FACE),
+			"ticks": _secs(t0 + push_s, t0 + push_s + face_s),
 			"clip": "strikes/roman_stand", "facing": Vector3.BACK,
 			"shot": "face_walk"}))
+	_beats.append(_with(blue, {"kind": "pose", "who": w,
+			"ticks": _secs(t0 + push_s + face_s, finger_start),
+			"clip": "strikes/roman_stand", "facing": Vector3.BACK,
+			"shot": "lip_hero"}))
 	# The finger, and on the slam the pyro and the room red, on a very wide.
 	_beats.append(_with(blue, {"kind": "pose", "who": w,
 			"ticks": _secs(finger_start, ROMAN_MUSIC_HIT + ROMAN_PYRO_WIDE),
@@ -1988,13 +2039,27 @@ func _add_route_in(w: WrestlerController, cut: Vector3, speed: float,
 	var climb_from := flight_outer_edge
 	var approach := climb_from + out * APPROACH_M
 	var foot := Vector3(0.0, 0.0, -ArenaBuilder.BARRICADE_RADIUS + 0.4)
+	# Round onto the flight on a curve, not out past it and back: the walk
+	# went 0.8 m beyond the foot of the steps and swung 130 degrees to come
+	# back to them -- the owner's "he turns the wrong way" (2 Nov). The curve
+	# leaves the barricade line heading along it and arrives on the stairs'
+	# own line, the turn spread over its last couple of metres.
+	var curve := approach_curve(foot, approach, climb_from)
 	if split_floor:
-		_beats.append({"kind": "walk", "who": w, "path": [cut, foot, approach],
+		# Two shots of about equal length, by distance walked (2K26 holds
+		# 6-9 s; the one floor shot ran 11.6 s at Roman's pace).
+		var walked := [_flat(cut).distance_to(_flat(curve[0]))]
+		for i in range(1, curve.size()):
+			walked.append(float(walked[-1]) + _flat(curve[i - 1]).distance_to(_flat(curve[i])))
+		var split := 1
+		while split < curve.size() - 2 and float(walked[split]) < float(walked[-1]) * 0.5:
+			split += 1
+		_beats.append({"kind": "walk", "who": w, "path": [cut] + curve.slice(0, split + 1),
 				"speed": speed, "walk_clip": walk_clip, "shot": "floor_track", "cut": true})
-		_beats.append({"kind": "walk", "who": w, "path": [approach, climb_from],
-				"speed": speed, "walk_clip": walk_clip, "shot": "ringside"})
+		_beats.append({"kind": "walk", "who": w, "path": curve.slice(split),
+				"speed": speed, "walk_clip": walk_clip, "shot": "steps_rear"})
 	else:
-		_beats.append({"kind": "walk", "who": w, "path": [cut, foot, approach, climb_from],
+		_beats.append({"kind": "walk", "who": w, "path": [cut] + curve,
 				"speed": speed, "walk_clip": walk_clip, "shot": "ringside", "cut": true})
 	_beats.append({"kind": "turn", "who": w, "facing": -out, "shot": "ringside"})
 	if floor_clip != "":
@@ -2004,21 +2069,20 @@ func _add_route_in(w: WrestlerController, cut: Vector3, speed: float,
 	_beats.append({"kind": "clip", "who": w, "clip": "strikes/climb_steps",
 			"ticks": int(round(CLIMB_SECONDS * TPS)),
 			"from": Vector3(climb_from.x, surface_y(climb_from), climb_from.z),
-			"to": top_at, "facing": -out, "shot": "ringside"})
+			"to": top_at, "facing": -out, "shot": "steps_rear", "plant": true})
 	# Onto the apron, a pace along the side from the post.
 	var apron := Vector3(ENTRY_CORNER.x * (RingBuilder.TURNBUCKLE_PAD_XZ - APRON_ALONG_M),
 			RingBuilder.APRON_TOP,
 			ENTRY_CORNER.y * APRON_STAND)
 	var across := _flat(apron - top_at)
+	# Square to the ropes in the step's last paces -- facing into the ring
+	# across the -Z side, in the apron step's close stance (the wait clip's
+	# staggered feet do not fit on the 0.2 m apron).
+	var into := Vector3(0.0, 0.0, -ENTRY_CORNER.y)
 	_beats.append({"kind": "clip", "who": w, "clip": "strikes/apron_step",
 			"ticks": int(round(APRON_STEP_SECONDS * TPS)),
-			"from": top_at, "to": apron, "facing": across, "shot": "ringside"})
-	# Square to the ropes: facing into the ring across the -Z side -- in the
-	# apron step's close stance, not the wait clip's: its staggered feet do
-	# not fit on the 0.2 m apron (one boot off the edge, one in the canvas).
-	var into := Vector3(0.0, 0.0, -ENTRY_CORNER.y)
-	_beats.append({"kind": "turn", "who": w, "facing": into, "shot": "ringside",
-			"keep_clip": true})
+			"from": top_at, "to": apron, "facing": across, "shot": "apron_low",
+			"face_to": into, "turn_from": APRON_TURN_FROM, "plant": true})
 	if survey_clip != "":
 		_beats.append({"kind": "clip", "who": w, "clip": survey_clip,
 				"ticks": 60, "from": apron, "to": apron, "facing": into, "shot": "ringside"})
@@ -2026,8 +2090,24 @@ func _add_route_in(w: WrestlerController, cut: Vector3, speed: float,
 	inside.y = 0.0  # the canvas is level with the ring centre; the apron is not.
 	_beats.append({"kind": "clip", "who": w, "clip": "strikes/rope_step_through_apron",
 			"ticks": int(round(APRON_ROPE_SECONDS * TPS)),
-			"from": apron, "to": inside, "facing": into, "shot": "rope_wide"})
+			"from": apron, "to": inside, "facing": into, "shot": "apron_low", "plant": true})
 	return inside
+
+
+## The floor walk onto the foot of the steps: a quadratic curve from the
+## barricade line (`from`) round through `bend` (out along the stairs' line)
+## to `to`, the foot of the flight. Its last tangent is the stairs' own line,
+## so he arrives facing up them. Points about 0.35 m apart.
+static func approach_curve(from: Vector3, bend: Vector3, to: Vector3) -> Array:
+	var length := _flat(from).distance_to(_flat(bend)) + _flat(bend).distance_to(_flat(to))
+	var n := maxi(4, int(ceil(length / 0.35)))
+	var pts: Array = []
+	for i in n + 1:
+		var u := float(i) / float(n)
+		# weighted toward the end, where the turn is
+		var q := 1.0 - pow(1.0 - u, 1.6)
+		pts.append(from * (1.0 - q) * (1.0 - q) + bend * 2.0 * (1.0 - q) * q + to * q * q)
+	return pts
 
 
 ## Through the ropes from the apron (refs/ropes.md): his left hand takes the
@@ -2178,6 +2258,10 @@ func _event(w: WrestlerController, what: String) -> void:
 				# after Kenny's, MatchAudio): queued now, he waits in the
 				# voice lane until Justin has finished.
 				cue.emit("called_" + w.entrance_style)
+		"pyro_clear":
+			if _pyro:
+				_pyro.queue_free()
+				_pyro = null
 		"lights_up":
 			_dim_house(false)
 		"house_down":
@@ -2303,6 +2387,75 @@ static func surface_y(p: Vector3) -> float:
 	return floor_y
 
 
+## The surface under `p` on the way into the ring: the ringside mat, each
+## tread of the diagonal steps, the platform, the apron and the canvas. What
+## a planted boot stands on (entry_contact.gd measured against the same).
+static func entry_surface_y(p: Vector3) -> float:
+	var edge := maxf(absf(p.x), absf(p.z))
+	if absf(p.x) <= RingBuilder.APRON_OUT and absf(p.z) <= RingBuilder.APRON_OUT:
+		return 0.0 if edge < 3.0 else RingBuilder.APRON_TOP
+	var floor_y := ArenaBuilder.FLOOR_Y + ArenaBuilder.RINGSIDE_MAT_LIFT
+	var corner := ENTRY_CORNER
+	var apron_corner := Vector3(corner.x * RingBuilder.APRON_OUT, 0.0, corner.y * RingBuilder.APRON_OUT)
+	var out := RingBuilder.step_out_dir(corner)
+	var across := Vector3(-corner.y, 0.0, corner.x).normalized()
+	var d := p - apron_corner
+	var o := d.dot(out)
+	var a := d.dot(across)
+	var apex := RingBuilder.STEP_APRON_GAP * sqrt(2.0)
+	if absf(a) > RingBuilder.STEP_WIDTH * 0.5 or o < -absf(a) + apex:
+		return floor_y
+	var top_front := apex + RingBuilder.STEP_PLATFORM
+	var treads := RingBuilder.STEP_TREADS
+	var rise := (RingBuilder.STEP_TOP_Y - RingBuilder.STEP_FLOOR_Y) / treads
+	for i in range(treads - 1, -1, -1):
+		var front := top_front + RingBuilder.STEP_RUN * (treads - 1 - i)
+		if o <= front:
+			return RingBuilder.STEP_FLOOR_Y + rise * (i + 1)
+	return floor_y
+
+
+## Each man's root lifted or lowered so his lower boot is on what it stands
+## on, through the entry clips (the owner, 2 Nov: Roman "floats" on the way
+## in). The clips are keyed for the base rig; a rig with a longer leg or a
+## wider stance -- Roman's, Kenny's -- left both boots 3-7 cm over the apron
+## and one 9 cm into it on the turn (entry_contact). Measured off the pose
+## each tick with the last correction taken out, eased, clamped; it eases
+## back to nothing on the beats that follow.
+const PLANT_ANKLE := 0.104
+const PLANT_MAX := 0.15
+const PLANT_EASE := 0.25
+var _plant := {}
+
+
+func _plant_offset(w: WrestlerController, planting: bool) -> float:
+	var was: float = _plant.get(w, 0.0)
+	var want := 0.0
+	if planting:
+		# The boot he stands on: the one nearer its own surface. Not simply
+		# the lower one -- squaring up on the 0.2 m apron a wide stance puts
+		# the front boot over the canvas line, 0.10 m higher, and planting
+		# that one lifted the other off the apron.
+		var errs: Array[float] = []
+		for bone: String in ["foot_l", "foot_r"]:
+			var fp := w._bone_world(bone)
+			if fp != Vector3.INF:
+				errs.append(fp.y - PLANT_ANKLE - entry_surface_y(fp) - was)
+		if errs.is_empty():
+			want = was
+		else:
+			var stand: float = errs[0]
+			for e: float in errs:
+				if absf(e) < absf(stand):
+					stand = e
+			want = clampf(-stand, -PLANT_MAX, PLANT_MAX)
+	var now := lerpf(was, want, PLANT_EASE)
+	if absf(now) < 0.0005 and not planting:
+		now = 0.0
+	_plant[w] = now
+	return now
+
+
 ## A point and a heading `distance` metres along a polyline, on the surface.
 func _along(path: Array, distance: float) -> Array:
 	var left := distance
@@ -2334,7 +2487,7 @@ func _place(w: WrestlerController, at: Vector3, heading: Vector3, snap: bool,
 		p.y = RingBuilder.APRON_TOP
 	else:
 		p.y = 0.0
-	w.global_position = p
+	w.global_position = p + Vector3.UP * _plant_offset(w, false)
 	var flat := Vector3(heading.x, 0.0, heading.z)
 	if flat.length() < 0.001:
 		if snap:
@@ -2556,6 +2709,36 @@ func _frame_shot(beat: Dictionary, delta: float, force_cut := false) -> void:
 		"ring_high_corner":
 			_camera.set_entrance_shot(RING_HIGH_CORNER_AT, w.global_position + Vector3.UP * 1.0,
 					RING_HIGH_CORNER_FOV, true)
+		"lip_hero":
+			# On the lip: low, three-quarter from his left, looking up at him
+			# with his wall behind -- a slow arc in (2K26's hero grammar).
+			var e_h := smoothstep(0.0, 1.0, float(_tick) / maxf(float(beat["ticks"]), 1.0))
+			var side_h := Vector3(-1.0, 0.0, 0.0).rotated(Vector3.UP, lerpf(0.55, 0.35, e_h))
+			_camera.set_entrance_shot(w.global_position + side_h * lerpf(3.4, 2.8, e_h)
+					+ Vector3.UP * 0.75, w.global_position + Vector3.UP * 1.55, 34.0,
+					first and not _was_shot("lip_hero"), delta)
+		"steps_rear":
+			# 2K26 Roman 3:15-3:24: low, behind him and to the side, tracking
+			# him round onto the steps and up them, the ring ahead of him.
+			var fr := _flat(-w.global_transform.basis.z).normalized()
+			var sr := Vector3.UP.cross(fr).normalized()
+			if sr.dot(_flat(w.global_position)) < 0.0:
+				sr = -sr
+			var at_r := w.global_position - fr * STEPS_REAR_BACK + sr * STEPS_REAR_SIDE \
+					+ Vector3.UP * STEPS_REAR_HEIGHT
+			# never out past the barricade, into the front row
+			var lim := ArenaBuilder.BARRICADE_RADIUS - 0.5
+			at_r.x = clampf(at_r.x, -lim, lim)
+			at_r.z = clampf(at_r.z, -lim, lim)
+			_camera.set_entrance_shot(at_r, w.global_position + fr * 2.2 + Vector3.UP * 1.3,
+					STEPS_REAR_FOV, first and not _was_shot("steps_rear"), delta)
+		"apron_low":
+			# 2K26 Roman 3:28-3:32: from inside the ring, low, up at him at the
+			# corner -- along the apron and in through the ropes.
+			var corner_dir := Vector3(ENTRY_CORNER.x, 0.0, ENTRY_CORNER.y).normalized()
+			_camera.set_entrance_shot(corner_dir * APRON_LOW_IN + Vector3.UP * APRON_LOW_HEIGHT,
+					_head_of(w) + Vector3.DOWN * 0.25, APRON_LOW_FOV,
+					first and not _was_shot("apron_low"), delta)
 		"ring_behind_out":
 			var f7 := _flat(-w.global_transform.basis.z).normalized()
 			var r7 := Vector3.UP.cross(-f7).normalized()
