@@ -323,10 +323,9 @@ def build() -> None:
 	# used to be the hall walla (freesound 635492) -- a crowd talking, which
 	# the owner kept hearing as "someone talking or distant on a megaphone"
 	# (2 Nov) -- and that recording is no longer used anywhere.
-	# The roar: a sustained full-house cheer, faded up with the excitement
-	# CrowdReaction already tracks.
-	roar = load(freesound("397434"), 2)
-	save("crowd_roar", lufs_to(loop(cut(roar, 0.3, 19.0), 1.5), CROWD_LUFS))
+	# crowd_roar is built by tools/audio/build_crowd_beds.py from the pops and
+	# the finish. It was FoolBoyMedia's "Crowd Cheer" (freesound 397434),
+	# which is applause -- the owner's "a lot of clapping" (2 Nov).
 	# Boos for the heel and a cheer for the face: each two indoor recordings
 	# laid together so it is a building, not a section.
 	boo = load(freesound("504621"), 2)

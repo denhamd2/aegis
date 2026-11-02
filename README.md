@@ -11248,3 +11248,22 @@ The owner: "fix Roman's entrance on the steps … improve his entrance overall �
 **Tests.**
 - `test_entrance_director`: on screen by 13 s, finger on the slam, the whole wall in frame, no shot over 9 s.
 - `test_referee_locomotion`; `test_sixty_fps`; `gait_audit` PASS; clip gate re-pinned after the `clip_shot` review.
+
+## 2 Nov — Cheering, not clapping; the intro check shot; crane moves for the intros and the face-off
+
+The owner: "The base crowd noise has a lot of clapping, instead I want it to be primarily cheering." "The wrestlers still are not standing in each corner when the camera cuts to them during the intros. It actually fits to Aubrey." And: "Would some smooth crane shots add more realism during wrestlers intros and also during the face off sequence?"
+
+**Cheering.**
+- **Measured.** Sharp transients in the 1.5–6 kHz clap band (a 5 ms envelope over twice its 150 ms one): `crowd_roar`, FoolBoyMedia's "Crowd Cheer", read 22.9 per mille. It is applause. The bed that had it under the cheer read 9.0, and every other crowd recording 0.
+- **Out.** That recording is out of the game.
+- **Rebuilt** (`tools/audio/build_crowd_beds.py`) from the cheering and screaming recordings only, all three at 0: `crowd_bed` (cheer plus the pops and the finish), `crowd_swell`, and the roar layer `crowd_roar` (the pops and the finish, 29 s).
+
+**The intro check shot.**
+- **The fault.** The referee's check looked at the man from 2.9 m in front of his corner. Aubrey stands 1 m in front of him checking him, on that line of sight, so the shot was her back.
+- **Now.** A three-quarter two-shot from inside the ring, off to the side (`ref_check_shot`), with the two of them about 20° apart in frame.
+- **Tested.** `test_the_referee_check_shows_him_not_just_her`.
+
+**Cranes.**
+- **The corner close-ups are a jib** (`intro_crane`): from low in front of him, about a metre off the canvas, rising past his chest to just over his eye line as it pushes in.
+- **The walk out of the corners is a crane** (`faceoff_crane`): it starts 3.8 m up and 26° round, and sweeps down and round to eye level, square to them, as they close. The stare's push picks it up from there.
+- **Tested.** `test_the_intros_and_the_walk_in_are_crane_moves`.

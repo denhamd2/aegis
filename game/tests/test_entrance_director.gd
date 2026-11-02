@@ -1113,3 +1113,48 @@ func test_no_shot_of_romans_entrance_drags() -> void:
 		if secs > 9.0 and beat.get("shot") not in ["ramp_low_wide"]:
 			long.append("%s %.1fs" % [beat.get("shot"), secs])
 	assert_array(long).override_failure_message("long shots: %s" % [long]).is_empty()
+
+
+## The owner, 2 Nov: in the intros the camera "cuts to them ... it actually
+## fits to Aubrey". The check shot looked at him down the line she stands on.
+## Now she and he are well apart in frame, both inside it, and the camera is
+## inside the ropes.
+func test_the_referee_check_shows_him_not_just_her() -> void:
+	for man: Vector3 in [Vector3(2.23, 0, 2.23), Vector3(-2.23, 0, -2.23), Vector3(2.23, 0, -2.23)]:
+		var ref := EntranceDirector.check_spot(man)
+		var to_c := -Vector3(man.x, 0, man.z).normalized()
+		var side := Vector3.UP.cross(to_c).normalized()
+		var shot := EntranceDirector.ref_check_shot(man, ref, side)
+		var at: Vector3 = shot[0]
+		var look: Vector3 = shot[1]
+		var axis := Vector3(look.x - at.x, 0, look.z - at.z).normalized()
+		var to_man := Vector3(man.x - at.x, 0, man.z - at.z).normalized()
+		var to_ref := Vector3(ref.x - at.x, 0, ref.z - at.z).normalized()
+		assert_float(rad_to_deg(to_man.angle_to(to_ref))).is_greater(12.0)
+		var half_h := rad_to_deg(atan(tan(deg_to_rad(EntranceDirector.REF_CHECK_FOV) * 0.5) * 16.0 / 9.0))
+		assert_float(rad_to_deg(axis.angle_to(to_man))).is_less(half_h - 4.0)
+		assert_float(rad_to_deg(axis.angle_to(to_ref))).is_less(half_h - 4.0)
+		assert_float(maxf(absf(at.x), absf(at.z))).is_less(RingBuilder.ROPE_SPAN)
+
+
+## "Smooth crane shots ... during wrestlers intros and also during the face
+## off": the corner close-up rises from low and pushes in; the walk-in comes
+## down from high and round to eye level, square to them.
+func test_the_intros_and_the_walk_in_are_crane_moves() -> void:
+	var head := Vector3(2.2, 1.75, 2.2)
+	var to_c := -Vector3(1, 0, 1).normalized()
+	var side := Vector3.UP.cross(to_c).normalized()
+	var start: Array = EntranceDirector.intro_crane(head, to_c, side, 0.0)
+	var end: Array = EntranceDirector.intro_crane(head, to_c, side, 1.0)
+	assert_float((start[0] as Vector3).y).is_less((end[0] as Vector3).y - 0.8)
+	assert_float(((start[0] as Vector3) - head).length()).is_greater(((end[0] as Vector3) - head).length())
+	# ends just over his eye line, his face framed
+	assert_float((end[0] as Vector3).y).is_greater(head.y - 0.1)
+	var top: Array = EntranceDirector.faceoff_crane(0.0)
+	var settle: Array = EntranceDirector.faceoff_crane(1.0)
+	assert_float(float(top[0])).is_greater(float(settle[0]) + 1.5)
+	assert_float(float(settle[0])).is_equal(EntranceDirector.FACEOFF_CAM_HEIGHT)
+	assert_float(absf(float(top[1]))).is_greater(15.0)
+	assert_float(float(settle[1])).is_equal(0.0)
+	# under the rig at its highest
+	assert_float(float(top[0])).is_less(EntranceDirector.RIG_CLEAR_Y)

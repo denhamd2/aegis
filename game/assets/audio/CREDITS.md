@@ -9,8 +9,7 @@ anyway.
 | --- | --- | --- | --- |
 | `crowd_boo` | [Booing Crowd](https://freesound.org/people/NeoSpica/sounds/504621/), with [JM_AMB_INT_Crowd Sport 01 - Booing](https://freesound.org/people/Julien_Matthey/sounds/557189/) | NeoSpica, Julien_Matthey | CC0 |
 | `crowd_cheer` | [R08-24 Large Crowd Screaming and Whistling](https://freesound.org/people/craigsmith/sounds/480725/), with [CRWDCheer_Cheering, Whistling](https://freesound.org/people/ShangusBurger/sounds/764273/) | craigsmith, ShangusBurger | CC0 |
-| `crowd_bed`, `crowd_swell` (mixed from `crowd_cheer`, `crowd_roar`, `crowd_pop_4` and `crowd_finish` by `tools/audio/build_crowd_beds.py`) | the recordings credited on those rows | | CC0 |
-| `crowd_roar` | [Crowd Cheer](https://freesound.org/people/FoolBoyMedia/sounds/397434/) | FoolBoyMedia | CC0 |
+| `crowd_bed`, `crowd_swell`, `crowd_roar` (mixed from `crowd_cheer`, the `crowd_pop_*` and `crowd_finish` by `tools/audio/build_crowd_beds.py`: cheering only, no applause) | the recordings credited on those rows | | CC0 |
 | `crowd_pop_*`, `crowd_finish` | [Stadium Crowd Reaction Excited 01](https://freesound.org/people/itmightgetloud/sounds/829453/) | itmightgetloud | CC0 |
 | `crowd_ooh_*` | [Crowd Ooohs and Ahhhs in Excitement](https://freesound.org/people/noah0189/sounds/264499/) | noah0189 | CC0 |
 | `bell_*` | [Boxing bell, various rings](https://freesound.org/people/TRP/sounds/571096/) | TRP | CC0 |

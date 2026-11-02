@@ -173,6 +173,21 @@ const INTRO_CLOSE_FOV := 34.0
 const INTRO_CLOSE_DISTANCE := 2.9
 ## How far the corner medium drifts in over its hold, metres.
 const INTRO_CLOSE_PUSH := 0.4
+## The jib on the corner close-up: from this far out and this low (metres
+## from his chest; 0.75 under it is about a metre off the canvas) up to just
+## over his eye line.
+const INTRO_CRANE_FROM := 3.6
+const INTRO_CRANE_LOW := -0.75
+const INTRO_CRANE_HIGH := 0.42
+## The referee's check: off to the side and in toward the centre.
+const REF_CHECK_SIDE := 1.5
+const REF_CHECK_IN := 1.5
+const REF_CHECK_FOV := 36.0
+## The walk out of the corners on a crane: it starts this high and this far
+## round from the hard camera's side, and sweeps down and round to eye level
+## on the men's line as they close.
+const FACEOFF_CRANE_TOP := 3.8
+const FACEOFF_CRANE_ARC := 26.0
 ## Every high shot hangs at RIG_CLEAR_Y: just under the light rig over the
 ## ring (ArenaBuilder.TRUSS_Y 7.6, its keys' bodies down to ~6.9), so the lens
 ## sees the building under the steel instead of through it. The owner: "the
@@ -2763,11 +2778,17 @@ func _frame_shot(beat: Dictionary, delta: float, force_cut := false) -> void:
 			# both men in frame (from diagonally opposite corners they start
 			# ~5.5 m apart -- square to their line at FACEOFF_CAM_DISTANCE the
 			# frame held empty canvas between them), closing in as they come.
+			# On a crane (the owner, 2 Nov): high and round to one side as they
+			# leave their corners, sweeping down and round to eye level as
+			# they close -- where the stare's push picks it up.
 			var mid := (_a.global_position + _b.global_position) * 0.5
-			var bearing := _flat(_camera.hard_cam_position - mid).normalized()
+			var e_c := smoothstep(0.0, 1.0, float(_tick) / maxf(float(beat["ticks"]), 1.0))
+			var crane := faceoff_crane(e_c)
+			var bearing := _flat(_camera.hard_cam_position - mid).normalized() \
+					.rotated(Vector3.UP, deg_to_rad(crane[1]))
 			var back := walk_in_distance(_a.global_position, _b.global_position, bearing)
-			_camera.set_entrance_shot(mid + bearing * back + Vector3.UP * FACEOFF_CAM_HEIGHT,
-					mid + Vector3.UP * 1.3, FACEOFF_WALK_FOV,
+			_camera.set_entrance_shot(mid + bearing * back + Vector3.UP * float(crane[0]),
+					mid + Vector3.UP * lerpf(1.0, 1.3, e_c), FACEOFF_WALK_FOV,
 					first and not _was_shot("faceoff_side"), delta)
 			_key_on_pair()
 		"faceoff":
@@ -2794,6 +2815,13 @@ func _frame_shot(beat: Dictionary, delta: float, force_cut := false) -> void:
 # ("staredown_push"). The walk out of the corners is "faceoff_side"; the walk
 # to the corners is "faceoff", the hard camera, on which the referee sends
 # them there.
+
+
+## The walk-in crane at eased progress `e`: [height, degrees round from the
+## hard camera's bearing]. Up and round at the start, eye level and square
+## at the end.
+static func faceoff_crane(e: float) -> Array:
+	return [lerpf(FACEOFF_CRANE_TOP, FACEOFF_CAM_HEIGHT, e), lerpf(FACEOFF_CRANE_ARC, 0.0, e)]
 
 
 ## The stare-down as the owner asked for it: one slow push from the profile
@@ -2928,17 +2956,42 @@ func _intro_close(beat: Dictionary, first: bool, delta: float) -> void:
 	var side := Vector3.UP.cross(to_c).normalized()
 	if side.dot(_camera.hard_cam_position - man.global_position) < 0.0:
 		side = -side
+	var e := smoothstep(0.0, 1.0, float(_tick) / float(beat["ticks"]))
 	if beat["shot"] == "corner_intro":
-		var e := smoothstep(0.0, 1.0, float(_tick) / float(beat["ticks"]))
-		var chest := head + Vector3.DOWN * 0.38
-		_camera.set_entrance_shot(chest + to_c * (INTRO_CLOSE_DISTANCE - INTRO_CLOSE_PUSH * e)
-				+ side * 0.55 + Vector3.UP * 0.05, chest, INTRO_CLOSE_FOV, first, delta)
+		var shot := intro_crane(head, to_c, side, e)
+		_camera.set_entrance_shot(shot[0], shot[1], INTRO_CLOSE_FOV, first, delta)
 		_aim_cam_key(man, true)
 	else:
-		_camera.set_entrance_shot(man.global_position + to_c * 2.9 + side * 1.4
-				+ Vector3.UP * 1.45, man.global_position + Vector3.UP * 1.3, 34.0,
-				first, delta)
+		var shot := ref_check_shot(man.global_position, check_spot(man.global_position), side)
+		_camera.set_entrance_shot(shot[0], shot[1], REF_CHECK_FOV, first, delta)
 		_aim_cam_key(man, true)
+
+
+## The corner close-up as a jib (the owner, 2 Nov: "smooth crane shots ...
+## during wrestlers intros"): from low in front of him, a little to the hard
+## camera's side, the arm rises past his chest to just over his eyes as it
+## pushes in -- the canvas and the corner at the start, his face at the end.
+## [camera, look] at eased progress `e`.
+static func intro_crane(head: Vector3, to_c: Vector3, side: Vector3, e: float) -> Array:
+	var chest := head + Vector3.DOWN * 0.38
+	var dist := lerpf(INTRO_CRANE_FROM, INTRO_CLOSE_DISTANCE - INTRO_CLOSE_PUSH, e)
+	var rise := lerpf(INTRO_CRANE_LOW, INTRO_CRANE_HIGH, e)
+	var at := chest + to_c * dist + side * lerpf(0.9, 0.55, e) + Vector3.UP * rise
+	return [at, chest.lerp(head + Vector3.DOWN * 0.08, e)]
+
+
+## The referee's check (the owner, 2 Nov: the camera "cuts to them ... it
+## actually fits to Aubrey"). It looked at him from 2.9 m in front of his
+## corner, and she stands 1 m in front of him checking him -- on that line of
+## sight, filling the frame. Now a three-quarter two-shot from inside the
+## ring, off to the side (straight to the side is out past the ropes): him in
+## his corner, her facing him, about 20 degrees apart in frame. [camera, look].
+static func ref_check_shot(man: Vector3, ref_at: Vector3, side: Vector3) -> Array:
+	var flat_man := Vector3(man.x, 0.0, man.z)
+	var mid := (flat_man + Vector3(ref_at.x, 0.0, ref_at.z)) * 0.5
+	var to_c := -flat_man.normalized() if flat_man.length() > 0.1 else Vector3.FORWARD
+	return [mid + side * REF_CHECK_SIDE + to_c * REF_CHECK_IN + Vector3.UP * 1.45,
+			mid + Vector3.UP * 1.3]
 
 
 ## His head, for the close-ups: the head bone if the rig has one, else a
