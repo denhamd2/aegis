@@ -91,7 +91,10 @@ func burst(level: float) -> void:
 func follow(director: EntranceDirector) -> void:
 	director.cue.connect(func(what: String) -> void:
 		if what.begins_with("pyro") or what == "strobe":
-			burst(1.0))
+			burst(1.0)
+		elif what == "flash_burst":
+			# The stare-down and the bell: the building's cameras go off.
+			burst(0.8))
 
 
 ## The flash rate published to the shader: the base plus the burst.

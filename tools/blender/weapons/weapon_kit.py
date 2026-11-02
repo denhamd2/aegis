@@ -490,6 +490,40 @@ def marker(root: bpy.types.Object, name: str, position: Vector,
     obj["marker"] = name
 
 
+# ---------------------------------------------------------------------------
+# Edge finishing (the owner, 2 Nov: realism -- "the weapons modelling ... AAA
+# realistic"). A real chair, ladder or set of steps has no knife edge: every
+# sharp corner is rounded a couple of millimetres, and that rounded strip is
+# what catches the light and tells a viewer the thing is solid steel or wood
+# rather than a box. Weighted normals keep the flat faces flat between them.
+# Hard-surface weapons only, and never on their decals, wire, tape, glass or
+# nails (the material's suffix after the weapon id says which part is which).
+# Not the barbed-wire chair: its wire is most of its triangles and all of its
+# look, and with the frame bevelled it went over the hand-held budget
+# (test_weapon_catalog, 15k a state).
+# ---------------------------------------------------------------------------
+BEVEL_WEAPONS = ("steel_chair", "ladder_bent", "ladder", "steel_steps",
+                 "table", "sledgehammer", "trash_can", "briefcase", "cookie_sheet",
+                 "fire_extinguisher", "frying_pan", "shovel", "stop_sign", "ring_bell",
+                 "handgun", "rpg", "brass_knuckles", "crutch", "board_with_nails",
+                 "bed_of_nails", "barbed_wire_board")
+BEVEL_SKIP = ("wire", "tape", "stencil", "label", "glass", "nails", "tag", "wrap", "decal",
+              "flame", "barbs", "chain")
+BEVEL_WIDTH = 0.0025
+BEVEL_SEGMENTS = 2
+BEVEL_ANGLE_DEG = 40.0
+
+
+def bevels(material: bpy.types.Material) -> bool:
+    """Whether a part in `material` gets the edge finish."""
+    name = material.name if material else ""
+    for weapon in sorted(BEVEL_WEAPONS, key=len, reverse=True):
+        if name.startswith(weapon + "_"):
+            suffix = name[len(weapon) + 1:]
+            return not any(word in suffix for word in BEVEL_SKIP)
+    return False
+
+
 def add_mesh(root: bpy.types.Object, part: WeaponPart, material: bpy.types.Material,
              smooth: bool = True, uv_scale: float = 2.0, auto_smooth_deg: float = 40.0,
              project: bool = True) -> bpy.types.Object:
@@ -509,7 +543,20 @@ def add_mesh(root: bpy.types.Object, part: WeaponPart, material: bpy.types.Mater
     obj = bpy.data.objects.new(part.name, mesh)
     bpy.context.collection.objects.link(obj)
     obj.parent = root
-    if smooth and auto_smooth_deg < 180.0:
+    if bevels(material):
+        bevel = obj.modifiers.new("finish", "BEVEL")
+        bevel.width = BEVEL_WIDTH
+        bevel.segments = BEVEL_SEGMENTS
+        bevel.limit_method = "ANGLE"
+        bevel.angle_limit = math.radians(BEVEL_ANGLE_DEG)
+        bevel.use_clamp_overlap = True
+        bevel.harden_normals = False
+        weighted = obj.modifiers.new("faces", "WEIGHTED_NORMAL")
+        weighted.keep_sharp = True
+        weighted.weight = 50
+        for poly in mesh.polygons:
+            poly.use_smooth = True
+    elif smooth and auto_smooth_deg < 180.0:
         mod = obj.modifiers.new("edges", "EDGE_SPLIT")
         mod.split_angle = math.radians(auto_smooth_deg)
         mod.use_edge_sharp = False

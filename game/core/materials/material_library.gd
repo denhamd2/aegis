@@ -804,6 +804,39 @@ static func build(overrides: Dictionary) -> StandardMaterial3D:
 	return _build(s)
 
 
+## The material `mat` with the mesh's baked occlusion (its vertex COLOR) on
+## both its colour and its emission -- for the bowl's seats
+## (tools/blender/arena_bowl.py bake_occlusion; the owner's realism pass,
+## 2 Nov). A StandardMaterial3D multiplies vertex colour into albedo at
+## most, and the bowl's look is its house EMISSION, so a plain (untextured)
+## spec moves to bowl_occlusion.gdshader with its colour, roughness,
+## metallic, specular and house emission carried across. A textured one
+## comes back as it is: the shader does not reproduce texturing.
+const OCCLUSION_SHADER := "res://core/materials/bowl_occlusion.gdshader"
+
+
+## `mean` is the bake's mean occlusion (arena_bowl.py prints it): colour and
+## emission are divided by it so the surface keeps its measured average level
+## (the bowl's house light is solved against luminance targets) and gains
+## only the contrast -- lighter seat tops, darker backs and under-row.
+static func with_occlusion(mat: BaseMaterial3D, mean: float = 1.0) -> Material:
+	if mat.albedo_texture or mat.normal_texture or mat.roughness_texture \
+			or mat.emission_texture or mat.ao_texture:
+		return mat
+	var out := ShaderMaterial.new()
+	out.shader = load(OCCLUSION_SHADER) as Shader
+	var lift := 1.0 / clampf(mean, 0.25, 1.0)
+	var c := mat.albedo_color
+	out.set_shader_parameter("albedo", Color(c.r * lift, c.g * lift, c.b * lift, c.a))
+	out.set_shader_parameter("roughness", mat.roughness)
+	out.set_shader_parameter("metallic", mat.metallic)
+	out.set_shader_parameter("specular", mat.metallic_specular)
+	out.set_shader_parameter("emission", mat.emission if mat.emission_enabled else Color.BLACK)
+	out.set_shader_parameter("emission_energy",
+			mat.emission_energy_multiplier * lift if mat.emission_enabled else 0.0)
+	return out
+
+
 ## Undo the mean darkening a multiplied emission map causes.
 ##
 ## Call this **after** whatever set `emission_energy_multiplier` (in this

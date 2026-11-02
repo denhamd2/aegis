@@ -114,6 +114,11 @@ const FACEOFF_CORNER_TURN_TICKS := 36
 const FACEOFF_CORNER_IN := 0.95
 ## The stare-down's push: from the two-shot (FACEOFF_CAM_*) in to this far
 ## off the pair, on this lens, both faces in frame.
+## The house from the walk out of the corners to the bell (realism, the
+## owner, 2 Nov): the crowd down to this share of its match light while the
+## ring stays at full -- the broadcast's pre-bell look, and the bright crowd
+## no longer silhouettes the two men against it.
+const PREBELL_HOUSE_LEVEL := 0.55
 const STAREDOWN_CLOSE := 1.3
 const STAREDOWN_FOV := 30.0
 ## The walk out of the corners: its lens, how far in from the frame's sides
@@ -1061,11 +1066,12 @@ func _add_faceoff() -> void:
 	var a_in := mid + _flat(ca - mid).normalized() * (FACEOFF_GAP * 0.5)
 	var b_in := mid + _flat(cb - mid).normalized() * (FACEOFF_GAP * 0.5)
 	var walk_in := maxi(1, int(ceil(_flat(ca).distance_to(_flat(a_in)) / FACEOFF_WALK_SPEED * TPS)))
-	_beats.append({"kind": "pair", "ticks": walk_in, "shot": "faceoff_side", "moves": [
+	_beats.append({"kind": "pair", "ticks": walk_in, "shot": "faceoff_side",
+			"events": [[1, "house_down"]], "moves": [
 			[_a, ca, a_in, face_a, "strikes/entrance_walk"],
 			[_b, cb, b_in, face_b, "strikes/entrance_walk"]]})
 	_beats.append({"kind": "pair", "ticks": FACEOFF_STARE_TICKS, "shot": "staredown_push",
-			"snap_end": true, "events": [[1, "faceoff_tension"]],
+			"snap_end": true, "events": [[1, "faceoff_tension"], [1, "flash_burst"]],
 			"moves": [[_a, a_in, a_in, face_a, "strikes/face_off"],
 					[_b, b_in, b_in, face_b, "strikes/face_off"]]})
 	# The match starts where the stare ends: the bell finds them here.
@@ -1485,6 +1491,10 @@ func _ring_bell_at_marks(place_on_marks: bool) -> void:
 	if _done:
 		return
 	_done = true
+	# The house back up with the bell, and the building's flashes go off.
+	if _lights and _lights.has_method("set_house_level"):
+		_lights.set_house_level(1.0)
+	cue.emit("flash_burst")
 	_release_ropes()
 	_card.hide_card()
 	_name_card_ticks = 0
@@ -2158,6 +2168,11 @@ func _event(w: WrestlerController, what: String) -> void:
 				cue.emit("called_" + w.entrance_style)
 		"lights_up":
 			_dim_house(false)
+		"house_down":
+			# Pre-bell: the crowd down, the ring kept at full (unlike
+			# _dim_house, which takes the ring keys down with the house).
+			if _lights and _lights.has_method("set_house_level"):
+				_lights.set_house_level(PREBELL_HOUSE_LEVEL)
 		"title_held":
 			if props:
 				props.set_title("held")

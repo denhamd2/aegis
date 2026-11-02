@@ -21,7 +21,12 @@ func test_an_entrance_close_up_focuses_on_the_subject_and_the_bell_clears_it() -
 	var dof := cam.attributes as CameraAttributesPractical
 	assert_object(dof).is_not_null()
 	assert_bool(dof.dof_blur_far_enabled).is_true()
-	assert_float(dof.dof_blur_far_distance).is_equal_approx(3.0 + MatchCamera.DOF_MARGIN, 0.01)
+	# The cut lands with the focus long, then racks onto him (the focus pull,
+	# the owner's realism pass): held past FOCUS_PULL_TIME it is on the subject.
+	assert_float(dof.dof_blur_far_distance).is_greater(3.0 + MatchCamera.DOF_MARGIN)
+	for _i in 40:
+		cam.set_entrance_shot(Vector3(0, 1.7, 3), Vector3(0, 1.7, 0), 34.0, false, 1.0 / 60.0)
+	assert_float(dof.dof_blur_far_distance).is_equal_approx(3.0 + MatchCamera.DOF_MARGIN, 0.1)
 	cam.resume_master()
 	assert_object(cam.attributes).is_null()
 

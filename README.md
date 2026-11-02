@@ -11063,3 +11063,47 @@ The knife, handgun and sword counts are the stock laid out on the stage at tick 
 **The announce desk's body and worktop.** They wore the tunnel's diamond plate.
 - **The body.** The barricade's padded black vinyl (`arena_barricade_pad`).
 - **The worktop.** A smooth grey-black plastic (`arena_desk_top`, Plastic011).
+
+
+## 2 Nov — Realism: haze over the crowd, the pre-bell house down, a handheld that breathes, a focus pull, shading baked into the seats, rounded edges on the weapons
+
+The owner asked for the five realism recommendations, and added: "I don't want the wrestlers to be lit dark when standing in the corners or during the faceoff". Review sheet: `gauntlet/refs/realism/realism_five_review.png`.
+
+**The real renderer, at last.**
+- **What changed.** Mesa's software Vulkan driver (lavapipe) now runs in the build container. So `--rendering-driver vulkan` renders **Forward+**, the pipeline the Mac build ships. Every probe frame before this was the OpenGL compatibility renderer.
+- **What it settled.** The men are lit in their corners and at the stare on Forward+. The silhouettes of the last round were the compatibility renderer, plus the camera-key bug fixed and shipped in the previous commit.
+- **The catch.** A Forward+ frame of the full arena takes minutes, so shots are few.
+
+**1. Haze over the crowd, not the ring** (`ArenaLighting._apply_bowl_haze`). A real arena runs haze machines, and the upper bowl reads bluer and softer than the ring: the strongest depth cue a wide has. The volumetric rig only made the shafts; at `HallHaze`'s 0.0006 it never reached the back rows.
+- **What it is.** Forward+ now gets the camera-following depth fog the compatibility renderer always had, on its own copy of the Environment. It begins past the ring from whatever camera is on (`haze_begin`: camera distance + `RING_REACH`, never under 13 m).
+- **Its look.** Cool (0.60, 0.67, 0.86) and dark (`BOWL_HAZE_ENERGY` 0.06), so far rows fade into the dark rather than glow.
+- **Measured on Forward+** (`ref_view`, before → after):
+  - the mat +0.1 % (unchanged);
+  - the lower bowl unchanged;
+  - upper-bowl contrast −15 %.
+  - At the first energy (0.10) the upper bowl lifted +20 % and the roof went blue-grey. 0.06 is the second pass.
+
+**2. The pre-bell look** (`EntranceDirector`, `ArenaLighting.set_house_level`):
+- **The house down.** From the walk out of the corners to the bell, the crowd's light, the audience washes and the aisle heads drop to 55 % (`PREBELL_HOUSE_LEVEL`). The ring keys and top fills stay at full. `_dim_house` takes the keys down with the house, which is why it is not used here.
+- **Back up.** The bell puts it back.
+- **Flashes.** A burst of camera flashes as the stare starts and at the bell (`flash_burst` → `CrowdReaction.burst`).
+- **Evidence.** The sheet's pre-bell frames were rendered before the house-down went in. The level is covered by `test_realism_pass` (ring keys unchanged, washes at 55 %, back to 1.0 at the bell), not by those frames.
+
+**3. Camera feel** (`MatchCamera`):
+- **Breathing.** Every camera but the hard camera's tripod now wanders a little: a film-back offset of at most 3 cm under half a hertz (`breathing`, `BREATH_MAX`). It sits on top of the entrance shots' drift and under the impact shake, scaled by the shake setting.
+- **Presentation only.** Time-driven, no RNG.
+- **Focus pull.** A cut to a long-lens close-up lands with the focus 1.6× long and racks onto the subject over 0.35 s (`focus_pull_distance`), on the camera's own frame clock, so captures stay frame-stable.
+
+**4. Shading baked into the seats** (`tools/blender/arena_bowl.py bake_occlusion`, `MaterialLibrary.with_occlusion`, `bowl_occlusion.gdshader`). The contact darkening under each row and at the backs of the seats is what makes a bowl read as built. Godot's SSAO only reaches it near the lens, not from the hard camera's 30 m.
+- **The bake.** 32 fixed Fibonacci-hemisphere rays per corner, 1.0 m reach, against the bowl's own solids. Deterministic: no sampler noise, and the bowl rebuilds byte-identical. Mean 0.684.
+- **The material.** The seats' look is their house emission, which a `StandardMaterial3D` never multiplies by vertex colour. So the plain seat spec moves to a small shader that puts the occlusion on colour and emission alike. Both are divided by the bake's mean, so the bowl keeps its measured average and gains only the contrast.
+- **Measured.** Lower bowl unchanged. The steps are textured and keep their material.
+- **On the way.** Godot exposes no material's generated shader to scripts, so the first approach, rewriting the StandardMaterial's own code, could not work.
+
+**5. Rounded edges on the weapons** (`weapon_kit.add_mesh`). A real chair, ladder or set of steps has no knife edge. Every sharp corner is rounded a couple of millimetres, and that strip is what catches the light and says solid metal or wood.
+- **The finish.** The hard-surface weapons now get a 2.5 mm, two-segment bevel on edges sharper than 40°, then weighted normals so the faces stay flat between.
+- **Never on** decals, wire, tape, glass or nails.
+- **Which weapons.** Steel chair, ladder (and bent), steel steps, table, sledgehammer, trash can, briefcase, cookie sheet, extinguisher, frying pan, shovel, stop sign, ring bell, handgun, RPG, knuckles, crutch and the boards.
+- **First pass, too heavy.** At 30° and three segments, the 10-sided tubes counted as edges: the ladder went ×8 and the handgun ×14.
+- **Within budget.** Every state of every weapon is now under its budget (`test_weapon_catalog`). The barbed-wire chair is left out: its wire is its look, and bevelled it went to 18.4k against 15k.
+- **Determinism.** The other weapons rebuild byte-identical.

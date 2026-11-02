@@ -658,6 +658,11 @@ func set_entrance_shot(at: Vector3, look: Vector3, lens: float, snap: bool,
 		global_position = global_position.lerp(at, 1.0 - exp(-5.0 * delta))
 	if global_position.distance_to(look) > 0.01:
 		look_at(look, Vector3.UP)
+	_breath_t += delta
+	var breath := breathing(_breath_t, Mode.ENTRANCE) * CameraSettings.shake_scale() \
+			if motion else Vector2.ZERO
+	h_offset = breath.x
+	v_offset = breath.y
 	_entrance_focus(global_position.distance_to(look), lens)
 
 
@@ -678,6 +683,23 @@ const DOF_AMOUNT := 0.08
 var _dof: CameraAttributesPractical
 
 
+## Realism (the owner, 2 Nov): a cut to a long-lens close-up lands with the
+## focus a little long and racks onto the subject over FOCUS_PULL_TIME, the
+## way a broadcast camera operator pulls focus -- not sharp on frame one.
+const FOCUS_PULL_FROM := 1.6
+const FOCUS_PULL_TIME := 0.35
+var _pull_from := -100.0
+var _pull_lens := -1.0
+var _pull_subject := -1.0
+
+
+## Where the focus sits `since` seconds after a cut onto a subject
+## `subject_distance` away.
+static func focus_pull_distance(subject_distance: float, since: float) -> float:
+	var e := smoothstep(0.0, FOCUS_PULL_TIME, maxf(since, 0.0))
+	return subject_distance * lerpf(FOCUS_PULL_FROM, 1.0, e)
+
+
 static func dof_amount_for(lens: float) -> float:
 	if lens > DOF_MAX_FOV:
 		return 0.0
@@ -691,8 +713,16 @@ func _entrance_focus(subject_distance: float, lens: float) -> void:
 		return
 	if _dof == null:
 		_dof = CameraAttributesPractical.new()
+	# The focus pull: a cut lands a touch behind the subject and the operator
+	# racks onto him (focus_pull_distance). A new subject is a cut: the lens
+	# or the distance jumped since the last frame.
+	var now := _breath_t   # the camera's own clock: frame-stable in captures
+	if absf(lens - _pull_lens) > 1.0 or absf(subject_distance - _pull_subject) > 0.6:
+		_pull_from = now
+	_pull_lens = lens
+	_pull_subject = subject_distance
 	_dof.dof_blur_far_enabled = true
-	_dof.dof_blur_far_distance = subject_distance + DOF_MARGIN
+	_dof.dof_blur_far_distance = focus_pull_distance(subject_distance, now - _pull_from) + DOF_MARGIN
 	_dof.dof_blur_far_transition = DOF_TRANSITION
 	_dof.dof_blur_amount = amount
 	attributes = _dof
@@ -1215,18 +1245,37 @@ func _after_shot(_delta: float) -> void:
 	_focused = true
 
 
+## Handheld breathing (the owner, 2 Nov, realism): an operator's camera is
+## never perfectly still -- a slow wander of the film back, at most
+## BREATH_MAX metres, under half a hertz. Every camera but the hard camera,
+## which is on a tripod in the bowl. Presentation only: time-driven, no RNG.
+const BREATH_MAX := 0.03
+var _breath_t := 0.0
+
+
+## The film-back offset (h, v) of the breathing `t` seconds in, for `cam_mode`.
+static func breathing(t: float, cam_mode: int) -> Vector2:
+	if cam_mode == Mode.HARD_CAM:
+		return Vector2.ZERO
+	var h := sin(t * 1.9) * 0.55 + sin(t * 0.83 + 1.7) * 0.45
+	var v := sin(t * 1.37 + 0.6) * 0.6 + sin(t * 0.61 + 2.9) * 0.4
+	return Vector2(h, v) * BREATH_MAX
+
+
 ## Handheld impact shake: a decaying "trauma" drives small offsets of the
 ## film back (h_offset / v_offset), so the camera's aim is untouched and it
 ## settles exactly where it was. Presentation only.
 func _shake(delta: float) -> void:
+	_breath_t += delta
+	var breath := breathing(_breath_t, mode) * CameraSettings.shake_scale()
 	if _trauma <= 0.0:
-		h_offset = 0.0
-		v_offset = 0.0
+		h_offset = breath.x
+		v_offset = breath.y
 		return
 	_shake_t += delta
 	var amt := _trauma * _trauma * FINISH_SHAKE * CameraSettings.shake_scale()
-	h_offset = amt * sin(_shake_t * 71.0) * cos(_shake_t * 23.0)
-	v_offset = amt * sin(_shake_t * 59.0 + 1.3)
+	h_offset = amt * sin(_shake_t * 71.0) * cos(_shake_t * 23.0) + breath.x
+	v_offset = amt * sin(_shake_t * 59.0 + 1.3) + breath.y
 	_trauma = maxf(0.0, _trauma - FINISH_SHAKE_DECAY * delta)
 
 

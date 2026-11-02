@@ -511,13 +511,24 @@ var _sweep_pace_target := 1.0
 var house_dim := 1.0
 
 
+## The house -- the crowd's light, the audience washes and the aisle heads --
+## as a share of the look's level, the ring untouched (EntranceDirector's
+## pre-bell "house_down", back to 1.0 at the bell).
+var house_level := 1.0
+
+
+func set_house_level(level: float) -> void:
+	house_level = clampf(level, 0.0, 1.0)
+	set_look(look)
+
+
 func set_look(p_look: Look) -> void:
 	look = p_look
 	var entrance := look == Look.ENTRANCE
 	if _ring_haze:
 		_ring_haze.density = _ring_haze_density * (ENTRANCE_RING_HAZE if entrance else MATCH_RING_HAZE)
 	RenderingServer.global_shader_parameter_set("crowd_light",
-			(CROWD_LIGHT_ENTRANCE if entrance else CROWD_LIGHT_MATCH)
+			(CROWD_LIGHT_ENTRANCE if entrance else CROWD_LIGHT_MATCH) * house_level
 			* (1.0 if _supports_volumetric_fog() else COMPAT_CROWD_GAIN))
 	RenderingServer.global_shader_parameter_set("glint_strength",
 			GLINT_ENTRANCE if entrance else GLINT_MATCH)
@@ -534,9 +545,11 @@ func set_look(p_look: Look) -> void:
 		light.light_energy = stage_energy * (ENTRANCE_STAGE_SHARE if entrance else 1.0) \
 				* renderer_gain(light)
 	for light in _audience_lights:
-		light.light_energy = audience_energy * (0.48 if entrance else 1.0) * renderer_gain(light)
+		light.light_energy = audience_energy * (0.48 if entrance else 1.0) * house_level \
+				* renderer_gain(light)
 	for light in _aisle_lights:
-		light.light_energy = AISLE_ENERGY * (0.2 if entrance else 1.0) * renderer_gain(light)
+		light.light_energy = AISLE_ENERGY * (0.2 if entrance else 1.0) * house_level \
+				* renderer_gain(light)
 	for light in _ring_tint:
 		light.light_energy = ring_tint_energy * (ENTRANCE_RING_SHARE if entrance else 1.0) \
 				* renderer_gain(light)
@@ -681,6 +694,7 @@ func _ready() -> void:
 	_build_stage_reflections()
 	_hang_fixtures()
 	_apply_compat_environment()
+	_apply_bowl_haze()
 	_compensate_for_renderer()
 	for child in get_children():
 		if child is SpotLight3D:
@@ -1600,6 +1614,27 @@ const COMPAT_CROWD_GAIN := 12.0
 ## the shot. Null on forward_plus, where none of this path runs.
 var _compat_env: Environment
 
+## The haze over the bowl on forward_plus (the owner, 2 Nov: "would adding
+## some level of fog ... help with depth and realism?" -- yes, over the
+## crowd, not the ring). A real arena runs haze machines: the upper bowl
+## reads bluer and softer than the ring, which is the strongest depth cue a
+## broadcast wide has. The volumetric rig only makes the light shafts; at
+## 0.0006 in HallHaze it never reached the back rows, which rendered as crisp
+## as the front (the first Forward+ frame of ref_view). This is the same
+## camera-following depth fog the compatibility renderer has always had --
+## begun past the ring from whatever camera is on, so the ring stays clear --
+## lighter, because it sits over the volumetric haze rather than replacing it.
+const BOWL_HAZE_END := 70.0
+const BOWL_HAZE_CURVE := 1.6
+const BOWL_HAZE_DENSITY := 0.32
+## Dark and cool: far rows fade INTO the hall's dark, they do not glow out of
+## it (FOG_ENERGY's note on the wash failure applies just the same).
+const BOWL_HAZE_ENERGY := 0.06
+const BOWL_HAZE_TINT := Color(0.60, 0.67, 0.86)
+## The forward_plus Environment carrying the haze. Null on the compatibility
+## renderer, which has _compat_env instead.
+var _haze_env: Environment
+
 
 ## Keeps the depth fog starting BEYOND the ring whichever camera is on.
 ##
@@ -1612,6 +1647,7 @@ func _process(_delta: float) -> void:
 	if look == Look.ENTRANCE:
 		_move_stage_beams()
 	_light_close_ups(_delta)
+	_follow_haze()
 	if _compat_env == null:
 		return
 	var camera := get_viewport().get_camera_3d() if is_inside_tree() else null
@@ -1619,6 +1655,46 @@ func _process(_delta: float) -> void:
 		return
 	var out := Vector2(camera.global_position.x, camera.global_position.z).length()
 	_compat_env.fog_depth_begin = maxf(FOG_BEGIN, out + RING_REACH)
+
+
+## The bowl haze's start for a camera at `camera`: past the ring's far side
+## from wherever the lens is, never nearer than FOG_BEGIN.
+static func haze_begin(camera: Vector3) -> float:
+	return maxf(FOG_BEGIN, Vector2(camera.x, camera.z).length() + RING_REACH)
+
+
+## On forward_plus: depth fog over the volumetric rig, on a copy of the
+## scene's Environment (shared between instances of match.tscn, as
+## _apply_compat_environment notes), installed on the WorldEnvironment so
+## set_look's grade still lands on the one in use.
+func _apply_bowl_haze() -> void:
+	if not _supports_volumetric_fog() or not is_inside_tree():
+		return
+	var we := get_tree().root.find_child("WorldEnvironment", true, false) as WorldEnvironment
+	if we == null or we.environment == null:
+		return
+	var env: Environment = we.environment.duplicate()
+	env.fog_enabled = true
+	env.fog_mode = Environment.FOG_MODE_DEPTH
+	env.fog_depth_begin = FOG_BEGIN
+	env.fog_depth_end = BOWL_HAZE_END
+	env.fog_depth_curve = BOWL_HAZE_CURVE
+	env.fog_density = BOWL_HAZE_DENSITY
+	env.fog_light_color = BOWL_HAZE_TINT
+	env.fog_light_energy = BOWL_HAZE_ENERGY
+	env.fog_sun_scatter = 0.0
+	env.fog_aerial_perspective = 0.0
+	env.fog_sky_affect = 0.0
+	we.environment = env
+	_haze_env = env
+
+
+func _follow_haze() -> void:
+	if _haze_env == null:
+		return
+	var camera := get_viewport().get_camera_3d() if is_inside_tree() else null
+	if camera:
+		_haze_env.fog_depth_begin = haze_begin(camera.global_position)
 
 
 func _apply_compat_environment() -> void:

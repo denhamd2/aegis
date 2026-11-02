@@ -448,6 +448,15 @@ const BOWL_MODEL := "res://assets/environment/arena_bowl.glb"
 ## measured luminance targets that a colour picked in Blender cannot know
 ## about. `reach` scales the house-emission floor per part exactly as the
 ## generated surfaces do.
+## The bowl parts that carry baked occlusion in their vertex colour
+## (arena_bowl.py OCCLUSION_PARTS), dressed through MaterialLibrary.with_occlusion.
+## The steps are textured (Carpet012), which with_occlusion leaves as they
+## are: only the seats -- most of what the bowl shows -- take it.
+const BOWL_OCCLUDED := ["BowlSeats"]
+## The seats' mean baked occlusion (arena_bowl.py's build log: "BowlSeats:
+## occlusion baked, mean 0.684"), divided back out so the bowl's measured
+## average level holds.
+const BOWL_SEAT_OCCLUSION_MEAN := 0.684
 const BOWL_MODEL_MATERIALS := {
 	"BowlSteps": ["arena_bowl", 1.0],
 	"BowlSeats": ["arena_seat", 1.17],
@@ -1506,8 +1515,11 @@ func _build_bowl_model() -> Node3D:
 	root.name = "BowlModel"
 	for part: String in BOWL_MODEL_MATERIALS:
 		var spec: Array = BOWL_MODEL_MATERIALS[part]
-		_dress(root, part, MaterialLibrary.house_compensate(
-				_house_lit(_textured(spec[0]), spec[1])))
+		var mat: Material = MaterialLibrary.house_compensate(
+				_house_lit(_textured(spec[0]), spec[1]))
+		if part in BOWL_OCCLUDED:
+			mat = MaterialLibrary.with_occlusion(mat as BaseMaterial3D, BOWL_SEAT_OCCLUSION_MEAN)
+		_dress(root, part, mat)
 	for part: String in BOWL_MODEL_EMISSIVE:
 		var spec: Array = BOWL_MODEL_EMISSIVE[part]
 		if part == "RibbonBoards":

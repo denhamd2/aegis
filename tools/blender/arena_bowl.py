@@ -910,6 +910,101 @@ def finish(parts: dict[str, Part]) -> None:
         bpy.context.collection.objects.link(obj)
 
 
+# ---------------------------------------------------------------------------
+# Baked occlusion (the owner, 2 Nov: realism -- "shading baked into the
+# seating")
+# ---------------------------------------------------------------------------
+## The parts that carry it, and what shadows them. Under a row's lip, the
+## back of a tread against the next riser, an aisle between seat blocks: the
+## contact darkening that makes a bowl read as built rather than as a flat
+## lit slope. Godot's SSAO only reaches it near the lens; at the hard
+## camera's 30 m it has nothing to work with.
+OCCLUSION_PARTS = ("BowlSeats",)
+OCCLUDERS = ("BowlSeats", "BowlSteps", "SuiteFascia", "StairNosing", "Shell", "RinkBoards")
+## Rays per corner, how far they look, and how dark a fully closed-in
+## corner goes (1 - OCCLUSION_STRENGTH).
+OCCLUSION_RAYS = 32
+OCCLUSION_REACH = 1.0
+OCCLUSION_STRENGTH = 0.6
+
+
+def hemisphere_directions(n: int) -> list:
+    """`n` fixed, cosine-weighted directions round +Z (a Fibonacci spiral):
+    the same every build, so the bake is deterministic -- no sampler noise."""
+    out = []
+    golden = math.pi * (3.0 - math.sqrt(5.0))
+    for i in range(n):
+        r = math.sqrt((i + 0.5) / n)
+        a = i * golden
+        out.append(Vector((r * math.cos(a), r * math.sin(a), math.sqrt(max(0.0, 1.0 - r * r)))))
+    return out
+
+
+def bake_occlusion() -> dict:
+    """Ray-cast ambient occlusion into each OCCLUSION_PARTS object's colour
+    attribute, per corner (a riser and the tread it meets keep their own
+    values). Exported as COLOR_0 (export_vertex_color ACTIVE); Godot's
+    occlusion material multiplies the seat colour and its house emission by
+    it (MaterialLibrary.with_occlusion)."""
+    from mathutils.bvhtree import BVHTree
+    verts, polys = [], []
+    for name in OCCLUDERS:
+        obj = bpy.data.objects.get(name)
+        if obj is None:
+            continue
+        base = len(verts)
+        verts.extend([v.co.copy() for v in obj.data.vertices])
+        polys.extend([[base + i for i in p.vertices] for p in obj.data.polygons])
+    tree = BVHTree.FromPolygons(verts, polys)
+    dirs = hemisphere_directions(OCCLUSION_RAYS)
+    means = {}
+    for name in OCCLUSION_PARTS:
+        obj = bpy.data.objects.get(name)
+        if obj is None:
+            continue
+        mesh = obj.data
+        attr = mesh.color_attributes.new("Col", "BYTE_COLOR", "CORNER")
+        mesh.color_attributes.active_color = attr
+        cache = {}
+        total = 0.0
+        for poly in mesh.polygons:
+            n = poly.normal
+            # A tangent frame round the face normal.
+            t = n.orthogonal().normalized()
+            b = n.cross(t)
+            world = [t * d.x + b * d.y + n * d.z for d in dirs]
+            for li in poly.loop_indices:
+                vi = mesh.loops[li].vertex_index
+                key = (vi, round(n.x, 3), round(n.y, 3), round(n.z, 3))
+                if key not in cache:
+                    origin = mesh.vertices[vi].co + n * 0.01
+                    hits = 0
+                    for d in world:
+                        if tree.ray_cast(origin, d, OCCLUSION_REACH)[0] is not None:
+                            hits += 1
+                    ao = 1.0 - OCCLUSION_STRENGTH * hits / len(world)
+                    cache[key] = ao
+                ao = cache[key]
+                attr.data[li].color = (ao, ao, ao, 1.0)
+                total += ao
+        means[name] = total / max(len(mesh.loops), 1)
+        # The exporter only writes the attribute a material reads; the
+        # placeholder colour times it keeps the .glb honest on its own.
+        material = obj.active_material
+        nodes = material.node_tree.nodes
+        bsdf = nodes["Principled BSDF"]
+        attribute = nodes.new("ShaderNodeVertexColor")
+        attribute.layer_name = "Col"
+        mix = nodes.new("ShaderNodeMix")
+        mix.data_type = "RGBA"
+        mix.blend_type = "MULTIPLY"
+        mix.inputs["Factor"].default_value = 1.0
+        mix.inputs[6].default_value = PART_COLORS[name]
+        material.node_tree.links.new(attribute.outputs["Color"], mix.inputs[7])
+        material.node_tree.links.new(mix.outputs[2], bsdf.inputs["Base Color"])
+    return means
+
+
 def triangle_count() -> int:
     total = 0
     for obj in bpy.data.objects:
@@ -937,6 +1032,7 @@ def main(argv: list[str]) -> int:
                                       aisle_indices, stage_gap)
     parts_tris = {name: parts[name].triangle_count() for name in CROWD_PARTS}
     finish(parts)
+    occluded = bake_occlusion()
 
     out = pathlib.Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -966,6 +1062,8 @@ def main(argv: list[str]) -> int:
              counts["signs"], counts["phones"]))
     for name in CROWD_PARTS:
         print("  %s: %d triangles" % (name, parts_tris[name]))
+    for name, mean in occluded.items():
+        print("  %s: occlusion baked, mean %.3f" % (name, mean))
     return 0
 
 
