@@ -974,3 +974,64 @@ func test_the_match_starts_from_the_corners_on_the_stare() -> void:
 
 func _flat(v: Vector3) -> Vector3:
 	return Vector3(v.x, 0.0, v.z)
+
+
+## The owner, 2 Nov: "they looked glitchy walking to their staredown". Each
+## walk of the start plays a clip authored at the speed the director moves
+## him (gait_audit measures the planted feet), never Entrance_Walk's 1.6 m/s
+## under a 0.6 m/s walk -- feet sliding back a metre a second.
+func test_the_walks_to_the_corners_and_the_stare_play_clips_made_for_their_speed() -> void:
+	var scene := _match(true, "roman", "cody")
+	var director: EntranceDirector = scene.get_node("EntranceDirector")
+	var beats: Array = director._beats
+	var walk_in: Dictionary = beats[-2]
+	var to_corners: Dictionary
+	for beat: Dictionary in beats:
+		if beat.get("shot", "") == "faceoff" and beat.get("kind", "") == "pair":
+			to_corners = beat
+			break
+	var authored := {EntranceDirector.FACEOFF_WALK_CLIP: EntranceDirector.FACEOFF_WALK_SPEED,
+			EntranceDirector.FACEOFF_CORNER_CLIP: EntranceDirector.FACEOFF_CORNER_SPEED}
+	for beat: Dictionary in [to_corners, walk_in]:
+		for move: Array in beat["moves"]:
+			var clip: String = move[4]
+			assert_bool(authored.has(clip)).override_failure_message("%s walks on %s" % [beat["shot"], clip]).is_true()
+			var speed := _flat(move[2] - move[1]).length() / (float(beat["ticks"]) / EntranceDirector.TPS)
+			assert_float(speed).is_less_equal(float(authored[clip]) + 0.02)
+			assert_float(speed).is_greater(float(authored[clip]) * 0.85)
+	assert_float(StrikeRecipes.RECIPES["walk_staredown"]["seconds"]).is_greater(1.0)
+
+
+## "Ensure Aubrey is out of their way during all that": from the corner
+## close-ups on she is in the neutral corner, off both men's walk.
+func test_aubrey_waits_in_the_neutral_corner_from_the_close_ups() -> void:
+	assert_bool(RefereeActor.FACEOFF_WAIT_SHOTS.has("corner_intro")).is_true()
+	assert_bool(RefereeActor.FACEOFF_WAIT_SHOTS.has("faceoff_side")).is_true()
+	assert_bool(RefereeActor.FACEOFF_WAIT_SHOTS.has("staredown_push")).is_true()
+	var a := EntranceDirector.faceoff_corner(Vector3(0, 0, -1.5), -1.0)
+	var b := EntranceDirector.faceoff_corner(Vector3(0, 0, 1.5), 1.0)
+	var n := RefereeActor.neutral_corner(a)
+	# a corner of its own, nowhere near either man's corner or the line between
+	assert_float(_flat(n - a).length()).is_greater(3.0)
+	assert_float(_flat(n - b).length()).is_greater(3.0)
+	assert_float(absf(_flat(n).normalized().dot(_flat(b - a).normalized()))).is_less(0.1)
+
+
+## "The camera panned to the corners but the wrestlers were not there": they
+## were, in the entrance dark. The ring and house come up as they walk to
+## their corners, so the walk and the match card's wide of the corners are lit.
+func test_the_lights_come_up_as_they_walk_to_their_corners() -> void:
+	var scene := _match(true, "roman", "cody")
+	var director: EntranceDirector = scene.get_node("EntranceDirector")
+	var first_faceoff := -1
+	var lit := -1
+	var beats: Array = director._beats
+	for i in beats.size():
+		var beat: Dictionary = beats[i]
+		if first_faceoff < 0 and beat.get("shot", "") == "faceoff" and beat.get("kind", "") == "pair":
+			first_faceoff = i
+		for e: Array in beat.get("events", []):
+			if e[1] == "lights_up":
+				lit = i
+	assert_int(first_faceoff).is_greater(0)
+	assert_int(lit).is_equal(first_faceoff)

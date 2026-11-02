@@ -105,10 +105,16 @@ const HANDOVER_TICKS := 165
 ## their marks and turn round, where the bell finds them. The match starts on
 ## the marks, exactly as it did, so nothing downstream moves.
 const FACEOFF_GAP := 0.75
-## The slow walk out of the corners.
+## The slow walk out of the corners, on its own clip authored at this speed
+## (Walk_Staredown): on Entrance_Walk (1.6 m/s) the feet slid back a metre a
+## second -- the owner's "glitchy walking to their staredown" (2 Nov).
 const FACEOFF_WALK_SPEED := 0.6
-## From the marks to the corners, and the turn in there.
-const FACEOFF_CORNER_SPEED := 1.1
+const FACEOFF_WALK_CLIP := "strikes/walk_staredown"
+## From the marks to the corners, on the slow walk authored at this speed
+## (Walk_Slow) -- not Entrance_Walk at 1.1, which skated half a metre a second.
+## And the turn in there.
+const FACEOFF_CORNER_SPEED := 1.0
+const FACEOFF_CORNER_CLIP := "strikes/walk_slow"
 const FACEOFF_CORNER_TURN_TICKS := 36
 ## How far in from the turnbuckle pad a man stands in his corner.
 const FACEOFF_CORNER_IN := 0.95
@@ -1053,9 +1059,15 @@ func _add_faceoff() -> void:
 	var to_a := _flat(ca - a.origin)
 	var to_b := _flat(cb - b.origin)
 	var walk_out := maxi(1, int(ceil(maxf(to_a.length(), to_b.length()) / FACEOFF_CORNER_SPEED * TPS)))
-	_beats.append({"kind": "pair", "ticks": walk_out, "shot": "faceoff", "moves": [
-			[_a, a.origin, ca, to_a, "strikes/entrance_walk"],
-			[_b, b.origin, cb, to_b, "strikes/entrance_walk"]]})
+	# The house lights come up as they go to their corners, not on the match
+	# card: the owner, 2 Nov, "the camera panned to the corners but the
+	# wrestlers were not there" -- they were, in the entrance dark. Up on the
+	# card, the fade was still under way, and the walk and the card's wide of
+	# the corners showed silhouettes.
+	_beats.append({"kind": "pair", "ticks": walk_out, "shot": "faceoff",
+			"events": [[1, "lights_up"]], "moves": [
+			[_a, a.origin, ca, to_a, FACEOFF_CORNER_CLIP],
+			[_b, b.origin, cb, to_b, FACEOFF_CORNER_CLIP]]})
 	var face_a := _flat(cb - ca)
 	var face_b := -face_a
 	_beats.append({"kind": "pair", "ticks": FACEOFF_CORNER_TURN_TICKS, "shot": "faceoff", "moves": [
@@ -1068,8 +1080,8 @@ func _add_faceoff() -> void:
 	var walk_in := maxi(1, int(ceil(_flat(ca).distance_to(_flat(a_in)) / FACEOFF_WALK_SPEED * TPS)))
 	_beats.append({"kind": "pair", "ticks": walk_in, "shot": "faceoff_side",
 			"events": [[1, "house_down"]], "moves": [
-			[_a, ca, a_in, face_a, "strikes/entrance_walk"],
-			[_b, cb, b_in, face_b, "strikes/entrance_walk"]]})
+			[_a, ca, a_in, face_a, FACEOFF_WALK_CLIP],
+			[_b, cb, b_in, face_b, FACEOFF_WALK_CLIP]]})
 	_beats.append({"kind": "pair", "ticks": FACEOFF_STARE_TICKS, "shot": "staredown_push",
 			"snap_end": true, "events": [[1, "faceoff_tension"], [1, "flash_burst"]],
 			"moves": [[_a, a_in, a_in, face_a, "strikes/face_off"],
@@ -1097,10 +1109,10 @@ func _add_intro(a: Transform3D, b: Transform3D, face_a: Vector3, face_b: Vector3
 	_checked = checked
 	var first := _b if checked == _a else _a
 	var last := _a if checked == _a else _b
-	# Both men are in: the house lights come up for the introductions and
-	# the stare-down (owner), not at the bell.
+	# Both men are in and lit (lights_up, on the walk to the corners in
+	# _add_faceoff): the introductions and the stare-down, not at the bell.
 	_beats.append({"kind": "pair", "ticks": INTRO_CARD_TICKS, "shot": "match_card",
-			"match_card": true, "moves": hold, "events": [[1, "lights_up"]]})
+			"match_card": true, "moves": hold})
 	_beats.append({"kind": "pair", "ticks": INTRO_CHECK_TICKS, "shot": "ref_check",
 			"focus": last, "moves": hold})
 	_beats.append({"kind": "pair", "ticks": INTRO_CLOSE_TICKS, "shot": "corner_intro",

@@ -37,6 +37,8 @@ const CYCLES := {
 	"walk_stalk": 3.5,   # MOVE_SPEED
 	"run_drive": 7.0,    # RUN_SPEED
 	"run_jog": 4.2,      # JOG_SPEED (outside the ring)
+	"walk_slow": 1.0,    # EntranceDirector.FACEOFF_CORNER_SPEED
+	"walk_staredown": 0.6,  # EntranceDirector.FACEOFF_WALK_SPEED
 }
 ## The official and timekeeper share AubreyModel's retargeted base-rig
 ## cycles. These rates are measured from their planted feet after retargeting,

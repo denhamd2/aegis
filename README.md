@@ -11171,3 +11171,34 @@ Review sheet: `gauntlet/refs/match/owner_list_2nov_review.png`.
 - **Tested.** `test_aubrey_keeps_after_him_until_the_fire_is_out` holds him up the aisle, brings him back, then relights him.
 
 **Extinguisher smoke (#39).** The faceted `FireExtinguisher_Cloud` mesh, scaled 0.2 → 1, is hidden. In its place is `WeaponActor.spray_cloud`: 240 soft lit billboard puffs along the horn, slowed by the air, swelling and fading. `test_extinguisher_spray`.
+
+## 2 Nov — The start in the real game: the corners lit, a walk-in that does not skate, Aubrey out of the way
+
+The owner: "the new corner and staredown didn't work. The camera pan to the corners but the wrestlers were not there. Also they looked glitchy walking to their staredown. Ensure Aubrey is out of their way during all that." Review sheet: `gauntlet/refs/match/staredown_fix_review.png`.
+
+**Reproduced on the full flow**, entrances on: a headless run logging both men, the referee and the camera on every beat from the walk to the corners to the bell. The `--faceoff` probe jumps past what matters here.
+
+**"Not there": they were, in the dark.**
+- **Where they were.** The men reach their corners and hold them through the introductions, exactly on the lines the director gives them.
+- **The light.** `lights_up` fired on the match card and faded in. So the walk to the corners, on the hard camera, and the card's high wide of the corners both ran in the entrance dark: an empty-looking ring with a referee.
+- **Fixed.** It now fires on the first tick of the walk to the corners.
+- **Checked on Forward+.** Both men and Aubrey are lit and in frame walking out, in the corners and on the card.
+
+**"Glitchy walking": the feet slid back a metre a second.**
+- **The cause.** The walk-in played `Entrance_Walk`, which is authored for 1.6 m/s, at 0.6 m/s. The walk to the corners played the same clip at 1.1 m/s.
+- **Now.**
+  - The walk-in plays a new `Walk_Staredown`, authored at 0.6 m/s (`wrestling_clips.py`): a short stride, the head level and still, the arms hanging.
+  - The walk to the corners plays `Walk_Slow` at 1.0 m/s (`FACEOFF_*_CLIP`, `FACEOFF_CORNER_SPEED`).
+- **Measured.** `gait_audit`: planted feet at 0.53 / 0.54 and 0.90 / 0.93 m/s.
+- **Gate.** Reviewed on `clip_shot`, and the clip gate re-pinned.
+
+**Aubrey.**
+- **Before.**
+  - She set off for her neutral corner only as the walk-in began, so she crossed the back of the shot between them.
+  - She stood 0.8 m off the checked man's shoulder through his close-up.
+- **Now** (`RefereeActor.FACEOFF_WAIT_SHOTS`). She goes straight from her check, during the first corner close-up while the camera faces away from her. She stands still at (2.17, −1.88) from the second close-up through the walk-in and the stare.
+- **Still open.** The stare's push looks down the line to that corner, so she is in the background between their heads: still, and soft at that lens. Moving her off that line would put her in front of the walk-in's camera, so it is left for the owner's call.
+
+**Tests.** `test_entrance_director`: the walks play clips made for their speed; Aubrey waits from the close-ups; lights up on the walk to the corners.
+
+**Renders.** The "before" frames are the OpenGL preview; the "after" frames of the corners are Forward+.

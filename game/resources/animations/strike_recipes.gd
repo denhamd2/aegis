@@ -373,6 +373,8 @@ const RECIPES := {
 	# Roman's entrance (gauntlet/refs/entrances.md). Own lengths, as above.
 	"walk_slow": {"kind": "retime", "source": "Walk_Slow",
 		"seconds": 1.000, "file": AUTHORED, "loop": true},
+	"walk_staredown": {"kind": "retime", "source": "Walk_Staredown",
+		"seconds": 40.0 / 30.0, "file": AUTHORED, "loop": true},
 	"walk_slow_look": {"kind": "retime", "source": "Walk_Slow_Look",
 		"seconds": 4.800, "file": AUTHORED, "loop": true},
 	"roman_stand": {"kind": "retime", "source": "Roman_Stand",

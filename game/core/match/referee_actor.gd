@@ -112,6 +112,9 @@ var _winner: WrestlerController
 var _separated := false
 ## Waiting in a neutral corner while they walk out and stare (follow()).
 var _faceoff_wait := false
+## The shots she spends in the neutral corner: the corner close-ups after
+## her check, the walk out of the corners and the stare.
+const FACEOFF_WAIT_SHOTS := ["corner_intro", "faceoff_side", "staredown_push"]
 var _separating := false
 ## Seconds she has stood between them; she steps clear after SEPARATE_HOLD.
 var _separate_time := 0.0
@@ -153,8 +156,13 @@ func follow(director: EntranceDirector) -> void:
 		_checking = shot == "ref_check" and mode == Mode.PARK
 		# The walk out of the corners and the stare: she waits in a neutral
 		# corner, off the diagonal the two of them walk -- her spot by the
-		# ropes is on it (EntranceDirector._add_faceoff).
-		_faceoff_wait = shot in ["faceoff_side", "staredown_push"]
+		# ropes is on it (EntranceDirector._add_faceoff). She goes there
+		# straight from her check, on the corner close-ups, and is standing
+		# still before they walk: the owner, 2 Nov, "Ensure Aubrey is out of
+		# their way during all that". She had set off only as the walk-in
+		# began, and crossed the back of the shot between them, and stood
+		# 0.8 m off the checked man's shoulder through his close-up.
+		_faceoff_wait = shot in FACEOFF_WAIT_SHOTS
 		if shot == "faceoff" and mode == Mode.PARK and not _separated:
 			_separated = true
 			_separating = true)

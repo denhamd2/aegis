@@ -2276,6 +2276,23 @@ CLIPS = {
         hand_fwd=(-0.06, 0.06), hand_up=(0.90, 0.92),
         hand_x={"r": 0.25, "l": -0.24}, elbow=None), curl=0.45),
 
+    # 40 frames / 1.33s, looping: the walk out of the corner to the
+    # stare-down, 0.6 m/s -- EntranceDirector.FACEOFF_WALK_SPEED. It played
+    # Entrance_Walk (authored at 1.6 m/s), so at 0.6 the planted foot slid
+    # back a metre a second -- the "glitchy" walk-in the owner saw (2 Nov).
+    # Slow and deliberate: a short stride (contact 20 of 40 per foot, half
+    # stride 0.2 m), the chest a little forward, the head level and still --
+    # his eyes stay on the other man -- the arms hanging, barely swinging.
+    "Walk_Staredown": _open_hands(_gait(
+        frames=40, fps=FPS, speed=0.6,
+        contacts={"r": (0, 20), "l": (20, 20)},
+        plant_up=0.104, lift_up=0.05,
+        foot_x={"r": 0.15, "l": -0.14},
+        pelvis_up=0.905, pelvis_dip=0.010,
+        hips_yaw=3.0, spine=(0.0, 6.0), head=(0, 0, 0),
+        hand_fwd=(-0.03, 0.03), hand_up=(0.88, 0.89),
+        hand_x={"r": 0.26, "l": -0.25}, elbow=None), curl=0.55),
+
     # 144 frames / 4.8s, looping: his walk to the ring at 0.5 m/s, surveying
     # the building as he goes (_methodical_walk).
     "Walk_Slow_Look": _methodical_walk(),
