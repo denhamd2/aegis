@@ -433,7 +433,13 @@ var _effect_velocity := Vector3.ZERO
 var _effect_homing := false
 var _effect_travelled := 0.0
 
-const EFFECT_LIFE := {"flash": 0.07, "cloud": 0.9, "rocket": 0.0, "blast": 1.3}
+const EFFECT_LIFE := {"flash": 0.07, "cloud": 2.4, "rocket": 0.0, "blast": 1.3}
+## The extinguisher's discharge (the owner, 2 Nov: "looks like a polygonal
+## cloud, rather than smoke particles"): soft billboard puffs, out of the horn
+## fast, slowed by the air, spreading and billowing as they thin -- not the
+## FireExtinguisher_Cloud mesh grown from 0.2 to 1, which stays hidden.
+const CLOUD_PUFFS := 240
+const CLOUD_PUFF_LIFE := 1.4
 ## Who hears about a weapon going off or breaking (MatchAudio, MatchCamera):
 ## on_weapon_event(weapon, event) with event "flash", "cloud", "rocket",
 ## "blast" or "broke". A group, not a signal: weapons are made mid-match,
@@ -533,9 +539,79 @@ func _spawn_effect(host: Node, kind: String, at: Transform3D) -> WeaponActor:
 	host.add_child(e)
 	e.global_transform = Transform3D(at.basis.orthonormalized(), at.origin)
 	if kind == "cloud":
-		e.scale = Vector3.ONE * 0.2
+		e._model.visible = false
+		var puffs := spray_cloud()
+		e.add_child(puffs)
+		puffs.emitting = true
 	e._announce(kind)
 	return e
+
+
+## One discharge of the extinguisher, along the node's +Z: a burst of powder
+## puffs that leave the horn at speed, drag to a stop within a couple of
+## metres, swell and drift, and fade. Soft round sprites (ManFire's soft dot),
+## lit by the hall so the cloud is not a glowing shape in a dark room.
+static func spray_cloud() -> GPUParticles3D:
+	var p := GPUParticles3D.new()
+	p.name = "Puffs"
+	p.amount = CLOUD_PUFFS
+	p.lifetime = CLOUD_PUFF_LIFE
+	p.one_shot = true
+	p.explosiveness = 0.55
+	p.randomness = 0.4
+	p.local_coords = false
+	p.emitting = false
+	p.visibility_aabb = AABB(Vector3(-3, -3, -1), Vector3(6, 6, 8))
+	var m := ParticleProcessMaterial.new()
+	m.direction = Vector3(0.0, 0.0, 1.0)
+	m.spread = 17.0
+	m.initial_velocity_min = 4.0
+	m.initial_velocity_max = 9.0
+	m.damping_min = 7.0
+	m.damping_max = 10.0
+	m.gravity = Vector3(0.0, -0.25, 0.0)
+	m.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
+	m.emission_sphere_radius = 0.04
+	m.angle_min = 0.0
+	m.angle_max = 360.0
+	m.angular_velocity_min = -40.0
+	m.angular_velocity_max = 40.0
+	m.turbulence_enabled = true
+	m.turbulence_noise_strength = 0.6
+	m.turbulence_noise_scale = 2.5
+	m.turbulence_influence_min = 0.02
+	m.turbulence_influence_max = 0.08
+	m.scale_min = 0.5
+	m.scale_max = 0.9
+	var grow := Curve.new()
+	grow.add_point(Vector2(0.0, 0.3))
+	grow.add_point(Vector2(0.3, 1.5))
+	grow.add_point(Vector2(1.0, 3.4))
+	var grow_tex := CurveTexture.new()
+	grow_tex.curve = grow
+	m.scale_curve = grow_tex
+	var grad := Gradient.new()
+	grad.offsets = PackedFloat32Array([0.0, 0.12, 0.55, 1.0])
+	grad.colors = PackedColorArray([Color(0.96, 0.96, 0.95, 0.0), Color(0.95, 0.95, 0.94, 0.32),
+			Color(0.9, 0.9, 0.9, 0.2), Color(0.86, 0.86, 0.86, 0.0)])
+	var ramp := GradientTexture1D.new()
+	ramp.gradient = grad
+	m.color_ramp = ramp
+	p.process_material = m
+	var quad := QuadMesh.new()
+	quad.size = Vector2(0.7, 0.7)
+	var mat := StandardMaterial3D.new()
+	mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+	mat.billboard_keep_scale = true
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.vertex_color_use_as_albedo = true
+	mat.albedo_texture = ManFire._soft_dot()
+	mat.roughness = 1.0
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	mat.shadow_to_opacity = false
+	quad.material = mat
+	p.draw_pass_1 = quad
+	return p
 
 
 func _announce(event: String) -> void:
@@ -546,9 +622,6 @@ func _announce(event: String) -> void:
 func _tick_effect(delta: float) -> void:
 	_effect_t += delta
 	match _effect:
-		"cloud":
-			var f := clampf(_effect_t / _effect_life, 0.0, 1.0)
-			scale = Vector3.ONE * lerpf(0.2, 1.0, sqrt(f))
 		"rocket":
 			var step := _effect_velocity * delta
 			if _effect_homing:

@@ -479,6 +479,11 @@ const RECIPES := {
 	"run_drive": {"kind": "retime", "source": "Run_Drive",
 		"seconds": 0.667, "file": AUTHORED, "loop": true},
 
+	# The jog outside the ring: Run_Jog's own 22 frames at 30 fps, tied to
+	# WrestlerController.JOG_SPEED through its generated contact phase.
+	"run_jog": {"kind": "retime", "source": "Run_Jog",
+		"seconds": 0.733, "file": AUTHORED, "loop": true},
+
 	# TIE_UP played "Push", a two-armed shove -- closer than the one-armed
 	# point it replaced, but still a man pushing a crate. A collar-and-elbow
 	# has one hand high on the neck and one on the elbow, chest square, legs

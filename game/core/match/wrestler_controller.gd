@@ -25,6 +25,10 @@ signal hurt(sell: int, move: MoveDef)
 
 const MOVE_SPEED := 3.5
 const RUN_SPEED := 7.0
+## Running outside the ring is a jog (the owner, 2 Nov: "it should be a jog
+## not a sprint"): strikes/run_jog, authored to this speed.
+const JOG_SPEED := 4.2
+const JOG_CLIP := "strikes/run_jog"
 const TIE_UP_RANGE := 1.4
 ## How close an opponent has to be for a strike or running attack to be worth
 ## STARTING, and the fallback contact test for moves that carry no authored
@@ -92,6 +96,33 @@ const GETUP_TICKS := 90 # 1.5s
 ## the same match rhythm for both without removing the player's option to
 ## recover sooner with input.
 const QUICK_DOWN_RECOVERY_DELAY_TICKS := 48 # 0.8s
+## Recovery by condition (the owner, 2 Nov: "recovery time was far too quick,
+## especially when their health is low ... if someone is put through a table
+## or hit with a weapon or a signature move it should take much longer to get
+## back up and also they should be groggy getting up"). Measured before: the
+## automatic quick rise came 0.8 s after nearly every knockdown, whatever his
+## health, so the DOWN_TICKS_* times almost never ran and there was no time
+## for a Spear or a ladder dive.
+##  * Below QUICK_RISE_MIN_HEALTH there is no automatic quick rise at all.
+##  * Above it, the wait before it grows from QUICK_DOWN_RECOVERY_DELAY_TICKS
+##    at full health to QUICK_DELAY_HURT_TICKS at the threshold.
+##  * A hard knockdown -- through a table, the desk or glass, a weapon that
+##    drops or wipes him out, a signature or a finisher -- never takes it,
+##    and lies HARD_DOWN_SCALE longer.
+const QUICK_RISE_MIN_HEALTH := 0.45
+const QUICK_DELAY_HURT_TICKS := 240
+const HARD_DOWN_SCALE := 1.4
+## Groggy after the rise: GROGGY_BASE_TICKS plus up to GROGGY_HURT_TICKS by
+## how hurt he is, plus GROGGY_HARD_TICKS after a hard knockdown, walking at
+## GROGGY_SPEED of his pace with no run, holding what hurts.
+const GROGGY_BASE_TICKS := 90
+const GROGGY_HURT_TICKS := 210
+const GROGGY_HARD_TICKS := 90
+const GROGGY_SPEED := 0.55
+## Ticks of groggy left; set as he comes up off the mat.
+var groggy_ticks := 0
+var _hard_down := false
+var _rose_staged := false
 ## How long a man a slam left on the mat (MoveDef.leaves_defender_down) lies
 ## there before rising, when the slam did not also knock him down. Half a
 ## knockdown's GETUP_TICKS: long enough to read as having been dropped,
@@ -1618,8 +1649,16 @@ func play_paired_pose(move: MoveDef, is_attacker: bool) -> bool:
 
 func _on_fsm_state_changed(_previous: WrestlerFSM.State, current: WrestlerFSM.State) -> void:
 	if current == WrestlerFSM.State.IDLE and _previous == WrestlerFSM.State.GETUP:
-		# Up off the mat, holding what hurts.
-		_begin_sell(most_hurt(combat.limb_damage, SELL_GETUP_MIN), SELL_GETUP_TICKS)
+		# Up off the mat, holding what hurts -- and groggy after a slow rise,
+		# a hard knockdown or when he is hurt (groggy_for).
+		groggy_ticks = groggy_for(combat.health(), _rose_staged, _hard_down)
+		_hard_down = false
+		_rose_staged = false
+		if groggy_ticks > 0:
+			var part := most_hurt(combat.limb_damage, 0.0)
+			_begin_sell(part if part != "" else "head", groggy_ticks)
+		else:
+			_begin_sell(most_hurt(combat.limb_damage, SELL_GETUP_MIN), SELL_GETUP_TICKS)
 	if current == WrestlerFSM.State.GRAPPLE_HOLD:
 		# A tie-up's hold chains (see "chain wrestling"); a running paired
 		# move's does not. Both men reset: either may end up the holder.
@@ -2047,8 +2086,15 @@ func _process_free_movement(delta: float, input: Dictionary) -> void:
 		return
 
 	var move_vec: Vector2 = input.get("move", Vector2.ZERO)
-	var running: bool = input.get("run", false) and not _guarding and move_vec.length() > 0.1
-	var speed := RUN_SPEED if running else MOVE_SPEED
+	if groggy_ticks > 0:
+		groggy_ticks -= 1
+	var running: bool = input.get("run", false) and not _guarding and move_vec.length() > 0.1 \
+			and groggy_ticks <= 0
+	var speed := (JOG_SPEED if outside_ring else RUN_SPEED) if running else MOVE_SPEED
+	if groggy_ticks > 0:
+		speed *= GROGGY_SPEED
+	if running and outside_ring and fsm.current_state != WrestlerFSM.State.RUN:
+		_set_state_clip(WrestlerFSM.State.RUN, JOG_CLIP)
 	var direction := Vector3(move_vec.x, 0.0, move_vec.y)
 
 	velocity.x = direction.x * speed
@@ -4893,6 +4939,10 @@ func _go_down(tier := -1) -> void:
 	_down_scale = 1.0
 	weapon_down_impact = _pending_weapon_impact \
 			if Engine.get_physics_frames() - _pending_weapon_frame <= WEAPON_DOWN_WITHIN else -1
+	_hard_down = tier >= CombatSystem.Tier.SIGNATURE \
+			or weapon_down_impact >= WeaponCatalog.Impact.DROP
+	if _hard_down:
+		_move_ticks_remaining = int(_move_ticks_remaining * HARD_DOWN_SCALE)
 	_pending_weapon_impact = -1
 	knockdown_tier = tier
 	combat.cut_off_comeback()
@@ -4917,6 +4967,22 @@ func _stop_dead() -> void:
 	_knockback_ticks = 0
 
 
+## Ticks down before the automatic quick rise, by health (0-1): the short
+## sell at full health, much longer as he nears QUICK_RISE_MIN_HEALTH.
+static func quick_rise_delay(health: float) -> int:
+	var t := clampf((health - QUICK_RISE_MIN_HEALTH) / (1.0 - QUICK_RISE_MIN_HEALTH), 0.0, 1.0)
+	return int(round(lerpf(QUICK_DELAY_HURT_TICKS, QUICK_DOWN_RECOVERY_DELAY_TICKS, t)))
+
+
+## Groggy ticks after a rise: after the slow rise or when hurt, longer the
+## more hurt and after a hard knockdown; none after a quick rise unhurt.
+static func groggy_for(health: float, staged: bool, hard: bool) -> int:
+	if not staged and not hard and health >= 0.6:
+		return 0
+	return GROGGY_BASE_TICKS + int(round((1.0 - clampf(health, 0.0, 1.0)) * GROGGY_HURT_TICKS)) \
+			+ (GROGGY_HARD_TICKS if hard else 0)
+
+
 func _process_down(input: Dictionary) -> void:
 	if dead:
 		_stop_dead()
@@ -4930,13 +4996,18 @@ func _process_down(input: Dictionary) -> void:
 	# never be pinned in time -- measured, Roman's Spears in the finish were
 	# covered after Cody was already back up, and the match never ended.
 	var big_one := knockdown_tier >= CombatSystem.Tier.SIGNATURE
+	if _through_hold > 0:
+		_hard_down = true
 	var held := fsm.ticks_in_state < maxi(int(WEAPON_DOWN_HOLD.get(weapon_down_impact, 0)), _through_hold)
-	var quick_recovery: bool = not held and ((combat != null and combat.is_fired_up()) \
+	var health := combat.health() if combat else 1.0
+	var can_quick := not held and not _hard_down and health >= QUICK_RISE_MIN_HEALTH
+	var quick_recovery: bool = can_quick and ((combat != null and combat.is_fired_up()) \
 			or not big_one and (input.get("strike", false)
-					or fsm.ticks_in_state >= QUICK_DOWN_RECOVERY_DELAY_TICKS))
+					or fsm.ticks_in_state >= quick_rise_delay(health)))
 	if quick_recovery or _move_ticks_remaining <= 0:
 		if not quick_recovery:
 			_set_state_clip(WrestlerFSM.State.GETUP, "strikes/getup_staged")
+		_rose_staged = not quick_recovery
 		_through_hold = 0
 		fsm.transition_to(WrestlerFSM.State.GETUP)
 		_move_ticks_remaining = GETUP_RISE_FAST_TICKS if quick_recovery else GETUP_STAGED_TICKS

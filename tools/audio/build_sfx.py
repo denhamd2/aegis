@@ -318,20 +318,11 @@ def build() -> None:
 	# MatchAudio's levels are the mix (tools/audio/measure_mix.py reads it back).
 	# Loop lengths 52 / 41 / 47 s, pairwise co-prime: no two seams ever line up.
 	#
-	# The hall: a dense indoor crowd. Use it for the bed too, slowed, filtered
-	# and smeared into non-verbal room tone. The previous Celtics-game bed had
-	# a recognizable "Defense" call in the shipped cut, which does not belong
-	# in a wrestling broadcast.
-	hall = load(freesound("635492"), 2)[:, ::-1]
-	hall_cut = cut(hall, 10.0, 43.0)
-	bed = sweeten(hall_cut, speed=43.0 / 54.0, hp=120.0, lp=3600.0)
-	save("crowd_bed", lufs_to(loop(bed), CROWD_LUFS))
-	# The hall walla stays at its original pace and width above the softer bed.
-	save("crowd_walla_a", lufs_to(loop(hall_cut), CROWD_LUFS))
-	# The second walla, crowd_swell, is built from crowd_walla_a by
-	# tools/audio/build_crowd_swell.py. It replaced a lucha libre recording
-	# (freesound 141704) whose horn over the crowd the owner heard as a
-	# distant megaphone (2 Nov).
+	# crowd_bed and crowd_swell are built by tools/audio/build_crowd_beds.py
+	# from the cheering, roaring and popping files this table writes. They
+	# used to be the hall walla (freesound 635492) -- a crowd talking, which
+	# the owner kept hearing as "someone talking or distant on a megaphone"
+	# (2 Nov) -- and that recording is no longer used anywhere.
 	# The roar: a sustained full-house cheer, faded up with the excitement
 	# CrowdReaction already tracks.
 	roar = load(freesound("397434"), 2)

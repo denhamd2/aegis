@@ -49,7 +49,7 @@ const MENU_CAMERA := "OPTIONS"
 ## the values' names in CameraSettings' enum order].
 const CAMERA_ROWS := [["COVERAGE", ["GAMEPLAY", "BROADCAST", "FIGHT FOREVER"]], ["CUTS", ["ON", "OFF"]],
 		["SHAKE", ["OFF", "LOW", "HIGH"]], ["REPLAYS", ["OFF", "FINISH", "FREQUENT"]],
-		["BLOOD", ["ON", "OFF"]], ["MOTION BLUR", ["ON", "OFF"]]]
+		["BLOOD", ["OFF", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]], ["MOTION BLUR", ["ON", "OFF"]]]
 var camera_row := 0
 const MENU_QUIT := "QUIT"
 
@@ -738,7 +738,7 @@ static func camera_option(row: int) -> int:
 		2: return CameraSettings.shake
 		3: return CameraSettings.replays
 		5: return 0 if CameraSettings.motion_blur_enabled() else 1
-		_: return 0 if Blood.on() else 1
+		_: return Blood.level if Blood.on() else 0
 
 
 func step_camera_option(dir: int) -> void:
@@ -753,7 +753,7 @@ func step_camera_option(dir: int) -> void:
 		5: CameraSettings.motion_blur = v == 0
 		_:
 			Blood.on()   # reads --blood once, before we override it
-			Blood.enabled = v == 0
+			Blood.set_level(v)
 	if _sfx:
 		_sfx.play("ui_move", -8.0)
 

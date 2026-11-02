@@ -10,6 +10,16 @@ const MODELS := ["res://scenes/roman_model.tscn", "res://scenes/cody_model.tscn"
 		"res://scenes/kenny_model.tscn"]
 
 
+## These measure the blood at full level (10, the blood as it was); the
+## shipped default (4) is pinned on its own below.
+func before_test() -> void:
+	Blood.set_level(Blood.MAX_LEVEL)
+
+
+func after_test() -> void:
+	Blood.set_level(Blood.DEFAULT_LEVEL)
+
+
 func _ticks(n: int) -> void:
 	for i in n:
 		await get_tree().physics_frame
@@ -222,3 +232,42 @@ func test_a_bloodied_man_laid_out_on_the_canvas_stains_it() -> void:
 	w.global_position = Vector3(-0.8, 0.0, -0.6)
 	var heavy := await _pool_under(w, 0.7)
 	assert_float(heavy).is_greater(light)
+
+
+## The owner, 2 Nov: "a blood scale setting of 1 to 10 ... 10 is what it
+## currently is ... set it to 4 by default". The level scales what is shown.
+func test_the_blood_level_defaults_to_four_and_scales_what_is_shown() -> void:
+	assert_int(Blood.DEFAULT_LEVEL).is_equal(4)
+	Blood.set_level(Blood.DEFAULT_LEVEL)
+	assert_float(Blood.amount()).is_equal_approx(0.4, 0.001)
+	var w := await _wrestler()
+	var b := _blood(w)
+	b.head = 1.0
+	b._peak = 1.0
+	b.shown_head = 1.0
+	b._since = Blood.UPDATE_EVERY
+	b._process(0.0)
+	assert_float(float(b.materials[0].get_shader_parameter("bleed_head"))).is_equal_approx(0.4, 0.001)
+	Blood.set_level(0)
+	assert_bool(Blood.on()).is_false()
+	Blood.set_level(10)
+	assert_bool(Blood.on()).is_true()
+	assert_float(Blood.amount()).is_equal(1.0)
+
+
+## The options screen steps OFF, 1 .. 10.
+func test_the_options_screen_steps_the_blood_level() -> void:
+	var row := -1
+	for i in TitleScreen.CAMERA_ROWS.size():
+		if TitleScreen.CAMERA_ROWS[i][0] == "BLOOD":
+			row = i
+	assert_int((TitleScreen.CAMERA_ROWS[row][1] as Array).size()).is_equal(11)
+	Blood.set_level(4)
+	var screen: TitleScreen = auto_free(TitleScreen.new())
+	screen.camera_row = row
+	assert_int(TitleScreen.camera_option(row)).is_equal(4)
+	screen.step_camera_option(-1)
+	assert_int(Blood.level).is_equal(3)
+	for i in 3:
+		screen.step_camera_option(-1)
+	assert_bool(Blood.on()).is_false()

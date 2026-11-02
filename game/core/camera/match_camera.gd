@@ -323,9 +323,12 @@ const TRAUMA_STRIKE := 0.3
 const TRAUMA_BIG_STRIKE := 0.45
 const TRAUMA_SLAM := 0.55
 ## Motion blur shutters (MotionBlur.intensity, the fraction of a frame's
-## motion smeared): light in open play, heavier through a paired move.
-const BLUR_BASE := 0.35
-const BLUR_ACTION := 0.6
+## motion smeared): light in open play, heavier through a paired move. The
+## owner, 2 Nov: "some of the motion blurs are too strong ... more natural ...
+## in moderation" -- halved (were 0.35 and 0.6); at 60 fps a broadcast
+## camera's smear is short.
+const BLUR_BASE := 0.18
+const BLUR_ACTION := 0.3
 const TRAUMA_KNOCKDOWN := 0.3
 ## No Holds Barred: a gunshot, a man through a table, the rocket's blast.
 const TRAUMA_SHOT := 0.25

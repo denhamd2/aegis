@@ -11129,3 +11129,45 @@ The owner: "I want the gameplay and animations all to be at 60fps. Inspect what 
 - **Pair clearance moved, the right way.** `power_samoan_drop`'s 7.2 cm, the victim's thigh through the attacker's pelvis at the sit-out that three refit passes had not cleared, measured 3.5 cm. It is off `PairClearanceBaseline.OVER`, which is now empty.
 - **The authoring gate re-pinned** after the review it asks for: the `blender-animation` skill, the landing looked at on `clip_shot`, the rebuild, the import and both bakes.
 - **Pinned.** `test_sixty_fps`.
+
+## 2 Nov — The owner's list: longer recovery, a jog outside, softer blur, no talking crowd, a blood level, Aubrey keeps after the fire, extinguisher smoke
+
+Review sheet: `gauntlet/refs/match/owner_list_2nov_review.png`.
+
+**Recovery (#32).** The owner: "recovery time was far too quick ... it should take a lot longer to recover, enabling time for finishers, and setup moves ... and also they should be groggy getting up."
+- **Measured cause.** Both controllers took the automatic quick rise 0.8 s after nearly every knockdown, at any health. The spear needs a man standing up after a long sell; the ladder needs one lying within reach.
+- **Now** (`WrestlerController.quick_rise_delay`, `_process_down`): 0.8 s at full health, up to 4.0 s at 45 % health, and below `QUICK_RISE_MIN_HEALTH` no quick rise at all, only the staged rise.
+- **Hard knockdowns.** Through a table, a weapon impact at DROP or more, a signature or a finisher: no quick rise, and down ×1.4 (`HARD_DOWN_SCALE`).
+- **Groggy** (`groggy_for`): after the slow rise, or whenever hurt, he is up selling his worst-hurt part for 1.5 s, plus up to 3.5 s by damage, plus 1.5 s after a hard knockdown. At 55 % speed and no running. None after a fresh quick rise. `test_recovery_time`.
+
+**A jog outside (#33).** `Run_Jog`, authored in `wrestling_clips.py` (22 frames, 4.2 m/s), replaces the 7 m/s sprint whenever he runs outside the ring (`JOG_SPEED`, `JOG_CLIP`). The mocap `Jog_Fwd` measures 6 m/s, too fast.
+- `gait_audit`: planted feet 4.15 and 4.51 m/s against the engine's 4.2.
+- On `clip_shot` the first cut's planted knee bent so deep it read as creeping, so the hips went up from 0.89 to 0.915 m (rest 0.917).
+- Clip gate re-pinned after that review, the rebuild, import and strike bake.
+
+**Motion blur (#34).** Camera base 0.35 → 0.18, action 0.6 → 0.3, per-pixel cap 2 % → 1.2 % of the frame.
+
+**Crowd audio (#35).** "Remove that completely and just use wrestling crowd audio."
+- **Found.** The bed, the walla layer over it and the swell were all cut from one recording, a hall walla (freesound 635492). Walla is a crowd talking.
+- **Removed.** `crowd_walla_a` and its layer are deleted, and `build_crowd_swell.py` with them. `crowd_bed` (53 s) and `crowd_swell` (43 s) are rebuilt by `tools/audio/build_crowd_beds.py` from the cheer, roar and pops only. The bed takes the walla's level at rest.
+- **The music under the crowd, measured.** The crowd loops played 6–9 dB over the entrance songs (−12.0, −12.5 and −16.6 LUFS masters).
+- **Now.** The songs are up 4 dB, Roman's 4 dB more (`StageVideo.music_db`, `music_trim_db`). The crowd loops dip 8 dB under an entrance song or the winner's theme, the reactions 4 dB.
+
+**Blood level (#36).** OPTIONS → BLOOD is OFF or 1–10, default 4; 10 is the blood as it was. `--blood off|1..10`.
+- The cut is worked out the same at every level. The level scales what is shown: the skin reveal, drips, pools and spatter (`Blood.amount`).
+- Not yet seen on a rendered match frame at 4.
+
+**Aubrey and the fire (#38).**
+- **Measured causes.**
+  - She cannot leave the ring (`KEEP_IN`), and her spray spot was beside him, so with him outside she never arrived and the errand hung for the rest of the match.
+  - The flames went out on a timer whether the foam reached him or not.
+  - A man who caught again while she was on the job was ignored.
+- **Now.**
+  - Her spot is inside the ropes and follows him as she walks.
+  - The fire goes out only within 4 m (`SPRAY_REACH`).
+  - Out of reach, she holds at the ropes, extinguisher up, and goes the moment he is in reach.
+  - She ends each spray by checking he is out, and when she is free she looks for anyone burning.
+- **Reach.** Everywhere on the floor is within 4 m of the ropes. Only the aisle is out of reach.
+- **Tested.** `test_aubrey_keeps_after_him_until_the_fire_is_out` holds him up the aisle, brings him back, then relights him.
+
+**Extinguisher smoke (#39).** The faceted `FireExtinguisher_Cloud` mesh, scaled 0.2 → 1, is hidden. In its place is `WeaponActor.spray_cloud`: 240 soft lit billboard puffs along the horn, slowed by the air, swelling and fading. `test_extinguisher_spray`.

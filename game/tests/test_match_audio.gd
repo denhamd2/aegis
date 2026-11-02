@@ -3,7 +3,7 @@ extends GdUnitTestSuite
 ## strikes are heard on landing and slams are left to the bump detector, and
 ## a sound can never touch the global RNG a match seed is drawn from.
 
-const NAMED := ["crowd_bed", "crowd_walla_a", "crowd_swell", "crowd_boo",
+const NAMED := ["crowd_bed", "crowd_swell", "crowd_boo",
 		"crowd_cheer", "crowd_roar", "crowd_finish", "bell_start", "bell_end",
 		"bell_ding", "pyro_boom", "pyro_bang", "whoosh", "ui_move", "ui_select", "ui_back"]
 const FAMILIES := ["crowd_pop", "crowd_ooh", "hit_punch", "hit_kick", "hit_chop", "hit_forearm", "bump",
@@ -446,13 +446,13 @@ func test_two_pools_pick_the_same_sounds() -> void:
 	assert_array(picks[0]).is_equal(picks[1])
 
 
-## Five loops of different lengths: no two seams land together for minutes.
+## Loops of different lengths: no two seams land together for minutes.
 func test_the_crowd_beds_are_out_of_step() -> void:
 	var lengths := []
-	for n: String in ["crowd_bed", "crowd_walla_a", "crowd_swell"]:
+	for n: String in ["crowd_bed", "crowd_swell"]:
 		var s := SfxPool.stream(n) as AudioStreamOggVorbis
 		lengths.append(int(round(s.get_length())))
-	assert_array(lengths).is_equal([52, 41, 43])
+	assert_array(lengths).is_equal([53, 43])
 	# Pairwise co-prime: the combined pattern repeats only after the product.
 	for i in lengths.size():
 		for j in range(i + 1, lengths.size()):
@@ -489,11 +489,12 @@ func test_the_room_warms_over_the_match() -> void:
 
 
 func test_the_beds_rise_with_the_intensity_and_the_new_ones_most() -> void:
+	# No walla: the owner's "someone talking ... remove that completely".
+	assert_bool(MatchAudio.bed_levels(0.5).has("walla_a")).is_false()
+	assert_bool(ResourceLoader.exists("res://assets/audio/crowd_walla_a.ogg")).is_false()
 	var low := MatchAudio.bed_levels(0.0)
 	var high := MatchAudio.bed_levels(1.0)
 	assert_float(float(low["bed"])).is_equal(MatchAudio.BED_DB + MatchAudio.CROWD_MIX_GAIN_DB)
-	assert_float(float(low["walla_a"])) \
-			.is_equal(MatchAudio.WALLA_A_DB[0] + MatchAudio.CROWD_MIX_GAIN_DB)
 	for k: String in low:
 		assert_float(high[k]).is_greater(low[k])
 	# The added beds swing further than the base one: that is the swell.
@@ -567,3 +568,17 @@ func test_every_new_take_has_a_length() -> void:
 			assert_float(s.get_length()).override_failure_message("%s_%d" % [f, i]).is_greater(0.05)
 	assert_float(SfxPool.stream("hit_can_0").get_length()).is_greater(0.05)
 	assert_float(SfxPool.stream("desk_crash_0").get_length()).is_greater(0.3)
+
+
+## The owner, 2 Nov: the crowd "drown[s] out the entrance music". The songs
+## come up, Roman's quieter master is trimmed to the others, and the crowd
+## loops dip under a song.
+func test_the_entrance_music_sits_over_the_crowd() -> void:
+	assert_float(StageVideo.ENTRANCE_VOLUME_DB).is_greater_equal(4.0)
+	assert_float(StageVideo.music_db(StageVideo.ENTRANCES["roman"])) \
+			.is_equal(StageVideo.ENTRANCE_VOLUME_DB + 4.0)
+	assert_float(StageVideo.music_db(StageVideo.ENTRANCES["cody"])).is_equal(StageVideo.ENTRANCE_VOLUME_DB)
+	assert_float(MatchAudio.THEME_DUCK_DB).is_less_equal(-8.0)
+	var audio: MatchAudio = auto_free(MatchAudio.new())
+	add_child(audio)
+	assert_bool(audio._entrance_music_on()).is_false()

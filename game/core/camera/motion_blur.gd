@@ -75,7 +75,9 @@ void main() {
 }
 """
 ## The longest smear, as a fraction of the frame's width.
-const MAX_FRACTION := 0.02
+## The longest smear, as a share of the frame's width. 0.02 (38 px at 1080p)
+## let a whip pan smear the whole picture; the owner asked for it moderated.
+const MAX_FRACTION := 0.012
 const CONTEXT := &"motion_blur"
 const SCRATCH := &"copy"
 

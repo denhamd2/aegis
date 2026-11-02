@@ -141,3 +141,60 @@ func test_the_fire_he_was_put_out_in_does_not_catch_him_again() -> void:
 	for i in 240:                       # well past the wet moment
 		await get_tree().process_frame
 	assert_bool(m.burning).is_false()
+
+
+## The owner, 2 Nov: "if it doesn't reach him, she doesn't try again and he
+## keeps burning". Burning out of her reach (up the aisle), she holds at
+## the ropes nearest him and does not put him out from there; the moment he
+## is in reach outside the ring, she does. Then he catches again: she goes
+## again.
+func test_aubrey_keeps_after_him_until_the_fire_is_out() -> void:
+	var scene: Node = auto_free(load(MATCH_SCENE).instantiate())
+	scene.entrances = false
+	add_child(scene)
+	await get_tree().process_frame
+	var a: WrestlerController = scene.get_node("WrestlerA")
+	var crew := scene.get_node("FireCrew") as FireCrew
+	var ref := scene.get_node("RefereeActor") as RefereeActor
+	var m := _man(a)
+	# up the aisle, past the barricade (held there: his own movement off)
+	var where := [Vector3(0.0, 0.0, -12.0)]
+	a.set_physics_process(false)
+	# he stays where he is put: outside, and not walking himself back in
+	a.outside_ring = true
+	for w: WrestlerController in [a, scene.get_node("WrestlerB")]:
+		if w.ai:
+			w.ai.set_physics_process(false)
+	var outs := [0]
+	crew.put_out.connect(func(_w: WrestlerController) -> void: outs[0] += 1)
+	m.ignite()
+	for i in 60 * 25:
+		a.outside_ring = true
+		a.global_position = where[0]
+		await get_tree().physics_frame
+	assert_bool(m.burning).override_failure_message("put out from out of reach at %s" % a.global_position).is_true()
+	assert_int(crew._step).is_equal(FireCrew.Step.HOLD)
+	# at the ropes, as near him as she can get
+	assert_float(ref.global_position.z).is_less(-(RefereeActor.KEEP_IN - 0.6))
+	# he comes back to ringside: in reach now
+	where[0] = Vector3(4.6, 0.0, 0.4)
+	var ticks := 0
+	while outs[0] == 0 and ticks < 60 * 20:
+		a.outside_ring = true
+		a.global_position = where[0]
+		await get_tree().physics_frame
+		ticks += 1
+	assert_int(outs[0]).is_equal(1)
+	assert_bool(m.burning).is_false()
+	# he catches again (after the wet moment): she goes again
+	for i in 60 * 4:
+		a.global_position = where[0]
+		await get_tree().physics_frame
+	m.ignite()
+	ticks = 0
+	while outs[0] == 1 and ticks < 60 * 40:
+		a.global_position = where[0]
+		await get_tree().physics_frame
+		ticks += 1
+	assert_int(outs[0]).is_equal(2)
+	assert_bool(m.burning).is_false()

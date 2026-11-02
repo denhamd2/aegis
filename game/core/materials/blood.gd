@@ -28,8 +28,14 @@ extends Node
 ## - **The canvas.** Drips under him while he stands, a pool where he lies,
 ##   spatter off a shot, a smear where he drags through it (CanvasBlood).
 ##
-## Settings: on by default; off from the title screen's options or
-## `--blood off`. Off, nothing bleeds and nothing is painted.
+## Settings: a level from OFF through 1-10 (the owner, 2 Nov: "The blood is
+## too gratuitous. Can you have a blood scale setting of 1 to 10 ... 10 is
+## what it currently is ... set it to 4 by default"). The title screen's
+## options or `--blood off|1..10`. The cut is worked out the same at every
+## level; the level scales what is SHOWN -- the reveal on the skin, the drips,
+## the pools, the spatter -- so 4 is 40 % of the old blood everywhere, and a
+## light cut that once just reached the canvas now stays on him. Off, nothing
+## bleeds and nothing is painted.
 ##
 ## PRESENTATION ONLY. It listens to CombatSystem.damaged and writes material
 ## parameters and the stain map; the simulation, the replay and its hash
@@ -97,7 +103,11 @@ const POOL_FROM := 0.06
 const LYING := 0.42
 const UPDATE_EVERY := 0.05
 
+const DEFAULT_LEVEL := 4
+const MAX_LEVEL := 10
 static var enabled := true
+## 1-10 (0 is off: `enabled` false). 10 is the blood as it was.
+static var level := DEFAULT_LEVEL
 static var _read := false
 
 var wrestler: WrestlerController
@@ -122,8 +132,24 @@ static func on() -> bool:
 		var args := OS.get_cmdline_user_args()
 		for i in args.size() - 1:
 			if args[i] == "--blood":
-				enabled = String(args[i + 1]) != "off"
-	return enabled
+				var v := String(args[i + 1])
+				if v == "off":
+					enabled = false
+				elif v.is_valid_int():
+					set_level(v.to_int())
+	return enabled and level > 0
+
+
+## OFF (0) or 1-10.
+static func set_level(v: int) -> void:
+	_read = true
+	level = clampi(v, 0, MAX_LEVEL)
+	enabled = level > 0
+
+
+## The share of the full blood shown at this level.
+static func amount() -> float:
+	return float(clampi(level, 0, MAX_LEVEL)) / float(MAX_LEVEL)
 
 
 ## Hangs a Blood on `w` for the skin surfaces its model registered as meta
@@ -213,7 +239,10 @@ func _throw_off(added: float, impact: Vector3 = Vector3.INF) -> void:
 	var dir := Vector3.FORWARD
 	if wrestler.opponent:
 		dir = at - wrestler.opponent.global_position
-	canvas.spatter(ground, dir, clampf(added * 6.0 + shown_head, 0.2, 1.4))
+	var a := amount()
+	if a <= 0.0:
+		return
+	canvas.spatter(ground, dir, clampf(added * 6.0 + shown_head, 0.2, 1.4) * a)
 
 
 func _process(delta: float) -> void:
@@ -233,15 +262,20 @@ func _process(delta: float) -> void:
 	if _since < UPDATE_EVERY:
 		return
 	_since = 0.0
+	var a := amount()
 	for m in materials:
-		m.set_shader_parameter("bleed_head", shown_head)
-		m.set_shader_parameter("bleed_back", shown_back)
+		m.set_shader_parameter("bleed_head", shown_head * a)
+		m.set_shader_parameter("bleed_back", shown_back * a)
 		m.set_shader_parameter("wet", wet)
 
 
 ## Drips while he stands, a pool where he lies.
 func _on_canvas(delta: float) -> void:
-	if shown_head < POOL_FROM and shown_back < POOL_FROM:
+	# What the canvas gets is what the skin shows, at the level set.
+	var a := amount()
+	var sh := shown_head * a
+	var sb := shown_back * a
+	if sh < POOL_FROM and sb < POOL_FROM:
 		return
 	var canvas := CanvasBlood.of(get_tree())
 	if canvas == null:
@@ -253,26 +287,26 @@ func _on_canvas(delta: float) -> void:
 		if _pool >= POOL_EVERY:
 			_pool = 0.0
 			var jitter := Vector3(_rng.randf_range(-1, 1), 0, _rng.randf_range(-1, 1)) * 0.03
-			if shown_head >= POOL_FROM:
-				canvas.stamp(Vector3(h.x, 0, h.z) + jitter, 0.03 + 0.09 * shown_head,
-						0.05 + 0.10 * shown_head, 0.45)
-			if shown_back >= POOL_FROM:
+			if sh >= POOL_FROM:
+				canvas.stamp(Vector3(h.x, 0, h.z) + jitter, 0.03 + 0.09 * sh,
+						0.05 + 0.10 * sh, 0.45)
+			if sb >= POOL_FROM:
 				var c := bone_at(&"chest")
-				canvas.stamp(Vector3(c.x, 0, c.z) + jitter, 0.04 + 0.10 * shown_back,
-						0.04 + 0.08 * shown_back, 0.5)
+				canvas.stamp(Vector3(c.x, 0, c.z) + jitter, 0.04 + 0.10 * sb,
+						0.04 + 0.08 * sb, 0.5)
 		return
 	# the moment he lands, the first of it is on the mat
 	_pool = POOL_EVERY
-	if shown_head < DRIP_FROM:
+	if sh < DRIP_FROM:
 		return
 	_drip += delta
-	var every := lerpf(DRIP_SLOW, DRIP_FAST, clampf((shown_head - DRIP_FROM) / 0.7, 0.0, 1.0))
+	var every := lerpf(DRIP_SLOW, DRIP_FAST, clampf((sh - DRIP_FROM) / 0.7, 0.0, 1.0))
 	if _drip < every * _rng.randf_range(0.7, 1.3):
 		return
 	_drip = 0.0
 	# off the chin, a little ahead of him
 	var fwd := -wrestler.global_basis.z
-	canvas.drip(Vector3(h.x, 0, h.z) + fwd * 0.08, 0.8 + 0.6 * shown_head)
+	canvas.drip(Vector3(h.x, 0, h.z) + fwd * 0.08, 0.8 + 0.6 * sh)
 
 
 ## The bone names each rig here uses for the head and the chest (the same

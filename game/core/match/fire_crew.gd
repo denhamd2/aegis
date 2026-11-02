@@ -9,6 +9,21 @@ extends Node
 ## WAIT (until she is free to leave her spot), FETCH (walk to the stash and
 ## pick up), REACH (walk to him, out of his reach but close), SPRAY (aim, the
 ## foam, the flames out partway through), then back to her spot.
+##
+## The owner, 2 Nov: "Aubrey tries the extinguisher once. However if it
+## doesn't reach him, she doesn't try again and he keeps burning." Measured
+## causes, all fixed here:
+## - she cannot leave the ring (RefereeActor.KEEP_IN), and the spot she was
+##   sent to was beside him wherever he was -- outside, she never arrived, and
+##   the errand hung for the rest of the match. Her spot is now inside the
+##   ropes, the nearest she can get, and it follows him while she walks;
+## - the flames went out on a timer whether the foam reached him or not. Now
+##   only within SPRAY_REACH; out of it she holds, extinguisher up, at the
+##   ropes nearest him (HOLD) and goes again the moment he is in reach;
+## - a man who caught again while she was still on the job was ignored (he was
+##   "already handled"), and nothing looked again after. She now ends a spray
+##   by checking he is out, and whenever she is free she looks for anyone
+##   still burning.
 
 signal put_out(wrestler: WrestlerController)
 
@@ -29,8 +44,15 @@ const SPRAY_SECONDS := 2.2
 ## Seconds into the spray the flames are out.
 const SPRAY_OUT_AT := 0.6
 const FOAM_HEIGHT := 1.1
+## How far the foam carries: from her hand to him, flat.
+const SPRAY_REACH := 4.0
+## Inside the ropes by this much, so the walk can always arrive.
+const ROPE_MARGIN := 0.25
+## He has moved this far from where she was heading: she re-aims the walk.
+const RETARGET := 0.6
+const RECHECK_EVERY := 0.4
 
-enum Step { IDLE, WAIT, FETCH_WALK, FETCH, REACH_WALK, SPRAY, RETURN }
+enum Step { IDLE, WAIT, FETCH_WALK, FETCH, REACH_WALK, SPRAY, RETURN, HOLD }
 
 var referee: RefereeActor
 var _step := Step.IDLE
@@ -41,6 +63,10 @@ var _prop: Node3D
 var _foam: GPUParticles3D
 var _held := false
 var _out := false
+## Every man she watches, so she can look for one still burning.
+var _fires: Array[ManFire] = []
+var _heading := Vector3.INF
+var _recheck := 0.0
 
 
 func _ready() -> void:
@@ -61,6 +87,7 @@ func watch(ref: RefereeActor, wrestlers: Array) -> void:
 	for w: Node in wrestlers:
 		var m := w.find_child("ManFire", false, false) as ManFire
 		if m:
+			_fires.append(m)
 			m.ignited.connect(func(_who: WrestlerController) -> void: _request(m))
 
 
@@ -85,6 +112,12 @@ func _process(delta: float) -> void:
 		return
 	_clock += delta
 	match _step:
+		Step.IDLE:
+			# anyone still burning -- caught again while she was busy
+			for m in _fires:
+				if is_instance_valid(m) and m.burning:
+					_request(m)
+					break
 		Step.WAIT:
 			# she goes while the match is on and she is following it: not in a
 			# count or a submission (RefereeActor.begin_live_errand)
@@ -99,8 +132,31 @@ func _process(delta: float) -> void:
 			if _held:
 				_follow_hand(_prop)
 			if _clock >= referee.errand_clip_length(FETCH_CLIP):
-				_go(Step.REACH_WALK)
-				referee.errand_go(_spray_spot(), _to_man_flat())
+				_walk_to_him()
+		Step.REACH_WALK:
+			_follow_hand(_prop)
+			if not _man.burning:
+				_done_spraying()
+				return
+			# he moved: aim the walk at where he is now
+			_recheck += delta
+			if _recheck >= RECHECK_EVERY:
+				_recheck = 0.0
+				if _flat(_spray_spot()).distance_to(_heading) > RETARGET:
+					_walk_to_him()
+		Step.HOLD:
+			# at the ropes, extinguisher up, until he is in reach
+			_follow_hand(_prop)
+			if not _man.burning:
+				_done_spraying()
+				return
+			_recheck += delta
+			if _recheck >= RECHECK_EVERY:
+				_recheck = 0.0
+				if in_reach():
+					_start_spray()
+				elif _flat(_spray_spot()).distance_to(_heading) > RETARGET:
+					_walk_to_him()
 		Step.SPRAY:
 			_follow_hand(_prop)
 			var nozzle := _prop.global_position + Vector3.UP * 0.3
@@ -109,16 +165,19 @@ func _process(delta: float) -> void:
 			if target.distance_to(nozzle) > 0.2:
 				_foam.look_at(target, Vector3.UP)
 			_foam.emitting = true
-			if not _out and _clock >= SPRAY_OUT_AT:
+			# out only where the foam reaches him
+			if not _out and _clock >= SPRAY_OUT_AT and in_reach():
 				_out = true
 				_man.extinguish()
 				put_out.emit(_man.wrestler)
 			if _clock >= SPRAY_SECONDS:
 				_foam.emitting = false
-				_prop.visible = false
-				_held = false
-				referee.end_live_errand()
-				_go(Step.RETURN)
+				if _man.burning:
+					# missed, or he caught again: after him, still holding it
+					_out = false
+					_walk_to_him()
+				else:
+					_done_spraying()
 		Step.RETURN:
 			if _clock >= 0.6:
 				_finish()
@@ -130,8 +189,44 @@ func _on_arrived() -> void:
 			_go(Step.FETCH)
 			referee.errand_play(FETCH_CLIP)
 		Step.REACH_WALK:
-			_go(Step.SPRAY)
-			referee.errand_play(AIM_CLIP)
+			if in_reach():
+				_start_spray()
+			else:
+				# the ropes are as near as she gets: hold there
+				_go(Step.HOLD)
+				referee.errand_idle()
+
+
+## Whether the foam reaches him from where she stands.
+func in_reach() -> bool:
+	if _man == null or referee == null:
+		return false
+	return _flat(referee.global_position).distance_to(_flat(_man.wrestler.global_position)) <= SPRAY_REACH
+
+
+func _walk_to_him() -> void:
+	_go(Step.REACH_WALK)
+	_recheck = 0.0
+	_heading = _flat(_spray_spot())
+	referee.errand_go(_heading, _to_man_flat())
+
+
+func _start_spray() -> void:
+	_go(Step.SPRAY)
+	_out = false
+	referee.errand_play(AIM_CLIP)
+
+
+func _done_spraying() -> void:
+	_foam.emitting = false
+	_prop.visible = false
+	_held = false
+	referee.end_live_errand()
+	_go(Step.RETURN)
+
+
+static func _flat(v: Vector3) -> Vector3:
+	return Vector3(v.x, 0.0, v.z)
 
 
 func _go(next: Step) -> void:
@@ -148,23 +243,31 @@ func _follow_hand(prop: Node3D) -> void:
 			PropHandoff._bone_holder(sk, "hand_r", referee, Vector3.ZERO))
 
 
-## Where she stands to spray him: on the stash's side of him, out of reach.
+## Where she stands to spray him: on the stash's side of him, out of reach --
+## and never past the ropes, which she cannot cross. Outside, that is the
+## point of the ropes nearest him.
 func _spray_spot() -> Vector3:
 	var man := _man.wrestler.global_position
 	var from := Vector3(STASH.x, 0.0, STASH.z) - Vector3(man.x, 0.0, man.z)
 	if from.length() < 0.01:
 		from = Vector3.RIGHT
-	return Vector3(man.x, 0.0, man.z) + from.normalized() * SPRAY_STANDOFF
+	var spot := Vector3(man.x, 0.0, man.z) + from.normalized() * SPRAY_STANDOFF
+	var edge := RefereeActor.KEEP_IN - ROPE_MARGIN
+	if absf(man.x) > edge or absf(man.z) > edge:
+		spot = Vector3(man.x, 0.0, man.z)
+	return Vector3(clampf(spot.x, -edge, edge), 0.0, clampf(spot.z, -edge, edge))
 
 
 ## She faces him from where she stands.
 func _to_man_flat() -> Vector3:
 	var man := _man.wrestler.global_position
-	return -Vector3(_spray_spot().x - man.x, 0.0, _spray_spot().z - man.z).normalized()
+	var to := Vector3(man.x - _spray_spot().x, 0.0, man.z - _spray_spot().z)
+	return to.normalized() if to.length() > 0.01 else Vector3.FORWARD
 
 
 func _finish() -> void:
 	_man = null
+	_heading = Vector3.INF
 	_step = Step.IDLE
 	_clock = 0.0
 	_held = false

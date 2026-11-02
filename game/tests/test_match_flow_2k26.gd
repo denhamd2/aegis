@@ -27,7 +27,10 @@ func test_a_knockdown_records_its_tier_and_sets_the_down_time() -> void:
 	var w: WrestlerController = scene.get_node("WrestlerB")
 	w._go_down(CombatSystem.Tier.SIGNATURE)
 	assert_int(w.knockdown_tier).is_equal(CombatSystem.Tier.SIGNATURE)
-	assert_int(w._move_ticks_remaining).is_equal(WrestlerController.DOWN_TICKS_POWER)
+	# a signature is a hard knockdown: down HARD_DOWN_SCALE longer (the owner,
+	# 2 Nov: "hit with a weapon or a signature move it should take much longer")
+	assert_int(w._move_ticks_remaining).is_equal(
+			int(WrestlerController.DOWN_TICKS_POWER * WrestlerController.HARD_DOWN_SCALE))
 
 
 func test_the_referee_covers_after_big_moves_but_not_every_knockdown() -> void:

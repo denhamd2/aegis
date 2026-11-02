@@ -108,6 +108,7 @@ const ENTRANCES := {
 	"roman": {
 		"video": "res://assets/environment/video/roman_entrance.ogv",
 		"music": "res://assets/audio/music/roman_entrance.ogg",
+		"music_trim_db": 4.0,
 		"still": "res://assets/environment/video/roman_entrance_still.png",
 		# Music time the main part slams in (EntranceDirector.ROMAN_MUSIC_HIT).
 		"chorus": 45.0,
@@ -156,7 +157,12 @@ const ENTRANCES := {
 ## director fades it: he is in the ring, his poses are done and his props
 ## are handed off (EntranceDirector "tron_off"). The clip plays silent and
 ## loops on the wall.
-const ENTRANCE_VOLUME_DB := 0.0
+## The owner, 2 Nov: the crowd "drown[s] out the entrance music. Make the
+## entrance music louder." Up 4 dB, each song trimmed to about -12.5 LUFS
+## ("music_trim_db": Roman's master measures -16.6 against Cody's -12.5 and
+## Kenny's -12.0), and the crowd loops dip under it (MatchAudio.THEME_DUCK_DB).
+## The master limiter holds the peaks.
+const ENTRANCE_VOLUME_DB := 4.0
 const ENTRANCE_FADE_SECONDS := 2.0
 
 var _player: VideoStreamPlayer = null
@@ -487,6 +493,11 @@ func play_entrance(style: String) -> bool:
 	return true
 
 
+## An entrance song's level: the common lift plus its own trim.
+static func music_db(entry: Dictionary) -> float:
+	return ENTRANCE_VOLUME_DB + float(entry.get("music_trim_db", 0.0))
+
+
 ## His music from the top, the whole song. Plays whether or not the wall can show his video --
 ## a headless run, a frame-locked capture -- because the music is not
 ## pictures.
@@ -501,7 +512,7 @@ func _play_music(entry: Dictionary) -> void:
 	_music = AudioStreamPlayer.new()
 	_music.name = "EntranceMusic"
 	_music.stream = stream
-	_music.volume_db = ENTRANCE_VOLUME_DB
+	_music.volume_db = music_db(entry)
 	# Not ducked under the ring announcer: he is lifted over it instead
 	# (RingAnnouncer.VOICE_GAIN_DB), so the music keeps its level.
 	add_child(_music)

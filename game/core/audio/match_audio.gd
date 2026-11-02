@@ -29,14 +29,18 @@ signal commentary_started(speaker: String, duration: float)
 ## the crowd noise to be louder during the match"). Commentary stays on its
 ## separate voice bus; the master compressor and limiter hold the sum.
 ## The owner, 2 Nov: "way too quiet ... much more lively and loud in general
-## throughout": +2 dB more across the loops, and the walla sits higher at rest.
+## throughout": +2 dB more across the loops.
+## The owner, later the same day: "I still heard that crappy crowd audio
+## throughout where it sounds like either someone talking or distant on a
+## megaphone. Remove that completely and just use wrestling crowd audio."
+## The bed, the walla layer over it and the swell had all been one hall walla
+## recording -- a crowd talking. The walla layer is gone and the bed and the
+## swell are rebuilt from the cheering, roaring and popping recordings only
+## (tools/audio/build_crowd_beds.py). The bed takes the walla's place at rest.
 const CROWD_MIX_GAIN_DB := 9.0
-const BED_DB := -5.0
-const BED_EXCITED_DB := -1.0
-const WALLA_A_DB := [-12.0, -4.0]
-## The second walla, crowd_swell (tools/audio/build_crowd_swell.py). It
-## replaced a lucha libre recording with a man on a horn over the crowd --
-## the owner's "someone on a megaphone in the distance".
+const BED_DB := -3.0
+const BED_EXCITED_DB := 0.0
+## The excitement layer, crowd_swell: cheers and pops rising with the match.
 const SWELL_DB := [-24.0, -4.0]
 ## The crowd's one-shot reactions -- pops, oohs, the finish -- ride over the
 ## loops. They never had the loops' CROWD_MIX_GAIN_DB, so a big pop played
@@ -166,7 +170,6 @@ const CHAOS_COMMENTARY_DECAY_PER_SECOND := 0.2
 
 var sfx: SfxPool
 var _bed: AudioStreamPlayer
-var _walla_a: AudioStreamPlayer
 var _swell: AudioStreamPlayer
 var _boo_loop: AudioStreamPlayer
 var _cheer_loop: AudioStreamPlayer
@@ -183,7 +186,7 @@ var _director: EntranceDirector
 var chants: CrowdChants
 ## The winner's theme, once the bell has gone: from his chorus, faded in, with
 ## the crowd beds ducked under it.
-const THEME_DB := -3.0
+const THEME_DB := 0.0
 const THEME_FADE_IN := 2.5
 ## The owner-supplied Dynamite broadcast theme starts under the opening
 ## announcers; at -3 dB it is 6 dB above its title-screen menu level.
@@ -192,8 +195,13 @@ const DYNAMITE_OPENING_THEME_DB := -3.0
 const DYNAMITE_OPENING_FADE_IN := 1.0
 const DYNAMITE_OPENING_FADE_OUT := 1.5
 ## Under music the crowd dips, it does not vanish: a live room is not turned
-## down for a song.
-const THEME_DUCK_DB := -4.0
+## down for a song. The owner, 2 Nov: the crowd "drown[s] out the entrance
+## music. Make the entrance music louder." Measured, the crowd loops sat 6-9 dB
+## over the songs; the songs come up (StageVideo.music_db) and the loops dip
+## 8 dB under an entrance song or the winner's theme.
+const THEME_DUCK_DB := -8.0
+## The roar and the heats dip less: the pop as the music hits stays a pop.
+const MUSIC_DUCK_REACTIONS := 0.5
 var _theme: AudioStreamPlayer
 var _dynamite_theme: AudioStreamPlayer
 var _opening_theme_elapsed := 0.0
@@ -240,18 +248,17 @@ func _ready() -> void:
 	chants.name = "Chants"
 	add_child(chants)
 	_bed = sfx.make_loop("crowd_bed")
-	_walla_a = sfx.make_loop("crowd_walla_a")
 	_swell = sfx.make_loop("crowd_swell")
 	_boo_loop = sfx.make_loop("crowd_boo")
 	_cheer_loop = sfx.make_loop("crowd_cheer")
 	_roar = sfx.make_loop("crowd_roar")
 	_bed.volume_db = BED_DB
 	# Under the ring announcer when he speaks (RingAnnouncer.DUCK_DB).
-	for p: AudioStreamPlayer in [_bed, _walla_a, _swell, _boo_loop, _cheer_loop, _roar]:
+	for p: AudioStreamPlayer in [_bed, _swell, _boo_loop, _cheer_loop, _roar]:
 		p.bus = RingAnnouncer.under_bus()
 	# Out of step from the first frame: each layer starts somewhere else in
 	# its own loop (deterministic -- SfxPool's seeded generator, not the match's).
-	for p: AudioStreamPlayer in [_bed, _walla_a, _swell, _boo_loop, _cheer_loop, _roar]:
+	for p: AudioStreamPlayer in [_bed, _swell, _boo_loop, _cheer_loop, _roar]:
 		var length: float = p.stream.get_length()
 		p.seek(fposmod(length * float(hash(String(p.name)) % 1000) / 1000.0, length))
 	_commentary_voice = AudioStreamPlayer.new()
@@ -320,6 +327,13 @@ static func cody_is_in_match(wrestlers: Array) -> bool:
 func follow(director: EntranceDirector) -> void:
 	_director = director
 	director.cue.connect(_on_cue)
+
+
+## Whether an entrance song is playing on the wall.
+func _entrance_music_on() -> bool:
+	if _director == null or not is_instance_valid(_director._wall):
+		return false
+	return _director._wall.is_music_playing()
 
 
 func share_voice_lane(announcer: RingAnnouncer) -> void:
@@ -658,7 +672,6 @@ static func bed_levels(i: float) -> Dictionary:
 	i = clampf(i, 0.0, 1.0)
 	return {
 		"bed": lerpf(BED_DB, BED_EXCITED_DB, i) + CROWD_MIX_GAIN_DB,
-		"walla_a": lerpf(WALLA_A_DB[0], WALLA_A_DB[1], i) + CROWD_MIX_GAIN_DB,
 		"swell": lerpf(SWELL_DB[0], SWELL_DB[1], i * i) + CROWD_MIX_GAIN_DB,
 	}
 
@@ -927,18 +940,19 @@ func _process(delta: float) -> void:
 	boo = cool(boo, delta)
 	cheer = cool(cheer, delta)
 	var levels := bed_levels(intensity)
+	var duck_to := THEME_DUCK_DB if _entrance_music_on() else 0.0
 	if _theme:
 		_theme_fade = minf(_theme_fade + delta / THEME_FADE_IN, 1.0)
 		_theme.volume_db = lerpf(-40.0, THEME_DB, _theme_fade * _theme_fade)
-		_duck = lerpf(_duck, THEME_DUCK_DB * _theme_fade, 1.0 - exp(-delta * 2.0))
+		duck_to = minf(duck_to, THEME_DUCK_DB * _theme_fade)
+	_duck = lerpf(_duck, duck_to, 1.0 - exp(-delta * 2.0))
 	_slew(_bed, levels["bed"] + _duck, delta)
-	_slew(_walla_a, levels["walla_a"] + _duck, delta)
 	_slew(_swell, levels["swell"] + _duck, delta)
-	_slew(_boo_loop, heat_db(boo), delta)
-	_slew(_cheer_loop, heat_db(cheer), delta)
+	_slew(_boo_loop, heat_db(boo) + _duck * MUSIC_DUCK_REACTIONS, delta)
+	_slew(_cheer_loop, heat_db(cheer) + _duck * MUSIC_DUCK_REACTIONS, delta)
 	if _roar:
 		var level := clampf((excitement - ROAR_FLOOR) / (1.0 - ROAR_FLOOR), 0.0, 1.0)
-		_roar.volume_db = ROAR_MAX_DB + CROWD_MIX_GAIN_DB \
+		_roar.volume_db = ROAR_MAX_DB + CROWD_MIX_GAIN_DB + _duck * MUSIC_DUCK_REACTIONS \
 				+ linear_to_db(maxf(pow(level, 1.5), 0.0001))
 	_hear_the_count()
 	chants.tick(delta, excitement)

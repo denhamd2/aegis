@@ -36,6 +36,7 @@ const OFFICIAL_SCENE := "res://scenes/aubrey_model.tscn"
 const CYCLES := {
 	"walk_stalk": 3.5,   # MOVE_SPEED
 	"run_drive": 7.0,    # RUN_SPEED
+	"run_jog": 4.2,      # JOG_SPEED (outside the ring)
 }
 ## The official and timekeeper share AubreyModel's retargeted base-rig
 ## cycles. These rates are measured from their planted feet after retargeting,

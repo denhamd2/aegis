@@ -114,7 +114,8 @@ func test_the_crowd_goes_under_the_voice() -> void:
 	for p in audio.find_children("Loop_crowd_*", "AudioStreamPlayer", true, false):
 		beds += 1
 		assert_str((p as AudioStreamPlayer).bus).is_equal(RingAnnouncer.UNDER_BUS)
-	assert_int(beds).is_greater_equal(6)
+	# bed, swell, boo, cheer, roar (the talking walla layer is gone, 2 Nov)
+	assert_int(beds).is_greater_equal(5)
 	assert_int(AudioServer.get_bus_index(RingAnnouncer.UNDER_BUS)).is_greater(0)
 
 

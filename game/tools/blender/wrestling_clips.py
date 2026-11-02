@@ -1341,6 +1341,27 @@ CLIPS = {
         hand_x={"r": 0.21, "l": -0.17},
         elbow={"r": (0.3, -0.9, -0.3), "l": (-0.3, -0.9, -0.3)}),
 
+    # The jog: running outside the ring (the owner, 2 Nov: "the wrestlers
+    # running outside the ring is too fast, it should be a jog not a
+    # sprint"). The same generator at 4.2 m/s: four frames (0.133 s) planted
+    # covering 0.56 m -- 4.2 m/s, WrestlerController.JOG_SPEED -- a shorter,
+    # lower stride, the torso near upright and the arms carried loose.
+    "Run_Jog": _gait(
+        frames=22, fps=FPS, speed=4.2,
+        contacts={"r": (0, 4), "l": (11, 4)},
+        # hips up near the walk's height: at 0.89 / 0.045 the planted knee
+        # bent so deep it read as creeping (clip_shot review, 2 Nov).
+        # lifted clear fast, as the sprint is: at 0.17 the foot hung under
+        # the planted height a frame past its contact and skated 1.2x
+        # (gait_audit).
+        plant_up=0.104, lift_up=0.24,
+        foot_x={"r": 0.13, "l": -0.13},
+        pelvis_up=0.915, pelvis_dip=0.035,
+        hips_yaw=4.0, spine=(2.0, -9.0), head=(6, 0, 0),
+        hand_fwd=(-0.18, 0.2), hand_up=(1.0, 1.18),
+        hand_x={"r": 0.22, "l": -0.19},
+        elbow={"r": (0.3, -0.9, -0.3), "l": (-0.3, -0.9, -0.3)}),
+
     # === the lock-up ====================================================
 
     # 30 frames / 1.0s, looping. Collar-and-elbow, as the owner asked for it
