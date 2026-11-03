@@ -90,7 +90,7 @@ const OPENING_SECONDARY_BURST_SIZE := 0.62
 ## up off the stage on a long flame tail, flaring out at the top into a puff
 ## of smoke. No spark burst. Fewer, bigger, chased across the set on his beat.
 ## They were firework chrysanthemums -- 150 of them on the WHOA -- glitter.
-const COMET_RISE := 10.5
+const COMET_RISE := 9.8
 const COMET_PUNCH_RISE := 12.5
 const COMET_FLIGHT := 0.75
 const COMET_TRAIL_AMOUNT := 150

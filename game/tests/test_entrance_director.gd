@@ -1207,3 +1207,48 @@ func test_nothing_starts_until_the_loading_screen_lifts() -> void:
 		await get_tree().physics_frame
 	assert_int(director._tick).is_greater(0)
 	assert_object(director.get_node_or_null("EntrancePyro")).is_not_null()
+
+
+## Cody's pyro is shot on his own beats (3 Nov storyboard: the pyro wide held
+## one far frame from 26 s to 33.5 s, and the fists were never seen).
+func test_codys_pyro_keeps_his_own_shots() -> void:
+	# B walks first (the handover closes B's entrance)
+	var scene := _match(true, "roman", "cody")
+	var director: EntranceDirector = scene.get_node("EntranceDirector")
+	var seen_hero := false
+	var ticks := 0
+	while ticks < 30000 and director._beat < director._beats.size():
+		director._physics_process(1.0 / 60.0)
+		ticks += 1
+		var b: Dictionary = director._beats[director._beat]
+		if b.get("who") != null and (b["who"] as WrestlerController).entrance_style != "cody" \
+				and seen_hero:
+			break
+		if b.get("shot", "") in ["stage_wide", "hero_low"]:
+			assert_bool(director.pyro_wide_on()).override_failure_message(
+					"the pyro wide took over " + String(b["shot"])).is_false()
+			seen_hero = seen_hero or b["shot"] == "hero_low"
+	assert_bool(seen_hero).is_true()
+
+
+## His blackout leaves the house dark and blue, not black ("a dark,
+## blue-lit house", refs/entrances.md), and puts it back after.
+func test_codys_blackout_keeps_a_dark_blue_house() -> void:
+	var scene := _match(true, "cody", "roman")
+	var director: EntranceDirector = scene.get_node("EntranceDirector")
+	var rig := scene.get_node("LightRig")
+	var wash: Light3D = null
+	for child in rig.get_children():
+		if String(child.name).begins_with("AudienceWash"):
+			wash = child
+			break
+	assert_object(wash).is_not_null()
+	var colour := wash.light_color
+	var ticks := 0
+	while ticks < 30000 and String((director._beats[director._beat] as Dictionary).get("shot", "")) != "crowd_wide":
+		director._physics_process(1.0 / 60.0)
+		ticks += 1
+	director._physics_process(1.0 / 60.0)
+	assert_bool(wash.light_color.is_equal_approx(EntranceDirector.CODY_HOUSE_BLUE)).is_true()
+	director.skip()
+	assert_bool(wash.light_color.is_equal_approx(colour)).is_true()

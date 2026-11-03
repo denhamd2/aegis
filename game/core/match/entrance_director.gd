@@ -235,6 +235,17 @@ static func rig_points() -> PackedVector3Array:
 ## `look`, tipped down until the rig is out of a lens at `at` with vertical
 ## `fov` (half a degree at a time, at most 30): for the wides that follow a
 ## man, whose aim is not a constant a test can check.
+## The walk's crane at eased progress `e`: [camera, look, fov] for a man at
+## `at` walking along `fwd` (flat).
+static func crane_front_shot(at: Vector3, fwd: Vector3, e: float) -> Array:
+	var right := Vector3.UP.cross(-fwd).normalized()
+	var cam := at + fwd * lerpf(CRANE_FRONT_AHEAD.x, CRANE_FRONT_AHEAD.y, e) \
+			+ right * lerpf(CRANE_FRONT_SIDE.x, CRANE_FRONT_SIDE.y, e) \
+			+ Vector3.UP * lerpf(CRANE_FRONT_HEIGHT.x, CRANE_FRONT_HEIGHT.y, e)
+	return [cam, at + Vector3.UP * lerpf(CRANE_FRONT_LOOK.x, CRANE_FRONT_LOOK.y, e),
+			lerpf(CRANE_FRONT_FOV.x, CRANE_FRONT_FOV.y, e)]
+
+
 static func rig_clear_look(at: Vector3, look: Vector3, fov: float) -> Vector3:
 	var to := look - at
 	var right := to.cross(Vector3.UP)
@@ -438,9 +449,9 @@ const ROMAN_BOW_TICKS := 240
 ## ahead of him with the wall behind, long holds, a telephoto face, the low
 ## track, over the shoulder. The high side and the arena-high wides are gone:
 ## both framed him as a small dark figure on an unlit ramp.
-const ROMAN_WALK_SHOTS := [["steadicam_front", 8 * ROMAN_BEAT], ["face_walk", 6 * ROMAN_BEAT],
+const ROMAN_WALK_SHOTS := [["crane_front", 8 * ROMAN_BEAT], ["face_walk", 6 * ROMAN_BEAT],
 		["steadicam_low", 6 * ROMAN_BEAT], ["over_shoulder", 5 * ROMAN_BEAT],
-		["steadicam_front", 7 * ROMAN_BEAT], ["barricade_track", 5 * ROMAN_BEAT],
+		["crane_front", 7 * ROMAN_BEAT], ["barricade_track", 5 * ROMAN_BEAT],
 		["face_walk", 5 * ROMAN_BEAT]]
 ## Until then the broadcast shows the building and his video: six shots, each
 ## a slow move eased in and out (blender-cameras: push-ins, a truck, a wide
@@ -549,7 +560,7 @@ const CODY_WHOA_LOW_TICKS := 200
 ## jacket's back, a close front, then the barricade. `arena_high` is gone: it
 ## showed him as a dot on a dark ramp, the shot Roman's cut also lost.
 ## [shot, seconds], cycled; whole beats of his music (A4).
-const CODY_WALK_SHOTS := [["steadicam_front", 8 * CODY_BEAT], ["over_shoulder", 5 * CODY_BEAT],
+const CODY_WALK_SHOTS := [["crane_front", 8 * CODY_BEAT], ["over_shoulder", 5 * CODY_BEAT],
 		["face_walk", 5 * CODY_BEAT], ["barricade_track", 5 * CODY_BEAT]]
 ## What he does with his arms on the walk (refs/entrances.md, C-39 / C-SS /
 ## C-SNME): yells at one side of the aisle with a fist up, points a fan out,
@@ -578,6 +589,12 @@ const CORNER_ROOT_M := 0.62
 ## on the WHOAs the camera sees him as a silhouette in the haze.
 const CODY_BLACKOUT := 0.03
 const CODY_BLACKOUT_AMBIENT := 0.10
+## In his blackout the house is not black but dark and blue (refs/entrances.md,
+## Cody "Open": "wide shots of a dark, blue-lit house and the crowd"): the
+## audience washes held at this share of their own, tinted. At 3% with the
+## rest, his crowd cutaway was 2.7 s of black (3 Nov storyboard).
+const CODY_HOUSE_FLOOR := 0.22
+const CODY_HOUSE_BLUE := Color(0.32, 0.46, 1.0)
 const BACKLIGHT_ENERGY := 30.0
 const BACKLIGHT_COLOR := Color(0.82, 0.88, 1.0)
 const CODY_RED := Color(1.0, 0.12, 0.10)
@@ -611,7 +628,7 @@ const KENNY_POSE_TICKS := 300
 const KENNY_WINGS_TICKS := 240
 ## Down the ramp as Cody's cut is, on his beat; hands slapped along one side
 ## of the aisle and then the other (wrestling_clips.py KENNY_GESTURES).
-const KENNY_WALK_SHOTS := [["steadicam_front", 8 * KENNY_BEAT], ["over_shoulder", 5 * KENNY_BEAT],
+const KENNY_WALK_SHOTS := [["crane_front", 8 * KENNY_BEAT], ["over_shoulder", 5 * KENNY_BEAT],
 		["face_walk", 5 * KENNY_BEAT], ["barricade_track", 5 * KENNY_BEAT]]
 const KENNY_WALK_GESTURES := ["strikes/kenny_walk_slap_l", "strikes/kenny_walk_slap_r"]
 ## His video starting on the big screen: from a crane over the floor, square
@@ -722,13 +739,28 @@ const CROWD_WIDE_FOV := 40.0
 ## And the other side's, across the ring toward the far end.
 const CROWD_FAR_AT := Vector3(-3.8, 1.6, 2.0)
 const CROWD_FAR_LOOK := Vector3(-15.0, 4.8, 9.0)
-## The dark house from high on the side, the ring and the floor rows, the
-## stage out of frame.
-const ARENA_DARK_LOOK := Vector3(-4.0, -1.0, -2.0)
+## The dark house from high on the side: across the ring to the far side's
+## seats, the stage out of frame. It looked down at (-4, -1, -2), tipped under
+## the rig on 2 Nov -- in Cody's blackout that was black floor with the stage
+## jammed into the top corner (3 Nov storyboard). Tipped by rig_clear_look.
+const ARENA_DARK_LOOK := Vector3(-18.0, 4.0, 4.0)
 ## 2K26's walking shot: ahead of him at chest height, a normal lens.
 const STEADICAM_FRONT_AHEAD := 2.6
 const STEADICAM_FRONT_HEIGHT := 1.4
 const STEADICAM_FRONT_FOV := 28.0
+## The walk's crane (the owner, 3 Nov: the half-body shot "looks too stiff
+## ... maybe something with the crane?"), in place of steadicam_front on
+## every walk. A jib on a dolly backing down ahead of him: it opens high and
+## off his right shoulder, looking down on him with the building round him,
+## and over the shot the arm booms down and swings in until it is just under
+## his chest looking up -- landing where the low tracking shot he likes
+## lives -- while the lens tightens from the whole man to knees-up.
+## [start, end] of the move, eased; metres from him, his forward and right.
+const CRANE_FRONT_AHEAD := Vector2(4.6, 3.0)
+const CRANE_FRONT_HEIGHT := Vector2(4.2, 1.15)
+const CRANE_FRONT_SIDE := Vector2(1.4, 0.5)
+const CRANE_FRONT_LOOK := Vector2(0.95, 1.5)
+const CRANE_FRONT_FOV := Vector2(42.0, 34.0)
 ## Alongside from the barricade (C-SS 14-30 s).
 const BARRICADE_TRACK_SIDE := 2.4
 const BARRICADE_TRACK_AHEAD := 1.2
@@ -785,6 +817,8 @@ var _wall: StageVideo
 var _skip_button: Button
 ## Light energies saved while the house is dimmed, to put back exactly.
 var _dimmed := {}
+## Lights _dim_house re-coloured, and the colour each had.
+var _tinted := {}
 var _env: Environment
 ## Cody's backlight, built on his first WHOA.
 var _backlight: SpotLight3D
@@ -1774,7 +1808,7 @@ func _add_roman_entrance(w: WrestlerController, entrance_x: float, side: String)
 			"speed": ROMAN_WALK_SPEED, "walk_clip": ROMAN_WALK_CLIP, "shot": "stage"}))
 	_beats.append(_with(blue, {"kind": "walk", "who": w, "path": [third, two_thirds],
 			"speed": ROMAN_WALK_SPEED, "walk_clip": ROMAN_WALK_CLIP,
-			"shot": "steadicam_front"}))
+			"shot": "crane_front"}))
 	_beats.append(_with(blue, {"kind": "walk", "who": w, "path": [two_thirds, lip],
 			"speed": ROMAN_WALK_SPEED, "walk_clip": ROMAN_WALK_CLIP,
 			"shot": "face_walk"}))
@@ -1971,7 +2005,7 @@ func _add_cody_entrance(w: WrestlerController, entrance_x: float, _side: String)
 	lip_speed = minf(lip_speed, CODY_WALK_SPEED * 1.4)
 	_beats.append({"kind": "walk", "who": w, "path": [mouth, lip], "lights": "RB",
 			"speed": lip_speed, "walk_clip": CODY_WALK_CLIP,
-			"shot": "steadicam_front"})
+			"shot": "crane_front"})
 	var at_lip := fists_end + to_lip / lip_speed
 	if kneel_from - at_lip > 0.6:
 		_beats.append({"kind": "pose", "who": w, "lights": "RB",
@@ -2035,11 +2069,14 @@ func _add_cody_entrance(w: WrestlerController, entrance_x: float, _side: String)
 	_beats.append({"kind": "walk", "who": w, "path": [stand, mark.origin],
 			"speed": CODY_WALK_SPEED, "walk_clip": CODY_WALK_CLIP,
 			"shot": "ringside", "on_mat": true})
+	# On him while the coat goes to the timekeeper's table: the far end wide
+	# held empty for the whole carry -- 10.5 s of one static frame on the
+	# 3 Nov storyboard. The end wide is the handover's alone.
 	_beats.append({"kind": "turn", "who": w, "facing": -mark.basis.z,
-			"shot": "end_wide", "settle": true, "snap_end": true,
+			"shot": "ringside", "settle": true, "snap_end": true,
 			"events": [[SETTLE_TICKS, "tron_off"]]})
 	# Nothing moves on until the coat is on the timekeeper's table.
-	_beats.append({"kind": "hold", "who": w, "ticks": 30, "shot": "end_wide",
+	_beats.append({"kind": "hold", "who": w, "ticks": 30, "shot": "ringside",
 			"wait_idle": true})
 
 
@@ -2461,7 +2498,7 @@ func _event(w: WrestlerController, what: String) -> void:
 		"dim_on":
 			_dim_house(true)
 		"blackout_on":
-			_dim_house(true, CODY_BLACKOUT, CODY_BLACKOUT_AMBIENT)
+			_dim_house(true, CODY_BLACKOUT, CODY_BLACKOUT_AMBIENT, CODY_HOUSE_FLOOR, CODY_HOUSE_BLUE)
 		"backlight_on", "backlight_dim", "backlight_off":
 			_set_backlight(w, what)
 		"broadcast_open", "pyro_opening":
@@ -2478,8 +2515,11 @@ func _event(w: WrestlerController, what: String) -> void:
 				_pyro.name = "EntrancePyro"
 				add_child(_pyro)
 			_pyro.fire(what.trim_prefix("pyro_"))
-			if what != "strobe":
-				_pyro_wide(what.trim_prefix("pyro_"))
+			# No pyro wide for his two: his beats already frame them -- the
+			# stage wide for the WHOA's comets, the low hero for the fists.
+			# The wide (6.5 s, then 4.5 more on the fists) held one far shot
+			# from 26 s to 33.5 s: the fists were never seen, and half the walk
+			# to the lip went with them (3 Nov storyboard).
 			if _crowd:
 				_crowd.pop(CROWD_PYRO_POP)
 		"house_walk":
@@ -2802,6 +2842,11 @@ func _frame_shot(beat: Dictionary, delta: float, force_cut := false) -> void:
 		"ringside":
 			_camera.set_entrance_shot(RINGSIDE_AT, w.global_position + Vector3.UP * 1.0,
 					RINGSIDE_FOV, true)
+		"crane_front":
+			var fc := _flat(-w.global_transform.basis.z).normalized()
+			var e_c := smoothstep(0.0, 1.0, float(_tick) / maxf(float(beat["ticks"]), 1.0))
+			var crane := crane_front_shot(w.global_position, fc, e_c)
+			_camera.set_entrance_shot(crane[0], crane[1], crane[2], first, delta)
 		"steadicam_front":
 			# 2K26's walk: backing ahead of him at chest height on a normal
 			# lens, his face and the set behind him.
@@ -2822,7 +2867,8 @@ func _frame_shot(beat: Dictionary, delta: float, force_cut := false) -> void:
 		"crowd_far":
 			_camera.set_entrance_shot(CROWD_FAR_AT, CROWD_FAR_LOOK, CROWD_WIDE_FOV, true)
 		"arena_dark_high":
-			_camera.set_entrance_shot(ARENA_HIGH_AT, ARENA_DARK_LOOK, ARENA_HIGH_FOV, true)
+			_camera.set_entrance_shot(ARENA_HIGH_AT, rig_clear_look(ARENA_HIGH_AT, ARENA_DARK_LOOK,
+					ARENA_HIGH_FOV), ARENA_HIGH_FOV, true)
 		"steadicam_low":
 			# Backing ahead of him, lens at his hips, tilted up past his chest.
 			var f4 := _flat(-w.global_transform.basis.z).normalized()
@@ -3212,7 +3258,8 @@ func _smoke_off() -> void:
 ## itself, and the ambient to ROMAN_AMBIENT_DIM; the originals are kept and
 ## restored exactly.
 func _dim_house(on: bool, rig: float = ROMAN_HOUSE_DIM,
-		ambient: float = ROMAN_AMBIENT_DIM) -> void:
+		ambient: float = ROMAN_AMBIENT_DIM, house_floor := 0.0,
+		house_tint := Color.WHITE) -> void:
 	if on == not _dimmed.is_empty():
 		return
 	if _lights and "house_dim" in _lights:
@@ -3222,7 +3269,13 @@ func _dim_house(on: bool, rig: float = ROMAN_HOUSE_DIM,
 			for child in _lights.get_children():
 				if child is Light3D and not String(child.name).begins_with("Accent"):
 					_dimmed[child] = (child as Light3D).light_energy
-					(child as Light3D).light_energy *= rig
+					var share := rig
+					if house_floor > rig and String(child.name).begins_with("AudienceWash"):
+						# the house held dark and tinted, not black
+						share = house_floor
+						_tinted[child] = (child as Light3D).light_color
+						(child as Light3D).light_color = house_tint
+					(child as Light3D).light_energy *= share
 					if _pose_dimmed.has(child):
 						# Mid-pose: the house's original is the one before the pose.
 						var was: Array = _pose_dimmed[child]
@@ -3238,6 +3291,10 @@ func _dim_house(on: bool, rig: float = ROMAN_HOUSE_DIM,
 		elif key == _env:
 			_env.ambient_light_energy = _dimmed[key]
 	_dimmed.clear()
+	for key in _tinted:
+		if is_instance_valid(key):
+			(key as Light3D).light_color = _tinted[key]
+	_tinted.clear()
 
 
 var _top: SpotLight3D

@@ -35,8 +35,10 @@ func test_no_wide_shot_has_the_rig_in_frame() -> void:
 				EntranceDirector.CODY_DARK_FOV],
 		["end_wide", EntranceDirector.END_WIDE_AT, EntranceDirector.END_WIDE_LOOK,
 				EntranceDirector.END_WIDE_FOV],
-		["arena_dark_high", EntranceDirector.ARENA_HIGH_AT, EntranceDirector.ARENA_DARK_LOOK,
-				EntranceDirector.ARENA_HIGH_FOV],
+		# aimed across at the far seats, tipped under the rig as the camera does
+		["arena_dark_high", EntranceDirector.ARENA_HIGH_AT, EntranceDirector.rig_clear_look(
+				EntranceDirector.ARENA_HIGH_AT, EntranceDirector.ARENA_DARK_LOOK,
+				EntranceDirector.ARENA_HIGH_FOV), EntranceDirector.ARENA_HIGH_FOV],
 		["pyro_ring", EntranceDirector.PYRO_RING_WIDE_AT, EntranceDirector.PYRO_RING_WIDE_LOOK,
 				EntranceDirector.PYRO_RING_WIDE_FOV],
 		["pyro_set", EntranceDirector.PYRO_SET_WIDE_AT, EntranceDirector.PYRO_SET_WIDE_LOOK,
@@ -184,9 +186,15 @@ func test_every_shot_a_beat_uses_can_be_framed() -> void:
 func test_the_walk_cuts_follow_from_behind_as_2k26_does() -> void:
 	var cody := EntranceDirector.CODY_WALK_SHOTS.map(func(s: Array) -> String: return s[0])
 	var roman := EntranceDirector.ROMAN_WALK_SHOTS.map(func(s: Array) -> String: return s[0])
-	assert_array(cody).contains(["steadicam_front", "over_shoulder", "face_walk",
+	assert_array(cody).contains(["crane_front", "over_shoulder", "face_walk",
 			"barricade_track"])
-	assert_array(roman).contains(["steadicam_front", "steadicam_low", "face_walk", "over_shoulder"])
+	assert_array(roman).contains(["crane_front", "steadicam_low", "face_walk", "over_shoulder"])
+	# The owner, 3 Nov: the half-body shot "looks too stiff" -- the crane
+	# replaces it on every walk.
+	for list: Array in [EntranceDirector.CODY_WALK_SHOTS, EntranceDirector.ROMAN_WALK_SHOTS,
+			EntranceDirector.KENNY_WALK_SHOTS]:
+		for shot: Array in list:
+			assert_str(String(shot[0])).is_not_equal("steadicam_front")
 	# Never the shots that framed him small and dark (roman_entrance_aaa_plan.md).
 	assert_array(roman).not_contains(["ramp_side_high", "arena_high"])
 	assert_array(cody).not_contains(["ramp_side_high", "arena_high"])
@@ -336,12 +344,6 @@ func test_the_face_off_and_match_intro_use_broadcast_pacing() -> void:
 ## opening rockets burst inside the pyro wide.
 func test_the_pyro_wide_frames_every_burst() -> void:
 	var bursts: Array[Vector3] = []
-	# Cody's comet jets: their launch and their top (the smoke puff).
-	# (the ramp jets go up from below the shot; their tops are in it)
-	for c: Array in EntrancePyro.cody_whoa_plan() + EntrancePyro.cody_punch_plan():
-		if (c[1] as Vector3).z <= ArenaBuilder.STAGE_FRONT:
-			bursts.append(c[1])
-		bursts.append(c[2] + Vector3.UP * 0.6)
 	for rocket: Array in EntrancePyro.opening_rocket_plan():
 		bursts.append(rocket[1] + Vector3(1.8, 2.2, -1.5))
 	var fov := EntranceDirector.PYRO_SET_WIDE_FOV
@@ -376,3 +378,55 @@ func test_the_walk_in_holds_both_men_from_their_corners() -> void:
 	var gap := EntranceDirector.FACEOFF_GAP * 0.5
 	assert_float(EntranceDirector.walk_in_distance(Vector3(0.0, 0.0, -gap), Vector3(0.0, 0.0, gap),
 			bearing)).is_equal(EntranceDirector.FACEOFF_CAM_DISTANCE)
+
+
+## Cody's WHOA comets are shot on his own stage wide (the pyro wide no longer
+## takes his entrance over): every set jet, launch to smoke, in frame.
+func test_the_stage_wide_frames_codys_comets() -> void:
+	var fov := EntranceDirector.STAGE_WIDE_FOV
+	var at := EntranceDirector.STAGE_WIDE_AT
+	var view := Transform3D(Basis().looking_at(EntranceDirector.STAGE_WIDE_LOOK - at, Vector3.UP),
+			at).affine_inverse()
+	for c: Array in EntrancePyro.cody_whoa_plan():
+		if (c[1] as Vector3).z > ArenaBuilder.STAGE_FRONT:
+			continue          # the ramp's, which go up past the lens
+		for p: Vector3 in [c[1], c[2] + Vector3.UP * 0.6]:
+			var local := view * p
+			assert_float(absf(atan2(local.y, -local.z))).override_failure_message(
+					"a comet at %s is cropped vertically" % p).is_less(deg_to_rad(fov) * 0.5)
+			assert_float(absf(atan2(local.x, -local.z))).override_failure_message(
+					"a comet at %s is cropped horizontally" % p) \
+					.is_less(atan(tan(deg_to_rad(fov) * 0.5) * 16.0 / 9.0))
+
+
+## The walk's crane: opens high off his shoulder on the whole man, booms down
+## and in to just under his chest looking up at him, the lens tightening.
+func test_the_walk_crane_booms_down_to_look_up_at_him() -> void:
+	var at := Vector3(0.0, 0.0, -20.0)
+	var fwd := Vector3(0.0, 0.0, 1.0)
+	var start := EntranceDirector.crane_front_shot(at, fwd, 0.0)
+	var end := EntranceDirector.crane_front_shot(at, fwd, 1.0)
+	# high and looking down at the start
+	assert_float((start[0] as Vector3).y).is_greater(3.5)
+	assert_float((start[1] as Vector3).y).is_less((start[0] as Vector3).y)
+	# under his chest, looking up, at the end
+	assert_float((end[0] as Vector3).y).is_less(1.3)
+	assert_float((end[1] as Vector3).y).is_greater((end[0] as Vector3).y)
+	# always ahead of him, the lens tightening
+	for e: float in [0.0, 0.25, 0.5, 0.75, 1.0]:
+		var shot := EntranceDirector.crane_front_shot(at, fwd, e)
+		assert_float(((shot[0] as Vector3) - at).dot(fwd)).is_greater(2.5)
+	assert_float(float(end[2])).is_less(float(start[2]))
+
+
+## Wherever the crane runs on the real walks, no ring rig in its frame.
+func test_the_walk_crane_never_sees_the_rig() -> void:
+	var bad := {"n": 0, "where": ""}
+	_run(["roman", "cody"], func(beat: Dictionary, camera: Camera3D) -> void:
+		if beat.get("shot", "") != "crane_front":
+			return
+		var look := camera.global_position - camera.global_basis.z
+		if EntranceDirector.rig_in_frame(camera.global_position, look, camera.fov) > 0:
+			bad["n"] += 1
+			bad["where"] = str(camera.global_position))
+	assert_int(bad["n"]).override_failure_message("rig in the crane at " + bad["where"]).is_equal(0)
