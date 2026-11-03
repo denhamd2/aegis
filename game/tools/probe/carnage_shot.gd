@@ -19,6 +19,8 @@ extends Node
 ##   --spot bay     no spot: the commentary bay and the barricade as they
 ##                  stand -- the desk's chairs and monitors close, a plain
 ##                  barricade run, the bay from the ring
+##   --spot figure_four  Roman down mid-ring, Cody (B) puts the figure four
+##                  on him: the lock, then the bridges (submission_figure_four)
 ##   --spot table_dive  a table up in the ring: Cody lays Roman out on it
 ##                  (table_lay), climbs the corner and moonsaults onto him
 ##                  through it (TopRopeSpot, the table)
@@ -82,6 +84,8 @@ func _ready() -> void:
 			await _table_dive()
 		"bay":
 			await _bay()
+		"figure_four":
+			await _figure_four()
 	print("CARNAGE SHOT DONE ", _spot)
 	get_tree().quit()
 
@@ -471,3 +475,31 @@ func _save(file: String) -> void:
 	get_viewport().get_texture().get_image().save_png(_out.path_join(file))
 	RenderingServer.render_loop_enabled = was
 	print("saved ", file)
+
+
+## Roman (A) down on his back mid-ring, Cody (B) at his feet: the figure four,
+## side-on to the two of them.
+func _figure_four() -> void:
+	_a.global_position = Vector3(0.0, 0.0, 0.0)
+	_a.rotation.y = 0.0
+	_b.global_position = Vector3(0.0, 0.0, 1.6)
+	_b.rotation.y = 0.0
+	_cam.global_position = Vector3(3.4, 1.5, 0.9)
+	_cam.look_at(Vector3(0.0, 0.35, 0.9))
+	_cam.fov = 44.0
+	Engine.max_physics_steps_per_frame = 1
+	RenderingServer.render_loop_enabled = false
+	await _frames(10)
+	_a._go_down()
+	_a._move_ticks_remaining = 100000
+	await _frames(30)
+	var move: MoveDef = load("res://resources/moves/submission_figure_four.tres")
+	_b.begin_submission(_a, CombatSystem.Limb.LEGS, move)
+	var shot := 0
+	for t in 300:
+		await _frames(1)
+		if t % 24 == 12:
+			await _save("figure_four_%02d.png" % shot)
+			shot += 1
+	print("FIGURE FOUR states ", WrestlerFSM.State.keys()[_b.fsm.current_state], " ",
+			WrestlerFSM.State.keys()[_a.fsm.current_state])

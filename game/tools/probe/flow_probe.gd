@@ -122,6 +122,17 @@ func _run(seed_value: int) -> Dictionary:
 	a.fsm.state_changed.connect(func(_f: int, to: int) -> void:
 		if to == WrestlerFSM.State.TIE_UP:
 			mix["tie_ups"] = mix.get("tie_ups", 0) + 1)
+	# The rope game (the owner, 3 Nov: "the wrestlers didn't run the ropes,
+	# there were no Irish whips"): whips thrown, charges, running attacks.
+	for w: WrestlerController in [a, b]:
+		w.fsm.state_changed.connect(func(_f: int, to: int) -> void:
+			match to:
+				WrestlerFSM.State.IRISH_WHIP:
+					mix["whipped"] = mix.get("whipped", 0) + 1
+				WrestlerFSM.State.RUN:
+					mix["runs"] = mix.get("runs", 0) + 1
+				WrestlerFSM.State.RUNNING_ATTACK:
+					mix["running_attacks"] = mix.get("running_attacks", 0) + 1)
 	var start := Engine.get_physics_frames()
 	t0[0] = start
 	var per_tick: Array = []    # [kind a, kind b]
@@ -130,6 +141,8 @@ func _run(seed_value: int) -> Dictionary:
 		await get_tree().physics_frame
 		tick += 1
 		per_tick.append([kind(a.fsm.current_state), kind(b.fsm.current_state)])
+	if a.ai and b.ai:
+		mix["rope_runs"] = a.ai.rope_runs + b.ai.rope_runs
 	scene.queue_free()
 	await get_tree().process_frame
 	for e in landed_at:

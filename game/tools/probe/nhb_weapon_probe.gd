@@ -97,6 +97,7 @@ static func run(host: Node, seed_value: int, budget: int, wrestlers := "roman,co
 	r["desk"] = []
 	r["climbs"] = []
 	r["ladder_ready"] = [0, 0]
+	r["chases"] = [0, 0]
 	# Roman's Spear (the owner, 2 Nov: "roman didn't land his spear"): each
 	# stalk state change, "Name:state@tick" (1 back, 2 set, 3 charge, 0 off),
 	# with the other man's FSM state and the distance between them.
@@ -152,6 +153,10 @@ static func run(host: Node, seed_value: int, budget: int, wrestlers := "roman,co
 					r["set_up"].append("%s%s@%d(%.1f,%.1f)" % [actor.def.id,
 							"^" if actor.is_climbable_ladder() else "", t,
 							actor.global_position.x, actor.global_position.z])
+		for k in 2:
+			var cw: WrestlerController = [a, b][k]
+			if cw.ai:
+				r["chases"][k] = cw.ai.flee_starts
 		# Ticks a ladder dive was on offer to each man (WrestlerAI._ladder_to_climb).
 		for k in 2:
 			var w: WrestlerController = [a, b][k]

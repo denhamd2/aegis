@@ -464,6 +464,32 @@ func test_roman_waits_for_his_music_under_dimmed_lights() -> void:
 	assert_float(light.light_energy).is_equal_approx(_after_bell(rig, light, before), 0.0001)
 
 
+## The owner, 3 Nov: "still not standing in their corners during the corner
+## camera pan". They were, on an unlit ring: lights_up put the match look up
+## and then undid it, restoring the ring keys the last entrance had dimmed.
+func test_the_ring_is_lit_for_the_match_card_and_the_corner_intros() -> void:
+	var scene := _match(true, "roman", "cody")
+	var director: EntranceDirector = scene.get_node("EntranceDirector")
+	var rig := scene.get_node("LightRig")
+	var ticks := 0
+	while ticks < 30000 and director._beat < director._beats.size() \
+			and (director._beats[director._beat] as Dictionary).get("shot", "") != "match_card":
+		director._physics_process(1.0 / 60.0)
+		ticks += 1
+	assert_str(String((director._beats[director._beat] as Dictionary).get("shot", ""))).is_equal("match_card")
+	for _i in 30:
+		director._physics_process(1.0 / 60.0)
+	assert_int(rig.look).is_equal(ArenaLighting.Look.MATCH)
+	var keys := 0
+	for child in rig.get_children():
+		if child is Light3D and (String(child.name).begins_with("Key") or String(child.name).begins_with("Top")):
+			keys += 1
+			assert_float((child as Light3D).light_energy).override_failure_message(
+					"%s at %.2f on the match card" % [child.name, (child as Light3D).light_energy]) \
+					.is_equal_approx(_after_bell(rig, child, 0.0), 0.0001)
+	assert_int(keys).is_greater(0)
+
+
 ## What a rig light reads once the bell has rung: the house dim undone, and
 ## the ring keys and top fill on the match look (ArenaLighting.set_look).
 static func _after_bell(rig: Node, light: Light3D, before: float) -> float:

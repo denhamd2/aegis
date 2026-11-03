@@ -4271,6 +4271,64 @@ CLIPS["Knee_Lift_Defender"] = [(0, pose(STAND)), (7, pose(STAND, head=(4, 0, 0))
 # on the way (David: "his legs and arms look broken").
 CLIPS["Bump_Back"] = [(0, pose(STAND, head=(4, 0, 0)))] + _back_fall(2, 30, pelvis_hit=0.95)
 
+# Lariated (the owner, 3 Nov: "knocked down with force to the mat"): 36
+# frames / 1.2 s. The arm across his throat on frame 0; head and chest
+# whipped back on 2 while his feet are still running in; turned inside out
+# by 5 -- hips over, legs swung up past level at chest height; flat on 10,
+# shoulders and back slapped down, legs still up; settled by 14 into
+# SUPINE_AWAY like every back bump (_back_fall), so DOWN takes him the same.
+CLIPS["Bump_Lariat"] = [
+    (0, pose(STAND, head=(4, 0, 0))),
+    (2, P(pelvis=(0.0, 0.02, 0.98), spine=(34, 0, 0), head=(44, 0, 0),
+          hand_r=(0.40, 0.08, 1.26), hand_l=(-0.38, 0.06, 1.24),
+          fist_r=0.2, fist_l=0.2)),
+    (5, dict(pelvis=(0.0, 0.02, 0.96), hips=(84, 0, 0),
+             spine=(-10, 0, 0), head=(-22, 0, 0),
+             hand_r=(0.56, -0.10, 1.10), hand_l=(-0.56, -0.12, 1.08),
+             elbow_r=(0.8, -0.3, -0.3), elbow_l=(-0.8, -0.3, -0.3),
+             fist_r=0.1, fist_l=0.1,
+             foot_r=(0.18, 0.80, 1.08), foot_l=(-0.16, 0.84, 1.14),
+             knee_r=(0.2, 0.8, 0.6), knee_l=(-0.2, 0.8, 0.6))),
+    (10, _yawed(S(pelvis=(0.0, 0.0, 0.200), head=(-2, 0, 0),
+                  hand_r=(-0.60, 0.10, 0.10), hand_l=(0.60, 0.10, 0.10),
+                  elbow_r=(-0.7, 0.3, -0.3), elbow_l=(0.7, 0.3, -0.3),
+                  fist_r=0.1, fist_l=0.1,
+                  foot_r=(-0.14, -0.70, 0.46), foot_l=(0.12, -0.72, 0.50)))),
+    (14, _yawed(S(pelvis=(0.0, 0.0, 0.180), spine=(-8, 0, 0), head=(-16, 0, 0)))),
+    (36, dict(SUPINE_AWAY)),
+]
+
+
+# Down hurt after a big landing -- through a table, off a ladder, a hard
+# weapon shot (the owner, 3 Nov: "when someone goes through a table they
+# should writhe in agony whilst on the floor"). 96 frames / 3.2 s, looping:
+# rolled half onto one side, knees drawn up, a hand at the small of his back
+# and the other at his head; back over flat, arched off the mat with both
+# hands under it; half onto the other side. Keyed in the body's own frame
+# (_body), as the roll is, so the hands go with the back they hold rather
+# than staying put on the mat while it turns.
+def _writhe(theta, curl, back_r, back_l, head_lift, pelvis_up=0.19):
+    hold_back = (0.16, -0.14, 0.12)
+    on_head = (0.08, 0.16, 0.60)
+    return _body((-86 + curl, 0, theta), (0.0, 0.0, pelvis_up),
+                 spine=(-6 - curl, 0, 0), head=(-12 - head_lift, 0, 0),
+                 hand_r=hold_back if back_r else on_head,
+                 hand_l=(-hold_back[0], hold_back[1], hold_back[2]) if back_l
+                 else (-on_head[0], on_head[1], on_head[2]),
+                 elbow_r=(1.0, -0.4, 0.0), elbow_l=(-1.0, -0.4, 0.0),
+                 fist_r=0.3, fist_l=0.3,
+                 foot_r=(0.14, 0.34, -0.48), foot_l=(-0.14, 0.30, -0.52),
+                 knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0), free_feet=True)
+
+
+CLIPS["Down_Writhe"] = [
+    (0, _writhe(180, 6, True, True, 6)),
+    (24, _writhe(150, 14, True, False, 12, pelvis_up=0.22)),
+    (48, _writhe(180, -4, True, True, 16)),
+    (72, _writhe(210, 14, False, True, 12, pelvis_up=0.22)),
+    (96, _writhe(180, 6, True, True, 6)),
+]
+
 # Clothesline From Hell, 36 frames. Sprints in with the right arm cocked,
 # swings it through the neck (video frames 2-4); the victim is turned over
 # backward three-quarters of a turn -- feet over his head -- and lands face
@@ -5660,10 +5718,18 @@ CLIPS["DriveBy_Defender"] = [(0, pose(STAND)), (8, pose(STAND, head=(4, 0, 0)))]
 # hold can outlast the clip, and the last frame is Cody flat and hooked.
 _F4_HOOK = dict(foot_r=(-0.08, 0.70, 0.42), foot_l=(0.20, 0.70, 0.14),
                 knee_r=(0.0, 0.2, 1.0), knee_l=(0.3, 0.2, 1.0), free_feet=True)
-_F4_BACK = dict(ATK_BACK, **_F4_HOOK)
-_F4_BRIDGE = dict(_F4_BACK, pelvis=(0.0, 0.02, 0.330), hips=(66, 0, 0),
+# The owner, 3 Nov: "it looks like they're just both lying down, rather than
+# him applying the hold ... Cody sitting up a little". He lay flat (ATK_BACK,
+# hips 84). Now he is propped up on his hands posted behind him, chest about
+# 50 degrees off the mat and eyes on the leg, and each bridge is a lean back
+# with his hips up off the mat into the hook.
+_F4_BACK = dict(ATK_BACK, hips=(50, 0, 0), spine=(8, 0, 0), head=(-20, 0, 0),
+                hand_r=(0.32, -0.46, 0.05), hand_l=(-0.32, -0.46, 0.05),
+                elbow_r=(0.6, -0.6, 0.2), elbow_l=(-0.6, -0.6, 0.2),
+                fist_r=0.0, fist_l=0.0, **_F4_HOOK)
+_F4_BRIDGE = dict(_F4_BACK, pelvis=(0.0, 0.02, 0.300), hips=(68, 0, 0),
                   spine=(10, 0, 0), head=(-26, 0, 0),
-                  hand_r=(0.42, -0.24, 0.08), hand_l=(-0.42, -0.24, 0.08),
+                  hand_r=(0.40, -0.52, 0.06), hand_l=(-0.40, -0.52, 0.06),
                   foot_r=(-0.08, 0.68, 0.46), foot_l=(0.20, 0.68, 0.16))
 CLIPS["Figure_Four_Attacker"] = [
     (0,  P()),
@@ -8229,16 +8295,18 @@ CLIPS["Ladder_Aerial_Attacker"] = [
     (30, pose(ONE_KNEE, pelvis=(0.0, 0.02, 0.72), spine=(-8, 0, 0))),
     (42, P()),
 ]
+# The man under it (the owner, 3 Nov, the ladder spot): he lies there while
+# Roman comes off the top, folds up round the impact on frame 15 (the
+# forearm lands at 0.48 s), rolls half onto his side clutching his ribs and
+# back, and settles flat. Keyed 12-25 at 0.82 m with his hips bent 78 degrees
+# -- a standing man's numbers in a supine clip -- he was jack-knifed up off
+# the mat in mid-air as the dive came down.
 CLIPS["Ladder_Aerial_Defender"] = [
     (0,  S()),
-    (12, S(pelvis=(0.0, 0.06, 0.82), hips=(-78, 0, 0), spine=(-8, 0, 0), head=(8, 0, 0),
-           hand_r=(0.40, 0.34, 0.72), hand_l=(-0.40, 0.34, 0.72),
-           elbow_r=(0.7, -0.3, -0.4), elbow_l=(-0.7, -0.3, -0.4))),
-    (17, S(pelvis=(0.0, 0.04, 0.80), hips=(-72, 0, 0), spine=(-14, 0, 0), head=(8, 0, 0),
-           hand_r=(0.30, 0.42, 0.78), hand_l=(-0.18, 0.20, 0.66), fist_r=0.1, fist_l=0.1)),
-    (25, pose(SUPINE, pelvis=(0.0, 0.02, 0.80), hips=(-66, 16, 10), spine=(-10, 8, 4), head=(4, 10, 0),
-           hand_r=(0.18, 0.30, 0.76), hand_l=(-0.22, 0.38, 0.72),
-           foot_r=(0.24, -0.16, 0.14), foot_l=(-0.22, 0.18, 0.14))),
+    (13, S()),
+    (16, _writhe(180, 16, True, True, 18)),
+    (24, _writhe(158, 12, True, False, 12, pelvis_up=0.21)),
+    (33, _writhe(180, 6, True, True, 6)),
     (42, S()),
 ]
 
@@ -8487,16 +8555,23 @@ _PB_BEND = dict(pelvis=(0.0, 0.12, 0.660), hips=(-40, 0, 0), spine=(-36, 0, 0),
 # Bomb's legs-together carry could not be (its fit floats him half a metre
 # out in front).
 _PB_TOP_ATK = P(pelvis=(0.0, 0.0, 0.860), spine=(4, 0, 0), head=(-10, 0, 0),
-                hand_r=(0.20, 0.30, 1.60), hand_l=(-0.20, 0.30, 1.60),
+                hand_r=(0.24, 0.24, 1.48), hand_l=(-0.24, 0.24, 1.48),
                 elbow_r=(0.8, -0.2, 0.0), elbow_l=(-0.8, -0.2, 0.0),
                 fist_r=0.7, fist_l=0.7,
                 foot_r=(0.26, -0.06, 0.104), foot_l=(-0.24, 0.08, 0.104))
-_PB_TOP_DEF = dict(pelvis=(0.0, 0.00, 1.640), hips=(10, 0, 0), spine=(6, 0, 0), head=(8, 0, 0),
-                   hand_r=(0.32, 0.14, 1.96), hand_l=(-0.32, 0.14, 1.96),
+# The owner, 3 Nov: "the victim should be cradled up on the attacker's
+# shoulders, at the moment he's not". He sat 1.64 m up with his thighs through
+# Roman's head, so the clearance fit (paired_fit.gd) carried him 0.46 m out in
+# front -- over Roman's head, not on him. Now he sits down onto the shoulders:
+# hips at 1.52 m, knees spread to clear the head either side, thighs resting
+# on the shoulders, calves hanging down Roman's back, hands on his shoulders
+# and Roman's hands on his thighs.
+_PB_TOP_DEF = dict(pelvis=(0.0, 0.04, 1.520), hips=(16, 0, 0), spine=(4, 0, 0), head=(8, 0, 0),
+                   hand_r=(0.28, 0.30, 1.62), hand_l=(-0.28, 0.30, 1.62),
                    elbow_r=(0.8, -0.3, -0.2), elbow_l=(-0.8, -0.3, -0.2),
                    fist_r=0.3, fist_l=0.3,
-                   foot_r=(0.27, 0.54, 1.18), foot_l=(-0.27, 0.54, 1.18),
-                   knee_r=(0.5, 1.0, 0.3), knee_l=(-0.5, 1.0, 0.3), free_feet=True)
+                   foot_r=(0.30, 0.56, 1.02), foot_l=(-0.30, 0.56, 1.02),
+                   knee_r=(0.8, 1.0, 0.2), knee_l=(-0.8, 1.0, 0.2), free_feet=True)
 _PB_LIFT_ATK = [
     (0,  dict(_LOCK_ATK)),
     # Over him, the head tucked between his thighs.

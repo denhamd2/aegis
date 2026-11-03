@@ -27,6 +27,7 @@ func test_climbing_moves_up_and_returns_to_idle_at_the_base() -> void:
 	var w := _wrestler()
 	var ladder := _upright_ladder(w)
 	w.global_position = Vector3(0.0, 0.0, -WrestlerController.LADDER_FRONT_OFFSET)
+	var base_y := w.global_position.y
 	assert_bool(ladder.is_climbable_ladder()).is_true()
 	assert_bool(w._weapon_input({"weapon": true})).is_true()
 	assert_int(w.fsm.current_state).is_equal(WrestlerFSM.State.LADDER_CLIMB)
@@ -38,7 +39,8 @@ func test_climbing_moves_up_and_returns_to_idle_at_the_base() -> void:
 			break
 		w._tick_ladder_climb({"move": Vector2(0.0, 1.0)})
 	assert_int(w.fsm.current_state).is_equal(WrestlerFSM.State.IDLE)
-	assert_float(w.global_position.y).is_equal_approx(WrestlerController.FLOOR_LEVEL, 0.01)
+	# back where he started up (the canvas), not the arena floor under it
+	assert_float(w.global_position.y).is_equal_approx(base_y, 0.01)
 	assert_bool(ladder.is_climbable_ladder()).is_true()
 
 
@@ -57,6 +59,8 @@ func test_a_hit_tips_the_ladder_and_the_climber_falls_to_down() -> void:
 		if w.fsm.current_state == WrestlerFSM.State.DOWN:
 			break
 	assert_int(w.fsm.current_state).is_equal(WrestlerFSM.State.DOWN)
+	# on the canvas he fell from, not the arena floor under the ring
+	assert_float(w.global_position.y).is_equal_approx(WrestlerController.MAT_LEVEL, 0.05)
 
 
 func test_a_carried_ladder_can_be_set_upright() -> void:

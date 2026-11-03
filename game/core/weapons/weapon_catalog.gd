@@ -89,6 +89,11 @@ const BLADES: Array[StringName] = [&"knife", &"sword"]
 const ROCKS: Array[StringName] = [&"kendo_stick", &"hockey_stick", &"crutch", &"weight_belt",
 		&"briefcase", &"frying_pan", &"ring_bell", &"championship_belt", &"chain", &"trash_can"]
 const IMPACT_DROP_AT := 8.0
+## Barbed wire, nails and glass: whatever else they do, they leave him
+## writhing on the mat (the owner, 3 Nov: "selling ... appropriate for the
+## force of each weapon").
+const CUTS: Array[StringName] = [&"barbed_wire_chair", &"barbed_wire_bat", &"board_with_nails",
+		&"barbed_wire_board", &"light_tubes", &"thumbtacks", &"bed_of_nails"]
 const IMPACT_WIPEOUT_AT := 14.0
 ## Time down after the bump, against an ordinary knockdown's.
 const IMPACT_DOWN_SCALE := {Impact.DROP: 1.0, Impact.WIPEOUT: 1.6, Impact.FATAL: 1.0}
@@ -113,6 +118,10 @@ static func impact_of(weapon: WeaponDef) -> int:
 
 
 ## Whether a hit with `weapon` puts the man down on its own.
+static func cuts(weapon: WeaponDef) -> bool:
+	return weapon != null and weapon.id in CUTS
+
+
 static func drops_him(weapon: WeaponDef) -> bool:
 	return impact_of(weapon) in [Impact.DROP, Impact.WIPEOUT, Impact.FATAL]
 

@@ -100,10 +100,16 @@ const RECIPES := {
 	"weapon_pickup_heavy": {"kind": "retime", "source": "Weapon_Pickup_Heavy", "seconds": 0.7333, "file": AUTHORED},
 	"weapon_throw": {"kind": "retime", "source": "Weapon_Throw", "seconds": 0.4333, "file": AUTHORED},
 	"weapon_set_up": {"kind": "retime", "source": "Weapon_Set_Up", "seconds": 0.7333, "file": AUTHORED},
-	"ladder_climb": {"kind": "retime", "source": "Ladder_Climb", "seconds": 1.0667, "file": AUTHORED},
+	# Looped (the owner, 3 Nov: "the ladder climbing animation doesn't
+	# work"): unlooped it played once and froze while he went on up.
+	"ladder_climb": {"kind": "retime", "source": "Ladder_Climb", "seconds": 1.0667,
+		"file": AUTHORED, "loop": true},
 	"ladder_fall": {"kind": "retime", "source": "Ladder_Fall", "seconds": 0.6, "file": AUTHORED},
 	# A strike knockdown's fall (WrestlerController._bump_down).
 	"bump_back": {"kind": "retime", "source": "Bump_Back", "seconds": 1.0, "file": AUTHORED},
+	# Lariated: the arm across his throat folds him over it, his legs swing
+	# up past level and he comes down flat from there.
+	"bump_lariat": {"kind": "retime", "source": "Bump_Lariat", "seconds": 1.2, "file": AUTHORED},
 
 	# BACK to the rig's own Punch_Jab, and the mocap excerpt that replaced it
 	# is gone. Measured with tools/probe/strike_clip_probe.tscn on the BASE
@@ -507,6 +513,11 @@ const RECIPES := {
 	# with his knees up, and he is still breathing.
 	"down_supine": {"kind": "retime", "source": "Down_Supine",
 		"seconds": 1.333, "file": AUTHORED, "loop": true},
+
+	# Through a table he does not lie still: he rolls side to side, one hand
+	# under the small of his back, the other to his head, knees drawing up.
+	"down_writhe": {"kind": "retime", "source": "Down_Writhe",
+		"seconds": 3.2, "file": AUTHORED, "loop": true},
 
 	# FINISHER played Sword_Attack: a two-handed overhead sword swing. The
 	# biggest moment in a match has been a man chopping at the air. This is

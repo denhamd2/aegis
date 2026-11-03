@@ -773,7 +773,14 @@ func on_weapon_event(weapon: WeaponActor, event: String) -> void:
 			_register_chaos_activity(2.0)
 		"broke":
 			if weapon.def.id == &"table":
-				sfx.play_any("table_crack", 0.0)
+				# A thunderous smash, not a crack (the owner, 3 Nov: "a very
+				# loud thunderous smash noise of the table"): the boards going,
+				# the heavier crash of the desk under them, and a low boom for
+				# the body through it.
+				sfx.play_any("table_crack", 3.0)
+				sfx.play_any("desk_crash", 1.0)
+				sfx.play("pyro_boom", -4.0, 0.55)
+				sfx.play_any("crowd_ooh", CROWD_REACTION_GAIN_DB + 1.0)
 			elif weapon.def.id == &"glass_pane":
 				# the sheet going: glass, over the thud of him and the frame
 				sfx.play_any("hit_glass", 2.0)

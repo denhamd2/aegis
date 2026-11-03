@@ -2395,6 +2395,15 @@ func _event(w: WrestlerController, what: String) -> void:
 				_pyro = null
 		"lights_up":
 			_dim_house(false)
+			# The owner, 3 Nov: "still not standing in their corners during
+			# the corner camera pan". They were -- in the dark. The cue above
+			# has already put up the MATCH look; _dim_house(false) then put
+			# back the levels it saved in the last entrance's dark, ring keys
+			# included, so the card wide and both corner close-ups were shot
+			# on an unlit ring (two silhouettes against a lit crowd) until
+			# house_down re-applied the look at the walk-in. Re-apply it here.
+			if _lights and _lights.has_method("set_look"):
+				_lights.set_look(_lights.look)
 		"house_down":
 			# Pre-bell: the crowd down, the ring kept at full (unlike
 			# _dim_house, which takes the ring keys down with the house).

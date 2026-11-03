@@ -1678,6 +1678,8 @@ func _on_fsm_state_changed(_previous: WrestlerFSM.State, current: WrestlerFSM.St
 		# Caught, hit or stopped: the run back off the ropes is over.
 		_irish_whip_return_ticks_remaining = 0
 		_whip_meet_ticks = -1
+		if current != WrestlerFSM.State.IRISH_WHIP:
+			rope_running = false
 	if current != WrestlerFSM.State.TAUNT:
 		_stalking = false
 	if not _anim_playback:
@@ -1871,8 +1873,12 @@ func _physics_process(delta: float) -> void:
 	var stepped_from := global_position
 	move_and_slide()
 	if fsm.current_state == WrestlerFSM.State.LADDER_FALL \
-			and (is_on_floor() or global_position.y <= FLOOR_LEVEL + 0.04):
-		global_position.y = FLOOR_LEVEL
+			and (is_on_floor() or global_position.y <= (FLOOR_LEVEL if outside_ring else MAT_LEVEL) + 0.04):
+		# Down on what he fell onto: the canvas, in the ring (keep_inside_the_ring
+		# holds him at MAT_LEVEL, and is_on_floor() never reports it). Every
+		# fall used to land at FLOOR_LEVEL -- in the ring, 1.1 m under the mat.
+		if not is_on_floor():
+			global_position.y = maxf(global_position.y, FLOOR_LEVEL if outside_ring else MAT_LEVEL)
 		_go_down()
 	if _rope_load_body:
 		# Out in the ropes on purpose -- the clamp would snap him back.
@@ -2124,7 +2130,10 @@ func _process_free_movement(delta: float, input: Dictionary) -> void:
 		# rad/tick at MOVE_SPEED, so an attacker who enters STRIKE already 90
 		# degrees off recovers about 8 degrees across a jab's whole startup.
 		# The turn during startup is the backstop; this is the fix.
-		if opponent and _in_range(FACE_OPPONENT_RANGE):
+		# Except running on the floor: a man jogging round the ring faces where
+		# he is going -- running from the other man, his back is to him; a
+		# strafe at a jog read as two men dancing (the owner, 3 Nov).
+		if opponent and _in_range(FACE_OPPONENT_RANGE) and not (running and outside_ring):
 			_turn_toward_opponent()
 		else:
 			look_at(global_position + direction, Vector3.UP)
@@ -2135,6 +2144,8 @@ func _process_free_movement(delta: float, input: Dictionary) -> void:
 			fsm.transition_to(WrestlerFSM.State.IDLE)
 
 	_wants_tie_up_this_tick = false
+	if input.get("rope_run", false) and begin_rope_run():
+		return
 	if not _guarding and (input.get("rebound", false) or input.get("grapple", false)) \
 			and try_rebound_move():
 		return
@@ -2715,6 +2726,50 @@ var _rebound_pick: MoveDef
 ## Whipped into a corner rather than the ropes: he is trapped against the
 ## turnbuckle when he reaches it (_reached_whip_corner()).
 var _irish_whip_corner := false
+
+
+## Running the ropes (the owner, 3 Nov: "the wrestlers didn't run the ropes"):
+## he sends himself into the ropes on the side away from the other man -- the
+## whip's own launch, bounce and run back (_process_irish_whip,
+## _process_irish_whip_return), at a run rather than thrown -- and comes off
+## them at him, where a strike press is his running attack (a lariat, the
+## Clothesline From Hell, a knee, a dropkick).
+var rope_running := false
+
+
+func can_rope_run() -> bool:
+	if outside_ring or opponent == null or has_weapon():
+		return false
+	if not fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION]):
+		return false
+	return abs(global_position.x) < RING_KEEP_IN - 0.9 and abs(global_position.z) < RING_KEEP_IN - 0.9
+
+
+## Which way he runs for the ropes: square to the side away from `from`.
+static func rope_run_dir(me: Vector3, from: Vector3) -> Vector3:
+	var away := me - from
+	away.y = 0.0
+	if away.length() < 0.05:
+		away = Vector3.RIGHT
+	if absf(away.x) >= absf(away.z):
+		return Vector3(signf(away.x), 0.0, 0.0)
+	return Vector3(0.0, 0.0, signf(away.z))
+
+
+func begin_rope_run() -> bool:
+	if not can_rope_run():
+		return false
+	var dir := rope_run_dir(global_position, opponent.global_position)
+	velocity = dir * RUN_SPEED
+	_irish_whip_launch_velocity = velocity
+	_irish_whip_target = opponent
+	_irish_whip_rebounded = false
+	_irish_whip_corner = false
+	rope_running = true
+	look_at(global_position + dir, Vector3.UP)
+	_set_state_clip(WrestlerFSM.State.IRISH_WHIP, "strikes/run_drive")
+	fsm.transition_to(WrestlerFSM.State.IRISH_WHIP)
+	return true
 
 
 ## Coming back off the ropes from a whip, on the autopilot.
@@ -4110,12 +4165,18 @@ func _resolve_pending_hits() -> void:
 	var wear_before := combat.wear
 	var fatal_shot := _pending_fatal_shot
 	var weapon_forces_down := false
+	# A lariat run through him (a strike marked leaves_defender_down): the
+	# owner, 3 Nov, "the victim reacts appropriately in being knocked down
+	# with force to the mat" -- it used to be a flinch.
+	var lariat := false
 	_pending_fatal_shot = false
+	_bump_clip = ""
 	for move in moves:
 		combat.apply_damage(move, CombatSystem.COMEBACK_DAMAGE_SCALE if hitter_fired_up else 1.0)
 		var weapon := WeaponCatalog.of_move(move)
 		fatal_shot = fatal_shot or (weapon != null and weapon.id == &"handgun")
 		weapon_forces_down = weapon_forces_down or (weapon != null and move.leaves_defender_down)
+		lariat = lariat or (weapon == null and move.leaves_defender_down)
 	var last_move: MoveDef = moves[moves.size() - 1]
 	_hit_sell = sell_tier(combat.wear - wear_before, health_before, WeaponCatalog.of_move(last_move) != null)
 	# in proportion to the weapon (WeaponCatalog.Impact): a stick rocks him,
@@ -4136,6 +4197,16 @@ func _resolve_pending_hits() -> void:
 				_bump_shove = float(WeaponCatalog.IMPACT_SHOVE[impact])
 				_pending_weapon_impact = impact
 				_pending_weapon_frame = Engine.get_physics_frames()
+				# The heaviest (the steps, the sledgehammer, a rocket) take
+				# him off his feet the way a lariat does; the sharp ones
+				# leave him writhing once he is down.
+				if impact == WeaponCatalog.Impact.WIPEOUT:
+					_bump_clip = BUMP_LARIAT_CLIP
+				if WeaponCatalog.cuts(weapon_def):
+					_writhe_in = WRITHE_AFTER
+	if lariat and not combat.is_fired_up():
+		_bump_clip = BUMP_LARIAT_CLIP
+		_bump_shove = maxf(_bump_shove, LARIAT_SHOVE)
 	_took_moves(moves.size())
 	hurt.emit(_hit_sell, last_move)
 	if fatal_shot:
@@ -4161,7 +4232,7 @@ func _resolve_pending_hits() -> void:
 		if stop > 0:
 			hit_stop(stop)
 			opponent.hit_stop(stop)
-	if weapon_forces_down or _would_be_knocked_down() or (_hit_sell == Sell.DOWN and not combat.is_fired_up()
+	if weapon_forces_down or _bump_clip != "" or _would_be_knocked_down() or (_hit_sell == Sell.DOWN and not combat.is_fired_up()
 			and not DOWNED_STATES.has(fsm.current_state)):
 		# A weapon explicitly marked as a knockdown hit gets the same immediate
 		# fall as a cumulative knockdown, even when the wrestler is otherwise
@@ -4393,6 +4464,10 @@ func _play_hit_reaction(move: MoveDef, tier := Sell.LIGHT) -> void:
 ## something, or was hit again); run out in IDLE, he goes back to the stance
 ## he loops on, carried in by the Inertializer.
 func _tick_sell() -> void:
+	# Back on his feet: a writhe still owed is not carried to the next fall.
+	if _writhe_in > 0 and fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION,
+			WrestlerFSM.State.RUN]):
+		_writhe_in = 0
 	if sell_ticks <= 0:
 		return
 	if fsm.current_state != WrestlerFSM.State.IDLE:
@@ -4919,6 +4994,14 @@ func _lie_down_after_throw() -> void:
 ## standing pose cross-faded into the lying one in ANIMATION_BLEND_TICKS --
 ## a man folding through himself to the mat in a tenth of a second.
 const BUMP_TICKS := 30
+## Turned inside out by a lariat (Bump_Lariat): the legs go up past level
+## and he comes down from higher, so the fall is longer than a back bump's,
+## and he is carried back with it.
+const BUMP_LARIAT_CLIP := "strikes/bump_lariat"
+const LARIAT_BUMP_TICKS := 36
+const LARIAT_SHOVE := 1.6
+## The bump the next _bump_down() plays, set by the hit that caused it.
+var _bump_clip := ""
 var _bumping := false
 
 
@@ -4955,8 +5038,11 @@ func _bump_down() -> void:
 	_stop_dead()
 	_knockback_ticks = 0
 	_sell_clip = ""
-	_set_state_clip(WrestlerFSM.State.HIT_REACT, "strikes/bump_back")
-	_start_move(WrestlerFSM.State.HIT_REACT, _timed_stub(BUMP_TICKS))
+	var lariat := _bump_clip == BUMP_LARIAT_CLIP and anim_player != null \
+			and anim_player.has_animation(BUMP_LARIAT_CLIP)
+	_bump_clip = ""
+	_set_state_clip(WrestlerFSM.State.HIT_REACT, BUMP_LARIAT_CLIP if lariat else "strikes/bump_back")
+	_start_move(WrestlerFSM.State.HIT_REACT, _timed_stub(LARIAT_BUMP_TICKS if lariat else BUMP_TICKS))
 	_bumping = true
 	if _bump_shove > 1.0 and opponent:
 		# the heaviest weapons carry him back as he goes over
@@ -5033,6 +5119,17 @@ static func quick_rise_delay(health: float) -> int:
 	return int(round(lerpf(QUICK_DELAY_HURT_TICKS, QUICK_DOWN_RECOVERY_DELAY_TICKS, t)))
 
 
+## Through a table: still for WRITHE_AFTER, then writhing for as long as he
+## stays down. The DOWN node goes back to its own clip on the next entry
+## (_take_clip_override), so this never outlives the one time down.
+func _tick_writhe() -> void:
+	if _writhe_in <= 0:
+		return
+	_writhe_in -= 1
+	if _writhe_in == 0:
+		_restart_state_clip(WrestlerFSM.State.DOWN, WRITHE_CLIP)
+
+
 ## Groggy ticks after a rise: after the slow rise or when hurt, longer the
 ## more hurt and after a hard knockdown; none after a quick rise unhurt.
 static func groggy_for(health: float, staged: bool, hard: bool) -> int:
@@ -5047,6 +5144,7 @@ func _process_down(input: Dictionary) -> void:
 		_stop_dead()
 		return
 	_move_ticks_remaining -= 1
+	_tick_writhe()
 	# A player can still trigger the quick rise early, but both controllers
 	# take it automatically after the shared brief sell beat, as do fired-up
 	# wrestlers. The staged rise remains the fallback when the down timer ends.
@@ -5729,6 +5827,8 @@ const LADDER_FALL_SHOVE := 1.15
 const LADDER_AERIAL_REACH := 1.8
 var _ladder_actor: WeaponActor
 var _ladder_start := Vector3.ZERO
+## The height he stood at as he started up (the canvas).
+var _ladder_base_y := 0.0
 var _ladder_climb_height := 0.0
 var _ladder_climb_progress := 0.0
 var _ladder_climb_ticks := 0
@@ -5967,9 +6067,15 @@ func begin_ladder_climb(ladder: WeaponActor) -> bool:
 	if gap > LADDER_INTERACT_REACH:
 		return false
 	_ladder_actor = ladder
-	_ladder_start = Vector3(mount.x, FLOOR_LEVEL, mount.z)
+	# From where he stands. It was FLOOR_LEVEL, the arena floor 1.1 m under
+	# the canvas, and a ladder is only climbed in the ring: the mat held him
+	# up, so he "climbed" on the spot with his hands and boots stretched up
+	# the rungs, and dived off the canvas (the owner, 3 Nov: "the ladder
+	# climbing animation doesn't work").
+	_ladder_base_y = global_position.y
+	_ladder_start = Vector3(mount.x, _ladder_base_y, mount.z)
 	_ladder_climb_height = maxf(0.5, ladder.global_marker("top").origin.y \
-			- FLOOR_LEVEL - LADDER_TOP_FOOT_GAP)
+			- _ladder_base_y - LADDER_TOP_FOOT_GAP)
 	_ladder_climb_progress = 0.0
 	_ladder_climb_ticks = 0
 	global_position = _ladder_start
@@ -6020,20 +6126,19 @@ func _tick_ladder_climb(input: Dictionary) -> void:
 		if can_start_ladder_aerial() and begin_ladder_aerial():
 			return
 		direction = -1.0
-	var previous := global_position.y
 	if direction != 0.0:
 		var delta_progress := LADDER_CLIMB_SPEED / maxf(_ladder_climb_height,
 				0.1) / float(Engine.physics_ticks_per_second)
 		_ladder_climb_progress = clampf(_ladder_climb_progress + direction * delta_progress,
 				0.0, 1.0)
-	var wanted_y := FLOOR_LEVEL + _ladder_climb_progress * _ladder_climb_height
+	var wanted_y := _ladder_base_y + _ladder_climb_progress * _ladder_climb_height
+	# Placed, not driven: the climb set velocity.y and _apply_gravity zeroes
+	# it on a ladder, so he never left the canvas.
 	velocity = Vector3.ZERO
-	velocity.y = (wanted_y - previous) * float(Engine.physics_ticks_per_second)
-	global_position.x = _ladder_start.x
-	global_position.z = _ladder_start.z
+	global_position = Vector3(_ladder_start.x, wanted_y, _ladder_start.z)
 	_update_ladder_climb_ik()
 	if _ladder_climb_progress <= 0.001 and direction < 0.0:
-		global_position.y = FLOOR_LEVEL
+		global_position.y = _ladder_base_y
 		velocity = Vector3.ZERO
 		_clear_ladder_climb()
 		fsm.transition_to(WrestlerFSM.State.IDLE)
@@ -6105,13 +6210,50 @@ func _update_ladder_climb_ik() -> void:
 	if not weapon_grip or not is_instance_valid(_ladder_actor):
 		return
 	var rung_coord := 1.0 + _ladder_climb_progress * 8.0
-	var right_hand := _ladder_rung_target(_ladder_actor, rung_coord + 0.45)
-	var left_hand := _ladder_rung_target(_ladder_actor, rung_coord - 0.45)
-	var right_foot := _ladder_rung_target(_ladder_actor, rung_coord - 1.2)
-	var left_foot := _ladder_rung_target(_ladder_actor, rung_coord - 2.0)
+	# Rung over rung, not a glide: every hand and boot holds its rung while
+	# he rises, then goes up two (LADDER_STEP) -- right hand with left boot,
+	# then left hand with right boot. All four used to slide up with him,
+	# the same pose all the way up (the owner, 3 Nov: "the ladder climbing
+	# animation doesn't work").
+	var right_hand := _ladder_limb_target(rung_coord + LADDER_HAND_LEAD, 0.0)
+	var left_hand := _ladder_limb_target(rung_coord + LADDER_HAND_LEAD, 1.0)
+	var right_foot := _ladder_limb_target(rung_coord + LADDER_FOOT_LEAD, 1.0)
+	var left_foot := _ladder_limb_target(rung_coord + LADDER_FOOT_LEAD, 0.0)
 	right_foot.origin += Vector3.UP * 0.02
 	left_foot.origin += Vector3.UP * 0.02
 	weapon_grip.climb_ladder(_ladder_actor, right_hand, left_hand, right_foot, left_foot)
+
+
+## Rungs each hand or boot goes up at a time.
+const LADDER_STEP := 2.0
+## The share of a step spent reaching for the next rung; held the rest.
+const LADDER_REACH_SHARE := 0.35
+## Where the hands and boots are, on average, against his own rung height.
+const LADDER_HAND_LEAD := 0.75
+const LADDER_FOOT_LEAD := -0.85
+## How far a hand or boot comes off the ladder toward him as it changes rung.
+const LADDER_LIFT_M := 0.08
+
+
+## The rung a hand or boot is on, `want` its rung if it moved with him and
+## `phase` which pair it moves with (0 or 1, a rung apart).
+static func ladder_limb_rung(want: float, phase: float) -> Vector2:
+	var x := (want - phase) / LADDER_STEP
+	var k := floorf(x)
+	var f := x - k
+	var t := 0.0
+	if f > 1.0 - LADDER_REACH_SHARE:
+		t = smoothstep(0.0, 1.0, (f - (1.0 - LADDER_REACH_SHARE)) / LADDER_REACH_SHARE)
+	# [rung, how far through its reach -- 0 or 1 holding]
+	return Vector2((k + t) * LADDER_STEP + phase, t)
+
+
+func _ladder_limb_target(want: float, phase: float) -> Transform3D:
+	var at := ladder_limb_rung(want, phase)
+	var target := _ladder_rung_target(_ladder_actor, at.x)
+	# off the rung toward him and back on, mid-reach
+	target.origin += _ladder_actor.global_basis * Vector3(0.0, 0.0, -LADDER_LIFT_M * sin(PI * at.y))
+	return target
 
 
 func _ladder_rung_target(ladder: WeaponActor, rung: float) -> Transform3D:
@@ -6508,6 +6650,12 @@ var _down_bonus := 0
 ## reached -- measured, up out of the wrecked desk 0.4 s after the powerbomb.
 const THROUGH_DOWN_HOLD := 240
 var _through_hold := 0
+## The owner, 3 Nov: through a table "they should writhe in agony whilst on
+## the floor". He lies stunned this long after the break, then rolls and
+## clutches his back (Down_Writhe) for the rest of the time down.
+const WRITHE_AFTER := 45
+const WRITHE_CLIP := "strikes/down_writhe"
+var _writhe_in := 0
 
 
 ## Just put down: if he is coming down on a set piece, it does its work as
@@ -6573,6 +6721,7 @@ func _land_on(w: WeaponActor, at: Vector3) -> void:
 		w.fold_bridge()
 		_down_bonus = TABLE_DOWN_TICKS
 		_through_hold = THROUGH_DOWN_HOLD
+		_writhe_in = WRITHE_AFTER
 		broke = true
 	elif w.def.broken != "":
 		# The break centred under him: he comes down near the edge as often as
@@ -6585,6 +6734,7 @@ func _land_on(w: WeaponActor, at: Vector3) -> void:
 		w.shatter(_weapon_seed(), self)
 		_down_bonus = TABLE_DOWN_TICKS
 		_through_hold = THROUGH_DOWN_HOLD
+		_writhe_in = WRITHE_AFTER
 		broke = true
 		if burning:
 			var fire := get_node_or_null("ManFire") as ManFire
@@ -6592,6 +6742,8 @@ func _land_on(w: WeaponActor, at: Vector3) -> void:
 				fire.ignite()
 	elif w.def.id == &"thumbtacks":
 		_stick_tacks(at)
+	if WeaponCatalog.cuts(w.def):
+		_writhe_in = WRITHE_AFTER
 	if impact_sell:
 		impact_sell.react_to_surface(w.def.id, broke)
 	if fsm.current_state == WrestlerFSM.State.DOWN:
@@ -6621,6 +6773,7 @@ func tick_fall_onto_set_piece(delta: float) -> void:
 	if fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION, WrestlerFSM.State.RUN]):
 		_fell_on = false
 		_through_hold = 0
+		_writhe_in = 0
 		return
 	if _fell_on or fall < FALLING_MPS or not MatchRules.no_holds_barred(self):
 		return
@@ -6674,6 +6827,7 @@ func _land_on_desk(stock: WeaponStock, at: Vector3) -> void:
 	combat.apply_damage(desk_move())
 	_down_bonus = TABLE_DOWN_TICKS
 	_through_hold = THROUGH_DOWN_HOLD
+	_writhe_in = WRITHE_AFTER
 	var venue := VenueDamage.of(self)
 	if venue:
 		venue.break_desk(at)

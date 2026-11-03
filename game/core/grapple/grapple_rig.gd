@@ -72,6 +72,18 @@ const AUTHORED_HIP_HEIGHT := 0.918
 ## height over AUTHORED_HIP_HEIGHT. See _transform_track_into_pair_frame().
 var _lift_scale := 1.0
 var _attacker_start_height_offset := 0.0
+## The ladder dive is authored off a 1.55 m perch; off a taller one he starts
+## higher by the difference (_attacker_start_height_offset). It was added to
+## every key, so he landed that much above the mat -- 0.9 m up, off the top
+## of the ladder he can now actually climb. Whole at the jump, none by the
+## authored landing (ladder_aerial: down on the man at 0.48 s).
+const LADDER_DIVE_FALL_FROM := 0.20
+const LADDER_DIVE_LAND_AT := 0.48
+
+
+static func ladder_dive_lift(t: float) -> float:
+	return 1.0 - smoothstep(LADDER_DIVE_FALL_FROM, LADDER_DIVE_LAND_AT, t)
+
 
 func begin(attacker: Node3D, defender: Node3D, move: MoveDef) -> void:
 	assert(not _active, "GrappleRig.begin() called while a grapple is already active")
@@ -199,7 +211,7 @@ func _transform_track_into_pair_frame(anim: Animation, track: int,
 			var pos: Vector3 = anim.track_get_key_value(track, k)
 			pos.y *= lift
 			if is_attacker_role:
-				pos.y += _attacker_start_height_offset
+				pos.y += _attacker_start_height_offset * ladder_dive_lift(anim.track_get_key_time(track, k))
 			anim.track_set_key_value(track, k, _pair_transform * pos)
 	elif track_type == Animation.TYPE_ROTATION_3D:
 		var yaw := Quaternion(_pair_transform.basis.orthonormalized())

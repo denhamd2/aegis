@@ -130,6 +130,16 @@ var _make_room_cooldown: int = 0
 const CHARGE_CHANCE := 0.45
 var _rise_rolled := false
 var _charge_this_rise := false
+## Of his charges as the other man rises, the share he takes off the ropes
+## instead (WrestlerController.begin_rope_run).
+const ROPE_RUN_SHARE := 0.55
+var _rope_run_this_rise := false
+## Times he ran the ropes (flow_probe).
+var rope_runs := 0
+## The other man running the ropes at him: met with a rebound move this
+## share of the time; otherwise he takes the running attack.
+const ROPE_RUN_COUNTER := 0.3
+var _counter_rope_run := -1
 var _charged_last_rise := false
 ## The heel in control plays to the crowd now and then (MatchFlow.wants_stall):
 ## a taunt between holds, no oftener than this many ticks.
@@ -787,11 +797,20 @@ func _poll_input() -> Dictionary:
 	# Coming back off the ropes from a whip: that is the ropes' momentum, not
 	# his choice, and the man who sent him there decides what happens next.
 	if controller.is_whip_returning():
+		# Off the ropes he ran himself: his running attack as he reaches him.
+		if controller.rope_running:
+			var gap := _flat(target.global_position - controller.global_position).length()
+			return {"strike": gap <= WrestlerController.STRIKE_HIT_RANGE + 0.4}
 		return {}
 	# He sent the other man into the ropes: he stands his ground and meets him
 	# coming back with his rebound move (WrestlerController.try_rebound_move()
 	# times it).
-	if target.is_whip_returning() and not controller.rebound_moves.is_empty():
+	if not target.rope_running:
+		_counter_rope_run = -1
+	elif _counter_rope_run < 0:
+		_counter_rope_run = 1 if _chain_rng().randf() < ROPE_RUN_COUNTER else 0
+	if target.is_whip_returning() and not controller.rebound_moves.is_empty() \
+			and (not target.rope_running or _counter_rope_run == 1):
 		return {"rebound": true}
 
 	var to_target := target.global_position - controller.global_position
@@ -928,6 +947,13 @@ func _poll_input() -> Dictionary:
 	# always closes distance by routing around a clear corner.
 	if controller.outside_ring and target.outside_ring and _back_in_the_ring_now():
 		return _into_the_ring(input)
+	# On the floor it is a chase, not two men jogging face to face (the owner,
+	# 3 Nov: "it feels more like a synchronized dance. I would expect one to be
+	# running facing away from the other, and the other wrestler chasing him,
+	# and if close enough to attack him from behind").
+	var chase := _floor_chase_input(input, to_target, distance)
+	if not chase.is_empty():
+		return chase
 	if controller.outside_ring and target.outside_ring and distance > tie_up_range:
 		input["move"] = _outside_opponent_move(target.global_position)
 		return input
@@ -942,8 +968,19 @@ func _poll_input() -> Dictionary:
 		_rise_rolled = true
 		_charge_this_rise = not _charged_last_rise and _chain_rng().randf() < CHARGE_CHANCE
 		_charged_last_rise = _charge_this_rise
+		_rope_run_this_rise = _charge_this_rise and _chain_rng().randf() < ROPE_RUN_SHARE
 	elif target.fsm.current_state != WrestlerFSM.State.GETUP:
 		_rise_rolled = false
+	# Or he runs the ropes as the man gets to his feet, and meets him coming
+	# off them (the owner, 3 Nov: "the wrestlers didn't run the ropes").
+	if _charge_this_rise and _rope_run_this_rise and _run_cooldown <= 0 \
+			and target.fsm.current_state == WrestlerFSM.State.GETUP \
+			and controller.can_rope_run():
+		_rope_run_this_rise = false
+		_charge_this_rise = false
+		_run_cooldown = running_attack_cooldown_ticks
+		rope_runs += 1
+		return {"rope_run": true}
 	if target.fsm.current_state == WrestlerFSM.State.GETUP and _charge_this_rise \
 			and _opening_grapple_done() and _run_cooldown <= 0 \
 			and _make_room_cooldown <= 0 and not _wants_tie_up() and distance < run_engage_distance + 0.3:
@@ -2508,3 +2545,76 @@ func _suplex() -> MoveDef:
 
 static func _flat(v: Vector3) -> Vector3:
 	return Vector3(v.x, 0.0, v.z)
+
+
+# --- The chase on the floor -------------------------------------------------
+## Both men out, on their feet and close: the one getting the worse of it
+## breaks away and runs (FLEE_CHANCE a roll, once per FLEE_COOLDOWN), along
+## the ringside lane, his back to the other man; the other runs him down and,
+## once he is close behind him, stops and hits him from behind.
+const FLEE_FROM := 3.2
+const FLEE_CHANCE := 0.35
+const FLEE_TICKS := Vector2i(90, 180)
+const FLEE_COOLDOWN := 480
+const CATCH_RANGE := 1.3
+const FLEE_PACE := 0.8
+var _flee_ticks := 0
+var _flee_cooldown := 0
+var _flee_sign := 1.0
+## Times he broke away and ran (nhb_weapon_probe).
+var flee_starts := 0
+
+
+## Running from the other man right now (the chaser reads it).
+func is_fleeing() -> bool:
+	return _flee_ticks > 0
+
+
+func _floor_chase_input(input: Dictionary, to_target: Vector3, distance: float) -> Dictionary:
+	if _flee_cooldown > 0:
+		_flee_cooldown -= 1
+	var free := [WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION, WrestlerFSM.State.RUN]
+	var out := controller.outside_ring and target.outside_ring \
+			and not ArenaBuilder.in_entrance_way(controller.global_position) \
+			and not controller.has_weapon() and _weapon_plan == WeaponPlan.NONE
+	if not out or not controller.fsm.is_in(free):
+		_flee_ticks = 0
+		return {}
+	# Running for it.
+	if _flee_ticks > 0:
+		_flee_ticks -= 1
+		if _flee_ticks == 0:
+			_flee_cooldown = FLEE_COOLDOWN
+		var me := controller.global_position
+		var side := GrappleRig._outside_side(me)
+		var along := Vector3.UP.cross(side).normalized() * _flee_sign
+		# a hurt man's run: the other man gains on him
+		input["move"] = _ringside_move(me, me + along * 4.0) * FLEE_PACE
+		input["run"] = true
+		return input
+	# Chasing him.
+	var other: WrestlerAI = target.ai
+	if other and other.is_fleeing():
+		if distance > CATCH_RANGE:
+			var dir := _outside_opponent_move(target.global_position)
+			input["move"] = dir
+			input["run"] = true
+			return input
+		# Caught him: stop, and hit him from behind (a strike pressed mid-run
+		# is a running attack, so off the run first).
+		input["move"] = Vector2.ZERO
+		input["strike"] = controller.fsm.current_state != WrestlerFSM.State.RUN
+		return input
+	# Breaking away: the man getting the worse of it, close, both standing.
+	if _flee_cooldown == 0 and distance < FLEE_FROM and target.fsm.is_in(free) \
+			and controller.combat.health() < target.combat.health() - 0.05:
+		_flee_cooldown = FLEE_COOLDOWN / 4
+		var rng := _chain_rng()
+		if rng.randf() < FLEE_CHANCE:
+			_flee_ticks = rng.randi_range(FLEE_TICKS.x, FLEE_TICKS.y)
+			flee_starts += 1
+			# away from him along the lane
+			var me := controller.global_position
+			var along := Vector3.UP.cross(GrappleRig._outside_side(me)).normalized()
+			_flee_sign = -1.0 if along.dot(target.global_position - me) > 0.0 else 1.0
+	return {}

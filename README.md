@@ -11301,3 +11301,47 @@ Review sheet: `gauntlet/refs/entrances/rig_clear_review.png`.
 ## 3 Nov — Nothing over the video wall
 
 The owner: "What's that black and purple screen up above the wide video screen? This should not be there, there should be nothing above the wider video screen." It was the set's backdrop and its pleated drape, which `tools/blender/entrance_set.py` ran from the floor to the hall's `WALL_TOP` — 25 m, a black wall 15 m tall over the video wall that the stage washes lit purple. Both now stop at the top chord of the truss frame the wall hangs in (`set_top`), so above the wall is the dark hall. `entrance_set.glb` rebuilt (two builds, one hash); `test_nothing_of_the_set_stands_over_the_video_wall` pins it. Review sheet: `gauntlet/refs/entrances/stage_top_review.png`.
+
+## 3 Nov — The ladder climb, the corners lit, the six sells, rope runs and the floor chase
+
+The owner: "The ladder climbing animation doesn't work." "The wrestlers are still not standing in their corners during the corner camera pan in the intro." Six sells: the powerbomb ("the victim should be cradled up on the attacker's shoulders"), face punches, weapons "appropriate for the force of each weapon", Cody's figure four ("both lying down ... their legs entwined and Cody sitting up a little"), tables ("writhe in agony whilst on the floor ... a very loud thunderous smash"), and lariats ("knocked down with force to the mat"). And from AI vs AI: no rope runs, whips or lariats; and outside, "more like a synchronized dance".
+
+**The ladder.** He never climbed it. The climb was measured from `FLOOR_LEVEL`, the arena floor 1.1 m under the canvas, and a ladder is only climbed in the ring. On top of that, `_apply_gravity` zeroes `velocity.y` on a ladder, which was the only thing moving him. So he stood on the mat with his hands and boots stretched up the rungs, progress ran to the top, and he dived off the canvas. The dive then landed 1.5 m under the mat, so nobody saw it.
+
+- The climb is now measured from where he stands, and he is placed at the rung height each tick. `carnage_shot --spot ladder`: root 0 → 2.47 m.
+- Rung over rung: each hand and boot holds its rung and then goes up two, right hand with left boot, then left hand with right boot. They used to slide up with him. `ladder_limb_rung`.
+- The climb clip loops. Its recipe had no `loop`, so it played once and froze.
+- The dive's start height is faded out by the landing (`GrappleRig.ladder_dive_lift`). Off the real top he landed 0.9 m above the mat.
+- The man under it is re-keyed. He had a standing man's numbers in a supine clip, jack-knifed in mid-air. Now he lies still, folds up round the impact, rolls half over clutching his back, and settles.
+
+**The corners.** The men were in their corners, but in the dark. The `lights_up` cue put the MATCH look up, then `_dim_house(false)` put back the levels saved in the last entrance's dark, ring keys included. So the match card and both corner close-ups showed two silhouettes against a lit crowd, until `house_down` re-applied the look at the walk-in. `lights_up` now re-applies the look after the restore. `test_the_ring_is_lit_for_the_match_card_and_the_corner_intros`.
+
+**Sells.**
+
+- **Lariat.** The plain running clothesline (all three rosters) was a flinch. It now puts him down with `Bump_Lariat`, a new 1.2 s clip:
+  - his head and chest whipped back;
+  - turned inside out, legs up past level;
+  - flat on frame 10;
+  - carried back as he goes over (`LARIAT_SHOVE`).
+- **Weapons by force.** The heaviest (sledgehammer, steel steps, RPG) take him off his feet the same way. Barbed wire, nails, light tubes and tacks leave him writhing once he is down (`WeaponCatalog.CUTS`). The stick, chair and bat tiers are as they were (ROCK, DROP).
+- **Tables.** Through a table, the desk, the bridge, or onto wire or tacks: he lies stunned 0.75 s, then writhes for the rest of his time down (`Down_Writhe`, 3.2 s loop, rolling side to side, a hand under his back). The break is louder:
+  - `table_crack` +3 dB;
+  - the desk crash under it;
+  - a low boom pitched to 0.55;
+  - a crowd "ooh".
+- **Powerbomb.** At the top he sat 1.64 m up with his thighs through Roman's head, so the clearance fit carried him 0.46 m out in front. Now his knees are spread either side of the head, thighs on the shoulders at 1.52 m, calves down Roman's back, and Roman's hands on his thighs. The fit is redone for the four moves sharing the pose (powerbomb, sit-out, buckle bomb, the combo): 0.26–0.33 m left.
+- **Figure four.** Cody lay flat (hips 84°). He is now propped on his hands, chest about 50° off the mat, and each bridge is a lean back with his hips up into the hook.
+- Face punches and the rest: `gauntlet/refs/selling_plan.md`.
+
+**Selling research (`gauntlet/refs/selling_plan.md`).** There was nothing in the backlog. The document lists what we have, what real selling and 2K do, and eight gaps in order. The biggest:
+- one down loop for every knockdown (it should be chosen by zone);
+- no strike side or uppercut reaction;
+- no limp on damaged legs;
+- no pain audio.
+
+**Rope runs and the chase** (measured in the next pass).
+- The AI now runs the ropes on 55 % of its rises off the mat (`ROPE_RUN_SHARE`). He comes back off them into a running strike, and 30 % of the time the other man counters.
+- On the floor, the worse-off man breaks away and runs: 35 % at 3.2 m, for 1.5–3 s, then an 8 s cooldown. The other chases him down and hits him from behind.
+- A man jogging outside faces where he runs, not the other man. That was the synchronised dance.
+
+**Still open.** The AEW opening storyboard (committed, not yet reviewed on frames), Cody's rockets and camera review, and probe numbers for the rope runs and chase.

@@ -53,9 +53,9 @@ const LEGAL_TRANSITIONS := {
 	# GRAPPLE_HOLD from IDLE/LOCOMOTION/RUN: a paired running attack skips the
 	# tie-up -- the runner connects and both men go straight into the move
 	# (WrestlerController._begin_running_paired()).
-	State.IDLE: [State.LOCOMOTION, State.RUN, State.STRIKE, State.TIE_UP, State.GRAPPLE_HOLD, State.HIT_REACT, State.STUNNED, State.PIN_ATTACKER, State.SUBMISSION_ATTACKER, State.VICTORY, State.TAUNT, State.ROPE_CROSS, State.WEAPON_ACTION, State.LADDER_CLIMB],
-	State.LOCOMOTION: [State.IDLE, State.RUN, State.STRIKE, State.TIE_UP, State.GRAPPLE_HOLD, State.HIT_REACT, State.STUNNED, State.PIN_ATTACKER, State.SUBMISSION_ATTACKER, State.VICTORY, State.TAUNT, State.ROPE_CROSS, State.WEAPON_ACTION, State.LADDER_CLIMB],
-	State.RUN: [State.LOCOMOTION, State.RUNNING_ATTACK, State.GRAPPLE_HOLD, State.IDLE, State.HIT_REACT, State.STUNNED, State.VICTORY, State.LADDER_CLIMB],
+	State.IDLE: [State.LOCOMOTION, State.RUN, State.STRIKE, State.TIE_UP, State.GRAPPLE_HOLD, State.HIT_REACT, State.STUNNED, State.PIN_ATTACKER, State.SUBMISSION_ATTACKER, State.VICTORY, State.TAUNT, State.ROPE_CROSS, State.WEAPON_ACTION, State.LADDER_CLIMB, State.IRISH_WHIP],
+	State.LOCOMOTION: [State.IDLE, State.RUN, State.STRIKE, State.TIE_UP, State.GRAPPLE_HOLD, State.HIT_REACT, State.STUNNED, State.PIN_ATTACKER, State.SUBMISSION_ATTACKER, State.VICTORY, State.TAUNT, State.ROPE_CROSS, State.WEAPON_ACTION, State.LADDER_CLIMB, State.IRISH_WHIP],
+	State.RUN: [State.LOCOMOTION, State.RUNNING_ATTACK, State.GRAPPLE_HOLD, State.IDLE, State.HIT_REACT, State.STUNNED, State.VICTORY, State.LADDER_CLIMB, State.IRISH_WHIP],
 	State.STRIKE: [State.IDLE, State.LOCOMOTION, State.HIT_REACT, State.STUNNED, State.VICTORY],
 	State.TIE_UP: [State.GRAPPLE_HOLD, State.IDLE, State.HIT_REACT, State.VICTORY],
 	State.GRAPPLE_HOLD: [State.MOVE_EXEC, State.IRISH_WHIP, State.IDLE, State.FINISHER, State.VICTORY],
