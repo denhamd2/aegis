@@ -666,3 +666,18 @@ func test_the_led_walls_show_the_whole_frame() -> void:
 	var wide := StageVideo.mirror_crop(16.0 / 9.0, 3.0)
 	assert_float((wide[0] as Vector2).x).is_equal_approx((16.0 / 9.0) / 3.0, 0.001)
 	assert_float((wide[1] as Vector2).x).is_equal_approx((1.0 - (16.0 / 9.0) / 3.0) * 0.5, 0.001)
+
+
+## The owner, 3 Nov: "What's that black and purple screen up above the wide
+## video screen? ... there should be nothing above the wider video screen."
+## It was the backdrop and the drape running on up to the hall's WALL_TOP,
+## 15 m over the wall. They stop at the wall's own truss frame now.
+func test_nothing_of_the_set_stands_over_the_video_wall() -> void:
+	var wall_top := ArenaBuilder.SCREEN_CENTER_Y + ArenaBuilder.SCREEN_HEIGHT * 0.5 \
+			+ ArenaBuilder.SCREEN_BEZEL
+	for part: String in ["StageBackdrop", "StageDrape"]:
+		var top := -INF
+		for v: Vector3 in _verts(part):
+			top = maxf(top, v.y)
+		assert_float(top).override_failure_message("%s tops out at %.2f m" % [part, top]) \
+				.is_less_equal(wall_top + 2.0)

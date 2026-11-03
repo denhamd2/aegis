@@ -239,7 +239,18 @@ def build_flared_deck(cfg: dict[str, float], stage: Part) -> None:
 
 
 
-def build_backdrop(cfg: dict[str, float], parts: dict[str, Part]) -> None:
+def set_top(cfg: dict[str, float], d: dict[str, float]) -> float:
+    """The top of the set: the top chord of the truss frame the video wall
+    hangs in. The backdrop and the drape stop here. They used to run on up to
+    the hall's WALL_TOP (25 m) -- a black slab 15 m tall over the video wall,
+    lit purple by the stage washes (the owner, 3 Nov: "there should be
+    nothing above the wider video screen")."""
+    return d["SCREEN_CENTER_Y"] + cfg["SCREEN_HEIGHT"] * 0.5 + cfg["SCREEN_BEZEL"] \
+        + TRUSS_ABOVE_SCREEN + TRUSS_SIZE * 0.5
+
+
+def build_backdrop(cfg: dict[str, float], d: dict[str, float],
+                   parts: dict[str, Part]) -> None:
     """The wall the set stands against, and what is hung on it.
 
     Without the wall the gap between the LED walls is a hole onto the
@@ -256,18 +267,18 @@ def build_backdrop(cfg: dict[str, float], parts: dict[str, Part]) -> None:
       above it (`build_truss_frame`).
     """
     wall_front = cfg["STAGE_BACK"] - 0.2
+    top = set_top(cfg, d)
     parts["StageBackdrop"].box(
-        Vector((0.0, (cfg["FLOOR_Y"] + cfg["WALL_TOP"]) * 0.5,
+        Vector((0.0, (cfg["FLOOR_Y"] + top) * 0.5,
                 cfg["STAGE_BACK"] - 0.4)),
-        Vector((backdrop_half(cfg) * 2.0,
-                cfg["WALL_TOP"] - cfg["FLOOR_Y"], 0.4)),
+        Vector((backdrop_half(cfg) * 2.0, top - cfg["FLOOR_Y"], 0.4)),
     )
-    build_drape(cfg, parts, wall_front)
+    build_drape(cfg, parts, wall_front, top)
 
 
 def build_drape(cfg: dict[str, float], parts: dict[str, Part],
-                wall_front: float) -> None:
-    """Pleated black cloth, floor to wall top, outboard of the LED walls.
+                wall_front: float, top: float) -> None:
+    """Pleated black cloth, floor to the top of the set, outboard of the LED walls.
 
     Each fold is a raised cosine across DRAPE_PLEAT, so the sheet has real
     depth and the house lights find a different angle on every facet -- a
@@ -275,7 +286,7 @@ def build_drape(cfg: dict[str, float], parts: dict[str, Part],
     faces the ring.
     """
     drape = parts["StageDrape"]
-    y0, y1 = cfg["FLOOR_Y"], cfg["WALL_TOP"] - 0.05
+    y0, y1 = cfg["FLOOR_Y"], top - 0.05
     for sx in (-1.0, 1.0):
         x_lo, x_hi = DRAPE_X
         folds = int(round((x_hi - x_lo) / DRAPE_PLEAT))
@@ -628,7 +639,7 @@ def main(argv: list[str]) -> int:
     venue.reset_scene()
     parts = {name: Part(name) for name in PART_COLORS}
     build_deck_and_ramp(cfg, parts)
-    build_backdrop(cfg, parts)
+    build_backdrop(cfg, d, parts)
     build_screen(cfg, d, parts)
     build_centre_screen(cfg, parts)
     build_side_screens(cfg, d, parts)
