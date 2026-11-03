@@ -133,9 +133,12 @@ func test_entrance_pyro_is_lifted_six_db_over_its_previous_mix() -> void:
 		{"sound": "pyro_boom", "volume_db": 5.0},
 		{"sound": "pyro_boom", "volume_db": 4.0},
 		{"sound": "whoosh", "volume_db": 2.0},
-		{"sound": "pyro_bang", "volume_db": 4.0},
-		{"sound": "pyro_boom", "volume_db": -2.0},
+		# Cody's comet chase: the bang now, a whoosh per wave after
+		# (MatchAudio.comet_sounds, scheduled)
+		{"sound": "pyro_bang", "volume_db": 2.0},
 	])
+	var whooshes := MatchAudio.comet_sounds(EntrancePyro.cody_whoa_plan())
+	assert_int(whooshes.size()).is_greater_equal(EntrancePyro.COMET_WAVES)
 
 
 func test_nonbreaking_set_piece_landing_plays_its_impact_sound() -> void:

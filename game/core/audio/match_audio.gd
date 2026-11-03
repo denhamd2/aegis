@@ -426,15 +426,24 @@ func _on_cue(what: String) -> void:
 			# _opening_show): the flame chase roaring, a launch and a burst for
 			# each rocket wave, and the concussion's hit.
 			_schedule_opening_pyro()
-		"pyro_stage", "pyro_over_ring":
+		"pyro_stage":
 			sfx.play("pyro_boom", -1.0 + ENTRANCE_PYRO_BOOST_DB)
+		"pyro_over_ring":
+			# Comet jets off the post tops: the launch roars, the jets crack.
+			_schedule_pyro(comet_sounds(EntrancePyro.cody_ring_plan()))
 		"pyro_roman":
 			# Flame units: the roar of the fire under the boom.
 			sfx.play("pyro_boom", -2.0 + ENTRANCE_PYRO_BOOST_DB)
 			sfx.play("whoosh", -4.0 + ENTRANCE_PYRO_BOOST_DB)
-		"pyro_cody_hit", "pyro_cody_punch":
+		"pyro_cody_hit":
+			# The WHOA's comet chase: a whoosh on every wave, the bang under
+			# the first.
+			sfx.play("pyro_bang", -4.0 + ENTRANCE_PYRO_BOOST_DB)
+			_schedule_pyro(comet_sounds(EntrancePyro.cody_whoa_plan()))
+		"pyro_cody_punch":
 			sfx.play("pyro_bang", -2.0 + ENTRANCE_PYRO_BOOST_DB)
 			sfx.play("pyro_boom", -8.0 + ENTRANCE_PYRO_BOOST_DB)
+			sfx.play("whoosh", -2.0 + ENTRANCE_PYRO_BOOST_DB)
 		"strobe":
 			sfx.play("pyro_bang", -6.0)
 		"tron_on":
@@ -1143,8 +1152,25 @@ static func opening_pyro_sounds() -> Array:
 	return out
 
 
+## A comet plan's sound: one launch whoosh per wave (the jets within a wave
+## go up together), [seconds, name, dB].
+static func comet_sounds(plan: Array) -> Array:
+	var out: Array = []
+	var last := -1.0
+	for c: Array in plan:
+		var t := float(c[0])
+		if last < 0.0 or t - last >= 0.25:
+			out.append([t, "whoosh", -5.0])
+			last = t
+	return out
+
+
 func _schedule_opening_pyro() -> void:
-	for cue: Array in opening_pyro_sounds():
+	_schedule_pyro(opening_pyro_sounds())
+
+
+func _schedule_pyro(cues: Array) -> void:
+	for cue: Array in cues:
 		var name: String = cue[1]
 		var gain: float = float(cue[2]) + ENTRANCE_PYRO_BOOST_DB
 		get_tree().create_timer(float(cue[0])).timeout.connect(func() -> void:

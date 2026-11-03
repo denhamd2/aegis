@@ -336,15 +336,12 @@ func test_the_face_off_and_match_intro_use_broadcast_pacing() -> void:
 ## opening rockets burst inside the pyro wide.
 func test_the_pyro_wide_frames_every_burst() -> void:
 	var bursts: Array[Vector3] = []
-	for v in EntrancePyro.WHOA_VOLLEYS:
-		var shift := EntrancePyro._wave_shift(v)
-		for x: float in EntrancePyro.SET_SHELL_XS:
-			bursts.append(Vector3(x, EntrancePyro.SET_SHELL_HEIGHT + 2.5 + 1.2,
-					ArenaBuilder.STAGE_FRONT - 4.0) + shift)
-		for z: float in EntrancePyro.RAMP_SHELL_ZS:
-			for sx: float in [-1.0, 1.0]:
-				bursts.append(Vector3(sx * (EntrancePyro.RAMP_SHELL_X + 1.0),
-						EntrancePyro.RAMP_SHELL_HEIGHT + 1.6, z))
+	# Cody's comet jets: their launch and their top (the smoke puff).
+	# (the ramp jets go up from below the shot; their tops are in it)
+	for c: Array in EntrancePyro.cody_whoa_plan() + EntrancePyro.cody_punch_plan():
+		if (c[1] as Vector3).z <= ArenaBuilder.STAGE_FRONT:
+			bursts.append(c[1])
+		bursts.append(c[2] + Vector3.UP * 0.6)
 	for rocket: Array in EntrancePyro.opening_rocket_plan():
 		bursts.append(rocket[1] + Vector3(1.8, 2.2, -1.5))
 	var fov := EntranceDirector.PYRO_SET_WIDE_FOV

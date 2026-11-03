@@ -51,11 +51,8 @@ const FLAME_PULSE_GAP := 0.836
 ## shells light the room on the first wave and from the centre shell after.
 const VOLLEYS := 5
 const VOLLEY_GAP := 0.42
-## Cody's WHOA: twice the barrage over the set, and pairs of shells down the
-## ramp over the crowd.
-const WHOA_VOLLEYS := 10
-## Kept to the stage half of the ramp and out over the seats: nearer the
-## ring they burst on top of the ramp cameras and their sparks fill the lens.
+## Cody's ramp comets: kept to the stage half of the ramp, either side of it:
+## nearer the ring they go up past the ramp cameras and fill the lens.
 const RAMP_SHELL_ZS := [-29.0, -26.0, -23.0, -20.0]
 const RAMP_SHELL_X := 7.0
 const RAMP_SHELL_HEIGHT := 9.5
@@ -87,6 +84,28 @@ const OPENING_TRAIL_LIFETIME := 0.42
 const OPENING_TRAIL_AMOUNT := 110
 const OPENING_BURST_SIZE := 1.2
 const OPENING_SECONDARY_BURST_SIZE := 0.62
+## Cody's pyro as comet jets (the owner, 3 Nov: "change Cody's pyro to
+## rockets rather than those sparkly style ones", and asked, "comet jets" --
+## the gold jets in his AEW Dynamite clip): a bright head streaking straight
+## up off the stage on a long flame tail, flaring out at the top into a puff
+## of smoke. No spark burst. Fewer, bigger, chased across the set on his beat.
+## They were firework chrysanthemums -- 150 of them on the WHOA -- glitter.
+const COMET_RISE := 10.5
+const COMET_PUNCH_RISE := 12.5
+const COMET_FLIGHT := 0.75
+const COMET_TRAIL_AMOUNT := 150
+const COMET_TRAIL_LIFETIME := 0.55
+## The WHOA chase: waves on the half beat of his music
+## (EntranceDirector.CODY_BEAT 0.743 s) -- left to right, right to left, out
+## from the middle, then again -- all up inside the 2.7 s the stage wide holds.
+const COMET_WAVES := 5
+const COMET_WAVE_GAP := 0.3715
+const COMET_STEP := 0.07
+## Up from the ramp's edges, either side, two waves.
+const COMET_RAMP_WAVES := 2
+## Rockets launched since this node was made (tests, probes).
+var rockets_launched := 0
+
 ## Over the ring: over the four corners, low enough that the wide which
 ## frames them (EntranceDirector.PYRO_RING_WIDE_*) has them in shot with the
 ## light rig still out over the top of it -- 4.1 m over the post tops (a
@@ -130,14 +149,14 @@ func fire(cue: String) -> void:
 			_flash(Vector3(0.0, 4.0, ArenaBuilder.STAGE_FRONT - 1.0), 30.0, 34.0, 1.5,
 					ROMAN_RED)
 		"cody_hit":
-			# The WHOA: gold shells across the whole set, wave on wave, and
-			# down the ramp over the crowd.
-			_shell_volley(SET_SHELL_XS, SET_SHELL_HEIGHT, SHELL_GOLD, WHOA_VOLLEYS)
-			_ramp_shells(SHELL_GOLD, WHOA_VOLLEYS)
+			# The WHOA: comet jets chased across the set on his beat, and up
+			# from both edges of the ramp.
+			_fire_plan(cody_whoa_plan())
 			_flash(Vector3(0.0, 6.0, ArenaBuilder.STAGE_FRONT - 1.0), 26.0, 34.0, 0.9)
 		"cody_punch":
-			# The fists driven down: the second, higher volley and a white pop.
-			_shell_volley(SET_SHELL_XS, SET_SHELL_HEIGHT + 2.5, SHELL_GOLD)
+			# The fists driven down: every jet at once, the tallest, and a
+			# white pop.
+			_fire_plan(cody_punch_plan())
 			_flash(Vector3(0.0, 5.0, ArenaBuilder.STAGE_FRONT - 1.0), 30.0, 32.0, 0.35,
 					STROBE_COLOR)
 		"strobe":
@@ -145,23 +164,10 @@ func fire(cue: String) -> void:
 			_flash(Vector3(0.0, 6.0, ArenaBuilder.STAGE_FRONT - 2.0), 45.0, 45.0, 0.16,
 					STROBE_COLOR)
 		"over_ring":
-			# Cody in his corner: shells over the ring's four corners, red,
-			# white and blue (C-SNME 1:46; 2K26 "pyro over the ring").
-			var colours := [SHELL_RED, SHELL_WHITE, SHELL_BLUE, SHELL_RED]
-			for v in VOLLEYS:
-				var i := 0
-				for sx: float in [-1.0, 1.0]:
-					for sz: float in [-1.0, 1.0]:
-						var at := Vector3(sx * RING_SHELL_XZ, RING_SHELL_HEIGHT + float(v % 2) * 0.6,
-								sz * RING_SHELL_XZ)
-						var col: Array = colours[(i + v) % colours.size()]
-						var lit := v == 0
-						# up from the corner posts
-						var from := Vector3(sx * RingBuilder.POST_XZ, RingBuilder.POST_TOP,
-								sz * RingBuilder.POST_XZ)
-						_later(v * VOLLEY_GAP + i * SHELL_STAGGER * 2.0,
-								func() -> void: _shell(from, at, col, 0.7, lit))
-						i += 1
+			# Cody in his corner: comet jets up off the four post tops, red,
+			# white and blue at their tops (C-SNME 1:46; 2K26 "pyro over the
+			# ring").
+			_fire_plan(cody_ring_plan())
 			_flash(Vector3(0.0, 4.5, 0.0), 14.0, 16.0, 0.5)
 
 
@@ -237,19 +243,28 @@ func _concussion() -> void:
 ## The smoke a concussion leaves: grey puffs across the deck front, rising
 ## slowly and thinning out over a few seconds.
 func _smoke_wall() -> void:
+	_smoke(Vector3(0.0, ArenaBuilder.STAGE_DECK_Y + 0.6, ArenaBuilder.STAGE_FRONT - 1.0),
+			Vector3(9.5, 0.4, 0.8), 140, 4.5, 2.2, 3.6, 1.8)
+
+
+## Grey smoke puffs from a box at `at`, rising slowly and thinning out.
+## Tagged "smoke" (EntrancePyro emits shells, flames and this, nothing else).
+func _smoke(at: Vector3, extents: Vector3, amount: int, lifetime: float,
+		scale_min: float, scale_max: float, speed: float) -> void:
 	var p := GPUParticles3D.new()
+	p.set_meta("smoke", true)
 	var m := ParticleProcessMaterial.new()
 	m.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
-	m.emission_box_extents = Vector3(9.5, 0.4, 0.8)
+	m.emission_box_extents = extents
 	m.direction = Vector3.UP
 	m.spread = 25.0
-	m.initial_velocity_min = 1.2
-	m.initial_velocity_max = 2.4
+	m.initial_velocity_min = speed * 0.67
+	m.initial_velocity_max = speed * 1.33
 	m.gravity = Vector3(0.0, 0.25, 0.0)
 	m.damping_min = 0.6
 	m.damping_max = 1.0
-	m.scale_min = 2.2
-	m.scale_max = 3.6
+	m.scale_min = scale_min
+	m.scale_max = scale_max
 	var grow := Curve.new()
 	grow.add_point(Vector2(0.0, 0.5))
 	grow.add_point(Vector2(1.0, 1.6))
@@ -274,16 +289,83 @@ func _smoke_wall() -> void:
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	quad.material = mat
 	p.draw_pass_1 = quad
-	p.amount = 140
-	p.lifetime = 4.5
+	p.amount = amount
+	p.lifetime = lifetime
 	p.one_shot = true
 	p.explosiveness = 0.85
 	p.fixed_fps = 60
-	p.visibility_aabb = AABB(Vector3(-14, -2, -4), Vector3(28, 14, 8))
+	p.visibility_aabb = AABB(-extents - Vector3(4, 2, 4), extents * 2.0 + Vector3(8, 14, 8))
 	add_child(p)
-	p.global_position = Vector3(0.0, ArenaBuilder.STAGE_DECK_Y + 0.6, ArenaBuilder.STAGE_FRONT - 1.0)
+	p.global_position = at
 	p.emitting = true
 	_later(p.lifetime + 0.5, p.queue_free)
+
+
+## Cody's comet jets, each [seconds from the cue, from, to, colours, lit].
+static func cody_whoa_plan() -> Array:
+	var plan: Array = []
+	var n := SET_SHELL_XS.size()
+	for v in COMET_WAVES:
+		for i in n:
+			# left to right, right to left, out from the middle
+			var step: int = [i, n - 1 - i, absi(i - n / 2)][v % 3]
+			var x: float = SET_SHELL_XS[i]
+			var from := Vector3(x, ArenaBuilder.STAGE_DECK_Y + 0.25, ArenaBuilder.STAGE_FRONT - 3.0
+					- float(v % 2) * 1.5)
+			var rise := COMET_RISE + float((i + v) % 3) * 0.6
+			plan.append([v * COMET_WAVE_GAP + step * COMET_STEP, from, from + Vector3.UP * rise,
+					SHELL_GOLD if (i + v) % 2 == 0 else SHELL_WHITE, i == n / 2])
+	for v in COMET_RAMP_WAVES:
+		for k in RAMP_SHELL_ZS.size():
+			for sx: float in [-1.0, 1.0]:
+				var z: float = RAMP_SHELL_ZS[k]
+				var from := Vector3(sx * (ArenaBuilder.RAMP_HALF_WIDTH + 0.3),
+						ArenaBuilder.match_surface_y(Vector3(0.0, 0.0, z)) + 0.2, z)
+				plan.append([0.2 + v * COMET_WAVE_GAP * 2.0 + k * COMET_STEP * 1.5, from,
+						from + Vector3.UP * RAMP_SHELL_HEIGHT, SHELL_GOLD, false])
+	return plan
+
+
+static func cody_punch_plan() -> Array:
+	var plan: Array = []
+	var n := SET_SHELL_XS.size()
+	for i in n:
+		var from := Vector3(SET_SHELL_XS[i], ArenaBuilder.STAGE_DECK_Y + 0.25,
+				ArenaBuilder.STAGE_FRONT - 3.0)
+		plan.append([absi(i - n / 2) * 0.03, from, from + Vector3.UP * COMET_PUNCH_RISE,
+				SHELL_WHITE, i == n / 2])
+	return plan
+
+
+static func cody_ring_plan() -> Array:
+	var plan: Array = []
+	var colours := [SHELL_RED, SHELL_WHITE, SHELL_BLUE, SHELL_RED]
+	for v in 3:
+		var i := 0
+		for sx: float in [-1.0, 1.0]:
+			for sz: float in [-1.0, 1.0]:
+				var from := Vector3(sx * RingBuilder.POST_XZ, RingBuilder.POST_TOP,
+						sz * RingBuilder.POST_XZ)
+				var to := Vector3(sx * RING_SHELL_XZ, RING_SHELL_HEIGHT + float(v % 2) * 0.6,
+						sz * RING_SHELL_XZ)
+				plan.append([v * VOLLEY_GAP * 1.4 + i * 0.08, from, to,
+						colours[(i + v) % colours.size()], v == 0 and i == 0])
+				i += 1
+	return plan
+
+
+func _fire_plan(plan: Array) -> void:
+	for c: Array in plan:
+		var from: Vector3 = c[1]
+		var to: Vector3 = c[2]
+		var col: Array = c[3]
+		var lit: bool = c[4]
+		_later(float(c[0]), func() -> void: _comet(from, to, col, lit))
+
+
+func _comet(from: Vector3, to: Vector3, colours: Array, lit: bool) -> void:
+	_launch_rocket(from, to, colours, lit, 1.0,
+			COMET_FLIGHT * clampf((to.y - from.y) / COMET_RISE, 0.6, 1.2), true)
 
 
 ## Deterministic launch and burst points for the opening salvo, in stage space.
@@ -301,20 +383,21 @@ static func opening_rocket_plan() -> Array:
 ## a waterfall or sparklers). Flown here, in _physics_process, rather than
 ## by a tween, so a cue plays the same frame for frame.
 func _launch_rocket(from: Vector3, to: Vector3, colours: Array, lit := true,
-		size := OPENING_BURST_SIZE, flight := OPENING_ROCKET_FLIGHT) -> void:
+		size := OPENING_BURST_SIZE, flight := OPENING_ROCKET_FLIGHT, comet := false) -> void:
+	rockets_launched += 1
 	var rocket := Node3D.new()
 	add_child(rocket)
 	rocket.global_position = from
 	var head := MeshInstance3D.new()
 	var mesh := SphereMesh.new()
-	mesh.radius = 0.105
-	mesh.height = 0.21
+	mesh.radius = 0.16 if comet else 0.105
+	mesh.height = mesh.radius * 2.0
 	var material := StandardMaterial3D.new()
 	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	material.albedo_color = Color(1.0, 0.82, 0.4)
 	material.emission_enabled = true
 	material.emission = Color(1.0, 0.72, 0.28)
-	material.emission_energy_multiplier = 5.0
+	material.emission_energy_multiplier = 8.0 if comet else 5.0
 	mesh.material = material
 	head.mesh = mesh
 	rocket.add_child(head)
@@ -332,6 +415,18 @@ func _launch_rocket(from: Vector3, to: Vector3, colours: Array, lit := true,
 	trail.draw_pass_1 = _spark_mesh(0.05)
 	trail.amount = OPENING_TRAIL_AMOUNT
 	trail.lifetime = OPENING_TRAIL_LIFETIME
+	if comet:
+		# A flame tail, white-hot at the head, through orange to red as it
+		# falls away behind: a jet of fire going up, not a line of sparks.
+		process.spread = 4.0
+		process.initial_velocity_max = 1.2
+		process.scale_min = 0.55
+		process.scale_max = 1.1
+		process.color = Color.WHITE
+		process.color_ramp = _ramp([FIRE_HOT, FIRE_ORANGE, FIRE_RED])
+		trail.draw_pass_1 = ManFire.tongue_pass(Vector2(0.32, 0.9), Color(1.3, 1.15, 1.0))
+		trail.amount = COMET_TRAIL_AMOUNT
+		trail.lifetime = COMET_TRAIL_LIFETIME
 	trail.fixed_fps = 60
 	trail.local_coords = false
 	trail.visibility_aabb = AABB(Vector3(-3, -3, -3), Vector3(6, 22, 6))
@@ -339,16 +434,30 @@ func _launch_rocket(from: Vector3, to: Vector3, colours: Array, lit := true,
 	trail.emitting = true
 	if lit:
 		_flash(from, 3.0, 8.0, 0.22, colours[1])
-	_rockets.append([rocket, from, to, 0.0, flight, colours, lit, size])
+	_rockets.append([rocket, from, to, 0.0, flight, colours, lit, size, not comet])
 
 
 func _finish_rocket(rocket: Node3D, at: Vector3, colours: Array, lit := true,
-		size := OPENING_BURST_SIZE) -> void:
+		size := OPENING_BURST_SIZE, burst := true) -> void:
 	if not is_instance_valid(rocket):
 		return
 	var trail := rocket.get_child(1) as GPUParticles3D
 	if trail:
 		trail.emitting = false
+	if not burst:
+		# A comet: the head flares and burns out where it stops, and leaves a
+		# puff of smoke hanging -- no stars.
+		var head := rocket.get_child(0) as Node3D
+		if head:
+			var tween := head.create_tween()
+			tween.set_process_mode(Tween.TWEEN_PROCESS_PHYSICS)
+			tween.tween_property(head, "scale", Vector3.ONE * 1.8, 0.08)
+			tween.tween_property(head, "scale", Vector3.ONE * 0.01, 0.22)
+		if lit:
+			_flash(at, 10.0, 14.0, 0.3, colours[1])
+		_smoke(at, Vector3(0.35, 0.3, 0.35), 14, 2.6, 0.8, 1.6, 0.25)
+		_later(COMET_TRAIL_LIFETIME + 0.3, rocket.queue_free)
+		return
 	# A large aerial chrysanthemum, then a smaller, brighter core inside it:
 	# broad sky-bursts rather than a fan of falling ground sparks.
 	_burst(at, colours, size, lit)
@@ -395,24 +504,6 @@ static func _wave_shift(v: int) -> Vector3:
 	return Vector3(along, float(v % 3) * 1.1, -float(v % 2) * 2.5)
 
 
-## Pairs of shells down the ramp, over the crowd either side of it, rippling
-## from the stage toward the ring.
-func _ramp_shells(colours: Array, waves: int) -> void:
-	for v in waves:
-		for k in RAMP_SHELL_ZS.size():
-			for sx: float in [-1.0, 1.0]:
-				var at := Vector3(sx * (RAMP_SHELL_X + float(v % 2)),
-						RAMP_SHELL_HEIGHT + float(v % 3) * 0.8, RAMP_SHELL_ZS[k])
-				var col: Array = colours if (k + v) % 2 == 0 else SHELL_WHITE
-				var lit := v == 0 and sx > 0.0
-				# fired from the ramp's edges, out over the seats either side
-				var from := Vector3(sx * (ArenaBuilder.RAMP_HALF_WIDTH + 0.3),
-						ArenaBuilder.match_surface_y(Vector3(0.0, 0.0, RAMP_SHELL_ZS[k])) + 0.2,
-						RAMP_SHELL_ZS[k])
-				_later(v * VOLLEY_GAP + k * SHELL_STAGGER * 1.5 + 0.2,
-						func() -> void: _shell(from, at, col, 0.65, lit))
-
-
 func _flame_pulse() -> void:
 	var deck := ArenaBuilder.STAGE_DECK_Y
 	var z := ArenaBuilder.STAGE_FRONT - 0.6
@@ -432,7 +523,7 @@ func _physics_process(delta: float) -> void:
 			node.global_position = (r[1] as Vector3).lerp(r[2], eased)
 		if f >= 1.0:
 			_rockets.erase(r)
-			_finish_rocket(node, r[2], r[5], r[6], r[7])
+			_finish_rocket(node, r[2], r[5], r[6], r[7], r[8])
 	for p: Array in _pending.duplicate():
 		p[0] = float(p[0]) - delta
 		if float(p[0]) <= 0.0:

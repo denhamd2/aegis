@@ -94,16 +94,20 @@ func test_every_volley_is_a_five_wave_barrage() -> void:
 		pyro._physics_process(1.0 / 60.0)
 	var stage_shells := pyro.find_children("", "GPUParticles3D", false, false).size()
 	assert_int(stage_shells).is_equal(EntrancePyro.SET_SHELL_XS.size() * EntrancePyro.VOLLEYS)
+	# Cody's WHOA: comet jets (the owner, 3 Nov, "rockets rather than those
+	# sparkly style ones"), every one in its plan, no star bursts, and not a
+	# light per jet.
 	var whoa: EntrancePyro = auto_free(EntrancePyro.new())
 	add_child(whoa)
 	whoa.fire("cody_hit")
+	var lights := 0
 	for i in 360:
 		whoa._physics_process(1.0 / 60.0)
-	var whoa_shells := whoa.find_children("", "GPUParticles3D", false, false).size()
-	assert_int(whoa_shells).is_equal(EntrancePyro.WHOA_VOLLEYS
-			* (EntrancePyro.SET_SHELL_XS.size() + EntrancePyro.RAMP_SHELL_ZS.size() * 2))
-	# and not a light per shell
-	assert_int(whoa._flashes.size()).is_less(whoa_shells / 3)
+		lights = maxi(lights, whoa._flashes.size())
+	assert_int(whoa.rockets_launched).is_equal(EntrancePyro.cody_whoa_plan().size())
+	for p: GPUParticles3D in whoa.find_children("", "GPUParticles3D", false, false):
+		assert_bool(p.has_meta("smoke")).override_failure_message("a burst on the WHOA").is_true()
+	assert_int(lights).is_less(whoa.rockets_launched / 3)
 
 
 ## The owner: no sparkler or waterfall pyro for either man -- fire for
@@ -129,7 +133,10 @@ func test_no_sparkler_or_waterfall_pyro() -> void:
 		var shell := is_equal_approx(p.explosiveness, 1.0) and m.spread >= 179.0
 		var flame := p.lifetime <= 1.0 and p.draw_pass_1 is QuadMesh \
 				and ((p.draw_pass_1 as QuadMesh).material as StandardMaterial3D).albedo_texture != null
-		assert_bool(shell or flame).override_failure_message("an emitter that is neither a shell nor a flame").is_true()
+		# the puff a comet jet leaves at its top
+		var smoke := p.has_meta("smoke")
+		assert_bool(shell or flame or smoke).override_failure_message(
+				"an emitter that is not a shell, a flame or smoke").is_true()
 	assert_int(emitters).is_greater(10)
 
 
@@ -145,3 +152,22 @@ func test_every_shell_goes_up_as_a_rocket() -> void:
 	assert_int(pyro.find_children("", "GPUParticles3D", false, false).size()).is_equal(0)
 	for r: Array in pyro._rockets:
 		assert_float((r[2] as Vector3).y - (r[1] as Vector3).y).is_greater(4.0)
+
+
+## Cody's comet jets go up from the stage, chase on his beat, and top out
+## where the WHOA's stage wide sees them.
+func test_codys_comets_chase_up_off_the_stage_on_his_beat() -> void:
+	var plan := EntrancePyro.cody_whoa_plan()
+	assert_int(plan.size()).is_less_equal(60)
+	for c: Array in plan + EntrancePyro.cody_punch_plan() + EntrancePyro.cody_ring_plan():
+		var rise := (c[2] as Vector3).y - (c[1] as Vector3).y
+		assert_float(rise).is_greater(4.0)
+		assert_float((c[2] as Vector3).y).is_less(EntrancePyro.SET_SHELL_HEIGHT)
+	# half beats of his music
+	assert_float(EntrancePyro.COMET_WAVE_GAP * 2.0).is_equal_approx(EntranceDirector.CODY_BEAT, 0.001)
+	# the chase is over inside the stage wide (pyro to the fists, ~2.7 s)
+	var last := 0.0
+	for c: Array in plan:
+		last = maxf(last, float(c[0]))
+	assert_float(last + EntrancePyro.COMET_FLIGHT).is_less(
+			EntranceDirector.CODY_PUNCH - EntranceDirector.CODY_PUNCH_AT / 60.0 - EntranceDirector.CODY_PYRO)
