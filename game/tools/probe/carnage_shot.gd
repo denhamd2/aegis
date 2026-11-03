@@ -492,6 +492,7 @@ func _figure_four() -> void:
 	await _frames(10)
 	_a._go_down()
 	_a._move_ticks_remaining = 100000
+	_a._through_hold = 100000                 # no quick rise before the hold
 	await _frames(30)
 	var move: MoveDef = load("res://resources/moves/submission_figure_four.tres")
 	_b.begin_submission(_a, CombatSystem.Limb.LEGS, move)

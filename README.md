@@ -11344,4 +11344,6 @@ The owner: "The ladder climbing animation doesn't work." "The wrestlers are stil
 - On the floor, the worse-off man breaks away and runs: 35 % at 3.2 m, for 1.5–3 s, then an 8 s cooldown. The other chases him down and hits him from behind.
 - A man jogging outside faces where he runs, not the other man. That was the synchronised dance.
 
+Review sheet: `gauntlet/refs/ladder_corners_sells_review.jpg` (before and after: the card wide, the ref check, the ladder halfway and at the top, the powerbomb's top, and the figure four).
+
 **Still open.** The AEW opening storyboard (committed, not yet reviewed on frames), Cody's rockets and camera review, and probe numbers for the rope runs and chase.
