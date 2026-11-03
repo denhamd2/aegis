@@ -4308,14 +4308,16 @@ CLIPS["Bump_Lariat"] = [
 # (_body), as the roll is, so the hands go with the back they hold rather
 # than staying put on the mat while it turns.
 def _writhe(theta, curl, back_r, back_l, head_lift, pelvis_up=0.19):
-    hold_back = (0.16, -0.14, 0.12)
+    # Clutching his side and ribs, not under his back: tucked under him, the
+    # forearm went 4-17 cm into the canvas as he rolled (PoseLint below_mat).
+    hold_back = (0.20, 0.12, 0.34)
     on_head = (0.08, 0.16, 0.60)
     return _body((-86 + curl, 0, theta), (0.0, 0.0, pelvis_up),
                  spine=(-6 - curl, 0, 0), head=(-12 - head_lift, 0, 0),
                  hand_r=hold_back if back_r else on_head,
                  hand_l=(-hold_back[0], hold_back[1], hold_back[2]) if back_l
                  else (-on_head[0], on_head[1], on_head[2]),
-                 elbow_r=(1.0, -0.4, 0.0), elbow_l=(-1.0, -0.4, 0.0),
+                 elbow_r=(1.0, 0.5, 0.0), elbow_l=(-1.0, 0.5, 0.0),
                  fist_r=0.3, fist_l=0.3,
                  foot_r=(0.14, 0.34, -0.48), foot_l=(-0.14, 0.30, -0.52),
                  knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0), free_feet=True)
@@ -4323,9 +4325,9 @@ def _writhe(theta, curl, back_r, back_l, head_lift, pelvis_up=0.19):
 
 CLIPS["Down_Writhe"] = [
     (0, _writhe(180, 6, True, True, 6)),
-    (24, _writhe(150, 14, True, False, 12, pelvis_up=0.22)),
+    (24, _writhe(158, 14, True, False, 12, pelvis_up=0.27)),
     (48, _writhe(180, -4, True, True, 16)),
-    (72, _writhe(210, 14, False, True, 12, pelvis_up=0.22)),
+    (72, _writhe(202, 14, False, True, 12, pelvis_up=0.27)),
     (96, _writhe(180, 6, True, True, 6)),
 ]
 
@@ -8303,10 +8305,11 @@ CLIPS["Ladder_Aerial_Attacker"] = [
 # the mat in mid-air as the dive came down.
 CLIPS["Ladder_Aerial_Defender"] = [
     (0,  S()),
-    (13, S()),
-    (16, _writhe(180, 16, True, True, 18)),
-    (24, _writhe(158, 12, True, False, 12, pelvis_up=0.21)),
-    (33, _writhe(180, 6, True, True, 6)),
+    # sees him coming: head up, bracing
+    (12, S(spine=(-8, 0, 0), head=(-20, 0, 0))),
+    (18, _writhe(180, 16, True, True, 18)),
+    (26, _writhe(160, 12, True, False, 12, pelvis_up=0.21)),
+    (34, _writhe(180, 6, True, True, 6)),
     (42, S()),
 ]
 
