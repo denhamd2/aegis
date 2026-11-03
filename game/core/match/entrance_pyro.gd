@@ -83,8 +83,12 @@ const OPENING_TRAIL_LIFETIME := 0.42
 const OPENING_TRAIL_AMOUNT := 110
 const OPENING_BURST_SIZE := 1.2
 const OPENING_SECONDARY_BURST_SIZE := 0.62
-## Over the ring: under the rig (TRUSS_Y 7.6), over the four corners.
-const RING_SHELL_HEIGHT := 6.8
+## Over the ring: over the four corners, low enough that the wide which
+## frames them (EntranceDirector.PYRO_RING_WIDE_*) has them in shot with the
+## light rig still out over the top of it -- 4.1 m over the post tops (a
+## rocket climbs at least 4 m: test_every_shell_goes_up_as_a_rocket),
+## where a real turnbuckle mortar's shell breaks.
+const RING_SHELL_HEIGHT := 5.7
 const RING_SHELL_XZ := 2.4
 
 ## A burning flame lights what is near it for as long as it burns

@@ -167,7 +167,14 @@ func _on_move_landed(attacker: WrestlerController, defender: WrestlerController,
 	# before that the cover is a near-fall, kicked out of at two and nine tenths.
 	if attacker.is_finisher(move):
 		attacker.combat.spend_finisher()
-	if attacker.is_finisher(move) and (attacker.flow == null or attacker.flow.finish_allowed()):
+		if attacker.flow != null:
+			attacker.flow.note_finisher(attacker)
+	# The story's loser's finisher is his near-fall, never the end (MatchFlow
+	# gives it him for that); a human's is always live.
+	var story_loser: bool = attacker.flow != null and attacker.is_ai \
+			and attacker.flow.winner != null and attacker.flow.winner != attacker
+	if attacker.is_finisher(move) and (attacker.flow == null or attacker.flow.finish_allowed()) \
+			and not story_loser:
 		_finished[defender] = move
 	else:
 		_finished.erase(defender)
@@ -289,6 +296,11 @@ func _check_for_downed_opponent_action() -> void:
 		if not defender.dead and PossumSpot.wants(defender, attacker):
 			_start_possum(defender, attacker)
 			return
+		# Going up the ladder he stood up over him: not stopped on the way by
+		# a stomp or a haul to his feet, which stood the man up before the
+		# dive (nhb_weapon_probe seed 4, 2 Nov).
+		if attacker.is_ai and attacker.ai and attacker.ai.going_for_ladder():
+			continue
 		# Worked before he is covered (Phase 4, position): a stomp or a fist,
 		# by where the standing man is -- up to GROUND_ATTACKS_MAX a knockdown,
 		# never after a finisher, whose knockdown is the cover.

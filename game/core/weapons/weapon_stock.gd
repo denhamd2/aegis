@@ -113,11 +113,11 @@ func nearest_stage_weapon(at: Vector3) -> WeaponActor:
 ## The nearest weapon lying loose on one side of the ropes (`inside` the
 ## ring or out of it) within `reach` of `at`, or null: one slid in, dropped,
 ## or knocked out of a man's hands, for an AI to go and pick up.
-func nearest_loose(at: Vector3, inside: bool, reach: float) -> WeaponActor:
+func nearest_loose(at: Vector3, inside: bool, reach: float, skip := {}) -> WeaponActor:
 	var best: WeaponActor = null
 	var best_d := reach
 	for a in actors:
-		if not _takeable(a):
+		if not _takeable(a) or skip.has(a.def.id):
 			continue
 		var p := a.global_position
 		var in_ring := absf(p.x) < RingBuilder.MAT_HALF and absf(p.z) < RingBuilder.MAT_HALF
@@ -131,11 +131,11 @@ func nearest_loose(at: Vector3, inside: bool, reach: float) -> WeaponActor:
 
 
 ## The nearest weapon lying loose within reach of `at`, or null.
-func loose_near(at: Vector3) -> WeaponActor:
+func loose_near(at: Vector3, skip := {}) -> WeaponActor:
 	var best: WeaponActor = null
 	var best_d := PICKUP_REACH
 	for a in actors:
-		if not _takeable(a):
+		if not _takeable(a) or skip.has(a.def.id):
 			continue
 		var d := Vector2(a.global_position.x - at.x, a.global_position.z - at.z).length()
 		if d < best_d:

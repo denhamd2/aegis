@@ -11267,3 +11267,33 @@ The owner: "The base crowd noise has a lot of clapping, instead I want it to be 
 - **The corner close-ups are a jib** (`intro_crane`): from low in front of him, about a metre off the canvas, rising past his chest to just over his eye line as it pushes in.
 - **The walk out of the corners is a crane** (`faceoff_crane`): it starts 3.8 m up and 26° round, and sweeps down and round to eye level, square to them, as they close. The stare's push picks it up from there.
 - **Tested.** `test_the_intros_and_the_walk_in_are_crane_moves`.
+
+## 2 Nov — Roman's Spear in every match; Lights Out on the floor with the ladder; the light rig raised and out of the intro wides
+
+The owner: "roman didn't land his spear. find out why, and fix." "During the lights out match the wrestlers are coming back into the ring a little too much ... Ensure there is at least one ladder climb and jump. Also ensure they don't overuse one weapon ... when wrestlers are healthy I want them to have a little more defense against being hit by a weapon, either blocking or grabbing the weapon ... less so when their health depleted." And: "I can still see the light rigging during the intros ... the wide shots. 1. Check if the rigging position is correct and two, adjust the camera position so it doesn't show."
+
+**The Spear (#26).** The cause was the story, not the move. In a match the seed gives to Cody, Roman (the heel) had rung "signature" in the comeback and "none" in the finish, so `finisher_blocked` was true all match and the stalk never began. Now both men have the finisher in the comeback (a cover off it before `FINISH_FROM` is a near fall — `MatchReferee` will not let the story's loser win with it), the loser keeps it in the finish until he has landed it once (`LOSER_NEAR_FALL_ROW`), a man who has not landed his by 345 s has it lit once, and Roman can run the Spear "out of nowhere" at a standing man 2.5–7 m away (once per 10 s). `flow_probe` seeds 1–4, Roman v Cody: a Spear in every match (1, 2, 3, 2), near falls before 420 s, Roman winning seeds 2 and 3 with it; never closer than ~60 s apart.
+
+**Lights Out (#31).** Measured with `nhb_weapon_probe` seeds 1–4 (6 min each), before → after:
+
+| | before | after |
+| --- | --- | --- |
+| time out of the ring | 13–54 % | 37–61 % |
+| ladder climbed and dived off | 0 of 4 | 4 of 4 |
+| most hits with one weapon by one man | 8–12 | 4–9 |
+| weapons pulled per match | 3–7 | 9–13 |
+| swings blocked / stolen | — | 0–2 / 0–1 per man |
+
+- More floor: `OUTSIDE_SPELL` 20–30 s (was 10–18), `IN_RING_USE` 0.35 / 0.1 from the stage (were 0.65 / 0.3).
+- No overuse: three swings a weapon (was four); a weapon he has had twice is left lying (`REUSE_MAX`, `_spent_weapons`) and weighted down in the pick.
+- The ladder, guaranteed: from 150 s, until somebody has been up one, his next run is for a ladder (under the ring, past the loose chairs, twice each at most). It took five fixes, each found on a probe trace: stood up in the ring it is kept on the mat its dive is made from (`upright_ladder_spot`) and faced with its foot to the middle of the ring (`upright_ladder_yaw`); a ladder ready for its dive beats a weapon run; he walks round it to its foot and climbs from the climb's own reach; the man under it sells — the referee's auto stomp/haul-up skips him and his get-up waits — while it is stood up and climbed; and only a player's weapon button climbs a ladder (the AI went up and down one every few seconds). Two dives at most per man.
+- Defence: an AI man on his feet, facing a melee swing, hands free, defends `0.35 × smoothstep(0.35, 1, health)` of the time — 35 % at full health, nothing under 35 % — and 40 % of those he rips the weapon away. Never a gun, launcher, spray, the torch or a set piece. Seeded, so a replay defends the same swings.
+- A throw, slide-in or set-up is no longer started off a run (`RUN -> WEAPON_ACTION` was an illegal transition the probe hit).
+
+**The rig (#44).** It hung 7.6 m over the mat — 8.7 m (28 ft) over the arena floor, the low end of a TV ring truss (9–11 m). Every high wide sat at `RIG_CLEAR_Y` 6.3, just under it, and a lens just under a ceiling of lamps sees the ceiling: Roman's building wide, Cody's dark wide, the opening crane, both pyro wides, the end wide and the post-match wide all had the grid across the top of frame (hundreds of rig points in shot, `rig_in_frame`). And at 7.6 a stage-facing wide could not be framed clean at all — the grid's far lines sat level with the top of the video wall.
+
+- Raised to 9.2 m over the mat (10.3 m, ~34 ft, over the floor). The light on the mat is kept: keys 6.8 → 8.7 and 40° → 36°, tops 18.5 → 26.5 and 52° → 46.5°, rim and audience by their distance (spot falloff is distance^1.6 inside the range window; each cone narrowed so its pool keeps its size). Forward+ (Vulkan) `match_look` frames 60 and 120, before → after: skin mean 0.187/0.198 → 0.187/0.202, skin p95 0.538/0.551 → 0.542/0.562, frame p90 0.491/0.484 → 0.509/0.496 — the same ring.
+- `overhead_rig.glb` rebuilt (deterministic: two builds, one hash). The script had stopped building — it read `ACCENT_Y` and the long-gone uplights — so the accents' boom now reads `ACCENT_DECK_RISE` and the uplight stands are gone; the grid's size is `ArenaLighting.RIG_GRID_OUTER` / `RIG_GRID_REACH`, read by both the Blender script and the cameras.
+- The wides re-aimed: toward the stage from behind the ring, low (`STAGE_WIDE_LOW_Y` 4 m) and tipped down so the top of frame passes between the wall's top and the grid's far lines; the opening crane and the set-pyro wide moved to the stage side of the grid; the ring-pyro wide lower with the corner shells at 5.7 m; the shots that follow a man tip down until clear (`rig_clear_look`). `test_no_wide_shot_has_the_rig_in_frame` checks every fixed wide against the rig with a degree to spare.
+- Measured over the whole entrance flow (a temporary probe projecting every rig vertex through the live camera, deleted after): no ring-rig point in the opening, Cody's dark wide, Roman's building wide, the match card, the ref check, the corner intros, the face-off or the end wide. Left on purpose: a corner of the grid at the very top of a few low hero angles looking up (`steps_rear`, `apron_low`, `corner_low`), as on television. Left for the next job: the roof's perimeter lamp rows (17 m) behind the opening rockets, which burst at 18 m — the owner's AEW opening reference is the brief for that pyro, and it sits lower.
+Review sheet: `gauntlet/refs/entrances/rig_clear_review.png`.

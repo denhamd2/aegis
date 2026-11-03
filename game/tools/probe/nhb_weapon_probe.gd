@@ -96,6 +96,7 @@ static func run(host: Node, seed_value: int, budget: int, wrestlers := "roman,co
 	r["moves"] = {}
 	r["desk"] = []
 	r["climbs"] = []
+	r["ladder_ready"] = [0, 0]
 	# Roman's Spear (the owner, 2 Nov: "roman didn't land his spear"): each
 	# stalk state change, "Name:state@tick" (1 back, 2 set, 3 charge, 0 off),
 	# with the other man's FSM state and the distance between them.
@@ -148,7 +149,14 @@ static func run(host: Node, seed_value: int, budget: int, wrestlers := "roman,co
 					r["pulled"].append("%s@%d" % [actor.def.id, t])
 				if is_instance_valid(actor) and actor.mode == WeaponActor.Mode.SET_UP and not seen.has([actor]):
 					seen[[actor]] = true
-					r["set_up"].append("%s@%d" % [actor.def.id, t])
+					r["set_up"].append("%s%s@%d(%.1f,%.1f)" % [actor.def.id,
+							"^" if actor.is_climbable_ladder() else "", t,
+							actor.global_position.x, actor.global_position.z])
+		# Ticks a ladder dive was on offer to each man (WrestlerAI._ladder_to_climb).
+		for k in 2:
+			var w: WrestlerController = [a, b][k]
+			if w.ai and w.ai._ladder_to_climb() != null:
+				r["ladder_ready"][k] += 1
 		if give != "" and OS.get_cmdline_user_args().has("--trace"):
 			var st := scene.get_node_or_null("WeaponStock") as WeaponStock
 			var pcs: Array = st.set_up_pieces() if st else []
@@ -177,6 +185,8 @@ static func run(host: Node, seed_value: int, budget: int, wrestlers := "roman,co
 			break
 	r["runs"] = [a.ai.weapon_runs_started if a.ai else 0, b.ai.weapon_runs_started if b.ai else 0]
 	r["swings"] = [a.ai.weapon_swings_thrown if a.ai else 0, b.ai.weapon_swings_thrown if b.ai else 0]
+	# weapon swings defended: [blocks, steals] for each man
+	r["defended"] = [[a.weapon_blocks, a.weapon_steals], [b.weapon_blocks, b.weapon_steals]]
 	scene.queue_free()
 	await host.get_tree().process_frame
 	return r

@@ -50,7 +50,13 @@ const PHASES := [
 			"face": {"takes": 0.55, "tempo": 1.0, "reverse": 0.3, "rung": "none", "stall": false, "lead": 0.3},
 			"neutral": {"takes": 0.30, "tempo": 0.95, "reverse": 1.0, "rung": "signature", "stall": false, "lead": 1.0}},
 	{"name": "comeback", "until": 420.0,
-			"heel": {"takes": 0.60, "tempo": 0.95, "reverse": 0.8, "rung": "signature", "stall": false, "lead": 0.3},
+			# Both men have the finisher in the comeback: before FINISH_FROM a
+			# cover off one is a near-fall (MatchReferee), the drama a match
+			# builds to. The heel had a signature at most here, and as the
+			# story's loser nothing at all in the finish -- so Roman, losing,
+			# never threw his Spear in a whole match (the owner, 2 Nov:
+			# "roman didn't land his spear. find out why").
+			"heel": {"takes": 0.60, "tempo": 0.95, "reverse": 0.8, "rung": "finisher", "stall": false, "lead": 0.3},
 			"face": {"takes": 0.20, "tempo": 0.8, "reverse": 1.4, "rung": "finisher", "stall": false, "lead": 1.0},
 			"neutral": {"takes": 0.35, "tempo": 0.95, "reverse": 1.0, "rung": "finisher", "stall": false, "lead": 1.0}},
 	# The finish is the winner's: which of them it is was settled at the bell
@@ -66,6 +72,9 @@ const WINNER_ROW := {"takes": 0.30, "tempo": 0.85, "reverse": 1.2, "rung": "fini
 		"lead": 1.0}
 const LOSER_ROW := {"takes": 0.90, "tempo": 0.95, "reverse": 0.6, "rung": "none", "stall": false,
 		"lead": 0.25}
+## The loser in the finish before he has had his finisher near-fall.
+const LOSER_NEAR_FALL_ROW := {"takes": 0.90, "tempo": 0.95, "reverse": 0.6, "rung": "finisher",
+		"stall": false, "lead": 0.25}
 ## A finisher can end the match from this second on (before it, a cover off a
 ## finisher is a near-fall). Matches that run long are ended anyway.
 const FINISH_FROM := 420.0
@@ -144,7 +153,14 @@ func _row_for(w: WrestlerController) -> Dictionary:
 	if not w.is_ai:
 		return p["neutral"]
 	if p["name"] == "finish" and winner != null:
-		return WINNER_ROW if w == winner else LOSER_ROW
+		if w == winner:
+			return WINNER_ROW
+		# The loser keeps his one finisher -- for the near-fall -- until he
+		# has landed it: Cody had Roman down through the whole comeback in
+		# flow_probe seed 1 and the Spear never came (2 Nov).
+		if int(finishers_landed.get(w, 0)) == 0:
+			return LOSER_NEAR_FALL_ROW
+		return LOSER_ROW
 	return row(p, _kind.get(w, Persona.Kind.NEUTRAL))
 
 
@@ -209,6 +225,17 @@ func finish_allowed() -> bool:
 ## four minutes in control without the meter coming round, and the match ran
 ## out with no winner (flow_probe seed 2).
 const FINISH_NUDGE_AFTER := 30.0
+## Into the comeback this long, an AI man who has not yet landed his finisher
+## has it lit once, so each man gets his finisher near-fall before the finish
+## (the loser's is his last big moment).
+const NEAR_FALL_NUDGE_AT := 345.0
+## Finishers landed this match, by wrestler (MatchReferee notes each).
+var finishers_landed := {}
+var _near_fall_nudged := {}
+
+
+func note_finisher(w: WrestlerController) -> void:
+	finishers_landed[w] = int(finishers_landed.get(w, 0)) + 1
 
 
 func _apply() -> void:
@@ -217,6 +244,14 @@ func _apply() -> void:
 			and not winner.combat.can_finisher() and not winner.combat.finisher_resting():
 		winner.combat.momentum = maxf(winner.combat.momentum, CombatSystem.SIGNATURE_THRESHOLD)
 		winner.combat.finisher_lit = true
+	if String(phase()["name"]) == "comeback" and seconds() >= NEAR_FALL_NUDGE_AT:
+		for w: WrestlerController in _wrestlers:
+			if w.is_ai and not _near_fall_nudged.has(w) and int(finishers_landed.get(w, 0)) == 0 \
+					and rung(w) == "finisher" and not w.combat.can_finisher() \
+					and not w.combat.finisher_resting():
+				_near_fall_nudged[w] = true
+				w.combat.momentum = maxf(w.combat.momentum, CombatSystem.SIGNATURE_THRESHOLD)
+				w.combat.finisher_lit = true
 	for w: WrestlerController in _wrestlers:
 		w.combat.damage_taken_scale = damage_taken_scale(w)
 		# What the AI may reach for. A human is never held back from a move he

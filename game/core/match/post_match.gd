@@ -237,8 +237,9 @@ func _shot_celebration(kind: String, delta: float) -> void:
 			camera.set_entrance_shot(at, p + Vector3.UP * 1.3, 44.0, snap, delta)
 		"arena":
 			# From the hard camera's side, under the rig (EntranceDirector.RIG_CLEAR_Y).
-			camera.set_entrance_shot(Vector3(-11.0, EntranceDirector.RIG_CLEAR_Y - 0.6, 6.0),
-					p + Vector3.UP * 1.0, 48.0, snap, delta)
+			var high := Vector3(-11.0, EntranceDirector.RIG_CLEAR_Y - 0.6, 6.0)
+			camera.set_entrance_shot(high, EntranceDirector.rig_clear_look(high,
+					p + Vector3.UP * 1.0, 48.0), 48.0, snap, delta)
 		_:
 			camera.set_entrance_shot(p + f * 1.7 + right * 0.4 + Vector3.UP * 0.35,
 					_head(winner) + Vector3.UP * 0.2, 46.0, snap, delta)

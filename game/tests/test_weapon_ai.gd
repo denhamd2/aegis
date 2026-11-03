@@ -436,7 +436,8 @@ func test_a_laid_out_ladder_selects_the_ladder_slam_pair() -> void:
 
 
 func test_a_weapon_fetched_outside_is_often_taken_back_into_the_ring() -> void:
-	# the owner, 19 Oct: more of No Holds Barred in the ring
+	# the owner, 19 Oct: more of No Holds Barred in the ring; then 2 Nov: "a
+	# bit more time battling outside the ring" -- about a third, not two in three
 	var pair := _pair(true)
 	var roman := pair[0]
 	roman.outside_ring = true
@@ -450,7 +451,7 @@ func test_a_weapon_fetched_outside_is_often_taken_back_into_the_ring() -> void:
 		roman.ai._start_use()
 		if roman.ai._use_in_ring:
 			in_ring += 1
-	assert_int(in_ring).is_between(50, 80)
+	assert_int(in_ring).is_between(20, 50)
 	# and heading in, he walks to the ropes on his side and goes through
 	roman.ai._use_in_ring = true
 	roman.ai._slide_in = false

@@ -213,4 +213,7 @@ func test_in_the_finish_the_winner_is_barely_marked_and_the_loser_is_not() -> vo
 	var lose: WrestlerController = b if win == a else a
 	assert_float(flow.damage_taken_scale(lose)).is_greater(flow.damage_taken_scale(win) * 2.0)
 	assert_str(flow.rung(win)).is_equal("finisher")
+	# The loser keeps one finisher for his near fall (2 Nov, Roman's Spear);
+	# once he has landed it, nothing.
+	flow.note_finisher(lose)
 	assert_str(flow.rung(lose)).is_equal("none")

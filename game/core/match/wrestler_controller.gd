@@ -3166,6 +3166,8 @@ func _process_active_move(input: Dictionary) -> void:
 		fsm.transition_to(WrestlerFSM.State.IDLE)
 
 func _apply_move_to_opponent(move: MoveDef) -> void:
+	if _is_weapon_swing(move) and opponent._defends_weapon(self, move):
+		return
 	if _is_weapon_swing(move):
 		if held_weapon.def.id == &"fire_torch":
 			# the fireball reached him: he goes up (ManFire, put out by the crew)
@@ -3192,6 +3194,63 @@ func _apply_move_to_opponent(move: MoveDef) -> void:
 	if opponent._take_guarded_strike(self, move):
 		return
 	opponent._pending_hits.append(move)
+
+
+## A healthy man does not just stand and take a chair (the owner, 2 Nov:
+## "when wrestlers are healthy I want them to have a little more defense
+## against being hit by a weapon, either blocking or grabbing the weapon for
+## themselves ... Not all the time though, and less so when their health
+## depleted"). An AI man on his feet, facing the swing, with his hands free,
+## defends a melee weapon WEAPON_DEFENSE_MAX of the time at full health,
+## falling away to nothing at WEAPON_DEFENSE_FROM; WEAPON_STEAL_SHARE of
+## those he rips it out of the other man's hands, the rest he takes on his
+## forearms. Never a gun, a launcher, a spray, the torch or a set piece. The
+## roll is from the match seed and the count of defences, so a replay
+## defends the same swings.
+const WEAPON_DEFENSE_MAX := 0.35
+const WEAPON_DEFENSE_FROM := 0.35
+const WEAPON_STEAL_SHARE := 0.4
+var weapon_blocks := 0
+var weapon_steals := 0
+var _weapon_defense_rolls := 0
+
+
+static func weapon_defense_chance(health: float) -> float:
+	return WEAPON_DEFENSE_MAX * smoothstep(WEAPON_DEFENSE_FROM, 1.0, clampf(health, 0.0, 1.0))
+
+
+static func weapon_defensible(def: WeaponDef) -> bool:
+	return def != null and not def.set_piece and def.id != &"fire_torch" \
+			and not (def.swing in [WeaponDef.Swing.GUN, WeaponDef.Swing.LAUNCHER, WeaponDef.Swing.SPRAY])
+
+
+func _defends_weapon(striker: WrestlerController, _move: MoveDef) -> bool:
+	if not is_ai or dead or held_weapon != null or striker == null or striker.held_weapon == null:
+		return false
+	if not weapon_defensible(striker.held_weapon.def) or not CAN_REVERSE.has(fsm.current_state):
+		return false
+	var toward := striker.global_position - global_position
+	toward.y = 0.0
+	var facing := -global_basis.z
+	facing.y = 0.0
+	if toward.length_squared() < 0.001 or facing.normalized().dot(toward.normalized()) < 0.3:
+		return false
+	_weapon_defense_rolls += 1
+	var rng := RandomNumberGenerator.new()
+	rng.seed = match_seed * 8192 + player_index * 131 + _weapon_defense_rolls * 7727 + 13
+	if rng.randf() >= weapon_defense_chance(combat.health()):
+		return false
+	combat.spend_stamina(CombatSystem.STAMINA_GUARD_BLOCK)
+	if rng.randf() < WEAPON_STEAL_SHARE:
+		var w := striker.held_weapon
+		striker._let_go()
+		take_weapon(w)
+		weapon_steals += 1
+	else:
+		weapon_blocks += 1
+		if hit_flinch:
+			hit_flinch.hit(striker.global_position, "body", 0.3)
+	return true
 
 
 func _take_guarded_strike(striker: WrestlerController, move: MoveDef) -> bool:
@@ -4999,6 +5058,17 @@ func _process_down(input: Dictionary) -> void:
 	if _through_hold > 0:
 		_hard_down = true
 	var held := fsm.ticks_in_state < maxi(int(WEAPON_DOWN_HOLD.get(weapon_down_impact, 0)), _through_hold)
+	# He sells while the other man goes up a ladder over him (nhb_weapon_probe
+	# seed 4, 2 Nov: up in the second it took to reach its foot, so the dive
+	# never came). WrestlerAI.going_for_ladder gives up after a few seconds.
+	var ladder_sell := opponent != null and opponent.ai != null and (
+			opponent.fsm.current_state == WrestlerFSM.State.LADDER_CLIMB
+			or (opponent.fsm.current_state == WrestlerFSM.State.WEAPON_ACTION
+					and opponent._weapon_action == "set_up_upright")
+			or (opponent.is_ai and opponent.ai.going_for_ladder()))
+	if ladder_sell:
+		_move_ticks_remaining = maxi(_move_ticks_remaining, 30)
+		held = true
 	var health := combat.health() if combat else 1.0
 	var can_quick := not held and not _hard_down and health >= QUICK_RISE_MIN_HEALTH
 	var quick_recovery: bool = can_quick and ((combat != null and combat.is_fired_up()) \
@@ -5791,7 +5861,10 @@ func _weapon_input(input: Dictionary) -> bool:
 	if not MatchRules.no_holds_barred(self):
 		return false
 	if has_weapon():
-		if input.get("throw", false):
+		# Thrown, slid in or set up from his feet, not off a run (the same
+		# rule as a pick-up below): RUN -> WEAPON_ACTION is not a transition.
+		var on_feet := fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION])
+		if input.get("throw", false) and on_feet:
 			if can_slide_weapon_into_ring():
 				begin_weapon_action("slide")
 				return true
@@ -5799,6 +5872,8 @@ func _weapon_input(input: Dictionary) -> bool:
 				begin_weapon_action("throw")
 				return true
 		if input.get("grapple", false):
+			if not on_feet:
+				return true             # he stops first; the press is spent
 			if held_weapon.def.id == &"ladder":
 				# The player's grapple/setup button opens a carried ladder by
 				# default; an explicit laid-out request remains available to AI and
@@ -5814,7 +5889,11 @@ func _weapon_input(input: Dictionary) -> bool:
 			return true
 		return false
 	if input.get("weapon", false):
-		var ladder := climbable_ladder_nearby()
+		# The player's weapon button climbs a ladder he is at. The AI climbs
+		# by its own "climb_ladder" input, for the dive: pressing for a weapon
+		# beside one stood up, it went up and down it every few seconds
+		# (nhb_weapon_probe seed 4, 2 Nov).
+		var ladder := climbable_ladder_nearby() if not is_ai else null
 		if ladder and _ladder_input_armed:
 			_ladder_input_armed = false
 			return begin_ladder_climb(ladder)
@@ -5900,6 +5979,30 @@ func begin_ladder_climb(ladder: WeaponActor) -> bool:
 	_set_state_clip(WrestlerFSM.State.LADDER_CLIMB, "strikes/ladder_climb")
 	fsm.transition_to(WrestlerFSM.State.LADDER_CLIMB)
 	return true
+
+
+## Where an upright ladder goes when stood up at `at`: in the ring, kept on
+## the part of the mat its dive is made from (can_start_ladder_aerial). Stood
+## up against the ropes over a man lying there, it was never climbed
+## (nhb_weapon_probe seed 4, 2 Nov).
+static func upright_ladder_spot(at: Vector3, outside: bool) -> Vector3:
+	if outside:
+		return at
+	var keep := RING_KEEP_IN - 0.85
+	return Vector3(clampf(at.x, -keep, keep), at.y, clampf(at.z, -keep, keep))
+
+
+## Which way an upright ladder stood up in the ring faces: its climbing side
+## (the mount, LADDER_FRONT_OFFSET in front of it) toward the middle of the
+## ring. Faced the way he happened to be facing, it was stood up near the
+## ropes with its foot against them, and nobody could get to it to climb
+## (nhb_weapon_probe seed 1, 2 Nov).
+static func upright_ladder_yaw(spot: Vector3, yaw: float, outside: bool) -> float:
+	var to_centre := Vector3(-spot.x, 0.0, -spot.z)
+	if outside or to_centre.length() < 0.3:
+		return yaw
+	to_centre = to_centre.normalized()
+	return atan2(-to_centre.x, -to_centre.z)
 
 
 func ladder_climb_progress() -> float:
@@ -6157,7 +6260,8 @@ func _tick_weapon_action(input: Dictionary) -> void:
 			if _weapon_action_ticks == WEAPON_ACTION_AT["set_up_upright"] and has_weapon():
 				var w := held_weapon
 				_let_go()
-				w.set_up_at(global_position - global_basis.z * 0.95, rotation.y, "Ladder_Open")
+				var spot := upright_ladder_spot(global_position - global_basis.z * 0.95, outside_ring)
+				w.set_up_at(spot, upright_ladder_yaw(spot, rotation.y, outside_ring), "Ladder_Open")
 		"light":
 			_tick_light()
 	if _weapon_action_ticks >= int(WEAPON_ACTION_TICKS[_weapon_action]):

@@ -24,6 +24,50 @@ func test_high_shots_still_see_over_the_crowd() -> void:
 	assert_float(EntranceDirector.STAGE_WIDE_AT.y).is_less(RIG_BOTTOM)
 
 
+## The owner, 2 Nov: "I can still see the light rigging during the intros ...
+## the wide shots. 1. Check if the rigging position is correct and two, adjust
+## the camera position so it doesn't show". Under the rig is not enough -- a
+## lens just under a ceiling of lamps sees the ceiling -- so every wide is
+## checked against the rig itself, with a degree of frame to spare.
+func test_no_wide_shot_has_the_rig_in_frame() -> void:
+	var shots := [
+		["cody_dark", EntranceDirector.CODY_DARK_AT, EntranceDirector.CODY_DARK_LOOK,
+				EntranceDirector.CODY_DARK_FOV],
+		["end_wide", EntranceDirector.END_WIDE_AT, EntranceDirector.END_WIDE_LOOK,
+				EntranceDirector.END_WIDE_FOV],
+		["arena_dark_high", EntranceDirector.ARENA_HIGH_AT, EntranceDirector.ARENA_DARK_LOOK,
+				EntranceDirector.ARENA_HIGH_FOV],
+		["pyro_ring", EntranceDirector.PYRO_RING_WIDE_AT, EntranceDirector.PYRO_RING_WIDE_LOOK,
+				EntranceDirector.PYRO_RING_WIDE_FOV],
+		["pyro_set", EntranceDirector.PYRO_SET_WIDE_AT, EntranceDirector.PYRO_SET_WIDE_LOOK,
+				EntranceDirector.PYRO_SET_WIDE_FOV],
+		["match_card", EntranceDirector.INTRO_CARD_AT, EntranceDirector.INTRO_CARD_LOOK,
+				EntranceDirector.INTRO_CARD_FOV],
+	]
+	for i in EntranceDirector.ROMAN_INTRO_SHOTS.size():
+		var s: Array = EntranceDirector.ROMAN_INTRO_SHOTS[i]
+		shots.append(["roman_intro %d start" % i, s[0], s[2], s[4]])
+		shots.append(["roman_intro %d end" % i, s[1], s[3], s[5]])
+	for t: float in [0.0, 2.0, 4.0, 6.0, 12.0]:
+		var o := EntranceDirector.opening_shot_at(t)
+		shots.append(["opening %.0f s" % t, o[1], o[2], o[3]])
+	for shot: Array in shots:
+		assert_int(EntranceDirector.rig_in_frame(shot[1], shot[2], shot[3])) \
+				.override_failure_message("rig in frame on " + str(shot[0])).is_equal(0)
+
+
+func test_the_ring_rig_hangs_where_a_tv_rig_does() -> void:
+	# ~9-11 m over an arena floor (FLOOR_Y is 1.1 m under the mat).
+	var over_floor := ArenaBuilder.TRUSS_Y - ArenaBuilder.FLOOR_Y
+	assert_float(over_floor).is_between(9.5, 11.0)
+	assert_float(ArenaLighting.TRUSS_Y).is_equal(ArenaBuilder.TRUSS_Y)
+	# The Blender rig builds its grid from the same numbers the cameras dodge.
+	var rig_py := FileAccess.get_file_as_string(
+			ProjectSettings.globalize_path("res://").path_join("../tools/blender/overhead_rig.py"))
+	if rig_py != "":
+		assert_str(rig_py).contains("\"RIG_GRID_OUTER\", \"RIG_GRID_REACH\"")
+
+
 func test_stage_wide_clears_the_ring_truss_from_the_led_top_in_sightline() -> void:
 	# A small downward tilt alone shifts both objects together in frame. Raising
 	# the camera below the fixtures changes the perspective enough to put the

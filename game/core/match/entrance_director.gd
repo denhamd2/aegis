@@ -189,18 +189,90 @@ const REF_CHECK_FOV := 36.0
 const FACEOFF_CRANE_TOP := 3.8
 const FACEOFF_CRANE_ARC := 26.0
 ## Every high shot hangs at RIG_CLEAR_Y: just under the light rig over the
-## ring (ArenaBuilder.TRUSS_Y 7.6, its keys' bodies down to ~6.9), so the lens
+## ring (ArenaBuilder.TRUSS_Y, its keys' bodies ~0.7 m under it), so the lens
 ## sees the building under the steel instead of through it. The owner: "the
 ## camera is above the light rigging above the ring, which blocks the view --
-## just underneath it, so we get a clear wide-angle shot".
+## just underneath it, so we get a clear wide-angle shot". Under it is not
+## the whole story -- a lens just under a ceiling of lamps still sees the
+## ceiling -- so each wide is also aimed so rig_in_frame() is 0 (2 Nov).
 const RIG_CLEAR_Y := 6.3
+## A wide toward the stage from behind the ring looks along under the ring
+## rig: from this low, tilted down onto the ring, the top of frame passes
+## between the video wall's top edge and the rig's far lines.
+const STAGE_WIDE_LOW_Y := 4.0
+## The light rig as a lens sees it (2 Nov, the owner: "I can still see the
+## light rigging during the intros ... the wide shots"): the ring grid's
+## lines at their PAR cans' lenses, and the fixtures hung under it. Built from
+## ArenaLighting's constants -- the numbers tools/blender/overhead_rig.py
+## builds the steel from -- so a moved rig moves this with it.
+static func rig_points() -> PackedVector3Array:
+	var pts := PackedVector3Array()
+	var hang := ArenaLighting.HANG_Y
+	var cans := hang + ArenaLighting.FIXTURE_TOP - 0.02 - 0.22
+	var o := ArenaLighting.RIG_GRID_OUTER
+	var reach := ArenaLighting.RIG_GRID_REACH
+	for offset: float in [-o, -ArenaLighting.KEY_OFFSET, ArenaLighting.KEY_OFFSET, o]:
+		var y := cans if absf(offset) == o else hang + ArenaLighting.FIXTURE_TOP
+		var s := -reach
+		while s <= reach + 0.01:
+			pts.append(Vector3(s, y, offset))
+			pts.append(Vector3(offset, y, s))
+			s += 0.5
+	# The fixtures: keys and audience wash under the inner lines, the top
+	# fills between them, the rim pair upstage. Each body hangs ~0.35 down.
+	for sx: float in [-1.0, 1.0]:
+		for sz: float in [-1.0, 1.0]:
+			pts.append(Vector3(sx * ArenaLighting.KEY_OFFSET, hang - 0.35, sz * ArenaLighting.KEY_OFFSET))
+		pts.append(Vector3(0.0, hang + 0.2 - 0.35, sx * ArenaLighting.TOP_OFFSET_Z))
+		pts.append(Vector3(sx * ArenaLighting.KEY_OFFSET, hang - 0.35, 0.0))
+		pts.append(Vector3(0.0, hang - 0.35, sx * ArenaLighting.KEY_OFFSET))
+		pts.append(Vector3(sx * ArenaLighting.RIM_X, ArenaLighting.RIM_Y - 0.35, ArenaLighting.RIM_Z))
+	return pts
+
+
+## `look`, tipped down until the rig is out of a lens at `at` with vertical
+## `fov` (half a degree at a time, at most 30): for the wides that follow a
+## man, whose aim is not a constant a test can check.
+static func rig_clear_look(at: Vector3, look: Vector3, fov: float) -> Vector3:
+	var to := look - at
+	var right := to.cross(Vector3.UP)
+	if right.length_squared() < 0.0001:
+		return look
+	right = right.normalized()
+	for i in 60:
+		if rig_in_frame(at, at + to, fov) == 0:
+			break
+		to = to.rotated(right, deg_to_rad(-0.5))
+	return at + to
+
+
+## How many rig points a lens at `at` looking at `look` with vertical `fov`
+## (16:9) has in frame, with `pad_deg` of frame around it so a lamp cannot sit
+## on the edge. A wide shot of the intros must make this 0.
+static func rig_in_frame(at: Vector3, look: Vector3, fov: float, pad_deg := 1.0,
+		aspect := 16.0 / 9.0) -> int:
+	var basis := Basis.looking_at(look - at, Vector3.UP)
+	var tan_v := tan(deg_to_rad(fov * 0.5 + pad_deg))
+	var tan_h := tan(atan(tan(deg_to_rad(fov * 0.5)) * aspect) + deg_to_rad(pad_deg))
+	var seen := 0
+	for p: Vector3 in rig_points():
+		var local := basis.inverse() * (p - at)
+		var depth := -local.z
+		if depth <= 0.05:
+			continue
+		if absf(local.y) / depth <= tan_v and absf(local.x) / depth <= tan_h:
+			seen += 1
+	return seen
 ## A crane just off the ramp, sweeping across the stage and framing the full
 ## rocket flight and burst above the video wall.
-const OPENING_AT := Vector3(-12.0, 6.0, 8.0)
-const OPENING_LOOK := Vector3(-1.0, 12.0, -37.0)
+## On the stage side of the ring rig (past ArenaLighting.RIG_GRID_REACH), so
+## the long look up at the rockets has no steel in it (the owner, 2 Nov: "I
+## can still see the light rigging during the intros").
+const OPENING_AT := Vector3(-12.0, 6.0, -12.0)
+const OPENING_LOOK := Vector3(-1.0, 10.0, -37.0)
 const OPENING_FOV := 64.0
-const OPENING_CRANE_TO := Vector3(12.0, 6.0, 5.0)
-const OPENING_CRANE_LOOK_TO := Vector3(1.0, 12.0, -37.0)
+const OPENING_CRANE_TO := Vector3(12.0, 6.0, -12.0)
+const OPENING_CRANE_LOOK_TO := Vector3(1.0, 10.0, -37.0)
 const OPENING_SIGN_SHOT_INDEX := 2
 const OPENING_SIGN_ALT_SHOT_INDEX := 3
 const OPENING_SIGN_CUE := "opening_enda_sign_raise"
@@ -209,10 +281,10 @@ const OPENING_SIGN_CUE := "opening_enda_sign_raise"
 ## then a clean stage master. [start seconds, camera, look, lens].
 const OPENING_SHOTS := [
 	[0.0, OPENING_AT, OPENING_LOOK, OPENING_FOV],
-	[4.0, Vector3(-10.0, 4.5, 2.0), Vector3(0.0, 12.0, -37.0), 64.0],
+	[4.0, Vector3(-10.0, 4.5, -12.0), Vector3(0.0, 10.0, -37.0), 64.0],
 	[8.5, Vector3(4.8, 2.0, -3.8), Vector3(8.05, 1.7, -3.6), 39.0],
 	[9.75, Vector3(4.4, 2.1, -2.8), Vector3(8.05, 1.7, -3.6), 36.0],
-	[11.0, Vector3(0.0, 6.0, 6.0), Vector3(0.0, 12.0, -37.0), 64.0],
+	[11.0, Vector3(0.0, 6.0, -12.0), Vector3(0.0, 10.0, -37.0), 64.0],
 ]
 ## The stage: from down the ramp, on a long lens, so the set fills the frame
 ## behind him.
@@ -379,8 +451,11 @@ const ROMAN_WALL_BACK := 13.5
 const ROMAN_INTRO_SHOTS := [
 	# The building, the stage empty under his light: high in the far end, a
 	# 24 mm wide, trucking across (R-41 0-10 s; 2K26 Roman 1:55).
-	[Vector3(8.5, RIG_CLEAR_Y, 14.0), Vector3(3.0, RIG_CLEAR_Y + 0.1, 14.5),
-		Vector3(0.0, 3.0, -18.0), Vector3(0.0, 3.2, -20.0), 53.0, 50.0, 7.0],
+	# Low enough and tilted down enough that the ring rig's far lines sit
+	# over the top of frame while the wall's top is still in it (2 Nov: the
+	# rig was across the top of this shot) -- rig_in_frame.
+	[Vector3(8.5, STAGE_WIDE_LOW_Y, 14.0), Vector3(3.0, STAGE_WIDE_LOW_Y, 14.5),
+		Vector3(4.4, -0.1, -1.5), Vector3(1.6, 0.15, -1.4), 44.0, 44.0, 7.0],
 	# His video on the wall, square on and level with its centre, pushing in
 	# a little: the whole OTC panel in frame, the portals' tops just under
 	# it. It aimed at the wall's old centre (9.2 m; the wall now sits on the
@@ -505,9 +580,9 @@ const CODY_BLUE := Color(0.18, 0.32, 1.0)
 ## His shots. The dark wide from high behind the hard camera; the long lens
 ## on his portal from down the ramp (85 mm, pushing in); a steadicam backing
 ## ahead of him; and the low angle inside the ring up past him in the corner.
-const CODY_DARK_AT := Vector3(0.0, RIG_CLEAR_Y, 14.0)
-const CODY_DARK_LOOK := Vector3(0.0, 3.0, -30.0)
-const CODY_DARK_FOV := 50.0
+const CODY_DARK_AT := Vector3(0.0, STAGE_WIDE_LOW_Y, 14.0)
+const CODY_DARK_LOOK := Vector3(0.0, 0.33, -2.0)
+const CODY_DARK_FOV := 44.0
 
 ## Kenny Omega (_add_kenny_entrance). Best knowledge, NOT measured off footage
 ## -- the owner's call, 27 Oct: nothing of his entrance could be downloaded
@@ -590,7 +665,7 @@ const STEADICAM_LOW_AHEAD := 1.3
 const STEADICAM_LOW_HEIGHT := 1.45
 const STEADICAM_LOW_FOV := 50.0
 ## The very wide from high at the far end, over the ring, on him.
-const ARENA_HIGH_AT := Vector3(6.5, RIG_CLEAR_Y, 12.0)
+const ARENA_HIGH_AT := Vector3(6.5, 5.0, 12.0)
 const ARENA_HIGH_FOV := 50.0
 ## Behind him, over his shoulder, down the ramp at the crowd (R-CJ).
 const OVER_SHOULDER_FOV := 50.0
@@ -618,7 +693,7 @@ const RING_BEHIND_OUT_FOV := 52.0
 ## The closing wide from the far end of the hall, under the rig (2K26 Cody
 ## 1:46-1:55, Roman 4:26-4:30).
 const END_WIDE_AT := Vector3(0.0, RIG_CLEAR_Y, 15.5)
-const END_WIDE_LOOK := Vector3(0.0, 1.6, 0.0)
+const END_WIDE_LOOK := Vector3(0.0, 0.5, 0.0)
 const END_WIDE_FOV := 46.0
 ## Inside the ring, low, behind him as he comes through the ropes (C-SNME).
 const RING_BEHIND_FOV := 70.0
@@ -644,7 +719,7 @@ const CROWD_FAR_AT := Vector3(-3.8, 1.6, 2.0)
 const CROWD_FAR_LOOK := Vector3(-15.0, 4.8, 9.0)
 ## The dark house from high on the side, the ring and the floor rows, the
 ## stage out of frame.
-const ARENA_DARK_LOOK := Vector3(-4.0, 0.5, -2.0)
+const ARENA_DARK_LOOK := Vector3(-4.0, -1.0, -2.0)
 ## 2K26's walking shot: ahead of him at chest height, a normal lens.
 const STEADICAM_FRONT_AHEAD := 2.6
 const STEADICAM_FRONT_HEIGHT := 1.4
@@ -2535,15 +2610,16 @@ static func _flat(v: Vector3) -> Vector3:
 ## fade (EntrancePyro.VOLLEYS, WHOA_VOLLEYS).
 const PYRO_WIDE_SECONDS := {"opening": 4.5, "stage": 4.5, "roman": 5.0, "cody_hit": 6.5,
 		"cody_punch": 4.5, "over_ring": 4.0}
-## Over the set: from high over the ring's stage-side ropes, down the ramp, the
+## Over the set: from the stage side of the ring rig (2 Nov: from over the
+## ropes it looked up through the rig's lines), down the ramp, the
 ## deck at the bottom of frame and the bursts 20 m up at the top.
-const PYRO_SET_WIDE_AT := Vector3(0.0, 4.5, -3.6)
+const PYRO_SET_WIDE_AT := Vector3(0.0, 4.5, -12.0)
 const PYRO_SET_WIDE_LOOK := Vector3(0.0, 9.0, -31.0)
 const PYRO_SET_WIDE_FOV := 64.0
 ## Over the ring: from the hard-camera side, high, the four corners' shells in.
-const PYRO_RING_WIDE_AT := Vector3(0.0, 5.5, 13.0)
-const PYRO_RING_WIDE_LOOK := Vector3(0.0, 4.0, 0.0)
-const PYRO_RING_WIDE_FOV := 60.0
+const PYRO_RING_WIDE_AT := Vector3(0.0, 5.0, 13.0)
+const PYRO_RING_WIDE_LOOK := Vector3(0.0, 0.0, 0.0)
+const PYRO_RING_WIDE_FOV := 56.0
 var _pyro_wide_ticks := 0
 var _pyro_wide_ring := false
 var _pyro_wide_cut := false
@@ -2683,13 +2759,16 @@ func _frame_shot(beat: Dictionary, delta: float, force_cut := false) -> void:
 					+ Vector3.UP * STEADICAM_LOW_HEIGHT,
 					w.global_position + Vector3.UP * 1.55, STEADICAM_LOW_FOV, first, delta)
 		"arena_high":
-			_camera.set_entrance_shot(ARENA_HIGH_AT, w.global_position + Vector3.UP * 1.0,
-					ARENA_HIGH_FOV, true)
+			_camera.set_entrance_shot(ARENA_HIGH_AT, rig_clear_look(ARENA_HIGH_AT,
+					w.global_position + Vector3.UP * 1.0, ARENA_HIGH_FOV), ARENA_HIGH_FOV, true)
 		"over_shoulder":
 			var f5 := _flat(-w.global_transform.basis.z).normalized()
 			var r5 := w.global_transform.basis.x
-			_camera.set_entrance_shot(w.global_position - f5 * 1.8 + r5 * 0.45
-					+ Vector3.UP * 1.8, w.global_position + f5 * 12.0 + Vector3.UP * 0.8,
+			# Tipped under the ring rig: from the ramp, level, the grid was
+			# across the top of the walk's wide (2 Nov, tmp rig probe).
+			var at5 := w.global_position - f5 * 1.8 + r5 * 0.45 + Vector3.UP * 1.8
+			_camera.set_entrance_shot(at5, rig_clear_look(at5,
+					w.global_position + f5 * 12.0 + Vector3.UP * 0.8, OVER_SHOULDER_FOV),
 					OVER_SHOULDER_FOV, first, delta)
 		"ramp_low_wide":
 			_camera.set_entrance_shot(RAMP_LOW_WIDE_AT, w.global_position + Vector3.UP * 2.2,

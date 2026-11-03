@@ -429,7 +429,13 @@ const WALL_EXTENT_X := 38.0
 ## been sitting on.
 const WALL_TOP := 25.0
 const ROOF_Y := 21.0
-const TRUSS_Y := 7.6
+## The ring rig's grid, over the mat (the floor is 1.1 m under it): 10.3 m
+## over the arena floor, mid-range for a TV ring truss (~9-11 m). It was 7.6
+## -- 28 ft over the floor, the low end -- and the high wides under it could
+## not frame the stage without its far lines across the top of the shot (the
+## owner, 2 Nov: "I can still see the light rigging during the intros ...
+## check if the rigging position is correct").
+const TRUSS_Y := 9.2
 
 # --- The Blender model ------------------------------------------------------
 ## The bowl and shell mesh, built by `tools/blender/arena_bowl.py` from the

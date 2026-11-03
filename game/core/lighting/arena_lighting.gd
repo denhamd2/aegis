@@ -45,7 +45,7 @@ class_name ArenaLighting
 # --- Geometry this rig hangs on (read from the hall, never written) ---------
 ## ArenaBuilder.TRUSS_Y. Key fixtures hang just under the grid so the truss
 ## reads as the thing they are hung from.
-const TRUSS_Y := 7.6
+const TRUSS_Y := 9.2
 const HANG_Y := TRUSS_Y - 0.35
 ## ArenaBuilder.ROOF_Y. Up from 14.0 with the hall: the building is now built
 ## around a regulation rink and carries its roof steel where an arena does.
@@ -75,6 +75,10 @@ const STAGE_BACK_Z := -38.0
 const KEY_OFFSET := 3.9
 ## Top fills at (0, HANG_Y + 0.2, +-TOP_OFFSET_Z).
 const TOP_OFFSET_Z := 2.1
+## The ring grid's outer box (its PAR rows hang under it) and how far its
+## lines run out from the centre. overhead_rig.py builds the steel from these.
+const RIG_GRID_OUTER := 7.5
+const RIG_GRID_REACH := 11.0
 ## Beams: the plan curve BEAM_INSET inside the bowl's first row, BEAM_DROP
 ## under the roof.
 const BEAM_INSET := 3.5
@@ -90,13 +94,17 @@ const STAGE_WASH_DZ := 21.0
 ## deck in front of the LED walls, firing narrow beams up and out through the
 ## haze. Still named Accent* -- EntranceDirector tints and boosts each man's
 ## side of them on his cues.
-const ACCENT_Y := ArenaBuilder.STAGE_DECK_Y + 0.35
+## How far over the deck the accents sit (a plain number: overhead_rig.py
+## reads it to hang their boom).
+const ACCENT_DECK_RISE := 0.35
+const ACCENT_Y := ArenaBuilder.STAGE_DECK_Y + ACCENT_DECK_RISE
 const ACCENT_DZ := 2.4
 const ACCENT_NEAR_X := 3.1
 const ACCENT_FAR_X := 6.9
 ## Rim pair, off the upstage line of the ring grid.
 const RIM_X := 6.4
-const RIM_Y := 6.9
+## TRUSS_Y - 0.7, off the grid on its drop arms (a literal: overhead_rig.py reads it).
+const RIM_Y := 8.5
 const RIM_Z := -7.2
 ## Height of a fixture's clamp face above its head's tilt axis -- where the
 ## steel starts. `tools/blender/overhead_rig.py` builds to the same number.
@@ -107,9 +115,15 @@ const FIXTURE_TOP := 0.32
 ## the far half of the mat; that overlap is what keeps the mat's luminance
 ## flat enough to be an exposure ANCHOR rather than a hot spot with a number
 ## attached.
-@export var key_energy: float = 6.8
+## 6.8 -> 8.7 and KEY_ANGLE 40 -> 36 when the rig went up 1.6 m (2 Nov): the
+## same light on the mat from 1.15x further off. Spot falloff here is
+## distance^-spot_attenuation (1.6) inside the range window, so the level
+## scales by (10.43/9.11)^1.6 x the window's 0.959/0.930 = 1.28, and the cone
+## narrows by the same distance ratio so the pool on the canvas keeps its size.
+@export var key_energy: float = 8.7
+const KEY_ANGLE := 36.0
 ## The key fixture's emitting size, in metres, for PCSS soft shadows. A large
-## truss wash or profile has a 0.3-0.4 m front lens. From 7.25 m up that
+## truss wash or profile has a 0.3-0.4 m front lens. From 8.85 m up that
 ## makes a penumbra about 9 cm wide under a shoulder 1.5 m off the mat
 ## (0.35 x 1.5 / 5.75), and
 ## none at the feet: sharp where a body touches the canvas, soft away from it,
@@ -166,7 +180,10 @@ const TOP_LIGHT_SIZE := 0.18
 ## onto the bodies. Measured on the gameplay and hard cameras (match_look.tscn,
 ## Vulkan): mat 0.65 -> 0.45, skin p75 0.24 -> 0.29 (2K26 0.31), frame above
 ## 0.5 from 22% -> 4-8% (2K26 7%), white balance B/G 1.09 -> 1.17 (2K26 1.16).
-@export var top_energy: float = 18.5
+## 18.5 -> 26.5 and TOP_ANGLE 52 -> 46.5 with the rig raise (2 Nov), the same
+## arithmetic as key_energy's: (9.05/7.45)^1.6 x 0.962/0.918 = 1.43.
+@export var top_energy: float = 26.5
+const TOP_ANGLE := 46.5
 ## Cool back/rim pair.
 ##
 ## THE CLAIM BELOW IS WRONG, and it is left standing with its correction
@@ -192,12 +209,14 @@ const TOP_LIGHT_SIZE := 0.18
 ## nothing. The gap was closed on the attire instead -- see match.tscn.
 ## Raised 2.2 -> 4.0 in the 2K26 round (item 4): the bright edge on heads and
 ## shoulders against the crowd is what reviewers mean by the ring "popping".
-@export var rim_energy: float = 2.0
+## 2.0 -> 2.25 with the rig raise (12.7 m from its aim, was 11.9).
+@export var rim_energy: float = 2.25
 ## House wash on the seating bowl. Sized against VISUAL_BAR.md's 0.014 crowd.
 @export var house_energy: float = 0.20
 ## New.png's front rows receive motivated light, with their photographic
 ## materials supplying detail. These outward-facing washes stay off the mat.
-@export var audience_energy: float = 6.2
+## 6.2 -> 7.45 with the rig raise (11.6 m to the first rows, was 10.3).
+@export var audience_energy: float = 7.45
 const AUDIENCE_COLOR := Color(1.0, 0.95, 0.89)
 const AISLE_COLOR := Color(0.16, 0.33, 1.0)
 const AISLE_ENERGY := 8.0
@@ -798,7 +817,7 @@ func _build_ring_key() -> void:
 			var aim := Vector3(-sx * 1.35, 0.0, -sz * 1.35)
 			var light := _spot("Key%s%s" % [
 					"E" if sx > 0.0 else "W", "N" if sz > 0.0 else "S"],
-					at, aim, KEY_COLOR, key_energy, 40.0, 0.5, 24.0, true)
+					at, aim, KEY_COLOR, key_energy, KEY_ANGLE, 0.5, 24.0, true)
 			# These are the fixtures the shafts come out of.
 			light.light_volumetric_fog_energy = 1.6
 			# Contact-hardening shadows (refs/aaa_gap.md item 8): a truss
@@ -841,7 +860,7 @@ func _build_top_fill() -> void:
 		var at := Vector3(0.0, HANG_Y + 0.2, sz * TOP_OFFSET_Z)
 		var light := _spot("Top%s" % ("N" if sz > 0.0 else "S"), at,
 				at + Vector3(0.0, -1.0, 0.0), TOP_COLOR, top_energy,
-				52.0, 0.7, 20.0, true)
+				TOP_ANGLE, 0.7, 20.0, true)
 		light.light_volumetric_fog_energy = 0.8
 		# Soft shadows (refs/aaa_gap.md item 8). These two are the strongest
 		# light on the mat, and without shadows they filled in every shadow

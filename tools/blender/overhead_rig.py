@@ -62,11 +62,10 @@ import bpy_exit  # noqa: E402
 LIGHTING_GD = venue.REPO / "game" / "core" / "lighting" / "arena_lighting.gd"
 LIGHTING_WANTED = [
     "TRUSS_Y", "ROOF_Y", "BOWL_INNER", "STAGE_BACK_Z",
-    "KEY_OFFSET", "TOP_OFFSET_Z", "BEAM_INSET", "BEAM_DROP",
+    "KEY_OFFSET", "TOP_OFFSET_Z", "RIG_GRID_OUTER", "RIG_GRID_REACH", "BEAM_INSET", "BEAM_DROP",
     "HOUSE_INSET", "HOUSE_DROP", "STAGE_WASH_X", "STAGE_WASH_Y",
-    "STAGE_WASH_DZ", "ACCENT_Y", "ACCENT_DZ", "ACCENT_FAR_X",
+    "STAGE_WASH_DZ", "ACCENT_DECK_RISE", "ACCENT_DZ", "ACCENT_FAR_X",
     "RIM_X", "RIM_Y", "RIM_Z",
-    "UPLIGHT_NEAR_X", "UPLIGHT_FAR_X", "UPLIGHT_Y", "UPLIGHT_DZ",
 ]
 ARENA_WANTED = ["FLOOR_Y", "STAGE_DECK_Y", "STAGE_HALF_WIDTH"]
 
@@ -78,9 +77,9 @@ FIXTURE_TOP = 0.32
 ## perimeter rings span further and carry more, so they are the heavier 0.52.
 RING_GRID_SIZE = 0.42
 PERIMETER_SIZE = 0.52
-## The ring grid's outer lines and reach, unchanged from entrance_set.py.
-GRID_OUTER = 7.5
-GRID_REACH = 11.0
+## The ring grid's outer lines and reach are ArenaLighting.RIG_GRID_OUTER and
+## RIG_GRID_REACH (7.5 and 11.0, unchanged from entrance_set.py): the game's
+## EntranceDirector.rig_in_frame keeps its wide shots off the same steel.
 
 ## No LED strips on the truss any more. They were cyan tubes under every
 ## outer chord and round both perimeter rings, off the wide AEW still; the
@@ -206,25 +205,27 @@ def build_ring_grid(lc: dict[str, float], parts: dict[str, Part]) -> None:
     otherwise have been buried in.
     """
     hang_y = lc["TRUSS_Y"] - 0.35
+    grid_outer = lc["RIG_GRID_OUTER"]
+    grid_reach = lc["RIG_GRID_REACH"]
     y = hang_y + FIXTURE_TOP + RING_GRID_SIZE * 0.5
-    offsets = (-GRID_OUTER, -lc["KEY_OFFSET"], lc["KEY_OFFSET"], GRID_OUTER)
+    offsets = (-grid_outer, -lc["KEY_OFFSET"], lc["KEY_OFFSET"], grid_outer)
     # LED strips on the outer box only. In the references the edge lines trace
     # the rig's outline; lit on every line, the inner pair criss-crossed the
     # frame over the ring on every upward shot.
     for offset in offsets:
-        outer = abs(offset) == GRID_OUTER
-        truss_run(parts, Vector((-GRID_REACH, y, offset)),
-                  Vector((GRID_REACH, y, offset)), RING_GRID_SIZE, led=outer)
-        truss_run(parts, Vector((offset, y, -GRID_REACH)),
-                  Vector((offset, y, GRID_REACH)), RING_GRID_SIZE, led=outer)
-    for x in (-GRID_OUTER, GRID_OUTER):
-        for z in (-GRID_OUTER, GRID_OUTER):
+        outer = abs(offset) == grid_outer
+        truss_run(parts, Vector((-grid_reach, y, offset)),
+                  Vector((grid_reach, y, offset)), RING_GRID_SIZE, led=outer)
+        truss_run(parts, Vector((offset, y, -grid_reach)),
+                  Vector((offset, y, grid_reach)), RING_GRID_SIZE, led=outer)
+    for x in (-grid_outer, grid_outer):
+        for z in (-grid_outer, grid_outer):
             drop_line(parts, Vector((x, y + RING_GRID_SIZE * 0.5, z)),
                       lc["ROOF_Y"] - 1.3)
     # Rows of PAR cans under the outer box, aimed in at the ring.
     chord = y - RING_GRID_SIZE * 0.5 - 0.02
     ring = Vector((0.0, 0.0, 0.0))
-    o = GRID_OUTER
+    o = grid_outer
     for a, b in ((Vector((-o, chord, -o)), Vector((o, chord, -o))),
                  (Vector((o, chord, -o)), Vector((o, chord, o))),
                  (Vector((o, chord, o)), Vector((-o, chord, o))),
@@ -244,7 +245,7 @@ def build_ring_grid(lc: dict[str, float], parts: dict[str, Part]) -> None:
     chord_y = y - RING_GRID_SIZE * 0.5
     for sx in (-1.0, 1.0):
         x = sx * lc["RIM_X"]
-        parts["RigTruss"].tube([Vector((x, chord_y, -GRID_OUTER)),
+        parts["RigTruss"].tube([Vector((x, chord_y, -grid_outer)),
                                 Vector((x, lc["RIM_Y"] + FIXTURE_TOP, lc["RIM_Z"]))],
                                0.03, sides=8)
 
@@ -262,7 +263,8 @@ def build_perimeter(cfg: dict[str, float], lc: dict[str, float],
 
 def build_stage_steel(lc: dict[str, float], ac: dict[str, float],
                       parts: dict[str, Part]) -> None:
-    """The stage-wash truss, the accent boom and the uplight stands."""
+    """The stage-wash truss and the accent boom. (The uplights and their
+    stands went when arena_lighting.gd dropped the uplights.)"""
     z = lc["STAGE_BACK_Z"] + lc["STAGE_WASH_DZ"]
     y = lc["STAGE_WASH_Y"] + FIXTURE_TOP + PERIMETER_SIZE * 0.5
     reach = lc["STAGE_WASH_X"] + 2.0
@@ -274,23 +276,13 @@ def build_stage_steel(lc: dict[str, float], ac: dict[str, float],
     # Accent boom: a pipe across the set just above the accents, on two
     # uprights standing on the deck outside the portal rings.
     bz = lc["STAGE_BACK_Z"] + lc["ACCENT_DZ"]
-    by = lc["ACCENT_Y"] + FIXTURE_TOP + 0.03
+    by = ac["STAGE_DECK_Y"] + lc["ACCENT_DECK_RISE"] + FIXTURE_TOP + 0.03
     post = ac["STAGE_HALF_WIDTH"] - 0.1
     parts["RigTruss"].tube([Vector((-post, by, bz)), Vector((post, by, bz))],
                            0.035, sides=8)
     for sx in (-1.0, 1.0):
         parts["RigTruss"].tube([Vector((sx * post, ac["STAGE_DECK_Y"], bz)),
                                 Vector((sx * post, by + 0.05, bz))], 0.045, sides=8)
-
-    # Uplights stand on the arena floor beside the set: a short pole each.
-    uz = lc["STAGE_BACK_Z"] + lc["UPLIGHT_DZ"]
-    top = lc["UPLIGHT_Y"] - FIXTURE_TOP
-    for sx in (-1.0, 1.0):
-        for x in (lc["UPLIGHT_NEAR_X"], lc["UPLIGHT_FAR_X"]):
-            parts["RigTruss"].tube([Vector((sx * x, ac["FLOOR_Y"], uz)),
-                                    Vector((sx * x, top, uz))], 0.04, sides=8)
-            parts["RigTruss"].cylinder(Vector((sx * x, ac["FLOOR_Y"], uz)),
-                                       Vector((0.0, 1.0, 0.0)), 0.25, 0.03, sides=12)
 
 
 def build_roof_steel(cfg: dict[str, float], lc: dict[str, float],

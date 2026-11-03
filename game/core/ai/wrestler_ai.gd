@@ -529,6 +529,18 @@ const TAUNT_WINDOW := 12
 var _setup_taunted := false
 var _power_taunted := false
 var _ladder_attempted_for_down := false
+## Ticks spent walking to a ladder's foot this knockdown, and the most he
+## spends before he leaves it for the cover.
+var _ladder_walk_ticks := 0
+const LADDER_WALK_GIVE_UP := 240
+## Ladder dives he goes up for in a match: the spot, not a routine.
+const LADDER_CLIMBS_MAX := 2
+var ladder_climbs := 0
+
+
+## On his way to the foot of a ladder he stood up, for the dive.
+func going_for_ladder() -> bool:
+	return _ladder_walk_ticks > 0 and not _ladder_attempted_for_down
 
 
 func _wants_taunt() -> bool:
@@ -565,6 +577,32 @@ var _spear_spot := Vector3.INF
 var _spear_ticks := 0
 
 
+## The Spear out of nowhere (2 Nov: in flow_probe seed 1 Cody, the story's
+## winner, had the whole comeback and never stayed down long enough for the
+## stalk, and the Spear never came). In the comeback or the finish, with it
+## up, both men in the ring and the other man on his feet SPEAR_NOWHERE_FROM
+## away, he runs at him -- at most once per SPEAR_NOWHERE_COOLDOWN.
+const SPEAR_NOWHERE_FROM := Vector2(2.5, 7.0)
+const SPEAR_NOWHERE_COOLDOWN := 600
+var _nowhere_cooldown := 0
+
+
+func _wants_spear_from_nowhere(distance: float) -> bool:
+	if _nowhere_cooldown > 0:
+		_nowhere_cooldown -= 1
+		return false
+	if controller.finisher_run_move == null or target.dead or controller.flow == null:
+		return false
+	if controller.outside_ring or target.outside_ring or not controller.combat.can_finisher():
+		return false
+	if String(controller.flow.phase()["name"]) not in ["comeback", "finish"]:
+		return false
+	if distance < SPEAR_NOWHERE_FROM.x or distance > SPEAR_NOWHERE_FROM.y:
+		return false
+	var standing := [WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION]
+	return controller.fsm.is_in(standing) and target.fsm.is_in(standing)
+
+
 ## The terms on which he would go for the finish by a lock-up
 ## (_wants_signature_tie_up), with a man down in the ring and a Spear to run.
 func _wants_spear_stalk() -> bool:
@@ -576,6 +614,10 @@ func _wants_spear_stalk() -> bool:
 		return false
 	var flow := controller.flow
 	if flow and flow.winner == controller and flow.finish_allowed():
+		return true
+	# The comeback's near-fall: his finisher is up and the man is down --
+	# build to it, ripe or not (MatchFlow gives each man one).
+	if flow and String(flow.phase()["name"]) == "comeback":
 		return true
 	return _opponent_is_ripe()
 
@@ -709,6 +751,11 @@ func _poll_input() -> Dictionary:
 		return {"submission_hold": true}
 	if controller.fsm.current_state == WrestlerFSM.State.DOWN \
 			and controller.is_ai and not controller.dead:
+		# He sells while the other man goes up the ladder over him: up in the
+		# second it took to reach its foot, the dive never came (nhb seed 4).
+		if target.fsm.current_state == WrestlerFSM.State.LADDER_CLIMB \
+				or (target.ai and target.ai.going_for_ladder()):
+			return {"strike": false}
 		return {"strike": controller.fsm.ticks_in_state >= AI_DOWN_RECOVERY_DELAY_TICKS}
 	if controller.fsm.current_state == WrestlerFSM.State.TIE_UP:
 		if _tie_up_tick == 0:
@@ -762,8 +809,16 @@ func _poll_input() -> Dictionary:
 		return input
 	if _roll_guard():
 		return {"guard": true}
-	# No Holds Barred: out for a weapon, or using the one in his hands.
-	var armed := _weapon_input(input, to_target, distance)
+	# No Holds Barred: out for a weapon, or using the one in his hands --
+	# unless a ladder he stood up is ready for its dive: then up it, not off
+	# for another weapon (nhb_weapon_probe seed 1, 2 Nov: he stood it up
+	# over Cody and walked away to fetch a chair).
+	if not controller.has_weapon() and _weapon_plan == WeaponPlan.FETCH \
+			and not _ladder_attempted_for_down and _ladder_to_climb() != null:
+		_weapon_plan = WeaponPlan.NONE
+	var armed := {} if _weapon_plan == WeaponPlan.NONE and not controller.has_weapon() \
+			and not _ladder_attempted_for_down and _ladder_to_climb() != null \
+			else _weapon_input(input, to_target, distance)
 	if not armed.is_empty():
 		return armed
 	# He took it back into the ring: there he waits for the other man.
@@ -780,6 +835,15 @@ func _poll_input() -> Dictionary:
 		var stalk := _spear_stalk_input(input, to_target, distance)
 		if not stalk.is_empty():
 			return stalk
+	# Or out of nowhere: the man is standing across the ring, the Spear is
+	# there, and Roman runs it in (_wants_spear_from_nowhere).
+	if _spear_stalk == 0 and _wants_spear_from_nowhere(distance):
+		_spear_stalk = STALK_CHARGE
+		_spear_ticks = SPEAR_STALK_TICKS / 2
+		_nowhere_cooldown = SPEAR_NOWHERE_COOLDOWN
+		var charge := _spear_stalk_input(input, to_target, distance)
+		if not charge.is_empty():
+			return charge
 	# Opponent is down: walk in for the cover instead of continuing to
 	# strike/grapple decisions below. MatchReferee triggers the pin once
 	# this wrestler is within its cover range and idle/moving.
@@ -793,13 +857,42 @@ func _poll_input() -> Dictionary:
 	# line would clip them.
 	if target.fsm.current_state != WrestlerFSM.State.DOWN:
 		_ladder_attempted_for_down = false
+		_ladder_walk_ticks = 0
 		_strut_armed = true
 		_strut_point = Vector3.INF
 	if target.fsm.current_state == WrestlerFSM.State.DOWN:
-		if not target.dead and not _ladder_attempted_for_down and not controller.outside_ring \
-				and controller.climbable_ladder_nearby() != null:
-			_ladder_attempted_for_down = true
-			return {"climb_ladder": true}
+		# A ladder stood up by him, the dive on (_ladder_to_climb): to its
+		# foot and up. It used to be one press from wherever he stood, and
+		# from 1.2 m off the ladder that press missed its foot and he never
+		# tried again (nhb_weapon_probe seed 4, 2 Nov).
+		var climb := _ladder_to_climb() if not target.dead and not _ladder_attempted_for_down else null
+		if climb:
+			var foot := climb.global_transform * Vector3(0.0, 0.0, -WrestlerController.LADDER_FRONT_OFFSET)
+			var to_foot := _flat(foot - controller.global_position)
+			_ladder_walk_ticks += 1
+			if _ladder_walk_ticks > LADDER_WALK_GIVE_UP:
+				_ladder_attempted_for_down = true
+			# Within the climb's own reach is enough -- begin_ladder_climb sets
+			# him on the foot. Held off it by the man lying beside it, he
+			# stood 1.4 m off at 0.7 x the reach and never pressed (seed 1).
+			elif to_foot.length() <= WrestlerController.LADDER_INTERACT_REACH - 0.1:
+				_ladder_attempted_for_down = true
+				ladder_climbs += 1
+				return {"climb_ladder": true}
+			else:
+				# Round the ladder, not into it: from behind it the straight
+				# line to its foot ran into its legs and he walked on the spot
+				# (nhb_weapon_probe seed 1, 2 Nov). To its side first.
+				var front := _flat(foot - climb.global_position).normalized()
+				var rel := _flat(controller.global_position - climb.global_position)
+				var goal := foot
+				if rel.dot(front) < 0.3:
+					var side := front.cross(Vector3.UP).normalized()
+					if rel.dot(side) < 0.0:
+						side = -side
+					goal = climb.global_position + side * 1.0 + front * 0.4
+				var step := _flat(goal - controller.global_position).normalized()
+				return {"move": Vector2(step.x, step.z)}
 		# A dead opponent is a finish, not an invitation to play to the crowd.
 		# Walk straight to the cover so the referee can count the pin.
 		# Off his own finisher he covers at once: no taunt, no strut. Measured,
@@ -1640,7 +1733,14 @@ const REPEAT_WEAPON_DIVISOR := 4.0
 ## Weapon id -> times picked this match.
 var _picked_weapons := {}
 ## Swings before he drops it, and how long a fetch may take before he gives up.
-const WEAPON_SWINGS := 4
+## (2 Nov: "ensure they don't overuse one weapon": three swings, not four.)
+const WEAPON_SWINGS := 3
+## A weapon he has used this many times this match he leaves lying: he goes
+## for another rather than picking the same chair up again.
+const REUSE_MAX := 2
+## Weapon id -> times he has had it in his hands this match (rummaged,
+## fetched, picked up loose or taken off the other man).
+var used_weapons := {}
 const FETCH_GIVE_UP_TICKS := 1500
 const USE_GIVE_UP_TICKS := 1800
 ## A throwable thrown from this far, this often.
@@ -1672,8 +1772,10 @@ const SET_DOWN_FROM := 1.9
 ## there -- carried through the ropes, or slid under the bottom one first
 ## SLIDE_IN_SHARE of those times -- and one fetched from the stage less
 ## often, so the walk back down the ramp is where that fight happens.
-const IN_RING_USE := 0.65
-const IN_RING_USE_FROM_STAGE := 0.3
+## (2 Nov: "more time battling outside the ring ... using the full selection
+## of weapons": most weapons are now used where they were found.)
+const IN_RING_USE := 0.35
+const IN_RING_USE_FROM_STAGE := 0.1
 const SLIDE_IN_SHARE := 0.45
 ## A weapon run goes up to the stage's layout this often (when there is one);
 ## otherwise he reaches under the ring.
@@ -1683,7 +1785,11 @@ const STAGE_RUN_CHANCE := 0.4
 const LOOSE_FETCH_REACH := 6.0
 ## With both men out, empty-handed and standing, the one who gets a moment
 ## takes the fight back into the ring after this long on the floor (ticks).
-const OUTSIDE_SPELL := Vector2i(600, 1080)
+## The owner, 2 Nov: "the wrestlers are coming back into the ring a little
+## too much. I want a bit more time battling outside the ring" -- 20-30 s on
+## the floor, from 10-18. (25-40 s put two matches in four outside 70% of
+## the time: more than "a bit".)
+const OUTSIDE_SPELL := Vector2i(1200, 1800)
 ## Having taken it back in, he waits this long in the ring for the other man
 ## to follow rather than going straight back out after him.
 const HOLD_RING_TICKS := 240
@@ -1726,10 +1832,55 @@ func _owns(def: WeaponDef) -> bool:
 	return false
 
 
+## The weapons he has had in his hands REUSE_MAX times: left lying.
+func _spent_weapons() -> Dictionary:
+	var spent := {}
+	for id: StringName in used_weapons:
+		if int(used_weapons[id]) >= REUSE_MAX:
+			spent[id] = true
+	return spent
+
+
+## The owner, 2 Nov: "Ensure there is at least one ladder climb and jump."
+## Past LADDER_DUE_AT into a No Holds Barred match with nobody yet having been
+## up a ladder, his next weapon run is for one: from under the ring, picked for
+## certain, and always taken into the ring (_start_use), where it is stood
+## up by the man he puts down and climbed for the dive (_ladder_to_climb).
+const LADDER_DUE_AT := 150.0
+const LADDER_RUNS_MAX := 2
+
+
+func ladder_due() -> bool:
+	if not MatchRules.no_holds_barred(controller) or controller.flow == null:
+		return false
+	if controller.flow.seconds() < LADDER_DUE_AT:
+		return false
+	# Due until somebody has been up one: a ladder swung and left on the
+	# ramp (nhb_weapon_probe seed 3, 2 Nov) is not the spot the owner asked
+	# for, so the next run is for another.
+	if ladder_climbs > 0 or controller.has_weapon():
+		return false
+	# Twice each, not every run (seed 3 fetched six before the dive).
+	if int(_picked_weapons.get(&"ladder", 0)) >= LADDER_RUNS_MAX:
+		return false
+	var other: WrestlerAI = target.ai if target else null
+	if other and other.ladder_climbs > 0:
+		return false
+	var stock := WeaponStock.of(controller)
+	for a in stock.set_up_pieces():
+		if a.def.id == &"ladder" and a.is_climbable_ladder() \
+				and absf(a.global_position.x) < WrestlerController.RING_KEEP_IN \
+				and absf(a.global_position.z) < WrestlerController.RING_KEEP_IN:
+			return false                # one stands in the ring already
+	return stock.in_stock(&"ladder")
+
+
 ## His pick from under the ring: every weapon in stock, his own weighted up.
 ## Not the set pieces he has no use for (a ladder, the steps' set-up) --
 ## everything in the catalogue can be swung, so all are fair.
 func choose_weapon(rng: RandomNumberGenerator) -> StringName:
+	if ladder_due():
+		return &"ladder"
 	var stock := WeaponStock.of(controller)
 	var ids: Array[StringName] = []
 	var weights: Array[float] = []
@@ -1746,7 +1897,8 @@ func choose_weapon(rng: RandomNumberGenerator) -> StringName:
 				w *= LADDER_WEIGHT
 		elif def.id in CARNAGE_WEAPONS:
 			w *= CARNAGE_WEIGHT
-		w /= pow(REPEAT_WEAPON_DIVISOR, float(_picked_weapons.get(def.id, 0)))
+		w /= pow(REPEAT_WEAPON_DIVISOR, float(maxi(int(_picked_weapons.get(def.id, 0)),
+				int(used_weapons.get(def.id, 0)))))
 		ids.append(def.id)
 		weights.append(w)
 		total += w
@@ -1781,7 +1933,8 @@ func _weapon_input(input: Dictionary, to_target: Vector3, distance: float) -> Di
 				_weapon_ticks = 0
 				_weapon_pick = &""
 				_fetch_inside = false
-				_fetch_from_stage = _weapon_rng().randf() < STAGE_RUN_CHANCE
+				# the ladder is under the ring
+				_fetch_from_stage = not ladder_due() and _weapon_rng().randf() < STAGE_RUN_CHANCE
 				_weapon_runs += 1
 				weapon_runs_started += 1
 			else:
@@ -1804,13 +1957,21 @@ func _weapon_input(input: Dictionary, to_target: Vector3, distance: float) -> Di
 	if _weapon_ticks > FETCH_GIVE_UP_TICKS:
 		_weapon_plan = WeaponPlan.NONE
 		return {}
-	if WeaponStock.of(controller).loose_near(controller.global_position):
+	var spent := _spent_weapons()
+	# The ladder's run is for the ladder: past the chairs lying about, under
+	# the ring for it (nhb_weapon_probe seed 3, 2 Nov: every run picked up
+	# something loose on the way, and the ladder came out with 90 s left).
+	if ladder_due() and not _fetch_inside:
+		for def: WeaponDef in WeaponCatalog.all():
+			if def.id != &"ladder":
+				spent[def.id] = true
+	if WeaponStock.of(controller).loose_near(controller.global_position, spent):
 		input["weapon"] = true          # one lying at his feet will do
 		return input
 	if _fetch_inside and controller.outside_ring:
 		return _into_the_ring(input)
 	var loose := WeaponStock.of(controller).nearest_loose(controller.global_position,
-			not controller.outside_ring, LOOSE_FETCH_REACH * (2.0 if _fetch_inside else 1.0))
+			not controller.outside_ring, LOOSE_FETCH_REACH * (2.0 if _fetch_inside else 1.0), spent)
 	if loose:
 		var to_loose := _flat(loose.global_position - controller.global_position)
 		var toward := to_loose.normalized()
@@ -1855,6 +2016,8 @@ func _wants_weapon() -> bool:
 		return false                    # a table up beside him: him through it first
 	var down := target.fsm.current_state == WrestlerFSM.State.DOWN
 	_weapon_roll = int(WEAPON_ROLL_TICKS / (WEAPON_ROLL_DOWN_SCALE if down else 1.0))
+	if ladder_due():
+		return true
 	return _weapon_rng().randf() < (WEAPON_CHANCE_HEEL if _is_heel() else WEAPON_CHANCE)
 
 
@@ -1880,6 +2043,9 @@ func _start_use() -> void:
 	_weapon_plan = WeaponPlan.USE
 	_weapon_ticks = 0
 	_weapon_swings = 0
+	if controller.held_weapon:
+		var id := controller.held_weapon.def.id
+		used_weapons[id] = int(used_weapons.get(id, 0)) + 1
 	_throw_rolled = false
 	var rng := _weapon_rng()
 	var from_stage := ArenaBuilder.in_entrance_way(controller.global_position)
@@ -2023,6 +2189,7 @@ func _line_up_input(input: Dictionary, to_target: Vector3, distance: float) -> D
 		if controller.climbable_ladder_nearby() == ladder:
 			input["move"] = Vector2.ZERO
 			input["climb_ladder"] = true
+			ladder_climbs += 1
 			return input
 		var to_ladder := _flat(ladder.global_position - controller.global_position)
 		input["move"] = Vector2(to_ladder.normalized().x, to_ladder.normalized().z)
@@ -2205,7 +2372,7 @@ func _desk_spot() -> bool:
 ## A ladder stood up on the safe part of the mat with the other man down in
 ## reach of its landing side, or null (can_start_ladder_aerial's terms).
 func _ladder_to_climb() -> WeaponActor:
-	if controller.outside_ring or target.outside_ring or controller.has_weapon() \
+	if ladder_climbs >= LADDER_CLIMBS_MAX or controller.outside_ring or target.outside_ring or controller.has_weapon() \
 			or target.fsm.current_state != WrestlerFSM.State.DOWN:
 		return null
 	var stock := controller.get_parent().get_node_or_null("WeaponStock") as WeaponStock \
