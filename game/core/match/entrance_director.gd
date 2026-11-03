@@ -97,7 +97,9 @@ const RAMP_SHOWN_SECONDS := 6.0
 
 # --- Timing (ticks at 60 Hz) --------------------------------------------------
 const TPS := 60
-const OPENING_TICKS := 300
+## The cold open's pyro and its three angles (EntrancePyro._opening_show, the
+## owner's AEW Dynamite reference, 3 Nov): ~12.5 s before the crowd cut.
+const OPENING_TICKS := 750
 ## Excalibur's crowd call and Tony's reply before the entrances. Seven seconds
 ## covers both clips and the serialized voice-lane gaps.
 const EXCALIBUR_CROWD_CALL_TICKS := 420
@@ -263,28 +265,31 @@ static func rig_in_frame(at: Vector3, look: Vector3, fov: float, pad_deg := 1.0,
 		if absf(local.y) / depth <= tan_v and absf(local.x) / depth <= tan_h:
 			seen += 1
 	return seen
-## A crane just off the ramp, sweeping across the stage and framing the full
-## rocket flight and burst above the video wall.
-## On the stage side of the ring rig (past ArenaLighting.RIG_GRID_REACH), so
-## the long look up at the rockets has no steel in it (the owner, 2 Nov: "I
-## can still see the light rigging during the intros").
-const OPENING_AT := Vector3(-12.0, 6.0, -12.0)
-const OPENING_LOOK := Vector3(-1.0, 10.0, -37.0)
-const OPENING_FOV := 64.0
-const OPENING_CRANE_TO := Vector3(12.0, 6.0, -12.0)
-const OPENING_CRANE_LOOK_TO := Vector3(1.0, 10.0, -37.0)
-const OPENING_SIGN_SHOT_INDEX := 2
-const OPENING_SIGN_ALT_SHOT_INDEX := 3
+## The cold open, shot as the owner's AEW Dynamite reference is (3 Nov):
+##   0-5 s    the dark hall: a long lens from behind the ring, down the hall
+##            to the stage, the flame chase and the rockets small and bright
+##            at the end of it, pushing in a little (low enough, and tight
+##            enough, that the ring rig is over the top of frame);
+##   5-9 s    in close on the wall, handheld, the flames and rockets past it;
+##   9-12.6   low from the side of the deck for the concussion;
+##   12.6-15  the crowd: two cuts on the Enda sign as the house roars;
+##   15 on    the stage master, the deck movers sweeping, into the entrance.
+## [start seconds, camera, look, lens].
+const OPENING_AT := Vector3(0.0, 2.0, 18.0)
+const OPENING_LOOK := Vector3(0.0, 4.5, -33.0)
+const OPENING_FOV := 18.0
+const OPENING_CRANE_TO := Vector3(0.0, 2.0, 16.5)
+const OPENING_CRANE_LOOK_TO := Vector3(0.0, 4.6, -33.0)
+const OPENING_SIGN_SHOT_INDEX := 3
+const OPENING_SIGN_ALT_SHOT_INDEX := 4
 const OPENING_SIGN_CUE := "opening_enda_sign_raise"
-## Timed broadcast montage: sweeping crane on the stage, a second stage-facing
-## angle for the next rocket volley, two crowd cuts on the raised Enda sign,
-## then a clean stage master. [start seconds, camera, look, lens].
 const OPENING_SHOTS := [
 	[0.0, OPENING_AT, OPENING_LOOK, OPENING_FOV],
-	[4.0, Vector3(-10.0, 4.5, -12.0), Vector3(0.0, 10.0, -37.0), 64.0],
-	[8.5, Vector3(4.8, 2.0, -3.8), Vector3(8.05, 1.7, -3.6), 39.0],
-	[9.75, Vector3(4.4, 2.1, -2.8), Vector3(8.05, 1.7, -3.6), 36.0],
-	[11.0, Vector3(0.0, 6.0, -12.0), Vector3(0.0, 10.0, -37.0), 64.0],
+	[5.0, Vector3(-4.0, 2.2, -21.0), Vector3(0.5, 6.0, -35.0), 42.0],
+	[9.0, Vector3(-13.0, 1.0, -24.0), Vector3(0.0, 4.5, -32.0), 50.0],
+	[12.6, Vector3(4.8, 2.0, -3.8), Vector3(8.05, 1.7, -3.6), 39.0],
+	[13.8, Vector3(4.4, 2.1, -2.8), Vector3(8.05, 1.7, -3.6), 36.0],
+	[15.0, Vector3(0.0, 6.0, -12.0), Vector3(0.0, 5.5, -37.0), 44.0],
 ]
 ## The stage: from down the ramp, on a long lens, so the set fills the frame
 ## behind him.
@@ -987,12 +992,11 @@ func _freeze(node: Node) -> void:
 ## root line; every beat names its camera shot and whether the card is up.
 func _build_timeline() -> void:
 	_beats.append({"kind": "opening", "ticks": OPENING_TICKS,
-			"events": [[1, "broadcast_open"], [1, "pyro_opening"]]})
+			"events": [[1, "broadcast_open"], [1, "show_dark"], [1, "pyro_opening"]]})
 	# Excalibur and Tony open the broadcast. Justin's match announcement is
 	# cued on the first beat of the first wrestler's entrance below.
 	_beats.append({"kind": "hold", "shot": "opening",
-			"events": [[1, "excalibur_crowd"], [1, "pyro_opening"],
-					[1, OPENING_SIGN_CUE]],
+			"events": [[1, "excalibur_crowd"], [1, OPENING_SIGN_CUE]],
 			"ticks": EXCALIBUR_CROWD_CALL_TICKS})
 	if title_match:
 		_beats.append({"kind": "hold", "shot": "opening", "events": [[1, "title_match"]],
@@ -1012,6 +1016,13 @@ func _build_timeline() -> void:
 			_add_kenny_entrance(w, pair[1], pair[2])
 		else:
 			_add_entrance(w, pair[1], pair[2])
+		if w == _b:
+			# The cold open hands the house back as the first entrance starts:
+			# its dim is the opening's, and _dim_house holds one dim at a time,
+			# so left on it would swallow each man's own (Roman's dim, Cody's
+			# blackout).
+			var first: Dictionary = _beats[first_beat]
+			first["events"] = [[1, "opening_end"]] + (first.get("events", []) as Array)
 		if w == _b and RingAnnouncer.has_call("intro"):
 			# Start Justin's "one fall" call with the opening of the first
 			# entrance, rather than holding the show before the entrance begins.
@@ -1410,7 +1421,27 @@ func _tick_ramp_card(w: WrestlerController) -> void:
 		_card.hide_card()
 
 
+## Held while the match-up screen still covers the arena: nothing starts --
+## no beat, no pyro, no music -- until TitleScreen releases it on
+## MatchStinger.revealing (the owner, 3 Nov: "the pyro actually go off during
+## our loading screen so we don't see them. Ensure nothing starts until the
+## end of the loading screen"). A match started without the stinger is never
+## held. HELD_MAX_TICKS lets go anyway if the release never comes.
+var held := false
+var _held_ticks := 0
+const HELD_MAX_TICKS := 900
+
+
+func release() -> void:
+	held = false
+
+
 func _physics_process(delta: float) -> void:
+	if held:
+		_held_ticks += 1
+		if _held_ticks < HELD_MAX_TICKS:
+			return
+		held = false
 	_update_skip_button()
 	if _done or _beat >= _beats.size():
 		return
@@ -2279,6 +2310,29 @@ static func _secs(from: float, to: float) -> int:
 	return int(round((to - from) * TPS))
 
 
+## The cold open's two events. They used to sit in _set_backlight's match,
+## which only the backlight events reach: the opening's house dim and its
+## pyro never fired, only their sound did (MatchAudio) -- under the match-up
+## screen (the owner, 3 Nov).
+func _opening_event(what: String) -> void:
+	match what:
+		"broadcast_open":
+			_dim_house(true, OPENING_HOUSE_DIM, OPENING_AMBIENT_DIM)
+			if _crowd:
+				_crowd.pop(1.0)
+		"pyro_opening":
+			if _pyro == null:
+				_pyro = EntrancePyro.new()
+				_pyro.name = "EntrancePyro"
+				add_child(_pyro)
+			# No pyro wide: the opening's own shots are its coverage.
+			_pyro.fire("opening")
+			if _lights and _lights.has_method("sync_beat"):
+				_lights.sync_beat(0.5)
+			if _crowd:
+				_crowd.pop(1.0)
+
+
 ## Cody's backlight: one cold spot in his portal behind him, aimed down the
 ## ramp at the camera, so he is a shape against light in the haze.
 func _set_backlight(w: WrestlerController, what: String) -> void:
@@ -2295,19 +2349,6 @@ func _set_backlight(w: WrestlerController, what: String) -> void:
 		_backlight.global_position = w.global_position + Vector3(0.0, 3.4, -2.6)
 		_backlight.look_at(w.global_position + Vector3(0.0, 1.2, 6.0), Vector3.UP)
 	match what:
-		"broadcast_open":
-			_dim_house(true, OPENING_HOUSE_DIM, OPENING_AMBIENT_DIM)
-			if _crowd:
-				_crowd.pop(1.0)
-		"pyro_opening":
-			if _pyro == null:
-				_pyro = EntrancePyro.new()
-				_pyro.name = "EntrancePyro"
-				add_child(_pyro)
-			_pyro.fire("opening")
-			_pyro_wide("opening")
-			if _crowd:
-				_crowd.pop(1.0)
 		"backlight_on":
 			_backlight.light_energy = BACKLIGHT_ENERGY
 			_backlight.visible = true
@@ -2414,6 +2455,12 @@ func _event(w: WrestlerController, what: String) -> void:
 			_dim_house(true, CODY_BLACKOUT, CODY_BLACKOUT_AMBIENT)
 		"backlight_on", "backlight_dim", "backlight_off":
 			_set_backlight(w, what)
+		"broadcast_open", "pyro_opening":
+			_opening_event(what)
+		"opening_end":
+			_dim_house(false)
+			if _lights and _lights.has_method("crowd_sweep"):
+				_lights.crowd_sweep(false)
 		"strobe", "pyro_cody_hit", "pyro_cody_punch":
 			if what == "pyro_cody_hit" and _lights and _lights.has_method("sync_beat"):
 				_lights.sync_beat(CODY_BEAT)
@@ -2669,6 +2716,21 @@ func _frame_shot(beat: Dictionary, delta: float, force_cut := false) -> void:
 			var opening := opening_shot_at(_opening_elapsed)
 			var new_shot := int(opening[0]) != _opening_shot_index
 			_opening_shot_index = int(opening[0])
+			if new_shot and _lights:
+				# The house roars on the cut to it, and the deck movers go wide
+				# over the crowd while the camera is on it.
+				var on_crowd := _opening_shot_index in [OPENING_SIGN_SHOT_INDEX,
+						OPENING_SIGN_ALT_SHOT_INDEX]
+				if _lights.has_method("crowd_sweep"):
+					_lights.crowd_sweep(on_crowd)
+				if on_crowd and _crowd:
+					_crowd.pop(1.0)
+				# The house comes up for the crowd (AEW's crowd shots are lit
+				# faces) and goes back down to the show for the stage master.
+				if on_crowd and _opening_shot_index == OPENING_SIGN_SHOT_INDEX:
+					cue.emit("opening_house_up")
+				elif _opening_shot_index == OPENING_SHOTS.size() - 1:
+					cue.emit("show_dark")
 			if int(opening[0]) in [OPENING_SIGN_SHOT_INDEX, OPENING_SIGN_ALT_SHOT_INDEX]:
 				_opening_sign_shot(first or new_shot, delta,
 						int(opening[0]) == OPENING_SIGN_ALT_SHOT_INDEX)

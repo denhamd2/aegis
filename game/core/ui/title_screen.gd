@@ -423,6 +423,14 @@ func _make_match() -> Node:
 
 func _enter_match(scene: Node) -> void:
 	var tree := get_tree()
+	# Nothing starts under the match-up screen: the opening waits for the
+	# reveal (EntranceDirector.held).
+	if is_instance_valid(_stinger) and not _stinger.is_queued_for_deletion() \
+			and "hold_entrances" in scene:
+		scene.hold_entrances = true
+		_stinger.revealing.connect(func() -> void:
+			if is_instance_valid(scene):
+				scene.release_entrances())
 	var old := tree.current_scene
 	tree.root.add_child(scene)
 	tree.current_scene = scene

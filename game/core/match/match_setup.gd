@@ -33,6 +33,15 @@ var title_match := false
 ## recording until the bell, so tick 0 is the bell whether or not anyone
 ## walked to the ring first, and a replay's end-state hash cannot tell.
 @export var entrances: bool = false
+## TitleScreen sets this when the match-up screen will still be covering the
+## arena: the entrances wait for release_entrances() (EntranceDirector.held).
+var hold_entrances := false
+
+
+func release_entrances() -> void:
+	var director := get_node_or_null("EntranceDirector") as EntranceDirector
+	if director:
+		director.release()
 
 @onready var wrestler_a: WrestlerController = $WrestlerA
 @onready var wrestler_b: WrestlerController = $WrestlerB
@@ -194,9 +203,10 @@ func _ready() -> void:
 		director.bell.connect(_begin_live)
 		# The match look from the introductions on, so the stare-down is lit.
 		director.cue.connect(func(what: String) -> void:
-			if what == "tron_on":
+			# The cold open is a show in the dark (EntrancePyro._opening_show).
+			if what == "tron_on" or what == "show_dark":
 				_set_look(ArenaLighting.Look.ENTRANCE)
-			if what == "lights_up":
+			if what == "lights_up" or what == "opening_house_up":
 				_set_look(ArenaLighting.Look.MATCH))
 		audio.follow(director)
 		crowd.follow(director)
@@ -205,6 +215,7 @@ func _ready() -> void:
 		if referee_actor:
 			referee_actor.follow(director)
 		director.begin(self)
+		director.held = hold_entrances
 		audio.share_voice_lane(director.voice_announcer())
 	else:
 		_begin_live()

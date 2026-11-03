@@ -165,15 +165,15 @@ func test_the_match_intro_and_faceoff_are_kept_brief() -> void:
 
 func test_broadcast_open_uses_stage_facing_pyro_angles_and_the_sign_cutaway() -> void:
 	var opening := EntranceDirector.opening_shot_at(0.0)
-	var stage_side := EntranceDirector.opening_shot_at(5.0)
-	var sign_fan := EntranceDirector.opening_shot_at(9.0)
-	var sign_fan_alt := EntranceDirector.opening_shot_at(10.0)
+	var stage_side := EntranceDirector.opening_shot_at(6.0)
+	var sign_fan := EntranceDirector.opening_shot_at(13.0)
+	var sign_fan_alt := EntranceDirector.opening_shot_at(14.0)
 	var final_stage := EntranceDirector.opening_shot_at(34.0)
 	assert_int(opening[0]).is_equal(0)
 	assert_int(stage_side[0]).is_equal(1)
 	assert_int(sign_fan[0]).is_equal(EntranceDirector.OPENING_SIGN_SHOT_INDEX)
 	assert_int(sign_fan_alt[0]).is_equal(EntranceDirector.OPENING_SIGN_ALT_SHOT_INDEX)
-	assert_int(final_stage[0]).is_equal(4)
+	assert_int(final_stage[0]).is_equal(EntranceDirector.OPENING_SHOTS.size() - 1)
 	assert_float(opening[1].x).is_not_equal(stage_side[1].x)
 	assert_float(stage_side[2].z).is_less(-30.0)
 	assert_float(sign_fan[2].x).is_equal_approx(SignFans.FANS[0][1].x, 0.01)
@@ -1158,3 +1158,26 @@ func test_the_intros_and_the_walk_in_are_crane_moves() -> void:
 	assert_float(float(settle[1])).is_equal(0.0)
 	# under the rig at its highest
 	assert_float(float(top[0])).is_less(EntranceDirector.RIG_CLEAR_Y)
+
+
+## The owner, 3 Nov: "the pyro actually go off during our loading screen so we
+## don't see them. Ensure nothing starts until the end of the loading screen."
+## Held (TitleScreen sets it under the match-up screen), the director does not
+## move a tick or fire a shell until it is released on the reveal.
+func test_nothing_starts_until_the_loading_screen_lifts() -> void:
+	var scene: Node = load(MATCH).instantiate()
+	scene.entrances = true
+	scene.hold_entrances = true
+	add_child(scene)
+	auto_free(scene)
+	var director: EntranceDirector = scene.get_node("EntranceDirector")
+	for i in 20:
+		await get_tree().physics_frame
+	assert_int(director._tick).is_equal(0)
+	assert_int(director._beat).is_equal(0)
+	assert_object(director.get_node_or_null("EntrancePyro")).is_null()
+	scene.release_entrances()
+	for i in 5:
+		await get_tree().physics_frame
+	assert_int(director._tick).is_greater(0)
+	assert_object(director.get_node_or_null("EntrancePyro")).is_not_null()

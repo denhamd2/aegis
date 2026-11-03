@@ -72,7 +72,11 @@ const SHELL_STAGGER := 0.09
 ## Opening volleys have visible launch trails: they leave the stage deck and
 ## travel vertically before bursting above the video wall.
 const OPENING_ROCKET_XS := [-8.0, -4.0, 0.0, 4.0, 8.0]
-const OPENING_ROCKET_RISE := 17.0
+## Up past the top of the video wall (9.75 m) to burst at ~10 m: high enough
+## to clear it, low enough that the long lens down the hall which frames them
+## (EntranceDirector.OPENING_SHOTS) keeps the ring rig and the roof's lamp rows
+## out of shot. They were 17 m up -- small sparkles in the roof's dark.
+const OPENING_ROCKET_RISE := 9.4
 const OPENING_ROCKET_FLIGHT := 1.1
 const OPENING_ROCKET_STAGGER := 0.18
 ## A tight, short comet tail: the launch should read as a rocket, never a
@@ -111,7 +115,7 @@ var _rockets: Array = []
 func fire(cue: String) -> void:
 	match cue:
 		"opening":
-			_opening_volley()
+			_opening_show()
 		"stage":
 			# A generic entrance: a barrage of gold shells over the set.
 			_shell_volley(SET_SHELL_XS, SET_SHELL_HEIGHT, SHELL_GOLD)
@@ -161,6 +165,127 @@ func fire(cue: String) -> void:
 			_flash(Vector3(0.0, 4.5, 0.0), 14.0, 16.0, 0.5)
 
 
+## The cold open, after the owner's AEW Dynamite reference (3 Nov): about ten
+## seconds of gold flame jets chasing along the stage front in time with
+## volleys of comet rockets past the wall, then a multicolour concussion --
+## blue, pink and white bursts low across the deck, a strobe and a wall of
+## smoke -- before the cut to the crowd. Seconds from the cue.
+const OPENING_FLAME_GAP := 0.5
+const OPENING_FLAME_STEPS := 18
+const OPENING_FLAME_HEIGHT := 4.8
+const OPENING_ROCKET_AT := [0.6, 2.6, 4.6, 6.6, 8.2]
+const OPENING_CONCUSSION_AT := 9.3
+const SHELL_PINK := [Color(1.0, 0.85, 0.95), Color(1.0, 0.25, 0.75), Color(0.5, 0.05, 0.4)]
+const CONCUSSION_BLUE := Color(0.25, 0.45, 1.0)
+
+
+func _opening_show() -> void:
+	var deck := ArenaBuilder.STAGE_DECK_Y
+	var z := ArenaBuilder.STAGE_FRONT - 0.6
+	var pairs := opening_flame_steps()
+	for k in pairs.size():
+		var xs: Array = pairs[k]
+		_later(k * OPENING_FLAME_GAP, func() -> void:
+			for i in xs.size():
+				# one light per step: the columns are lit by the pair's first
+				_flame(Vector3(float(xs[i]), deck, z), OPENING_FLAME_HEIGHT, i == 0))
+	for v in OPENING_ROCKET_AT.size():
+		_later(float(OPENING_ROCKET_AT[v]), func() -> void: _opening_rockets(v))
+	_later(OPENING_CONCUSSION_AT, _concussion)
+
+
+## The flame chase: which deck projectors fire on each step -- the outer pair
+## in to the inner and back, and all six together on every fourth.
+static func opening_flame_steps() -> Array:
+	var order := [[-7.4, 7.4], [-5.4, 5.4], [-3.4, 3.4], [-5.4, 5.4]]
+	var steps: Array = []
+	for k in OPENING_FLAME_STEPS:
+		steps.append(FLAME_DECK_XS.duplicate() if k % 4 == 3 else order[k % order.size()])
+	return steps
+
+
+func _opening_rockets(wave: int) -> void:
+	var plan := opening_rocket_plan()
+	var shift := _wave_shift(wave)
+	for i in plan.size():
+		var points: Array = plan[i]
+		var order := absi(i - plan.size() / 2)
+		var colours: Array = SHELL_GOLD if (i + wave) % 2 == 0 else SHELL_WHITE
+		var from: Vector3 = points[0] + Vector3(shift.x, 0.0, 0.0)
+		var to: Vector3 = points[1] + Vector3(shift.x, shift.y * 0.4, 0.0)
+		_later(order * OPENING_ROCKET_STAGGER, func() -> void:
+			_launch_rocket(from, to, colours, order == 0))
+
+
+## The concussion: a line of big coloured bursts low over the deck, a white
+## strobe on it, the stage washed blue, and the smoke it leaves.
+func _concussion() -> void:
+	var colours := [SHELL_BLUE, SHELL_PINK, SHELL_WHITE, SHELL_PINK, SHELL_BLUE]
+	var xs := [-8.0, -4.0, 0.0, 4.0, 8.0]
+	for i in xs.size():
+		var at := Vector3(float(xs[i]), ArenaBuilder.STAGE_DECK_Y + 2.6,
+				ArenaBuilder.STAGE_FRONT - 1.2)
+		var col: Array = colours[i]
+		_later(absi(i - 2) * 0.06, func() -> void: _burst(at, col, 0.95, i == 2))
+		_later(0.22 + absi(i - 2) * 0.06, func() -> void:
+			_burst(at + Vector3(0.0, 2.2, -0.6), colours[(i + 1) % colours.size()], 0.7, false))
+	_flash(Vector3(0.0, 4.0, ArenaBuilder.STAGE_FRONT - 1.5), 60.0, 50.0, 0.18, STROBE_COLOR)
+	_flash(Vector3(0.0, 5.0, ArenaBuilder.STAGE_FRONT - 2.0), 22.0, 40.0, 1.6, CONCUSSION_BLUE, true)
+	_smoke_wall()
+
+
+## The smoke a concussion leaves: grey puffs across the deck front, rising
+## slowly and thinning out over a few seconds.
+func _smoke_wall() -> void:
+	var p := GPUParticles3D.new()
+	var m := ParticleProcessMaterial.new()
+	m.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
+	m.emission_box_extents = Vector3(9.5, 0.4, 0.8)
+	m.direction = Vector3.UP
+	m.spread = 25.0
+	m.initial_velocity_min = 1.2
+	m.initial_velocity_max = 2.4
+	m.gravity = Vector3(0.0, 0.25, 0.0)
+	m.damping_min = 0.6
+	m.damping_max = 1.0
+	m.scale_min = 2.2
+	m.scale_max = 3.6
+	var grow := Curve.new()
+	grow.add_point(Vector2(0.0, 0.5))
+	grow.add_point(Vector2(1.0, 1.6))
+	var grow_tex := CurveTexture.new()
+	grow_tex.curve = grow
+	m.scale_curve = grow_tex
+	var grad := Gradient.new()
+	grad.offsets = PackedFloat32Array([0.0, 0.15, 1.0])
+	grad.colors = PackedColorArray([Color(0.75, 0.75, 0.8, 0.0), Color(0.7, 0.7, 0.75, 0.45),
+			Color(0.5, 0.5, 0.55, 0.0)])
+	var ramp := GradientTexture1D.new()
+	ramp.gradient = grad
+	m.color_ramp = ramp
+	p.process_material = m
+	var quad := QuadMesh.new()
+	quad.size = Vector2(1.0, 1.0)
+	var mat := StandardMaterial3D.new()
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.vertex_color_use_as_albedo = true
+	mat.albedo_texture = _puff()
+	mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	quad.material = mat
+	p.draw_pass_1 = quad
+	p.amount = 140
+	p.lifetime = 4.5
+	p.one_shot = true
+	p.explosiveness = 0.85
+	p.fixed_fps = 60
+	p.visibility_aabb = AABB(Vector3(-14, -2, -4), Vector3(28, 14, 8))
+	add_child(p)
+	p.global_position = Vector3(0.0, ArenaBuilder.STAGE_DECK_Y + 0.6, ArenaBuilder.STAGE_FRONT - 1.0)
+	p.emitting = true
+	_later(p.lifetime + 0.5, p.queue_free)
+
+
 ## Deterministic launch and burst points for the opening salvo, in stage space.
 static func opening_rocket_plan() -> Array:
 	var plan: Array = []
@@ -169,23 +294,6 @@ static func opening_rocket_plan() -> Array:
 				ArenaBuilder.STAGE_FRONT - 0.8)
 		plan.append([from, from + Vector3(0.0, OPENING_ROCKET_RISE, -2.4)])
 	return plan
-
-
-func _opening_volley() -> void:
-	var plan := opening_rocket_plan()
-	for v in VOLLEYS:
-		var shift := _wave_shift(v)
-		for i in plan.size():
-			var points: Array = plan[i]
-			var order := absi(i - plan.size() / 2)
-			var colours: Array = SHELL_GOLD if (i + v) % 2 == 0 else SHELL_WHITE
-			var from: Vector3 = points[0] + Vector3(shift.x, 0.0, shift.z)
-			var to: Vector3 = points[1] + shift
-			var lit := v == 0 or order == 0
-			_later(v * VOLLEY_GAP * 1.4 + order * OPENING_ROCKET_STAGGER,
-					func() -> void: _launch_rocket(from, to, colours, lit))
-	_flash(Vector3(0.0, 5.0, ArenaBuilder.STAGE_FRONT - 2.0), 24.0, 34.0, 0.55,
-			STROBE_COLOR)
 
 
 ## A rocket from `from` to `to` on a short comet tail, bursting there --
@@ -383,6 +491,10 @@ func _spark_mesh(size: float, stretch := 3.0) -> QuadMesh:
 	mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
 	mat.vertex_color_use_as_albedo = true
 	mat.albedo_color = Color(3.0, 2.6, 2.0)   # over 1: they bloom
+	# A soft round glow, not a hard square: untextured, every star drew as a
+	# square of flat colour and a burst read as pixel confetti -- the owner's
+	# "sparkly style" (3 Nov).
+	mat.albedo_texture = _puff()
 	mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
 	quad.material = mat
 	return quad

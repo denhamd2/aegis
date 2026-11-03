@@ -422,9 +422,10 @@ func _on_cue(what: String) -> void:
 		_queue_commentary("excalibur_kenny_resume")
 	match what:
 		"pyro_opening":
-			# A fuller launch-and-burst hit under the entrance-video theme.
-			sfx.play("pyro_bang", 1.0 + ENTRANCE_PYRO_BOOST_DB)
-			sfx.play("pyro_boom", -2.0 + ENTRANCE_PYRO_BOOST_DB)
+			# The cold open's show, sound on its own timings (EntrancePyro.
+			# _opening_show): the flame chase roaring, a launch and a burst for
+			# each rocket wave, and the concussion's hit.
+			_schedule_opening_pyro()
 		"pyro_stage", "pyro_over_ring":
 			sfx.play("pyro_boom", -1.0 + ENTRANCE_PYRO_BOOST_DB)
 		"pyro_roman":
@@ -1119,3 +1120,26 @@ func _hear_bumps(w: WrestlerController, delta: float) -> void:
 	sfx.play_any("bump", db, 0.06)
 	_cooldown[w] = BUMP_COOLDOWN
 	falls.clear()
+
+
+## [seconds, sound, gain dB] for the cold open's pyro, off EntrancePyro's own
+## timings so picture and sound cannot drift apart.
+static func opening_pyro_sounds() -> Array:
+	var out: Array = []
+	for k in range(0, EntrancePyro.OPENING_FLAME_STEPS, 2):
+		out.append([k * EntrancePyro.OPENING_FLAME_GAP, "whoosh", -7.0])
+	for t: float in EntrancePyro.OPENING_ROCKET_AT:
+		out.append([t, "pyro_bang", -3.0])
+		out.append([t + EntrancePyro.OPENING_ROCKET_FLIGHT, "pyro_boom", -4.0])
+	out.append([EntrancePyro.OPENING_CONCUSSION_AT, "pyro_boom", 1.0])
+	out.append([EntrancePyro.OPENING_CONCUSSION_AT, "pyro_bang", 1.0])
+	return out
+
+
+func _schedule_opening_pyro() -> void:
+	for cue: Array in opening_pyro_sounds():
+		var name: String = cue[1]
+		var gain: float = float(cue[2]) + ENTRANCE_PYRO_BOOST_DB
+		get_tree().create_timer(float(cue[0])).timeout.connect(func() -> void:
+			if is_instance_valid(sfx):
+				sfx.play(name, gain))

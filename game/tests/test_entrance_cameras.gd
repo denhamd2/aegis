@@ -48,7 +48,7 @@ func test_no_wide_shot_has_the_rig_in_frame() -> void:
 		var s: Array = EntranceDirector.ROMAN_INTRO_SHOTS[i]
 		shots.append(["roman_intro %d start" % i, s[0], s[2], s[4]])
 		shots.append(["roman_intro %d end" % i, s[1], s[3], s[5]])
-	for t: float in [0.0, 2.0, 4.0, 6.0, 12.0]:
+	for t: float in [0.0, 2.0, 4.9, 6.0, 8.9, 10.0, 13.0, 14.0, 16.0]:
 		var o := EntranceDirector.opening_shot_at(t)
 		shots.append(["opening %.0f s" % t, o[1], o[2], o[3]])
 	for shot: Array in shots:
@@ -87,56 +87,79 @@ func test_stage_wide_clears_the_ring_truss_from_the_led_top_in_sightline() -> vo
 			"LED top should clear the near truss by a visible margin").is_greater(5.0)
 
 
-func test_opening_montage_sweeps_the_stage_then_cuts_to_the_enda_sign() -> void:
-	var crane_start := EntranceDirector.opening_shot_at(0.0)
-	var crane_end := EntranceDirector.opening_shot_at(3.9)
-	var stage_side := EntranceDirector.opening_shot_at(5.0)
-	var sign_fan := EntranceDirector.opening_shot_at(9.0)
-	var sign_fan_alt := EntranceDirector.opening_shot_at(10.0)
-	var stage_master := EntranceDirector.opening_shot_at(11.5)
-	assert_int(crane_start[0]).is_equal(0)
-	assert_int(crane_end[0]).is_equal(0)
-	assert_int(stage_side[0]).is_equal(1)
+## The cold open as the owner's AEW Dynamite reference (3 Nov): the dark hall
+## down a long lens, in close on the wall, low from the side for the
+## concussion, the crowd on the Enda sign, then the stage master.
+func test_opening_montage_follows_the_aew_cold_open() -> void:
+	var hall := EntranceDirector.opening_shot_at(0.0)
+	var hall_end := EntranceDirector.opening_shot_at(4.9)
+	var wall := EntranceDirector.opening_shot_at(6.0)
+	var concussion := EntranceDirector.opening_shot_at(EntrancePyro.OPENING_CONCUSSION_AT)
+	var sign_fan := EntranceDirector.opening_shot_at(13.0)
+	var sign_fan_alt := EntranceDirector.opening_shot_at(14.0)
+	var stage_master := EntranceDirector.opening_shot_at(16.0)
+	assert_int(hall[0]).is_equal(0)
+	assert_int(hall_end[0]).is_equal(0)
+	assert_int(wall[0]).is_equal(1)
+	assert_int(concussion[0]).is_equal(2)
 	assert_int(sign_fan[0]).is_equal(EntranceDirector.OPENING_SIGN_SHOT_INDEX)
 	assert_int(sign_fan_alt[0]).is_equal(EntranceDirector.OPENING_SIGN_ALT_SHOT_INDEX)
-	assert_int(stage_master[0]).is_equal(4)
-	assert_float(crane_end[1].x).is_greater(crane_start[1].x + 15.0)
-	for stage_shot: Array in [crane_start, stage_side, stage_master]:
+	assert_int(stage_master[0]).is_equal(EntranceDirector.OPENING_SHOTS.size() - 1)
+	# down the hall from behind the ring, on a long lens, pushing in
+	assert_float((hall[1] as Vector3).z).is_greater(10.0)
+	assert_float(float(hall[3])).is_less(25.0)
+	assert_float((hall_end[1] as Vector3).z).is_less((hall[1] as Vector3).z)
+	for stage_shot: Array in [hall, wall, concussion, stage_master]:
 		assert_float(stage_shot[2].z).is_less(-30.0)
 	assert_float(sign_fan[2].x).is_equal_approx(SignFans.FANS[0][1].x, 0.01)
 	assert_float(sign_fan[2].z).is_equal_approx(SignFans.FANS[0][1].z, 0.01)
-	assert_float(sign_fan_alt[2].x).is_equal_approx(SignFans.FANS[0][1].x, 0.01)
-	assert_float(sign_fan_alt[2].z).is_equal_approx(SignFans.FANS[0][1].z, 0.01)
-	assert_float(crane_start[3]).is_equal(64.0)
-	assert_float(stage_side[3]).is_equal(64.0)
 	assert_int(EntranceDirector.opening_shot_at(60.0)[0]).is_equal(stage_master[0])
+	# The whole cold open is over by the time the first entrance starts.
+	var opening_seconds := float(EntranceDirector.OPENING_TICKS
+			+ EntranceDirector.EXCALIBUR_CROWD_CALL_TICKS) / EntranceDirector.TPS
+	assert_float(float(EntranceDirector.OPENING_SHOTS[-1][0])).is_less(opening_seconds)
+	assert_float(EntrancePyro.OPENING_CONCUSSION_AT).is_less(
+			float(EntranceDirector.OPENING_SHOTS[EntranceDirector.OPENING_SIGN_SHOT_INDEX][0]))
 
 
-func test_opening_crane_and_stage_angle_fit_every_rocket_burst() -> void:
-	for at_seconds: float in [0.0, 2.0, 3.9, 4.0, 6.0, 8.4]:
+func _in_frame(at: Vector3, look: Vector3, fov: float, p: Vector3) -> bool:
+	var view := Transform3D(Basis().looking_at(look - at, Vector3.UP), at).affine_inverse()
+	var local: Vector3 = view * p
+	if local.z >= 0.0:
+		return false
+	return absf(atan2(local.y, -local.z)) < deg_to_rad(fov) * 0.5 \
+			and absf(atan2(local.x, -local.z)) < atan(tan(deg_to_rad(fov) * 0.5) * 16.0 / 9.0)
+
+
+func test_opening_hall_wide_holds_every_rocket_and_the_wall_shot_the_middle_ones() -> void:
+	var plan := EntrancePyro.opening_rocket_plan()
+	for at_seconds: float in [0.0, 2.0, 4.9]:
 		var shot := EntranceDirector.opening_shot_at(at_seconds)
-		var camera_at: Vector3 = shot[1]
-		var look: Vector3 = shot[2]
-		var fov: float = shot[3]
-		var camera_basis := Basis().looking_at(look - camera_at, Vector3.UP)
-		var view := Transform3D(camera_basis, camera_at).affine_inverse()
-		for rocket: Array in EntrancePyro.opening_rocket_plan():
-			var local: Vector3 = view * rocket[1]
-			var vertical := absf(atan2(local.y, -local.z))
-			var horizontal := absf(atan2(local.x, -local.z))
-			assert_float(vertical).override_failure_message(
-					"rocket at %s is cropped vertically at %.1f s" % [rocket[1], at_seconds]) \
-				.is_less(deg_to_rad(fov) * 0.5)
-			var horizontal_half_fov := atan(tan(deg_to_rad(fov) * 0.5) * 16.0 / 9.0)
-			assert_float(horizontal).override_failure_message(
-					"rocket at %s is cropped horizontally at %.1f s" % [rocket[1], at_seconds]) \
-				.is_less(horizontal_half_fov)
-	# A comet tail, not a fountain: tight and short. Long enough, since the
-	# owner asked for rocket pyro (19 Oct), to draw each rocket's climb.
-	assert_float(EntrancePyro.OPENING_TRAIL_SPREAD).is_less_equal(4.0)
-	assert_float(EntrancePyro.OPENING_TRAIL_LIFETIME).is_less_equal(0.45)
-	assert_int(EntrancePyro.OPENING_TRAIL_AMOUNT).is_less_equal(120)
+		for rocket: Array in plan:
+			for p: Vector3 in [rocket[0], rocket[1] + Vector3(0.0, 1.5, 0.0)]:
+				assert_bool(_in_frame(shot[1], shot[2], shot[3], p)) \
+						.override_failure_message("%s out of the hall wide at %.1f s" % [p, at_seconds]) \
+						.is_true()
+	var wall := EntranceDirector.opening_shot_at(6.0)
+	for i in [1, 2, 3]:
+		var burst: Vector3 = plan[i][1]
+		assert_bool(_in_frame(wall[1], wall[2], wall[3], burst)) \
+				.override_failure_message("%s out of the wall shot" % burst).is_true()
+	# Lower than the roof's lamp rows: bursts at about 10 m, not 17.
+	for rocket: Array in plan:
+		assert_float((rocket[1] as Vector3).y).is_less(11.0)
 	assert_float(EntrancePyro.OPENING_BURST_SIZE).is_greater(1.0)
+
+
+func test_the_opening_flame_chase_fires_every_projector() -> void:
+	var fired := {}
+	for step: Array in EntrancePyro.opening_flame_steps():
+		for x in step:
+			fired[x] = true
+	for x in EntrancePyro.FLAME_DECK_XS:
+		assert_bool(fired.has(x)).is_true()
+	assert_float(EntrancePyro.OPENING_FLAME_STEPS * EntrancePyro.OPENING_FLAME_GAP) \
+			.is_less_equal(EntrancePyro.OPENING_CONCUSSION_AT)
 
 
 func test_every_shot_a_beat_uses_can_be_framed() -> void:
