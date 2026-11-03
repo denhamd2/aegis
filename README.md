@@ -11381,3 +11381,31 @@ The cues:
 Tests check the move and that the rig is never in its frame on the real walks.
 
 Review sheet: `gauntlet/refs/entrances/cody_comets_review.jpg`.
+
+## 3 Nov — A ladder climbed hand over hand; holding 60 fps on the Mac
+
+The owner: "Ensure the ladder climbing animation is natural, ie holding the sides during a climb, step by step climb." And: on his MacBook M1 "at times the gameplay can become a bit janky and animations can get a bit like stop motion ... What can you do to improve ours?"
+
+**The climb.**
+- **Hands:** on the side rails (±0.295 m, `LADDER_RAIL_HALF`, measured off `ladder.glb`), palms on the near face. They hold from two rungs under shoulder height up to it, hand over hand: each holds while he rises, then reaches two rungs up, off the ladder toward him and back on.
+- **Boots:** on the rungs a hip-width apart (`LADDER_FOOT_HALF`). The right hand moves with the left boot, then the left hand with the right. One boot starts on the floor and one on the first rung.
+- **Fists:** closed round the rails (`Ladder_Climb`, fist 0.7).
+- **What it replaces:** every limb was on the middle of the rungs, both boots on the same spot and the hands at his waist.
+- **Measured from the ladder:** heights come from the ladder's own rung markers, with the rung line carried on to the floor and up the rails to the cap.
+
+**The stop motion.** It is not the animation. Every bone is already drawn between physics ticks at the render fraction (`Inertializer.draw_between`, done under task 17), and the heavy hit-stop is two ticks.
+
+What is not steady is the frame rate. The Mac renders the 3D at the panel's full Retina size, about four million pixels, with:
+- MSAA 4x and TAA;
+- volumetric fog and shadowed truss lights;
+- a 6,000-figure crowd.
+
+A frame that misses its 16.7 ms slot waits for the next v-sync, so the picture drops to 30 for a moment.
+
+**The fix: `GraphicsSettings` and `FramePacer`.**
+- **AUTO, the new default:** renders the 3D below the panel's size and upscales it, with MetalFX on a Mac's Metal renderer and FSR elsewhere. The HUD stays at full size. Every half second the 3D resolution moves between 60 and 100% to hold 60 fps: down a step over 17.4 ms a frame, up under 13.
+- **HIGH:** the full look, as before.
+- **BALANCED and PERFORMANCE:** 77% and 60% of the resolution.
+- **Where to set it:** OPTIONS > GRAPHICS, or `--graphics` on the command line.
+- **F3:** shows fps, frame time, the worst frame and a count of hitches, plus the 3D scale and renderer. That tells a slow frame rate apart from a one-off hitch on the owner's machine.
+- **Only in the game itself:** the title screen installs the pacer, so probes and captures still render at full size, as every measured number in `gauntlet/` was taken.

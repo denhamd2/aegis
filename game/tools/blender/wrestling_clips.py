@@ -8229,34 +8229,34 @@ CLIPS["Weapon_Set_Up"] = [
 ]
 
 # 32 frames (1.067 s, looped): hands alternate up the ladder while the boots
-# trade rungs. The pelvis stays close to the rails and the knees remain bent;
+# trade rungs, fists closed round the side rails (the rung IK puts them there). The pelvis stays close to the rails and the knees remain bent;
 # the motion is deliberately small so the rung IK is the contact authority.
 CLIPS["Ladder_Climb"] = [
     (0,  R(pelvis=(0.0, 0.02, 0.790), hips=(-12, 0, 0), spine=(-24, 0, 0), head=(8, 0, 0),
            hand_r=(0.22, 0.54, 1.46), hand_l=(-0.20, 0.50, 1.20),
            elbow_r=(0.62, -0.28, 0.28), elbow_l=(-0.62, -0.28, 0.08),
            foot_r=(0.16, 0.50, 0.38), foot_l=(-0.16, 0.50, 0.12),
-           knee_r=(0.2, 1.0, 0.0), knee_l=(-0.2, 1.0, 0.0), fist_r=0.2, fist_l=0.2)),
+           knee_r=(0.2, 1.0, 0.0), knee_l=(-0.2, 1.0, 0.0), fist_r=0.7, fist_l=0.7)),
     (8,  R(pelvis=(0.0, 0.04, 0.810), hips=(-14, 0, 0), spine=(-27, 0, 0), head=(9, 0, 0),
            hand_r=(0.22, 0.50, 1.22), hand_l=(-0.20, 0.56, 1.48),
            elbow_r=(0.62, -0.28, 0.06), elbow_l=(-0.62, -0.28, 0.30),
            foot_r=(0.16, 0.50, 0.12), foot_l=(-0.16, 0.50, 0.38),
-           knee_r=(0.2, 1.0, 0.0), knee_l=(-0.2, 1.0, 0.0), fist_r=0.2, fist_l=0.2)),
+           knee_r=(0.2, 1.0, 0.0), knee_l=(-0.2, 1.0, 0.0), fist_r=0.7, fist_l=0.7)),
     (16, R(pelvis=(0.0, 0.02, 0.790), hips=(-12, 0, 0), spine=(-24, 0, 0), head=(8, 0, 0),
            hand_r=(0.22, 0.54, 1.46), hand_l=(-0.20, 0.50, 1.20),
            elbow_r=(0.62, -0.28, 0.28), elbow_l=(-0.62, -0.28, 0.08),
            foot_r=(0.16, 0.50, 0.38), foot_l=(-0.16, 0.50, 0.12),
-           knee_r=(0.2, 1.0, 0.0), knee_l=(-0.2, 1.0, 0.0), fist_r=0.2, fist_l=0.2)),
+           knee_r=(0.2, 1.0, 0.0), knee_l=(-0.2, 1.0, 0.0), fist_r=0.7, fist_l=0.7)),
     (24, R(pelvis=(0.0, 0.04, 0.810), hips=(-14, 0, 0), spine=(-27, 0, 0), head=(9, 0, 0),
            hand_r=(0.22, 0.50, 1.22), hand_l=(-0.20, 0.56, 1.48),
            elbow_r=(0.62, -0.28, 0.06), elbow_l=(-0.62, -0.28, 0.30),
            foot_r=(0.16, 0.50, 0.12), foot_l=(-0.16, 0.50, 0.38),
-           knee_r=(0.2, 1.0, 0.0), knee_l=(-0.2, 1.0, 0.0), fist_r=0.2, fist_l=0.2)),
+           knee_r=(0.2, 1.0, 0.0), knee_l=(-0.2, 1.0, 0.0), fist_r=0.7, fist_l=0.7)),
     (32, R(pelvis=(0.0, 0.02, 0.790), hips=(-12, 0, 0), spine=(-24, 0, 0), head=(8, 0, 0),
            hand_r=(0.22, 0.54, 1.46), hand_l=(-0.20, 0.50, 1.20),
            elbow_r=(0.62, -0.28, 0.28), elbow_l=(-0.62, -0.28, 0.08),
            foot_r=(0.16, 0.50, 0.38), foot_l=(-0.16, 0.50, 0.12),
-           knee_r=(0.2, 1.0, 0.0), knee_l=(-0.2, 1.0, 0.0), fist_r=0.2, fist_l=0.2)),
+           knee_r=(0.2, 1.0, 0.0), knee_l=(-0.2, 1.0, 0.0), fist_r=0.7, fist_l=0.7)),
 ]
 
 # 18 frames (0.6 s): shoulders peel off first, the hands lose their holds,

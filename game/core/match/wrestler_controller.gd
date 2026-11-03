@@ -6209,16 +6209,23 @@ func _clear_ladder_climb() -> void:
 func _update_ladder_climb_ik() -> void:
 	if not weapon_grip or not is_instance_valid(_ladder_actor):
 		return
-	var rung_coord := 1.0 + _ladder_climb_progress * 8.0
-	# Rung over rung, not a glide: every hand and boot holds its rung while
-	# he rises, then goes up two (LADDER_STEP) -- right hand with left boot,
-	# then left hand with right boot. All four used to slide up with him,
-	# the same pose all the way up (the owner, 3 Nov: "the ladder climbing
-	# animation doesn't work").
-	var right_hand := _ladder_limb_target(rung_coord + LADDER_HAND_LEAD, 0.0)
-	var left_hand := _ladder_limb_target(rung_coord + LADDER_HAND_LEAD, 1.0)
-	var right_foot := _ladder_limb_target(rung_coord + LADDER_FOOT_LEAD, 1.0)
-	var left_foot := _ladder_limb_target(rung_coord + LADDER_FOOT_LEAD, 0.0)
+	# Climbed as a man climbs (the owner, 3 Nov: "holding the sides during a
+	# climb, step by step"): his hands on the side rails at chest to shoulder
+	# height, his boots on the rungs a hip-width apart, hand over hand and
+	# step by step -- each holds while he rises, then reaches two rungs up,
+	# the right hand with the left boot, then the left hand with the right.
+	# One boot starts on the floor and one on the first rung. They were all
+	# on the middle of the rungs, the boots on the same spot and the hands at
+	# his waist.
+	var k_root := _ladder_rung_coord(global_position.y)
+	var spacing := _ladder_rung_spacing()
+	var right := _ladder_right()
+	var hand_want := k_root + LADDER_HAND_UP / spacing
+	var foot_want := k_root + LADDER_FOOT_UP / spacing
+	var right_hand := _ladder_limb_target(hand_want, 0.0, right * LADDER_RAIL_HALF, LADDER_PALM_OUT)
+	var left_hand := _ladder_limb_target(hand_want, 1.0, -right * LADDER_RAIL_HALF, LADDER_PALM_OUT)
+	var right_foot := _ladder_limb_target(foot_want, 1.0, right * LADDER_FOOT_HALF, 0.0)
+	var left_foot := _ladder_limb_target(foot_want, 0.0, -right * LADDER_FOOT_HALF, 0.0)
 	right_foot.origin += Vector3.UP * 0.02
 	left_foot.origin += Vector3.UP * 0.02
 	weapon_grip.climb_ladder(_ladder_actor, right_hand, left_hand, right_foot, left_foot)
@@ -6228,9 +6235,17 @@ func _update_ladder_climb_ik() -> void:
 const LADDER_STEP := 2.0
 ## The share of a step spent reaching for the next rung; held the rest.
 const LADDER_REACH_SHARE := 0.35
-## Where the hands and boots are, on average, against his own rung height.
-const LADDER_HAND_LEAD := 0.75
-const LADDER_FOOT_LEAD := -0.85
+## Where his hands want to be on the rails, above where he stands (they hold
+## from two rungs under that up to it: chest to shoulder), and his boots
+## (from where he stands to two rungs over: a step up).
+const LADDER_HAND_UP := 1.55
+const LADDER_FOOT_UP := 0.55
+## The side rails' centres off the ladder's middle (ladder.glb: the rails
+## span +-0.313, the rungs +-0.292), the boots' off it, and the palms in
+## front of the rails, on the face he holds.
+const LADDER_RAIL_HALF := 0.295
+const LADDER_FOOT_HALF := 0.12
+const LADDER_PALM_OUT := 0.035
 ## How far a hand or boot comes off the ladder toward him as it changes rung.
 const LADDER_LIFT_M := 0.08
 
@@ -6248,23 +6263,46 @@ static func ladder_limb_rung(want: float, phase: float) -> Vector2:
 	return Vector2((k + t) * LADDER_STEP + phase, t)
 
 
-func _ladder_limb_target(want: float, phase: float) -> Transform3D:
+## A hand or boot's target: its rung (ladder_limb_rung), `side` off the
+## ladder's middle, `out` toward him, lifted off the ladder mid-reach.
+func _ladder_limb_target(want: float, phase: float, side: Vector3, out: float) -> Transform3D:
 	var at := ladder_limb_rung(want, phase)
 	var target := _ladder_rung_target(_ladder_actor, at.x)
-	# off the rung toward him and back on, mid-reach
-	target.origin += _ladder_actor.global_basis * Vector3(0.0, 0.0, -LADDER_LIFT_M * sin(PI * at.y))
+	var toward := _ladder_actor.global_basis * Vector3(0.0, 0.0, -1.0)
+	target.origin += side + toward * (out + LADDER_LIFT_M * sin(PI * at.y))
 	return target
 
 
+## His height as a rung coordinate (rung_1 is 1; 0 is a rung's spacing under
+## it, about the floor).
+func _ladder_rung_coord(y: float) -> float:
+	var r1 := _ladder_actor.global_marker("rung_1").origin.y
+	return 1.0 + (y - r1) / _ladder_rung_spacing()
+
+
+func _ladder_rung_spacing() -> float:
+	return maxf(0.05, (_ladder_actor.global_marker("rung_9").origin.y
+			- _ladder_actor.global_marker("rung_1").origin.y) / 8.0)
+
+
+## Across the ladder toward his right hand, flat.
+func _ladder_right() -> Vector3:
+	var across := _ladder_actor.global_marker("rung_1").basis.x
+	across.y = 0.0
+	across = across.normalized()
+	return across if across.dot(global_basis.x) >= 0.0 else -across
+
+
+## On the rungs' line at rung coordinate `rung`, carried on past the first
+## (to the floor) and the last (up the rails to the cap) along the ladder's
+## own slope.
 func _ladder_rung_target(ladder: WeaponActor, rung: float) -> Transform3D:
-	var clamped := clampf(rung, 1.0, 9.0)
-	var low := int(floor(clamped))
-	var high := mini(low + 1, 9)
+	var c := clampf(rung, 0.0, 9.9)
+	var low := clampi(int(floor(c)), 1, 8)
 	var a := ladder.global_marker("rung_%d" % low)
-	var b := ladder.global_marker("rung_%d" % high)
-	var weight := clamped - float(low)
-	return Transform3D(a.basis.slerp(b.basis, weight).orthonormalized(),
-			a.origin.lerp(b.origin, weight))
+	var b := ladder.global_marker("rung_%d" % (low + 1))
+	var weight := c - float(low)
+	return Transform3D(a.basis.orthonormalized(), a.origin + (b.origin - a.origin) * weight)
 
 
 func begin_weapon_action(action: String) -> void:

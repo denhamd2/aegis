@@ -49,7 +49,9 @@ const MENU_CAMERA := "OPTIONS"
 ## the values' names in CameraSettings' enum order].
 const CAMERA_ROWS := [["COVERAGE", ["GAMEPLAY", "BROADCAST", "FIGHT FOREVER"]], ["CUTS", ["ON", "OFF"]],
 		["SHAKE", ["OFF", "LOW", "HIGH"]], ["REPLAYS", ["OFF", "FINISH", "FREQUENT"]],
-		["BLOOD", ["OFF", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]], ["MOTION BLUR", ["ON", "OFF"]]]
+		["BLOOD", ["OFF", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]], ["MOTION BLUR", ["ON", "OFF"]],
+		# GraphicsSettings, in its enum order: AUTO holds 60 fps.
+		["GRAPHICS", ["AUTO", "HIGH", "BALANCED", "PERFORMANCE"]]]
 var camera_row := 0
 const MENU_QUIT := "QUIT"
 
@@ -129,6 +131,13 @@ static var last_mode: int = MatchRules.Mode.ONE_ON_ONE
 
 
 func _ready() -> void:
+	# The frame-rate keeper (GraphicsSettings, F3 for the readout): installed
+	# by the game's front door, so the probes and captures, which start
+	# elsewhere, render at full size as every measured number was taken.
+	if not get_tree().root.has_node("FramePacer"):
+		var pacer: Node = load("res://core/render/frame_pacer.gd").new()
+		pacer.name = "FramePacer"
+		get_tree().root.add_child.call_deferred(pacer)
 	# Teko Bold, the broadcast graphics' face -- see TitleArt.teko().
 	_font = TitleArt.teko(700)
 	_backdrop = TitleArt.make_backdrop_texture()
@@ -746,6 +755,7 @@ static func camera_option(row: int) -> int:
 		2: return CameraSettings.shake
 		3: return CameraSettings.replays
 		5: return 0 if CameraSettings.motion_blur_enabled() else 1
+		6: return GraphicsSettings.current()
 		_: return Blood.level if Blood.on() else 0
 
 
@@ -759,6 +769,7 @@ func step_camera_option(dir: int) -> void:
 		2: CameraSettings.shake = v as CameraSettings.Shake
 		3: CameraSettings.replays = v as CameraSettings.Replays
 		5: CameraSettings.motion_blur = v == 0
+		6: GraphicsSettings.set_quality(v as GraphicsSettings.Quality)
 		_:
 			Blood.on()   # reads --blood once, before we override it
 			Blood.set_level(v)
@@ -768,7 +779,7 @@ func step_camera_option(dir: int) -> void:
 
 func _draw_camera(view: Vector2) -> void:
 	draw_rect(Rect2(Vector2.ZERO, view), Color(0, 0, 0, 0.72))
-	var panel := Rect2(view.x * 0.28, view.y * 0.24, view.x * 0.44, view.y * 0.48)
+	var panel := Rect2(view.x * 0.28, view.y * 0.20, view.x * 0.44, view.y * 0.56)
 	TitleArt.draw_cut_panel(self, panel, view.y * 0.035,
 			Color(TitleArt.KEY_PANEL, 0.96), Color(TitleArt.KEY_GOLD_DIM, 0.8),
 			maxf(1.0, view.y * 0.0018))
@@ -793,7 +804,7 @@ func _draw_camera(view: Vector2) -> void:
 		TitleArt.draw_tracked(self, _font,
 				Vector2(panel.position.x + panel.size.x - view.x * 0.030 - vw, y),
 				value, row_size, view.y * 0.002, TitleArt.STEEL)
-		y += view.y * 0.058   # six rows inside the panel
+		y += view.y * 0.058   # seven rows inside the panel
 
 
 ## First keyboard event bound to each action, joined -- e.g. "UP LEFT DOWN RIGHT".
