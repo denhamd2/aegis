@@ -101,8 +101,11 @@ const COMET_TRAIL_LIFETIME := 0.55
 const COMET_WAVES := 5
 const COMET_WAVE_GAP := 0.3715
 const COMET_STEP := 0.07
-## Up from the ramp's edges, either side, two waves.
+## Up from the ramp's edges, either side, two waves -- from its stage half
+## only: the nearer pairs went up 3-6 m from the stage wide's lens and filled
+## it with blurred flame (3 Nov, Vulkan frames).
 const COMET_RAMP_WAVES := 2
+const COMET_RAMP_ZS := [-29.0, -26.0]
 ## Rockets launched since this node was made (tests, probes).
 var rockets_launched := 0
 
@@ -316,9 +319,9 @@ static func cody_whoa_plan() -> Array:
 			plan.append([v * COMET_WAVE_GAP + step * COMET_STEP, from, from + Vector3.UP * rise,
 					SHELL_GOLD if (i + v) % 2 == 0 else SHELL_WHITE, i == n / 2])
 	for v in COMET_RAMP_WAVES:
-		for k in RAMP_SHELL_ZS.size():
+		for k in COMET_RAMP_ZS.size():
 			for sx: float in [-1.0, 1.0]:
-				var z: float = RAMP_SHELL_ZS[k]
+				var z: float = COMET_RAMP_ZS[k]
 				var from := Vector3(sx * (ArenaBuilder.RAMP_HALF_WIDTH + 0.3),
 						ArenaBuilder.match_surface_y(Vector3(0.0, 0.0, z)) + 0.2, z)
 				plan.append([0.2 + v * COMET_WAVE_GAP * 2.0 + k * COMET_STEP * 1.5, from,

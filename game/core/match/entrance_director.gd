@@ -595,6 +595,11 @@ const CODY_BLACKOUT_AMBIENT := 0.10
 ## rest, his crowd cutaway was 2.7 s of black (3 Nov storyboard).
 const CODY_HOUSE_FLOOR := 0.22
 const CODY_HOUSE_BLUE := Color(0.32, 0.46, 1.0)
+## The stands themselves are emissive (the crowd shader's `crowd_light`,
+## 0.3 in the entrance look, 9.0 in the match) and already washed blue
+## (ArenaBuilder.CROWD_WASH): this much of it in his blackout reads as a dark,
+## blue house. The washes alone left it black on Vulkan.
+const CODY_HOUSE_CROWD_LIGHT := 1.5
 const BACKLIGHT_ENERGY := 30.0
 const BACKLIGHT_COLOR := Color(0.82, 0.88, 1.0)
 const CODY_RED := Color(1.0, 0.12, 0.10)
@@ -819,6 +824,8 @@ var _skip_button: Button
 var _dimmed := {}
 ## Lights _dim_house re-coloured, and the colour each had.
 var _tinted := {}
+## The stands' light before his blackout lifted it (null: not lifted).
+var _crowd_light_was: Variant = null
 var _env: Environment
 ## Cody's backlight, built on his first WHOA.
 var _backlight: SpotLight3D
@@ -2499,6 +2506,10 @@ func _event(w: WrestlerController, what: String) -> void:
 			_dim_house(true)
 		"blackout_on":
 			_dim_house(true, CODY_BLACKOUT, CODY_BLACKOUT_AMBIENT, CODY_HOUSE_FLOOR, CODY_HOUSE_BLUE)
+			_crowd_light_was = RenderingServer.global_shader_parameter_get("crowd_light")
+			if _crowd_light_was == null:
+				_crowd_light_was = ArenaLighting.CROWD_LIGHT_ENTRANCE
+			RenderingServer.global_shader_parameter_set("crowd_light", CODY_HOUSE_CROWD_LIGHT)
 		"backlight_on", "backlight_dim", "backlight_off":
 			_set_backlight(w, what)
 		"broadcast_open", "pyro_opening":
@@ -3295,6 +3306,9 @@ func _dim_house(on: bool, rig: float = ROMAN_HOUSE_DIM,
 		if is_instance_valid(key):
 			(key as Light3D).light_color = _tinted[key]
 	_tinted.clear()
+	if _crowd_light_was != null:
+		RenderingServer.global_shader_parameter_set("crowd_light", _crowd_light_was)
+		_crowd_light_was = null
 
 
 var _top: SpotLight3D

@@ -11347,3 +11347,37 @@ The owner: "The ladder climbing animation doesn't work." "The wrestlers are stil
 Review sheet: `gauntlet/refs/ladder_corners_sells_review.jpg` (before and after: the card wide, the ref check, the ladder halfway and at the top, the powerbomb's top, and the figure four).
 
 **Still open.** The AEW opening storyboard (committed, not yet reviewed on frames), Cody's rockets and camera review, and probe numbers for the rope runs and chase.
+
+## 3 Nov — Cody's pyro as comet jets; his entrance cameras reviewed; the walk's crane
+
+The owner: "change Cody's pyro to rockets and review his entrance cameras". Asked what rockets should look like, he chose the gold comet jets of his AEW Dynamite clip. Then, mid-review: the half-body walking shot "looks too stiff ... act as our director and find a better shot ... maybe something with the crane?"
+
+**Comet jets** (`EntrancePyro._comet`, `cody_whoa_plan`, `cody_punch_plan`, `cody_ring_plan`). Every shell already flew up on a short trail, but each ended in a firework chrysanthemum, and the WHOA fired about 150 of them: glitter. Now a jet is:
+- a bright head on a flame tail (the fire ramp, `ManFire` tongues);
+- going straight up 10–12 m;
+- flaring out at the top into a smoke puff, with no burst.
+
+The cues:
+- **WHOA:** five waves chased across the set on his half beat (0.37 s): left to right, right to left, out from the middle. Plus jets from the stage half of the ramp, about 40 jets in all, all up inside the 2.7 s stage wide.
+- **Fists:** all seven at once, the tallest.
+- **His corner:** three waves off the post tops.
+- **Sound:** a launch whoosh per wave (`MatchAudio.comet_sounds`).
+
+**Camera review.** I rendered his entrance end to end on OpenGL, then checked the shots it flagged on Vulkan:
+- **The pyro wide took the entrance over.** `pyro_cody_hit` held the far pyro wide for 6.5 s and the fists added 4.5 more, so one distant frame ran from 26 s to 33.5 s. The fists' hero shot was never seen, and half the walk to the lip went with it. His beats now keep their own shots: the stage wide (the comets are framed in it, `test_the_stage_wide_frames_codys_comets`) and the low hero on the fists.
+- **The crowd cutaway in his blackout was black.** The stands are emissive (`crowd_light` 0.3 in the entrance look), so dimming the washes did nothing. His blackout now lifts them to 1.5, already washed blue: "a dark, blue-lit house", as the reference has it. Restored after.
+- **The dark high wide** was tipped down at black floor, the stage jammed into a corner. It now looks across the ring at the far stand, tipped under the rig by `rig_clear_look`.
+- **The coat carry:** the far end wide held empty for 10.5 s while his coat went to the timekeeper's table. The camera stays on him; the end wide is the handover's alone.
+- **Ring entry:** contact is clean. Float at most 1.4 cm, sink 0.7 cm, no snap turns (`entry_contact --who cody`).
+- **Not faults:**
+  - the black walk frames are OpenGL only, and Vulkan has him lit;
+  - the flames on the wall shots are his entrance video, not pyro.
+
+**The walk's crane** (`crane_front`, every man's walk, in place of `steadicam_front`). A jib on a dolly backing down ahead of him:
+- it opens 4.2 m up off his right shoulder on the whole man and the building;
+- it booms down and in, eased, to just under his chest looking up at him, the low-angle look of the tracking shot the owner likes;
+- the lens goes from 42° to 34°.
+
+Tests check the move and that the rig is never in its frame on the real walks.
+
+Review sheet: `gauntlet/refs/entrances/cody_comets_review.jpg`.

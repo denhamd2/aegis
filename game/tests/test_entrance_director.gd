@@ -1250,5 +1250,8 @@ func test_codys_blackout_keeps_a_dark_blue_house() -> void:
 		ticks += 1
 	director._physics_process(1.0 / 60.0)
 	assert_bool(wash.light_color.is_equal_approx(EntranceDirector.CODY_HOUSE_BLUE)).is_true()
+	# the stands lifted (the shader global itself reads back null headless)
+	assert_bool(director._crowd_light_was != null).is_true()
 	director.skip()
 	assert_bool(wash.light_color.is_equal_approx(colour)).is_true()
+	assert_bool(director._crowd_light_was == null).is_true()
