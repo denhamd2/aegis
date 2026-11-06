@@ -74,6 +74,10 @@ extends Resource
 ## It is not a knockdown -- see WrestlerController._lie_down_after_throw().
 @export var leaves_defender_down: bool = false
 
+## Face-first moves need a prone sell. Damage alone cannot tell which side of
+## the body hit the canvas; most head-damage moves still land on the back.
+@export var down_face_first: bool = false
+
 ## Whether this paired move's defender lands flat on his back with his head
 ## AWAY from the attacker -- a straight back bump -- rather than toward him.
 ##

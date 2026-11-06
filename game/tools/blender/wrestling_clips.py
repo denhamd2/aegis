@@ -3845,14 +3845,17 @@ def _rolled(theta):
 # turned over them, were dragged through the canvas and snapped 1.3 m in a
 # frame (tools/probe/move_qa.tscn). It is now carried in the body's own frame
 # (_body), tucked, through 60 and 120 degrees.
+PRONE_SELL = dict(pelvis=(0.0, 0.0, 0.200), hips=(-86, 0, 0), spine=(-2, 0, 0),
+                  head=(8, 0, 0),
+                  hand_r=(0.46, 0.30, 0.10), hand_l=(-0.46, 0.30, 0.10),
+                  elbow_r=(0.7, 0.0, 0.7), elbow_l=(-0.7, 0.0, 0.7),
+                  fist_r=0.1, fist_l=0.1,
+                  foot_r=(0.14, -0.86, 0.12), foot_l=(-0.12, -0.84, 0.12),
+                  knee_r=(0.2, 0.0, -1.0), knee_l=(-0.2, 0.0, -1.0))
+
+
 def _face_first_then_roll(land, end):
-    prone = dict(pelvis=(0.0, 0.0, 0.200), hips=(-86, 0, 0), spine=(-2, 0, 0),
-                 head=(8, 0, 0),
-                 hand_r=(0.46, 0.30, 0.10), hand_l=(-0.46, 0.30, 0.10),
-                 elbow_r=(0.7, 0.0, 0.7), elbow_l=(-0.7, 0.0, 0.7),
-                 fist_r=0.1, fist_l=0.1,
-                 foot_r=(0.14, -0.86, 0.12), foot_l=(-0.12, -0.84, 0.12),
-                 knee_r=(0.2, 0.0, -1.0), knee_l=(-0.2, 0.0, -1.0))
+    prone = PRONE_SELL
     # Beats at 0, 5, 8, 11, 14, 18 frames after landing, squeezed to fit.
     span = min(1.0, (end - land) / 19.0)
     at = [land + int(round(x * span)) for x in (0, 5, 8, 11, 14, 18)]
@@ -4329,6 +4332,72 @@ CLIPS["Down_Writhe"] = [
     (48, _writhe(180, -4, True, True, 16)),
     (72, _writhe(202, 14, False, True, 12, pelvis_up=0.27)),
     (96, _writhe(180, 6, True, True, 6)),
+]
+
+# Every sell starts at SUPINE: paired throws and the solo bumps hand off at
+# exactly that pose. The first keys move the hurt part only after impact.
+# Back, neck and knee close their loops on SUPINE so a long down keeps moving.
+CLIPS["Down_Back"] = [
+    (0, S()),
+    (12, S(spine=(-12, 0, 0), head=(-18, 0, 0),
+           hand_r=(-0.22, 0.18, 0.28), hand_l=(0.24, 0.16, 0.27),
+           elbow_r=(-0.7, 0.3, 0.2), elbow_l=(0.7, 0.3, 0.2))),
+    (32, S(spine=(-9, 0, 0), head=(-16, 0, 0),
+           hand_r=(-0.22, 0.18, 0.28), hand_l=(0.24, 0.16, 0.27))),
+    (60, S()),
+]
+CLIPS["Down_Neck"] = [
+    (0, S()),
+    (12, S(head=(-23, 8, 0),
+           hand_r=(-0.27, 0.34, 0.40))),
+    (32, S(head=(-18, -6, 0),
+           hand_r=(-0.27, 0.34, 0.40))),
+    (60, S()),
+]
+CLIPS["Down_Knee"] = [
+    (0, S()),
+    (12, S(foot_r=(-0.16, -0.60, 0.10),
+           hand_r=(-0.18, -0.30, 0.33), hand_l=(0.20, -0.28, 0.30),
+           knee_r=(-0.3, 0.2, 0.9))),
+    (32, S(foot_r=(-0.16, -0.57, 0.10),
+           hand_r=(-0.18, -0.30, 0.33), hand_l=(0.20, -0.28, 0.30),
+           knee_r=(-0.3, 0.2, 0.9))),
+    (60, S()),
+]
+# A finisher or sledgehammer leaves him slack, without a breathing heave.
+CLIPS["Down_Out"] = [
+    (0, S()),
+    (14, S(spine=(-6, 0, 0), head=(-19, 9, 0),
+            hand_r=(-0.47, 0.04, 0.10), hand_l=(0.46, 0.03, 0.10),
+            fist_r=0.0, fist_l=0.0)),
+    (30, S(spine=(-6, 0, 0), head=(-19, 9, 0),
+            hand_r=(-0.47, 0.04, 0.10), hand_l=(0.46, 0.03, 0.10),
+            fist_r=0.0, fist_l=0.0)),
+]
+# The paired Cutter currently lands SUPINE. He rolls onto his front after
+# impact, holds his head there, then turns back so either get-up can begin
+# from the same pose as every other knockdown. This is a one-shot sell.
+def _down_roll(theta):
+    # Keep the hands above the canvas while the chest rolls underneath them.
+    spec = _rolled(theta)
+    for hand in ("hand_r", "hand_l"):
+        x, y, z = spec[hand]
+        spec[hand] = (x, y, z + 0.12)
+    return spec
+
+
+DOWN_PRONE = _down_roll(0)
+CLIPS["Down_Face_First"] = [
+    (0, S()),
+    (6, _down_roll(120)),
+    (12, _down_roll(60)),
+    (18, dict(DOWN_PRONE)),
+    (58, dict(DOWN_PRONE, head=(4, 8, 0))),
+    (70, dict(DOWN_PRONE)),
+    (82, _down_roll(60)),
+    (94, _down_roll(120)),
+    (108, S()),
+    (120, S()),
 ]
 
 # Clothesline From Hell, 36 frames. Sprints in with the right arm cocked,

@@ -513,6 +513,16 @@ const RECIPES := {
 	# with his knees up, and he is still breathing.
 	"down_supine": {"kind": "retime", "source": "Down_Supine",
 		"seconds": 1.333, "file": AUTHORED, "loop": true},
+	"down_back": {"kind": "retime", "source": "Down_Back",
+		"seconds": 2.0, "file": AUTHORED, "loop": true},
+	"down_neck": {"kind": "retime", "source": "Down_Neck",
+		"seconds": 2.0, "file": AUTHORED, "loop": true},
+	"down_knee": {"kind": "retime", "source": "Down_Knee",
+		"seconds": 2.0, "file": AUTHORED, "loop": true},
+	"down_face_first": {"kind": "retime", "source": "Down_Face_First",
+		"seconds": 4.0, "file": AUTHORED},
+	"down_out": {"kind": "retime", "source": "Down_Out",
+		"seconds": 1.0, "file": AUTHORED},
 
 	# Through a table he does not lie still: he rolls side to side, one hand
 	# under the small of his back, the other to his head, knees drawing up.

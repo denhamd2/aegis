@@ -51,8 +51,8 @@ published detail on how the idles and locomotion are built. Sources:
 
 ## The gaps, biggest first
 
-1. **Down sells are a single loop.** Every knockdown ends in `Down_Supine`,
-   whatever caused it. Needed:
+1. **Down sells by zone (shipped 5 Nov).** Every knockdown formerly ended in
+   `Down_Supine`, whatever caused it. Added:
    - writhe (tables, wire, tacks; **shipped 3 Nov**);
    - holding the back (powerbomb, backbreaker);
    - holding the neck (DDT, neckbreaker, Cross Rhodes);
@@ -102,10 +102,20 @@ published detail on how the idles and locomotion are built. Sources:
    referee's count and a climb, rather than standing neutral. The ladder sell
    (2 Nov) is the pattern; extend it to taunts and the climb to the top rope.
 
+## 5 Nov — down sells by zone
+
+Gap 1 now has five authored sells beyond `Down_Supine` and `Down_Writhe`:
+`Down_Back`, `Down_Neck`, `Down_Knee`, `Down_Face_First`, and `Down_Out`.
+The move's strongest damage zone selects the back, neck, or knee response;
+face-first moves carry an explicit landing flag; finishers, sledgehammers,
+and fatal shots use the still out-cold pose. Every sell begins at the supine
+handoff pose. The face-first sell rolls onto the front, then returns to
+supine for the existing get-up animations.
+
 ## Order
 
 1. The owner's six fixes (#48).
-2. Down sells by zone (gap 1).
+2. Down sells by zone (gap 1; done 5 Nov).
 3. Strike side, uppercut and contact (gap 3).
 4. The limp layer (gap 4).
 5. Pain audio (gap 6).

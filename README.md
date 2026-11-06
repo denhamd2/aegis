@@ -11409,3 +11409,9 @@ A frame that misses its 16.7 ms slot waits for the next v-sync, so the picture d
 - **Where to set it:** OPTIONS > GRAPHICS, or `--graphics` on the command line.
 - **F3:** shows fps, frame time, the worst frame and a count of hitches, plus the 3D scale and renderer. That tells a slow frame rate apart from a one-off hitch on the owner's machine.
 - **Only in the game itself:** the title screen installs the pacer, so probes and captures still render at full size, as every measured number in `gauntlet/` was taken.
+
+## 5 Nov — Downed sells by body part
+
+Knockdowns now carry the move that caused them into the DOWN state. The strongest damage zone picks a back, neck, or knee sell; face-first moves use a landing flag; finishers, sledgehammers, and fatal shots leave the wrestler out cold. Existing table and cut writhing still takes over when it is due. The face-first sell rolls onto the front and returns to the shared supine pose before get-up.
+
+The five new clips are authored in Blender and baked into `strike_clips.tres`: `Down_Back`, `Down_Neck`, `Down_Knee`, `Down_Face_First`, and `Down_Out`. Each starts at the old supine handoff pose, so the preceding throw or bump meets it cleanly. The three body-part sells loop; the face-first and out-cold sells hold their final pose.

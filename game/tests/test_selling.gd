@@ -52,3 +52,51 @@ func test_a_beaten_man_lies_there_longer() -> void:
 	w.fsm.transition_to(WrestlerFSM.State.IDLE)
 	w._go_down(-1)
 	assert_int(w._move_ticks_remaining).is_greater(fresh)
+
+
+func test_down_sell_follows_the_move_and_the_down_state_plays_it() -> void:
+	var back := load("res://resources/moves/signature_backbreaker.tres") as MoveDef
+	var neck := load("res://resources/moves/signature_neckbreaker.tres") as MoveDef
+	var knee := load("res://resources/moves/ground_stomp_legs.tres") as MoveDef
+	var cutter := load("res://resources/moves/signature_cody_cutter.tres") as MoveDef
+	var pedigree := load("res://resources/moves/signature_pedigree.tres") as MoveDef
+	assert_str(WrestlerController.down_sell_clip(back, -1)).is_equal(WrestlerController.DOWN_BACK_CLIP)
+	assert_str(WrestlerController.down_sell_clip(neck, -1)).is_equal(WrestlerController.DOWN_NECK_CLIP)
+	assert_str(WrestlerController.down_sell_clip(knee, -1)).is_equal(WrestlerController.DOWN_KNEE_CLIP)
+	assert_str(WrestlerController.down_sell_clip(cutter, CombatSystem.Tier.SIGNATURE)) \
+			.is_equal(WrestlerController.DOWN_FACE_FIRST_CLIP)
+	assert_str(WrestlerController.down_sell_clip(pedigree, CombatSystem.Tier.SIGNATURE)) \
+			.is_equal(WrestlerController.DOWN_FACE_FIRST_CLIP)
+	var w: WrestlerController = auto_free(WRESTLER_SCENE.instantiate())
+	add_child(w)
+	await get_tree().physics_frame
+	w._go_down(CombatSystem.Tier.SIGNATURE, cutter)
+	assert_int(w.fsm.current_state).is_equal(WrestlerFSM.State.DOWN)
+	assert_str(w._down_clip).is_equal(WrestlerController.DOWN_FACE_FIRST_CLIP)
+	var state := (w.anim_tree.tree_root as AnimationNodeStateMachine).get_node("DOWN") as AnimationNodeAnimation
+	assert_str(state.animation).is_equal(WrestlerController.DOWN_FACE_FIRST_CLIP)
+	for clip: String in [WrestlerController.DOWN_BACK_CLIP, WrestlerController.DOWN_NECK_CLIP,
+			WrestlerController.DOWN_KNEE_CLIP, WrestlerController.DOWN_FACE_FIRST_CLIP,
+			WrestlerController.DOWN_OUT_CLIP]:
+		assert_bool(w.anim_player.has_animation(clip)).override_failure_message(clip).is_true()
+	assert_int(w.anim_player.get_animation(WrestlerController.DOWN_BACK_CLIP).loop_mode) \
+			.is_equal(Animation.LOOP_LINEAR)
+	assert_int(w.anim_player.get_animation(WrestlerController.DOWN_FACE_FIRST_CLIP).loop_mode) \
+			.is_equal(Animation.LOOP_NONE)
+	assert_int(w.anim_player.get_animation(WrestlerController.DOWN_OUT_CLIP).loop_mode) \
+			.is_equal(Animation.LOOP_NONE)
+
+
+func test_finisher_and_sledgehammer_leave_him_out_cold() -> void:
+	var finisher := load("res://resources/moves/finisher_spear.tres") as MoveDef
+	var hammer := WeaponCatalog.swing_move(WeaponCatalog.by_id(&"sledgehammer"))
+	assert_str(WrestlerController.down_sell_clip(finisher, CombatSystem.Tier.FINISHER)) \
+			.is_equal(WrestlerController.DOWN_OUT_CLIP)
+	assert_str(WrestlerController.down_sell_clip(hammer, -1)).is_equal(WrestlerController.DOWN_OUT_CLIP)
+	var w: WrestlerController = auto_free(WRESTLER_SCENE.instantiate())
+	add_child(w)
+	await get_tree().physics_frame
+	w._go_down(CombatSystem.Tier.FINISHER, finisher)
+	assert_str(w._down_clip).is_equal(WrestlerController.DOWN_OUT_CLIP)
+	assert_str(w._take_clip_override(WrestlerFSM.State.PIN_DEFENDER)) \
+			.is_equal(WrestlerController.DOWN_OUT_CLIP)

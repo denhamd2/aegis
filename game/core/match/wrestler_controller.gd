@@ -151,6 +151,32 @@ const DOUBLE_DOWN_STIR_TICKS := 60
 ## The tier of whatever last knocked him down (CombatSystem.Tier, -1 for
 ## strikes): MatchReferee covers only after the bigger ones.
 var knockdown_tier := -1
+const DOWN_BACK_CLIP := "strikes/down_back"
+const DOWN_NECK_CLIP := "strikes/down_neck"
+const DOWN_KNEE_CLIP := "strikes/down_knee"
+const DOWN_FACE_FIRST_CLIP := "strikes/down_face_first"
+const DOWN_OUT_CLIP := "strikes/down_out"
+var _down_move: MoveDef
+var _down_clip := "strikes/down_supine"
+
+
+## The move chooses the injured part; tier chooses whether he is still
+## responsive. Explicit orientation is needed for a face-first landing.
+static func down_sell_clip(move: MoveDef, tier: int, fatal := false) -> String:
+	if fatal or tier >= CombatSystem.Tier.FINISHER:
+		return DOWN_OUT_CLIP
+	if move == null:
+		return "strikes/down_supine"
+	var weapon := WeaponCatalog.of_move(move)
+	if weapon != null and weapon.id == &"sledgehammer":
+		return DOWN_OUT_CLIP
+	if move.down_face_first:
+		return DOWN_FACE_FIRST_CLIP
+	if move.damage_legs > maxf(move.damage_head, move.damage_torso):
+		return DOWN_KNEE_CLIP
+	if move.damage_head > move.damage_torso:
+		return DOWN_NECK_CLIP
+	return DOWN_BACK_CLIP
 
 
 static func down_ticks_for(tier: int) -> int:
@@ -931,6 +957,12 @@ func _apply_colorway() -> void:
 func _build_animation_tree() -> void:
 	if anim_player.has_animation("strikes/ladder_climb"):
 		anim_player.get_animation("strikes/ladder_climb").loop_mode = Animation.LOOP_LINEAR
+	for down_loop: String in [DOWN_BACK_CLIP, DOWN_NECK_CLIP, DOWN_KNEE_CLIP]:
+		if anim_player.has_animation(down_loop):
+			anim_player.get_animation(down_loop).loop_mode = Animation.LOOP_LINEAR
+	for down_once: String in [DOWN_FACE_FIRST_CLIP, DOWN_OUT_CLIP]:
+		if anim_player.has_animation(down_once):
+			anim_player.get_animation(down_once).loop_mode = Animation.LOOP_NONE
 	var state_machine := AnimationNodeStateMachine.new()
 	for state_id in STATE_ANIMATIONS:
 		var clip_name: String = STATE_ANIMATIONS[state_id]
@@ -1729,6 +1761,8 @@ func _take_clip_override(state: WrestlerFSM.State) -> String:
 	_state_clip_override.clear()
 	if clip != "":
 		return clip
+	if state == WrestlerFSM.State.PIN_DEFENDER and _down_clip == DOWN_OUT_CLIP:
+		return DOWN_OUT_CLIP
 	return clip_for_state(state, _is_grapple_attacker)
 
 ## Clip this state should play, honouring the per-role overrides. Public so
@@ -4210,6 +4244,7 @@ func _resolve_pending_hits() -> void:
 	_took_moves(moves.size())
 	hurt.emit(_hit_sell, last_move)
 	if fatal_shot:
+		_down_move = last_move
 		if fsm.current_state == WrestlerFSM.State.LADDER_CLIMB:
 			dead = true
 			combat.drain_health_permanently()
@@ -4234,6 +4269,7 @@ func _resolve_pending_hits() -> void:
 			opponent.hit_stop(stop)
 	if weapon_forces_down or _bump_clip != "" or _would_be_knocked_down() or (_hit_sell == Sell.DOWN and not combat.is_fired_up()
 			and not DOWNED_STATES.has(fsm.current_state)):
+		_down_move = last_move
 		# A weapon explicitly marked as a knockdown hit gets the same immediate
 		# fall as a cumulative knockdown, even when the wrestler is otherwise
 		# fired up. Dropped mid-swing: nothing is held over.
@@ -4859,9 +4895,9 @@ func _resolve_grapple_move(move: MoveDef) -> void:
 	var knocked_down := opponent._would_be_knocked_down() \
 			or tier_of(move) == CombatSystem.Tier.FINISHER
 	if knocked_down:
-		opponent._go_down(tier_of(move))
+		opponent._go_down(tier_of(move), move)
 	elif move and move.leaves_defender_down:
-		opponent._lie_down_after_throw()
+		opponent._lie_down_after_throw(move)
 	else:
 		opponent._start_move(WrestlerFSM.State.HIT_REACT, opponent._timed_stub(HIT_REACT_TICKS))
 	if ai and tier_of(move) == CombatSystem.Tier.SIGNATURE:
@@ -4981,8 +5017,10 @@ func _release_model_facing(force := false) -> void:
 ## at no cost, and every finish in this match is supposed to be a pinfall on
 ## a man who was -- _process_timed_state() restores eligibility once he is
 ## back on his feet.
-func _lie_down_after_throw() -> void:
+func _lie_down_after_throw(move: MoveDef = null) -> void:
 	_stop_dead()
+	_down_clip = down_sell_clip(move, -1)
+	_set_state_clip(WrestlerFSM.State.DOWN, _down_clip)
 	fsm.transition_to(WrestlerFSM.State.DOWN)
 	ground_attacks_taken = 0
 	_move_ticks_remaining = THROWN_DOWN_TICKS
@@ -5066,11 +5104,14 @@ func _take_fatal_gunshot() -> void:
 	_go_down()
 
 
-func _go_down(tier := -1) -> void:
+func _go_down(tier := -1, move: MoveDef = null) -> void:
 	_bumping = false
 	if fsm.current_state == WrestlerFSM.State.HIT_REACT or fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION, WrestlerFSM.State.RUN, WrestlerFSM.State.STRIKE]):
 		fsm.transition_to(WrestlerFSM.State.HIT_REACT)
 	_stop_dead()
+	_down_clip = down_sell_clip(move if move != null else _down_move, tier, dead)
+	_down_move = null
+	_set_state_clip(WrestlerFSM.State.DOWN, _down_clip)
 	fsm.transition_to(WrestlerFSM.State.DOWN)
 	ground_attacks_taken = 0
 	picked_up = false
@@ -5127,6 +5168,7 @@ func _tick_writhe() -> void:
 		return
 	_writhe_in -= 1
 	if _writhe_in == 0:
+		_down_clip = WRITHE_CLIP
 		_restart_state_clip(WrestlerFSM.State.DOWN, WRITHE_CLIP)
 
 

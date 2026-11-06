@@ -17,6 +17,7 @@ damage_arms = 0.0
 damage_legs = 4.0
 momentum_gain = 14.0
 leaves_defender_down = true
+down_face_first = true
 metadata/ff_name = "Slingshot Cutter"
 metadata/ff_family = "cutter"
 metadata/ff_setup = "rope"
