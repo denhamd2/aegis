@@ -3,12 +3,35 @@
 What is done, what comes next, and in what order. Updated at the end of each
 round; the README is the detailed log of how each piece was built.
 
-Latest published baseline: `fb69eae` (2026-10-16). The active task is the
-owner's eight current/new screenshot pairs, with an Apple M1 Pro / 16 GB,
-steady 60 fps target and the new references' skin finish. Start with
-[`visual_target_2026_10_16/plan.md`](visual_target_2026_10_16/plan.md) and
-[`progress.md`](visual_target_2026_10_16/progress.md). The earlier feature
-history below does not supersede that plan or later user corrections.
+Latest published game baseline: `2db6b67` (2026-11-06). The older roadmap
+notes below record prior rounds; use the current list here and later user
+corrections for what to do next.
+
+## Current backlog (6 Nov)
+
+**Completed:** varied downed sells by body part (5 Nov); side-aware head
+reactions, uppercut reactions, and strike contact checks (6 Nov). See
+[`selling_plan.md`](selling_plan.md) for the clips, test results, and measured
+strike connection sample.
+
+**Open selling work:**
+
+1. Add a limp for damaged legs and a hanging hurt arm during locomotion
+   (selling gap 4).
+2. Add a face-first collapse and a spin-out knockdown for suitable blows
+   (remaining force classes in selling gap 2).
+3. Refine the powerbomb shoulder carry, Samoan drop, Cross Rhodes, and figure
+   four paired holds (selling gap 5).
+4. Add graded pain vocals for hits, holds, and time down (selling gap 6).
+5. Keep selling during taunts, counts, and climbs (selling gap 8).
+6. Add facial controls and expressions after the body work reads at broadcast
+   distance (selling gap 7).
+
+**Other open work:** Mac-native visual and frame-pacing review against the
+owner's references; the remaining Fight Forever move library; the Roman/Cody
+body-morph audit; and the ladder offense and interruption variants described
+below. The 20,000-tick strike probe crashed in Godot's notification code;
+the completed 4,000-tick sample did not run to a match finish.
 
 ## Done and on the Mac build
 
@@ -180,7 +203,7 @@ table and the assessment of Gemini's suggestions are in
   pin unchanged because the required rendered clip review is unavailable in
   this display-less workspace.
 
-## Current priority: owner's New.png visual target
+## Earlier visual priority: owner's New.png target (Oct)
 
 The 15 October reference comparison supersedes the older material/look
 choices where they conflict. See
@@ -203,7 +226,7 @@ choices where they conflict. See
   still need to pass. The ladder-aerial numeric clearance failure is fixed in
   the working tree, pending rendered confirmation.
 
-## Order of work
+## Earlier visual work order
 
 1. Complete the New.png visual comparison and tune the first environment /
    crowd slice. Capture Mac-native appearance and frame pacing.

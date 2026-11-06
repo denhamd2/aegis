@@ -3,11 +3,13 @@
 The owner, 3 Nov: "Do we have anything in the backlog to improve selling by the
 wrestler being attacked? If no, research what needs to be done."
 
-**Backlog check.** No open item. The last selling work shipped. It is listed
-in `next_steps.md` ("every hit ... is sold to its size and to how much he has
-left") and `match_aaa_plan.md` §3 (`Sell_Head`/`Sell_Gut`, `FLURRY_STUN_AT`).
+**Backlog check on 3 Nov.** No selling-specific item was open then. The last
+selling work was listed in `next_steps.md` ("every hit ... is sold to its size
+and to how much he has left") and `match_aaa_plan.md` §3 (`Sell_Head`/
+`Sell_Gut`, `FLURRY_STUN_AT`).
 `animation_gap.md` Phase 4 names the in-between selling that `SellClutch`
-covers. Nothing beyond that was planned, hence this document.
+covers. The gaps below became the selling backlog; their statuses are current
+through 6 Nov.
 
 ## What the game does today
 
@@ -125,13 +127,15 @@ strikes (78.2%), with zero interrupted strikes. All three samples ended at the
 tick limit before a finish. The 20,000-tick run crashed inside Godot's node
 notification code before it could report.
 
-## Order
+## Next selling work
 
-1. The owner's six fixes (#48).
-2. Down sells by zone (gap 1; done 5 Nov).
-3. Strike side, uppercut and contact (gap 3; done 6 Nov).
-4. The limp layer (gap 4).
-5. Pain audio (gap 6).
+1. Limb damage during locomotion (gap 4).
+2. Face-first and spin-out knockdowns (remaining gap 2).
+3. Specific paired holds and moves (gap 5).
+4. Pain audio (gap 6).
+5. Selling through taunts, counts and climbs (gap 8).
 6. Faces (gap 7).
+
+Down sells by zone (gap 1) and strike reactions (gap 3) are complete.
 
 Each is closed on rendered frames and a probe, not on this document.
