@@ -14,7 +14,7 @@ covers. Nothing beyond that was planned, hence this document.
 | Layer | What it does | Where |
 | --- | --- | --- |
 | Hit size | Five sizes: LIGHT, MEDIUM, HEAVY, KNEE, DOWN. Chosen by the damage taken and the health left. Reaction 20–72 ticks. | `WrestlerController.sell_tier`, `SELL_REACT_TICKS` |
-| Where he was hit | Head or gut: `Hit_React_Head`/`_Torso`, `Hit_Heavy_*`, `Hit_Knee`. Then `Sell_Head`/`Sell_Gut` for 40 ticks. | `StrikeRecipes.reaction_for`, `_play_hit_reaction` |
+| Where he was hit | Head by strike hand, uppercut, or gut: mirrored `Hit_React_Head`, `Hit_Uppercut`, `Hit_React_Torso`, and heavy variants. Then a matching head or gut sell. | `StrikeRecipes.reaction_for`, `_play_hit_reaction` |
 | Every blow | An additive flinch away from the hitter, plus hit-stop. | `HitFlinch` |
 | A string of blows | Rocked into `Stunned_Sway` on the third blow inside a sell. | `FLURRY_STUN_AT` |
 | Knockdown | `Bump_Back`, then `Down_Supine` (breathing, knees up). Time down scales with the move. Staged get-up and groggy afterwards. | `_bump_down`, `_go_down`, `groggy_for` |
@@ -69,12 +69,12 @@ published detail on how the idles and locomotion are built. Sources:
 
    Still missing: a face-first collapse (guitar, chair to the back of the head)
    and a spin-out (a superkick).
-3. **Strike side and type.** Head reactions do not know which side the punch
-   came from, or whether it was a hook, an uppercut or a jab. Needed:
-   - mirror `Hit_React_Head` by the attacker's lead hand;
-   - an uppercut reaction (chin lifted, up on his toes);
-   - a measured contact frame, so every face punch visibly lands before the
-     head moves. `strike_connect_probe` to re-run.
+3. **Strike side and type (done 6 Nov).** Head shots carry explicit striking
+   hand and uppercut metadata. Left-hand hits mirror the head snap, heavy
+   stagger and jaw-clutch sell; the dropdown uppercut lifts the chin and toes.
+   Damage is still queued when contact is made in the authored active window
+   and resolved before the defender starts moving. The contact ordering is
+   covered by the startup-to-hit test and `strike_connect_probe`.
 4. **Limb damage on the walk.** `CombatSystem` already tracks head, torso, arms
    and legs. Needed:
    - over 60 on the legs: a limp, as an additive layer on the locomotion (as
@@ -112,11 +112,24 @@ and fatal shots use the still out-cold pose. Every sell begins at the supine
 handoff pose. The face-first sell rolls onto the front, then returns to
 supine for the existing get-up animations.
 
+## 6 Nov — strike reactions
+
+Gap 3 uses `MoveDef.strike_hand` to choose a left or right head reaction and
+`MoveDef.head_reaction` for uppercuts. The lighter and heavier clips share a
+matching sell handoff; the uppercut has a longer heavy stagger. The jab,
+cross, elbow, parry counter and dropdown uppercut have authored hand metadata.
+The defender's reaction begins when the referee resolves a strike after its
+contact tick, with no head motion during the attacker's startup.
+The three-seed, 4,000-tick connection probe recorded 122 landed of 156 thrown
+strikes (78.2%), with zero interrupted strikes. All three samples ended at the
+tick limit before a finish. The 20,000-tick run crashed inside Godot's node
+notification code before it could report.
+
 ## Order
 
 1. The owner's six fixes (#48).
 2. Down sells by zone (gap 1; done 5 Nov).
-3. Strike side, uppercut and contact (gap 3).
+3. Strike side, uppercut and contact (gap 3; done 6 Nov).
 4. The limp layer (gap 4).
 5. Pain audio (gap 6).
 6. Faces (gap 7).

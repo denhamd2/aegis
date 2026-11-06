@@ -31,6 +31,14 @@ extends Resource
 @export var damage_arms: float = 0.0
 @export var damage_legs: float = 0.0
 
+## The striking hand determines which way a head shot turns the defender.
+## UNKNOWN keeps the existing default reaction for kicks, weapons and moves
+## whose contact side has not been authored.
+enum StrikeHand { UNKNOWN, LEFT, RIGHT }
+@export var strike_hand: StrikeHand = StrikeHand.UNKNOWN
+enum HeadReaction { NORMAL, UPPERCUT }
+@export var head_reaction: HeadReaction = HeadReaction.NORMAL
+
 ## Where the striking limb actually is, in the wrestler's own local space,
 ## on the tick this move applies damage -- forward is -Z, matching the
 ## model's PI-Y mount in WrestlerController._install_character_model().

@@ -11,6 +11,7 @@ recovery_frames = 19
 reversal_window_start = 0
 reversal_window_end = 0
 damage_head = 5.0
+strike_hand = 2
 damage_torso = 1.0
 damage_arms = 0.0
 damage_legs = 0.0

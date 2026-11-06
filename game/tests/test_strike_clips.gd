@@ -17,6 +17,7 @@ extends GdUnitTestSuite
 const StrikeRecipes := preload("res://resources/animations/strike_recipes.gd")
 const STRIKE_CLIPS := preload("res://resources/animations/strike_clips.tres")
 const RIG := preload("res://assets/characters/wrestler_base.glb")
+const WRESTLER_SCENE := preload("res://scenes/wrestler.tscn")
 
 func _rig_player() -> AnimationPlayer:
 	var model: Node = auto_free(RIG.instantiate())
@@ -183,7 +184,7 @@ func test_the_kick_clip_matches_the_move_that_plays_it() -> void:
 
 func test_the_reactions_are_as_long_as_the_hit_reaction_state() -> void:
 	var seconds := WrestlerController.HIT_REACT_TICKS / float(Engine.physics_ticks_per_second)
-	for name: StringName in [&"hit_head", &"hit_torso"]:
+	for name: StringName in [&"hit_head", &"hit_head_left", &"hit_uppercut", &"hit_torso"]:
 		assert_float(STRIKE_CLIPS.get_animation(name).length) \
 			.override_failure_message("%s outlives or undershoots HIT_REACT" % name) \
 			.is_equal_approx(seconds, 0.02)
@@ -201,6 +202,63 @@ func test_a_head_shot_and_a_body_shot_pick_different_reactions() -> void:
 
 func test_a_move_with_no_damage_still_gets_a_reaction() -> void:
 	assert_str(StrikeRecipes.reaction_for(null)).is_equal("strikes/hit_torso")
+
+func test_punch_hand_and_uppercut_choose_their_own_head_reactions() -> void:
+	var jab := load("res://resources/moves/strike_jab.tres") as MoveDef
+	var cross := load("res://resources/moves/strike_cross.tres") as MoveDef
+	var uppercut := load("res://resources/moves/strike_dropdown_uppercut.tres") as MoveDef
+	assert_int(jab.strike_hand).is_equal(MoveDef.StrikeHand.LEFT)
+	assert_int(cross.strike_hand).is_equal(MoveDef.StrikeHand.RIGHT)
+	assert_int(uppercut.head_reaction).is_equal(MoveDef.HeadReaction.UPPERCUT)
+	assert_str(StrikeRecipes.reaction_for(jab)).is_equal("strikes/hit_head_left")
+	assert_str(StrikeRecipes.reaction_for(cross)).is_equal("strikes/hit_head")
+	assert_str(StrikeRecipes.reaction_for(uppercut)).is_equal("strikes/hit_uppercut")
+	assert_str(StrikeRecipes.sell_for(StrikeRecipes.reaction_for(jab))) \
+			.is_equal("strikes/sell_head_left")
+
+func test_heavy_hit_keeps_the_strike_side_and_uppercut_type() -> void:
+	var wrestler: WrestlerController = auto_free(WRESTLER_SCENE.instantiate())
+	add_child(wrestler)
+	await get_tree().physics_frame
+	for entry: Array in [
+		["strike_jab", "strikes/hit_heavy_head_left", "strikes/sell_head_left"],
+		["strike_cross", "strikes/hit_heavy_head", "strikes/sell_head"],
+		["strike_dropdown_uppercut", "strikes/hit_heavy_uppercut", "strikes/sell_head"],
+	]:
+		var move := load("res://resources/moves/%s.tres" % entry[0]) as MoveDef
+		wrestler._play_hit_reaction(move, WrestlerController.Sell.HEAVY)
+		assert_str(wrestler._state_clip_override[WrestlerFSM.State.HIT_REACT]) \
+				.override_failure_message(entry[0]).is_equal(entry[1])
+		assert_str(wrestler._sell_clip).is_equal(entry[2])
+
+func test_jab_contact_starts_the_defenders_head_reaction_after_startup() -> void:
+	var attacker: WrestlerController = auto_free(WRESTLER_SCENE.instantiate())
+	var defender: WrestlerController = auto_free(WRESTLER_SCENE.instantiate())
+	add_child(attacker)
+	add_child(defender)
+	await get_tree().physics_frame
+	attacker.opponent = defender
+	defender.opponent = attacker
+	attacker.global_position = Vector3.ZERO
+	defender.global_position = Vector3(0.0, 0.0, -0.75)
+	var jab := load("res://resources/moves/strike_jab.tres") as MoveDef
+	var landed := [false]
+	attacker.move_landed.connect(func(_a, _d, _m): landed[0] = true)
+	attacker._start_move(WrestlerFSM.State.STRIKE, jab)
+	for tick in jab.startup_frames:
+		attacker._process_active_move({})
+		assert_bool(landed[0]).override_failure_message("jab landed in startup tick %d" % tick).is_false()
+		assert_int(defender.fsm.current_state).is_equal(WrestlerFSM.State.IDLE)
+	attacker._process_active_move({})
+	assert_bool(landed[0]).is_true()
+	# Contact queues the hit; the referee resolves it after both wrestlers
+	# finish this tick. The reaction cannot pre-empt the arriving fist.
+	assert_int(defender.fsm.current_state).is_equal(WrestlerFSM.State.IDLE)
+	defender._resolve_pending_hits()
+	assert_int(defender.fsm.current_state).is_equal(WrestlerFSM.State.HIT_REACT)
+	var node := (defender.anim_tree.tree_root as AnimationNodeStateMachine) \
+			.get_node("HIT_REACT") as AnimationNodeAnimation
+	assert_str(node.animation).is_equal("strikes/hit_head_left")
 
 ## A strike must not be able to land from further than the fist can reach.
 ## Measured by running FK over the generated jab: the fist peaks 0.76m

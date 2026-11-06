@@ -305,6 +305,10 @@ const RECIPES := {
 	# it mid-recoil. Hit_Head was trimmed because its tail was surplus.
 	"hit_head": {"kind": "retime", "source": "Hit_React_Head",
 		"seconds": 0.333, "file": AUTHORED},
+	"hit_head_left": {"kind": "retime", "source": "Hit_React_Head_Left",
+		"seconds": 0.333, "file": AUTHORED},
+	"hit_uppercut": {"kind": "retime", "source": "Hit_Uppercut",
+		"seconds": 0.333, "file": AUTHORED},
 	# Authored. Hit_Chest flinches; this FOLDS around the hit -- chest
 	# hollows, shoulders close in, knees give -- so a body shot and a head
 	# shot are visibly different things happening to a man.
@@ -314,6 +318,10 @@ const RECIPES := {
 	# doubled over and stumbling, dropped to a knee.
 	"hit_heavy_head": {"kind": "retime", "source": "Hit_Heavy_Head",
 		"seconds": 0.8, "file": AUTHORED},
+	"hit_heavy_head_left": {"kind": "retime", "source": "Hit_Heavy_Head_Left",
+		"seconds": 0.8, "file": AUTHORED},
+	"hit_heavy_uppercut": {"kind": "retime", "source": "Hit_Heavy_Uppercut",
+		"seconds": 0.8, "file": AUTHORED},
 	"hit_heavy_gut": {"kind": "retime", "source": "Hit_Heavy_Gut",
 		"seconds": 0.8, "file": AUTHORED},
 	"hit_knee": {"kind": "retime", "source": "Hit_Knee",
@@ -321,6 +329,8 @@ const RECIPES := {
 	# The sells that follow them while he is left alone
 	# (WrestlerController.SELL_TICKS): 20 frames each.
 	"sell_head": {"kind": "retime", "source": "Sell_Head",
+		"seconds": 0.667, "file": AUTHORED},
+	"sell_head_left": {"kind": "retime", "source": "Sell_Head_Left",
 		"seconds": 0.667, "file": AUTHORED},
 	"sell_gut": {"kind": "retime", "source": "Sell_Gut",
 		"seconds": 0.667, "file": AUTHORED},
@@ -752,7 +762,10 @@ static func total_damage(move: MoveDef) -> float:
 
 ## The sell that carries on from a hit reaction (WrestlerController.SELL_TICKS).
 static func sell_for(reaction: String) -> String:
-	if reaction in [clip("hit_head"), clip("hit_heavy_head"), clip("hit_knee")]:
+	if reaction in [clip("hit_head_left"), clip("hit_heavy_head_left")]:
+		return clip("sell_head_left")
+	if reaction in [clip("hit_head"), clip("hit_heavy_head"), clip("hit_uppercut"),
+			clip("hit_heavy_uppercut"), clip("hit_knee")]:
 		return clip("sell_head")
 	if reaction in [clip("hit_torso"), clip("hit_heavy_gut")]:
 		return clip("sell_gut")
@@ -762,5 +775,10 @@ static func sell_for(reaction: String) -> String:
 static func reaction_for(move: MoveDef) -> String:
 	if not move:
 		return clip("hit_torso")
-	return clip("hit_head") if move.damage_head > move.damage_torso \
-			else clip("hit_torso")
+	if move.damage_head <= move.damage_torso:
+		return clip("hit_torso")
+	if move.head_reaction == MoveDef.HeadReaction.UPPERCUT:
+		return clip("hit_uppercut")
+	if move.strike_hand == MoveDef.StrikeHand.LEFT:
+		return clip("hit_head_left")
+	return clip("hit_head")

@@ -4483,10 +4483,16 @@ func _play_strike_clip(move: MoveDef) -> void:
 ## strikes read as not connecting to anything in particular.
 func _play_hit_reaction(move: MoveDef, tier := Sell.LIGHT) -> void:
 	var reaction := StrikeRecipes.reaction_for(move)
-	var head := reaction == StrikeRecipes.clip("hit_head")
 	match tier:
 		Sell.HEAVY:
-			reaction = StrikeRecipes.clip("hit_heavy_head" if head else "hit_heavy_gut")
+			if reaction == StrikeRecipes.clip("hit_uppercut"):
+				reaction = StrikeRecipes.clip("hit_heavy_uppercut")
+			elif reaction == StrikeRecipes.clip("hit_head_left"):
+				reaction = StrikeRecipes.clip("hit_heavy_head_left")
+			elif reaction == StrikeRecipes.clip("hit_head"):
+				reaction = StrikeRecipes.clip("hit_heavy_head")
+			else:
+				reaction = StrikeRecipes.clip("hit_heavy_gut")
 		Sell.KNEE:
 			reaction = StrikeRecipes.clip("hit_knee")
 	_set_state_clip(WrestlerFSM.State.HIT_REACT, reaction)

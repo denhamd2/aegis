@@ -11415,3 +11415,11 @@ A frame that misses its 16.7 ms slot waits for the next v-sync, so the picture d
 Knockdowns now carry the move that caused them into the DOWN state. The strongest damage zone picks a back, neck, or knee sell; face-first moves use a landing flag; finishers, sledgehammers, and fatal shots leave the wrestler out cold. Existing table and cut writhing still takes over when it is due. The face-first sell rolls onto the front and returns to the shared supine pose before get-up.
 
 The five new clips are authored in Blender and baked into `strike_clips.tres`: `Down_Back`, `Down_Neck`, `Down_Knee`, `Down_Face_First`, and `Down_Out`. Each starts at the old supine handoff pose, so the preceding throw or bump meets it cleanly. The three body-part sells loop; the face-first and out-cold sells hold their final pose.
+
+## 6 Nov — Strike reactions by side and type
+
+Head shots now use the striking hand carried on the move: the left jab turns the defender opposite the right cross, elbow, and parry counter. The dropdown uppercut gets its own chin-up, toe-lift reaction, with a longer version for heavy sells. Left-hand reactions continue into a mirrored jaw-clutch sell before the wrestler squares up again. Body shots keep their folded-over reaction.
+
+The hit check begins on the move's authored first active tick. The defender enters the reaction only when that hit is resolved after contact; the new strike test checks the ordering through the jab's startup, contact, and reaction state.
+
+`strike_connect_probe` over seeds 1–3 and 4,000 ticks each recorded 122 landed of 156 thrown strikes (78.2%), with 27 contact-volume misses, 7 unhittable targets, and no interrupted strikes. All three samples ended at the tick limit before a match finish. The longer 20,000-tick run crashed in Godot's notification threading after about 34 minutes without a report; the shorter run completed and provided the connection sample.

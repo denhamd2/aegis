@@ -3510,6 +3510,76 @@ CLIPS = {
     ],
 }
 
+# Left-hand head shots carry the defender's turn and jaw clutch to the other
+# side. Mirror target positions and pole vectors, not solved bone rotations:
+# RigPoser then solves each arm on its own side of the torso.
+def _mirror_reaction(spec):
+    out = {}
+    for key, value in spec.items():
+        target = key
+        if key.endswith("_r"):
+            target = key[:-2] + "_l"
+        elif key.endswith("_l"):
+            target = key[:-2] + "_r"
+        if isinstance(value, tuple) and len(value) == 3:
+            if key in ("hips", "spine", "head") or key.startswith(("clav_", "ankle_")):
+                out[target] = (value[0], -value[1], -value[2])
+            else:
+                # The rig's right foot is not a perfect reflection of its
+                # left. Its ball sinks through the mat during the mirrored
+                # weight transfer unless the target is raised 3.5 cm.
+                lift = 0.035 if target == "foot_r" else 0.0
+                out[target] = (-value[0], value[1], value[2] + lift)
+        else:
+            out[target] = value
+    return out
+
+
+CLIPS["Hit_React_Head_Left"] = [
+    (frame, R() if i == 0 else _mirror_reaction(spec))
+    for i, (frame, spec) in enumerate(CLIPS["Hit_React_Head"])
+]
+CLIPS["Hit_Heavy_Head_Left"] = [
+    (frame, R() if i == 0 else _mirror_reaction(spec))
+    for i, (frame, spec) in enumerate(CLIPS["Hit_Heavy_Head"])
+]
+CLIPS["Sell_Head_Left"] = []
+for frame, spec in CLIPS["Sell_Head"]:
+    mirrored = _mirror_reaction(spec)
+    if frame == 16:
+        # Recover the original stance before returning to READY on frame 20;
+        # crossing the mirrored step into READY in four frames drove a toe
+        # through the mat.
+        mirrored["foot_r"] = spec["foot_r"]
+        mirrored["foot_l"] = spec["foot_l"]
+    CLIPS["Sell_Head_Left"].append((frame, R() if frame == 20 else mirrored))
+
+# An uppercut drives the chin up before the torso and feet give. The first
+# moving key is after contact; the heavier version stays rocked for the
+# longer heavy-reaction state before handing off to Sell_Head.
+CLIPS["Hit_Uppercut"] = [
+    (0, R()),
+    (2, R(pelvis=(0.0, -0.03, 0.800), hips=(4, 0, 0), spine=(8, 0, 0),
+          head=(28, 0, 0), hand_r=(0.30, 0.18, 1.08))),
+    (4, R(pelvis=(0.0, -0.09, 0.840), hips=(10, 0, 0), spine=(18, 0, 0),
+          head=(40, 0, 0), hand_r=(0.36, 0.12, 1.10),
+          foot_r=(0.27, -0.22, 0.14), foot_l=(-0.23, 0.20, 0.14),
+          ankle_r=(18, 0, 0), ankle_l=(18, 0, 0))),
+    (8, R(pelvis=(0.0, -0.13, 0.800), hips=(4, 0, 0), spine=(8, 0, 0),
+          head=(25, 0, 0), hand_l=(-0.14, 0.24, 1.38),
+          foot_r=(0.29, -0.34, 0.104))),
+    (12, HEAD_HURT),
+]
+CLIPS["Hit_Heavy_Uppercut"] = CLIPS["Hit_Uppercut"][:3] + [
+    (8, R(pelvis=(0.02, -0.18, 0.806), hips=(12, 0, 0), spine=(22, 0, 0),
+          head=(36, 0, 0), hand_r=(0.40, 0.04, 1.16),
+          foot_r=(0.29, -0.46, 0.104))),
+    (14, R(pelvis=(0.02, -0.19, 0.780), hips=(-4, 0, 0), spine=(-14, 0, 0),
+           head=(18, 0, 0), hand_l=(-0.14, 0.24, 1.40),
+           foot_l=(-0.22, -0.24, 0.104))),
+    (24, HEAD_HURT),
+]
+
 # Signature. A backbreaker, built on the body slam's lift -- which reads --
 # rather than a second one derived from scratch: the same scoop, the same
 # roll onto his back across the chest, and then instead of the slam the
