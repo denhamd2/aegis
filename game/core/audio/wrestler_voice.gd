@@ -22,6 +22,10 @@ const MIN_GAP := 0.6
 const LIGHT_CHANCE := 0.5
 ## Down on the mat: the groan comes as he lands, not as he starts to fall.
 const DOWN_GROAN_DELAY := 0.55
+## Once the hold locks, the first cry and the breathing space between cries.
+const HOLD_FIRST := 0.20
+const HOLD_GAP := 2.60
+const HOLD_RETRY := 0.25
 ## Seconds of breath between two screams.
 const BURN_BREATH := 0.18
 ## The scream fades out over this when the fire is out.
@@ -47,6 +51,7 @@ var _seeded := false
 var _since := INF
 var _last := {}
 var _groan_in := -1.0
+var _hold_in := -1.0
 var _breath := -1.0
 var _fading := -1.0
 
@@ -150,6 +155,17 @@ func stop_screaming() -> void:
 
 func _process(delta: float) -> void:
 	_since += delta
+	var held := wrestler != null and wrestler.fsm != null \
+			and wrestler.fsm.current_state == WrestlerFSM.State.SUBMISSION_DEFENDER \
+			and (wrestler.opponent == null or wrestler.opponent._submission_lock_ticks <= 0)
+	if held:
+		if _hold_in < 0.0:
+			_hold_in = HOLD_FIRST
+		_hold_in -= delta
+		if _hold_in <= 0.0:
+			_hold_in = HOLD_GAP if say("yell") else HOLD_RETRY
+	else:
+		_hold_in = -1.0
 	if _groan_in >= 0.0:
 		_groan_in -= delta
 		if _groan_in < 0.0:

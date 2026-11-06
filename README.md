@@ -11382,6 +11382,35 @@ Tests check the move and that the rig is never in its frame on the real walks.
 
 Review sheet: `gauntlet/refs/entrances/cody_comets_review.jpg`.
 
+## 6 Nov — Selling backlog closed
+
+Damaged legs now add a limp to the walk and run; a damaged right arm eases down
+beside the body. The additive modifier reads the match's existing limb damage
+and changes only the skeleton. The sell clutch keeps a small trunk lean during
+taunts, pin counts, ladder climbs and the scripted climb to the top rope while
+the authored hands keep their grips. A wrestler also starts a sell while the
+other man taunts.
+
+Two more solo falls complete the knockdown force classes. Guitar hits and
+chairs from behind cause a face-first collapse, then the face-down sell;
+superkicks turn the victim out of the kick before a back bump. The new
+`Bump_Face` and `Bump_Spin` clips were authored at 30 fps and exported at the
+game's 60 fps. Their two-clip preview passed PoseLint with no below-mat or
+body-break findings after the hand and boot contacts were tuned. The visual
+frames were checked from the side; the full-library bake and tests are the
+release gate.
+
+Roman, Cody and Kenny now each have two runtime facial shape controls:
+parted mouth and clenched brow/lips. The controls ease with acute hits and
+accumulated wear. The morph data uses vertex offsets and full normal/tangent
+directions; the initial version exposed facial meshes, which a rendered
+close-up caught before it shipped. The corrected close-ups keep the face
+intact. The pain voice already covered hit grunts, mat groans and severe-hit
+yells; it now gives a spaced yell during a locked submission. The earlier
+powerbomb shoulder carry, Samoan drop, Cross Rhodes and figure-four clips
+were already authored, so their stale backlog entries are closed. See
+`gauntlet/refs/selling_plan.md` for the full status.
+
 ## 3 Nov — A ladder climbed hand over hand; holding 60 fps on the Mac
 
 The owner: "Ensure the ladder climbing animation is natural, ie holding the sides during a climb, step by step climb." And: on his MacBook M1 "at times the gameplay can become a bit janky and animations can get a bit like stop motion ... What can you do to improve ours?"

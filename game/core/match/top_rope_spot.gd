@@ -237,6 +237,9 @@ func _next() -> void:
 		_finish()
 		return
 	var seg: Dictionary = _segments[_seg]
+	if String(seg["a"]["clip"]) == "strikes/corner_climb" and attacker.sell_clutch:
+		attacker._begin_sell(WrestlerController.most_hurt(attacker.combat.limb_damage,
+				WrestlerController.SELL_GETUP_MIN), CLIMB_TICKS + STEP_TICKS)
 	# "" keeps the clip already playing (the crossbody's hold on the man).
 	if String(seg["a"]["clip"]) != "":
 		attacker.play_presentation_clip(seg["a"]["clip"])
@@ -247,6 +250,9 @@ func _physics_process(delta: float) -> void:
 	if _seg < 0 or _seg >= _segments.size():
 		return
 	var seg: Dictionary = _segments[_seg]
+	if attacker.sell_clutch:
+		var climbing := _seg == 2 or _seg == 3
+		attacker.sell_clutch.advance(climbing, false)
 	_tick += 1
 	var t := clampf(float(_tick) / float(seg["ticks"]), 0.0, 1.0)
 	var beat: Dictionary = seg["a"]

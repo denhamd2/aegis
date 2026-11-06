@@ -35,6 +35,7 @@ var _ids := {}
 var _part := ""
 var _left := 0
 var _weight := 0.0
+var _hands_free := true
 
 
 func _ready() -> void:
@@ -62,8 +63,9 @@ func part() -> String:
 
 
 ## One physics tick; `free` false (he is doing something) lets go at once.
-func advance(free: bool) -> void:
-	if not free:
+func advance(allowed: bool, hands_free := true) -> void:
+	_hands_free = hands_free
+	if not allowed:
 		_left = 0
 	if _left > 0:
 		_left -= 1
@@ -86,7 +88,7 @@ func _process_modification() -> void:
 	var left := (to_sk.basis * -wrestler.global_transform.basis.x).normalized()
 	var up := (to_sk.basis * Vector3.UP).normalized()
 	# The lean first: the hand's target is on his own body, which moves with it.
-	var lean := deg_to_rad(float(LEAN_DEG[_part])) * w * 0.5
+	var lean := deg_to_rad(float(LEAN_DEG[_part])) * w * (0.5 if _hands_free else 0.12)
 	var axis := fwd.cross(up).normalized() # tipping about it takes the chest forward
 	for key: String in ["spine_02", "spine_03"]:
 		var id: int = _ids[key]
@@ -95,6 +97,10 @@ func _process_modification() -> void:
 		var pg := sk.get_bone_global_pose(parent) if parent >= 0 else Transform3D()
 		var turned := Transform3D(Basis(axis, -lean) * g.basis, g.origin)
 		sk.set_bone_pose_rotation(id, (pg.basis.inverse() * turned.basis).get_rotation_quaternion())
+	# During a taunt, count or climb the authored hands own their prop or the
+	# other wrestler. Keep the pain in the trunk without pulling a grip away.
+	if not _hands_free:
+		return
 	var at := func(key: String) -> Vector3:
 		return sk.get_bone_global_pose(_ids[key]).origin
 	var target: Vector3

@@ -4344,6 +4344,27 @@ CLIPS["Knee_Lift_Defender"] = [(0, pose(STAND)), (7, pose(STAND, head=(4, 0, 0))
 # on the way (David: "his legs and arms look broken").
 CLIPS["Bump_Back"] = [(0, pose(STAND, head=(4, 0, 0)))] + _back_fall(2, 30, pelvis_hit=0.95)
 
+# A superkick turns the jaw and shoulders, then the hips follow. He rotates
+# out of the kick before taking the bump on his back, instead of sharing the
+# lariat's legs-over-head silhouette.
+CLIPS["Bump_Spin"] = [
+    (0, pose(STAND, head=(6, 22, 0))),
+    (3, P(pelvis=(0.0, -0.05, 0.89), hips=(0, 42, 0),
+          spine=(12, 28, -7), head=(12, 28, 0),
+          hand_r=(0.45, 0.0, 1.28), hand_l=(-0.30, 0.05, 1.08))),
+    (7, P(pelvis=(0.0, -0.14, 0.70), hips=(36, 120, 0),
+          spine=(-10, 18, 0), head=(-18, 12, 0),
+          hand_r=(0.42, -0.38, 1.04), hand_l=(-0.45, -0.35, 1.12),
+          foot_r=(0.21, 0.24, 0.33), foot_l=(-0.16, 0.38, 0.30),
+          knee_r=(0.2, 0.8, 0.5), knee_l=(-0.2, 0.8, 0.5))),
+    (13, _yawed(S(pelvis=(0.0, 0.0, 0.200), head=(-2, 0, 0),
+                  hand_r=(-0.55, 0.12, 0.58), hand_l=(0.55, 0.12, 0.75),
+                  foot_l=(0.15, -0.86, 0.16)))),
+    (19, _yawed(S(pelvis=(0.0, 0.0, 0.180), head=(-16, 0, 0),
+                  hand_r=(-0.37, 0.05, 0.28), hand_l=(0.36, 0.03, 0.28)))),
+    (36, dict(SUPINE_AWAY)),
+]
+
 # Lariated (the owner, 3 Nov: "knocked down with force to the mat"): 36
 # frames / 1.2 s. The arm across his throat on frame 0; head and chest
 # whipped back on 2 while his feet are still running in; turned inside out
@@ -4800,6 +4821,24 @@ def _face_fall(hit, end, **hit_over):
                            foot_r=(0.20, -0.30, 0.22), foot_l=(-0.18, -0.24, 0.24),
                            knee_r=(0.2, 0.4, -0.6), knee_l=(-0.2, 0.4, -0.6)))] \
         + _face_first_then_roll(hit + 6, end)
+
+
+# A blow from behind folds him forward. His palms catch the canvas before
+# the face, then he rolls onto his back so the down sell can choose its zone.
+CLIPS["Bump_Face"] = [(0, pose(STAND, head=(-8, 0, 0)))] + _face_fall(2, 30)
+_face_hand_lift = {8: 0.08, 13: 0.15, 16: 0.34, 19: 0.34,
+                   22: 0.22, 26: 0.14}
+for _i, (_frame, _spec) in enumerate(CLIPS["Bump_Face"]):
+    if _frame not in _face_hand_lift:
+        continue
+    _spec = dict(_spec)
+    for _hand in ("hand_r", "hand_l"):
+        _x, _y, _z = _spec[_hand]
+        _spec[_hand] = (_x, _y, _z + _face_hand_lift[_frame])
+    if _frame == 16:
+        _x, _y, _z = _spec["foot_r"]
+        _spec["foot_r"] = (_x, _y, _z + 0.08)
+    CLIPS["Bump_Face"][_i] = (_frame, _spec)
 
 
 # Bicycle Knee Strike, 36 frames. Leaps off the left foot and drives the
@@ -9490,7 +9529,11 @@ def main():
     arm = load_rig()
     clear_actions()
     poser = RigPoser(arm)
-    for name in sorted(CLIPS):
+    selected = os.environ.get("AEGIS_ONLY_CLIPS", "")
+    names = sorted(selected.split(",")) if selected else sorted(CLIPS)
+    for name in names:
+        if name not in CLIPS:
+            raise ValueError("unknown clip: " + name)
         author(poser, arm, name, CLIPS[name])
     # Every action must survive the export. ACTIONS mode walks the actions
     # that could be assigned to the armature, so the armature must KEEP its
@@ -9499,8 +9542,9 @@ def main():
     for action in bpy.data.actions:
         action.use_fake_user = True
     drop_mesh()
-    export(OUT)
-    print("wrote %s (%d clips)" % (OUT, len(CLIPS)))
+    output = os.environ.get("AEGIS_CLIP_OUTPUT", OUT)
+    export(output)
+    print("wrote %s (%d clips)" % (output, len(names)))
 
 
 if __name__ == "__main__":

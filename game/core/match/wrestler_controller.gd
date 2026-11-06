@@ -459,6 +459,7 @@ var ai: WrestlerAI
 var opponent: WrestlerController
 var fsm: WrestlerFSM
 var combat: CombatSystem
+var face_expression: FaceExpression
 var grapple_rig: GrappleRig
 ## Retargeted CC0 base mesh's own AnimationPlayer (see
 ## assets/characters/CREDITS.md).
@@ -489,6 +490,7 @@ var body_life: BodyLife
 var foot_lock: FootLock
 var rope_reach: RopeReach
 var sell_clutch: SellClutch
+var limb_damage_sell: LimbDamageSell
 var impact_sell: ImpactSell
 var guard_pose: GuardPose
 var _guarding := false
@@ -786,6 +788,11 @@ func _ready() -> void:
 	fsm = WrestlerFSM.new()
 	add_child(fsm)
 	combat = CombatSystem.new()
+	face_expression = FaceExpression.new()
+	face_expression.name = "FaceExpression"
+	face_expression.wrestler = self
+	add_child(face_expression)
+	face_expression.install(get_node("CharacterModel") as Node3D)
 	ai = get_node_or_null("AI")
 	if ai:
 		ai.controller = self
@@ -830,6 +837,7 @@ func _ready() -> void:
 		_build_body_life()
 		_build_hit_flinch()
 		_build_sell_clutch()
+		_build_limb_damage_sell()
 		_build_impact_sell()
 		_build_foot_lock()
 		_build_rope_reach()
@@ -1305,6 +1313,17 @@ func _build_sell_clutch() -> void:
 		sell_clutch.bones[key] = _skeleton_bone_name(key)
 	sell_clutch.wrestler = self
 	skeleton.add_child(sell_clutch)
+
+
+## After the transient clutch: a damaged leg still changes the next walk,
+## and a hurt arm hangs after he lets go of the injured part.
+func _build_limb_damage_sell() -> void:
+	limb_damage_sell = LimbDamageSell.new()
+	limb_damage_sell.name = "LimbDamageSell"
+	for key: String in limb_damage_sell.bones:
+		limb_damage_sell.bones[key] = _skeleton_bone_name(key)
+	limb_damage_sell.wrestler = self
+	skeleton.add_child(limb_damage_sell)
 
 
 ## Paired move and surface follow-through. It is ordered after the ordinary
@@ -3410,6 +3429,7 @@ const SELL_EVERY := Vector2i(300, 540)
 
 var _sell_clock := -1
 var _sell_draws := 0
+var _busy_sell_state := -1
 ## Sells begun this match (probes).
 var sells := 0
 
@@ -3418,7 +3438,19 @@ func _tick_selling() -> void:
 	if sell_clutch == null:
 		return
 	var free := fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION])
-	sell_clutch.advance(free)
+	var own_busy := fsm.is_in([WrestlerFSM.State.TAUNT, WrestlerFSM.State.PIN_DEFENDER,
+			WrestlerFSM.State.LADDER_CLIMB])
+	var watching_taunt := free and opponent != null \
+			and opponent.fsm.current_state == WrestlerFSM.State.TAUNT
+	var busy_state := int(fsm.current_state) if own_busy else -2 if watching_taunt else -1
+	sell_clutch.advance(free or own_busy, free)
+	if own_busy or watching_taunt:
+		if _busy_sell_state != busy_state:
+			_busy_sell_state = busy_state
+			var ticks := 240 if fsm.current_state != WrestlerFSM.State.TAUNT else 150
+			_begin_sell(most_hurt(combat.limb_damage, SELL_GETUP_MIN), ticks)
+		return
+	_busy_sell_state = -1
 	if not free:
 		return
 	if _sell_clock < 0:
@@ -4205,6 +4237,7 @@ func _resolve_pending_hits() -> void:
 	var lariat := false
 	_pending_fatal_shot = false
 	_bump_clip = ""
+	_bump_face_first = false
 	for move in moves:
 		combat.apply_damage(move, CombatSystem.COMEBACK_DAMAGE_SCALE if hitter_fired_up else 1.0)
 		var weapon := WeaponCatalog.of_move(move)
@@ -4241,6 +4274,14 @@ func _resolve_pending_hits() -> void:
 	if lariat and not combat.is_fired_up():
 		_bump_clip = BUMP_LARIAT_CLIP
 		_bump_shove = maxf(_bump_shove, LARIAT_SHOVE)
+	# A rear chair blow and a guitar crumple forward. A superkick turns its
+	# victim around before he lands; both use dedicated authored solo falls.
+	var behind := opponent != null and (-global_basis.z).dot(
+			(opponent.global_position - global_position).normalized()) < -0.3
+	var special := special_bump_clip(last_move, behind)
+	if special != "":
+		_bump_clip = special
+		_bump_face_first = special == BUMP_FACE_CLIP
 	_took_moves(moves.size())
 	hurt.emit(_hit_sell, last_move)
 	if fatal_shot:
@@ -5042,10 +5083,24 @@ const BUMP_TICKS := 30
 ## and he comes down from higher, so the fall is longer than a back bump's,
 ## and he is carried back with it.
 const BUMP_LARIAT_CLIP := "strikes/bump_lariat"
+const BUMP_FACE_CLIP := "strikes/bump_face"
+const BUMP_SPIN_CLIP := "strikes/bump_spin"
 const LARIAT_BUMP_TICKS := 36
 const LARIAT_SHOVE := 1.6
+
+
+static func special_bump_clip(move: MoveDef, hit_from_behind: bool) -> String:
+	if move == null:
+		return ""
+	var weapon := WeaponCatalog.of_move(move)
+	if weapon and (weapon.id == &"guitar" or weapon.id == &"steel_chair" and hit_from_behind):
+		return BUMP_FACE_CLIP
+	if String(move.animation_pair_id).contains("superkick"):
+		return BUMP_SPIN_CLIP
+	return ""
 ## The bump the next _bump_down() plays, set by the hit that caused it.
 var _bump_clip := ""
+var _bump_face_first := false
 var _bumping := false
 
 
@@ -5082,11 +5137,11 @@ func _bump_down() -> void:
 	_stop_dead()
 	_knockback_ticks = 0
 	_sell_clip = ""
-	var lariat := _bump_clip == BUMP_LARIAT_CLIP and anim_player != null \
-			and anim_player.has_animation(BUMP_LARIAT_CLIP)
+	var clip := _bump_clip if _bump_clip != "" and anim_player != null \
+			and anim_player.has_animation(_bump_clip) else "strikes/bump_back"
 	_bump_clip = ""
-	_set_state_clip(WrestlerFSM.State.HIT_REACT, BUMP_LARIAT_CLIP if lariat else "strikes/bump_back")
-	_start_move(WrestlerFSM.State.HIT_REACT, _timed_stub(LARIAT_BUMP_TICKS if lariat else BUMP_TICKS))
+	_set_state_clip(WrestlerFSM.State.HIT_REACT, clip)
+	_start_move(WrestlerFSM.State.HIT_REACT, _timed_stub(LARIAT_BUMP_TICKS if clip in [BUMP_LARIAT_CLIP, BUMP_SPIN_CLIP] else BUMP_TICKS))
 	_bumping = true
 	if _bump_shove > 1.0 and opponent:
 		# the heaviest weapons carry him back as he goes over
@@ -5115,7 +5170,9 @@ func _go_down(tier := -1, move: MoveDef = null) -> void:
 	if fsm.current_state == WrestlerFSM.State.HIT_REACT or fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION, WrestlerFSM.State.RUN, WrestlerFSM.State.STRIKE]):
 		fsm.transition_to(WrestlerFSM.State.HIT_REACT)
 	_stop_dead()
-	_down_clip = down_sell_clip(move if move != null else _down_move, tier, dead)
+	_down_clip = DOWN_FACE_FIRST_CLIP if _bump_face_first and not dead \
+			else down_sell_clip(move if move != null else _down_move, tier, dead)
+	_bump_face_first = false
 	_down_move = null
 	_set_state_clip(WrestlerFSM.State.DOWN, _down_clip)
 	fsm.transition_to(WrestlerFSM.State.DOWN)
@@ -5243,7 +5300,8 @@ func _process_timed_state(input: Dictionary, next_state: WrestlerFSM.State) -> v
 		# who hit him: down, turned round onto Down_Supine as the paired
 		# moves' falls are (MoveDef.defender_lands_head_away).
 		_bumping = false
-		_turn_round_on_the_mat()
+		if not _bump_face_first:
+			_turn_round_on_the_mat()
 		var tier := bump_tier
 		bump_tier = -1
 		_go_down(tier)

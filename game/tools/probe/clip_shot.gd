@@ -36,6 +36,10 @@ var _hand := ""
 ## Drain threaded rendering after each camera change; otherwise the first
 ## capture can be blank and later images can contain the preceding view.
 var _settle_frames := 3
+## Optional [open mouth, clench] weights for inspecting the runtime pain
+## shapes on a detailed roster model.
+var _expression := Vector2.ZERO
+var _view_filter := ""
 
 ## Camera positions, as {name: [eye, aim]}.
 ##
@@ -72,6 +76,12 @@ func _ready() -> void:
 			_at = Array(args[i + 1].split(",")).map(func(v: String) -> float: return v.to_float())
 		elif args[i] == "--settle" and i + 1 < args.size():
 			_settle_frames = maxi(3, args[i + 1].to_int())
+		elif args[i] == "--expression" and i + 1 < args.size():
+			var weights := args[i + 1].split(",")
+			if weights.size() == 2:
+				_expression = Vector2(weights[0].to_float(), weights[1].to_float())
+		elif args[i] == "--view" and i + 1 < args.size():
+			_view_filter = args[i + 1]
 	_run()
 
 
@@ -84,6 +94,13 @@ func _run() -> void:
 		return
 	var model: Node3D = model_packed.instantiate()
 	add_child(model)
+	if _expression != Vector2.ZERO:
+		var expression := FaceExpression.new()
+		expression.install(model)
+		for mi in expression.meshes:
+			mi.set_blend_shape_value(0, _expression.x)
+			mi.set_blend_shape_value(1, _expression.y)
+		expression.free()
 	var player: AnimationPlayer = model.find_child("AnimationPlayer", true, false)
 	if not player:
 		push_error("%s has no AnimationPlayer" % _model)
@@ -167,6 +184,8 @@ func _run() -> void:
 				"hfront": Vector3(0.0, 0.05, 0.55), "hout": Vector3(0.55 * (1.0 if _hand == "l" else -1.0), 0.05, 0.1),
 				"hback": Vector3(0.0, 0.1, -0.55)})
 		for view_name: String in views:
+			if _view_filter != "" and view_name != _view_filter:
+				continue
 			for frac: float in _at:
 				player.play(clip_name)
 				player.seek(anim.length * frac, true)

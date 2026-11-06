@@ -9,7 +9,7 @@ and to how much he has left") and `match_aaa_plan.md` §3 (`Sell_Head`/
 `Sell_Gut`, `FLURRY_STUN_AT`).
 `animation_gap.md` Phase 4 names the in-between selling that `SellClutch`
 covers. The gaps below became the selling backlog; their statuses are current
-through 6 Nov.
+through the 6 Nov selling closeout.
 
 ## What the game does today
 
@@ -19,9 +19,11 @@ through 6 Nov.
 | Where he was hit | Head by strike hand, uppercut, or gut: mirrored `Hit_React_Head`, `Hit_Uppercut`, `Hit_React_Torso`, and heavy variants. Then a matching head or gut sell. | `StrikeRecipes.reaction_for`, `_play_hit_reaction` |
 | Every blow | An additive flinch away from the hitter, plus hit-stop. | `HitFlinch` |
 | A string of blows | Rocked into `Stunned_Sway` on the third blow inside a sell. | `FLURRY_STUN_AT` |
-| Knockdown | `Bump_Back`, then `Down_Supine` (breathing, knees up). Time down scales with the move. Staged get-up and groggy afterwards. | `_bump_down`, `_go_down`, `groggy_for` |
+| Knockdown | Back, lariat, face-first and spin-out falls. The down sell follows the injury zone, with staged get-up and groggy recovery. | `_bump_down`, `_go_down`, `groggy_for` |
 | After big moves | Additive sell profiles: suplex, Cross Rhodes, table rebound, wire, tacks, ladder. | `ImpactSell` |
 | Between exchanges | His hand goes to the most-hurt part: head, ribs, knee or shoulder. | `SellClutch` |
+| Lingering damage | Damaged legs limp in locomotion; a hurt arm hangs. The trunk keeps showing pain through taunts, counts and climbs. | `LimbDamageSell`, `SellClutch` |
+| Face and voice | Detailed roster faces have mouth-open and clench shapes. CC0 grunts, groans and yells follow hit size; burning sustains a scream. | `FaceExpression`, `WrestlerVoice` |
 | Weapons | Graded by impact: LIGHT, ROCK, BLADE, DROP, WIPEOUT, FATAL. | `WeaponCatalog.impact_of` |
 | Comeback | Fired up, he takes the damage but not the flinch. | `MATCH_FLOW.md` |
 
@@ -64,45 +66,42 @@ published detail on how the idles and locomotion are built. Sources:
 
    Pick by the move's damage zone and its tier, the way `_play_hit_reaction`
    picks a standing reaction.
-2. **Force classes for knockdowns.** One back bump served every knockdown.
+2. **Force classes for knockdowns (complete 6 Nov).** One back bump served every knockdown.
    Done 3 Nov:
    - `Bump_Lariat` for lariats and the heaviest weapons;
    - weapon impact now picks the bump and the writhe.
 
-   Still missing: a face-first collapse (guitar, chair to the back of the head)
-   and a spin-out (a superkick).
+   `Bump_Face` now follows a guitar or a chair from behind, and `Bump_Spin`
+   follows a superkick. Both hand off to the matching down sell.
 3. **Strike side and type (done 6 Nov).** Head shots carry explicit striking
    hand and uppercut metadata. Left-hand hits mirror the head snap, heavy
    stagger and jaw-clutch sell; the dropdown uppercut lifts the chin and toes.
    Damage is still queued when contact is made in the authored active window
    and resolved before the defender starts moving. The contact ordering is
    covered by the startup-to-hit test and `strike_connect_probe`.
-4. **Limb damage on the walk.** `CombatSystem` already tracks head, torso, arms
-   and legs. Needed:
+4. **Limb damage on the walk (complete 6 Nov).** `CombatSystem` tracks head,
+   torso, arms and legs. `LimbDamageSell` adds:
    - over 60 on the legs: a limp, as an additive layer on the locomotion (as
      `SellClutch` is additive);
    - over 60 on the arms: the hurt arm hangs.
 
-   A presentation-only modifier, deterministic from the damage, the same
-   contract as `SellClutch`.
-5. **Specific holds and moves.** Each needs a re-authored paired clip:
+   The modifier is presentation-only and deterministic from the damage.
+5. **Specific holds and moves (already shipped before this closeout).** Authored paired clips include:
    - powerbomb: the victim cradled on the shoulders (#15);
    - Samoan drop;
    - Cross Rhodes;
    - the figure four: legs entwined, the attacker sitting up.
-6. **Pain audio.** There are no vocal sells: no grunt on a chop, no groan on the
-   mat, no scream in a hold. Needed: a small CC0 set of grunts, groans and
-   screams in `assets/audio`, scaled by sell size. They play under the crowd and
-   are never on top of it.
-7. **Faces.** The rigs have no face controls, so there are no grimaces. The
-   options:
-   - a jaw/brow bone pair on the base rig (`rigging`);
-   - two shape keys per wrestler (open mouth, clenched).
-
-   Lowest priority: at broadcast distance the body reads first.
-8. **Selling while he waits.** He should sell through the other man's taunt, the
-   referee's count and a climb, rather than standing neutral. The ladder sell
-   (2 Nov) is the pattern; extend it to taunts and the climb to the top rope.
+6. **Pain audio (complete 6 Nov).** `WrestlerVoice` already picked CC0
+   light/heavy grunts, a mat groan, yells and a sustained burn scream from hit
+   size. This closeout added spaced cries after a submission locks. Per-wrestler
+   pitch and seeded take choice keep the voice below the crowd in the mix.
+7. **Faces (complete 6 Nov).** Roman, Cody and Kenny gain two runtime shape
+   controls on their finished head meshes: parted mouth and clenched brow/lips.
+   The pain expression eases with the hit and accumulated wear.
+8. **Selling while he waits (complete 6 Nov).** `SellClutch` remains active
+   through his opponent's taunt, his own taunt, a count, a ladder climb, and
+   the scripted climb to the top rope. Busy hands keep their grip while the
+   trunk carries the pain.
 
 ## 5 Nov — down sells by zone
 
@@ -127,15 +126,15 @@ strikes (78.2%), with zero interrupted strikes. All three samples ended at the
 tick limit before a finish. The 20,000-tick run crashed inside Godot's node
 notification code before it could report.
 
-## Next selling work
+## 6 Nov — selling closeout
 
-1. Limb damage during locomotion (gap 4).
-2. Face-first and spin-out knockdowns (remaining gap 2).
-3. Specific paired holds and moves (gap 5).
-4. Pain audio (gap 6).
-5. Selling through taunts, counts and climbs (gap 8).
-6. Faces (gap 7).
+The six items formerly listed as next selling work are complete. The paired
+holds and most pain vocals were already implemented; their backlog entries had
+not been updated. This pass added submission cries, `LimbDamageSell`,
+`Bump_Face`, `Bump_Spin`, busy-state `SellClutch` behavior, and `FaceExpression`. `test_selling`,
+`test_face_expression`, `test_wrestler_voice`, PoseLint and paired clearance
+cover the implementation. Rendered clip frames were reviewed for both new
+falls and the pain shapes on the detailed roster.
 
-Down sells by zone (gap 1) and strike reactions (gap 3) are complete.
-
-Each is closed on rendered frames and a probe, not on this document.
+There are no open items in this selling backlog. Broader game work remains in
+`next_steps.md`.

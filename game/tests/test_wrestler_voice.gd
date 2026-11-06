@@ -87,6 +87,29 @@ func test_a_knockdown_ends_on_a_groan_as_he_lands() -> void:
 	assert_array(said).contains_exactly(["groan"])
 
 
+func test_a_locked_submission_draws_spaced_cries_until_release() -> void:
+	var scene := _match()
+	await get_tree().process_frame
+	var a: WrestlerController = scene.get_node("WrestlerA")
+	var v := _voice(a)
+	v.set_process(false)
+	var said := []
+	v.said.connect(func(f: String, _s: String) -> void: said.append(f))
+	a._go_down()
+	v._groan_in = -1.0
+	a.fsm.transition_to(WrestlerFSM.State.SUBMISSION_DEFENDER)
+	v._since = INF
+	v._process(WrestlerVoice.HOLD_FIRST + 0.01)
+	assert_array(said).contains_exactly(["yell"])
+	v._process(WrestlerVoice.HOLD_GAP * 0.5)
+	assert_int(said.size()).is_equal(1)
+	v._process(WrestlerVoice.HOLD_GAP * 0.5 + 0.01)
+	assert_int(said.size()).is_equal(2)
+	a.fsm.transition_to(WrestlerFSM.State.DOWN)
+	v._process(WrestlerVoice.HOLD_GAP + 0.1)
+	assert_int(said.size()).is_equal(2)
+
+
 func test_a_burning_man_screams_until_he_is_put_out() -> void:
 	var scene := _match()
 	await get_tree().process_frame

@@ -107,6 +107,8 @@ const RECIPES := {
 	"ladder_fall": {"kind": "retime", "source": "Ladder_Fall", "seconds": 0.6, "file": AUTHORED},
 	# A strike knockdown's fall (WrestlerController._bump_down).
 	"bump_back": {"kind": "retime", "source": "Bump_Back", "seconds": 1.0, "file": AUTHORED},
+	"bump_face": {"kind": "retime", "source": "Bump_Face", "seconds": 1.0, "file": AUTHORED},
+	"bump_spin": {"kind": "retime", "source": "Bump_Spin", "seconds": 1.2, "file": AUTHORED},
 	# Lariated: the arm across his throat folds him over it, his legs swing
 	# up past level and he comes down flat from there.
 	"bump_lariat": {"kind": "retime", "source": "Bump_Lariat", "seconds": 1.2, "file": AUTHORED},

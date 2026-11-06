@@ -3,29 +3,22 @@
 What is done, what comes next, and in what order. Updated at the end of each
 round; the README is the detailed log of how each piece was built.
 
-Latest published game baseline: `2db6b67` (2026-11-06). The older roadmap
+Latest game baseline: the selling closeout on `main` (2026-11-06). The older roadmap
 notes below record prior rounds; use the current list here and later user
 corrections for what to do next.
 
 ## Current backlog (6 Nov)
 
-**Completed:** varied downed sells by body part (5 Nov); side-aware head
-reactions, uppercut reactions, and strike contact checks (6 Nov). See
+**Completed selling backlog:** varied downed sells by body part; side-aware
+head and uppercut reactions; strike contact checks; the damaged-leg limp and
+hurt-arm hang; face-first and spin-out knockdowns; paired powerbomb, Samoan
+drop, Cross Rhodes and figure-four holds; graded pain vocals including
+submission cries; selling through taunts, counts and climbs; and the two
+pain-expression shapes on Roman, Cody and Kenny. See
 [`selling_plan.md`](selling_plan.md) for the clips, test results, and measured
 strike connection sample.
 
-**Open selling work:**
-
-1. Add a limp for damaged legs and a hanging hurt arm during locomotion
-   (selling gap 4).
-2. Add a face-first collapse and a spin-out knockdown for suitable blows
-   (remaining force classes in selling gap 2).
-3. Refine the powerbomb shoulder carry, Samoan drop, Cross Rhodes, and figure
-   four paired holds (selling gap 5).
-4. Add graded pain vocals for hits, holds, and time down (selling gap 6).
-5. Keep selling during taunts, counts, and climbs (selling gap 8).
-6. Add facial controls and expressions after the body work reads at broadcast
-   distance (selling gap 7).
+**Open selling work:** none.
 
 **Other open work:** Mac-native visual and frame-pacing review against the
 owner's references; the remaining Fight Forever move library; the Roman/Cody

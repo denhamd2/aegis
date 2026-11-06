@@ -40,6 +40,72 @@ func test_every_tier_has_a_reaction_clip() -> void:
 	assert_str(StrikeRecipes.sell_for(StrikeRecipes.clip("hit_heavy_gut"))).is_equal(StrikeRecipes.clip("sell_gut"))
 
 
+func test_remaining_knockdown_classes_pick_their_authored_falls() -> void:
+	for clip: String in ["bump_face", "bump_spin"]:
+		assert_bool(StrikeRecipes.RECIPES.has(clip)).is_true()
+	var guitar := WeaponCatalog.swing_move(WeaponCatalog.by_id(&"guitar"))
+	var chair := WeaponCatalog.swing_move(WeaponCatalog.by_id(&"steel_chair"))
+	var kick := load("res://resources/moves/ff/superkick_3.tres") as MoveDef
+	assert_str(WrestlerController.special_bump_clip(guitar, false)).is_equal(WrestlerController.BUMP_FACE_CLIP)
+	assert_str(WrestlerController.special_bump_clip(chair, true)).is_equal(WrestlerController.BUMP_FACE_CLIP)
+	assert_str(WrestlerController.special_bump_clip(chair, false)).is_empty()
+	assert_str(WrestlerController.special_bump_clip(kick, false)).is_equal(WrestlerController.BUMP_SPIN_CLIP)
+
+
+func test_limb_damage_changes_the_drawn_walk_and_arm_only_after_threshold() -> void:
+	var w: WrestlerController = auto_free(WRESTLER_SCENE.instantiate())
+	add_child(w)
+	await get_tree().physics_frame
+	assert_object(w.limb_damage_sell).is_not_null()
+	assert_float(LimbDamageSell.injury_weight(59.0)).is_equal(0.0)
+	assert_float(LimbDamageSell.injury_weight(100.0)).is_equal(1.0)
+	w.fsm.transition_to(WrestlerFSM.State.LOCOMOTION)
+	w.combat.limb_damage[CombatSystem.Limb.LEGS] = 100.0
+	w.combat.limb_damage[CombatSystem.Limb.ARMS] = 100.0
+	var pelvis := w.skeleton.find_bone("pelvis")
+	var hand := w.skeleton.find_bone("hand_r")
+	var before_hips := w.skeleton.get_bone_global_pose(pelvis).origin
+	var before_hand := w.skeleton.get_bone_global_pose(hand).origin
+	w.limb_damage_sell._last_frame = -1
+	w.limb_damage_sell._process_modification()
+	assert_float(w.limb_damage_sell._leg_weight).is_greater(0.0)
+	assert_float(w.limb_damage_sell._arm_weight).is_greater(0.0)
+	assert_float(w.skeleton.get_bone_global_pose(pelvis).origin.distance_to(before_hips)).is_greater(0.0)
+	assert_float(w.skeleton.get_bone_global_pose(hand).origin.distance_to(before_hand)).is_greater(0.0)
+	w.fsm.transition_to(WrestlerFSM.State.IDLE)
+	w.limb_damage_sell._last_frame = -1
+	w.limb_damage_sell._process_modification()
+	assert_float(w.limb_damage_sell._leg_weight).is_less(0.1)
+
+
+func test_hurt_wrestler_keeps_selling_during_taunt_without_taking_its_hand_grip() -> void:
+	var w: WrestlerController = auto_free(WRESTLER_SCENE.instantiate())
+	add_child(w)
+	await get_tree().physics_frame
+	w.combat.limb_damage[CombatSystem.Limb.HEAD] = 75.0
+	w.fsm.transition_to(WrestlerFSM.State.TAUNT)
+	w._tick_selling()
+	w._tick_selling()
+	assert_str(w.sell_clutch.part()).is_equal("head")
+	assert_bool(w.sell_clutch.is_selling()).is_true()
+	assert_bool(w.sell_clutch._hands_free).is_false()
+
+
+func test_hurt_wrestler_sells_while_opponent_taunts() -> void:
+	var w: WrestlerController = auto_free(WRESTLER_SCENE.instantiate())
+	var opponent: WrestlerController = auto_free(WRESTLER_SCENE.instantiate())
+	add_child(w)
+	add_child(opponent)
+	await get_tree().physics_frame
+	w.opponent = opponent
+	w.combat.limb_damage[CombatSystem.Limb.TORSO] = 75.0
+	opponent.fsm.transition_to(WrestlerFSM.State.TAUNT)
+	w._tick_selling()
+	w._tick_selling()
+	assert_str(w.sell_clutch.part()).is_equal("torso")
+	assert_bool(w.sell_clutch.is_selling()).is_true()
+
+
 func test_a_beaten_man_lies_there_longer() -> void:
 	var w: WrestlerController = auto_free(WRESTLER_SCENE.instantiate())
 	add_child(w)
