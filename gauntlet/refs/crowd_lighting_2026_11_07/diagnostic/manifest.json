@@ -1,0 +1,35 @@
+{
+  "scope": "Component shader compilation/fill diagnostic only; not full-arena visual acceptance",
+  "pipeline": "forward_plus",
+  "rendering_driver": "vulkan",
+  "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+  "software_rasterised": true,
+  "performance_evidence": false,
+  "godot": "4.6.3.stable.official.7d41c59c4",
+  "settle_frames": 24,
+  "resolution": [
+    960,
+    540
+  ],
+  "shader_compilation_options": {
+    "GALLIVM_PERF": "nopt",
+    "LP_NUM_THREADS": "2"
+  },
+  "source": "material_check.gd",
+  "image": "material_check.png",
+  "exit_code": 0,
+  "fixture": {
+    "bowl_boxes_world_x": [
+      14.0,
+      24.0,
+      34.0
+    ],
+    "bowl_boxes_world_y": [
+      1.0,
+      9.0
+    ],
+    "photographic_material": "Fan00 on one diagnostic box, not a real-character render"
+  },
+  "image_save_error": 0,
+  "notes": "Standalone diagnostic uses its recorded /workspace/aegis/build output path. Full-arena acceptance still requires the existing reference_look/native capture tools on a suitable host."
+}

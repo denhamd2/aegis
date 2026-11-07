@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites id="2026-11-07" name="report_2" tests="34" failures="0" skipped="0" flaky="0" time="0.000">
+	<testsuite id="0" name="test_reference_visuals" package="tests" timestamp="2026-11-07T14:16:23" hostname="localhost" tests="5" failures="0" errors="0" skipped="0" flaky="0" time="0.270">
+		<testcase name="test_textured_variants_preserve_seat_origins_uvs_masks_and_budget" classname="test_reference_visuals" time="0.080">
+		</testcase>
+		<testcase name="test_section_culling_does_not_change_seeded_seats_clothes_or_density" classname="test_reference_visuals" time="0.008">
+		</testcase>
+		<testcase name="test_audience_washes_and_aisle_accents_stay_off_the_canvas" classname="test_reference_visuals" time="0.057">
+		</testcase>
+		<testcase name="test_fixed_aisle_lights_dim_for_entrances_without_becoming_sweeping_beams" classname="test_reference_visuals" time="0.049">
+		</testcase>
+		<testcase name="test_house_dimming_preserves_ring_exposure_and_key_energies" classname="test_reference_visuals" time="0.045">
+		</testcase>
+	</testsuite>
+	<testsuite id="1" name="test_arena_beams" package="tests" timestamp="2026-11-07T14:16:23" hostname="localhost" tests="5" failures="0" errors="0" skipped="0" flaky="0" time="0.236">
+		<testcase name="test_the_rig_builds_every_beam" classname="test_arena_beams" time="0.044">
+		</testcase>
+		<testcase name="test_no_beam_can_reach_the_mat" classname="test_arena_beams" time="0.044">
+		</testcase>
+		<testcase name="test_no_beam_colour_is_green_dominant" classname="test_arena_beams" time="0.008">
+		</testcase>
+		<testcase name="test_the_crowd_wash_holds_the_crowd_level" classname="test_arena_beams" time="0.006">
+		</testcase>
+		<testcase name="test_the_beams_sweep_fast_and_wide_on_a_crowd_cutaway" classname="test_arena_beams" time="0.110">
+		</testcase>
+	</testsuite>
+	<testsuite id="2" name="test_stage_lighting" package="tests" timestamp="2026-11-07T14:16:23" hostname="localhost" tests="8" failures="0" errors="0" skipped="0" flaky="0" time="0.278">
+		<testcase name="test_stage_reflections_stay_disabled_until_native_review" classname="test_stage_lighting" time="0.045">
+		</testcase>
+		<testcase name="test_stage_reflections_are_cached_and_exclude_the_ring_spawns" classname="test_stage_lighting" time="0.045">
+		</testcase>
+		<testcase name="test_no_entrance_fixture_can_reach_the_mat" classname="test_stage_lighting" time="0.047">
+		</testcase>
+		<testcase name="test_the_stage_wash_is_the_one_kept_off_the_mat_by_its_aim" classname="test_stage_lighting" time="0.042">
+		</testcase>
+		<testcase name="test_the_stage_wash_recolour_only_moved_its_level_slightly" classname="test_stage_lighting" time="0.006">
+		</testcase>
+		<testcase name="test_only_fixtures_behind_the_stage_line_escape_the_mat_gain" classname="test_stage_lighting" time="0.006">
+		</testcase>
+		<testcase name="test_the_compatibility_gains_are_inert_on_forward_plus" classname="test_stage_lighting" time="0.005">
+		</testcase>
+		<testcase name="test_barricade_spill_stops_at_the_mat_edge" classname="test_stage_lighting" time="0.046">
+		</testcase>
+	</testsuite>
+	<testsuite id="3" name="test_arena_crowd" package="tests" timestamp="2026-11-07T14:16:24" hostname="localhost" tests="8" failures="0" errors="0" skipped="0" flaky="0" time="2.077">
+		<testcase name="test_the_bowl_ships_a_crowd" classname="test_arena_crowd" time="0.263">
+		</testcase>
+		<testcase name="test_every_crowd_vertex_carries_a_colour" classname="test_arena_crowd" time="0.255">
+		</testcase>
+		<testcase name="test_the_crowd_is_not_all_wearing_the_same_shirt" classname="test_arena_crowd" time="0.248">
+		</testcase>
+		<testcase name="test_the_animation_phase_is_spread_across_the_bowl" classname="test_arena_crowd" time="0.246">
+		</testcase>
+		<testcase name="test_a_figure_stands_on_its_row_rather_than_floating" classname="test_arena_crowd" time="0.240">
+		</testcase>
+		<testcase name="test_the_crowd_is_people_not_a_palette" classname="test_arena_crowd" time="0.255">
+		</testcase>
+		<testcase name="test_arms_carry_a_mask_and_a_side_in_uv2" classname="test_arena_crowd" time="0.250">
+		</testcase>
+		<testcase name="test_the_sign_boards_are_their_own_textured_part" classname="test_arena_crowd" time="0.280">
+		</testcase>
+	</testsuite>
+	<testsuite id="4" name="test_floor_crowd" package="tests" timestamp="2026-11-07T14:16:26" hostname="localhost" tests="8" failures="0" errors="0" skipped="0" flaky="0" time="0.701">
+		<testcase name="test_the_model_ships_two_sets_of_distinct_fans" classname="test_floor_crowd" time="0.026">
+		</testcase>
+		<testcase name="test_the_near_fans_are_more_detailed_than_the_far_ones" classname="test_floor_crowd" time="0.026">
+		</testcase>
+		<testcase name="test_every_fan_is_built_facing_forward" classname="test_floor_crowd" time="0.023">
+		</testcase>
+		<testcase name="test_the_fans_are_seated_on_the_floor_not_through_it" classname="test_floor_crowd" time="0.023">
+		</testcase>
+		<testcase name="test_the_fans_are_seated_height" classname="test_floor_crowd" time="0.025">
+		</testcase>
+		<testcase name="test_every_fan_marks_its_garment_in_grey" classname="test_floor_crowd" time="0.397">
+		</testcase>
+		<testcase name="test_every_fan_keeps_its_own_skin_and_clothes" classname="test_floor_crowd" time="0.107">
+		</testcase>
+		<testcase name="test_the_fans_carry_an_arm_mask" classname="test_floor_crowd" time="0.030">
+		</testcase>
+	</testsuite>
+</testsuites>

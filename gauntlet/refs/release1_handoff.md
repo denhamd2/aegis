@@ -2,6 +2,26 @@
 
 Status: draft; not visually accepted or published. Do not start Release 2.
 
+## Resume result — 7 November
+
+The workspace recovered, the saved draft branch was checked out, and latest
+main was merged. The complete focused run now passes: **34 tests, zero errors
+or failures** after asset import. The source restoration ambiguity below is
+resolved: the saved draft is intact and comparison attempts restore it.
+See [the validation record](crowd_lighting_2026_11_07/validation.md) and its
+JUnit report for the passing checks and bounded-render results.
+Both changed shader paths also compiled/rendered in an isolated Forward+
+diagnostic, with the expected depth/height fade; its source, PNG and provenance
+are preserved in the validation record. Full-arena acceptance is still open.
+
+Full-arena Forward+ software rendering still has no usable saved comparison:
+guarded attempts avoid executor loss but show corrupted live previews and
+time out. The 8 GiB executor needs a suitable visual-review route; the owner
+has been asked to choose a GPU-capable environment or a marked Mac preview.
+Keep the release blocked on appearance review; no new Mac release was made.
+
+The remainder records the original interruption for provenance.
+
 The approved plan and three AEW stills were committed and pushed to main in
 debd882bc9b1dd3c543b418591292d25e9898972. The last verified published Mac app
 is 492ab0b049a875e29ce2742232d39733645b9046 at mac-latest; it has Aegis.zip.
