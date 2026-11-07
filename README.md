@@ -9,8 +9,10 @@ footage is used only as a *measurement* reference (frame timings, camera
 framing, HUD layout) — no extracted models, textures, audio, or likenesses
 enter this repo.
 
-**What comes next:** [`gauntlet/refs/next_steps.md`](gauntlet/refs/next_steps.md)
-— the roadmap: what is done, the next weapon work, and the open items.
+**What comes next:** the owner's
+[`incremental quality plan`](gauntlet/refs/incremental_quality_plan.md), with
+22 ordered Mac releases and [crowd-lighting references](gauntlet/refs/crowd_lighting_2026_11_07/README.md).
+[`next_steps.md`](gauntlet/refs/next_steps.md) retains backlog status and earlier work.
 
 ## Layout
 

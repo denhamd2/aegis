@@ -1,5 +1,34 @@
 # Agent guidance
 
+## Aegis priorities and incremental delivery
+
+The owner's [incremental quality plan](gauntlet/refs/incremental_quality_plan.md)
+is the current release order; it supersedes older handoffs where they conflict.
+Rank new requests by impact, effort and dependencies. Validate, commit, push
+and publish each release separately, then verify `mac-latest` references that
+commit before starting the next release. Record evidence and limitations in
+the plan's release ledger and `gauntlet/refs/next_steps.md`.
+
+Aegis targets 60 fps (16.67 ms) on a MacBook M1 with 16 GB memory. Preserve
+60 Hz simulation, smooth animation, Fight Forever pacing and broadcast quality.
+Only native measurements establish Mac performance. Use the cheapest adequate
+checks: mannequin logic/contact checks, real-mesh deformation renders, then
+full-arena presentation captures. Keep complete regressions for broad gameplay
+or animation changes; rerun costly checks only for changes or unresolved risks.
+
+Use reference-led game-design, animation, modeling, lighting and materials
+judgement without claiming employment or credits on reference games. Preserve
+the approved entrances: fewer cuts, front/side walks, a slightly below-waist
+lens, wide entry/handover coverage, and close poses/faceoff. Only the ending
+replay is removed; in-match replay settings still apply. Mac is the delivery
+platform; retire Web publishing in Release 7 after its dependency audit.
+
+Read relevant files/skills only, batch independent inspections and keep concise
+handovers. Do not add model-specific practices until applicable official
+GPT-6.1 Sol guidance has been checked; keep
+[sourced guidance](gauntlet/refs/codex_working_guidance.md) separate from project
+measurements. Work without sub-agents unless the owner asks for them.
+
 ## Blender skills and tools
 
 The shared skill guides live in `.claude/skills/`, with Codex-discoverable
@@ -89,10 +118,12 @@ validate through its capture/evidence gates. For Beechlawn, follow
 
 - Aegis wrestling and Beechlawn Rovers are separate Godot projects. Keep their
   scenes, assets, exports, and build/release workflows separate.
-- Football rules, player controls, character sheets, match systems, and the M1
-  performance target are Beechlawn-specific. Never use them to change or
+- Football rules, player controls, character sheets and match systems are
+  Beechlawn-specific. Never use them to change or
   reinterpret the wrestling game's systems. Wrestling-specific rig, move,
   arena, and evidence rules do not constrain Beechlawn assets or gameplay.
+  Both games have their own M1 performance requirements; measure each project
+  separately rather than transferring results between them.
 - Before changing Aegis gameplay architecture, read
   `gauntlet/anchor/ARCHITECTURE.md`. Use that project's measured references as
   the authority for wrestling-game visuals.

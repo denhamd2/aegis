@@ -1,5 +1,23 @@
 # Next steps -- the roadmap
 
+## Current release order — 7 November 2026
+
+The owner's [incremental quality plan](incremental_quality_plan.md) is now the
+authority for release order, acceptance and validation. Its 22 releases start
+with crowd lighting, HUD cleanup and the post-match ending. The
+[three AEW crowd-lighting stills](crowd_lighting_2026_11_07/README.md) are saved
+alongside it. Earlier ordering below is historical where it conflicts.
+
+The fresh clone did not contain the other chat's uncommitted entrance, camera,
+trouser and mat-contact changes. The owner instructed “ship the latest.”
+Baseline `492ab0b049a875e29ce2742232d39733645b9046` is already published in
+`mac-latest`, verified on 7 November with the `Aegis.zip` asset present.
+Release 1 (crowd lighting) is in progress; Releases 2–22 are queued.
+Each release must be validated, committed, pushed and verified in the Mac
+release before the next starts. Native M1 frame pacing remains unverified.
+
+## Previous backlog and implementation notes
+
 What is done, what comes next, and in what order. Updated at the end of each
 round; the README is the detailed log of how each piece was built.
 
