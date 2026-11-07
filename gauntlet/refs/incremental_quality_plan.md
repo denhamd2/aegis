@@ -130,5 +130,5 @@ scope is the established Fight Forever reference catalogue.
 | Release | Status | Validation, publication and remaining limitations |
 | --- | --- | --- |
 | Baseline | Published | `492ab0b049a875e29ce2742232d39733645b9046` verified against `mac-latest` on 7 November 2026. Other-chat uncommitted changes were unavailable; owner chose latest main. Native M1 performance remains unverified. |
-| 1 | Blocked: validation incomplete | Draft preserved in [PR #13](https://github.com/denhamd2/aegis/pull/13). Full-arena baseline rendering disconnected the executor; environment became unavailable before comparison captures and post-import tests. Not visually accepted or deployed. See the draft's `gauntlet/refs/release1_handoff.md`. |
+| 1 | Blocked: GPU review host required | [PR #13](https://github.com/denhamd2/aegis/pull/13): 34 focused cases pass; both shaders compile/render in an isolated Forward+ diagnostic. Full-arena software captures remain unusable/time out. Owner selected a GPU-capable environment; no GPU host is attached or provisioning/switch tool exposed. Attach/configure that host, finish visual acceptance, then publish Mac. Not deployed; M1 performance unverified. |
 | 2–22 | Queued | Start each release only after the previous release's commit is verified in the published Mac release. |
