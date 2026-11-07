@@ -3514,6 +3514,9 @@ var _stalking := false
 
 
 func begin_spear_setup() -> void:
+	if finisher_run_move == null or combat == null or not combat.can_finisher() \
+			or not fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION]):
+		return
 	if combat:
 		combat.taunted()
 	_set_state_clip(WrestlerFSM.State.TAUNT, SPEAR_SETUP_CLIP)
@@ -3537,6 +3540,10 @@ func _tick_spear_setup() -> void:
 ## Spear from the set-up). Returns whether it started.
 func try_running_finisher() -> bool:
 	if finisher_run_move == null or opponent == null or grapple_rig == null:
+		return false
+	if combat == null or not combat.can_finisher() or dead or opponent.dead \
+			or outside_ring or opponent.outside_ring or has_weapon() or grapple_rig.is_active() \
+			or not _move_weight_legal(finisher_run_move):
 		return false
 	if not RUNNING_PAIRED_TARGET_STATES.has(fsm.current_state) \
 			or not RUNNING_PAIRED_TARGET_STATES.has(opponent.fsm.current_state):

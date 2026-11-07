@@ -308,6 +308,8 @@ func _physics_process(_delta: float) -> void:
 	if not controller.fsm.is_in([WrestlerFSM.State.IDLE,
 			WrestlerFSM.State.LOCOMOTION, WrestlerFSM.State.RUN]):
 		_charging = false
+		if not (controller.fsm.current_state == WrestlerFSM.State.TAUNT and controller._stalking):
+			_spear_stalk = STALK_OFF
 
 ## Reversals (Phase 4): once per strike thrown at him, at a moment inside
 ## its window, he reads it or he does not. The chance is his stamina's: fresh,
@@ -590,9 +592,9 @@ var _spear_ticks := 0
 ## The Spear out of nowhere (2 Nov: in flow_probe seed 1 Cody, the story's
 ## winner, had the whole comeback and never stayed down long enough for the
 ## stalk, and the Spear never came). In the comeback or the finish, with it
-## up, both men in the ring and the other man on his feet SPEAR_NOWHERE_FROM
+## up, both men in the ring and the other man on his feet SPEAR_NOWHERE_MAX
 ## away, he runs at him -- at most once per SPEAR_NOWHERE_COOLDOWN.
-const SPEAR_NOWHERE_FROM := Vector2(2.5, 7.0)
+const SPEAR_NOWHERE_MAX := 7.0
 const SPEAR_NOWHERE_COOLDOWN := 600
 var _nowhere_cooldown := 0
 
@@ -607,9 +609,9 @@ func _wants_spear_from_nowhere(distance: float) -> bool:
 		return false
 	if String(controller.flow.phase()["name"]) not in ["comeback", "finish"]:
 		return false
-	if distance < SPEAR_NOWHERE_FROM.x or distance > SPEAR_NOWHERE_FROM.y:
+	if distance > SPEAR_NOWHERE_MAX:
 		return false
-	var standing := [WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION]
+	var standing := WrestlerController.RUNNING_PAIRED_TARGET_STATES
 	return controller.fsm.is_in(standing) and target.fsm.is_in(standing)
 
 
@@ -649,7 +651,7 @@ func _begin_spear_stalk() -> void:
 ## Empty when the stalk is over and the rest of the brain should decide.
 func _spear_stalk_input(input: Dictionary, to_target: Vector3, distance: float) -> Dictionary:
 	_spear_ticks -= 1
-	if target.dead or target.outside_ring or _spear_ticks <= 0 \
+	if target.dead or target.outside_ring or controller.outside_ring or _spear_ticks <= 0 \
 			or not controller.combat.can_finisher():
 		_spear_stalk = STALK_OFF
 		return {}
@@ -678,7 +680,7 @@ func _spear_stalk_input(input: Dictionary, to_target: Vector3, distance: float) 
 		return input
 	if controller.try_running_finisher():
 		_spear_stalk = STALK_OFF
-		return {}
+		return {"move": Vector2.ZERO}
 	var dir := to_target.normalized() if distance > 0.01 else Vector3.ZERO
 	input["move"] = Vector2(dir.x, dir.z)
 	input["run"] = true

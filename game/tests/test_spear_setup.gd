@@ -38,6 +38,8 @@ func test_the_set_up_holds_until_he_is_up() -> void:
 	cody.global_position = Vector3(1.5, 0.0, 0.0)
 	cody.fsm.current_state = WrestlerFSM.State.DOWN
 	await get_tree().physics_frame
+	roman.combat.finisher_lit = true
+	roman.combat.momentum = CombatSystem.MOMENTUM_MAX
 	roman.begin_spear_setup()
 	assert_int(roman.fsm.current_state).is_equal(WrestlerFSM.State.TAUNT)
 	# Past the clip and still set: the man is down.
@@ -60,6 +62,8 @@ func test_the_spear_runs_into_a_man_on_his_feet() -> void:
 	roman.global_position = Vector3(-3.0, 0.0, 0.0)
 	cody.global_position = Vector3(0.0, 0.0, 0.0)
 	await get_tree().physics_frame
+	roman.combat.finisher_lit = true
+	roman.combat.momentum = CombatSystem.MOMENTUM_MAX
 	# Out of range: not yet.
 	assert_bool(roman.try_running_finisher()).is_false()
 	roman.global_position = Vector3(-1.0, 0.0, 0.0)
@@ -100,3 +104,46 @@ func test_the_ai_backs_off_sets_and_spears_him_as_he_rises() -> void:
 	input = ai._spear_stalk_input({"move": Vector2.ZERO}, Vector3.ZERO, 0.0)
 	assert_bool(input.get("spear_setup", false)).is_true()
 	assert_int(ai._spear_stalk).is_equal(WrestlerAI.STALK_SET)
+
+
+func test_an_unearned_or_illegal_spear_does_not_start() -> void:
+	var scene := _roman_vs_cody()
+	var roman := scene.get_node("WrestlerA") as WrestlerController
+	var cody := scene.get_node("WrestlerB") as WrestlerController
+	roman.is_ai = false
+	cody.is_ai = false
+	roman.global_position = Vector3(-1, 0, 0)
+	cody.global_position = Vector3.ZERO
+	assert_bool(roman.try_running_finisher()).is_false()
+	roman.begin_spear_setup()
+	assert_int(roman.fsm.current_state).is_not_equal(WrestlerFSM.State.TAUNT)
+	roman.combat.finisher_lit = true
+	roman.combat.momentum = CombatSystem.MOMENTUM_MAX
+	cody.fsm.current_state = WrestlerFSM.State.STRIKE
+	assert_bool(roman.try_running_finisher()).is_false()
+	cody.fsm.current_state = WrestlerFSM.State.IDLE
+	cody.outside_ring = true
+	assert_bool(roman.try_running_finisher()).is_false()
+	cody.outside_ring = false
+	assert_bool(roman.try_running_finisher()).is_true()
+	assert_int(roman._attempted_moves.get(&"running_spear", 0)).is_equal(1)
+	assert_int(roman._landed_moves.get(&"running_spear", 0)).is_equal(0)
+
+
+func test_a_close_standing_opportunity_can_start_the_running_finisher_path() -> void:
+	var scene := _roman_vs_cody()
+	var roman := scene.get_node("WrestlerA") as WrestlerController
+	var cody := scene.get_node("WrestlerB") as WrestlerController
+	roman.combat.finisher_lit = true
+	roman.combat.momentum = CombatSystem.MOMENTUM_MAX
+	roman.flow.tick = 430 * 60
+	roman.global_position = Vector3(-1.0, 0, 0)
+	cody.global_position = Vector3.ZERO
+	cody.fsm.current_state = WrestlerFSM.State.IDLE
+	assert_bool(roman.ai._wants_spear_from_nowhere(1.0)).is_true()
+	roman.ai._spear_stalk = WrestlerAI.STALK_CHARGE
+	roman.ai._spear_ticks = 120
+	var input := roman.ai._spear_stalk_input({}, Vector3.RIGHT, 1.0)
+	assert_bool(input.is_empty()).is_false()
+	assert_object(roman._active_move).is_same(roman.finisher_run_move)
+	assert_int(roman.ai._spear_stalk).is_equal(WrestlerAI.STALK_OFF)

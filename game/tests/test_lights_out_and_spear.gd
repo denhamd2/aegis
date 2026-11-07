@@ -175,8 +175,8 @@ func test_the_spear_comes_out_of_nowhere_in_the_comeback() -> void:
 func test_the_spear_out_of_nowhere_has_its_terms() -> void:
 	var pair := _pair(false)
 	var ai := _spear_ready(pair, 330.0)
-	# Too close to run, or too far.
-	assert_bool(ai._wants_spear_from_nowhere(1.0)).is_false()
+	# Close range is a legal opportunity too; across ringside is not.
+	assert_bool(ai._wants_spear_from_nowhere(1.0)).is_true()
 	assert_bool(ai._wants_spear_from_nowhere(9.0)).is_false()
 	# Not with the other man out on the floor.
 	pair[1].outside_ring = true
