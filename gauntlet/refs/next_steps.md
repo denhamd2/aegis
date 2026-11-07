@@ -12,7 +12,13 @@ The fresh clone did not contain the other chat's uncommitted entrance, camera,
 trouser and mat-contact changes. The owner instructed “ship the latest.”
 Baseline `492ab0b049a875e29ce2742232d39733645b9046` is already published in
 `mac-latest`, verified on 7 November with the `Aegis.zip` asset present.
-Release 1 (crowd lighting) is in progress; Releases 2–22 are queued.
+Release 1 (crowd lighting) is blocked on validation; Releases 2–22 are queued.
+The lighting draft and recovery notes are preserved in
+[PR #13](https://github.com/denhamd2/aegis/pull/13). The full-arena Forward+
+baseline loaded on a software renderer, then the executor disconnected and
+became unavailable before a usable comparison capture or post-import test run.
+The first test run started before import finished and failed on missing imports;
+it is not a passing validation result. The draft has not been deployed.
 Each release must be validated, committed, pushed and verified in the Mac
 release before the next starts. Native M1 frame pacing remains unverified.
 
