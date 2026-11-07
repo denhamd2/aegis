@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites id="2026-11-07" name="report_4" tests="5" failures="0" skipped="0" flaky="0" time="0.000">
+	<testsuite id="0" name="test_instant_replay" package="tests" timestamp="2026-11-07T15:00:51" hostname="localhost" tests="5" failures="0" errors="0" skipped="0" flaky="0" time="38.799">
+		<testcase name="test_a_signature_earns_a_replay_and_the_finisher_does_not" classname="test_instant_replay" time="18.800">
+		</testcase>
+		<testcase name="test_it_plays_only_on_frequent_between_moves_and_not_too_often" classname="test_instant_replay" time="0.007">
+		</testcase>
+		<testcase name="test_a_queued_replay_is_cancelled_when_the_match_is_over" classname="test_instant_replay" time="0.006">
+		</testcase>
+		<testcase name="test_options_keep_in_match_replays_and_retire_the_finish_only_choice" classname="test_instant_replay" time="0.006">
+		</testcase>
+		<testcase name="test_the_match_carries_it_and_headless_it_never_fires" classname="test_instant_replay" time="19.944">
+		</testcase>
+	</testsuite>
+</testsuites>

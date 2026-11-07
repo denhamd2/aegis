@@ -11454,3 +11454,22 @@ Head shots now use the striking hand carried on the move: the left jab turns the
 The hit check begins on the move's authored first active tick. The defender enters the reaction only when that hit is resolved after contact; the new strike test checks the ordering through the jab's startup, contact, and reaction state.
 
 `strike_connect_probe` over seeds 1–3 and 4,000 ticks each recorded 122 landed of 156 thrown strikes (78.2%), with 27 contact-volume misses, 7 unhittable targets, and no interrupted strikes. All three samples ended at the tick limit before a match finish. The longer 20,000-tick run crashed in Godot's notification threading after about 34 minutes without a report; the shorter run completed and provided the connection sample.
+
+
+## 7 Nov — Mac lighting release and presentation batch
+
+Crowd indirect fill now fades with seating distance and height independently
+of ring exposure. The Mac release was verified at `d59d830` with a matching
+tag and app asset. The owner will review its arena appearance on their Mac;
+native M1 frame pacing remains unverified.
+
+The next batch removes central move-name flashes and gives readiness/Fired Up
+their own rows above wrestler names. The finish goes straight to winner
+presentation, with the loser held down and queued replays cancelled. Frequent
+in-match replays remain available; the obsolete Finish-only menu choice is
+removed while its stored enum value stays compatible. 35 distinct focused
+checks pass, and HUD renders were inspected at 1280×720 and 640×360. See
+[`presentation validation`](gauntlet/refs/presentation_2026_11_07/validation.md).
+
+The owner approved focused commits with one validation/deployment per related
+batch. Next is priorities 4–6: move variety, Roman's Spear and rope-running.

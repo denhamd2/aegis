@@ -1,11 +1,11 @@
 # Release 1 validation — resumed 7 November 2026
 
-Status: **34 focused tests and isolated shader rendering pass; owner authorised
-Mac publication and will review arena appearance on their Mac**.
-This records validation for [PR #13](https://github.com/denhamd2/aegis/pull/13).
-Native appearance and M1 performance remain unverified. Earlier GPU-host
-requirements below are historical; they do not block publication under the
-owner's latest instruction.
+Status: **published for owner Mac review** at
+`d59d830dc51b7ec4bccd89dbd0e0167f7e3f0402`. Mac workflow success, matching
+`mac-latest` tag SHA and `Aegis.zip` asset were verified. 34 focused tests and
+isolated shader rendering pass; native arena appearance and M1 performance
+await owner review. Earlier GPU-host requirements below are historical and
+superseded by the owner's explicit deployment instruction.
 
 ## Passing checks
 

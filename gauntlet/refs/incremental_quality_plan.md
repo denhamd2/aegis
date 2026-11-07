@@ -18,9 +18,12 @@ were not present in this fresh clone. The owner subsequently instructed
 This establishes publication of that baseline, not recovery of another
 workspace's uncommitted changes or native M1 visual/performance acceptance.
 
-Then complete the work below in priority order. **Each numbered release gets
-its own validation, commit, push and Mac deployment.** Verify that the
-published Mac release references that commit before starting the next release.
+Then complete the work below in priority order. **Owner update: keep focused
+commits and group related priorities into small batches, with one validation
+and Mac deployment per batch.** The numbers below remain priority IDs.
+Verify that the published Mac release references the batch commit before
+starting the next batch. The first groups are 2–3 (HUD and post-match ending),
+then 4–6 (move variety, Roman's Spear and rope-running attacks).
 Update the backlog with completed work and remaining limitations. Large move
 families and the remaining catalogue ship in separately validated small batches.
 
@@ -112,7 +115,7 @@ hardware.
 These conventions are summarised in the root `AGENTS.md`:
 
 - Rank multiple requests by impact, effort and dependencies.
-- Validate, commit and deploy each completed change incrementally.
+- Keep focused commits; validate and deploy related batches incrementally.
 - Treat M1/16 GB performance, smooth animation, Fight Forever pacing and
   broadcast quality as continuing requirements.
 - Use expert game-design judgement and reference-led animation, modeling,
@@ -137,5 +140,7 @@ scope is the established Fight Forever reference catalogue.
 | Release | Status | Validation, publication and remaining limitations |
 | --- | --- | --- |
 | Baseline | Published | `492ab0b049a875e29ce2742232d39733645b9046` verified against `mac-latest` on 7 November 2026. Other-chat uncommitted changes were unavailable; owner chose latest main. Native M1 performance remains unverified. |
-| 1 | Ready for Mac publication | [PR #13](https://github.com/denhamd2/aegis/pull/13): 34 focused cases pass; both shaders compile/render in an isolated Forward+ diagnostic. Owner authorised deployment and will review the full arena on their Mac. Native appearance and M1 performance remain unverified. Verify the published commit before Release 2. |
-| 2–22 | Queued | Start each release only after the previous release's commit is verified in the published Mac release. |
+| 1 | Published for owner Mac review | `d59d830dc51b7ec4bccd89dbd0e0167f7e3f0402`: Mac workflow succeeded; `mac-latest` tag SHA verified and `Aegis.zip` present (982,707,267 bytes). 34 focused cases and both shader renders pass. Arena appearance and M1 performance await owner review. |
+| 2–3 | Ready for Mac publication | HUD cleanup and direct winner celebration; focused commits `f5d64bf` and `14e90c0`. 35 distinct focused checks pass; HUD renders reviewed at 1280×720 and 640×360. One validation/deployment for the batch; native appearance/performance await owner review. See [validation](presentation_2026_11_07/validation.md). |
+| 4–6 | Next batch | Move variety/psychology, Roman’s Spear and rope-running attacks. Start after the presentation batch is verified in the Mac release. |
+| 7–22 | Queued | Preserve priority order; group related work where appropriate and split large animation work by move family. |

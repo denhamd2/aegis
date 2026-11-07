@@ -1,10 +1,11 @@
 # Release 1 handover — crowd lighting
 
-Status: ready for Mac publication under the owner's review instruction.
-34 focused tests and isolated Forward+ shader rendering pass. The owner will
-review arena appearance on their Mac; native M1 performance is unverified.
-Verify the published release commit before starting Release 2. Earlier GPU-host
-blockers below are historical and superseded by this instruction.
+Status: published for owner Mac review at
+`d59d830dc51b7ec4bccd89dbd0e0167f7e3f0402`. The successful Mac job, matching
+`mac-latest` tag SHA and `Aegis.zip` asset were verified. Arena appearance and
+native M1 performance await owner review. The owner subsequently approved
+related batches: priorities 2–3 together, then 4–6. Earlier GPU-host blockers
+below are historical and do not block publication under that instruction.
 
 ## Resume result — 7 November
 

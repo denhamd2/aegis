@@ -4,9 +4,11 @@
 
 The owner's [incremental quality plan](gauntlet/refs/incremental_quality_plan.md)
 is the current release order; it supersedes older handoffs where they conflict.
-Rank new requests by impact, effort and dependencies. Validate, commit, push
-and publish each release separately, then verify `mac-latest` references that
-commit before starting the next release. Record evidence and limitations in
+Rank new requests by impact, effort and dependencies. The owner approved small
+related batches: keep commits focused, then validate and deploy each batch once.
+Verify `mac-latest` references the batch commit before starting the next batch.
+The first groups are priorities 2–3 (HUD/ending), then 4–6 (AI/running offence).
+Record evidence and limitations in
 the plan's release ledger and `gauntlet/refs/next_steps.md`.
 
 The owner explicitly authorised deployment for review on their Mac after the

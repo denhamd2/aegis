@@ -12,19 +12,24 @@ The fresh clone did not contain the other chat's uncommitted entrance, camera,
 trouser and mat-contact changes. The owner instructed “ship the latest.”
 Baseline `492ab0b049a875e29ce2742232d39733645b9046` is already published in
 `mac-latest`, verified on 7 November with the `Aegis.zip` asset present.
-Release 1 (crowd lighting) is ready for Mac publication. The owner explicitly
-instructed: deploy it for review on their Mac, then continue the priorities.
-A missing cloud GPU or full-arena capture no longer blocks publication.
+**Published:** priority 1 (crowd lighting), commit
+`d59d830dc51b7ec4bccd89dbd0e0167f7e3f0402`. The Mac workflow succeeded;
+`mac-latest` points to that exact SHA and contains `Aegis.zip` (982,707,267 bytes).
+34 focused cases and both isolated shader renders pass. Native arena appearance
+and M1 performance await owner Mac review.
 
-**Validation:** 34 focused cases pass with zero errors/failures after import;
-both changed shaders also compiled/rendered in an isolated Forward+ diagnostic.
-[PR #13](https://github.com/denhamd2/aegis/pull/13) preserves the test report,
-shader diagnostic and detailed limitations. Native arena appearance and M1
-performance await owner review. Verify the published Mac commit, then start
-Release 2 (HUD cleanup) and Release 3 (post-match ending) in order.
+**Owner-approved process:** keep focused commits, then validate and publish
+small related batches once per batch. Missing cloud GPU/full-arena captures do
+not block publication; the owner will review on their Mac. Verify each published
+batch commit before beginning the next batch.
 
-Each release must be validated, committed, pushed and verified in the Mac
-release before the next starts. Native M1 frame pacing remains unverified.
+**Ready for Mac publication: priorities 2–3**, HUD cleanup and the post-match
+ending. 35 distinct focused checks pass; HUD-only Forward+ renders at 1280×720
+and 640×360 were inspected. See [validation](presentation_2026_11_07/validation.md).
+The batch removes central move flashes, separates readiness/Fired Up from names,
+starts winner presentation immediately and prevents queued replays after the finish.
+**Next batch: priorities 4–6**, move variety, Roman’s Spear and rope-running.
+Later work retains the listed order, with animation batches by move family.
 
 ## Previous backlog and implementation notes
 
@@ -259,7 +264,7 @@ choices where they conflict. See
 5. Run the complete test suite, make a Mac build, and review that build on the
    target machine before calling these changes release-ready.
 
-## How every step is checked
+## Earlier validation process (historical)
 
 1. gdUnit tests for the behaviour, run headless.
 2. A rendered review sheet, looked at before it is sent to the owner.
