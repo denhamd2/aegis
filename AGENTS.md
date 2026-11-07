@@ -9,6 +9,11 @@ and publish each release separately, then verify `mac-latest` references that
 commit before starting the next release. Record evidence and limitations in
 the plan's release ledger and `gauntlet/refs/next_steps.md`.
 
+The owner explicitly authorised deployment for review on their Mac after the
+focused checks pass. Missing cloud GPU/full-arena captures are not a publication
+blocker: record appearance and native M1 performance as awaiting owner review,
+publish the Mac build, verify its exact commit, then continue the priorities.
+
 Aegis targets 60 fps (16.67 ms) on a MacBook M1 with 16 GB memory. Preserve
 60 Hz simulation, smooth animation, Fight Forever pacing and broadcast quality.
 Only native measurements establish Mac performance. Use the cheapest adequate

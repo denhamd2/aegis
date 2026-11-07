@@ -12,22 +12,17 @@ The fresh clone did not contain the other chat's uncommitted entrance, camera,
 trouser and mat-contact changes. The owner instructed “ship the latest.”
 Baseline `492ab0b049a875e29ce2742232d39733645b9046` is already published in
 `mac-latest`, verified on 7 November with the `Aegis.zip` asset present.
-Release 1 (crowd lighting) is blocked on a GPU visual-review host; Releases 2–22
-are queued. [PR #13](https://github.com/denhamd2/aegis/pull/13) preserves the draft,
-validation record, JUnit report and isolated shader-render evidence.
+Release 1 (crowd lighting) is ready for Mac publication. The owner explicitly
+instructed: deploy it for review on their Mac, then continue the priorities.
+A missing cloud GPU or full-arena capture no longer blocks publication.
 
-The workspace recovered and **34 focused cases now pass**, with zero errors or
-failures after import. Both changed shaders also compiled/rendered in a small
-Forward+ diagnostic with the expected distance/height fade. Full-arena software
-captures still show unusable interim previews and time out; guarded retries
-avoided another executor loss. Those previews do not establish Mac appearance.
+**Validation:** 34 focused cases pass with zero errors/failures after import;
+both changed shaders also compiled/rendered in an isolated Forward+ diagnostic.
+[PR #13](https://github.com/denhamd2/aegis/pull/13) preserves the test report,
+shader diagnostic and detailed limitations. Native arena appearance and M1
+performance await owner review. Verify the published Mac commit, then start
+Release 2 (HUD cleanup) and Release 3 (post-match ending) in order.
 
-The owner selected a **GPU-capable environment**. The attached 8 GiB executor
-exposes no GPU device, and available tools cannot provision/switch hosts.
-Attach/configure a suitable GPU host next; use the saved draft and passing
-checks instead of repeating import/test recovery. Full-arena visual acceptance,
-Mac publication and native M1 measurements remain open. No Mac preview or
-production release was published in this resume.
 Each release must be validated, committed, pushed and verified in the Mac
 release before the next starts. Native M1 frame pacing remains unverified.
 

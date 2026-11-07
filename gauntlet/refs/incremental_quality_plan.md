@@ -24,6 +24,13 @@ published Mac release references that commit before starting the next release.
 Update the backlog with completed work and remaining limitations. Large move
 families and the remaining catalogue ship in separately validated small batches.
 
+**Owner update, 7 November:** deploy the validated changes for review on the
+owner's Mac, then continue the priorities. A cloud GPU/full-arena comparison is
+not a publication prerequisite. Keep focused correctness checks and available
+component renders; mark native appearance and M1 performance as awaiting owner
+review. Continue after verifying each published Mac commit without waiting for
+that review unless new feedback or a demonstrated fault changes the scope.
+
 ## Release order
 
 Effort is relative: **S** small, **M** medium, **L** large.
@@ -130,5 +137,5 @@ scope is the established Fight Forever reference catalogue.
 | Release | Status | Validation, publication and remaining limitations |
 | --- | --- | --- |
 | Baseline | Published | `492ab0b049a875e29ce2742232d39733645b9046` verified against `mac-latest` on 7 November 2026. Other-chat uncommitted changes were unavailable; owner chose latest main. Native M1 performance remains unverified. |
-| 1 | Blocked: GPU review host required | [PR #13](https://github.com/denhamd2/aegis/pull/13): 34 focused cases pass; both shaders compile/render in an isolated Forward+ diagnostic. Full-arena software captures remain unusable/time out. Owner selected a GPU-capable environment; no GPU host is attached or provisioning/switch tool exposed. Attach/configure that host, finish visual acceptance, then publish Mac. Not deployed; M1 performance unverified. |
+| 1 | Ready for Mac publication | [PR #13](https://github.com/denhamd2/aegis/pull/13): 34 focused cases pass; both shaders compile/render in an isolated Forward+ diagnostic. Owner authorised deployment and will review the full arena on their Mac. Native appearance and M1 performance remain unverified. Verify the published commit before Release 2. |
 | 2–22 | Queued | Start each release only after the previous release's commit is verified in the published Mac release. |

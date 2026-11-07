@@ -1,8 +1,11 @@
 # Release 1 validation — resumed 7 November 2026
 
-Status: **focused tests pass; arena appearance review remains blocked**.
-This is a validation update for [draft PR #13](https://github.com/denhamd2/aegis/pull/13),
-not a release acceptance or Mac deployment record.
+Status: **34 focused tests and isolated shader rendering pass; owner authorised
+Mac publication and will review arena appearance on their Mac**.
+This records validation for [PR #13](https://github.com/denhamd2/aegis/pull/13).
+Native appearance and M1 performance remain unverified. Earlier GPU-host
+requirements below are historical; they do not block publication under the
+owner's latest instruction.
 
 ## Passing checks
 

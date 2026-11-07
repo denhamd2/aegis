@@ -1,6 +1,10 @@
 # Release 1 handover — crowd lighting
 
-Status: draft; not visually accepted or published. Do not start Release 2.
+Status: ready for Mac publication under the owner's review instruction.
+34 focused tests and isolated Forward+ shader rendering pass. The owner will
+review arena appearance on their Mac; native M1 performance is unverified.
+Verify the published release commit before starting Release 2. Earlier GPU-host
+blockers below are historical and superseded by this instruction.
 
 ## Resume result — 7 November
 
