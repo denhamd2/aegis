@@ -10,6 +10,8 @@ extends RefCounted
 
 enum Coverage { GAMEPLAY, BROADCAST, FIGHT_FOREVER }
 enum Shake { OFF, LOW, HIGH }
+## FINISH retains its stored/CLI value for compatibility; ending replays are
+## removed. Only OFF and FREQUENT are offered by the options screen.
 enum Replays { OFF, FINISH, FREQUENT }
 
 ## FIGHT_FOREVER is the default (the owner, 18 October: in-match animation
@@ -59,10 +61,10 @@ static func motion_blur_enabled() -> bool:
 
 static func replay_finish() -> bool:
 	_read_command_line()
-	return replays != Replays.OFF
+	return false
 
 
-## FREQUENT: big moves replayed mid-match too (InstantReplay).
+## FREQUENT: big moves replayed during the match (InstantReplay).
 static func replay_frequent() -> bool:
 	_read_command_line()
 	return replays == Replays.FREQUENT

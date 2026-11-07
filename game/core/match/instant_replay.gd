@@ -7,7 +7,7 @@ extends Node
 ## every setting but OFF replayed the finish and only the finish.
 ##
 ## How it stays out of the match: it plays only between moves (never in a
-## pin, a hold or the finisher, which PostMatch replays), at most once every
+## pin, a hold or the finisher), at most once every
 ## COOLDOWN seconds, and while it plays the whole tree is PAUSED -- no tick
 ## runs, so the match resumes on exactly the tick it left and the recording
 ## (ReplaySystem) never sees it. The pictures come from ReplayBuffer, which
@@ -61,8 +61,8 @@ func watch(p_buffer: ReplayBuffer, p_camera: MatchCamera, rig: GrappleRig,
 	rig.grapple_finished.connect(_on_finished)
 
 
-## A move worth replaying: a signature or bigger that is not the finisher
-## (the finish has its own replay after the bell).
+## A move worth replaying: a signature or bigger that is not the finisher,
+## so the live finish and winner's celebration remain uninterrupted.
 static func worth_replaying(attacker: WrestlerController, move: MoveDef) -> bool:
 	return attacker != null and move != null \
 			and attacker.tier_of(move) >= CombatSystem.Tier.SIGNATURE \
@@ -99,6 +99,9 @@ func _on_finished(_a: Node3D, _d: Node3D) -> void:
 
 
 func _process(delta: float) -> void:
+	if referee and referee.is_match_over():
+		finish_match()
+		return
 	if _playing:
 		_play(delta)
 		return
@@ -111,6 +114,17 @@ func _process(delta: float) -> void:
 		_from = -1.0
 		return
 	_begin()
+
+
+## Pending in-match replays must never start over the winner's celebration.
+## Restore any active playback before MatchSetup applies the final poses.
+func finish_match() -> void:
+	_due = -1.0
+	_capture_from = -1.0
+	_in_move = false
+	if _playing:
+		_end()
+	set_process(false)
 
 
 func _begin() -> void:

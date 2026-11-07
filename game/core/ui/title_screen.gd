@@ -48,7 +48,7 @@ const MENU_CAMERA := "OPTIONS"
 ## The camera options (CameraSettings, camera_aaa_plan.md D2): [label,
 ## the values' names in CameraSettings' enum order].
 const CAMERA_ROWS := [["COVERAGE", ["GAMEPLAY", "BROADCAST", "FIGHT FOREVER"]], ["CUTS", ["ON", "OFF"]],
-		["SHAKE", ["OFF", "LOW", "HIGH"]], ["REPLAYS", ["OFF", "FINISH", "FREQUENT"]],
+		["SHAKE", ["OFF", "LOW", "HIGH"]], ["REPLAYS", ["OFF", "FREQUENT"]],
 		["BLOOD", ["OFF", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]], ["MOTION BLUR", ["ON", "OFF"]],
 		# GraphicsSettings, in its enum order: AUTO holds 60 fps.
 		["GRAPHICS", ["AUTO", "HIGH", "BALANCED", "PERFORMANCE"]]]
@@ -753,7 +753,7 @@ static func camera_option(row: int) -> int:
 		0: return CameraSettings.coverage
 		1: return 0 if CameraSettings.cuts else 1
 		2: return CameraSettings.shake
-		3: return CameraSettings.replays
+		3: return 1 if CameraSettings.replay_frequent() else 0
 		5: return 0 if CameraSettings.motion_blur_enabled() else 1
 		6: return GraphicsSettings.current()
 		_: return Blood.level if Blood.on() else 0
@@ -767,7 +767,7 @@ func step_camera_option(dir: int) -> void:
 		0: CameraSettings.coverage = v as CameraSettings.Coverage
 		1: CameraSettings.cuts = v == 0
 		2: CameraSettings.shake = v as CameraSettings.Shake
-		3: CameraSettings.replays = v as CameraSettings.Replays
+		3: CameraSettings.replays = CameraSettings.Replays.FREQUENT if v == 1 else CameraSettings.Replays.OFF
 		5: CameraSettings.motion_blur = v == 0
 		6: GraphicsSettings.set_quality(v as GraphicsSettings.Quality)
 		_:

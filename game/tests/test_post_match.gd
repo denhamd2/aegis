@@ -3,9 +3,11 @@ extends GdUnitTestSuite
 ## post-match, and the winner ends up beside Aubrey with his arm raised.
 
 var _scene: Node
+var _saved_replays: CameraSettings.Replays
 
 
 func before_test() -> void:
+	_saved_replays = CameraSettings.replays
 	_scene = (load("res://scenes/match.tscn") as PackedScene).instantiate()
 	var pair := Roster.pair_from_spec("")
 	TitleScreen.configure_match(_scene, pair[0], pair[1], 3)
@@ -14,6 +16,7 @@ func before_test() -> void:
 
 
 func after_test() -> void:
+	CameraSettings.replays = _saved_replays
 	_scene.queue_free()
 
 
@@ -96,3 +99,38 @@ func test_a_standing_loser_is_put_on_the_mat_for_the_post_match() -> void:
 		if _scene.post_match.is_done():
 			break
 	assert_float(worst).is_less(0.6)
+
+
+func test_normal_loser_stays_down_and_a_buffered_finish_never_replays() -> void:
+	var winner: WrestlerController = _scene.get_node("WrestlerA")
+	var loser: WrestlerController = _scene.get_node("WrestlerB")
+	winner.is_ai = false
+	loser.is_ai = false
+	for i in 20:
+		await get_tree().physics_frame
+	winner.fsm.transition_to(WrestlerFSM.State.IDLE)
+	loser.fsm.transition_to(WrestlerFSM.State.IDLE)
+	loser.fsm.transition_to(WrestlerFSM.State.STUNNED)
+	loser.fsm.transition_to(WrestlerFSM.State.DOWN)
+	loser._move_ticks_remaining = 1
+	assert_bool(loser.dead).is_false()
+	# Supply a valid replay window even headless. The old ending would play it.
+	var buffer: ReplayBuffer = _scene.replay_buffer
+	buffer._marks = {"finisher": 2.0, "cover": 4.0}
+	buffer._frames = [[0.0, buffer._snapshot()], [6.0, buffer._snapshot()]]
+	CameraSettings.replays = CameraSettings.Replays.FREQUENT
+	_scene.referee._declare_winner(winner, "pinfall")
+	var pm: PostMatch = _scene.post_match
+	assert_str(pm._stage).is_equal("winner")
+	assert_bool(pm._card.is_showing()).is_true()
+	assert_int(winner.fsm.current_state).is_equal(WrestlerFSM.State.VICTORY)
+	for i in 1100:
+		await get_tree().physics_frame
+		assert_bool(buffer._playing).is_false()
+		assert_bool(winner.is_physics_processing()).is_false()
+		assert_bool(loser.is_physics_processing()).is_false()
+		if i > 30:
+			assert_float(_pelvis_y(loser)).is_less(0.6)
+		if pm.is_done():
+			break
+	assert_int(loser.fsm.current_state).is_equal(WrestlerFSM.State.DOWN)

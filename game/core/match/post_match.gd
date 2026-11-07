@@ -1,29 +1,12 @@
 class_name PostMatch
 extends Node
-## After the three (camera_aaa_plan.md C1-C4), the payoff 2K26 leans on
-## hardest, cut as a broadcast cuts it:
-##
-##   the bell        the camera stays on the count and the reaction (HOLD)
-##   C1 the winner   low and in front of him, up at him, the winner card over it
-##   C2 the replay   the finisher again, half speed, from two new angles --
-##                   mat level square to it, then high over it -- REPLAY
-##                   badge up; skipped if replays are off or nothing to show
-##   C3 celebration  close on him; ringside wide; the arena wide from under the
-##                   rig; low and close as the referee raises his hand
-##   C4 the rating   the match's stars over the arena wide
-##
-## Presentation only: the match is over and frozen when it starts. It drives
-## MatchCamera through set_entrance_shot() (which takes the camera off its own
-## logic) and plays the replay through ReplayBuffer, which hands every pose
-## back afterwards.
+## The finish goes straight to the winner and celebration, then the rating.
+## The match is already frozen. Ending replays are deliberately omitted;
+## InstantReplay retains its separate in-match settings and shared badge.
 
 signal finished
 
-const HOLD := 1.8
 const WINNER_HOLD := 3.0
-const REPLAY_LEAD := 0.6     # seconds before the finisher starts
-const REPLAY_TAIL := 0.9     # after the cover starts
-const REPLAY_SPEED := 0.5
 const CELEBRATION := [["close", 2.2], ["ringside", 2.0], ["arena", 2.6], ["hero", 2.4]]
 const RATING_HOLD := 3.6
 ## The title presented (TitlePresentation): the celebration holds on him and
@@ -39,14 +22,11 @@ var replay: ReplayBuffer
 var stats := {}
 
 var _t := 0.0
-var _stage := "hold"
+var _stage := "winner"
 var _stage_t := 0.0
-var _replay_from := -1.0
-var _replay_to := -1.0
 var _celeb := 0
 var _layer: CanvasLayer
 var _card: EntranceLowerThird
-var _badge: Control
 var _rating: Control
 var _done := false
 
@@ -63,22 +43,14 @@ func begin(p_camera: MatchCamera, p_winner: WrestlerController, p_loser: Wrestle
 	add_child(_layer)
 	_card = EntranceLowerThird.new()
 	_layer.add_child(_card)
-	_badge = _ReplayBadge.new()
-	_badge.visible = false
-	_layer.add_child(_badge)
 	_rating = _RatingCard.new()
 	_rating.visible = false
 	(_rating as _RatingCard).stars = match_rating(stats)
 	(_rating as _RatingCard).minutes = float(stats.get("seconds", 0.0)) / 60.0
 	_layer.add_child(_rating)
-	if replay and CameraSettings.replay_finish():
-		var start := replay.mark_time("finisher")
-		var cover := replay.mark_time("cover")
-		if start >= 0.0:
-			_replay_from = start - REPLAY_LEAD
-			_replay_to = (cover if cover > start else start + 3.0) + REPLAY_TAIL
-			if not replay.has_window(_replay_from, _replay_to):
-				_replay_from = -1.0
+	_card.show_card(_name(winner), "WINNER")
+	_shot_winner_low(0.0)
+	_present_title()
 
 
 func is_done() -> bool:
@@ -102,30 +74,11 @@ func _process(delta: float) -> void:
 	_t += delta
 	_stage_t += delta
 	match _stage:
-		"hold":
-			if _stage_t >= HOLD:
-				_next("winner")
-				_card.show_card(_name(winner), "WINNER")
 		"winner":
 			_shot_winner_low(delta)
 			if _stage_t >= WINNER_HOLD:
 				_card.hide_card()
-				_next("replay" if _replay_from >= 0.0 else "celebrate")
-				if _stage == "celebrate":
-					_present_title()
-				if _stage == "replay":
-					replay.begin_playback()
-					_badge.visible = true
-		"replay":
-			var length := (_replay_to - _replay_from) / REPLAY_SPEED
-			var at := _replay_from + _stage_t * REPLAY_SPEED
-			replay.show(at)
-			_shot_replay(_stage_t / length, delta)
-			if _stage_t >= length:
-				replay.restore()
-				_badge.visible = false
 				_next("celebrate")
-				_present_title()
 		"celebrate":
 			var step: Array = CELEBRATION[_celeb]
 			_shot_celebration(String(step[0]), delta)
@@ -155,7 +108,7 @@ func _process(delta: float) -> void:
 				finished.emit()
 
 
-## The belt to the winner, once the replay is done with everybody's poses.
+## The belt to the winner during the uninterrupted celebration.
 func _present_title() -> void:
 	_title = TitlePresentation.of(self)
 	var ref := get_parent().get_node_or_null("RefereeActor") as RefereeActor if get_parent() else null
@@ -199,28 +152,6 @@ func _shot_winner_low(delta: float) -> void:
 	var right := Vector3.UP.cross(-f).normalized()
 	camera.set_entrance_shot(p + f * 2.6 + right * 0.6 + Vector3.UP * 0.45,
 			_head(winner) + Vector3.DOWN * 0.15, 34.0, _stage_t <= delta * 1.5, delta)
-
-
-## The finisher again: mat level and square to the pair for the first half,
-## high over the downed man for the second.
-func _shot_replay(k: float, delta: float) -> void:
-	var a := winner.global_position
-	var d := loser.global_position if loser else a
-	var mid := (a + d) * 0.5
-	var across := d - a
-	across.y = 0.0
-	if across.length() < 0.2:
-		across = _front(winner)
-	across = across.normalized()
-	var side := Vector3.UP.cross(across).normalized()
-	if side.dot(camera.hard_cam_position - mid) < 0.0:
-		side = -side
-	if k < 0.5:
-		camera.set_entrance_shot(mid - side * 3.3 + Vector3.UP * 0.5, mid + Vector3.UP * 0.8,
-				50.0, _stage_t <= delta * 1.5, delta)
-	else:
-		camera.set_entrance_shot(mid + side * 1.6 - across * 1.5 + Vector3.UP * 3.8,
-				mid + Vector3.UP * 0.4, 46.0, absf(k - 0.5) < 0.02, delta)
 
 
 func _shot_celebration(kind: String, delta: float) -> void:

@@ -277,6 +277,10 @@ func _begin_live() -> void:
 
 func _on_match_won(winner: WrestlerController, method: String) -> void:
 	print("Match won by %s via %s" % [winner.name, method])
+	if instant_replay:
+		instant_replay.finish_match()
+	if replay_buffer:
+		replay_buffer.set_process(false)
 	var loser := wrestler_b if winner == wrestler_a else wrestler_a
 	if loser and loser.has_method("lay_out_after_match"):
 		loser.lay_out_after_match()
@@ -298,7 +302,7 @@ func _on_match_won(winner: WrestlerController, method: String) -> void:
 	if record_replay_path != "" or (CaptureHarness and CaptureHarness.is_capturing()):
 		get_tree().quit()
 		return
-	# The bell, the winner, the replay, the celebration, the rating.
+	# The bell goes directly to the winner's celebration, then the rating.
 	var camera := get_node_or_null("MatchCamera") as MatchCamera
 	if camera and winner:
 		_stats["near_falls"] = referee.near_falls
