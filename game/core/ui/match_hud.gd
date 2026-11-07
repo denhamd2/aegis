@@ -104,13 +104,10 @@ static func meter_state(combat: CombatSystem) -> String:
 	if combat.can_signature():
 		return "SIGNATURE"
 	return ""
-## How long a landed big move's name stays up, seconds.
-const POPUP_SECONDS := 1.6
-## Move families that earn a name on screen. A jab does not.
+## Retained title formatting for existing diagnostic callers. Landed moves
+## no longer subscribe to, or raise, central HUD announcements.
 const POPUP_PREFIXES := ["power_", "signature_", "finisher_", "grapple_", "submission_",
 		"running_corner_", "dive_"]
-var _popup_text := ""
-var _popup_left := 0.0
 var _audio: MatchAudio
 
 func _ready() -> void:
@@ -126,12 +123,8 @@ func _resolve() -> void:
 	var root: Node = get_parent().get_parent() if get_parent() else null
 	if wrestler_a == null:
 		wrestler_a = _find(wrestler_a_path, root, "WrestlerA") as WrestlerController
-		if wrestler_a:
-			wrestler_a.move_landed.connect(_on_move_landed)
 	if wrestler_b == null:
 		wrestler_b = _find(wrestler_b_path, root, "WrestlerB") as WrestlerController
-		if wrestler_b:
-			wrestler_b.move_landed.connect(_on_move_landed)
 	if referee == null:
 		referee = _find(referee_path, root, "MatchReferee") as MatchReferee
 
@@ -155,7 +148,6 @@ var _since_decided := 0.0
 func _process(delta: float) -> void:
 	if not is_resolved():
 		_resolve()
-	_popup_left = maxf(_popup_left - delta, 0.0)
 	if referee and referee.is_match_over():
 		_since_decided += delta
 	if _audio == null and wrestler_a and wrestler_a.get_parent():
@@ -181,13 +173,6 @@ static func move_title(move: MoveDef) -> String:
 			return id.trim_prefix(prefix).replace("_", " ").to_upper()
 	return ""
 
-func _on_move_landed(_attacker: WrestlerController, _defender: WrestlerController,
-		move: MoveDef) -> void:
-	var title := move_title(move)
-	if title != "":
-		_popup_text = title
-		_popup_left = POPUP_SECONDS
-
 ## Which way the crowd leans, -1 (all with the left plate's man) .. +1 (all with
 ## the right plate's). Read from the audio's own heats, so the meter and the
 ## sound cannot disagree. 0 when there is no audio or no favourite.
@@ -212,15 +197,16 @@ func _draw() -> void:
 		var left_plate := plate_rect(view, false)
 		_draw_plate(left_plate.position, left_plate.size,
 				wrestler_a, MOMENTUM_A, false)
+		_draw_readiness(view, false, wrestler_a)
 	if wrestler_b:
 		var right_plate := plate_rect(view, true)
 		_draw_plate(right_plate.position, right_plate.size,
 				wrestler_b, MOMENTUM_B, true)
+		_draw_readiness(view, true, wrestler_b)
 
 	if referee:
 		_draw_count(view)
 		_draw_hold(view)
-	_draw_popup(view)
 	_draw_controls(view)
 
 
@@ -233,6 +219,42 @@ static func plate_rect(view: Vector2, mirrored: bool) -> Rect2:
 	var y := view.y - plate.y - view.y * BOTTOM_SAFE_FRACTION
 	var x := view.x - width - x_margin if mirrored else x_margin
 	return Rect2(Vector2(x, y), plate)
+
+
+## A separate row above each health plate: readiness can never cover a name.
+static func ready_rect(view: Vector2, mirrored: bool) -> Rect2:
+	var plate := plate_rect(view, mirrored)
+	var height := maxf(18.0, plate.size.y * 0.34)
+	var gap := maxf(4.0, plate.size.y * 0.08)
+	return Rect2(plate.position - Vector2(0.0, height + gap),
+			Vector2(plate.size.x, height))
+
+
+func _draw_readiness(view: Vector2, mirrored: bool, wrestler: WrestlerController) -> void:
+	if wrestler.combat == null:
+		return
+	var state := meter_state(wrestler.combat)
+	var badge := ready_rect(view, mirrored)
+	if state != "":
+		var finisher := state != "SIGNATURE"
+		var pulse := 0.6 + 0.4 * absf(sin(Time.get_ticks_msec() * (0.012 if finisher else 0.007)))
+		_draw_status(badge, state, PIP_FINISHER if finisher else PIP_SIGNATURE, pulse)
+	if wrestler.combat.is_fired_up():
+		# Keep the comeback tag as well, on its own row rather than the name.
+		if state != "":
+			badge.position.y -= badge.size.y + 4.0
+		var pulse := 0.65 + 0.35 * absf(sin(Time.get_ticks_msec() * 0.008))
+		_draw_status(badge, "FIRED UP", FIRED_UP, pulse)
+
+
+func _draw_status(rect: Rect2, text: String, colour: Color, alpha: float) -> void:
+	draw_rect(rect, PLATE_BG)
+	var font := TitleArt.teko(700)
+	var pixels := int(maxf(10.0, rect.size.y * 0.65))
+	var baseline := rect.position + Vector2(0.0,
+			(rect.size.y - font.get_height(pixels)) * 0.5 + font.get_ascent(pixels))
+	draw_string(font, baseline, text, HORIZONTAL_ALIGNMENT_CENTER,
+			rect.size.x, pixels, Color(colour, alpha))
 
 func _draw_plate(origin: Vector2, plate: Vector2, wrestler: WrestlerController,
 		fallback_accent: Color, mirrored: bool) -> void:
@@ -290,29 +312,6 @@ func _draw_plate(origin: Vector2, plate: Vector2, wrestler: WrestlerController,
 	var fill := meter_fill(wrestler.combat) if wrestler.combat else 0.0
 	_draw_momentum(Rect2(bar_x, mom_y, bar_w, mom_h), fill, meter_colour(fill), mirrored)
 
-	# The state, named and pulsing on the plate's top corner, as Fight
-	# Forever flashes it: read from the same gates the AI and the controller
-	# use, so a lit name is a promise.
-	if wrestler.combat:
-		var state := meter_state(wrestler.combat)
-		if state != "":
-			var finisher := state != "SIGNATURE"
-			var pulse := 0.6 + 0.4 * absf(sin(Time.get_ticks_msec() * (0.012 if finisher else 0.007)))
-			var size_px := int(maxf(10.0, plate.y * 0.2))
-			var col := PIP_FINISHER if finisher else PIP_SIGNATURE
-			draw_string(TitleArt.teko(700), Vector2(origin.x + pad, origin.y + pad + size_px * 0.8),
-					state, HORIZONTAL_ALIGNMENT_LEFT if mirrored else HORIZONTAL_ALIGNMENT_RIGHT,
-					content_w - pad * 2.0, size_px, Color(col, pulse))
-
-	# The comeback, named on his plate for as long as it runs. The story
-	# beat has to be readable by someone who has never seen the game: the
-	# no-sell and the stagger show it, and this says it.
-	if wrestler.combat and wrestler.combat.is_fired_up():
-		var tag_size := int(maxf(9.0, plate.y * 0.2))
-		var pulse := 0.65 + 0.35 * absf(sin(Time.get_ticks_msec() * 0.008))
-		draw_string(font, origin + Vector2(pad, pad + name_size * 0.85),
-				"FIRED UP", HORIZONTAL_ALIGNMENT_CENTER, content_w - pad * 2.0,
-				tag_size, Color(FIRED_UP, pulse))
 
 ## Green remaining, red revealed at the *depleted* end -- which end that is
 ## mirrors with the plate, so damage always eats inward from the screen edge.
@@ -336,16 +335,6 @@ func _draw_momentum(rect: Rect2, fill: float, accent: Color, mirrored: bool) -> 
 		var tx := rect.position.x + (rect.size.x * (1.0 - t) if mirrored else rect.size.x * t)
 		draw_line(Vector2(tx, rect.position.y),
 				Vector2(tx, rect.position.y + rect.size.y), THRESHOLD_TICK, 1.0)
-
-## The name of a big move that has just landed, lower third, fading out.
-func _draw_popup(view: Vector2) -> void:
-	if _popup_left <= 0.0 or _popup_text == "":
-		return
-	var font := TitleArt.teko(700)
-	var size_px := int(view.y * 0.075)
-	var alpha := clampf(_popup_left / 0.4, 0.0, 1.0)
-	draw_string(font, Vector2(0.0, view.y * 0.68), _popup_text,
-			HORIZONTAL_ALIGNMENT_CENTER, view.x, size_px, Color(1, 1, 1, alpha))
 
 ## Centre-top, and a plain pop-in: timings.md frame-stepped the digits
 ## appearing between one frame and the next with no fade, so nothing here

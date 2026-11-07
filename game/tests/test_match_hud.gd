@@ -255,13 +255,20 @@ func test_big_moves_get_a_name_and_a_jab_does_not() -> void:
 	assert_str(MatchHUD.move_title(_move("running_attack_clothesline"))).is_equal("")
 	assert_str(MatchHUD.move_title(null)).is_equal("")
 
-func test_a_landed_big_move_raises_the_popup_and_a_jab_does_not() -> void:
-	var hud: MatchHUD = auto_free(MatchHUD.new())
-	hud._on_move_landed(null, null, _move("strike_jab"))
-	assert_float(hud._popup_left).is_equal(0.0)
-	hud._on_move_landed(null, null, _move("signature_pedigree"))
-	assert_float(hud._popup_left).is_greater(0.0)
-	assert_str(hud._popup_text).is_equal("PEDIGREE")
+func test_ready_badges_have_their_own_space_above_both_name_plates() -> void:
+	for view: Vector2 in [Vector2(640, 360), Vector2(1280, 720),
+			Vector2(1600, 820), Vector2(2560, 1600)]:
+		for mirrored: bool in [false, true]:
+			var plate := MatchHUD.plate_rect(view, mirrored)
+			var badge := MatchHUD.ready_rect(view, mirrored)
+			assert_bool(badge.intersects(plate)).is_false()
+			assert_float(badge.end.y).is_less(plate.position.y)
+			assert_bool(Rect2(Vector2.ZERO, view).encloses(badge)).is_true()
+			var font := TitleArt.teko(700)
+			var pixels := int(maxf(10.0, badge.size.y * 0.65))
+			for label: String in ["FINISHER!", "SIGNATURE", "FIRED UP"]:
+				assert_float(font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT,
+						-1, pixels).x).is_less(badge.size.x)
 
 func test_the_crowd_meter_is_neutral_without_audio_or_favourites() -> void:
 	var hud: MatchHUD = auto_free(MatchHUD.new())
