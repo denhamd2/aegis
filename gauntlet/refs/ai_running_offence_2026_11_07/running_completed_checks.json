@@ -1,0 +1,101 @@
+{
+  "passed": 19,
+  "cases": [
+    {
+      "suite": "res://tests/test_spear_setup.gd",
+      "case": "test_roman_carries_the_run_in_spear_as_a_finisher",
+      "elapsed": "35s 294ms"
+    },
+    {
+      "suite": "res://tests/test_spear_setup.gd",
+      "case": "test_the_set_up_holds_until_he_is_up",
+      "elapsed": "30s 64ms"
+    },
+    {
+      "suite": "res://tests/test_spear_setup.gd",
+      "case": "test_the_spear_runs_into_a_man_on_his_feet",
+      "elapsed": "27s 907ms"
+    },
+    {
+      "suite": "res://tests/test_spear_setup.gd",
+      "case": "test_the_ai_backs_off_sets_and_spears_him_as_he_rises",
+      "elapsed": "28s 501ms"
+    },
+    {
+      "suite": "res://tests/test_spear_setup.gd",
+      "case": "test_an_unearned_or_illegal_spear_does_not_start",
+      "elapsed": "34s 491ms"
+    },
+    {
+      "suite": "res://tests/test_spear_setup.gd",
+      "case": "test_a_close_standing_opportunity_can_start_the_running_finisher_path",
+      "elapsed": "50s 593ms"
+    },
+    {
+      "suite": "res://tests/test_running_attack_selection.gd",
+      "case": "test_fires_when_in_range_and_strike_pressed",
+      "elapsed": "81ms"
+    },
+    {
+      "suite": "res://tests/test_running_attack_selection.gd",
+      "case": "test_does_not_fire_without_strike_pressed",
+      "elapsed": "45ms"
+    },
+    {
+      "suite": "res://tests/test_running_attack_selection.gd",
+      "case": "test_does_not_fire_out_of_range",
+      "elapsed": "75ms"
+    },
+    {
+      "suite": "res://tests/test_running_attack_selection.gd",
+      "case": "test_does_not_fire_without_running_attack_move",
+      "elapsed": "71ms"
+    },
+    {
+      "suite": "res://tests/test_running_attack_selection.gd",
+      "case": "test_does_not_fire_against_unhittable_opponent",
+      "elapsed": "41ms"
+    },
+    {
+      "suite": "res://tests/test_running_attack_selection.gd",
+      "case": "test_a_paired_move_waits_for_both_roles_instead_of_using_a_fallback_punch",
+      "elapsed": "72ms"
+    },
+    {
+      "suite": "res://tests/test_running_attack_selection.gd",
+      "case": "test_an_invalid_rebound_decelerates_and_clears_its_reservation_to_attack",
+      "elapsed": "71ms"
+    },
+    {
+      "suite": "res://tests/test_rope_run_and_chase.gd",
+      "case": "test_he_runs_for_the_ropes_away_from_the_other_man",
+      "elapsed": "10ms"
+    },
+    {
+      "suite": "res://tests/test_rope_run_and_chase.gd",
+      "case": "test_running_the_ropes_sends_him_off_and_marks_the_run",
+      "elapsed": "102ms"
+    },
+    {
+      "suite": "res://tests/test_rope_run_and_chase.gd",
+      "case": "test_no_rope_run_from_the_ropes_or_outside",
+      "elapsed": "74ms"
+    },
+    {
+      "suite": "res://tests/test_rope_run_and_chase.gd",
+      "case": "test_on_the_floor_the_worse_off_man_breaks_away_and_runs",
+      "elapsed": "71ms"
+    },
+    {
+      "suite": "res://tests/test_rope_run_and_chase.gd",
+      "case": "test_a_man_jogging_on_the_floor_faces_where_he_runs",
+      "elapsed": "98ms"
+    },
+    {
+      "suite": "res://tests/test_rope_run_and_chase.gd",
+      "case": "test_a_real_rope_rebound_continues_into_an_attack",
+      "elapsed": "29s 642ms"
+    }
+  ],
+  "note": "Local 300 s process deadline ended before the Irish-whip suite completed. No completed case failed; full suite runs in CI."
+}

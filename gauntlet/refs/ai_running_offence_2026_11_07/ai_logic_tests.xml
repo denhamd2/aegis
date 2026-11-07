@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites id="2026-11-07" name="report_1" tests="49" failures="0" skipped="0" flaky="0" time="0.000">
+	<testsuite id="0" name="test_wrestler_ai_match_shape" package="tests" timestamp="2026-11-07T18:54:58" hostname="localhost" tests="27" failures="0" errors="0" skipped="0" flaky="0" time="2.109">
+		<testcase name="test_the_first_close_range_decision_is_a_grapple" classname="test_wrestler_ai_match_shape" time="0.086">
+		</testcase>
+		<testcase name="test_after_a_grapple_lands_the_ai_only_strikes" classname="test_wrestler_ai_match_shape" time="0.043">
+		</testcase>
+		<testcase name="test_the_opponents_grapple_also_ends_the_opening" classname="test_wrestler_ai_match_shape" time="0.081">
+		</testcase>
+		<testcase name="test_strikes_are_rate_limited" classname="test_wrestler_ai_match_shape" time="0.071">
+		</testcase>
+		<testcase name="test_ai_strike_cooldown_cannot_create_multi_second_idle_gaps" classname="test_wrestler_ai_match_shape" time="0.040">
+		</testcase>
+		<testcase name="test_ai_vs_ai_wrestlers_quick_recover_after_a_brief_down_beat" classname="test_wrestler_ai_match_shape" time="0.076">
+		</testcase>
+		<testcase name="test_ai_quick_down_recovery_also_applies_in_human_vs_ai_matches" classname="test_wrestler_ai_match_shape" time="0.073">
+		</testcase>
+		<testcase name="test_human_controlled_wrestler_gets_the_same_quick_down_recovery" classname="test_wrestler_ai_match_shape" time="0.039">
+		</testcase>
+		<testcase name="test_out_of_range_it_only_closes" classname="test_wrestler_ai_match_shape" time="0.109">
+		</testcase>
+		<testcase name="test_neutral_footwork_is_a_brief_tangent_step_not_a_circle" classname="test_wrestler_ai_match_shape" time="0.073">
+		</testcase>
+		<testcase name="test_seeded_neutral_footwork_is_varied_per_ai_and_replayable" classname="test_wrestler_ai_match_shape" time="0.196">
+		</testcase>
+		<testcase name="test_no_charge_before_the_opening_lock_up" classname="test_wrestler_ai_match_shape" time="0.077">
+		</testcase>
+		<testcase name="test_it_charges_when_there_is_room_to" classname="test_wrestler_ai_match_shape" time="0.077">
+		</testcase>
+		<testcase name="test_it_does_not_charge_from_close_range" classname="test_wrestler_ai_match_shape" time="0.043">
+		</testcase>
+		<testcase name="test_a_charge_is_held_across_the_engage_threshold" classname="test_wrestler_ai_match_shape" time="0.071">
+		</testcase>
+		<testcase name="test_arriving_in_reach_presses_the_attack" classname="test_wrestler_ai_match_shape" time="0.072">
+		</testcase>
+		<testcase name="test_charges_are_rate_limited" classname="test_wrestler_ai_match_shape" time="0.039">
+		</testcase>
+		<testcase name="test_a_charge_is_abandoned_when_the_target_stops_being_hittable" classname="test_wrestler_ai_match_shape" time="0.072">
+		</testcase>
+		<testcase name="test_a_hold_never_sees_a_run_press" classname="test_wrestler_ai_match_shape" time="0.075">
+		</testcase>
+		<testcase name="test_a_grapple_hold_asks_for_nothing" classname="test_wrestler_ai_match_shape" time="0.037">
+		</testcase>
+		<testcase name="test_a_ripe_opponent_is_locked_up_for_the_signature" classname="test_wrestler_ai_match_shape" time="0.080">
+		</testcase>
+		<testcase name="test_an_opponent_a_hit_short_of_ripe_is_still_struck" classname="test_wrestler_ai_match_shape" time="0.073">
+		</testcase>
+		<testcase name="test_ripeness_resets_with_a_knockdown" classname="test_wrestler_ai_match_shape" time="0.039">
+		</testcase>
+		<testcase name="test_a_ripe_opponent_is_struck_when_the_meter_is_short" classname="test_wrestler_ai_match_shape" time="0.072">
+		</testcase>
+		<testcase name="test_ripeness_uses_the_weakest_signature_in_the_pool" classname="test_wrestler_ai_match_shape" time="0.038">
+		</testcase>
+		<testcase name="test_a_rejected_running_request_keeps_the_charge_available" classname="test_wrestler_ai_match_shape" time="0.041">
+		</testcase>
+		<testcase name="test_a_spear_stalk_keeps_its_authored_setup_but_cancels_when_hit" classname="test_wrestler_ai_match_shape" time="0.070">
+		</testcase>
+	</testsuite>
+	<testsuite id="1" name="test_lights_out_and_spear" package="tests" timestamp="2026-11-07T18:55:00" hostname="localhost" tests="14" failures="0" errors="0" skipped="0" flaky="0" time="1.413">
+		<testcase name="test_a_healthy_man_defends_some_swings_and_a_hurt_one_none" classname="test_lights_out_and_spear" time="0.009">
+		</testcase>
+		<testcase name="test_he_defends_a_chair_but_never_a_gun_a_spray_or_a_set_piece" classname="test_lights_out_and_spear" time="0.009">
+		</testcase>
+		<testcase name="test_a_weapon_he_has_used_twice_is_left_lying" classname="test_lights_out_and_spear" time="0.079">
+		</testcase>
+		<testcase name="test_a_used_weapon_is_picked_far_less_often_again" classname="test_lights_out_and_spear" time="0.418">
+		</testcase>
+		<testcase name="test_the_ladder_comes_out_once_the_match_is_under_way" classname="test_lights_out_and_spear" time="0.082">
+		</testcase>
+		<testcase name="test_no_ladder_is_due_in_a_singles_match" classname="test_lights_out_and_spear" time="0.039">
+		</testcase>
+		<testcase name="test_more_of_the_fight_stays_on_the_floor" classname="test_lights_out_and_spear" time="0.006">
+		</testcase>
+		<testcase name="test_the_storys_loser_keeps_his_finisher_for_one_near_fall" classname="test_lights_out_and_spear" time="0.041">
+		</testcase>
+		<testcase name="test_both_men_have_the_finisher_in_the_comeback" classname="test_lights_out_and_spear" time="0.008">
+		</testcase>
+		<testcase name="test_the_spear_comes_out_of_nowhere_in_the_comeback" classname="test_lights_out_and_spear" time="0.078">
+		</testcase>
+		<testcase name="test_the_spear_out_of_nowhere_has_its_terms" classname="test_lights_out_and_spear" time="0.071">
+		</testcase>
+		<testcase name="test_a_ladder_stood_up_in_the_ring_is_kept_where_its_dive_is_made" classname="test_lights_out_and_spear" time="0.009">
+		</testcase>
+		<testcase name="test_with_a_ladder_stood_up_by_the_downed_man_he_goes_up_it" classname="test_lights_out_and_spear" time="0.396">
+		</testcase>
+		<testcase name="test_a_ladder_in_the_ring_is_climbed_from_the_middle_of_the_ring" classname="test_lights_out_and_spear" time="0.012">
+		</testcase>
+	</testsuite>
+	<testsuite id="2" name="test_ai_power_tie_up" package="tests" timestamp="2026-11-07T18:55:02" hostname="localhost" tests="8" failures="0" errors="0" skipped="0" flaky="0" time="0.181">
+		<testcase name="test_it_locks_up_for_the_power_move_inside_the_band" classname="test_ai_power_tie_up" time="0.041">
+		</testcase>
+		<testcase name="test_not_below_the_band" classname="test_ai_power_tie_up" time="0.010">
+		</testcase>
+		<testcase name="test_not_once_a_signature_is_affordable" classname="test_ai_power_tie_up" time="0.009">
+		</testcase>
+		<testcase name="test_not_before_the_opening_grapple" classname="test_ai_power_tie_up" time="0.010">
+		</testcase>
+		<testcase name="test_not_after_landing_one" classname="test_ai_power_tie_up" time="0.010">
+		</testcase>
+		<testcase name="test_only_one_attempt_a_match" classname="test_ai_power_tie_up" time="0.009">
+		</testcase>
+		<testcase name="test_not_without_a_power_move" classname="test_ai_power_tie_up" time="0.010">
+		</testcase>
+		<testcase name="test_not_for_the_man_who_lost_the_opening_lock_up" classname="test_ai_power_tie_up" time="0.010">
+		</testcase>
+	</testsuite>
+</testsuites>

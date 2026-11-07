@@ -1,0 +1,63 @@
+{
+  "godot": "4.6.3",
+  "headless": true,
+  "fixed_fps": 60,
+  "host_cpu_quota": 2,
+  "scope": "Test-case elapsed time including fixture setup; concurrent host load, not isolated profiling or native game performance.",
+  "rows": [
+    {
+      "source": "selection_tests.xml",
+      "suite": "test_working_offence",
+      "cases": 3,
+      "case_seconds": 0.023
+    },
+    {
+      "source": "selection_tests.xml",
+      "suite": "test_paired_moveset",
+      "cases": 22,
+      "case_seconds": 13.772
+    },
+    {
+      "source": "selection_tests.xml",
+      "suite": "test_match_story",
+      "cases": 6,
+      "case_seconds": 17.133
+    },
+    {
+      "source": "ai_logic_tests.xml",
+      "suite": "test_wrestler_ai_match_shape",
+      "cases": 27,
+      "case_seconds": 1.863
+    },
+    {
+      "source": "ai_logic_tests.xml",
+      "suite": "test_lights_out_and_spear",
+      "cases": 14,
+      "case_seconds": 1.257
+    },
+    {
+      "source": "ai_logic_tests.xml",
+      "suite": "test_ai_power_tie_up",
+      "cases": 8,
+      "case_seconds": 0.109
+    },
+    {
+      "source": "running_completed_checks.json",
+      "suite": "res://tests/test_rope_run_and_chase.gd",
+      "cases": 6,
+      "case_seconds": 29.997
+    },
+    {
+      "source": "running_completed_checks.json",
+      "suite": "res://tests/test_running_attack_selection.gd",
+      "cases": 7,
+      "case_seconds": 0.456
+    },
+    {
+      "source": "running_completed_checks.json",
+      "suite": "res://tests/test_spear_setup.gd",
+      "cases": 6,
+      "case_seconds": 206.85
+    }
+  ]
+}

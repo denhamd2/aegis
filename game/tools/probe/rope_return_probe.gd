@@ -4,7 +4,9 @@ extends Node
 
 func _ready() -> void:
 	var rows: Array[Dictionary] = []
-	for spec in [["near", -0.5, false], ["far", -3.6, false], ["down", -0.5, true]]:
+	for spec in [["near", Vector3(-0.5, 0, 0), false, Vector3(3, 0, 0)],
+			["far", Vector3(-2.6, 0, -2.6), false, Vector3(3, 0, 2.3)],
+			["down", Vector3(-0.5, 0, 0), true, Vector3(3, 0, 0)]]:
 		var runner := WrestlerController.new()
 		var target := WrestlerController.new()
 		for man in [runner, target]:
@@ -15,13 +17,13 @@ func _ready() -> void:
 		runner.opponent = target
 		target.opponent = runner
 		runner.running_attack_move = load("res://resources/moves/running_attack_clothesline.tres")
-		target.position = Vector3(spec[1], 0, 0)
+		target.position = spec[1]
 		target.fsm.current_state = WrestlerFSM.State.DOWN if spec[2] else WrestlerFSM.State.IDLE
 		runner.rope_running = true
 		runner._irish_whip_target = target
 		runner._rope_load_tick = 100
 		runner._rope_load_speed = WrestlerController.RUN_SPEED
-		runner._rope_load_from = Vector3(3.0, 0, 0)
+		runner._rope_load_from = spec[3]
 		runner._rope_load_out = Vector3.RIGHT
 		runner.fsm.current_state = WrestlerFSM.State.IRISH_WHIP
 		runner._tick_rope_load()

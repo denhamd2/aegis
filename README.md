@@ -11473,3 +11473,17 @@ checks pass, and HUD renders were inspected at 1280×720 and 640×360. See
 
 The owner approved focused commits with one validation/deployment per related
 batch. Next is priorities 4–6: move variety, Roman's Spear and rope-running.
+
+
+## 7 Nov — AI and running-offence batch
+
+Accepted attempts now drive move/family repetition history and working-tier
+fallbacks. Roman can take earned close standing Spear opportunities, with legal
+state checks and interruption cleanup. Rope returns allow travel to attack range
+and decelerate when the opportunity disappears; running attacks select legal
+paired roles and spend cooldown on acceptance.
+
+99 focused checks pass; baseline and final seeded comparisons each completed
+12 matches. The owner requested immediate Mac publication while the full CI
+run continues. Native appearance and M1 frame timing await owner review. See
+[validation](gauntlet/refs/ai_running_offence_2026_11_07/validation.md).

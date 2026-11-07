@@ -1,0 +1,20 @@
+[
+	{
+		"case": "near",
+		"end_speed": 0.0,
+		"result": "attack",
+		"ticks": 25
+	},
+	{
+		"case": "far",
+		"end_speed": 7.00000047683716,
+		"result": "expired",
+		"ticks": 45
+	},
+	{
+		"case": "down",
+		"end_speed": 7.0,
+		"result": "expired",
+		"ticks": 45
+	}
+]

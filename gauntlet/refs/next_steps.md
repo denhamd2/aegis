@@ -23,12 +23,18 @@ small related batches once per batch. Missing cloud GPU/full-arena captures do
 not block publication; the owner will review on their Mac. Verify each published
 batch commit before beginning the next batch.
 
-**Ready for Mac publication: priorities 2–3**, HUD cleanup and the post-match
+**Published: priorities 2–3**, HUD cleanup and the post-match
 ending. 35 distinct focused checks pass; HUD-only Forward+ renders at 1280×720
 and 640×360 were inspected. See [validation](presentation_2026_11_07/validation.md).
+Commit `6eab898999edc72821a774ffb4518da0dea5150c` was verified at `mac-latest`,
+with `Aegis.zip` (982,707,469 bytes) after workflow 42384661693 succeeded.
 The batch removes central move flashes, separates readiness/Fired Up from names,
 starts winner presentation immediately and prevents queued replays after the finish.
-**Next batch: priorities 4–6**, move variety, Roman’s Spear and rope-running.
+**Mac publication requested: priorities 4–6**, move variety, Roman’s Spear and rope-running.
+99 focused checks pass and both seeded matrices complete all 12 matches. The owner
+requested immediate deployment while full CI continues. See
+[validation](ai_running_offence_2026_11_07/validation.md).
+Next is priority 7, faster validation and Mac-only delivery, after Mac publication is verified.
 Later work retains the listed order, with animation batches by move family.
 
 ## Previous backlog and implementation notes

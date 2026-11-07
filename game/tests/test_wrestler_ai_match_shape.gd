@@ -367,3 +367,16 @@ func test_a_rejected_running_request_keeps_the_charge_available() -> void:
 	ai._running_attack_started()
 	assert_bool(ai._charging).is_false()
 	assert_int(ai._run_cooldown).is_greater(0)
+
+
+func test_a_spear_stalk_keeps_its_authored_setup_but_cancels_when_hit() -> void:
+	var ai := _make_pair(3.0)
+	ai._spear_stalk = WrestlerAI.STALK_SET
+	ai.controller.fsm.current_state = WrestlerFSM.State.TAUNT
+	ai.controller._stalking = true
+	ai._physics_process(1.0 / 60.0)
+	assert_int(ai._spear_stalk).is_equal(WrestlerAI.STALK_SET)
+	ai.controller.fsm.current_state = WrestlerFSM.State.HIT_REACT
+	ai.controller._stalking = false
+	ai._physics_process(1.0 / 60.0)
+	assert_int(ai._spear_stalk).is_equal(WrestlerAI.STALK_OFF)

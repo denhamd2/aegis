@@ -1,0 +1,64 @@
+--- a/game/core/match/wrestler_controller.gd
++++ b/game/core/match/wrestler_controller.gd
+@@ -13,6 +13,8 @@
+ signal knocked_down(wrestler: WrestlerController)
+ signal pin_started(attacker: WrestlerController, defender: WrestlerController)
+ signal move_landed(attacker: WrestlerController, defender: WrestlerController, move: MoveDef)
++## Accepted offence, before its outcome; misses and counters still count.
++signal move_attempted(attacker: WrestlerController, defender: WrestlerController, move: MoveDef)
+ signal weapon_taken(wrestler: WrestlerController, weapon: WeaponActor)
+ signal weapon_retrieval_started(wrestler: WrestlerController)
+ ## His comeback has started (MatchReferee decides when; see fire_up()).
+@@ -779,6 +781,7 @@
+ var flow: MatchFlow = null
+ 
+ func _ready() -> void:
++	move_landed.connect(_record_landed_move)
+ 	# Drawn between physics ticks, so his walk and root motion do not step
+ 	# at 60 Hz on a faster (or uneven) display -- see MatchSmoothing.
+ 	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_ON
+@@ -3188,6 +3191,8 @@
+ 	_maybe_start_running_attack(input)
+ 
+ func _start_move(state: WrestlerFSM.State, move: MoveDef) -> void:
++	if state in [WrestlerFSM.State.STRIKE, WrestlerFSM.State.RUNNING_ATTACK]:
++		_record_move_attempt(move)
+ 	_active_move = move
+ 	_move_ticks_remaining = move.total_frames()
+ 	_active_move_hit_applied = false
+@@ -4777,6 +4782,24 @@
+ ## (_pick_tier_move): what MovePlaybook's allowances count against.
+ var _move_uses := {}
+ var _recent_picks: Array[StringName] = []
++## Telemetry is separate from selection counts, so failed setups and misses
++## can be distinguished from landed offence without changing the simulation.
++var _attempted_moves := {}
++var _landed_moves := {}
++
++
++func _record_move_attempt(move: MoveDef) -> void:
++	if move == null or move.animation_pair_id == &"":
++		return
++	var id := move.animation_pair_id
++	_attempted_moves[id] = int(_attempted_moves.get(id, 0)) + 1
++	move_attempted.emit(self, opponent, move)
++
++
++func _record_landed_move(_a: WrestlerController, _d: WrestlerController, move: MoveDef) -> void:
++	if move:
++		var id := move.animation_pair_id
++		_landed_moves[id] = int(_landed_moves.get(id, 0)) + 1
+ 
+ 
+ func _pick_tier_move(primary: MoveDef, pool: Array[MoveDef]) -> MoveDef:
+--- a/game/core/grapple/grapple_rig.gd
++++ b/game/core/grapple/grapple_rig.gd
+@@ -104,6 +104,8 @@
+ 				- _authored_role_start_height(move, true)
+ 
+ 	_active = true
++	if attacker.has_method("_record_move_attempt"):
++		attacker._record_move_attempt(move)
+ 	grapple_started.emit(attacker, defender, move)
+ 
+ 	# The lock-up, before the move. _align_to_pair() below teleports both men
