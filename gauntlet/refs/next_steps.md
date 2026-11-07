@@ -30,9 +30,11 @@ Commit `6eab898999edc72821a774ffb4518da0dea5150c` was verified at `mac-latest`,
 with `Aegis.zip` (982,707,469 bytes) after workflow 42384661693 succeeded.
 The batch removes central move flashes, separates readiness/Fired Up from names,
 starts winner presentation immediately and prevents queued replays after the finish.
-**Mac publication requested: priorities 4–6**, move variety, Roman’s Spear and rope-running.
+**Published: priorities 4–6**, move variety, Roman’s Spear and rope-running.
 99 focused checks pass and both seeded matrices complete all 12 matches. The owner
-requested immediate deployment while full CI continues. See
+requested immediate deployment while full CI continues. Mac run 42405043123
+succeeded; `mac-latest` was verified at `c805d2d551a70e566262ba6ac05ea6f4370e9c4a`
+with `Aegis.zip` (982,718,501 bytes). See
 [validation](ai_running_offence_2026_11_07/validation.md).
 Next is priority 7, faster validation and Mac-only delivery, after Mac publication is verified.
 Later work retains the listed order, with animation batches by move family.

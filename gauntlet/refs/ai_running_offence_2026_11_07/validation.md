@@ -98,3 +98,11 @@ legal state transitions and completion. No animation resources were reauthored
 in this batch. Named counters distinguish attacks from landings; they do not
 classify every cancelled navigation intent as an attempted move. Later priorities
 retain their existing reference-led animation, presentation and performance work.
+
+## Verified Mac publication
+
+Mac workflow [42405043123](https://github.com/denhamd2/aegis/actions/runs/42405043123)
+succeeded. `mac-latest` resolves to batch commit
+`c805d2d551a70e566262ba6ac05ea6f4370e9c4a`; the published `Aegis.zip` is
+982,718,501 bytes. Full CI continues independently per the owner’s immediate
+deployment request. This receipt changes documentation only.
