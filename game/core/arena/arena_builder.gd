@@ -1596,15 +1596,15 @@ func _crowd_material(phase_source: String = "UV.x", floor_fans := false,
 shader_type spatial;
 render_mode diffuse_lambert, specular_disabled, shadows_disabled, cull_disabled;
 
+#include "res://core/arena/crowd_lighting.gdshaderinc"
+
 uniform float bob_amplitude = 0.035;
 uniform float bob_speed = 1.7;
 uniform float sway_amplitude = 0.018;
-// The floor that keeps the back rows off measure_frame.py's 0.0025 void
-// threshold, in the same spirit as ArenaBuilder.HOUSE_TARGET. The crowd's
-// real level is meant to come from a fixture aimed at it; until the house
-// wash actually reaches the bowl (see gauntlet/refs/lighting.md's ablation)
-// this is most of what lights them, which is why it is not smaller.
-uniform float house_light = 0.06;
+// A restrained indirect fill, independent of the ring keys/exposure. Real
+// audience washes light the front rows; self-light must not flatten the bowl.
+// The shared seating profile lets the upper stands fall into shadow.
+uniform float house_light = 0.018;
 // The colour of the light the crowd sits in. It used to be white, so the stand
 // took its shirts' colours at face value and measured blue-GREY: mean sat
 // 0.408 on crowd_bank against 0.49-0.67 on every AEW still in
@@ -1645,6 +1645,7 @@ uniform sampler2D sign_atlas : source_color, filter_linear_mipmap, repeat_disabl
 uniform float sign_level = 0.45;
 
 varying float ring_dist;
+varying float seating_fill;
 
 varying vec3 shirt;
 varying float figure;
@@ -1663,6 +1664,7 @@ void vertex() {
 	shade = (0.72 + 0.4 * hash(PHASE_SOURCE * 91.7)) * (0.7 + 0.3 * clamp(NORMAL.y * 0.5 + 0.5 + abs(NORMAL.x) * 0.15, 0.0, 1.0));
 	vec3 world = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
 	ring_dist = length(world.xz);
+	seating_fill = crowd_seating_fill(world);
 	float phase = PHASE_SOURCE * 6.2831853;
 	// Bob scaled by height above the seat, so feet stay planted and heads
 	// move most -- a figure translated bodily reads as a hovering cutout.
@@ -1729,7 +1731,7 @@ void fragment() {
 	ALBEDO = cloth;
 	float near = (1.0 - smoothstep(near_from, near_to, ring_dist)) * clamp(crowd_light - 0.3, 0.0, 1.0);
 	vec3 wash = mix(house_tint, near_warm, near);
-	EMISSION = cloth * shade * wash * house_light * crowd_light * (1.0 + (near_gain - 1.0) * near);
+	EMISSION = cloth * shade * wash * house_light * crowd_light * seating_fill * (1.0 + (near_gain - 1.0) * near);
 	ROUGHNESS = 1.0;
 	SPECULAR = 0.0;
 }

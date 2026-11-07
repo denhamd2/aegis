@@ -114,3 +114,28 @@ func test_fixed_aisle_lights_dim_for_entrances_without_becoming_sweeping_beams()
 		rig.set_look(ArenaLighting.Look.MATCH)
 		assert_that(node.transform).is_equal(rest)
 		assert_float(node.light_energy).is_greater(entrance * 4.0)
+
+
+func test_house_dimming_preserves_ring_exposure_and_key_energies() -> void:
+	# Exercise the real rig without loading the arena: audience tuning must
+	# never spend the ring's exposure budget or leave entrances stuck dark.
+	var world: WorldEnvironment = auto_free(WorldEnvironment.new())
+	world.name = "WorldEnvironment"
+	world.environment = Environment.new()
+	world.environment.tonemap_exposure = 1.0
+	add_child(world)
+	var rig: ArenaLighting = auto_free(ArenaLighting.new())
+	add_child(rig)
+	rig.set_look(ArenaLighting.Look.MATCH)
+	var exposure := world.environment.tonemap_exposure
+	var keys: Array[float] = []
+	for light in rig._ring_lights:
+		keys.append(light.light_energy)
+	var audience_energy := rig._audience_lights[0].light_energy
+	for level: float in [0.0, 0.25, 1.0]:
+		rig.set_house_level(level)
+		assert_float(world.environment.tonemap_exposure).is_equal(exposure)
+		for i in keys.size():
+			assert_float(rig._ring_lights[i].light_energy).is_equal(keys[i])
+		assert_float(rig._audience_lights[0].light_energy) \
+				.is_equal_approx(audience_energy * level, 0.0001)

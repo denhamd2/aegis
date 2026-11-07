@@ -1,6 +1,8 @@
 shader_type spatial;
 render_mode diffuse_burley, specular_schlick_ggx, cull_disabled;
 
+#include "res://core/arena/crowd_lighting.gdshaderinc"
+
 // UV0 is the photographic atlas; UV2 is cosmetic arm weight / side.
 // COLOR: garment mask, reaction role, chest mask, skin mask.
 uniform sampler2D albedo_atlas : source_color, filter_linear_mipmap_anisotropic, repeat_disable;
@@ -13,6 +15,7 @@ global uniform float crowd_light;
 
 varying vec4 masks;
 varying vec4 clothing;
+varying float seating_fill;
 
 float fan_hash(float value) {
 	return fract(sin(value * 12.9898) * 43758.5453);
@@ -24,6 +27,7 @@ void vertex() {
 	float figure = float(INSTANCE_ID) * 0.6180339887;
 	float phase = fract(figure) * 6.2831853;
 	vec3 world = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+	seating_fill = crowd_seating_fill(world);
 	float ring_dist = length(world.xz);
 	float band = 0.5 + 0.5 * sin(atan(world.z, world.x) * 3.0 - TIME * 0.9 + ring_dist * 0.04);
 	float excitement = clamp(crowd_excitement * (0.4 + 0.8 * band), 0.0, 1.0);
@@ -60,7 +64,7 @@ void fragment() {
 	NORMAL_MAP = mix(vec3(0.5, 0.5, 1.0), texture(cloth_normal, UV * 32.0).rgb, garment * 0.16);
 	// A tiny residual floor holds silhouettes during a blackout; the fixtures
 	// and their shadows provide the visible match lighting and surface shape.
-	EMISSION = base * 0.0015 * clamp(crowd_light / 3.5, 0.0, 1.0);
+	EMISSION = base * 0.0015 * seating_fill * clamp(crowd_light / 3.5, 0.0, 1.0);
 	ALPHA = source.a;
 	ALPHA_SCISSOR_THRESHOLD = 0.45;
 }
