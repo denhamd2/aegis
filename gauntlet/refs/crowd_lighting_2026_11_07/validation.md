@@ -93,6 +93,12 @@ shader values against the three AEW stills. A GPU-capable environment or native
 Mac review is needed to resolve the current visual blocker. Native M1 frame
 pacing and memory pressure remain unverified.
 
-The owner has been asked whether to provide a GPU-capable environment or use
-a clearly marked Mac preview for review. No preview, production release,
-Release 2 work or Web-retirement change has been published during this resume.
+The owner selected **a GPU-capable environment** for the remaining review.
+The only attached executor exposes no hardware Vulkan device, `/dev/dri` or
+NVIDIA device nodes, and the available tools expose no GPU provisioning or
+environment-switch action. A GPU host must be attached/configured before the
+remaining capture can run. Keep using the saved draft and passing evidence;
+do not restart the earlier failed test/import work.
+
+No preview, production release, Release 2 work or Web-retirement change has
+been published during this resume.

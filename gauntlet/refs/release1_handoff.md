@@ -16,8 +16,9 @@ are preserved in the validation record. Full-arena acceptance is still open.
 
 Full-arena Forward+ software rendering still has no usable saved comparison:
 guarded attempts avoid executor loss but show corrupted live previews and
-time out. The 8 GiB executor needs a suitable visual-review route; the owner
-has been asked to choose a GPU-capable environment or a marked Mac preview.
+time out. The owner selected a **GPU-capable environment** for visual review.
+The only attached 8 GiB executor exposes no GPU device, and no provisioning
+or environment-switch tool is available; attach/configure a GPU host next.
 Keep the release blocked on appearance review; no new Mac release was made.
 
 The remainder records the original interruption for provenance.
