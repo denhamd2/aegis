@@ -85,3 +85,29 @@ static func place_of(move: MoveDef) -> int:
 ## How many times a match `move` may be thrown; 0 is no limit.
 static func max_uses(move: MoveDef) -> int:
 	return int(_entry(move)[1])
+
+
+## Strikes/ground work may form deliberate strings. Throws and running moves
+## keep a separate recent history even while those strings are being worked.
+static func is_big_offence(move: MoveDef) -> bool:
+	var id := String(move.animation_pair_id)
+	return not (id.begins_with("strike_") or id.begins_with("ground_") or id.begins_with("chain_"))
+
+
+## Families share a longer, soft penalty; different suplex variants should
+## not circumvent repeat protection. Unknown moves retain their own identity.
+static func family_of(move: MoveDef) -> StringName:
+	var id := String(move.animation_pair_id)
+	for word in ["suplex", "brainbuster", "snap_dragon"]:
+		if word in id:
+			return &"suplex"
+	for word in ["powerbomb", "driver", "bomb"]:
+		if word in id:
+			return &"driver_bomb"
+	for word in ["slam", "samoan_drop", "spinebuster"]:
+		if word in id:
+			return &"slam"
+	for word in ["ddt", "neckbreaker", "cross_rhodes"]:
+		if word in id:
+			return &"neck_drop"
+	return move.animation_pair_id

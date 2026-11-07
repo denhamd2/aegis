@@ -56,6 +56,7 @@ func test_an_ai_power_draw_holds_its_big_moves_and_spreads_the_rest() -> void:
 	var seen := {}
 	for i in 12:
 		var m := a._pick_tier_move(primary, pool)
+		a._record_move_attempt(m)
 		seen[String(m.animation_pair_id)] = int(seen.get(String(m.animation_pair_id), 0)) + 1
 	assert_bool(seen.has("ff_tiger_driver_98")).is_false()
 	assert_bool(seen.has("ff_sit_out_powerbomb_2")).is_false()
@@ -65,6 +66,7 @@ func test_an_ai_power_draw_holds_its_big_moves_and_spreads_the_rest() -> void:
 	var late := {}
 	for i in 6:
 		var m := a._pick_tier_move(primary, pool)
+		a._record_move_attempt(m)
 		late[String(m.animation_pair_id)] = int(late.get(String(m.animation_pair_id), 0)) + 1
 	assert_int(int(late.get("ff_tiger_driver_98", 0))).is_equal(1)
 	assert_int(int(late.get("ff_sit_out_powerbomb_2", 0))).is_equal(1)

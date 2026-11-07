@@ -104,6 +104,8 @@ func begin(attacker: Node3D, defender: Node3D, move: MoveDef) -> void:
 				- _authored_role_start_height(move, true)
 
 	_active = true
+	if attacker.has_method("_record_move_attempt"):
+		attacker._record_move_attempt(move)
 	grapple_started.emit(attacker, defender, move)
 
 	# The lock-up, before the move. _align_to_pair() below teleports both men

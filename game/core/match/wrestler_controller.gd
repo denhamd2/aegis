@@ -13,6 +13,8 @@ extends CharacterBody3D
 signal knocked_down(wrestler: WrestlerController)
 signal pin_started(attacker: WrestlerController, defender: WrestlerController)
 signal move_landed(attacker: WrestlerController, defender: WrestlerController, move: MoveDef)
+## Accepted offence, before its outcome; misses and counters still count.
+signal move_attempted(attacker: WrestlerController, defender: WrestlerController, move: MoveDef)
 signal weapon_taken(wrestler: WrestlerController, weapon: WeaponActor)
 signal weapon_retrieval_started(wrestler: WrestlerController)
 ## His comeback has started (MatchReferee decides when; see fire_up()).
@@ -779,6 +781,7 @@ var _damage_at_last_knockdown: float = 0.0
 var flow: MatchFlow = null
 
 func _ready() -> void:
+	move_landed.connect(_record_landed_move)
 	# Drawn between physics ticks, so his walk and root motion do not step
 	# at 60 Hz on a faster (or uneven) display -- see MatchSmoothing.
 	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_ON
@@ -2216,6 +2219,8 @@ func _process_free_movement(delta: float, input: Dictionary) -> void:
 		combat.spend_stamina(CombatSystem.STAMINA_PER_STRIKE_TICK * swing.total_frames())
 	elif not _guarding and input.get("strike", false) and strike_move:
 		var strike := _pick_string_strike()
+		if strike == null:
+			return
 		_play_strike_clip(strike)
 		_start_move(WrestlerFSM.State.STRIKE, strike)
 		combat.spend_stamina(CombatSystem.STAMINA_PER_STRIKE_TICK * strike.total_frames())
@@ -2695,6 +2700,8 @@ func _maybe_start_running_attack(input: Dictionary) -> void:
 	if input.get("strike", false) and running_attack_move and opponent \
 			and _in_range(STRIKE_HIT_RANGE) and not UNHITTABLE_STATES.has(opponent.fsm.current_state):
 		var move := _pick_tier_move(running_attack_move, running_attack_move_pool)
+		if move == null:
+			return
 		if _can_run_into_paired(move):
 			_begin_running_paired(move)
 			return
@@ -2718,7 +2725,7 @@ func try_corner_spear() -> bool:
 	if not RUNNING_PAIRED_TARGET_STATES.has(fsm.current_state):
 		return false
 	var move := _pick_tier_move(corner_move, corner_move_pool)
-	if not PairedRecipes.RECIPES.has(String(move.animation_pair_id)):
+	if move == null or not PairedRecipes.RECIPES.has(String(move.animation_pair_id)):
 		return false
 	opponent.fsm.transition_to(WrestlerFSM.State.IDLE)
 	_begin_running_paired(move)
@@ -2841,6 +2848,8 @@ func try_rebound_move() -> bool:
 	if _rebound_pick == null:
 		_rebound_pick = _pick_tier_move(rebound_moves[0], rebound_moves.slice(1))
 	var move := _rebound_pick
+	if move == null:
+		return false
 	var to_him := opponent.global_position - global_position
 	to_him.y = 0.0
 	var gap := to_him.length()
@@ -3188,6 +3197,8 @@ func _process_irish_whip_return(input: Dictionary) -> void:
 	_maybe_start_running_attack(input)
 
 func _start_move(state: WrestlerFSM.State, move: MoveDef) -> void:
+	if state in [WrestlerFSM.State.STRIKE, WrestlerFSM.State.RUNNING_ATTACK]:
+		_record_move_attempt(move)
 	_active_move = move
 	_move_ticks_remaining = move.total_frames()
 	_active_move_hit_applied = false
@@ -4606,8 +4617,8 @@ func _pick_hold_move() -> MoveDef:
 		# A working lock-up (WrestlerAI): a grapple, or the power move when the
 		# meter has earned it -- never the big ones.
 		if cap == CombatSystem.Tier.POWER and combat.can_power() and power_move \
-				and _story_has(power_move, power_move_pool):
-			move = _pick_tier_move(power_move, power_move_pool)
+				and _story_has_place(power_move, power_move_pool):
+			move = _pick_working_hold()
 		else:
 			move = _pick_tier_move(grapple_move, grapple_move_pool)
 	elif combat.can_finisher() and finisher_move:
@@ -4620,11 +4631,32 @@ func _pick_hold_move() -> MoveDef:
 			_own_signature_thrown = true
 		else:
 			move = _pick_tier_move(signature_move, signature_move_pool)
-	elif combat.can_power() and power_move and _story_has(power_move, power_move_pool):
-		move = _pick_tier_move(power_move, power_move_pool)
+	elif combat.can_power() and power_move and _story_has_place(power_move, power_move_pool):
+		move = _pick_working_hold()
 	else:
 		move = _pick_tier_move(grapple_move, grapple_move_pool)
 	return move
+
+
+## Once the power tier is earned, choose working offence across both legal
+## tiers. Exhausting its first allowance must not funnel every later lock-up
+## back to a small basic pool (Kenny's vertical suplex in particular).
+func _pick_working_hold() -> MoveDef:
+	if not is_ai:
+		return _pick_tier_move(power_move, power_move_pool)
+	var pool: Array[MoveDef] = power_move_pool.duplicate()
+	pool.append(grapple_move)
+	pool.append_array(grapple_move_pool)
+	return _pick_tier_move(power_move, pool)
+
+
+func _story_has_place(primary: MoveDef, pool: Array[MoveDef]) -> bool:
+	if not is_ai or flow == null:
+		return true
+	for candidate: MoveDef in [primary] + pool:
+		if _move_weight_legal(candidate) and MovePlaybook.place_of(candidate) <= flow.story_place(self):
+			return true
+	return false
 
 
 ## Whether the AI's story (MatchFlow.story_place, MovePlaybook) has a move
@@ -4636,10 +4668,10 @@ func _story_has(primary: MoveDef, pool: Array[MoveDef]) -> bool:
 		return true
 	var place := flow.story_place(self)
 	for candidate: MoveDef in [primary] + pool:
-		if candidate == null or MovePlaybook.place_of(candidate) > place:
+		if not _move_weight_legal(candidate) or MovePlaybook.place_of(candidate) > place:
 			continue
 		var cap := MovePlaybook.max_uses(candidate)
-		if cap == 0 or int(_move_uses.get(candidate.animation_pair_id, 0)) < cap:
+		if cap == 0 or int(_attempted_moves.get(candidate.animation_pair_id, 0)) < cap:
 			return true
 	return false
 
@@ -4771,28 +4803,82 @@ func _count_string_hit() -> void:
 	_string_last = _string_clock
 
 
-## How many of this wrestler's last tier picks are held back from the next.
+## Attempts, rather than draws, drive repeat protection. Keep big offence in
+## its own history: intervening jabs must not erase the previous suplex.
 const RECENT_PICKS := 2
-## How many times this match each move has been picked, by pair id
-## (_pick_tier_move): what MovePlaybook's allowances count against.
-var _move_uses := {}
+const FAMILY_HISTORY := 8
 var _recent_picks: Array[StringName] = []
+var _recent_power: Array[StringName] = []
+var _recent_families: Array[StringName] = []
+var _attempted_moves := {}
+var _landed_moves := {}
+
+
+func _record_move_attempt(move: MoveDef) -> void:
+	if move == null or move.animation_pair_id == &"":
+		return
+	var id := move.animation_pair_id
+	_attempted_moves[id] = int(_attempted_moves.get(id, 0)) + 1
+	_recent_picks.append(id)
+	while _recent_picks.size() > RECENT_PICKS:
+		_recent_picks.pop_front()
+	if MovePlaybook.is_big_offence(move):
+		_recent_power.append(id)
+		while _recent_power.size() > RECENT_PICKS:
+			_recent_power.pop_front()
+		_recent_families.append(MovePlaybook.family_of(move))
+		while _recent_families.size() > FAMILY_HISTORY:
+			_recent_families.pop_front()
+	move_attempted.emit(self, opponent, move)
+
+
+func _record_landed_move(_a: WrestlerController, _d: WrestlerController, move: MoveDef) -> void:
+	if move:
+		var id := move.animation_pair_id
+		_landed_moves[id] = int(_landed_moves.get(id, 0)) + 1
+
+
+func _move_weight_legal(move: MoveDef) -> bool:
+	return move != null and (opponent == null or
+			(opponent.weight_class >= move.weight_class_min
+			and opponent.weight_class <= move.weight_class_max))
+
+
+## A modest preference for working an already hurt body part, and for shorter
+## offence when tired. Phase/tier legality still takes precedence; authored
+## strike strings and deliberate weapon spots bypass this tier draw.
+func _offence_weight(move: MoveDef) -> float:
+	var weight := 1.0 / (1.0 + 2.0 * float(_attempted_moves.get(move.animation_pair_id, 0)))
+	if MovePlaybook.is_big_offence(move):
+		var repeats := _recent_families.count(MovePlaybook.family_of(move))
+		weight /= 1.0 + float(repeats) * 0.75
+	if is_ai and combat != null:
+		var exertion := clampf(float(move.total_frames()) / 180.0, 0.0, 1.0)
+		weight *= 1.0 - (1.0 - combat.stamina) * exertion * 0.5
+		if opponent != null and opponent.combat != null:
+			var damages := [move.damage_head, move.damage_torso, move.damage_arms, move.damage_legs]
+			var limbs := [CombatSystem.Limb.HEAD, CombatSystem.Limb.TORSO,
+					CombatSystem.Limb.ARMS, CombatSystem.Limb.LEGS]
+			var total := 0.0
+			var worked := 0.0
+			for i in limbs.size():
+				total += damages[i]
+				worked += damages[i] * float(opponent.combat.limb_damage[limbs[i]])
+			if total > 0.0:
+				weight *= 1.0 + 0.35 * worked / (total * CombatSystem.MAX_LIMB_DAMAGE)
+	return weight
 
 
 func _pick_tier_move(primary: MoveDef, pool: Array[MoveDef]) -> MoveDef:
-	if pool.is_empty():
-		return primary
-	var choices: Array[MoveDef] = [primary]
-	for candidate: MoveDef in pool:
-		if not candidate:
+	var choices: Array[MoveDef] = []
+	var seen := {}
+	for candidate: MoveDef in [primary] + pool:
+		if not _move_weight_legal(candidate) or seen.has(candidate.animation_pair_id):
 			continue
-		if opponent.weight_class < candidate.weight_class_min:
-			continue
-		if opponent.weight_class > candidate.weight_class_max:
-			continue
+		seen[candidate.animation_pair_id] = true
 		choices.append(candidate)
-	if choices.size() == 1:
-		return primary
+	if choices.is_empty():
+		return null
 	# The story first (MovePlaybook, MatchFlow.story_place): the AI keeps the
 	# big moves for late and throws each only as often as a match shows it.
 	# Whatever survives, it is still a pick from this tier: if the story has
@@ -4803,7 +4889,7 @@ func _pick_tier_move(primary: MoveDef, pool: Array[MoveDef]) -> MoveDef:
 		for candidate: MoveDef in choices:
 			var cap := MovePlaybook.max_uses(candidate)
 			if MovePlaybook.place_of(candidate) <= place \
-					and (cap == 0 or int(_move_uses.get(candidate.animation_pair_id, 0)) < cap):
+					and (cap == 0 or int(_attempted_moves.get(candidate.animation_pair_id, 0)) < cap):
 				in_story.append(candidate)
 		if in_story.is_empty():
 			# All of what the story allows has been seen as often as a match
@@ -4828,12 +4914,13 @@ func _pick_tier_move(primary: MoveDef, pool: Array[MoveDef]) -> MoveDef:
 					in_story.append(candidate)
 		choices = in_story
 	# Not the same move twice running from one pool (the owner, 19 Oct: AI
-	# matches "into a repetition of moves"): the last RECENT_PICKS picks are
+	# matches "into a repetition of moves"): the last RECENT_PICKS attempts are
 	# left out while anything else in the tier is still on offer. Seeded and
 	# replayed like every other draw.
 	var fresh: Array[MoveDef] = []
 	for candidate: MoveDef in choices:
-		if not _recent_picks.has(candidate.animation_pair_id):
+		var history := _recent_power if MovePlaybook.is_big_offence(candidate) else _recent_picks
+		if not history.has(candidate.animation_pair_id):
 			fresh.append(candidate)
 	if not fresh.is_empty():
 		choices = fresh
@@ -4846,7 +4933,7 @@ func _pick_tier_move(primary: MoveDef, pool: Array[MoveDef]) -> MoveDef:
 	var weights: Array[float] = []
 	var total := 0.0
 	for candidate: MoveDef in choices:
-		var wgt := 1.0 / (1.0 + 2.0 * float(_move_uses.get(candidate.animation_pair_id, 0)))
+		var wgt := _offence_weight(candidate)
 		weights.append(wgt)
 		total += wgt
 	var roll := rng.randf() * total
@@ -4856,10 +4943,6 @@ func _pick_tier_move(primary: MoveDef, pool: Array[MoveDef]) -> MoveDef:
 		if roll <= 0.0:
 			pick = choices[i]
 			break
-	_move_uses[pick.animation_pair_id] = int(_move_uses.get(pick.animation_pair_id, 0)) + 1
-	_recent_picks.append(pick.animation_pair_id)
-	while _recent_picks.size() > RECENT_PICKS:
-		_recent_picks.pop_front()
 	return pick
 
 ## Breaks a grapple hold that produced no move, returning both wrestlers to

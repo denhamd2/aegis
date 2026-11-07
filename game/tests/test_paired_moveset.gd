@@ -489,3 +489,56 @@ func test_cody_fights_with_his_own_moveset() -> void:
 	# The Figure-Four is his, and only his.
 	assert_str(String(cody.submission_move.animation_pair_id)).is_equal("figure_four")
 	assert_object(roman.submission_move).is_null()
+
+
+func test_intervening_strikes_do_not_erase_a_recent_suplex() -> void:
+	var attacker := _make_attacker()
+	var suplex := _make_move(&"grapple_vertical_suplex")
+	var slam := _make_move(&"power_bodyslam")
+	attacker._record_move_attempt(suplex)
+	for id: StringName in [&"strike_jab", &"strike_cross", &"strike_kick_heavy"]:
+		attacker._record_move_attempt(_make_move(id))
+	for draw in 12:
+		assert_object(attacker._pick_tier_move(suplex, [slam])).is_same(slam)
+	# The only legal choice is still usable, rather than starving the tier.
+	assert_object(attacker._pick_tier_move(suplex, [])).is_same(suplex)
+
+
+func test_draws_do_not_count_as_attempts_or_landings() -> void:
+	var attacker := _make_attacker()
+	var suplex := _make_move(&"grapple_vertical_suplex")
+	for draw in 6:
+		attacker._pick_tier_move(suplex, [])
+	assert_dict(attacker._attempted_moves).is_empty()
+	attacker._record_move_attempt(suplex)
+	assert_int(attacker._attempted_moves[suplex.animation_pair_id]).is_equal(1)
+	assert_dict(attacker._landed_moves).is_empty()
+	attacker._record_landed_move(attacker, attacker.opponent, suplex)
+	assert_int(attacker._landed_moves[suplex.animation_pair_id]).is_equal(1)
+
+
+func test_repeat_family_penalty_survives_intervening_punches() -> void:
+	var attacker := _make_attacker()
+	var suplex := _make_move(&"grapple_vertical_suplex")
+	var dragon := _make_move(&"ff_snap_dragon_suplex_2")
+	var slam := _make_move(&"power_bodyslam")
+	attacker._record_move_attempt(suplex)
+	for i in 12:
+		attacker._record_move_attempt(_make_move(&"strike_jab"))
+	assert_float(attacker._offence_weight(dragon)).is_less(attacker._offence_weight(slam))
+
+
+func test_primary_is_subject_to_weight_legality_and_duplicates_have_no_extra_vote() -> void:
+	var attacker := _make_attacker()
+	var forbidden := _make_move(&"too_heavy")
+	forbidden.weight_class_max = 0
+	var legal := _make_move(&"legal")
+	assert_object(attacker._pick_tier_move(forbidden, [legal])).is_same(legal)
+	assert_object(attacker._pick_tier_move(forbidden, [])).is_null()
+	var other := _make_move(&"other")
+	for seed_value in 12:
+		attacker.match_seed = seed_value
+		attacker._tier_draws = 0
+		var single := attacker._pick_tier_move(legal, [other])
+		attacker._tier_draws = 0
+		assert_object(attacker._pick_tier_move(legal, [legal, other, other])).is_same(single)
