@@ -4658,6 +4658,12 @@ func _pick_hold_move() -> MoveDef:
 	# signature or finisher off a lock-up, whatever his meter says.
 	if is_ai and flow != null and flow.rung(self) == "none":
 		cap = CombatSystem.Tier.POWER if cap < 0 else mini(cap, CombatSystem.Tier.POWER)
+	# A working hold's basic cap must not force an exhausted suplex while
+	# the earned power tier still has an unused move in this match phase.
+	if is_ai and cap == CombatSystem.Tier.GRAPPLE and combat.can_power() \
+			and not _story_has(grapple_move, grapple_move_pool) \
+			and _story_has(power_move, power_move_pool):
+		cap = CombatSystem.Tier.POWER
 	if cap >= 0 and cap <= CombatSystem.Tier.POWER:
 		# A working lock-up (WrestlerAI): a grapple, or the power move when the
 		# meter has earned it -- never the big ones.
@@ -4687,7 +4693,7 @@ func _pick_hold_move() -> MoveDef:
 ## tiers. Exhausting its first allowance must not funnel every later lock-up
 ## back to a small basic pool (Kenny's vertical suplex in particular).
 func _pick_working_hold() -> MoveDef:
-	if not is_ai:
+	if not is_ai or _story_has(power_move, power_move_pool):
 		return _pick_tier_move(power_move, power_move_pool)
 	var pool: Array[MoveDef] = power_move_pool.duplicate()
 	pool.append(grapple_move)

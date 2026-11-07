@@ -11,6 +11,11 @@ const MATCH := "res://scenes/match.tscn"
 func _roman_vs_cody() -> Node:
 	var scene: Node = auto_free(load(MATCH).instantiate())
 	TitleScreen.configure_match(scene, Roster.by_id("roman"), Roster.by_id("cody"), 1)
+	# Real roster rigs and ring contacts; these checks do not need arena
+	# geometry or entrance presentation.
+	for part in ["Arena", "LightRig"]:
+		scene.get_node(part).free()
+	scene.entrances = false
 	add_child(scene)
 	return scene
 

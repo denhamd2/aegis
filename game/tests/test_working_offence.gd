@@ -49,3 +49,21 @@ func test_working_selection_respects_fatigue_and_body_part_damage() -> void:
 	slow.startup_frames = 160
 	attacker.combat.stamina = 0.1
 	assert_float(attacker._offence_weight(head)).is_greater(attacker._offence_weight(slow))
+
+
+func test_a_spent_basic_cap_uses_an_earned_unused_power_move() -> void:
+	var attacker: WrestlerController = auto_free(WrestlerController.new())
+	var defender: WrestlerController = auto_free(WrestlerController.new())
+	attacker.opponent = defender
+	attacker.is_ai = true
+	attacker.combat = CombatSystem.new()
+	attacker.combat.momentum = CombatSystem.MOMENTUM_MAX
+	attacker.combat.record_tier(CombatSystem.Tier.GRAPPLE)
+	attacker.flow = auto_free(MatchFlow.new())
+	attacker.flow.tick = 120 * 60
+	attacker.grapple_move = load("res://resources/moves/grapple_vertical_suplex.tres")
+	attacker.power_move = load("res://resources/moves/power_powerslam.tres")
+	for i in MovePlaybook.max_uses(attacker.grapple_move):
+		attacker._record_move_attempt(attacker.grapple_move)
+	attacker.tie_up_rung_cap = CombatSystem.Tier.GRAPPLE
+	assert_object(attacker._pick_hold_move()).is_same(attacker.power_move)
