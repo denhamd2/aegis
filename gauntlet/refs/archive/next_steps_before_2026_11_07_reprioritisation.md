@@ -1,0 +1,283 @@
+Archived on 7 November 2026. Historical claims below are not current status.
+Use the [current prioritised backlog](../next_steps.md).
+
+# Next steps -- the roadmap
+
+## Current release order — 7 November 2026
+
+The owner's [incremental quality plan](../incremental_quality_plan.md) is now the
+authority for release order, acceptance and validation. Its 22 releases start
+with crowd lighting, HUD cleanup and the post-match ending. The
+[three AEW crowd-lighting stills](../crowd_lighting_2026_11_07/README.md) are saved
+alongside it. Earlier ordering below is historical where it conflicts.
+
+The fresh clone did not contain the other chat's uncommitted entrance, camera,
+trouser and mat-contact changes. The owner instructed “ship the latest.”
+Baseline `492ab0b049a875e29ce2742232d39733645b9046` is already published in
+`mac-latest`, verified on 7 November with the `Aegis.zip` asset present.
+**Published:** priority 1 (crowd lighting), commit
+`d59d830dc51b7ec4bccd89dbd0e0167f7e3f0402`. The Mac workflow succeeded;
+`mac-latest` points to that exact SHA and contains `Aegis.zip` (982,707,267 bytes).
+34 focused cases and both isolated shader renders pass. Native arena appearance
+and M1 performance await owner Mac review.
+
+**Owner-approved process:** keep focused commits, then validate and publish
+small related batches once per batch. Missing cloud GPU/full-arena captures do
+not block publication; the owner will review on their Mac. Verify each published
+batch commit before beginning the next batch.
+
+**Published: priorities 2–3**, HUD cleanup and the post-match
+ending. 35 distinct focused checks pass; HUD-only Forward+ renders at 1280×720
+and 640×360 were inspected. See [validation](../presentation_2026_11_07/validation.md).
+Commit `6eab898999edc72821a774ffb4518da0dea5150c` was verified at `mac-latest`,
+with `Aegis.zip` (982,707,469 bytes) after workflow 42384661693 succeeded.
+The batch removes central move flashes, separates readiness/Fired Up from names,
+starts winner presentation immediately and prevents queued replays after the finish.
+**Published: priorities 4–6**, move variety, Roman’s Spear and rope-running.
+99 focused checks pass and both seeded matrices complete all 12 matches. The owner
+requested immediate deployment while full CI continues. Mac run 42405043123
+succeeded; `mac-latest` was verified at `c805d2d551a70e566262ba6ac05ea6f4370e9c4a`
+with `Aegis.zip` (982,718,501 bytes). See
+[validation](../ai_running_offence_2026_11_07/validation.md).
+Next is priority 7, faster validation and Mac-only delivery, after Mac publication is verified.
+Later work retains the listed order, with animation batches by move family.
+
+## Previous backlog and implementation notes
+
+What is done, what comes next, and in what order. Updated at the end of each
+round; the README is the detailed log of how each piece was built.
+
+Latest game baseline: the selling closeout on `main` (2026-11-06). The older roadmap
+notes below record prior rounds; use the current list here and later user
+corrections for what to do next.
+
+## Current backlog (6 Nov)
+
+**Completed selling backlog:** varied downed sells by body part; side-aware
+head and uppercut reactions; strike contact checks; the damaged-leg limp and
+hurt-arm hang; face-first and spin-out knockdowns; paired powerbomb, Samoan
+drop, Cross Rhodes and figure-four holds; graded pain vocals including
+submission cries; selling through taunts, counts and climbs; and the two
+pain-expression shapes on Roman, Cody and Kenny. See
+[`selling_plan.md`](../selling_plan.md) for the clips, test results, and measured
+strike connection sample.
+
+**Open selling work:** none.
+
+**Other open work:** Mac-native visual and frame-pacing review against the
+owner's references; the remaining Fight Forever move library; the Roman/Cody
+body-morph audit; and the ladder offense and interruption variants described
+below. The 20,000-tick strike probe crashed in Godot's notification code;
+the completed 4,000-tick sample did not run to a match finish.
+
+## Done and on the Mac build
+
+- **Crowd audio and chants**, all free sources: an arena crowd at broadcast
+  loudness, chants checked by a speech recogniser (Co-dy, O-T-C, This is
+  awesome, Holy shit!, the count), and louder entrances.
+- **Weapons phase 1, grips**: hands on the handles of every weapon, carried
+  within 3 cm (the table within 4).
+- **Weapons phase 2, pickups**: the lift fits the weapon (one hand, two hands,
+  or a squat for the heavy ones); his hands close on it where it lies, and it
+  never jumps into his hand.
+- **Selling**: every hit, by weapon or by move, is sold to its size and to how
+  much he has left -- light, medium, heavy, to the knee, or down.
+- **Blood**: the dangerous weapons cut him, more for a bigger shot and a more
+  beaten man. It starts as a cut at the hairline and builds to a crimson mask,
+  then dries. The tacks cut his back. The canvas gets drips, pools, spatter and
+  smears. On by default; OPTIONS > BLOOD > OFF to turn it off.
+
+## Weapons phase 3: weapon-specific swings
+
+Each family gets its own body clip (in `game/tools/blender/wrestling_clips.py`)
+and its own swing path (`WeaponCatalog.SWING_PATHS`), so the weapon travels
+with his hands rather than the hands chasing a generic swing.
+
+| Family | Weapons | The swing |
+| --- | --- | --- |
+| Bat | baseball bat, barbed-wire bat, lead pipe, sledgehammer | two hands stacked, step in, hips turn through |
+| Slapshot | hockey stick | a slapshot (the owner's pick) |
+| Chop | kendo stick | two-hand overhead chop |
+| Chair | steel chair, barbed-wire chair | held by the legs, high overhead |
+| Two-handed slam | trash can, steel steps | overhead, both hands |
+| Shovel | shovel | flat of the blade, overhead |
+| Crutch | crutch | held by the foot end, overhead |
+| Bonk | ring bell, frying pan, championship belt | overhand |
+| Flat face | cookie sheet, stop sign, briefcase | the flat face into him |
+| Ladder | ladder | lift high, step through, bring it down |
+| Table | table | two-hand slam |
+| Fist | chain | wrapped round the fist for a punch (the owner's pick) |
+
+- Overhead swings stop at head height, never in the mat.
+- **Phase 3 done:** `KNOWN_SWING_SLIPS` in
+  `game/tests/test_weapon_grip_contact.gd` is empty -- every swing keeps
+  both palms within 3 cm of the handles -- and the clip gates pass (pose lint,
+  body deformation, clip authoring).
+- Review sheets for the new bonk, flat-face, crutch, and chain motions were
+  rendered and checked; ladder/table reuse the two-hand overhead/slam forms.
+
+## Weapons phases 4-5: set-piece spots and AI weapon use
+
+- **Implemented on `main`**: No Holds Barred retrieval and use decisions,
+  table setup and paired suplex spot, weapon-specific impacts, weapon-retrieval
+  inserts, and the table-break camera/sound response.
+- **Added this round (working tree)**: the AI can now line up the same paired
+  spot over thumbtacks, a bed of nails, or a barbed-wire board. These pieces
+  are weighted as common wild-match picks; nonbreaking landings now receive a
+  broadcast insert and a weapon-specific impact sound.
+- **Completed this slice (working tree)**: the ladder now has a laid-out
+  landing state, AI selects its dedicated damage/recovery move for the paired
+  suplex spot, and a short guarded ladder-impact sell replaces the generic
+  suplex follow-through. Unit coverage checks AI selection, mat-level bounds,
+  landing damage, and the specific sell. The paired-shot probe accepts
+  `--weapon ladder` for review captures. The current cloud image has neither
+  `xvfb-run` nor a Vulkan display driver, so a valid rendered review capture
+  still needs to be made on a capture-capable host.
+- **Added this slice (working tree)**: an upright ladder can now be set,
+  climbed and descended on fixed ticks with hand/boot targets on its rungs.
+  The AI takes one climb opportunity while its opponent is down; a hit tips
+  the ladder and sends the climber into the downed recovery path. Laid-out
+  ladders still support the existing paired slam. From the top, a wrestler
+  can now launch a paired diving elbow at a downed opponent. The clip preserves
+  actual ladder height, the victim gets a matched chest impact and guarded
+  settle, and the normal downed recovery remains in charge. A carried ladder
+  opens upright inside or outside the ring; an upright ringside ladder can be
+  folded, picked back up, and slid under the ropes. Next ladder work:
+  capture and tune the spot on a render-capable host, then consider broader
+  ladder offense (weapon swings and safe climb interruption variants).
+- **No Holds Barred phase 0**: core rules, fighting outside, rope crossings,
+  and weapon retrieval are implemented. Revisit only if a full match probe
+  reveals a remaining rules or referee failure.
+
+## Entrance and ring presentation
+
+- **Implemented in the working tree:** the shorter two-man entrance close,
+  timed stage/crowd/camera opening, Cody and Roman's ramp-to-ring routes,
+  stair/apron/rope transitions, Cody's coat removal and folded handoff,
+  Aubrey's prop carry, timekeeper table placement, and light recovery for the
+  staredown. The smoke's black disc was traced to its shadow-casting cone and
+  removed. The entrance and prop-handoff test suites cover these paths.
+- **Next: native Mac visual review.** Capture the opening, each entrance,
+  prop handoff, and the normal match shot on the target Mac. Review the image
+  quality, body/prop placement, lighting, and frame pacing against the user's
+  game. Headless tests cannot validate rendered appearance, and the cloud
+  renderer did not produce a faithful Mac Forward+ frame.
+- **Then: ladder spot review and tuning.** Review the ladder setup, climb,
+  interruption, and top-rope dive in a rendered match. Extend its offense with
+  authored ladder swings and a few readable climb-interruption variants only
+  after the current spot is visually approved.
+
+## Fight Forever style (the owner's 17 Oct direction)
+
+In-match animation and camera now follow AEW Fight Forever, which replaces
+the 2K26 reference for in-match work. The measurements, the 52-wrestler move
+table and the assessment of Gemini's suggestions are in
+[`aew_ff_animation_review.md`](../aew_ff_animation_review.md).
+
+- **Step 1, camera and pace (on the branch):** FIGHT FOREVER is the default
+  coverage (OPTIONS > COVERAGE): a high hard camera on one side, a low
+  close-up cut for grapples, signatures and specials, and a hard cut wide on
+  the impact. The close-up cuts round to the far side once if the referee
+  walks into the lens. Running attacks, dives and ground moves stay wide. The
+  tie-up is quicker (about 0.3 s). Remaining: the full suite, then main.
+- **Move library:** every wrestler's signatures and specials from the video,
+  tagged to the wrestlers who use them (`FFMoveLibrary`,
+  `game/resources/moves/ff/`). Each move becomes playable once its clips are
+  authored; `test_ff_library` prints the count (3 of 146).
+- **Built so far:** Cody's Tiger Driver '98 (in his power pool), plus the
+  existing Cross Rhodes and Figure Four. Review sheets:
+  [`ff_review/`](../ff_review/).
+- **Next:** Cody Cutter 4; Kenny's V-Triggers, Snap Dragons, Powerbomb/V-
+  Trigger combo and One Winged Angel; then the other wrestlers by family.
+  After that: per-move frame data for the running attacks, the SIGNATURE /
+  SPECIAL banner, Kenny's own moveset, the standard Cross Rhodes as Cody's
+  default, pacing, and replays after specials.
+- **Smoothness gap (owner's question, 18 Oct):** FF's moves are denser (a
+  pose every frame, likely mocap) and its engine adds motion blur; ours are
+  keyed every 3-10 frames and splined. Two answers, both on the branch:
+  - *In-between keys on the hero moves.* `tools/anim/clip_speeds.gd` finds
+    where a clip lurches; `test_clip_cadence` scores the 22 hero clips
+    (summed jerk 980.6 -> 951.5 so far) and holds the line. Fixed: the
+    Tiger Driver, Alabama Slam and Vertical Suplex landings (now settled
+    in the body's frame over six frames), two get-ups, and the Superman
+    Punch's crouch. The Powerslam rise kept its keys: an earlier rise put
+    Cody's head through Roman's leg.
+  - *Camera motion blur* (`core/camera/motion_blur.gd`, OPTIONS > MOTION
+    BLUR): a compositor pass along the velocity buffer, Forward+ only (the
+    Mac), off on cut frames. Strength still to be judged on the Mac.
+- **Cross Rhodes, FF's (19 Oct):** the hold, the spin (the men orbit a half-
+  turn), the man flipped upside down and spiked on his head at 0.83 s, 1.9 s
+  in all. It is Cody's finisher now; the 2.5 s 2K26 version from behind is
+  retired. Review: [`ff_review/cross_rhodes_ff.png`](../ff_review/cross_rhodes_ff.png).
+- **Mac HUD (19 Oct):** reproduced on a local release export of the same
+  preset: the HUD came up with no link to either man (a node-path override in
+  match.tscn did not reach the exported build), so no health plates in human
+  or AI games. MatchHUD now defaults its paths and finds the men by name.
+- **Close-up framing:** the FF close-up frames what is there -- the highest
+  head, hand or boot of either man -- so a man hoisted upside down stays in
+  shot, and cuts round the referee if she steps into the lens.
+
+## Character shape and animation clearance
+
+- **Body morph audit remains open.** Keep the existing skeletons and rest
+  poses; audit Roman and Cody's rendered silhouettes and attire fit against
+  the supplied references, then make narrowly scoped mesh/weight changes.
+  Do not change rig dimensions until paired grips, foot placement, and
+  collision assumptions have been remeasured.
+- **Ladder clearance (working-tree change):** the `ladder_aerial` attacker now
+  follows a shallow lateral arc through the landing and roll-through, keeping
+  his lower leg clear of the victim's leg. The focused `PairClearance` check
+  passes without changing the limits. `test_ladder_climb`, paired-move and
+  grapple-placement suites also pass. A rendered paired shot is still needed
+  before visual acceptance; this cloud workspace has no X11/Wayland display or
+  Xvfb, so the paired-shot capture helper cannot run here.
+- **Post-match pin test (working-tree change):** the finish test now uses the
+  dead-after-gunshot cover path and confirms the loser stays down after the
+  referee counts three. Both post-match cases pass.
+- **Animation authoring digest gate (pre-existing):** `test_clip_authoring_gate`
+  still fails because the pinned `wrestling_clips.py` digest predates the
+  current source (`9612aaae…` is actual; `1c3a3000…` is pinned). I left the
+  pin unchanged because the required rendered clip review is unavailable in
+  this display-less workspace.
+
+## Earlier visual priority: owner's New.png target (Oct)
+
+The 15 October reference comparison supersedes the older material/look
+choices where they conflict. See
+[`visual_target_2026_10_15/brief.md`](../visual_target_2026_10_15/brief.md) and
+[`review.md`](../visual_target_2026_10_15/review.md).
+
+- **Implemented in the working tree:** photographic textured near crowd with
+  shared atlases and section culling; outward audience washes and stationary
+  blue aisle accents; visible long-side stairs; pad roughness and restrained
+  emission; varied LED spill; metallic diamond-plate steps; repeatable native
+  Mac look/frame-pacing tools.
+- **Verified:** 46 focused crowd/bowl/lighting cases passed. A subsequent
+  run passed the four visual contract cases with added normal/tangent checks
+  plus seven real replay round-trip cases. The near-crowd GLB rebuilt byte for
+  byte. These checks do not establish a visual match or a Mac frame rate.
+- **Next:** rendered comparison and tuning, then wrestler skin/attire and
+  canvas/apron polish under the accepted light. Target Apple Silicon/16 GB,
+  1080p/60 fps; the exact chip and native performance remain unmeasured.
+- **Release gate stays open:** native visual acceptance and the full test suite
+  still need to pass. The ladder-aerial numeric clearance failure is fixed in
+  the working tree, pending rendered confirmation.
+
+## Earlier visual work order
+
+1. Complete the New.png visual comparison and tune the first environment /
+   crowd slice. Capture Mac-native appearance and frame pacing.
+2. Finish wrestler skin/attire and canvas/apron polish, then visually review
+   the revised ladder-aerial landing while preserving its impact and recovery.
+3. Tune the ladder broadcast insert and author ladder swing/interruption
+   variants from the rendered review.
+4. Complete the Roman/Cody body-morph audit against the reference stills.
+5. Run the complete test suite, make a Mac build, and review that build on the
+   target machine before calling these changes release-ready.
+
+## Earlier validation process (historical)
+
+1. gdUnit tests for the behaviour, run headless.
+2. A rendered review sheet, looked at before it is sent to the owner.
+3. The full test suite before every push.
+4. Shipped to `main`, which rebuilds the Mac app on the `mac-latest` release.

@@ -1,7 +1,9 @@
 # Aegis: incremental quality and gameplay improvements
 
-Owner-approved plan, restored from chat on 7 November 2026. This supersedes
-older ordering in `next_steps.md` and `handoff_prompt.md` where they conflict.
+Owner-approved plan, restored from chat on 7 November 2026. The owner subsequently requested an impact-versus-effort reprioritisation.
+The [current backlog](next_steps.md) now controls execution order, including
+older open follow-ups; this plan retains stable IDs and acceptance criteria.
+Both supersede older handoff ordering where it conflicts.
 
 ## Goal and release process
 
@@ -12,18 +14,18 @@ Target **60 fps on a MacBook M1 with 16 GB memory**.
 The original prerequisite was to release the uncommitted entrance, camera,
 trouser and mat-contact changes after their targeted checks. Those changes
 were not present in this fresh clone. The owner subsequently instructed
-**“ship the latest”**: use the latest `main` as the baseline. On 7 November,
-`main` and the published `mac-latest` release both reference
+**“ship the latest”**: use the latest `main` as the baseline. At the initial baseline verification on 7 November,
+`main` and the published `mac-latest` release both referenced
 `492ab0b049a875e29ce2742232d39733645b9046`; the release contains `Aegis.zip`.
 This establishes publication of that baseline, not recovery of another
 workspace's uncommitted changes or native M1 visual/performance acceptance.
 
-Then complete the work below in priority order. **Owner update: keep focused
+Complete outstanding work in the ranked order in [the backlog](next_steps.md). **Owner update: keep focused
 commits and group related priorities into small batches, with one validation
-and Mac deployment per batch.** The numbers below remain priority IDs.
+and Mac deployment per batch.** The numbers below remain stable scope IDs, not current priority ranks.
 Verify that the published Mac release references the batch commit before
-starting the next batch. The first groups are 2–3 (HUD and post-match ending),
-then 4–6 (move variety, Roman's Spear and rope-running attacks).
+starting the next batch. Published batches are 1, 2–3 (HUD/ending), and 4–6 (AI/running offence).
+The backlog ranks the remaining batches by impact, effort and dependencies.
 Update the backlog with completed work and remaining limitations. Large move
 families and the remaining catalogue ship in separately validated small batches.
 
@@ -34,11 +36,11 @@ component renders; mark native appearance and M1 performance as awaiting owner
 review. Continue after verifying each published Mac commit without waiting for
 that review unless new feedback or a demonstrated fault changes the scope.
 
-## Release order
+## Scope and acceptance by stable ID
 
 Effort is relative: **S** small, **M** medium, **L** large.
 
-| Release | Change | Effort | Acceptance |
+| ID | Change | Effort | Acceptance |
 | ---: | --- | :---: | --- |
 | 1 | **Crowd lighting** | M | Match the [three AEW references](crowd_lighting_2026_11_07/README.md): bright ring, readable front rows, progressively darker seating and shadowed upper stands. Tune crowd emission and spill independently of ring exposure. |
 | 2 | **HUD cleanup** | S | Remove central white move-name flashes. Give the flashing Finisher indicator a dedicated readable position that cannot overlap wrestler names. |
@@ -142,5 +144,5 @@ scope is the established Fight Forever reference catalogue.
 | Baseline | Published | `492ab0b049a875e29ce2742232d39733645b9046` verified against `mac-latest` on 7 November 2026. Other-chat uncommitted changes were unavailable; owner chose latest main. Native M1 performance remains unverified. |
 | 1 | Published for owner Mac review | `d59d830dc51b7ec4bccd89dbd0e0167f7e3f0402`: Mac workflow succeeded; `mac-latest` tag SHA verified and `Aegis.zip` present (982,707,267 bytes). 34 focused cases and both shader renders pass. Arena appearance and M1 performance await owner review. |
 | 2–3 | Published for owner Mac review | HUD cleanup and direct winner celebration; focused commits `f5d64bf` and `14e90c0`. 35 distinct focused checks pass; HUD renders reviewed at 1280×720 and 640×360. Mac workflow 42384661693 succeeded at `6eab898999edc72821a774ffb4518da0dea5150c`; exact tag SHA and `Aegis.zip` (982,707,469 bytes) verified. Native appearance/performance await owner review. See [validation](presentation_2026_11_07/validation.md). |
-| 4–6 | Published for owner Mac review | Move variety/psychology, earned Spear opportunities and rope-running follow-through. 99 focused cases pass; baseline and final seeded matrices each complete all 12 matches. Published `c805d2d551a70e566262ba6ac05ea6f4370e9c4a`; Mac run 42405043123 succeeded, exact tag SHA verified, `Aegis.zip` present (982,718,501 bytes). Complete CI continues independently, as requested. See [validation](ai_running_offence_2026_11_07/validation.md). Native appearance/performance await owner Mac review. |
-| 7–22 | Queued | Preserve priority order; group related work where appropriate and split large animation work by move family. |
+| 4–6 | Published for owner Mac review | Move variety/psychology, earned Spear opportunities and rope-running follow-through. 99 focused cases pass; baseline and final seeded matrices each complete all 12 matches. Published `c805d2d551a70e566262ba6ac05ea6f4370e9c4a`; Mac run 42405043123 succeeded, exact tag SHA verified, `Aegis.zip` present (982,718,501 bytes). Full gameplay CI at `d419e04` has since passed; exact published-commit CI 42405043131 was still running at the backlog update. Publication proceeded on the owner’s immediate-deployment instruction. See [validation](ai_running_offence_2026_11_07/validation.md). Native appearance/performance await owner Mac review. |
+| 7–22, X1–X3 | Ranked / open | See the [impact-versus-effort backlog](next_steps.md) for current ranks, related batches, dependencies, legacy follow-ups and native acceptance work. Original IDs remain stable; the old numeric order is superseded. |

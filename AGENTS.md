@@ -2,14 +2,16 @@
 
 ## Aegis priorities and incremental delivery
 
-The owner's [incremental quality plan](gauntlet/refs/incremental_quality_plan.md)
-is the current release order; it supersedes older handoffs where they conflict.
-Rank new requests by impact, effort and dependencies. The owner approved small
-related batches: keep commits focused, then validate and deploy each batch once.
-Verify `mac-latest` references the batch commit before starting the next batch.
-The first groups are priorities 2–3 (HUD/ending), then 4–6 (AI/running offence).
-Record evidence and limitations in
-the plan's release ledger and `gauntlet/refs/next_steps.md`.
+The owner's [prioritised backlog](gauntlet/refs/next_steps.md) controls work
+order by impact, effort and dependencies. The
+[quality plan](gauntlet/refs/incremental_quality_plan.md) retains scope,
+acceptance and stable IDs; original numeric IDs no longer indicate execution
+order. These documents supersede older handoffs where they conflict.
+Keep commits focused and group related work into small batches with shared
+validation and one Mac deployment. Verify `mac-latest` references the batch
+commit before starting the next batch. Update the backlog and release ledger
+with publication evidence, completed work and remaining limitations.
+Documentation-only updates need no Mac rebuild or expensive regression run.
 
 The owner explicitly authorised deployment for review on their Mac after the
 focused checks pass. Missing cloud GPU/full-arena captures are not a publication
@@ -28,7 +30,7 @@ judgement without claiming employment or credits on reference games. Preserve
 the approved entrances: fewer cuts, front/side walks, a slightly below-waist
 lens, wide entry/handover coverage, and close poses/faceoff. Only the ending
 replay is removed; in-match replay settings still apply. Mac is the delivery
-platform; retire Web publishing in Release 7 after its dependency audit.
+platform; backlog ID 7 retires Web publishing after its dependency audit.
 
 Read relevant files/skills only, batch independent inspections and keep concise
 handovers. Do not add model-specific practices until applicable official
