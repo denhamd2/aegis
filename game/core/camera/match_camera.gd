@@ -438,6 +438,10 @@ var _cut_fresh := false
 ## Fight Forever grapple cut: out wide at this fraction of the paired move.
 var _cut_ff_impact := -1.0
 var _cut_ff_special := false
+## A bound slam's own contact frame, as a fraction of the paired move.
+## -1 when the current cut is not a slam. The slam shake waits for this;
+## it must not borrow the finisher sequence's fixed fraction.
+var _cut_impact_at := -1.0
 ## The side the current Fight Forever close-up shoots from, fixed on the cut.
 var _cut_ff_toward := Vector3.ZERO
 ## Whether it has already cut round the referee (once a shot, never back).
@@ -980,6 +984,7 @@ func _on_grapple_started(attacker: Node3D, defender: Node3D, move: MoveDef) -> v
 		_finish_over_shoulder = move.animation_pair_id in FINISH_OVER_SHOULDER
 	elif _try_cut(Cut.SLAM, attacker, defender):
 		_cut_grapple = true
+		_cut_impact_at = impact_fraction(move)
 
 ## Fight Forever: in close for the lock-up and the lift, out wide on the
 ## impact. The cut is bound to the paired move (held while it plays) and ends
@@ -1006,6 +1011,7 @@ func _ff_grapple_cut(attacker: Node3D, defender: Node3D, move: MoveDef, special:
 	_cut_ff_toward = Vector3.ZERO
 	_cut_ff_flipped = false
 	_cut_ff_top = -1.0
+	_cut_impact_at = -1.0
 	var total := maxf(float(move.total_frames()), 1.0) if move else 1.0
 	_cut_ff_impact = clampf((move.startup_frames / total) - FF_IMPACT_LEAD, 0.1, 0.95) \
 			if move else 0.5
@@ -1062,6 +1068,21 @@ static func _is_moving_attack(move: MoveDef) -> bool:
 
 static func _is_signature(move: MoveDef) -> bool:
 	return move != null and _move_key(move).begins_with("signature")
+
+
+## The fraction of a paired move at which contact lands: its own startup
+## frames over its whole length, clamped so a shake cannot fire before the move
+## has visibly begun or after it has finished.
+static func impact_fraction(move: MoveDef) -> float:
+	if move == null:
+		return 0.5
+	var total := maxf(float(move.total_frames()), 1.0)
+	return clampf(move.startup_frames / total, 0.05, 0.98)
+
+
+## Whether a bound shot's progress has reached its contact frame.
+static func contact_reached(progress: float, at: float) -> bool:
+	return at >= 0.0 and progress >= at
 
 
 func _on_grapple_finished(attacker: Node3D, defender: Node3D) -> void:
@@ -1296,8 +1317,7 @@ func _arm_impact_shake(wrestler: WrestlerController, move: MoveDef) -> void:
 		_impact_shake = TRAUMA_SIGNATURE
 	else:
 		return
-	var total := maxf(float(move.total_frames()), 1.0)
-	_impact_shake_at = clampf(move.startup_frames / total, 0.05, 0.98)
+	_impact_shake_at = impact_fraction(move)
 
 
 func _impact_shake_due() -> void:
@@ -1450,16 +1470,18 @@ func _on_move_landed(attacker: WrestlerController, defender: WrestlerController,
 	var big := damage >= BIG_STRIKE_DAMAGE
 	# 2K26 shakes on a big blow, not on every punch: a shake on every jab
 	# read as the camera flinching, not the man.
-	if big:
-		add_trauma(TRAUMA_BIG_STRIKE)
+	var trauma := TRAUMA_BIG_STRIKE if big else 0.0
 	# a struck signature or finisher (a Superman Punch, a kick) shakes as the
-	# paired ones do, on the blow
+	# paired ones do, on the blow. Take the larger of the two, never their
+	# sum: stacking put every big signature blow at the finisher's ceiling.
 	if attacker != null:
 		var tier := attacker.tier_of(move)
 		if tier == CombatSystem.Tier.FINISHER:
-			add_trauma(TRAUMA_FINISHER)
-		elif tier == CombatSystem.Tier.SIGNATURE:
-			add_trauma(TRAUMA_SIGNATURE)
+			trauma = maxf(trauma, TRAUMA_FINISHER)
+		elif tier == CombatSystem.Tier.SIGNATURE or _is_signature(move):
+			trauma = maxf(trauma, TRAUMA_SIGNATURE)
+	if trauma > 0.0:
+		add_trauma(trauma)
 	if CameraSettings.fight_forever():
 		if attacker != null and (attacker.is_finisher(move) or _is_signature(move)):
 			_try_cut(Cut.STRIKE, defender, attacker, FF_STRIKE_HOLD)
@@ -1542,6 +1564,7 @@ func _try_cut(kind: int, subject: Node3D, other: Node3D, hold_override := -1.0,
 	_cut_return = master_mode()
 	_cut_ff_impact = -1.0
 	_cut_ff_special = false
+	_cut_impact_at = -1.0
 	mode = Mode.EVENT_CUT
 	_cut = kind
 	_cut_subject = subject
@@ -1665,7 +1688,8 @@ func _event_shot(delta: float) -> bool:
 			at = mid + side * 3.6 + Vector3.UP * 0.45
 			look = mid + Vector3.UP * 0.7
 			lens = 52.0
-			if grapple_rig and grapple_rig.is_active() and grapple_rig.progress() >= FINISH_IMPACT_AT \
+			if grapple_rig and grapple_rig.is_active() \
+					and contact_reached(grapple_rig.progress(), _cut_impact_at) \
 					and not _cut_landed:
 				_cut_landed = true
 				add_trauma(TRAUMA_SLAM)

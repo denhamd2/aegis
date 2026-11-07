@@ -7,9 +7,26 @@ extends GdUnitTestSuite
 const MATCH_SCENE := preload("res://scenes/match.tscn")
 
 
+var _was_coverage := CameraSettings.Coverage.FIGHT_FOREVER
+var _was_cuts := true
+var _was_shake := CameraSettings.Shake.LOW
+
+
 func before_test() -> void:
+	# Settle the command-line defaults once, before this suite overrides them;
+	# otherwise the first _shake() call could re-read them over the test.
+	CameraSettings.shake_scale()
+	_was_coverage = CameraSettings.coverage
+	_was_cuts = CameraSettings.cuts
+	_was_shake = CameraSettings.shake
 	CameraSettings.coverage = CameraSettings.Coverage.FIGHT_FOREVER
 	CameraSettings.cuts = true
+
+
+func after_test() -> void:
+	CameraSettings.coverage = _was_coverage
+	CameraSettings.cuts = _was_cuts
+	CameraSettings.shake = _was_shake
 
 
 func _match() -> Node:
@@ -175,3 +192,72 @@ func test_a_signature_and_a_finisher_shake_the_camera_on_their_impact_only() -> 
 	a.signature_move_pool.clear()
 	camera._on_move_landed(a, b, sig)
 	assert_float(camera._trauma).is_equal(1.0)
+
+
+func test_a_slam_shake_waits_for_the_moves_own_contact_frame() -> void:
+	# The broadcast slam used to shake at FINISH_IMPACT_AT (60% of the move)
+	# whatever the move was. A move that lands at 30% must shake at 30%: the
+	# finisher sequence's fraction is not the slam's contact.
+	var slam := _move(30, 6, 64)
+	assert_float(MatchCamera.impact_fraction(slam)).is_equal_approx(0.30, 0.001)
+	var scene := _match()
+	var camera: MatchCamera = scene.get_node("MatchCamera")
+	var a: WrestlerController = scene.get_node("WrestlerA")
+	var b: WrestlerController = scene.get_node("WrestlerB")
+	CameraSettings.coverage = CameraSettings.Coverage.BROADCAST
+	camera.mode = MatchCamera.Mode.HARD_CAM
+	camera._held = MatchCamera.MIN_SHOT
+	camera._on_grapple_started(a, b, slam)
+	assert_int(camera._cut).is_equal(MatchCamera.Cut.SLAM)
+	assert_float(camera._cut_impact_at).is_equal_approx(0.30, 0.001)
+	assert_bool(MatchCamera.contact_reached(0.29, camera._cut_impact_at)).is_false()
+	assert_bool(MatchCamera.contact_reached(0.31, camera._cut_impact_at)).is_true()
+
+
+func test_impact_fraction_is_clamped_inside_the_move() -> void:
+	assert_float(MatchCamera.impact_fraction(_move(0, 6, 94))).is_equal_approx(0.05, 0.001)
+	assert_float(MatchCamera.impact_fraction(_move(100, 0, 0))).is_equal_approx(0.98, 0.001)
+	assert_float(MatchCamera.impact_fraction(null)).is_equal_approx(0.5, 0.001)
+
+
+func test_a_big_signature_blow_is_restrained_not_stacked_on_the_big_strike() -> void:
+	# A signature blow is both "big" and "signature". Adding both traumas
+	# clamped it to the finisher's ceiling; the harder cue wins instead.
+	var scene := _match()
+	var camera: MatchCamera = scene.get_node("MatchCamera")
+	var a: WrestlerController = scene.get_node("WrestlerA")
+	var b: WrestlerController = scene.get_node("WrestlerB")
+	var sig := _move(52, 8, 24, "signature_superman_punch")
+	sig.damage_head = 14.0
+	camera._on_move_landed(a, b, sig)
+	assert_float(camera._trauma).is_equal_approx(MatchCamera.TRAUMA_SIGNATURE, 0.001)
+	camera._trauma = 0.0
+	a.finisher_move = sig
+	camera._on_move_landed(a, b, sig)
+	assert_float(camera._trauma).is_equal_approx(MatchCamera.TRAUMA_FINISHER, 0.001)
+
+
+func test_shake_off_writes_no_offset() -> void:
+	var scene := _match()
+	var camera: MatchCamera = scene.get_node("MatchCamera")
+	CameraSettings.shake = CameraSettings.Shake.OFF
+	camera.add_trauma(1.0)
+	camera._shake(1.0 / 60.0)
+	assert_float(camera.h_offset).is_equal_approx(0.0, 0.0001)
+	assert_float(camera.v_offset).is_equal_approx(0.0, 0.0001)
+
+
+func test_the_shake_settles_briefly_without_pausing_anything() -> void:
+	var scene := _match()
+	var camera: MatchCamera = scene.get_node("MatchCamera")
+	var time_scale := Engine.time_scale
+	camera.add_trauma(1.0)
+	camera._shake(1.0 / 60.0)
+	# One frame at full finisher trauma stays inside the film-back budget.
+	assert_float(absf(camera.h_offset)).is_less(0.2)
+	assert_float(absf(camera.v_offset)).is_less(0.2)
+	for i in 36:
+		camera._shake(1.0 / 60.0)
+	assert_float(camera._trauma).is_equal(0.0)    # under 0.3 s at 60 fps
+	assert_float(Engine.time_scale).is_equal_approx(time_scale, 0.0001)
+	assert_bool(get_tree().paused).is_false()
