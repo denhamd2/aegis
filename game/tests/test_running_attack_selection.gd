@@ -54,3 +54,30 @@ func test_does_not_fire_against_unhittable_opponent() -> void:
 	pair[1].fsm.current_state = WrestlerFSM.State.DOWN
 	pair[0]._maybe_start_running_attack({"strike": true})
 	assert_int(pair[0].fsm.current_state).is_equal(WrestlerFSM.State.RUN)
+
+
+func test_a_paired_move_waits_for_both_roles_instead_of_using_a_fallback_punch() -> void:
+	var pair := _make_pair()
+	pair[0].running_attack_move = load("res://resources/moves/running_clothesline_from_hell.tres")
+	pair[1].fsm.current_state = WrestlerFSM.State.STRIKE
+	pair[0]._maybe_start_running_attack({"strike": true})
+	assert_int(pair[0].fsm.current_state).is_equal(WrestlerFSM.State.RUN)
+	assert_dict(pair[0]._attempted_moves).is_empty()
+
+
+func test_an_invalid_rebound_decelerates_and_clears_its_reservation_to_attack() -> void:
+	var pair := _make_pair()
+	var runner: WrestlerController = pair[0]
+	runner.rope_running = true
+	runner._irish_whip_target = pair[1]
+	runner._irish_whip_return_ticks_remaining = 45
+	runner.velocity = Vector3.RIGHT * WrestlerController.RUN_SPEED
+	pair[1].fsm.current_state = WrestlerFSM.State.DOWN
+	for i in WrestlerController.ROPE_RUN_RECOVERY_TICKS:
+		var before := runner.velocity.length()
+		runner._process_irish_whip_return({"strike": true})
+		assert_float(runner.velocity.length()).is_less_equal(before)
+		if i == 0:
+			assert_float(runner.velocity.length()).is_greater(0.0)
+	assert_int(runner.fsm.current_state).is_equal(WrestlerFSM.State.LOCOMOTION)
+	assert_float(runner.velocity.length()).is_equal_approx(0.0, 0.001)

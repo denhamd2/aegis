@@ -225,6 +225,7 @@ func test_charges_are_rate_limited() -> void:
 	ai.poll_input()
 	ai.target.global_position = Vector3(WrestlerController.STRIKE_HIT_RANGE - 0.05, 0.0, 0.0)
 	assert_bool(ai.poll_input().get("strike", false)).is_true()
+	ai._running_attack_started()
 	ai.target.global_position = Vector3(3.0, 0.0, 0.0)
 	assert_bool(ai.poll_input().get("run", false)).override_failure_message(
 		"The AI started a second charge immediately after landing one."
@@ -351,3 +352,18 @@ func _damage(w: WrestlerController, total: float) -> void:
 	var move := MoveDef.new()
 	move.damage_torso = total
 	w.combat.apply_damage(move)
+
+
+func test_a_rejected_running_request_keeps_the_charge_available() -> void:
+	var ai := _make_charging_pair(3.0)
+	ai.poll_input()
+	ai.target.global_position = Vector3(1.0, 0.0, 0.0)
+	ai.target.fsm.current_state = WrestlerFSM.State.STRIKE
+	assert_bool(ai.poll_input().get("strike", false)).is_true()
+	assert_bool(ai._charging).is_true()
+	assert_int(ai._run_cooldown).is_equal(0)
+	ai.target.fsm.current_state = WrestlerFSM.State.IDLE
+	assert_bool(ai.poll_input().get("strike", false)).is_true()
+	ai._running_attack_started()
+	assert_bool(ai._charging).is_false()
+	assert_int(ai._run_cooldown).is_greater(0)

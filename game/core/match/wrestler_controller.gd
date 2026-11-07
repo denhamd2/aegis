@@ -2697,20 +2697,30 @@ func _strike_reaches(move: MoveDef) -> bool:
 ## case, from _process_free_movement(), and the post-whip autopilot case,
 ## from _process_irish_whip_return()).
 func _maybe_start_running_attack(input: Dictionary) -> void:
-	if input.get("strike", false) and running_attack_move and opponent \
-			and _in_range(STRIKE_HIT_RANGE) and not UNHITTABLE_STATES.has(opponent.fsm.current_state):
-		var move := _pick_tier_move(running_attack_move, running_attack_move_pool)
-		if move == null:
-			return
-		if _can_run_into_paired(move):
-			_begin_running_paired(move)
-			return
-		# One state, potentially two performances: point it at this move's
-		# clip first (a move with no baked clip keeps the Punch_Cross
-		# fallback -- _set_state_clip ignores unknown clips).
+	if not input.get("strike", false) or opponent == null or not _in_range(STRIKE_HIT_RANGE) \
+			or UNHITTABLE_STATES.has(opponent.fsm.current_state):
+		return
+	var legal: Array[MoveDef] = []
+	for candidate: MoveDef in [running_attack_move] + running_attack_move_pool:
+		if not _move_weight_legal(candidate):
+			continue
+		# A two-body move needs both roles free. Never turn a failed paired
+		# setup into an unrelated fallback punch with the paired move's damage.
+		if PairedRecipes.RECIPES.has(String(candidate.animation_pair_id)) \
+				and not _can_run_into_paired(candidate):
+			continue
+		legal.append(candidate)
+	if legal.is_empty():
+		return
+	var move := _pick_tier_move(legal[0], legal.slice(1))
+	if _can_run_into_paired(move):
+		_begin_running_paired(move)
+	else:
 		_set_state_clip(WrestlerFSM.State.RUNNING_ATTACK,
-				StrikeRecipes.clip(String(move.animation_pair_id)) if move else "")
+				StrikeRecipes.clip(String(move.animation_pair_id)))
 		_start_move(WrestlerFSM.State.RUNNING_ATTACK, move)
+	if ai:
+		ai._running_attack_started()
 
 ## The corner move, if he has one and the other man is hanging in a corner and
 ## he is free to run at him. The man is brought out of the trap first
@@ -2795,6 +2805,9 @@ var _irish_whip_corner := false
 ## them at him, where a strike press is his running attack (a lariat, the
 ## Clothesline From Hell, a knee, a dropkick).
 var rope_running := false
+const ROPE_RUN_RECOVERY_TICKS := 12
+const ROPE_RUN_RETURN_MAX := 90
+var _rope_run_recovery := 0
 
 
 func can_rope_run() -> bool:
@@ -2826,6 +2839,7 @@ func begin_rope_run() -> bool:
 	_irish_whip_rebounded = false
 	_irish_whip_corner = false
 	rope_running = true
+	_rope_run_recovery = 0
 	look_at(global_position + dir, Vector3.UP)
 	_set_state_clip(WrestlerFSM.State.IRISH_WHIP, "strikes/run_drive")
 	fsm.transition_to(WrestlerFSM.State.IRISH_WHIP)
@@ -3138,6 +3152,14 @@ func _tick_rope_load() -> void:
 				* IRISH_WHIP_REBOUND_DAMPING
 		_irish_whip_rebounded = true
 		_irish_whip_return_ticks_remaining = IRISH_WHIP_RETURN_TICKS
+		if rope_running and is_instance_valid(_irish_whip_target):
+			# Forty-five ticks cover 5.25 m. Across the ring that could expire
+			# before reaching attack range; reserve travel plus recovery time.
+			var gap := Vector2(global_position.x, global_position.z).distance_to(
+					Vector2(_irish_whip_target.global_position.x, _irish_whip_target.global_position.z))
+			var travel := ceili(maxf(0.0, gap - STRIKE_HIT_RANGE) / RUN_SPEED * Engine.physics_ticks_per_second)
+			_irish_whip_return_ticks_remaining = clampi(travel + ROPE_RUN_RECOVERY_TICKS + 6,
+					IRISH_WHIP_RETURN_TICKS, ROPE_RUN_RETURN_MAX)
 		fsm.transition_to(WrestlerFSM.State.RUN)
 		return
 	var want := _rope_load_from + _rope_load_out * x \
@@ -3171,6 +3193,22 @@ func _end_rope_load_when_clear() -> void:
 ## still allowing a running attack the moment it's in range.
 func _process_irish_whip_return(input: Dictionary) -> void:
 	_irish_whip_return_ticks_remaining -= 1
+	if rope_running:
+		var invalid := not is_instance_valid(_irish_whip_target)
+		if not invalid:
+			invalid = _irish_whip_target.dead or _irish_whip_target.outside_ring \
+					or _irish_whip_target.fsm.current_state == WrestlerFSM.State.DOWN
+		if invalid or _rope_run_recovery > 0 \
+				or _irish_whip_return_ticks_remaining < ROPE_RUN_RECOVERY_TICKS:
+			# Carry the rebound through a short, bounded deceleration. An
+			# opponent who falls or leaves the ring is no longer a charge target.
+			_rope_run_recovery += 1
+			velocity.x = move_toward(velocity.x, 0.0, RUN_SPEED / ROPE_RUN_RECOVERY_TICKS)
+			velocity.z = move_toward(velocity.z, 0.0, RUN_SPEED / ROPE_RUN_RECOVERY_TICKS)
+			_irish_whip_return_ticks_remaining = maxi(_irish_whip_return_ticks_remaining, 1)
+			if _rope_run_recovery >= ROPE_RUN_RECOVERY_TICKS:
+				fsm.transition_to(WrestlerFSM.State.LOCOMOTION)
+			return
 	if _whip_meet_ticks >= 0:
 		# Paced into a rebound strike (_whip_meet()): there on its contact
 		# frame, and held there until it lands.

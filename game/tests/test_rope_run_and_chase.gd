@@ -99,3 +99,33 @@ func test_a_man_jogging_on_the_floor_faces_where_he_runs() -> void:
 		cody._process_free_movement(1.0 / 60.0, {"move": Vector2(0.0, 1.0), "run": true})
 	var facing := -cody.global_basis.z
 	assert_float(facing.z).is_greater(0.9)
+
+
+func test_a_real_rope_rebound_continues_into_an_attack() -> void:
+	var scene: Node = auto_free(load("res://scenes/match.tscn").instantiate())
+	TitleScreen.configure_match(scene, Roster.by_id("roman"), Roster.by_id("cody"), 1, true)
+	for part in ["Arena", "LightRig"]:
+		scene.get_node(part).free()
+	scene.entrances = false
+	add_child(scene)
+	var runner := scene.get_node("WrestlerA") as WrestlerController
+	var target := scene.get_node("WrestlerB") as WrestlerController
+	scene.get_node("MatchReferee").set_physics_process(false)
+	target.is_ai = false
+	runner.global_position = Vector3.ZERO
+	target.global_position = Vector3(-1.5, 0, 0)
+	assert_bool(runner.begin_rope_run()).is_true()
+	var rebounded := false
+	var attacked := false
+	for tick in 240:
+		await get_tree().physics_frame
+		if runner.is_whip_returning():
+			rebounded = true
+		if not runner._attempted_moves.is_empty():
+			attacked = true
+			break
+	assert_bool(rebounded).override_failure_message("Never returned from the actual ring ropes").is_true()
+	assert_bool(attacked).override_failure_message("Rebound expired before a running attack").is_true()
+	assert_bool(runner.rope_running).is_false()
+	assert_bool(runner.fsm.current_state in [WrestlerFSM.State.GRAPPLE_HOLD,
+			WrestlerFSM.State.RUNNING_ATTACK]).is_true()

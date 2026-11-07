@@ -223,6 +223,8 @@ var _footwork_rolls := 0
 ## RUN (_process_free_movement). It would stop running at exactly the distance
 ## where the attack becomes possible, so the attack could never fire at all.
 var _charging: bool = false
+var _charge_ticks := 0
+const CHARGE_MAX_TICKS := 120
 var _run_cooldown: int = 0
 ## Ticks this AI has been alive, used only to number the circling bouts so the
 ## direction roll has something to vary on. Advances once per physics tick, so
@@ -269,6 +271,8 @@ func setup_jitter(match_seed: int, player_index: int) -> void:
 func _physics_process(_delta: float) -> void:
 	if not controller or not target:
 		return
+	if _charging:
+		_charge_ticks += 1
 	if _cooldown > 0:
 		_cooldown -= 1
 	if _run_cooldown > 0:
@@ -310,6 +314,15 @@ func _physics_process(_delta: float) -> void:
 		_charging = false
 		if not (controller.fsm.current_state == WrestlerFSM.State.TAUNT and controller._stalking):
 			_spear_stalk = STALK_OFF
+
+
+## Called only after the controller accepted the attack, rather than when the
+## AI merely pressed strike at a target that might be busy or out of reach.
+func _running_attack_started() -> void:
+	_charging = false
+	_charge_ticks = 0
+	_run_cooldown = running_attack_cooldown_ticks
+	_make_room_cooldown = make_room_cooldown_ticks
 
 ## Reversals (Phase 4): once per strike thrown at him, at a moment inside
 ## its window, he reads it or he does not. The chance is his stamina's: fresh,
@@ -1008,7 +1021,8 @@ func _poll_input() -> Dictionary:
 	# and before this it fired zero times in a match (measured, ladder_probe
 	# seeds 1-3: "running 0" for both men, with RUN absent from every entries
 	# dict).
-	if _charging and WrestlerController.UNHITTABLE_STATES.has(target.fsm.current_state):
+	if _charging and (WrestlerController.UNHITTABLE_STATES.has(target.fsm.current_state)
+			or _charge_ticks >= CHARGE_MAX_TICKS):
 		# He went down, or into a pin, mid-run. Nothing to charge at, and
 		# _maybe_start_running_attack() would refuse anyway -- so stop running
 		# rather than sprint into him and hold the latch forever.
@@ -1023,6 +1037,7 @@ func _poll_input() -> Dictionary:
 		# test_match_loop_reachability's 600 frames. He walks in to lock up;
 		# the charges come after.
 		_charging = true
+		_charge_ticks = 0
 
 	if _charging:
 		var dir := to_target.normalized()
@@ -1031,14 +1046,9 @@ func _poll_input() -> Dictionary:
 		input["move"] = Vector2(dir.x, dir.z)
 		input["run"] = true
 		if distance <= WrestlerController.STRIKE_HIT_RANGE:
-			# In RUN this press becomes _maybe_start_running_attack(), not a
-			# strike -- _process_free_movement() branches on the state before
-			# it looks at the input. The cooldown is spent here, on arrival,
-			# whether or not the attack's own gate lets it through.
+			# Keep the request latched until the controller accepts a legal
+			# running attack. A temporarily busy target must not consume it.
 			input["strike"] = true
-			_charging = false
-			_run_cooldown = running_attack_cooldown_ticks
-			_make_room_cooldown = make_room_cooldown_ticks
 		return input
 
 	# Too close: give ground -- but keep deciding. This sets the move vector
