@@ -183,8 +183,9 @@ AUBREY_AAA = EyeSpec(centre=(0.5, 0.5), mm_per_uv=30.0, size=512,
 ## 8 Nov, the owner: "Kenny's eyes should be dark brown" (the grey-blue and
 ## a three-view's hazel were both wrong). Warm and dark: red over green over
 ## blue, at a level that still reads as brown, not black, in the brow's
-## shade under match light (Cody's own level rendered black there).
-KENNY_IRIS_TINT = (1.02, 0.66, 0.42)
+## shade under match light (Cody's own level rendered black there). Darkened
+## again after the Blender studio render (kenny_review_render.py) read amber.
+KENNY_IRIS_TINT = (0.80, 0.50, 0.31)
 KENNY = dataclasses.replace(CODY, sclera=(224, 204, 194), occluded_albedo=0.72)
 KENNY_IRIS_SCALE = 0.9
 ## The sheet's close-up is lit hard: a small pupil, about a quarter of the

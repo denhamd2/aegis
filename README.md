@@ -11560,3 +11560,16 @@ The owner supplied studio references of Kenny's hair from the front, three-quart
 The result is 39,884 triangles, against a budget of about 45k for two wrestlers at 60 fps on an M1. Sheet: `gauntlet/refs/characters/review/kenny_hair_loops.jpg` (loop 0 against references, loop 4, and under match light). `test_kenny_model`, `test_hair_shadow_pyro` and `test_cody_model` pass.
 
 **The ceiling.** At 5/10 the remaining gap is method, not tuning. Procedural card ribbons over one shared atlas read as thatch from behind. Reference-quality curls need authored hair-card textures: strand-rendered clumps baked from a curve groom into an atlas, with depth and alpha. That is the next step if the owner wants hair past 5.
+
+**Blender review renders.** `tools/blender/kenny_review_render.py` assembles Kenny in Blender the way the game does. It takes Cody's mesh and adds:
+- the photo-fit head bake, matched by rest position;
+- `KennyFaceShape`'s hand moves, parsed from the .gd with the same smoothstep-ellipsoid falloff (22,259 head vertices moved, as in-game);
+- his skin, gear and eye atlases with `KENNY_SKIN_TINT`;
+- the curl groom, its vertex colour over the curl atlas, with the game's specular levels.
+
+It renders the owner's four views (front, left three-quarter, exact left profile, both eyes) with Cycles on the CPU under a neutral key, fill and rim. The renders are in `gauntlet/refs/characters/review/blender/`; the sheet against the references is `kenny_blender_review.jpg`. Under the studio light his irises still read amber, so `KENNY_IRIS_TINT` came down again, to (0.80, 0.50, 0.31).
+
+What the renders show, against the references:
+- the head is still Cody's face reshaped (the likeness gap the judge put at about 7);
+- the curls read as twisted ropes, not loose ringlets (the 5/10 hair);
+- the skin is greyer and duller under a studio key than under the arena's warm light.
