@@ -174,6 +174,8 @@ SLICK_COLUMNS = 2
 ATLAS = (1024, 2048)
 ATLAS_STRANDS = 140
 ATLAS_SEED = 271029
+## A share of each clump's strands are thin flyaways off its edge.
+ATLAS_FLYAWAY = 0.12
 ## The RGB under the strands: what the opaque cap shows between them. At
 ## 120 (linear 0.19) it took the cap to near black.
 ATLAS_GROUND = 170
@@ -194,11 +196,19 @@ def linear(c) -> tuple:
 
 
 def paint_atlas(target: pathlib.Path) -> None:
-    """RGB strand tone over ATLAS_GROUND, coverage in alpha. Curl columns: a
-    clump of strands sharing one curl (so it reads as a ringlet, not frizz),
-    each strand's phase and amplitude a little off the clump's, converging
-    toward the tip and thinning over the last quarter. Slick columns: long
-    strands with a slow wave."""
+    """The curl cards' atlas: each column a clump of strands rendered in 3D.
+
+    Owner's brief, 8 Nov: "visible strand detail rather than solid
+    plastic-looking clumps ... realistic overlapping curl clusters, varying
+    thickness and flyaways". The first atlas drew flat 2D strokes; this one
+    builds each column as a clump of 3D strands -- a coil (curl columns) or a
+    slow wave (slick columns) -- projects it, and shades every segment:
+    Kajiya-Kay (bright where the strand runs across the light), and depth
+    (the clump's back strands in its own shade). Segments are drawn back to
+    front, so front strands cross over darker ones behind: a ringlet with a
+    dark core and lit crests. A share are thin flyaways. Grey tone over
+    ATLAS_GROUND, coverage in alpha; vertex colour gives the hue. Root at
+    the top. numpy and PIL only: byte-identical on rebuild."""
     rng = np.random.default_rng(ATLAS_SEED)
     ss = 2
     w, h = ATLAS[0] * ss, ATLAS[1] * ss
@@ -207,30 +217,51 @@ def paint_atlas(target: pathlib.Path) -> None:
     dt, da = ImageDraw.Draw(tone), ImageDraw.Draw(alpha)
     columns = CURL_COLUMNS + SLICK_COLUMNS
     col = w / columns
+    light = np.array([0.45, -0.62, 0.64])
+    light /= np.linalg.norm(light)
+    n = 120
     for c in range(columns):
         curly = c < CURL_COLUMNS
         centre = c * col + col * 0.5
-        # Loop 1: one or two broad S-turns a card over the helix, not the
-        # 5-7 fine waves that read as frizz; the crown's lengths wavy too.
-        waves = float(rng.uniform(1.0, 1.6)) if curly else float(rng.uniform(2.0, 2.5))
-        amp = col * (float(rng.uniform(0.10, 0.14)) if curly else 0.08)
+        turns = float(rng.uniform(1.3, 1.8)) if curly else float(rng.uniform(1.0, 1.4))
+        radius = col * (float(rng.uniform(0.20, 0.25)) if curly else 0.07)
         phase = float(rng.uniform(0.0, 2.0 * math.pi))
-        for _ in range(ATLAS_STRANDS):
-            x0 = centre + col * 0.40 * float(np.clip(rng.normal(0.0, 0.45), -1.0, 1.0))
-            length = h * float(rng.uniform(0.70, 1.0))
-            a = amp * float(rng.uniform(0.7, 1.25))
-            ph = phase + float(rng.normal(0.0, 0.35))
-            pts = []
-            for t in np.linspace(0.0, 1.0, 160):
-                x = x0 + (centre - x0) * 0.6 * t * t + a * math.sin(ph + waves * 2.0 * math.pi * t)
-                pts.append((x, t * length))
-            width = max(1, round(float(rng.uniform(2.0, 3.4)) * ss))
-            # Most strands bright, a few dark ones through the clump.
-            shade = int(rng.integers(205, 256)) if rng.random() < 0.65 else int(rng.integers(140, 185))
-            dt.line(pts, fill=shade, width=width)
-            da.line(pts, fill=int(rng.integers(170, 256)), width=width)
-    alpha = alpha.filter(ImageFilter.GaussianBlur(0.6 * ss)).resize(ATLAS, Image.LANCZOS)
-    tone = tone.filter(ImageFilter.GaussianBlur(0.5 * ss)).resize(ATLAS, Image.LANCZOS)
+        segments = []
+        for k in range(ATLAS_STRANDS):
+            fly = rng.random() < ATLAS_FLYAWAY
+            dx, dz = rng.normal(0.0, col * 0.11), rng.normal(0.0, col * 0.11)
+            length = h * float(rng.uniform(0.72, 1.0))
+            ph = phase + float(rng.normal(0.0, 0.30))
+            r = radius * float(rng.uniform(0.85, 1.15))
+            t = np.linspace(0.0, 1.0, n)
+            ang = ph + turns * 2.0 * math.pi * t
+            # Converging toward the tip; a flyaway wanders off the clump.
+            spread = (1.0 - 0.55 * t) * (1.0 + (1.6 * t if fly else 0.0))
+            x = centre + r * (1.0 - 0.25 * t) * np.cos(ang) + dx * spread
+            z = r * np.sin(ang) + dz * spread
+            y = t * length
+            if fly:
+                x = x + np.cumsum(rng.normal(0.0, 0.6 * ss, n))
+            pts = np.stack([x, y, z], 1)
+            tan = np.gradient(pts, axis=0)
+            tan /= np.maximum(np.linalg.norm(tan, axis=1, keepdims=True), 1e-6)
+            kk = np.sqrt(np.clip(1.0 - (tan @ light) ** 2, 0.0, 1.0))
+            spec = kk ** 24
+            depth = 0.5 + 0.5 * np.clip(z / (radius + col * 0.25), -1.0, 1.0)
+            # Lit to the old atlas's level (its strands 205-255 over 170): the
+            # vertex colour carries the gold, and a darker atlas went olive.
+            shade = np.clip(135 + 95 * kk * (0.35 + 0.65 * depth) + 45 * spec * depth, 0, 255)
+            width = max(1, round(float(rng.uniform(0.8, 1.4) if fly else rng.uniform(1.6, 3.0)) * ss))
+            a_val = int(rng.integers(110, 170)) if fly else int(rng.integers(190, 256))
+            for m in range(n - 1):
+                segments.append((float(z[m] + z[m + 1]), (x[m], y[m], x[m + 1], y[m + 1]),
+                                 int(shade[m]), width, a_val))
+        segments.sort(key=lambda sgm: sgm[0])
+        for _, (x0, y0, x1, y1), sh, wd, av in segments:
+            dt.line((x0, y0, x1, y1), fill=sh, width=wd)
+            da.line((x0, y0, x1, y1), fill=av, width=wd)
+    alpha = alpha.filter(ImageFilter.GaussianBlur(0.5 * ss)).resize(ATLAS, Image.LANCZOS)
+    tone = tone.filter(ImageFilter.GaussianBlur(0.4 * ss)).resize(ATLAS, Image.LANCZOS)
     out = Image.merge("RGBA", (tone, tone, tone, alpha))
     out.save(target, optimize=True)
 
