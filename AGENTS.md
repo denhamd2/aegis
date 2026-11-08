@@ -18,6 +18,13 @@ focused checks pass. Missing cloud GPU/full-arena captures are not a publication
 blocker: record appearance and native M1 performance as awaiting owner review,
 publish the Mac build, verify its exact commit, then continue the priorities.
 
+**Deploy every committed batch.** After each batch commit, push `main` and let
+the macOS workflow build it. Verify the `mac-latest` release points at the exact
+batch commit and that `Aegis.zip` is present before calling the batch delivered.
+Do not start the next batch until that verification is done. Preserve any
+uncommitted work already in the main worktree; never discard it to make the
+push.
+
 Aegis targets 60 fps (16.67 ms) on a MacBook M1 with 16 GB memory. Preserve
 60 Hz simulation, smooth animation, Fight Forever pacing and broadcast quality.
 Only native measurements establish Mac performance. Use the cheapest adequate
@@ -33,18 +40,39 @@ replay is removed; in-match replay settings still apply. Mac is the delivery
 platform; backlog ID 7 retires Web publishing after its dependency audit.
 
 Read relevant files/skills only, batch independent inspections and keep concise
-handovers. Do not add model-specific practices until applicable official
-GPT-6.1 Sol guidance has been checked; keep
-[sourced guidance](gauntlet/refs/codex_working_guidance.md) separate from project
-measurements. Use the model routing below: delegate specialist work to its
-owner instead of doing it in the main context, and keep small, self-contained
-edits in the main agent.
+handovers. Keep [sourced guidance](gauntlet/refs/codex_working_guidance.md)
+separate from project measurements. Use the routing and quality policy below:
+delegate specialist work to its owner instead of doing it in the main context,
+and keep small, self-contained edits in the main agent.
 
-## OpenCode model routing
+## Communication style
 
-OpenCode discovers the project agents in `.opencode/agents/`; new sessions
-start on `aegis-main` via `.opencode/opencode.jsonc`. Every agent is pinned to a
-free model, and no routing may silently fall through to a paid one.
+Keep updates concise (1–2 sentences) and non-technical during work. For routine
+completion reports use **Completed**, **Validated**, **Remaining** and **Next**.
+Do not show long code blocks, raw logs, reasoning traces or file contents unless
+asked.
+
+## Development strategy and model routing
+
+Quality comes first, efficient execution second, token efficiency third. Do not
+trade a major quality gain for a small saving. Work within the owner's OpenCode
+Go subscription; never automatically use a model or service that can incur
+charges outside it.
+
+Verified catalog facts: `opencode-go/deepseek-v4.1-flash` exposes `low`, `high`
+and `max` reasoning variants; `opencode-go/deepseek-v4-pro` exposes `high` and
+`max` and is available in the subscription; Pro has no image input, while Flash
+does. `opencode/nemotron-3.5-super-vl-free` is active, accepts image input and is
+genuinely free: input, output and cache all cost zero. Reasoning variants are
+pinned in agent frontmatter because the root default model does not retain a
+`#variant`.
+
+| Agent | Mode | Model | Role |
+| --- | --- | --- | --- |
+| `aegis-main` | primary | `opencode-go/deepseek-v4.1-flash#max` | Default owner: classify, plan, coordinate, implement gameplay, integrate, validate and report. |
+| `blender-specialist` | subagent | `opencode-go/deepseek-v4.1-flash#max` | 3D asset work: modeling, rigging, UV, texturing, materials, lighting, animation, arenas, VFX and export. |
+| `architect` | subagent | `opencode-go/deepseek-v4-pro#max` | Pro escalation for difficult reasoning, architecture, trade-offs and complex choreography; read-only. |
+| `visual-qa` | subagent | `opencode/nemotron-3.5-super-vl-free` | Selective visual review of rendered wrestler models, animations, textures, lighting, arenas and gameplay screenshots; read-only and free. |
 
 OpenCode also reads the root `AGENTS.md` and discovers the shared skills in
 `.claude/skills/` and `.agents/skills/` from the repository root. Start a
@@ -52,23 +80,154 @@ Beechlawn session in `games/beechlawn_rovers/` to load that project's
 `AGENTS.md` and `.agents/skills/`; a root session intentionally does not
 advertise football-only rules or skills.
 
-| Agent | Mode | Model | Delegate when |
-| --- | --- | --- | --- |
-| `aegis-main` | primary | `opencode/glm-5.3-flash-free` | Default owner for every Aegis task: plan, delegate, integrate, validate, report. |
-| `blender-specialist` | subagent | `opencode/glm-5.3-flash-free` | 3D asset work: modeling, rigging, retopology, animation, materials, UV, export. |
-| `visual-qa` | subagent | `opencode/nemotron-3.5-super-vl-free` | Reviewing rendered frames, screenshots or capture manifests; read-only. |
-| `architect` | subagent | `opencode/big-pickle` | Cross-system design, hard trade-offs, debugging strategy; read-only. |
-
+- Flash Max is the default for roughly 85–90% of work across every discipline.
+  Keep it selected as the main model; do not switch the session to Pro.
+- Pro is reserved for roughly 10–15% of genuinely complex work. It is not a
+  quota and not a discipline label. The main agent invokes `architect`
+  automatically when a trigger below is met, gives it a focused brief, then
+  resumes implementation and testing after the specialist returns.
+- `visual-qa` is selective, not automatic. Invoke it only when automated
+  validation cannot settle a rendered visual claim, and do not run it after
+  every change. Its scope is rendered wrestler models, animations, textures,
+  lighting, arenas and gameplay screenshots.
+- Do not use Gemini or any other paid visual model without the owner's explicit
+  approval, even if it is included in the OpenCode Go allowance. If Nemotron is
+  unavailable, report the limitation and stop; do not silently substitute a paid
+  model.
+- No separate gameplay subagent is configured by default: `aegis-main` owns
+  gameplay, controls, physics, AI, cameras, UI and performance so one agent
+  remains accountable. Add another agent only if the owner approves and the
+  structure would materially benefit.
+- Reuse the existing agents and skills. Do not create a subagent per skill. One
+  task has one primary owner; do not fan the same question out to several
+  agents.
+- If a pinned model is unavailable, stop and report it. Do not silently
+  substitute another model or route outside the subscription.
 - The main agent owns integration, tests and the final report. Specialists
   return scripts, findings or plans; they do not publish.
-- Route one owner per question. Do not fan the same question out to several
-  specialists.
-- If a pinned model is unavailable, stop and report it. Never substitute a paid
-  model, and never claim a Blender/Godot run that did not happen.
-- Android Termux has no local Blender or Godot unless a remote executor or MCP
-  bridge is already configured. Check first, then state the limitation.
 - Do not commit or push a batch unless the owner has approved that batch for
   publication.
+
+## Image generation and texture work
+
+- Do not call `experimental_image_generate` or any external paid
+  image-generation or editing service automatically. Do not activate an
+  image-generation API without the owner's explicit approval. This applies to
+  shell, HTTP, browser, plugin and MCP routes as well as the built-in tool.
+- The project permission denies the built-in tool. Do not attempt to bypass that
+  deny.
+- Procedural texture creation, Blender modeling and materials remain with Flash
+  Max and `blender-specialist`. Use Blender shader nodes, procedural materials,
+  bakes, UV/texture workflows and existing project textures. Do not substitute
+  generated images for project-authored or reference-matched assets.
+- Visual QA remains free `opencode/nemotron-3.5-super-vl-free`, selective and
+  read-only. It reviews existing evidence; it does not generate or edit images.
+
+## Automatic Pro escalation
+
+Escalate to `architect` when:
+
+- two meaningful attempts have failed to resolve a significant problem;
+- a difficult architectural decision is required;
+- several tightly coupled systems need redesign;
+- complex choreography or physics needs deeper analysis;
+- a persistent visual-quality defect needs a different approach;
+- a critical performance problem needs architectural investigation.
+
+Give the specialist only the decision, constraints, relevant evidence and files,
+and the options already considered. Do not send whole project histories or large
+logs. It returns a recommendation, risks and a test plan; its task ends and the
+main agent continues. Do not escalate merely because a task belongs to a
+technical discipline, and do not assume Pro outperforms Flash without task
+evidence.
+
+## Discipline routing and validation
+
+| Discipline | Default owner | Core work and validation |
+| --- | --- | --- |
+| Character modeling and rigging | `blender-specialist` | Proportions, anatomy, faces, bodies, clothing, game-ready topology, deformation, bone weights, IK/FK, scale, rig compatibility and LOD. Reuse working meshes and rigs. Validate topology, proportions, weights and deformation. |
+| Texturing and materials | `blender-specialist` | PBR skin, fabric, leather and metal; UVs and texel density; atlases, normal/roughness maps; colour and material response; texture budgets; Godot-compatible materials. Reuse material libraries. Validate missing textures, broken UVs, assignments and memory. |
+| Lighting and rendering | `blender-specialist`; `aegis-main` for in-game lighting | Broadcast arena lighting, skin/clothing response, shadows, exposure, contrast, reflections, atmosphere and consistency across camera angles. Prefer Godot Forward+ for in-game claims. Validate configuration and performance settings; use actual renders where available. |
+| Wrestling animation | `blender-specialist` | Grapples, throws, strikes, submissions, reversals, locomotion, transitions, two-wrestler synchronization, contact constraints, timing, momentum, root motion, selling and Godot integration. Plan attacker and defender choreography together. Validate contacts, foot sliding, joint limits, continuity and exports. |
+| Gameplay and controls | `aegis-main` | Responsive controls, grapple/strike systems, reversals, pins/submissions, match rules, move selection, positioning, camera integration, match flow and state transitions. Test timing, transitions, input handling and failure cases. |
+| Physics and collision | `aegis-main` | Wrestler collision and contact, grapple positioning, knockdowns, impacts, ropes/boundaries, tables/ladders/weapons and animation/physics coordination. Prefer stable, predictable behaviour over unnecessary complexity. Validate collisions, contacts and state transitions. |
+| Opponent AI | `aegis-main` | Decision-making, offence/defence, positioning, reversals, pacing, difficulty, contextual move selection, ring awareness and variety. Use deterministic simulations and scenario tests where practical. |
+| Arenas, crowds, environments and VFX | `blender-specialist` | Arena geometry, ring/ringside assets, crowds, entrances and staging, screens/LED, lighting, atmosphere, pyrotechnics/effects, reuse, instancing and LOD. Prioritise believable broadcast presentation and efficient rendering. Validate scene/instancing and performance cost. |
+| Cameras, UI, HUD and presentation | `aegis-main` | Broadcast camera behaviour, dynamic framing, entrances/cutscenes, HUD/match graphics, menus, replays, transitions and readability. Preserve the approved camera and entrance direction. Validate framing, readability, transitions and continuity. |
+| Performance and optimization | `aegis-main` | Maintain 60 FPS on the M1/16 GB target; reduce render cost, geometry/material cost, animation playback cost, memory/texture pressure and unnecessary physics/AI work; profile bottlenecks. Only native measurements establish M1 performance. |
+
+The escalation triggers above cover the discipline-specific Pro cases: difficult
+rig architecture or persistent deformation, persistent material-system problems,
+visual-quality-versus-performance decisions, complex choreography or
+synchronization, gameplay-system architecture, coupled physics instability, AI
+decision-policy redesign, arena/instancing architecture, camera/presentation
+architecture and major optimization trade-offs.
+
+## Progressive quality assurance
+
+Apply this to every discipline. Run the cheapest meaningful check first.
+
+- **Level 1 — automated checks.** Topology, scale, materials, transforms and rig
+  checks; UVs, dimensions, file references and memory estimates; joint limits,
+  contact points, keyframes and root motion; state transitions, inputs, timing
+  and move logic; AI scenario tests and decision consistency; collision and
+  stability tests; lighting configuration and performance settings; UI layout
+  and scene validation; repeatable benchmarks where execution is available.
+  Make these programmatic where possible. Do not invoke AI vision or Pro for
+  routine validation.
+- **Level 2 — selective visual testing.** Only when a working Blender, Godot or
+  remote rendering environment exists. Generate a small number of representative
+  images, use low-resolution previews first, and inspect only changed or
+  problematic areas. Prefer automated diagnostics over AI visual review; use
+  vision selectively and do not resend identical frames or analyse whole videos.
+  Do not invoke `visual-qa` automatically after every change; Level 1 checks must
+  come first. Every move that is claimed built or fixed still needs its own
+  per-move sheet and a recorded `visual-qa` verdict (see below); batch sheets
+  are supporting evidence, not a substitute.
+- **Level 3 — final quality validation.** Use more complete evidence only for
+  major milestones or acceptance-ready work: character turnarounds, deformation
+  captures, animation previews, arena lighting captures, gameplay recordings, UI
+  captures, Forward+ evidence and native Mac performance tests. Preserve all
+  existing Aegis evidence and acceptance requirements.
+
+- **Per-move visual QA.** Every move that is claimed built or fixed must have
+  its own review sheet — both roles, six beats, match camera plus a close or
+  side view — stored at `gauntlet/refs/ff_review/moves/<move_id>.png`, and a
+  `visual-qa` verdict recorded in `gauntlet/refs/ff_visual_qa_ledger.md`. A move
+  without a sheet and a verdict is not complete. This is per completed move, not
+  per code change.
+
+If testing could not actually run, label the result unverified.
+
+## Android and remote validation
+
+Development runs through OpenCode on Android/Termux. Never assume Blender,
+Godot or Mac execution is available. Inspect existing CI, capture tools and
+remote execution possibilities first. Playwright is acceptable only where a
+working browser-based game or viewer exists; it is not authoritative Forward+
+visual evidence. Do not create expensive rendering infrastructure without
+permission. Continue productive implementation with static analysis and
+applicable automated tests when rendering is unavailable, and record outstanding
+visual and native-performance validation for later.
+
+## Token efficiency
+
+- Use Flash Max by default; invoke Pro only for justified complexity.
+- Reuse existing agents, skills, rigs, materials and infrastructure.
+- Inspect only relevant files; avoid repeated full-project searches.
+- Keep specialist context focused; do not send whole histories or large logs.
+- Prefer small patches over complete rewrites.
+- Avoid unnecessary parallel agent calls.
+- Do not repeat tests when relevant inputs have not changed.
+- Run automated checks before expensive visual inspection.
+- Do not send whole videos to AI by default.
+- Do not regenerate complete assets when a local correction suffices.
+- Preserve concise checkpoints to avoid repeated context gathering.
+- Use project-specific validation rather than generic repeated checks.
+- Do not use unapproved paid tools or services.
+- Quality improvements should justify their computational and token cost. The
+  goal is maximum quality and progress per unit of token usage, not minimum
+  token usage at any cost.
 
 ## Blender skills and tools
 

@@ -59,7 +59,10 @@ const MOVES := {
 	"table_lay": "legs",
 	"power_powerslam": "legs",
 	"power_alabama_slam": "legs",
-	"power_samoan_drop": "legs",
+	# The fireman's carry holds the NEAR thigh, the leg over the shoulder --
+	# not the far thigh the cradle family picks for a body slam. The upper
+	# back is held 3 cm further out, on the surface the hand wraps.
+	"power_samoan_drop": "legs_carry",
 	"signature_pedigree": "wrist",
 	"grapple_guillotine": "facelock",
 	"running_drive_by": "none",
@@ -194,6 +197,17 @@ static func targets(family_name: String, opponent: WrestlerController, from: Vec
 			var thigh := near if near.distance_to(from) > far.distance_to(from) else far
 			var knee_side: Vector3 = at.call("calf_l" if thigh == near else "calf_r")
 			return [upper_back, thigh.lerp(knee_side, 0.35)]
+		"legs_carry":
+			# The fireman's carry (Samoan Drop): the hand under the leg over
+			# the shoulder, and the upper back held on its near surface. The
+			# cradle's far thigh is a body slam's hold, not this one's.
+			var near_s: Vector3 = at.call("thigh_l")
+			var far_s: Vector3 = at.call("thigh_r")
+			var thigh_s: Vector3 = near_s \
+					if near_s.distance_to(from) <= far_s.distance_to(from) else far_s
+			var knee_s: Vector3 = at.call("calf_l" if thigh_s == near_s else "calf_r")
+			var upper_s: Vector3 = chest + away * (WRAP + 0.03) + Vector3.UP * 0.04
+			return [upper_s, thigh_s.lerp(knee_s, 0.35)]
 		"facelock":
 			var head: Vector3 = at.call("Head")
 			return [neck + Vector3.UP * 0.06, head + Vector3.UP * 0.04]
