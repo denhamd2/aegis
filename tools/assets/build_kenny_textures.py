@@ -252,7 +252,17 @@ THIGH_PANEL = (0.61, 1.03, 38.0, 128.0)
 BACK_STRIPE = (0.61, 1.0, 150.0)
 ## On the boots: a gold panel down the front of the shaft and one down the
 ## outside.
-BOOT_PANELS = ((0.0, 22.0), (90.0, 16.0))
+## Pass 7 (8 Nov), against the sheet's boot panels: the front panel runs
+## wider up the shin, every panel edged in white piping (BOOT_PIPING, degrees).
+BOOT_PANELS = ((0.0, 30.0), (90.0, 18.0))
+BOOT_PIPING = 3.0
+## The sheet's tights are white with thin gold veins through the marble, not
+## flat white: TIGHTS_VEIN, at TIGHTS_VEIN_SCALE (m) and strength.
+TIGHTS_VEIN = np.array([212.0, 182.0, 116.0])
+TIGHTS_VEIN_SCALE = 0.22
+TIGHTS_VEIN_STRENGTH = 0.75
+## And the black scrollwork over the gold panels is denser than pass 6's.
+PANEL_SCROLL_WIDTH = 0.13
 BOOT_FOOT = 0.13
 GEAR_SEED = 2710
 
@@ -758,6 +768,8 @@ def tights(point, pts):
                 marble(point, GEAR_SEED) * 0.35, TIGHTS_MARBLE)
     radius = 0.075
     a = np.radians(ang) * radius
+    out = paint(out, filigree(a, hgt, TIGHTS_VEIN_SCALE, GEAR_SEED + 8, 0.035)
+                * (0.45 + 0.55 * marble(point, GEAR_SEED + 9)) * TIGHTS_VEIN_STRENGTH, TIGHTS_VEIN)
     # The outer-thigh panel, scalloped edges, black outline, black scrollwork.
     h0, h1, t0, t1 = THIGH_PANEL
     wave = 7.0 * np.sin(hgt * 60.0 + side * 1.3)
@@ -768,7 +780,8 @@ def tights(point, pts):
     out = paint(out, rim, BLACK)
     gold = paint(np.broadcast_to(GOLD, point.shape).astype(np.float32),
                  marble(point * 3.0, GEAR_SEED + 1) * 0.5, GOLD_DARK)
-    gold = paint(gold, filigree(a, hgt, 0.14, GEAR_SEED + 2, 0.07), BLACK)
+    gold = paint(gold, np.maximum(filigree(a, hgt, 0.14, GEAR_SEED + 2, PANEL_SCROLL_WIDTH),
+                                  filigree(a, hgt, 0.07, GEAR_SEED + 10, 0.08)), BLACK)
     out = paint(out, inside, gold)
     # The stripe down the back of the thigh.
     b0, b1, bc = BACK_STRIPE
@@ -787,15 +800,25 @@ def tights(point, pts):
     # The boot tops on the shin: black, with the boots' gold panels.
     shin = smoothstep(BOOT_TOP + 0.004, BOOT_TOP - 0.004, hgt)
     out = paint(out, shin, BLACK)
+    out = paint(out, shin * boot_piping(ang), TAPE)
     out = paint(out, shin * boot_panels(ang, a, hgt), GOLD)
     return out
+
+
+def boot_piping(ang):
+    m = np.zeros_like(ang)
+    for centre, half in BOOT_PANELS:
+        d = np.abs(np.abs(ang - centre) - half - BOOT_PIPING)
+        m = np.maximum(m, smoothstep(BOOT_PIPING, BOOT_PIPING * 0.4, d))
+    return m
 
 
 def boot_panels(ang, a, hgt):
     m = np.zeros_like(ang)
     for centre, half in BOOT_PANELS:
         m = np.maximum(m, smoothstep(half + 2, half - 2, np.abs(ang - centre)))
-    return m * (1.0 - filigree(a, hgt, 0.06, GEAR_SEED + 4, 0.08))
+    return m * (1.0 - np.maximum(filigree(a, hgt, 0.06, GEAR_SEED + 4, 0.11),
+                                 filigree(a, hgt, 0.11, GEAR_SEED + 11, 0.09)))
 
 
 def boot(point, pts):
@@ -803,6 +826,7 @@ def boot(point, pts):
     out = paint(np.broadcast_to(BLACK, point.shape).astype(np.float32),
                 marble(point * 2.0, GEAR_SEED + 5) * 0.4, BLACK * 1.8)
     shaft = smoothstep(BOOT_FOOT, BOOT_FOOT + 0.02, hgt)
+    out = paint(out, shaft * boot_piping(ang), TAPE)
     out = paint(out, shaft * boot_panels(ang, np.radians(ang) * 0.06, hgt), GOLD)
     return out
 

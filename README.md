@@ -11499,3 +11499,10 @@ The owner asked for Kenny to match his reference sheet, starting with height and
 **Eyes, the same day.** Under match light the whites rendered near white, a glow, and a band of white under each iris read as a stare. `KENNY_EYE_TONE` comes down a fifth (0.66/0.61/0.59), and `KennyFaceShape`'s lower lid lifts 2.2 mm (it was 1.2), so the lid now meets the iris: his squint.
 
 **Body skin, the same day.** The sheet's body is flushed red over the upper chest, shoulders and upper back, and freckled across the shoulders. `build_kenny_textures.body_detail` places both by where each texel sits on the body (`gear_points`). The flush rises from 1.18 m and fades out into the neck (`BODY_FLUSH_*`). Freckles thin out below the shoulders (`BODY_FRECKLE_*`), each from a seeded field. Under match light the chest goes from G/R 0.74 to 0.71. The rebuild is byte-identical, and `test_kenny_model`, `test_skin_look` and `test_blood` pass.
+
+**Gear, the same day.** Against the sheet's pants and boot panels, `build_kenny_textures`:
+- runs thin gold veins through the white tights' marble (`TIGHTS_VEIN*`);
+- doubles the black scrollwork over the gold thigh panels (`PANEL_SCROLL_WIDTH`, plus a finer second layer);
+- widens the boots' front panel (`BOOT_PANELS`), fills it with denser scrollwork, and edges every panel in the sheet's white piping (`boot_piping`).
+
+Sheet: `gauntlet/refs/characters/review/kenny_gear_pass7.jpg`. The rebuild is byte-identical.
