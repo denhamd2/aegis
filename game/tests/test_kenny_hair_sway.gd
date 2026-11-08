@@ -33,4 +33,4 @@ func test_his_lengths_wear_the_swaying_card_shader() -> void:
 		else:
 			assert_object(mat).is_instanceof(ShaderMaterial)
 			swaying += 1
-	assert_int(swaying).is_equal(2)
+	assert_int(swaying).is_equal(3)

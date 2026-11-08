@@ -138,8 +138,9 @@ func _add_hair() -> void:
 				SLICK_SWAY if mi.name == "CurlSlick" else 1.0)
 		if not cap:
 			_sway_materials.append(mesh_instance.material_override)
+		# The cap and the undercoat cast: the hair's shade on his neck.
 		mesh_instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON \
-				if mi.name == "CurlCap" else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+				if mi.name in ["CurlCap", "CurlUndercoat"] else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	curls.free()
 	_sway_skeleton = skeleton
 	_sway_head = skeleton.find_bone("Head")
@@ -212,10 +213,7 @@ func _card_material(sway_amount: float) -> ShaderMaterial:
 	var mat := ShaderMaterial.new()
 	mat.shader = HAIR_CARD
 	mat.set_shader_parameter("albedo_tex", load(CURL_CARDS))
-	mat.set_shader_parameter("roughness", CURL_ROUGHNESS)
-	mat.set_shader_parameter("specular", 0.12)
 	mat.set_shader_parameter("anisotropy_ratio", HairLook.ANISOTROPY)
-	mat.set_shader_parameter("alpha_scissor", 0.2)
 	mat.set_shader_parameter("sway_amount", sway_amount)
 	return mat
 
