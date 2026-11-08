@@ -11532,3 +11532,31 @@ Sheet: `kenny_body_pass9.jpg`.
 **Eyes: dark brown.** The owner: "Kenny's eyes should be dark brown". `build_eyes.KENNY_IRIS_TINT` is now (1.02, 0.66, 0.42): warm and dark, and still brown rather than black in the brow's shade under match light.
 
 **The owner's studio three-view** (`gauntlet/refs/characters/kenny_3view.jpg`) was tried as the photo-fit's profile, its 12 outline points read off the silhouette. It would move his chin back 19 mm and his lower lip 11 mm. Its profile has the chin 21 px behind the brow; the sheet's has it ahead. That is a receding chin, the opposite of his, so it was not taken (no tilt or mirroring of the marks changes the solve). It stays as a hair and colour reference.
+
+## 8 Nov — Kenny's hair: four art-director loops against the owner's five-view references
+
+The owner supplied studio references of Kenny's hair from the front, three-quarter, side, back and above (`gauntlet/refs/characters/kenny_3view.jpg`, `kenny_hair_back.png`, `kenny_hair_top.png`) and asked for four improvement loops, each reviewed by an art-director subagent. `model_turnaround` gains a top-down head view so all five angles compare. Each loop was a five-view sheet, then the review, then its changes in `tools/blender/kenny_curls.py`. The scores ran 3 → 3.5 → 4.5 → 5 out of 10.
+
+- **Loop 1.**
+  - The ringlet cards get custom normals: double-sided cards had drawn black streaks.
+  - Broad S-curls replace the fine frizz.
+  - The colour goes warm gold over brown roots, and the earmuff silhouette tightens to a column behind the ears.
+- **Loop 2.**
+  - The cards turn with the helix, a corkscrew rather than a zig-zag ribbon.
+  - The crown is denser, with each strand S-waving sideways as it goes back.
+  - The atlas strands double, and the curl specular comes down.
+- **Loop 3.**
+  - One coiling card per ringlet instead of two crossed: the groom had reached 70.8k triangles.
+  - Looser S-waves (pitch 0.06–0.08).
+  - A wider value range, brown showing under the gold to mid-length.
+  - Softer swept-back crown waves, and a ragged hem.
+- **Loop 4.**
+  - The cap now covers the back of the skull to the nape, where skin showed through.
+  - Each coil is shaded dark on its back turn and bright on its front.
+  - More, wider ringlets, closer in.
+  - A brighter gold tip, and the crown strands leave the hairline straight.
+  - The review's "stop an end once it meets the shoulders" was tried and dropped: the push fires on the skull, so every length ended at the neck.
+
+The result is 39,884 triangles, against a budget of about 45k for two wrestlers at 60 fps on an M1. Sheet: `gauntlet/refs/characters/review/kenny_hair_loops.jpg` (loop 0 against references, loop 4, and under match light). `test_kenny_model`, `test_hair_shadow_pyro` and `test_cody_model` pass.
+
+**The ceiling.** At 5/10 the remaining gap is method, not tuning. Procedural card ribbons over one shared atlas read as thatch from behind. Reference-quality curls need authored hair-card textures: strand-rendered clumps baked from a curve groom into an atlas, with depth and alpha. That is the next step if the owner wants hair past 5.

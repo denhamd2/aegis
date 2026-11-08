@@ -73,13 +73,15 @@ _spec.loader.exec_module(kenny_tex)
 ## Blender space (Z up, -Y forward). Cody's skull: its vertical axis passes
 ## through (0, AXIS_Y); the face is toward -Y, the back of the head at +Y 0.205.
 AXIS_Y = 0.095
+## The scalp also takes the head's skin this far round (deg) and this high.
+NAPE = (110.0, 1.56)
 
 ## Colours, sRGB. Measured off the sheet's hair panel (back view, under arena
 ## light: median (82,67,58), 90th percentile (151,121,103), 97th (187,155,123):
 ## red over blue 1.4-1.5) and lifted to albedo. The first pass took the tips
 ## to (206,168,112), red over blue 1.84, and the curls rendered ginger-orange.
 ROOT = (84, 62, 42)
-TIP = (238, 192, 110)
+TIP = (242, 196, 112)
 ## The crown, wet and slicked: the sheet's renders at (104,70,58) under arena
 ## light, ours rendered (197,170,138) -- a pale helmet (the owner, 8 Nov:
 ## "amazingly lifelike"). The cap and the slicked strands over it are darker
@@ -116,7 +118,7 @@ SLICK_WAVE = 0.003
 SLICK_SEED = 271027
 
 ## CurlRinglets.
-RINGLET_COUNT = 290
+RINGLET_COUNT = 360
 ## Rooted behind the ears and round the back: at least this many degrees
 ## round from the front of the head, and no higher than RINGLET_ROOT_TOP.
 RINGLET_ROOT_ANGLE = 104.0
@@ -138,21 +140,21 @@ RINGLET_LENGTH_BACK = (0.14, 0.24)
 RINGLET_FLOOR = 1.52
 ## The three-view's hair stands well off his head, a full mass at the sides
 ## and back: further out than the first groom (0.010-0.024).
-RINGLET_STANDOFF = (0.010, 0.020)
+RINGLET_STANDOFF = (0.006, 0.014)
 RINGLET_DRAPE = 0.30
 ## Outward drift per unit of fall: the lengths spread a little as they hang.
 RINGLET_DRIFT = 0.05
 RINGLET_SIM_STEP = 0.004
 ## 9-12 samples a turn at the pitch below (loop 2; 0.008 gave 6-8, kinks).
 ## The art director asked for 0.003; 0.004 holds the hair near 60k triangles.
-RINGLET_STEP = 0.004
+RINGLET_STEP = 0.005
 ## Loose curls: a helix round the line, small against the clump's width.
 ## The three-view's are long loose waves, not tight corkscrews: wider and
 ## longer per turn than the first groom's (0.006-0.011, 0.034-0.055).
 RINGLET_RADIUS = (0.009, 0.013)
 RINGLET_PITCH = (0.060, 0.080)
 RINGLET_EASE = 0.04
-RINGLET_WIDTH = ((0.028, 0.040), 0.014)
+RINGLET_WIDTH = ((0.034, 0.046), 0.016)
 ## Darker where the ringlet leaves the scalp, in the shade of the hair over it.
 RINGLET_ROOT_SHADE = 0.6
 RINGLET_SEED = 271028
@@ -224,7 +226,7 @@ def paint_atlas(target: pathlib.Path) -> None:
                 pts.append((x, t * length))
             width = max(1, round(float(rng.uniform(2.0, 3.4)) * ss))
             # Most strands bright, a few dark ones through the clump.
-            shade = int(rng.integers(205, 256)) if rng.random() < 0.65 else int(rng.integers(100, 160))
+            shade = int(rng.integers(205, 256)) if rng.random() < 0.65 else int(rng.integers(140, 185))
             dt.line(pts, fill=shade, width=width)
             da.line(pts, fill=int(rng.integers(170, 256)), width=width)
     alpha = alpha.filter(ImageFilter.GaussianBlur(0.6 * ss)).resize(ATLAS, Image.LANCZOS)
@@ -247,11 +249,17 @@ class Scalp:
         mw = body.matrix_world
         for face in bm.faces:
             centre = sum((loop[uv].uv for loop in face.loops), Vector((0, 0))) / len(face.loops)
-            if face.material_index != head or not scalp.is_hair(*centre):
+            if face.material_index != head:
+                remove.append(face)
+                continue
+            c = mw @ face.calc_center_median()
+            # Loop 4: the back of the skull down to the nape too -- Cody's
+            # short-hair mask stops above it, and skin showed behind the curls.
+            nape = round_from_front(c) >= NAPE[0] and c.z >= NAPE[1]
+            if not (scalp.is_hair(*centre) or nape):
                 remove.append(face)
                 continue
             # Below his receding hairline: forehead, not scalp.
-            c = mw @ face.calc_center_median()
             angle = round_from_front(c)
             if angle < kenny_tex.HAIRLINE_REACH and c.z < float(kenny_tex.hairline_at(angle)):
                 remove.append(face)
@@ -407,7 +415,7 @@ def build_slick(s: Scalp, arm):
             across = d.cross(nq).normalized()
             # Loop 2: each strand S-waves sideways as it goes back (the
             # top-down reference), not a straight plank.
-            centre = q + nq * standoff + across * SLICK_WAVE * math.sin(2.0 * math.pi * 1.5 * t + wave_phase)
+            centre = q + nq * standoff + across * SLICK_WAVE * t * math.sin(2.0 * math.pi * 1.5 * t + wave_phase)
             width = half * (1.0 - 0.6 * t * t)
             for k in (-1.0, 1.0):
                 verts.append(centre + across * width * k)
@@ -429,6 +437,7 @@ def fall(root, normal, length, standoff, bvh):
     pts = [p]
     total = 0.0
     still = 0
+    pushed = False
     for _ in range(4000):
         h = Vector((p.x, p.y - AXIS_Y, 0.0))
         r = h.length
@@ -437,6 +446,7 @@ def fall(root, normal, length, standoff, bvh):
         loc, nrm, _, _ = bvh.find_nearest(q)
         if loc is not None and (q - loc).dot(nrm) < standoff:
             q = loc + nrm * standoff
+            pushed = True
         # Not drawn in toward the neck faster than RINGLET_DRAPE per unit of fall.
         hq = Vector((q.x, q.y - AXIS_Y, 0.0))
         floor = r - RINGLET_DRAPE * max(p.z - q.z, 0.0)
@@ -452,6 +462,9 @@ def fall(root, normal, length, standoff, bvh):
         p = q
         if total >= length or p.z <= RINGLET_FLOOR:
             break
+        # (Loop 4 tried stopping any strand once pushed and below 1.56: the
+        # push fires on the skull, so every length ended at the neck -- a bob.
+        # RINGLET_FLOOR keeps the ends off the traps.)
     # Resample at even spacing along the line.
     out, acc = [pts[0]], 0.0
     target = RINGLET_STEP
@@ -496,7 +509,11 @@ def build_ringlet(samples, rng, column, tone):
         centre = p + radial * (radius * smooth(0.0, RINGLET_EASE, s))
         width = (w_top + (RINGLET_WIDTH[1] - w_top) * rel ** 1.5) * (0.5 + 0.5 * smooth(0.0, 0.03, s))
         shade = RINGLET_ROOT_SHADE + (1.0 - RINGLET_ROOT_SHADE) * smooth(0.0, 0.2, rel)
-        c = [min((r + (tc * tone - r) * smooth(0.10, 0.70, rel)) * shade, 1.0)
+        # Loop 4: the coil's back turn darker, its front turn bright -- what
+        # makes a ringlet read as a spiral S, not a flat dash.
+        h = Vector((centre.x, centre.y - AXIS_Y, 0.0)).normalized()
+        occ = 0.5 + 0.5 * (0.5 + 0.5 * radial.dot(h))
+        c = [min((r + (tc * tone - r) * smooth(0.10, 0.70, rel)) * shade * occ, 1.0)
              for r, tc in zip(root_c, tip_c)]
         wts = weights_at(centre)
         # Lit as one mass, not as card faces (art director, loop 1: double-
