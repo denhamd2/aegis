@@ -11506,3 +11506,5 @@ The owner asked for Kenny to match his reference sheet, starting with height and
 - widens the boots' front panel (`BOOT_PANELS`), fills it with denser scrollwork, and edges every panel in the sheet's white piping (`boot_piping`).
 
 Sheet: `gauntlet/refs/characters/review/kenny_gear_pass7.jpg`. The rebuild is byte-identical.
+
+**His "2", the same day.** The sheet's big gold "2" scroll is now on his right thigh (gold with the panels' scrollwork, black-edged) and on the kneepad (`GLYPH_*`, `glyph`). It is drawn as a distance field over the leg's surface coordinates, so it reads the right way round from the front. Sheet: `kenny_gear_pass8.jpg`.

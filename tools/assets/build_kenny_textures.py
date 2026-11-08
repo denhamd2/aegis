@@ -797,6 +797,13 @@ def tights(point, pts):
     out = paint(out, pad, BLACK)
     out = paint(out, pad * filigree(a, hgt, 0.07, GEAR_SEED + 3, 0.07), GOLD)
     out = paint(out, np.clip(pad_rim, 0, 1) * pad, GOLD)
+    # The "2": on the thigh, black-edged gold with the panels' scrollwork;
+    # on the kneepad, plain gold on the black.
+    fill, rim = glyph(ang, hgt, side, GLYPH_THIGH, radius)
+    out = paint(out, rim * (1 - pad), BLACK)
+    out = paint(out, fill * (1 - pad), gold)
+    fill, _ = glyph(ang, hgt, side, GLYPH_KNEE, radius)
+    out = paint(out, fill * pad, GOLD)
     # The boot tops on the shin: black, with the boots' gold panels.
     shin = smoothstep(BOOT_TOP + 0.004, BOOT_TOP - 0.004, hgt)
     out = paint(out, shin, BLACK)
@@ -811,6 +818,39 @@ def boot_piping(ang):
         d = np.abs(np.abs(ang - centre) - half - BOOT_PIPING)
         m = np.maximum(m, smoothstep(BOOT_PIPING, BOOT_PIPING * 0.4, d))
     return m
+
+
+## The sheet's big gold "2" scroll on his right leg: over the front of the
+## thigh (gold, black-edged, on the white) and on the kneepad (gold on black).
+## [centre angle (deg, + outward), centre height (m), height (m)].
+GLYPH_THIGH = (14.0, 0.80, 0.24)
+GLYPH_KNEE = (4.0, 0.525, 0.13)
+## In the glyph's own units (height 1, x right as seen from the front).
+GLYPH_ARC = ((0.0, 0.20), 0.27, 165.0, -35.0)
+GLYPH_LINES = (((0.22, 0.045), (-0.31, -0.47)), ((-0.31, -0.47), (0.34, -0.47)),
+               ((-0.235, 0.27), (-0.34, 0.17)))
+GLYPH_WIDTH = 0.075
+GLYPH_RIM = 0.035
+
+
+def glyph(ang, hgt, side, spec, radius):
+    """The "2" on his right leg: (fill, rim) masks, 0-1."""
+    centre, h0, size = spec
+    vx = np.radians(ang - centre) * radius * side / size
+    vy = (hgt - h0) / size
+    d = np.full(ang.shape, 9.0, np.float32)
+    (cx, cy), r, t0, t1 = GLYPH_ARC
+    for t in np.linspace(math.radians(t0), math.radians(t1), 40):
+        px, py = cx + r * math.cos(t), cy + r * math.sin(t)
+        d = np.minimum(d, np.hypot(vx - px, vy - py))
+    for (ax, ay), (bx, by) in GLYPH_LINES:
+        ex, ey = bx - ax, by - ay
+        t = np.clip(((vx - ax) * ex + (vy - ay) * ey) / (ex * ex + ey * ey), 0, 1)
+        d = np.minimum(d, np.hypot(vx - ax - t * ex, vy - ay - t * ey))
+    right = (side < 0).astype(np.float32)
+    fill = smoothstep(GLYPH_WIDTH, GLYPH_WIDTH * 0.7, d) * right
+    rim = smoothstep(GLYPH_WIDTH + GLYPH_RIM, GLYPH_WIDTH + GLYPH_RIM * 0.6, d) * right
+    return fill, rim
 
 
 def boot_panels(ang, a, hgt):
