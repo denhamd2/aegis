@@ -83,8 +83,12 @@ Per move, for **both** attacker and defender:
    a clear sell; no teleport pops at state changes.
 6. **Wiring:** the move fires in real matches from the correct tier/position,
    with contact/damage on the authored tick.
-7. **Evidence:** a review sheet of both halves at match camera and close
-   range, plus a seeded match tally proving it lands.
+7. **Evidence:** a **per-move** review sheet of both halves at match camera and
+   close/side range, stored at
+   `gauntlet/refs/ff_review/moves/<move_id>.png`, with a `visual-qa` verdict
+   recorded in `gauntlet/refs/ff_visual_qa_ledger.md`, plus a seeded match
+   tally proving it lands. A batch sheet is supporting evidence; it does not
+   substitute for the per-move sheet and verdict.
 
 "Exactly matching" can only mean this measured bar, not mocap identity — we
 have no mocap and no per-move FF frames for most of the catalogue.
@@ -120,8 +124,9 @@ Order by how often they appear and how much of the roster they cover:
 5. **Submission** — figure_four_leglock.
 
 Each batch: re-key timing/contact/recovery, add in-betweens, re-bake, run the
-gates, render both halves, review sheet, seeded tally, then commit and deploy
-as one batch. Small enough to review in one sitting.
+gates, render **one sheet per move**, get a `visual-qa` verdict for each move,
+run the seeded tally, then commit and deploy as one batch. Small enough to
+review in one sitting; batch sheets do not replace the per-move evidence.
 
 ## Phase C — the remaining 119, by family, with base + variants
 
@@ -143,10 +148,15 @@ library; copy that pattern:
   exists to build on.
 
 **Roster reality:** these 119 belong to other wrestlers. They only appear in
-matches if `FITS` is widened or the roster grows. Before Phase C, decide with
-the owner whether to (a) add selected library moves to the existing three
-wrestlers, or (b) build a generic library for a future roster. Option (a) is
-far cheaper and shows up in matches immediately.
+matches if `FITS` is widened or the roster grows.
+
+**Owner decision (8 November 2026): build the generic library (option b).** The
+119 are being authored so they can be assigned when more wrestlers are added,
+not only for the current three. Every variant therefore ships with a MoveDef,
+a paired clip for both roles, a family/setup tag, a per-move sheet and a
+recorded `visual-qa` verdict — a generic move nobody has reviewed is not
+usable. Selected moves can still be added to the current roster later through
+`FITS` without re-authoring.
 
 ## Per-batch delivery rules
 

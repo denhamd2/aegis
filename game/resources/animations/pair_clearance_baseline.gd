@@ -26,8 +26,6 @@ const OVER := {
 ## attacker turns or rolls through the hold, and the arm chain lags the spin.
 const CONTACT_LIMIT := 0.05
 const GRIP := {
-	# Stage 8: 5.6 cm, the same landing as its OVER entry above.
-	"power_samoan_drop": 0.07,
 	# running_rolling_codebreaker (0.54) left 26 Oct: from where this measure
 	# starts it, its roll carried the attacker's root to 3.25 m, over the
 	# ropes, and the ring keep-in held his body back while the clip went on.

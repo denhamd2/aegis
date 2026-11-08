@@ -187,8 +187,11 @@ static func entries() -> Array:
 				# Fight Forever library, batch 1 (FFMoveLibrary.FITS): a big
 				# man's powerbomb and spinebuster; batch 2, the fireman's
 				# carry bomb (the Samoan Drop above is FF's squatting one).
+				# The Chokeslam was built in batch 1 and left in match.tscn's
+				# shared pool only; configure_match() replaced that pool, so
+				# no configured match could ever reach it.
 				M + "ff/powerbomb_1.tres", M + "ff/spinebuster_5.tres",
-				M + "ff/fireman_carry_bomb_2.tres"],
+				M + "ff/fireman_carry_bomb_2.tres", M + "ff/chokeslam_1.tres"],
 		"signature": [M + "signature_superman_punch.tres", M + "signature_backbreaker.tres"],
 		"running": [M + "running_attack_clothesline.tres",
 				M + "running_clothesline_from_hell.tres", M + "running_knee_lift.tres",

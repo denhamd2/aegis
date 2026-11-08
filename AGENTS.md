@@ -18,6 +18,13 @@ focused checks pass. Missing cloud GPU/full-arena captures are not a publication
 blocker: record appearance and native M1 performance as awaiting owner review,
 publish the Mac build, verify its exact commit, then continue the priorities.
 
+**Deploy every committed batch.** After each batch commit, push `main` and let
+the macOS workflow build it. Verify the `mac-latest` release points at the exact
+batch commit and that `Aegis.zip` is present before calling the batch delivered.
+Do not start the next batch until that verification is done. Preserve any
+uncommitted work already in the main worktree; never discard it to make the
+push.
+
 Aegis targets 60 fps (16.67 ms) on a MacBook M1 with 16 GB memory. Preserve
 60 Hz simulation, smooth animation, Fight Forever pacing and broadcast quality.
 Only native measurements establish Mac performance. Use the cheapest adequate
@@ -174,12 +181,21 @@ Apply this to every discipline. Run the cheapest meaningful check first.
   problematic areas. Prefer automated diagnostics over AI visual review; use
   vision selectively and do not resend identical frames or analyse whole videos.
   Do not invoke `visual-qa` automatically after every change; Level 1 checks must
-  come first.
+  come first. Every move that is claimed built or fixed still needs its own
+  per-move sheet and a recorded `visual-qa` verdict (see below); batch sheets
+  are supporting evidence, not a substitute.
 - **Level 3 — final quality validation.** Use more complete evidence only for
   major milestones or acceptance-ready work: character turnarounds, deformation
   captures, animation previews, arena lighting captures, gameplay recordings, UI
   captures, Forward+ evidence and native Mac performance tests. Preserve all
   existing Aegis evidence and acceptance requirements.
+
+- **Per-move visual QA.** Every move that is claimed built or fixed must have
+  its own review sheet — both roles, six beats, match camera plus a close or
+  side view — stored at `gauntlet/refs/ff_review/moves/<move_id>.png`, and a
+  `visual-qa` verdict recorded in `gauntlet/refs/ff_visual_qa_ledger.md`. A move
+  without a sheet and a verdict is not complete. This is per completed move, not
+  per code change.
 
 If testing could not actually run, label the result unverified.
 

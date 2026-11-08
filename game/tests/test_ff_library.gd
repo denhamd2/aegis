@@ -58,6 +58,30 @@ func test_batch_one_is_built() -> void:
 	assert_str(FFMoveLibrary.move("spear_2").resource_path).is_equal("res://resources/moves/finisher_spear.tres")
 
 
+## The Chokeslam was built in batch 1 but lived only in match.tscn's shared
+## power pool. Every configured roster entry replaces that tier, so it was
+## unreachable in a real match; this holds its new home.
+func test_chokeslam_is_reachable_in_a_configured_match() -> void:
+	var roman := Roster.by_id("roman")
+	assert_array(roman.moveset["power"]).contains([
+			"res://resources/moves/ff/chokeslam_1.tres"])
+	var scene: Node = auto_free(load("res://scenes/match.tscn").instantiate())
+	TitleScreen.configure_match(scene, roman, Roster.by_id("cody"), 1)
+	var wrestler: WrestlerController = scene.get_node("WrestlerA")
+	var ids: Array[String] = [String(wrestler.power_move.animation_pair_id)]
+	for move: MoveDef in wrestler.power_move_pool:
+		ids.append(String(move.animation_pair_id))
+	assert_array(ids).contains(["ff_chokeslam_1"])
+
+
+## The Samoan Drop's hands hold the near thigh and the surface of the upper
+## back, not the cradle's far thigh. The pair-clearance gate measures the
+## result; this pins the family so a later edit cannot quietly revert it.
+func test_samoan_drop_uses_the_carry_contact_family() -> void:
+	var move: MoveDef = load("res://resources/moves/power_samoan_drop.tres")
+	assert_str(PairedContacts.family(move)).is_equal("legs_carry")
+
+
 ## Batch 2 (26 Oct), Roman's fits: two new paired moves and our Samoan Drop
 ## under FF's name, each in the roster draw where he throws it.
 func test_batch_two_is_built_and_romans() -> void:

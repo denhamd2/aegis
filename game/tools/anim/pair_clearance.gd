@@ -36,13 +36,17 @@ const SEGMENTS := [
 ## Forever library's animated moves come back as "ff/<move>".
 static func paired_move_ids() -> Array[String]:
 	var out: Array[String] = []
+	var only := OS.get_environment("PAIR_ONLY").split(",", false)
 	for sub: String in ["", "ff/"]:
 		for file in DirAccess.get_files_at("res://resources/moves/" + sub):
 			if not file.ends_with(".tres"):
 				continue
+			var id := sub + file.get_basename()
+			if not only.is_empty() and not only.has(id):
+				continue
 			var move := load("res://resources/moves/" + sub + file) as MoveDef
 			if move and PairedRecipes.RECIPES.has(move.animation_pair_id):
-				out.append(sub + file.get_basename())
+				out.append(id)
 	out.sort()
 	return out
 
