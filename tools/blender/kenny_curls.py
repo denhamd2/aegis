@@ -96,27 +96,27 @@ SLICK_STREAK_SHARE = 0.45
 ## 8 Nov, against the owner's studio three-view (gauntlet/refs/characters/
 ## kenny_3view.jpg): bleached, ash and golden curls over darker roots, so
 ## the spread is wider -- dark dirty-blond to near platinum.
-RINGLET_TONE = (0.85, 1.12)
+RINGLET_TONE = (0.65, 1.15)
 
 ## CurlCap: off the skin by this much, more on top.
 CAP_LIFT = (0.0018, 0.0035)
 
 ## CurlSlick: the part, x in metres (+X is his left).
 CURL_PART = 0.022
-SLICK_COUNT = 1000
-SLICK_STEPS = 10
+SLICK_COUNT = 650
+SLICK_STEPS = 8
 SLICK_LENGTH = (0.05, 0.13)
-SLICK_HALF_WIDTH = (0.0025, 0.0045)
+SLICK_HALF_WIDTH = (0.0022, 0.0040)
 ## Off the cap: lying flat, wet.
 ## Lifted off the cap: swept back with body, not plastered (three-view).
 SLICK_STANDOFF = (0.004, 0.012)
 ## Sideways off the part as the strands leave the hairline.
 SLICK_SWEEP = 0.35
-SLICK_WAVE = 0.005
+SLICK_WAVE = 0.003
 SLICK_SEED = 271027
 
 ## CurlRinglets.
-RINGLET_COUNT = 250
+RINGLET_COUNT = 290
 ## Rooted behind the ears and round the back: at least this many degrees
 ## round from the front of the head, and no higher than RINGLET_ROOT_TOP.
 RINGLET_ROOT_ANGLE = 104.0
@@ -130,12 +130,12 @@ RINGLET_FRAME_ANGLE = (92.0, 108.0)
 RINGLET_FRAME_HEIGHT = (1.72, 1.80)
 ## Length along the fall, metres: longer at the back (onto the top of the
 ## back) than at the sides (onto the shoulders).
-RINGLET_LENGTH_SIDE = (0.14, 0.22)
-RINGLET_LENGTH_BACK = (0.15, 0.21)
+RINGLET_LENGTH_SIDE = (0.12, 0.18)
+RINGLET_LENGTH_BACK = (0.14, 0.24)
 ## And none below this height: the owner, 25 Oct, of the last build, "His
 ## hair looks too big" -- it reached 1.35 m. The sheet's ends lie on the tops
 ## of the shoulders and the top of the back.
-RINGLET_FLOOR = 1.50
+RINGLET_FLOOR = 1.52
 ## The three-view's hair stands well off his head, a full mass at the sides
 ## and back: further out than the first groom (0.010-0.024).
 RINGLET_STANDOFF = (0.010, 0.020)
@@ -149,12 +149,12 @@ RINGLET_STEP = 0.004
 ## Loose curls: a helix round the line, small against the clump's width.
 ## The three-view's are long loose waves, not tight corkscrews: wider and
 ## longer per turn than the first groom's (0.006-0.011, 0.034-0.055).
-RINGLET_RADIUS = (0.010, 0.015)
-RINGLET_PITCH = (0.035, 0.050)
+RINGLET_RADIUS = (0.009, 0.013)
+RINGLET_PITCH = (0.060, 0.080)
 RINGLET_EASE = 0.04
 RINGLET_WIDTH = ((0.028, 0.040), 0.014)
 ## Darker where the ringlet leaves the scalp, in the shade of the hair over it.
-RINGLET_ROOT_SHADE = 0.5
+RINGLET_ROOT_SHADE = 0.6
 RINGLET_SEED = 271028
 
 ## Weights by height (Blender z = Godot y): all Head above HEAD_Y[0], all
@@ -210,8 +210,8 @@ def paint_atlas(target: pathlib.Path) -> None:
         centre = c * col + col * 0.5
         # Loop 1: one or two broad S-turns a card over the helix, not the
         # 5-7 fine waves that read as frizz; the crown's lengths wavy too.
-        waves = float(rng.uniform(1.0, 1.6)) if curly else float(rng.uniform(3.0, 4.0))
-        amp = col * (float(rng.uniform(0.10, 0.14)) if curly else 0.12)
+        waves = float(rng.uniform(1.0, 1.6)) if curly else float(rng.uniform(2.0, 2.5))
+        amp = col * (float(rng.uniform(0.10, 0.14)) if curly else 0.08)
         phase = float(rng.uniform(0.0, 2.0 * math.pi))
         for _ in range(ATLAS_STRANDS):
             x0 = centre + col * 0.40 * float(np.clip(rng.normal(0.0, 0.45), -1.0, 1.0))
@@ -224,7 +224,7 @@ def paint_atlas(target: pathlib.Path) -> None:
                 pts.append((x, t * length))
             width = max(1, round(float(rng.uniform(2.0, 3.4)) * ss))
             # Most strands bright, a few dark ones through the clump.
-            shade = int(rng.integers(205, 256)) if rng.random() < 0.8 else int(rng.integers(150, 200))
+            shade = int(rng.integers(205, 256)) if rng.random() < 0.65 else int(rng.integers(100, 160))
             dt.line(pts, fill=shade, width=width)
             da.line(pts, fill=int(rng.integers(170, 256)), width=width)
     alpha = alpha.filter(ImageFilter.GaussianBlur(0.6 * ss)).resize(ATLAS, Image.LANCZOS)
@@ -496,7 +496,7 @@ def build_ringlet(samples, rng, column, tone):
         centre = p + radial * (radius * smooth(0.0, RINGLET_EASE, s))
         width = (w_top + (RINGLET_WIDTH[1] - w_top) * rel ** 1.5) * (0.5 + 0.5 * smooth(0.0, 0.03, s))
         shade = RINGLET_ROOT_SHADE + (1.0 - RINGLET_ROOT_SHADE) * smooth(0.0, 0.2, rel)
-        c = [min((r + (tc * tone - r) * smooth(0.05, 0.45, rel)) * shade, 1.0)
+        c = [min((r + (tc * tone - r) * smooth(0.10, 0.70, rel)) * shade, 1.0)
              for r, tc in zip(root_c, tip_c)]
         wts = weights_at(centre)
         # Lit as one mass, not as card faces (art director, loop 1: double-
@@ -507,16 +507,18 @@ def build_ringlet(samples, rng, column, tone):
         # Loop 2: the two crossed cards turn with the helix (radial and its
         # tangent cross) -- a corkscrew, where cards held on a fixed frame read
         # as zig-zag ribbons.
-        for card, direction in enumerate((radial, tan.cross(radial).normalized())):
+        # Loop 3: one card, coiling with the helix -- a coiled tape already
+        # reads as a ringlet, and the crossed second card halved the budget.
+        for card, direction in enumerate((tan.cross(radial).normalized(),)):
             for side in (-0.5, 0.5):
                 verts.append(centre + direction * (width * side))
                 uvs.append(((cols[card] + side * 0.9 + 0.5) / columns, 1.0 - rel))
                 colours.append(c)
                 weights.append(wts)
                 normals.append(nrm)
-    per = 4
+    per = 2
     for k in range(len(samples) - 1):
-        for card in range(2):
+        for card in range(1):
             a = k * per + card * 2
             b = (k + 1) * per + card * 2
             faces.append((a, a + 1, b + 1, b))
