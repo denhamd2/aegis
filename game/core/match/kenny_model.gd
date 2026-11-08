@@ -71,6 +71,7 @@ const CURL_CARDS := CHAR + "kenny_curl_cards.png"
 ## the root to gold at the tips, per ringlet lighter or darker), so the
 ## material is white.
 const CURL_ROUGHNESS := 0.7
+const HAIR_CARD := preload("res://core/materials/hair_card.gdshader")
 const CAP_SPECULAR := 0.08
 const CAP_ROUGHNESS := 0.9
 
@@ -130,10 +131,91 @@ func _add_hair() -> void:
 		var mesh_instance := mi.duplicate() as MeshInstance3D
 		skeleton.add_child(mesh_instance)
 		mesh_instance.skeleton = NodePath("..")
-		mesh_instance.material_override = _curl_material(mi.name == "CurlCap")
+		var cap := mi.name == "CurlCap"
+		mesh_instance.material_override = _curl_material(true) if cap else _card_material(
+				SLICK_SWAY if mi.name == "CurlSlick" else 1.0)
+		if not cap:
+			_sway_materials.append(mesh_instance.material_override)
 		mesh_instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON \
 				if mi.name == "CurlCap" else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	curls.free()
+	_sway_skeleton = skeleton
+	_sway_head = skeleton.find_bone("Head")
+	set_process(_sway_head >= 0 and not _sway_materials.is_empty())
+
+
+## The owner, 8 Nov: "his hair should be able to move as it's long". A damped
+## spring on the head's motion: the lengths lag his moves, swing past and
+## settle (SWAY_STIFFNESS, SWAY_DAMPING), within SWAY_MAX, with a faint idle
+## drift. hair_card.gdshader weights it from none at the root to all at the
+## tip.
+const SWAY_STIFFNESS := 55.0
+const SWAY_DAMPING := 4.2
+## How hard his head's acceleration throws the lengths.
+const SWAY_GAIN := 0.012
+const SWAY_MAX := 0.09
+## The crown's slicked lengths move a little with the rest.
+const SLICK_SWAY := 0.25
+const SWAY_IDLE := 0.003
+var _sway_materials: Array[ShaderMaterial] = []
+var _sway_skeleton: Skeleton3D
+var _sway_head := -1
+var _sway := Vector3.ZERO
+var _sway_vel := Vector3.ZERO
+var _head_prev := Vector3.ZERO
+var _head_vel_prev := Vector3.ZERO
+var _sway_primed := 0
+var _sway_t := 0.0
+
+
+func _process(delta: float) -> void:
+	if _sway_skeleton == null or delta <= 0.0:
+		return
+	var head := (_sway_skeleton.global_transform * _sway_skeleton.get_bone_global_pose(_sway_head)).origin
+	var head_vel := (head - _head_prev) / delta
+	var accel := (head_vel - _head_vel_prev) / delta
+	_head_prev = head
+	_head_vel_prev = head_vel
+	# The first frames, and a teleport (a cut, a reset), carry no motion.
+	if _sway_primed < 2 or head_vel.length() > 12.0:
+		_sway_primed += 1
+		accel = Vector3.ZERO
+	_sway_t += delta
+	_sway = step_sway(_sway, _sway_vel, accel, delta)
+	_sway_vel = _last_sway_vel
+	var idle := Vector3(sin(_sway_t * 1.3), 0.0, sin(_sway_t * 0.9 + 1.0)) * SWAY_IDLE
+	var local := _sway_skeleton.global_basis.inverse() * (_sway + idle)
+	for mat in _sway_materials:
+		mat.set_shader_parameter("sway", local)
+
+
+static var _last_sway_vel := Vector3.ZERO
+
+
+## One step of the spring: offset and velocity under the head's
+## acceleration (the hair is thrown the other way), clamped to SWAY_MAX.
+## Static and pure but for the returned velocity, for tests.
+static func step_sway(offset: Vector3, vel: Vector3, head_accel: Vector3, dt: float) -> Vector3:
+	var a := -SWAY_STIFFNESS * offset - SWAY_DAMPING * vel - head_accel * SWAY_GAIN * SWAY_STIFFNESS
+	vel += a * dt
+	offset += vel * dt
+	if offset.length() > SWAY_MAX:
+		offset = offset.normalized() * SWAY_MAX
+		vel *= 0.5
+	_last_sway_vel = vel
+	return offset
+
+
+func _card_material(sway_amount: float) -> ShaderMaterial:
+	var mat := ShaderMaterial.new()
+	mat.shader = HAIR_CARD
+	mat.set_shader_parameter("albedo_tex", load(CURL_CARDS))
+	mat.set_shader_parameter("roughness", CURL_ROUGHNESS)
+	mat.set_shader_parameter("specular", 0.12)
+	mat.set_shader_parameter("anisotropy_ratio", HairLook.ANISOTROPY)
+	mat.set_shader_parameter("alpha_scissor", 0.2)
+	mat.set_shader_parameter("sway_amount", sway_amount)
+	return mat
 
 
 func _curl_material(cap: bool) -> StandardMaterial3D:

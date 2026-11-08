@@ -11589,3 +11589,10 @@ The owner shared his Dynamite entrance (113 s; breakdown in `gauntlet/refs/entra
 - **No chest-up handheld.** His last hold before the lift was still `face_walk`; it is now `hero_low`.
 
 **Gates.** `test_entrance_director` (its Kenny tests now expect `pyro_kenny`, `fog_on` and `fog_off`), `test_entrance_cameras`, `test_match_audio` and the clip gates all pass: 136 cases.
+
+## 8 Nov — Kenny's hair moves
+
+The owner: "his hair should be able to move as it's long".
+- **The shader.** The curls and the crown's lengths now wear `core/materials/hair_card.gdshader`, which draws them as the old material did: atlas times vertex colour, alpha to coverage at 0.2, and HairLook's anisotropic highlight. It adds a vertex sway weighted from none at the root to all of it at the tip (squared), so the lengths swing while the roots stay put. The cap keeps its StandardMaterial3D.
+- **The spring.** `KennyModel` drives the sway from a damped spring on his head bone's acceleration: stiffness 55 (about 1.2 Hz), damping 4.2, gain 0.012, clamped to 9 cm. Lunge forward and the lengths are thrown back, swing past and settle. A teleport or a cut carries no motion. The crown's lengths take a quarter of it. There is a faint idle drift.
+- **Gates.** The new `test_kenny_hair_sway`: the swing goes against the motion, is clamped, and comes back to rest within 5 s; the ringlets and slick wear the shader. `test_kenny_model` and `test_hair_shadow_pyro` pass. Under match light the look is unchanged.
