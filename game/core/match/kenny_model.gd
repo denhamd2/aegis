@@ -57,7 +57,9 @@ const KENNY_SKIN_TINT := Color(0.72, 0.62, 0.56)
 ## a grey iris). The first pass set this bluer and brighter than Cody's
 ## (0.86, 0.88, 0.92) on top of a periwinkle iris, and the owner saw the eyes
 ## glow, the wrong colour.
-const KENNY_EYE_TONE := Color(0.82, 0.78, 0.76)
+## 8 Nov: under match light the whites still rendered near white and read as
+## a glow; under his brow they sit in its shade. Down a fifth.
+const KENNY_EYE_TONE := Color(0.66, 0.61, 0.59)
 
 const CURLS := CHAR + "kenny_curls.glb"
 const CURL_CARDS := CHAR + "kenny_curl_cards.png"

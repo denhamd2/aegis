@@ -40,7 +40,9 @@ const TABLE := [
 	# stay on the eyeball: the other half of his squint. Cody's margin sits
 	# at y 1.709, under the iris; the eye read as a stare (loop 3, run 11).
 	# Full under the pupil, little at the corners.
-	[Vector3(0.032, 1.7085, -0.015), Vector3(0.015, 0.006, 0.010), Vector3(0.0, 0.0012, 0.0006), true],
+	# 8 Nov: 1.2 mm still left a band of white under the iris under match
+	# light -- a stare. 2.2 mm.
+	[Vector3(0.032, 1.7085, -0.015), Vector3(0.015, 0.006, 0.010), Vector3(0.0, 0.0022, 0.0011), true],
 	# Fuller under the eyes...
 	[Vector3(0.045, 1.680, -0.020), Vector3(0.022, 0.020, 0.030), Vector3(0.0025, 0.0, 0.0035), true],
 	# ...and the cheek hollow filled.

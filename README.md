@@ -11495,3 +11495,5 @@ The owner asked for Kenny to match his reference sheet, starting with height and
 
 
 **Hair, the same day.** His crown rendered (197,170,138), a pale helmet, against the sheet's wet crown at (104,70,58). `kenny_curls.py` now gives the cap and the slicked strands their own darker, warmer colours (`CAP` 88/64/46, `SLICK_ROOT`/`SLICK_TIP`), and the crown renders at (140,98,67). The ringlets already measured right and are unchanged. The rebuild is byte-identical.
+
+**Eyes, the same day.** Under match light the whites rendered near white, a glow, and a band of white under each iris read as a stare. `KENNY_EYE_TONE` comes down a fifth (0.66/0.61/0.59), and `KennyFaceShape`'s lower lid lifts 2.2 mm (it was 1.2), so the lid now meets the iris: his squint.
