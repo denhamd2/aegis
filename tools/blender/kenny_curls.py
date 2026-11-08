@@ -98,17 +98,17 @@ SLICK_STREAK_SHARE = 0.45
 ## 8 Nov, against the owner's studio three-view (gauntlet/refs/characters/
 ## kenny_3view.jpg): bleached, ash and golden curls over darker roots, so
 ## the spread is wider -- dark dirty-blond to near platinum.
-RINGLET_TONE = (0.65, 1.15)
+RINGLET_TONE = (0.55, 1.25)
 
 ## CurlCap: off the skin by this much, more on top.
 CAP_LIFT = (0.0018, 0.0035)
 
 ## CurlSlick: the part, x in metres (+X is his left).
 CURL_PART = 0.022
-SLICK_COUNT = 650
-SLICK_STEPS = 8
+SLICK_COUNT = 260
+SLICK_STEPS = 10
 SLICK_LENGTH = (0.05, 0.13)
-SLICK_HALF_WIDTH = (0.0022, 0.0040)
+SLICK_HALF_WIDTH = (0.006, 0.011)
 ## Off the cap: lying flat, wet.
 ## Lifted off the cap: swept back with body, not plastered (three-view).
 SLICK_STANDOFF = (0.004, 0.012)
@@ -133,7 +133,7 @@ RINGLET_FRAME_HEIGHT = (1.68, 1.82)
 ## Length along the fall, metres: longer at the back (onto the top of the
 ## back) than at the sides (onto the shoulders).
 RINGLET_LENGTH_SIDE = (0.15, 0.22)
-RINGLET_LENGTH_BACK = (0.18, 0.28)
+RINGLET_LENGTH_BACK = (0.16, 0.25)
 ## And none below this height: the owner, 25 Oct, of the last build, "His
 ## hair looks too big" -- it reached 1.35 m. The sheet's ends lie on the tops
 ## of the shoulders and the top of the back.
@@ -147,7 +147,11 @@ RINGLET_DRIFT = 0.05
 RINGLET_SIM_STEP = 0.004
 ## 9-12 samples a turn at the pitch below (loop 2; 0.008 gave 6-8, kinks).
 ## The art director asked for 0.003; 0.004 holds the hair near 60k triangles.
-RINGLET_STEP = 0.008
+## The fine path every length is resampled to (loop 9); the cards keep a
+## vertex row every CLUMP_ROWS_PER_WAVE-th of their wavelength along it.
+RINGLET_STEP = 0.004
+CLUMP_ROWS_PER_WAVE = 9.0
+CLUMP_TIGHTEN = 0.2
 ## Loose curls: a helix round the line, small against the clump's width.
 ## The three-view's are long loose waves, not tight corkscrews: wider and
 ## longer per turn than the first groom's (0.006-0.011, 0.034-0.055).
@@ -156,14 +160,14 @@ RINGLET_PITCH = (0.060, 0.080)
 RINGLET_EASE = 0.04
 RINGLET_WIDTH = ((0.034, 0.046), 0.016)
 ## Darker where the ringlet leaves the scalp, in the shade of the hair over it.
-RINGLET_ROOT_SHADE = 0.6
+RINGLET_ROOT_SHADE = 0.45
 RINGLET_SEED = 271028
 ## Clump cards (loop 6): width at the root, at the tip; the S-wave's
 ## amplitude and wavelength (m); the arc length the atlas's v spans.
 CLUMP_WIDTH = (0.020, 0.030)
 CLUMP_TIP_WIDTH = 0.010
 CLUMP_AMP = (0.004, 0.014)
-CLUMP_WAVE = (0.035, 0.070)
+CLUMP_WAVE = (0.045, 0.070)
 CARD_V_LENGTH = 0.25
 ## The undercoat: wide, close, dark (layer AO 0.45).
 UNDERCOAT_COUNT = 40
@@ -174,9 +178,9 @@ UNDERCOAT_SEED = 271030
 ## Loop 8: where a length leaves the scalp (it lifts to its standoff over
 ## 5 cm); and the flyaways off the outer clumps.
 ROOT_LIFT = 0.004
-FLYAWAY_PER_CARD = 1.15
-FLYAWAY_WIDTH = (0.0025, 0.004)
-FLYAWAY_LENGTH = (0.04, 0.08)
+FLYAWAY_PER_CARD = 0.35
+FLYAWAY_WIDTH = (0.005, 0.005)
+FLYAWAY_LENGTH = (0.08, 0.12)
 FLYAWAY_SEGMENTS = 6
 ## The lengths beside the face (round less than FRONT_ANGLE): further off the
 ## head, drifting out, turned toward the front by FRONT_TWIST degrees.
@@ -184,6 +188,22 @@ FRONT_ANGLE = 135.0
 FRONT_STANDOFF = (0.012, 0.030)
 FRONT_DRIFT = 0.18
 FRONT_TWIST = (30.0, 55.0)
+## Loop 9 (review 8): the front locks end at the collarbone; the back's held
+## inside the shoulders' width.
+FRONT_FLOOR = 1.50
+BACK_CLAMP_X = 0.15
+## A fifth of the clumps platinum at their crests.
+PLATINUM_SHARE = 0.2
+PLATINUM_TONE = (1.15, 1.30)
+## Flyaways: fewer, longer, on the silhouette's sides only.
+FLY_ANGLE = (80.0, 150.0)
+## The crown: slicked only in front of SLICK_ANGLE; wavy clumps behind it.
+SLICK_ANGLE = 70.0
+CROWN_ANGLE = (70.0, 104.0)
+CROWN_ABOVE = 1.80
+CROWN_COUNT = 70
+## The cap under it all, decimated to this share: it is hidden.
+CAP_DECIMATE = 0.22
 
 ## Weights by height (Blender z = Godot y): all Head above HEAD_Y[0], all
 ## neck_01 by HEAD_Y[1]; neck_01 to spine_03 over NECK_Y.
@@ -462,13 +482,22 @@ def build_cap(s: Scalp, arm):
         uvs.append(((q.x + 0.5) * 6.0, (q.y - s.front) * 5.0 + (s.high - q.z) * 5.0))
         colours.append(cap)
         weights.append(weights_at(q))
-    return mesh_object("CurlCap", arm, verts, s.faces, uvs, colours, weights)
+    obj, _ = mesh_object("CurlCap", arm, verts, s.faces, uvs, colours, weights)
+    # Loop 9: an opaque shell under the hair needs few triangles.
+    mod = obj.modifiers.new("Decimate", "DECIMATE")
+    mod.ratio = CAP_DECIMATE
+    with bpy.context.temp_override(object=obj, active_object=obj):
+        bpy.ops.object.modifier_move_to_index(modifier="Decimate", index=0)
+        bpy.ops.object.modifier_apply(modifier="Decimate")
+    return obj, sum(len(poly.vertices) - 2 for poly in obj.data.polygons)
 
 
 def build_slick(s: Scalp, arm):
     rng = np.random.default_rng(SLICK_SEED)
     verts, faces, uvs, colours, weights, normals = [], [], [], [], [], []
-    roots = s.area_choice(rng, lambda c, n: True, SLICK_COUNT)
+    # Loop 9: slicked back only over the front of the crown; behind, the
+    # crown is wavy clumps (build_ringlets' CROWN roots).
+    roots = s.area_choice(rng, lambda c, n: round_from_front(c) < SLICK_ANGLE, SLICK_COUNT)
     root_c, tip_c = linear(SLICK_ROOT), linear(SLICK_TIP)
     streak_c = linear(SLICK_STREAK)
     for p, n in roots:
@@ -513,7 +542,7 @@ def build_slick(s: Scalp, arm):
     return mesh_object("CurlSlick", arm, verts, faces, uvs, colours, weights, normals)
 
 
-def fall(root, normal, length, standoff, bvh, drift=None):
+def fall(root, normal, length, standoff, bvh, drift=None, floor=None, clamp_x=None):
     """The ringlet's line from its root, resampled every RINGLET_STEP."""
     # Loop 8: rooted on the scalp, lifting to its standoff over 5 cm -- a
     # root set off the scalp read as a floating flap.
@@ -543,6 +572,11 @@ def fall(root, normal, length, standoff, bvh, drift=None):
             if nrm.z > 0.75 and abs(q.x) > 0.10:
                 pts.append(q)
                 break
+            # Loop 9: on the upper back with most of its length done, it
+            # ends there, hanging, not sliding on down the back.
+            if nrm.z > 0.4 and q.z < 1.52 and total >= 0.65 * length:
+                pts.append(q)
+                break
             if q.z < 1.60:
                 slide = nrm.copy()
         # Not drawn in toward the neck faster than RINGLET_DRAPE per unit of fall.
@@ -558,7 +592,10 @@ def fall(root, normal, length, standoff, bvh, drift=None):
         total += moved
         pts.append(q)
         p = q
-        if total >= length or p.z <= RINGLET_FLOOR:
+        if clamp_x is not None and abs(p.x) > clamp_x:
+            p = Vector((math.copysign(clamp_x, p.x), p.y, p.z))
+            pts[-1] = p
+        if total >= length or p.z <= (RINGLET_FLOOR if floor is None else floor):
             break
         # (Loop 4 tried stopping any strand once pushed and below 1.56: the
         # push fires on the skull, so every length ended at the neck -- a bob.
@@ -597,9 +634,21 @@ def build_clump_card(samples, rng, kind, tone, shade_layer=1.0, width=None, twis
     u0, u1 = strip_span(kind, int(rng.integers(0, 3)))
     total = (len(samples) - 1) * RINGLET_STEP
     root_c, tip_c = linear(ROOT), linear(TIP)
+    kept = 0
+    last = -1.0
     for k, (p, tan) in enumerate(samples):
         s_len = k * RINGLET_STEP
         rel = s_len / total if total > 0 else 0.0
+        # The curl tightens toward the ends (loop 8; a fifth, loop 9): the
+        # wave's phase run up over every step of the fine path...
+        local = wave * (1.0 - CLUMP_TIGHTEN * rel)
+        if k:
+            wave_phase += 2.0 * math.pi * RINGLET_STEP / local
+        # ...and a vertex row kept every ninth of the local wavelength
+        # (review 8: 2.8 rows a wave drew a sawtooth -- crimping).
+        if 0 < k < len(samples) - 1 and s_len - last < local / CLUMP_ROWS_PER_WAVE:
+            continue
+        last = s_len
         out = Vector((p.x, p.y - AXIS_Y, 0.0))
         out = (out - tan * out.dot(tan)).normalized()
         side = tan.cross(out).normalized()
@@ -609,28 +658,27 @@ def build_clump_card(samples, rng, kind, tone, shade_layer=1.0, width=None, twis
             # over 4 cm, so the root lies on the scalp (loop 8).
             rot = Matrix.Rotation(twist * smooth(0.0, 0.04, s_len), 3, tan)
             out, side = rot @ out, rot @ side
-        # The curl tightens toward the ends (loop 8): the wave's phase run
-        # up step by step at a wavelength shrinking a third by the tip.
-        if k:
-            wave_phase += 2.0 * math.pi * RINGLET_STEP / (wave * (1.0 - 0.35 * rel))
         a = wave_phase
         ease = smooth(0.0, 0.04, s_len)
         centre = p + (side * amp * math.sin(a) + out * 0.3 * amp * math.cos(a)) * ease
         wdt = (w0 + (CLUMP_TIP_WIDTH - w0) * rel) * (0.4 + 0.6 * smooth(0.0, 0.03, s_len))
-        shade = (RINGLET_ROOT_SHADE + (1.0 - RINGLET_ROOT_SHADE) * smooth(0.0, 0.2, rel)) * shade_layer
+        # Loop 9: the upper third stays dark (the reference's crown and upper
+        # back), the crests bright below.
+        shade = (RINGLET_ROOT_SHADE + (1.0 - RINGLET_ROOT_SHADE) * smooth(0.0, 0.35, rel)) * shade_layer
         c = [min((r + (tc * tone - r) * smooth(0.10, 0.70, rel)) * shade, 1.0)
              for r, tc in zip(root_c, tip_c)] + [rel]
         wts = weights_at(centre)
         # Loop 7: the tip lands at v 0 on every card, however long (its
         # taper and gathered tips), the root wherever its length puts it.
         v = min(1.0, (total - s_len) / CARD_V_LENGTH)
-        for j, f in enumerate((-0.5, 0.0, 0.5)):
+        for f in (-0.5, 0.0, 0.5):
             verts.append(centre + side * (wdt * f) + out * (0.25 * wdt if f == 0.0 else 0.0))
             uvs.append((u0 + (u1 - u0) * (0.5 + f * 0.95), v))
             colours.append(c)
             weights.append(wts)
             normals.append((out + Vector((0.0, 0.0, 0.15))).normalized())
-    for k in range(len(samples) - 1):
+        kept += 1
+    for k in range(kept - 1):
         a0, b0 = k * 3, (k + 1) * 3
         faces.append((a0, a0 + 1, b0 + 1, b0))
         faces.append((a0 + 1, a0 + 2, b0 + 2, b0 + 1))
@@ -642,7 +690,7 @@ def build_flyaways(samples, rng, tone):
     down it, a centimetre out, bending away from it, on the atlas's fly
     strip. The silhouette's broken edge."""
     verts, faces, uvs, colours, weights, normals = [], [], [], [], [], []
-    n = int(FLYAWAY_PER_CARD) + (1 if rng.random() < FLYAWAY_PER_CARD % 1.0 else 0)
+    n = 1 if rng.random() < FLYAWAY_PER_CARD else 0
     u0, u1 = strip_span("fly", 0)
     tip_c = linear(TIP)
     for _ in range(n):
@@ -721,7 +769,11 @@ def build_ringlets(s: Scalp, body, arm):
         return (RINGLET_FRAME_ANGLE[0] <= round_from_front(c) < RINGLET_FRAME_ANGLE[1]
                 and RINGLET_FRAME_HEIGHT[0] <= c.z <= RINGLET_FRAME_HEIGHT[1])
 
-    roots = s.area_choice(rng, keep, RINGLET_COUNT) + s.area_choice(rng, frame, RINGLET_FRAME_COUNT)
+    def crown(c, n):
+        return CROWN_ANGLE[0] <= round_from_front(c) < CROWN_ANGLE[1] and c.z > CROWN_ABOVE
+
+    roots = s.area_choice(rng, keep, RINGLET_COUNT) + s.area_choice(rng, frame, RINGLET_FRAME_COUNT) \
+        + s.area_choice(rng, crown, CROWN_COUNT)
     verts, faces, uvs, colours, weights, normals = [], [], [], [], [], []
     count = 0
     for p, n in roots:
@@ -732,13 +784,16 @@ def build_ringlets(s: Scalp, body, arm):
         standoff = float(rng.uniform(*RINGLET_STANDOFF))
         column = int(rng.integers(0, CURL_COLUMNS))
         tone = float(rng.uniform(*RINGLET_TONE))
+        if rng.random() < PLATINUM_SHARE:
+            tone = float(rng.uniform(*PLATINUM_TONE))
         angle = round_from_front(p)
         front = angle < FRONT_ANGLE
         if front:
             # Loop 7: the reference's width at the jaw -- the lengths by the
             # face stand off and spread, and turn their faces forward.
             standoff = float(rng.uniform(*FRONT_STANDOFF))
-        samples = fall(p, n, length, standoff, bvh, FRONT_DRIFT if front else None)
+        samples = fall(p, n, length, standoff, bvh, FRONT_DRIFT if front else None,
+                       FRONT_FLOOR if front else None, None if front else BACK_CLAMP_X)
         if len(samples) < 4:
             continue
         twist = 0.0
@@ -746,7 +801,8 @@ def build_ringlets(s: Scalp, body, arm):
             twist = math.radians(float(rng.uniform(*FRONT_TWIST))) * (1.0 if p.x > 0.0 else -1.0)
         v, f, uv, c, w, nm = build_clump_card(samples, rng, "clump" if count % 5 else "ringlet",
                                               tone, twist=twist)
-        fv, ff, fuv, fc, fw, fnm = build_flyaways(samples, rng, tone)
+        fv, ff, fuv, fc, fw, fnm = build_flyaways(samples, rng, tone) \
+            if FLY_ANGLE[0] <= angle < FLY_ANGLE[1] else ([], [], [], [], [], [])
         off_v = len(v)
         v += fv
         f += [tuple(i + off_v for i in face) for face in ff]
