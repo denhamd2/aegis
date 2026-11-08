@@ -11479,3 +11479,17 @@ paired roles and spend cooldown on acceptance.
 12 matches. The owner requested immediate Mac publication while the full CI
 run continues. Native appearance and M1 frame timing await owner review. See
 [validation](gauntlet/refs/ai_running_offence_2026_11_07/validation.md).
+
+## 8 Nov — Kenny: the owner's face atlas, one skin tone, height checked
+
+The owner asked for Kenny to match his reference sheet, starting with height and skin. Review: `gauntlet/refs/kenny_lifelike_review.md`. Sheet: `gauntlet/refs/characters/review/kenny_skin_pass6.jpg`.
+
+- **Height was already right.** `Roster` stands him at 1.829 m (6'0") and Cody at 1.880 m, and the title screen applies it in every mode.
+- **The owner's face atlas.** The owner generated a realistic face atlas for Kenny in GPT Image (hairline, face, beard and ears) and asked for it to be used. `build_kenny_textures.owner_face` paints it over the head atlas from `tools/assets/sources/kenny_face_owner.png`. Its nostrils were drawn about 18 px high, so the rows are re-spaced onto the mesh's (`FACE_ROWS`). Its colour is levelled onto the skin round it and its edge feathered over 80 px. Provenance is in `CREDITS.md`.
+- **One skin.** Measured on `face_shot` under match light, the chest rendered pale peach (G/R 0.84) under a redder face (0.73); the sheet's chest is flushed at 0.55. `SKIN_GAIN` now takes green and blue down (1.20/1.08/1.03, every atlas). `KENNY_SKIN_TINT` drops to 0.72/0.62/0.56, because the chest was near white and the tonemap washed the hue out. Now: face 0.64 (the sheet's forehead is 0.65), chest 0.74.
+- **The cheek squares are gone.** The procedural beard's cheek line (`BEARD_TOP`) came down about 7 mm and its edge softened. Under the owner's atlas the cheeks are its own beard.
+
+**Gates.** `test_kenny_model` (17) passes, and every asset rebuilds byte-identically from the script.
+
+**Left:** the pale blond curl cap reads as a helmet, and the eyes still glow (steps 5 and 7 of the review).
+

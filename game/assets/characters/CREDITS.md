@@ -237,6 +237,12 @@ swapped in at load:
   `kenny_face_projected.png`, the owner's reference sheet
   (`gauntlet/refs/characters/kenny_omega_sheet.png`) front head shot
   warped onto Cody's head UVs by `tools/blender/kenny_face_projection.py`.
+  Since 8 Nov the head's face region (hairline, face, beard, ears) is
+  `tools/assets/sources/kenny_face_owner.png`: a texture the owner made in
+  GPT Image from this atlas and supplied to the project for Kenny ("Use my
+  generated one"), painted over the atlas by the same script
+  (`owner_face`, rows re-spaced to the mesh's nostrils, levelled and
+  feathered). Provenance: the owner's own generation, supplied by him.
   That sheet is a likeness reference supplied by the owner; its own
   provenance is the owner's to confirm before redistribution.
 - `kenny_gear_*.png`: painted procedurally by the same script, from nothing

@@ -19,7 +19,7 @@ The owner (8 Nov) asked for three things:
 | Eyes, brows, lashes | Grey-blue iris, lids lowered | Irises read large and glassy. Dark crescent under the lower lid. Brows are heavy painted bands, not hairs | 7–8 |
 | Beard | Texture, plus a moustache darken (0.70) | Painted, with no 3D stubble. His is a 5 mm ginger-blond beard that breaks the jaw silhouette | 7.5 |
 | Body/build | Cody's body + `BodyBulk.KENNY` (+8 mm on the arms only) | Never measured (plan item 8 is still open). Kenny is leaner through the waist, with fuller pecs and delts and a less vascular forearm | ? |
-| Height | Cody's 1.88 m (6'2"), unscaled | Kenny is about 1.83 m (6'0"), about 2.7% shorter | Wrong |
+| Height | Correct: `Roster` stands him at his billed 1.829 m (6'0") against Cody's 1.880 (`stature_scale`, applied by the title screen in every mode) | None (corrected 8 Nov: the first read missed `Roster.stature_m`) | OK |
 | Gear | Cody's atlases repainted white and gold | Not checked against the sheet's filigree, black-and-gold kneepads and boot panels at close range | ? |
 | Entrance | `_add_kenny_entrance`: walk, stage pose with pyro, hand slaps, second-rope wings | Labelled "unverified against footage". Ring arrival is too dark in the renders. His walk is Cody's gait at 1.1 m/s, not his loose, bouncy one | 6 |
 

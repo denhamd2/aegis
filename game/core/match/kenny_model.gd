@@ -51,7 +51,7 @@ const GEAR_TEXTURES := {
 ## 0.86 they took Kenny's chest to (250,245,233) on the stage lip, clipped
 ## white, where Cody's sits well inside the range. Fairer in hue, close to
 ## Cody's in level.
-const KENNY_SKIN_TINT := Color(0.80, 0.72, 0.66)
+const KENNY_SKIN_TINT := Color(0.72, 0.62, 0.56)
 ## Cody's level, a shade warmer -- the sheet's white of the eye is pink-white
 ## under his flushed lids, not grey: the colour is in the maps now (build_eyes.py,
 ## a grey iris). The first pass set this bluer and brighter than Cody's

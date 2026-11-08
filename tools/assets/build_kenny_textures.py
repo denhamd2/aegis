@@ -48,6 +48,22 @@ _spec.loader.exec_module(cody_tex)
 HEAD_SOURCE = CHARACTERS / "cody_rhodes_ximage_d17c32323759dea.png"
 PROJECTED = CHARACTERS / "kenny_face_projected.png"
 HEAD_OUT = CHARACTERS / "kenny_head.png"
+## The owner's own face texture for Kenny (8 Nov, made by the owner in GPT
+## Image from this atlas's face region -- hairline, face, beard and ears --
+## and given to the project: "I asked gpt image to update the atlas to make
+## it more realistic. Can you match this?"). It is painted over FACE_BOX,
+## where the mesh's eyes, mouth and ears already sit; its nostrils were drawn
+## ~18 px high, so its rows are re-spaced to put them on the mesh's (FACE_ROWS,
+## source row -> atlas row, in the box's pixels). Its colour is levelled onto
+## the retinted skin round it and its edge feathered, so the face is one skin
+## with the head and body. It goes on last, over the scalp: its painted hair
+## is the scalp under his curls.
+OWNER_FACE = REPO / "tools/assets/sources/kenny_face_owner.png"
+FACE_BOX = (380, 280, 1668, 1560)
+FACE_ROWS = [(0, 0), (440, 440), (729, 747), (883, 883), (1280, 1280)]
+FACE_EDGE = 80
+## Skin to level on (box px): forehead and both cheeks under the eyes.
+FACE_LEVEL_AT = [(450, 200, 840, 300), (150, 520, 380, 640), (910, 520, 1140, 640)]
 
 ## Kenny's skin against Cody's, as a gain on Cody's albedo. The sheet's
 ## medians -- chest (193,107,98), arm (182,104,85), cheek (199,106,92) -- are
@@ -58,7 +74,12 @@ HEAD_OUT = CHARACTERS / "kenny_head.png"
 ## pink (156,101,97). So the albedo is the one that RENDERS near the sheet:
 ## brighter than Cody's tan and as warm, red over green ~1.5 with KennyModel's
 ## tint, the rest of the flush left to the lights.
-SKIN_GAIN = np.array([1.20, 1.21, 1.18])
+## Pass 6 (8 Nov), measured on face_shot under match light: the chest
+## rendered pale peach, G/R 0.84 (232,195,173), against his own forehead's
+## 0.73 and the sheet's flushed chest at 0.55 -- the body read as another
+## man's under Kenny's face. Green and blue come down (x0.89, x0.87) on every
+## atlas, the head's too, so neck and chest stay one skin.
+SKIN_GAIN = np.array([1.20, 1.08, 1.03])
 ## His face a shade redder than the body's tone, over the photo's area: the
 ## sheet's face is flushed red all over under arena light (forehead G/R 0.65
 ## there). Green only -- adding blue went lilac (pass 2).
@@ -88,14 +109,17 @@ EYES = [(0.386, 0.342, 0.050, 0.022), (0.610, 0.342, 0.050, 0.022)]
 ## either side; heights in metres, bind pose.
 HEAD_AXIS_Z = -0.09
 ## The cheek line: under the nose at the front, rising to the sideburns.
-BEARD_TOP = [(0.0, 1.661), (20.0, 1.665), (35.0, 1.675), (55.0, 1.69), (70.0, 1.70),
+## Pass 6 (8 Nov): the cheek line came down ~7 mm beside the nose and its
+## edge softened -- under match light it stopped in two dark squares on the
+## cheekbones that read as bruises; the sheet's cheek beard thins out there.
+BEARD_TOP = [(0.0, 1.661), (20.0, 1.665), (35.0, 1.668), (55.0, 1.682), (70.0, 1.695),
              (82.0, 1.725), (95.0, 1.73)]
 ## The neckline: low under the chin, up to the jaw's underside at the sides.
 BEARD_FLOOR = [(0.0, 1.565), (40.0, 1.575), (70.0, 1.59), (95.0, 1.60)]
 ## How far round it reaches, by height: in front of the ear above the jaw's
 ## corner, round under the ear below it.
 BEARD_REACH = [(1.64, 102.0), (1.665, 96.0), (1.68, 90.0), (1.75, 90.0)]
-BEARD_FEATHER = 0.008
+BEARD_FEATHER = 0.014
 ## Down the neck it thins out over this far, as a neckline grows.
 BEARD_NECK_FADE = 0.016
 ## His colour: the sheet's face is flushed, his cheeks and nose redder than
@@ -350,6 +374,34 @@ def beard_masks(point, cover, theta):
     return beard.astype(np.float32), cheek.astype(np.float32)
 
 
+def owner_face(out):
+    """The owner's face texture (OWNER_FACE) over FACE_BOX, rows re-spaced,
+    levelled onto the skin, its edge feathered."""
+    x0, y0, x1, y1 = FACE_BOX
+    nw, n = x1 - x0, y1 - y0
+    src = np.asarray(Image.open(OWNER_FACE).convert("RGB").resize((nw, n), Image.LANCZOS),
+                     np.float32)
+    want = np.arange(n, dtype=np.float32)
+    rows = np.interp(want, [r[1] for r in FACE_ROWS], [r[0] for r in FACE_ROWS])
+    lo = np.clip(np.floor(rows).astype(int), 0, n - 1)
+    hi = np.clip(lo + 1, 0, n - 1)
+    t = (rows - lo)[:, None, None]
+    face = src[lo] * (1 - t) + src[hi] * t
+    under = out[y0:y1, x0:x1]
+    ours = np.concatenate([under[b:d, a:c].reshape(-1, 3) for a, b, c, d in FACE_LEVEL_AT])
+    theirs = np.concatenate([face[b:d, a:c].reshape(-1, 3) for a, b, c, d in FACE_LEVEL_AT])
+    face = face * (np.median(ours, 0) / np.maximum(np.median(theirs, 0), 1.0))
+    across = np.arange(nw, dtype=np.float32)
+
+    def ramp(v, size):
+        r = np.clip(np.minimum(v, size - 1 - v) / FACE_EDGE, 0, 1)
+        return r * r * (3 - 2 * r)
+    edge = (ramp(want, n)[:, None] * ramp(across, nw)[None, :])[..., None]
+    out = out.copy()
+    out[y0:y1, x0:x1] = under * (1 - edge) + face * edge
+    return out
+
+
 def head() -> None:
     src = Image.open(HEAD_SOURCE).convert("RGBA")
     w, h = src.size
@@ -473,6 +525,7 @@ def head() -> None:
     root = np.clip(1.1 - ratio, 0, 1)
     colour = (SCALP_BLOND * (1 - root) + SCALP_ROOT * root) * np.clip(ratio, 0.8, 1.1)
     out = out * (1 - hair[..., None]) + colour * hair[..., None]
+    out = owner_face(out)
     save(out, HEAD_OUT, alpha)
 
 
