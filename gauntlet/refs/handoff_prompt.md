@@ -80,6 +80,11 @@ end-to-end recording (needs a GPU; `tools/capture/run_capture.sh`).
   (`https://denhamd2.github.io/aegis/` if Pages is configured; confirm via
   the run's deploy step). Do not start the next stage until the live deploy
   is verified.
+
+  > Superseded: Android was removed, and Web publishing was retired in ID 7.
+  > The deploy to verify is now `.github/workflows/mac.yml` and the
+  > `mac-latest` release (see `gauntlet/refs/next_steps.md`). This handoff is
+  > kept as the record of the decisions it lists.
 - **Match target:** an AI-vs-AI match of **8–12 minutes**, with **2–4
   near-falls** and at least one kickout from a finisher. Roman is the
   **heel**; Cody is the **babyface**.
