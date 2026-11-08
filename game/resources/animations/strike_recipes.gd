@@ -9,11 +9,12 @@ extends RefCounted
 ## disease the paired moves had: the clip and the MoveDef disagreed about
 ## how long the move takes, and the FSM wins that argument.
 ##
-## strike_jab.tres runs 20 ticks (0.333s) while a full punch clip is
+## strike_jab.tres used to run 20 ticks (0.333s) while the punch clip was
 ## ~0.87s, so the arm cross-faded back to idle still travelling forward.
-## The jab excerpt is therefore cut to 0.514s (31 ticks) with contact on
-## tick 8, which is then what strike_jab.tres's startup_frames says, so the
-## frame data and the animation finally describe the same punch.
+## The jab is now cut to 0.500s (30 ticks: 10 startup + 4 active + 16
+## recovery) with contact on tick 10, which is what strike_jab.tres's
+## startup_frames says, so the frame data and the animation describe the same
+## punch.
 ##
 ## Measured on the old rig, by sampling the clip's own tracks and running
 ## forward kinematics by hand (neither AnimationPlayer.seek() nor
@@ -142,18 +143,18 @@ const RECIPES := {
 	# real jab is ever sourced -- that is a missing ASSET, not a bug.
 	#
 	# Punch_Cross's contact is measured at t=0.300s of its 1.0s length
-	# (tools/anim/measure_strike_contact.gd). Retimed to 0.514s / 31 ticks that
-	# lands at 0.154s -- tick 9, not the tick 8 the old excerpt hit -- so
-	# strike_jab.tres moves its startup_frames to 9 and gives the tick back out
-	# of recovery, keeping the move 31 ticks and the clip exactly as long as
-	# the state that plays it.
-	# Authored. Punch_Cross retimed to 0.514s had the right duration but
-	# spent it as one slow arc with no snap in it. The authored jab follows
-	# the combat-timing reference -- short anticipation, a 2-frame action
-	# phase, quick recovery -- and throws the LEFT hand, so the jab and the
-	# cross read as different punches rather than the same arm twice.
+	# (tools/anim/measure_strike_contact.gd). Retimed to 0.514s / 31 ticks it
+	# landed at tick 9, not the tick 8 the old excerpt hit. Superseded by the
+	# authored 18-frame Strike_Jab below (contact frame 6, tick 10 of 30).
+	# 18 frames, the worked LEFT jab, contact on frame 6 (= tick 10 of
+	# strike_jab.tres, whose 10+4+16 frame data is 30 ticks / 0.500 s).
+	# Authored with a 4-frame anticipation, a 2-frame action phase, a 4-frame
+	# follow-through and 8 frames of recovery; the head counter-turns against
+	# the chest so the eyes stay on the man through contact. The recipe retimes
+	# the 0.6 s authored clip to 0.500 s, which puts the contact frame exactly
+	# on tick 10.
 	"strike_jab": {"kind": "retime", "source": "Strike_Jab",
-		"seconds": 0.514, "file": AUTHORED},
+		"seconds": 0.500, "file": AUTHORED},
 
 	# BACK to the stitched posed kick, for the same reason as the jab above:
 	# the baked roundhouse put the head below the hips on every one of its 35

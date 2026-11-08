@@ -57,7 +57,13 @@ const MOVES := {
 ## Candidate striking limbs. The one that travels furthest forward over the
 ## clip is the one throwing the strike -- measured, not declared, because a
 ## clip's own name is not evidence about which limb it swings.
-const TIPS := ["hand_l", "hand_r", "foot_l", "foot_r"]
+##
+## lowerarm_* is the ELBOW joint (the upper arm's tail). A bionic elbow is
+## thrown with the point of the elbow leading and the forearm folded, so the
+## hand is behind the contact and the hand-based measure would report the
+## wrong point; adding the elbow lets the tool pick the limb that actually
+## leads. Every hand- or foot-led strike still resolves to its hand/foot.
+const TIPS := ["hand_l", "hand_r", "foot_l", "foot_r", "lowerarm_l", "lowerarm_r"]
 
 ## Radius of the striking surface itself: a fist and a boot are not points.
 ## Chosen to match the limb, and small enough that the contact test stays a

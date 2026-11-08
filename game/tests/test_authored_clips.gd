@@ -16,7 +16,7 @@ const AUTHORED_GLB := "res://assets/animations/wrestling_clips.glb"
 ## longer, and it is cut off mid-action. Both have shipped in this project
 ## before, which is why strike_recipes.gd retimes everything.
 const AUTHORED_LENGTHS := {
-	"strike_jab": 0.514,          # strike_jab.tres: 10+4+17 = 31 frames
+	"strike_jab": 0.500,          # strike_jab.tres: 10+4+16 = 30 frames
 	"strike_cross": 0.667,        # strike_cross.tres: 12+4+24 = 40
 	"strike_kick": 0.583,         # strike_kick.tres: 14+5+16 = 35
 	"strike_kick_heavy": 0.950,   # strike_kick_heavy.tres: 11+5+41 = 57
