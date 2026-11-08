@@ -246,6 +246,23 @@ static func crane_front_shot(at: Vector3, fwd: Vector3, e: float) -> Array:
 			lerpf(CRANE_FRONT_FOV.x, CRANE_FRONT_FOV.y, e)]
 
 
+## The ring-arrival crane at eased progress `e` on a man at `man`: [camera,
+## look, fov]. `toward` picks the side of the corner it stands (the hard
+## camera's).
+static func entry_crane_shot(man: Vector3, toward: Vector3, e: float) -> Array:
+	var post := Vector3(ENTRY_CORNER.x * RingBuilder.POST_XZ, 0.0,
+			ENTRY_CORNER.y * RingBuilder.POST_XZ)
+	var out := RingBuilder.step_out_dir(ENTRY_CORNER)
+	var side := Vector3.UP.cross(out).normalized()
+	if side.dot(toward - post) < 0.0:
+		side = -side
+	var cam := post + out * lerpf(ENTRY_CRANE_BACK.x, ENTRY_CRANE_BACK.y, e) \
+			+ side * lerpf(ENTRY_CRANE_SIDE.x, ENTRY_CRANE_SIDE.y, e) \
+			+ Vector3.UP * lerpf(ENTRY_CRANE_HEIGHT.x, ENTRY_CRANE_HEIGHT.y, e)
+	var look := (post + Vector3.UP * 0.8).lerp(man + Vector3.UP * 1.2, ENTRY_CRANE_FOLLOW)
+	return [cam, look, lerpf(ENTRY_CRANE_FOV.x, ENTRY_CRANE_FOV.y, e)]
+
+
 static func rig_clear_look(at: Vector3, look: Vector3, fov: float) -> Vector3:
 	var to := look - at
 	var right := to.cross(Vector3.UP)
@@ -449,10 +466,10 @@ const ROMAN_BOW_TICKS := 240
 ## ahead of him with the wall behind, long holds, a telephoto face, the low
 ## track, over the shoulder. The high side and the arena-high wides are gone:
 ## both framed him as a small dark figure on an unlit ramp.
-const ROMAN_WALK_SHOTS := [["crane_front", 8 * ROMAN_BEAT], ["face_walk", 6 * ROMAN_BEAT],
+const ROMAN_WALK_SHOTS := [["crane_front", 8 * ROMAN_BEAT], ["steadicam_low", 6 * ROMAN_BEAT],
 		["steadicam_low", 6 * ROMAN_BEAT], ["over_shoulder", 5 * ROMAN_BEAT],
-		["crane_front", 7 * ROMAN_BEAT], ["barricade_track", 5 * ROMAN_BEAT],
-		["face_walk", 5 * ROMAN_BEAT]]
+		["crane_front", 7 * ROMAN_BEAT], ["over_shoulder", 5 * ROMAN_BEAT],
+		["steadicam_low", 5 * ROMAN_BEAT]]
 ## Until then the broadcast shows the building and his video: six shots, each
 ## a slow move eased in and out (blender-cameras: push-ins, a truck, a wide
 ## establishing lens), in seconds. [from, to, look_from, look_to, fov_from,
@@ -561,7 +578,7 @@ const CODY_WHOA_LOW_TICKS := 200
 ## showed him as a dot on a dark ramp, the shot Roman's cut also lost.
 ## [shot, seconds], cycled; whole beats of his music (A4).
 const CODY_WALK_SHOTS := [["crane_front", 8 * CODY_BEAT], ["over_shoulder", 5 * CODY_BEAT],
-		["face_walk", 5 * CODY_BEAT], ["barricade_track", 5 * CODY_BEAT]]
+		["steadicam_low", 10 * CODY_BEAT]]
 ## What he does with his arms on the walk (refs/entrances.md, C-39 / C-SS /
 ## C-SNME): yells at one side of the aisle with a fist up, points a fan out,
 ## yells at the other side, one fist to the roof. Each ONCE, one to a beat of
@@ -634,7 +651,7 @@ const KENNY_WINGS_TICKS := 240
 ## Down the ramp as Cody's cut is, on his beat; hands slapped along one side
 ## of the aisle and then the other (wrestling_clips.py KENNY_GESTURES).
 const KENNY_WALK_SHOTS := [["crane_front", 8 * KENNY_BEAT], ["over_shoulder", 5 * KENNY_BEAT],
-		["face_walk", 5 * KENNY_BEAT], ["barricade_track", 5 * KENNY_BEAT]]
+		["steadicam_low", 10 * KENNY_BEAT]]
 const KENNY_WALK_GESTURES := ["strikes/kenny_walk_slap_l", "strikes/kenny_walk_slap_r"]
 ## His video starting on the big screen: from a crane over the floor, square
 ## to the wall, the whole screen and the dark stage under it (owner: the old
@@ -761,6 +778,23 @@ const STEADICAM_FRONT_FOV := 28.0
 ## his chest looking up -- landing where the low tracking shot he likes
 ## lives -- while the lens tightens from the whole man to knees-up.
 ## [start, end] of the move, eased; metres from him, his forward and right.
+## The ring arrival's crane (the owner, 3 Nov: up the steps, through the
+## ropes and the props to Aubrey "I want to keep all of that wide angle
+## shots ... consider if a crane camera makes sense"). One jib off the
+## entry corner, outside the ring on the hard camera's side: it opens high on
+## the steps, the corner and the whole ring, and over ENTRY_CRANE_TICKS
+## booms down and in while it keeps him in frame -- the floor, the steps,
+## the apron, the ropes, his mark and every hand-off on one move, no cuts.
+## It replaced floor_track, steps_rear, ringside, bow_close, apron_low,
+## ring_behind_low and ring_low: seven angles in about thirty seconds.
+const ENTRY_CRANE_BACK := Vector2(6.5, 5.0)
+const ENTRY_CRANE_SIDE := Vector2(4.5, 3.5)
+const ENTRY_CRANE_HEIGHT := Vector2(5.2, 2.6)
+const ENTRY_CRANE_FOV := Vector2(52.0, 44.0)
+const ENTRY_CRANE_TICKS := 900
+## How much of the look follows him (the rest stays on the corner): the
+## frame drifts with him rather than chasing him.
+const ENTRY_CRANE_FOLLOW := 1.0
 const CRANE_FRONT_AHEAD := Vector2(4.6, 3.0)
 const CRANE_FRONT_HEIGHT := Vector2(4.2, 1.15)
 const CRANE_FRONT_SIDE := Vector2(1.4, 0.5)
@@ -824,6 +858,8 @@ var _skip_button: Button
 var _dimmed := {}
 ## Lights _dim_house re-coloured, and the colour each had.
 var _tinted := {}
+## Ticks into the ring-arrival crane's move; -1 when it is not on.
+var _entry_crane_ticks := -1
 ## The stands' light before his blackout lifted it (null: not lifted).
 var _crowd_light_was: Variant = null
 var _env: Environment
@@ -1345,9 +1381,9 @@ func _add_entrance(w: WrestlerController, entrance_x: float, side: String) -> vo
 	var mark: Transform3D = _mark[w]
 	_beats.append({"kind": "walk", "who": w,
 			"path": [inside, mark.origin],
-			"shot": "ringside", "on_mat": true})
+			"shot": "entry_crane", "on_mat": true})
 	_beats.append({"kind": "turn", "who": w, "facing": -mark.basis.z,
-			"shot": "ringside", "settle": true, "snap_end": true,
+			"shot": "entry_crane", "settle": true, "snap_end": true,
 			"events": [[SETTLE_TICKS, "tron_off"]]})
 
 
@@ -1818,7 +1854,7 @@ func _add_roman_entrance(w: WrestlerController, entrance_x: float, side: String)
 			"shot": "crane_front"}))
 	_beats.append(_with(blue, {"kind": "walk", "who": w, "path": [two_thirds, lip],
 			"speed": ROMAN_WALK_SPEED, "walk_clip": ROMAN_WALK_CLIP,
-			"shot": "face_walk"}))
+			"shot": "steadicam_low"}))
 	# On the lip, the building looked over: the push in, the telephoto
 	# face, the low three-quarter -- sharing what is left before the finger.
 	var push_s := lip_s * 0.42
@@ -1831,7 +1867,7 @@ func _add_roman_entrance(w: WrestlerController, entrance_x: float, side: String)
 	_beats.append(_with(blue, {"kind": "pose", "who": w,
 			"ticks": _secs(t0 + push_s, t0 + push_s + face_s),
 			"clip": "strikes/roman_stand", "facing": Vector3.BACK,
-			"shot": "face_walk"}))
+			"shot": "steadicam_low"}))
 	_beats.append(_with(blue, {"kind": "pose", "who": w,
 			"ticks": _secs(t0 + push_s + face_s, finger_start),
 			"clip": "strikes/roman_stand", "facing": Vector3.BACK,
@@ -1858,27 +1894,27 @@ func _add_roman_entrance(w: WrestlerController, entrance_x: float, side: String)
 	var centre := Vector3(-0.4, 0.0, -0.6)
 	_beats.append({"kind": "walk", "who": w, "path": [in_at, centre],
 			"speed": ROMAN_WALK_SPEED, "walk_clip": ROMAN_WALK_CLIP,
-			"shot": "ringside", "on_mat": true})
+			"shot": "entry_crane", "on_mat": true})
 	_beats.append({"kind": "turn", "who": w, "facing": Vector3.BACK,
-			"shot": "ring_low"})
+			"shot": "entry_crane"})
 	# The finger to the hard camera, then hands on hips, staring, close.
 	_beats.append({"kind": "pose", "who": w, "ticks": 240,
 			"clip": "strikes/finger_hold", "facing": Vector3.BACK,
-			"shot": "ring_behind_out"})
+			"shot": "entry_crane"})
 	# Hands on hips; Aubrey, back from the timekeeper, comes for the ula fala.
 	_beats.append({"kind": "pose", "who": w, "ticks": 300,
 			"clip": "strikes/hands_hips", "facing": Vector3.BACK,
-			"shot": "face_walk", "events": [[1, "prop_call_fala"]]})
+			"shot": "steadicam_low", "events": [[1, "prop_call_fala"]]})
 	_beats.append({"kind": "pose", "who": w, "ticks": 90,
 			"clip": "strikes/ula_fala_off", "facing": Vector3.BACK,
-			"shot": "ring_low", "events": [[ULA_FALA_LIFT_AT, "fala_off"]]})
+			"shot": "entry_crane", "events": [[ULA_FALA_LIFT_AT, "fala_off"]]})
 	_beats.append({"kind": "pose", "who": w, "ticks": _secs(0.0, HAND_OUT_SECONDS),
 			"clip": "strikes/prop_hand_out_r", "facing": Vector3.BACK,
-			"shot": "ring_low", "events": [[1, "prop_pass_fala"]]})
+			"shot": "entry_crane", "events": [[1, "prop_pass_fala"]]})
 	var mark: Transform3D = _mark[w]
 	_beats.append({"kind": "walk", "who": w, "path": [centre, mark.origin],
 			"speed": ROMAN_WALK_SPEED, "walk_clip": ROMAN_WALK_CLIP,
-			"shot": "ringside", "on_mat": true})
+			"shot": "entry_crane", "on_mat": true})
 	_beats.append({"kind": "turn", "who": w, "facing": -mark.basis.z,
 			"shot": "end_wide", "settle": true, "snap_end": true,
 			"events": [[SETTLE_TICKS, "tron_off"], [SETTLE_TICKS, "dim_off"]]})
@@ -2049,7 +2085,7 @@ func _add_cody_entrance(w: WrestlerController, entrance_x: float, _side: String)
 	var stand := post - out_dir * CORNER_ROOT_M
 	_beats.append({"kind": "walk", "who": w, "path": [in_at, stand],
 			"speed": CODY_WALK_SPEED, "walk_clip": CODY_WALK_CLIP,
-			"shot": "ring_behind_low", "on_mat": true})
+			"shot": "entry_crane", "on_mat": true})
 	_beats.append({"kind": "turn", "who": w, "facing": out_dir, "shot": "corner_low"})
 	_beats.append({"kind": "clip", "who": w, "clip": "strikes/corner_climb",
 			"ticks": 72, "from": stand, "to": stand, "facing": out_dir,
@@ -2067,23 +2103,23 @@ func _add_cody_entrance(w: WrestlerController, entrance_x: float, _side: String)
 	var inward := (Vector3(mark.origin.x - stand.x, 0.0, mark.origin.z - stand.z)).normalized()
 	_beats.append({"kind": "clip", "who": w, "clip": "strikes/coat_off",
 			"ticks": 120, "from": stand, "to": stand, "facing": out_dir,
-			"shot": "ring_low", "pass_facing": inward,
+			"shot": "entry_crane", "pass_facing": inward,
 			"events": [[1, "prop_call_coat"], [COAT_OFF_AT, "coat_off"]]})
-	_beats.append({"kind": "turn", "who": w, "facing": inward, "shot": "ring_low"})
+	_beats.append({"kind": "turn", "who": w, "facing": inward, "shot": "entry_crane"})
 	_beats.append({"kind": "pose", "who": w, "ticks": _secs(0.0, HAND_OUT_SECONDS),
 			"clip": "strikes/prop_hand_out_r", "facing": inward,
-			"shot": "ring_low", "events": [[1, "prop_pass_coat"]]})
+			"shot": "entry_crane", "events": [[1, "prop_pass_coat"]]})
 	_beats.append({"kind": "walk", "who": w, "path": [stand, mark.origin],
 			"speed": CODY_WALK_SPEED, "walk_clip": CODY_WALK_CLIP,
-			"shot": "ringside", "on_mat": true})
+			"shot": "entry_crane", "on_mat": true})
 	# On him while the coat goes to the timekeeper's table: the far end wide
 	# held empty for the whole carry -- 10.5 s of one static frame on the
 	# 3 Nov storyboard. The end wide is the handover's alone.
 	_beats.append({"kind": "turn", "who": w, "facing": -mark.basis.z,
-			"shot": "ringside", "settle": true, "snap_end": true,
+			"shot": "entry_crane", "settle": true, "snap_end": true,
 			"events": [[SETTLE_TICKS, "tron_off"]]})
 	# Nothing moves on until the coat is on the timekeeper's table.
-	_beats.append({"kind": "hold", "who": w, "ticks": 30, "shot": "ringside",
+	_beats.append({"kind": "hold", "who": w, "ticks": 30, "shot": "entry_crane",
 			"wait_idle": true})
 
 
@@ -2124,7 +2160,7 @@ func _add_kenny_entrance(w: WrestlerController, entrance_x: float, side: String)
 			"speed": KENNY_WALK_SPEED, "walk_clip": KENNY_WALK_CLIP, "appear": true,
 			"shot": "stage_wide"}))
 	_beats.append(_with(lit, {"kind": "walk", "who": w, "path": [half, lip],
-			"speed": KENNY_WALK_SPEED, "walk_clip": KENNY_WALK_CLIP, "shot": "face_walk"}))
+			"speed": KENNY_WALK_SPEED, "walk_clip": KENNY_WALK_CLIP, "shot": "steadicam_low"}))
 	# On the lip, looking the building over until the lift: pushed in on, the
 	# long lens from down the ramp, then close.
 	var at_lip := KENNY_OUT + _flat(emerge).distance_to(_flat(lip)) / KENNY_WALK_SPEED
@@ -2156,7 +2192,7 @@ func _add_kenny_entrance(w: WrestlerController, entrance_x: float, side: String)
 	var stand := post - out_dir * CORNER_ROOT_M
 	_beats.append({"kind": "walk", "who": w, "path": [in_at, stand],
 			"speed": KENNY_WALK_SPEED, "walk_clip": KENNY_WALK_CLIP,
-			"shot": "ring_behind_low", "on_mat": true})
+			"shot": "entry_crane", "on_mat": true})
 	_beats.append({"kind": "turn", "who": w, "facing": out_dir, "shot": "corner_low"})
 	_beats.append({"kind": "clip", "who": w, "clip": "strikes/corner_climb",
 			"ticks": 72, "from": stand, "to": stand, "facing": out_dir,
@@ -2170,7 +2206,7 @@ func _add_kenny_entrance(w: WrestlerController, entrance_x: float, side: String)
 	var mark: Transform3D = _mark[w]
 	_beats.append({"kind": "walk", "who": w, "path": [stand, mark.origin],
 			"speed": KENNY_WALK_SPEED, "walk_clip": KENNY_WALK_CLIP,
-			"shot": "ringside", "on_mat": true})
+			"shot": "entry_crane", "on_mat": true})
 	_beats.append({"kind": "turn", "who": w, "facing": -mark.basis.z,
 			"shot": "end_wide", "settle": true, "snap_end": true,
 			"events": [[SETTLE_TICKS, "tron_off"], [SETTLE_TICKS, "dim_off"]]})
@@ -2220,21 +2256,21 @@ func _add_route_in(w: WrestlerController, cut: Vector3, speed: float,
 		while split < curve.size() - 2 and float(walked[split]) < float(walked[-1]) * 0.5:
 			split += 1
 		_beats.append({"kind": "walk", "who": w, "path": [cut] + curve.slice(0, split + 1),
-				"speed": speed, "walk_clip": walk_clip, "shot": "floor_track", "cut": true})
+				"speed": speed, "walk_clip": walk_clip, "shot": "entry_crane", "cut": true})
 		_beats.append({"kind": "walk", "who": w, "path": curve.slice(split),
-				"speed": speed, "walk_clip": walk_clip, "shot": "steps_rear"})
+				"speed": speed, "walk_clip": walk_clip, "shot": "entry_crane"})
 	else:
 		_beats.append({"kind": "walk", "who": w, "path": [cut] + curve,
-				"speed": speed, "walk_clip": walk_clip, "shot": "ringside", "cut": true})
-	_beats.append({"kind": "turn", "who": w, "facing": -out, "shot": "ringside"})
+				"speed": speed, "walk_clip": walk_clip, "shot": "entry_crane", "cut": true})
+	_beats.append({"kind": "turn", "who": w, "facing": -out, "shot": "entry_crane"})
 	if floor_clip != "":
 		_beats.append({"kind": "pose", "who": w, "ticks": floor_ticks,
-				"clip": floor_clip, "facing": -out, "shot": "bow_close"})
+				"clip": floor_clip, "facing": -out, "shot": "entry_crane"})
 	var top_at := Vector3(top.x, RingBuilder.STEP_TOP_Y, top.z)
 	_beats.append({"kind": "clip", "who": w, "clip": "strikes/climb_steps",
 			"ticks": int(round(CLIMB_SECONDS * TPS)),
 			"from": Vector3(climb_from.x, surface_y(climb_from), climb_from.z),
-			"to": top_at, "facing": -out, "shot": "steps_rear", "plant": true})
+			"to": top_at, "facing": -out, "shot": "entry_crane", "plant": true})
 	# Onto the apron, a pace along the side from the post.
 	var apron := Vector3(ENTRY_CORNER.x * (RingBuilder.TURNBUCKLE_PAD_XZ - APRON_ALONG_M),
 			RingBuilder.APRON_TOP,
@@ -2246,16 +2282,16 @@ func _add_route_in(w: WrestlerController, cut: Vector3, speed: float,
 	var into := Vector3(0.0, 0.0, -ENTRY_CORNER.y)
 	_beats.append({"kind": "clip", "who": w, "clip": "strikes/apron_step",
 			"ticks": int(round(APRON_STEP_SECONDS * TPS)),
-			"from": top_at, "to": apron, "facing": across, "shot": "apron_low",
+			"from": top_at, "to": apron, "facing": across, "shot": "entry_crane",
 			"face_to": into, "turn_from": APRON_TURN_FROM, "plant": true})
 	if survey_clip != "":
 		_beats.append({"kind": "clip", "who": w, "clip": survey_clip,
-				"ticks": 60, "from": apron, "to": apron, "facing": into, "shot": "ringside"})
+				"ticks": 60, "from": apron, "to": apron, "facing": into, "shot": "entry_crane"})
 	var inside := apron + into * APRON_ROPE_TO.x
 	inside.y = 0.0  # the canvas is level with the ring centre; the apron is not.
 	_beats.append({"kind": "clip", "who": w, "clip": "strikes/rope_step_through_apron",
 			"ticks": int(round(APRON_ROPE_SECONDS * TPS)),
-			"from": apron, "to": inside, "facing": into, "shot": "apron_low", "plant": true})
+			"from": apron, "to": inside, "facing": into, "shot": "entry_crane", "plant": true})
 	return inside
 
 
@@ -2768,6 +2804,8 @@ func _frame(beat: Dictionary, delta: float, force_cut := false) -> void:
 func _frame_shot(beat: Dictionary, delta: float, force_cut := false) -> void:
 	if not _camera:
 		return
+	if beat.get("shot", "") != "entry_crane":
+		_entry_crane_ticks = -1
 	var w: WrestlerController = beat.get("who")
 	var first := force_cut or _tick == 1
 	match beat.get("shot", beat["kind"]):
@@ -2853,6 +2891,17 @@ func _frame_shot(beat: Dictionary, delta: float, force_cut := false) -> void:
 		"ringside":
 			_camera.set_entrance_shot(RINGSIDE_AT, w.global_position + Vector3.UP * 1.0,
 					RINGSIDE_FOV, true)
+		"entry_crane":
+			# One move across beats: its clock runs while the shot does, and it
+			# cuts in only when it starts.
+			if _entry_crane_ticks < 0:
+				_entry_crane_ticks = 0
+			elif delta > 0.0:
+				_entry_crane_ticks += 1
+			var e_r := smoothstep(0.0, 1.0, float(_entry_crane_ticks) / float(ENTRY_CRANE_TICKS))
+			var rc := entry_crane_shot(w.global_position, _camera.hard_cam_position, e_r)
+			_camera.set_entrance_shot(rc[0], rig_clear_look(rc[0], rc[1], rc[2]), rc[2],
+					_entry_crane_ticks == 0, delta)
 		"crane_front":
 			var fc := _flat(-w.global_transform.basis.z).normalized()
 			var e_c := smoothstep(0.0, 1.0, float(_tick) / maxf(float(beat["ticks"]), 1.0))

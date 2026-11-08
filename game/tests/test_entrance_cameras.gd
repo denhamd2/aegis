@@ -186,9 +186,17 @@ func test_every_shot_a_beat_uses_can_be_framed() -> void:
 func test_the_walk_cuts_follow_from_behind_as_2k26_does() -> void:
 	var cody := EntranceDirector.CODY_WALK_SHOTS.map(func(s: Array) -> String: return s[0])
 	var roman := EntranceDirector.ROMAN_WALK_SHOTS.map(func(s: Array) -> String: return s[0])
-	assert_array(cody).contains(["crane_front", "over_shoulder", "face_walk",
-			"barricade_track"])
-	assert_array(roman).contains(["crane_front", "steadicam_low", "face_walk", "over_shoulder"])
+	assert_array(cody).contains(["crane_front", "over_shoulder", "steadicam_low"])
+	assert_array(roman).contains(["crane_front", "steadicam_low", "over_shoulder"])
+	# The owner, 3 Nov: "too many camera angles", and not the chest-up
+	# handheld: three angles on the walk.
+	for list: Array in [EntranceDirector.CODY_WALK_SHOTS, EntranceDirector.ROMAN_WALK_SHOTS,
+			EntranceDirector.KENNY_WALK_SHOTS]:
+		var kinds := {}
+		for shot: Array in list:
+			kinds[shot[0]] = true
+			assert_str(String(shot[0])).is_not_equal("face_walk")
+		assert_int(kinds.size()).is_less_equal(3)
 	# The owner, 3 Nov: the half-body shot "looks too stiff" -- the crane
 	# replaces it on every walk.
 	for list: Array in [EntranceDirector.CODY_WALK_SHOTS, EntranceDirector.ROMAN_WALK_SHOTS,
@@ -430,3 +438,27 @@ func test_the_walk_crane_never_sees_the_rig() -> void:
 			bad["n"] += 1
 			bad["where"] = str(camera.global_position))
 	assert_int(bad["n"]).override_failure_message("rig in the crane at " + bad["where"]).is_equal(0)
+
+
+## The ring arrival is one crane: from the floor to his mark and the props,
+## no cut, the rig never in it, and him always in frame.
+func test_the_ring_arrival_is_one_crane_move() -> void:
+	var seen := {"crane": 0, "cuts": 0, "rig": 0, "lost": 0}
+	var last := [""]
+	_run(["roman", "cody"], func(beat: Dictionary, camera: Camera3D) -> void:
+		var shot := String(beat.get("shot", ""))
+		if shot == "entry_crane":
+			seen["crane"] += 1
+			var look := camera.global_position - camera.global_basis.z
+			if EntranceDirector.rig_in_frame(camera.global_position, look, camera.fov) > 0:
+				seen["rig"] += 1
+			var w: WrestlerController = beat.get("who")
+			# (is_position_in_frustum is not live headless: measure the angle)
+			if w:
+				var to := w.global_position + Vector3.UP - camera.global_position
+				if rad_to_deg((-camera.global_basis.z).angle_to(to)) > camera.fov * 0.5:
+					seen["lost"] += 1
+		last[0] = shot)
+	assert_int(seen["crane"]).is_greater(600)
+	assert_int(seen["rig"]).override_failure_message("rig in the arrival crane").is_equal(0)
+	assert_int(seen["lost"]).override_failure_message("lost him %d ticks" % seen["lost"]).is_less(30)
