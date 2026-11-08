@@ -679,6 +679,9 @@ const HANDOFF_MAX_WAIT := 60 * 25
 ## The OTC look is blue (R-41, R-CJ, and his own wall video): his portal
 ## accents go blue, and red only for the pyro (R-41 42 s).
 const ROMAN_BLUE := Color(0.22, 0.52, 1.0)
+## Kenny's stage, from the owner's Dynamite clip: the set's blue flames on the
+## screens, blue light and blue smoke round him.
+const KENNY_BLUE := Color(0.26, 0.56, 1.0)
 const ROMAN_PYRO_RED := Color(1.0, 0.10, 0.16)
 ## His shots. The push-in on the mark: from the ramp, a slow dolly in and a
 ## lens tightening on him. The hero shot: low at his feet looking up, for the
@@ -2137,7 +2140,8 @@ func _add_kenny_entrance(w: WrestlerController, entrance_x: float, side: String)
 	var emerge := Vector3(entrance_x, deck, ArenaBuilder.ENTRANCE_Z)
 	var lip := Vector3(0.0, deck, ArenaBuilder.STAGE_FRONT - 0.6)
 	var foot_of_ramp := Vector3(0.0, 0.0, CUT_TO_Z)
-	var lit := {"lights": side}
+	# The owner's clip (8 Nov): his stage is blue -- light, smoke and screens.
+	var lit := {"lights": side, "light_color": KENNY_BLUE}
 	# Every beat up to the pose is placed by its music time, counted in whole
 	# ticks from his first: rounding each beat on its own drifted the pyro.
 	var first := _beats.size()
@@ -2156,9 +2160,11 @@ func _add_kenny_entrance(w: WrestlerController, entrance_x: float, side: String)
 				"shot": cut[1]}))
 	# Out on the onset, to the lip at his own pace.
 	var half := emerge.lerp(lip, 0.5)
+	# Out of blue smoke (the clip, 0:30): it rises as he walks out and clears
+	# on the pyro.
 	_beats.append(_with(lit, {"kind": "walk", "who": w, "path": [emerge, half],
 			"speed": KENNY_WALK_SPEED, "walk_clip": KENNY_WALK_CLIP, "appear": true,
-			"shot": "stage_wide"}))
+			"shot": "stage_wide", "fog_at": emerge, "events": [[1, "fog_on"]]}))
 	_beats.append(_with(lit, {"kind": "walk", "who": w, "path": [half, lip],
 			"speed": KENNY_WALK_SPEED, "walk_clip": KENNY_WALK_CLIP, "shot": "steadicam_low"}))
 	# On the lip, looking the building over until the lift: pushed in on, the
@@ -2166,7 +2172,7 @@ func _add_kenny_entrance(w: WrestlerController, entrance_x: float, side: String)
 	var at_lip := KENNY_OUT + _flat(emerge).distance_to(_flat(lip)) / KENNY_WALK_SPEED
 	var pose_from := KENNY_LIFT - float(KENNY_PYRO_AT) / TPS
 	for hold: Array in [[lerpf(at_lip, pose_from, 0.45), "stage_push"],
-			[lerpf(at_lip, pose_from, 0.7), "ramp_long"], [pose_from, "face_walk"]]:
+			[lerpf(at_lip, pose_from, 0.7), "ramp_long"], [pose_from, "hero_low"]]:
 		var ticks: int = to.call(hold[0])
 		if ticks > 0:
 			_beats.append(_with(lit, {"kind": "pose", "who": w, "ticks": ticks,
@@ -2177,7 +2183,8 @@ func _add_kenny_entrance(w: WrestlerController, entrance_x: float, side: String)
 	# to the ring rendered in the dark.
 	_beats.append(_with(lit, {"kind": "pose", "who": w, "ticks": KENNY_PYRO_AT + 30,
 			"clip": "strikes/kenny_stage_pose", "facing": Vector3.BACK, "shot": "hero_low",
-			"events": [[KENNY_PYRO_AT, "pyro_stage"], [KENNY_PYRO_AT, "house_walk"]]}))
+			"events": [[KENNY_PYRO_AT, "pyro_kenny"], [KENNY_PYRO_AT, "house_walk"],
+					[KENNY_PYRO_AT, "fog_off"]]}))
 	_beats.append(_with(lit, {"kind": "pose", "who": w,
 			"ticks": KENNY_POSE_TICKS - KENNY_PYRO_AT - 30, "clip": "strikes/kenny_stage_pose",
 			"facing": Vector3.BACK, "shot": "stage_wide"}))
@@ -2588,7 +2595,7 @@ func _event(w: WrestlerController, what: String) -> void:
 			_smoke_on(w)
 		"fog_off":
 			_smoke_off()
-		"pyro_stage", "pyro_over_ring", "pyro_roman":
+		"pyro_stage", "pyro_over_ring", "pyro_roman", "pyro_kenny":
 			if what == "pyro_roman" and _lights and _lights.has_method("sync_beat"):
 				_lights.sync_beat(ROMAN_BEAT)
 			if _pyro == null:

@@ -873,7 +873,8 @@ func test_kenny_walks_his_own_entrance() -> void:
 		assert_bool(clips.has(clip)).override_failure_message("no %s" % clip).is_true()
 	assert_array(walks.keys()).contains_exactly([EntranceDirector.KENNY_WALK_CLIP])
 	assert_array(gestures).contains_exactly(EntranceDirector.KENNY_WALK_GESTURES)
-	for e in ["tron_on", "dim_on", "pyro_stage", "pyro_over_ring", "tron_off", "dim_off"]:
+	for e in ["tron_on", "dim_on", "pyro_kenny", "fog_on", "fog_off", "pyro_over_ring", "tron_off",
+			"dim_off"]:
 		assert_bool(events.has(e)).override_failure_message("no %s" % e).is_true()
 	assert_str(EntranceDirector._wait_clip(kenny)).is_equal("strikes/kenny_stand")
 	# Every clip he plays is in the game.
@@ -898,7 +899,7 @@ func test_kennys_beats_land_on_the_music() -> void:
 	var pyro_ticks: Array[int] = []
 	var clock: Array[int] = [0]
 	director.cue.connect(func(what: String) -> void:
-		if what == "pyro_stage":
+		if what == "pyro_kenny":
 			pyro_ticks.append(clock[0]))
 	while ticks < 20000 and director._beat < director._beats.size():
 		var b: Dictionary = director._beats[director._beat]

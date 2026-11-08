@@ -431,7 +431,7 @@ func _on_cue(what: String) -> void:
 		"pyro_over_ring":
 			# Comet jets off the post tops: the launch roars, the jets crack.
 			_schedule_pyro(comet_sounds(EntrancePyro.cody_ring_plan()))
-		"pyro_roman":
+		"pyro_roman", "pyro_kenny":
 			# Flame units: the roar of the fire under the boom.
 			sfx.play("pyro_boom", -2.0 + ENTRANCE_PYRO_BOOST_DB)
 			sfx.play("whoosh", -4.0 + ENTRANCE_PYRO_BOOST_DB)

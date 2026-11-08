@@ -151,6 +151,15 @@ func fire(cue: String) -> void:
 				_shell_volley(SET_SHELL_XS, SET_SHELL_HEIGHT, SHELL_RED))
 			_flash(Vector3(0.0, 4.0, ArenaBuilder.STAGE_FRONT - 1.0), 30.0, 34.0, 1.5,
 					ROMAN_RED)
+		"kenny":
+			# The owner's Dynamite clip (8 Nov, gauntlet/refs/entrances/
+			# kenny_dynamite.md): flame jets either side of the set while he
+			# stands centre-stage with his arms up, under a white flash -- fire,
+			# not a shell barrage.
+			for k in FLAME_PULSES:
+				_later(k * FLAME_PULSE_GAP, _flame_pulse)
+			_flash(Vector3(0.0, 5.0, ArenaBuilder.STAGE_FRONT - 1.0), 30.0, 32.0, 0.6,
+					STROBE_COLOR)
 		"cody_hit":
 			# The WHOA: comet jets chased across the set on his beat, and up
 			# from both edges of the ramp.

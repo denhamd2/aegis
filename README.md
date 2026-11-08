@@ -11579,3 +11579,13 @@ What the renders show, against the references:
 **Hair: a strand-rendered card atlas.** The owner's brief asked for "visible strand detail rather than solid plastic-looking clumps". The curl-card atlas was 2D strokes. `paint_atlas` now builds each column as a 3D clump of strands: a coil for the curls, a slow wave for the crown, with 12% thin flyaways. It projects the clump and shades every segment by Kajiya-Kay (lit where a strand runs across the light) and by depth (the clump's back strands in its own shade), drawing back to front so the front strands cross darker ones behind. Its level matches the old atlas, so the vertex colour still carries the gold. Under match light the curls now read as separate locks with shadow between the coils. Same triangles (39.9k); numpy and PIL only, and the rebuild is byte-identical. Before and after: `kenny_hair_strand_atlas.jpg`.
 
 **Skin: less tanned.** The owner: "I think we made him too tanned ... more like the references". Under match light his forehead rendered G/R 0.63, B/R 0.56, against the studio three-view's 0.72 and 0.63: too orange rather than too dark. `KENNY_SKIN_TINT` 0.72/0.62/0.56 becomes 0.72/0.68/0.64, and the forehead now renders 0.68/0.62. Sheet: `kenny_skin_pass10.jpg` (before, after, the reference).
+
+## 8 Nov — Kenny's entrance, matched to the owner's Dynamite clip
+
+The owner shared his Dynamite entrance (113 s; breakdown in `gauntlet/refs/entrances/kenny_dynamite.md`, frames in `kenny_dynamite_a/b.jpg`). Against it:
+- **Blue.** His stage beats are lit `KENNY_BLUE`, as the clip's blue light and blue-flame screens are. He walks out through blue smoke (`fog_on` at the portal), which clears on the pyro.
+- **The pose.** Both arms straight up overhead with index fingers pointing to the roof (clip 0:42), where the first pass had the arms out wide. Then the finger guns at the crowd, as before. `Kenny_Stage_Pose` is re-keyed; the clips were rebuilt and the strike and paired libraries re-baked; the sha is re-pinned.
+- **Fire, not shells.** A new `EntrancePyro` cue, `kenny`: flame pulses either side of the set and a white flash (clip 0:45–1:03). Its sound is the flame roar Roman's uses.
+- **No chest-up handheld.** His last hold before the lift was still `face_walk`; it is now `hero_low`.
+
+**Gates.** `test_entrance_director` (its Kenny tests now expect `pyro_kenny`, `fog_on` and `fog_off`), `test_entrance_cameras`, `test_match_audio` and the clip gates all pass: 136 cases.
