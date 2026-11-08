@@ -182,6 +182,7 @@ FLYAWAY_PER_CARD = 0.35
 FLYAWAY_WIDTH = (0.005, 0.005)
 FLYAWAY_LENGTH = (0.08, 0.12)
 FLYAWAY_SEGMENTS = 6
+FLYAWAY_FLOOR = 1.44
 ## The lengths beside the face (round less than FRONT_ANGLE): further off the
 ## head, drifting out, turned toward the front by FRONT_TWIST degrees.
 FRONT_ANGLE = 135.0
@@ -542,7 +543,7 @@ def build_slick(s: Scalp, arm):
     return mesh_object("CurlSlick", arm, verts, faces, uvs, colours, weights, normals)
 
 
-def fall(root, normal, length, standoff, bvh, drift=None, floor=None, clamp_x=None):
+def fall(root, normal, length, standoff, bvh, drift=None, z_floor=None, clamp_x=None):
     """The ringlet's line from its root, resampled every RINGLET_STEP."""
     # Loop 8: rooted on the scalp, lifting to its standoff over 5 cm -- a
     # root set off the scalp read as a floating flap.
@@ -595,7 +596,9 @@ def fall(root, normal, length, standoff, bvh, drift=None, floor=None, clamp_x=No
         if clamp_x is not None and abs(p.x) > clamp_x:
             p = Vector((math.copysign(clamp_x, p.x), p.y, p.z))
             pts[-1] = p
-        if total >= length or p.z <= (RINGLET_FLOOR if floor is None else floor):
+        # (z_floor: not `floor`, which the drape below reuses for a radius --
+        # the shadowing let every length run past its floor.)
+        if total >= length or p.z <= (RINGLET_FLOOR if z_floor is None else z_floor):
             break
         # (Loop 4 tried stopping any strand once pushed and below 1.56: the
         # push fires on the skull, so every length ended at the neck -- a bob.
@@ -710,6 +713,9 @@ def build_flyaways(samples, rng, tone):
                  + side * float(rng.normal(0.0, 0.15))).normalized()
             if j:
                 q = q + d * (length / FLYAWAY_SEGMENTS)
+                # Never below his shoulders (the owner, 25 Oct: "His hair
+                # looks too big"; test_kenny_model's floor).
+                q = Vector((q.x, q.y, max(q.z, FLYAWAY_FLOOR)))
             c = [min(tc * tone, 1.0) for tc in tip_c] + [0.6 + 0.4 * t]
             for f in (-0.5, 0.5):
                 verts.append(q + side * width * f)
