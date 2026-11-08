@@ -11573,3 +11573,5 @@ What the renders show, against the references:
 - the head is still Cody's face reshaped (the likeness gap the judge put at about 7);
 - the curls read as twisted ropes, not loose ringlets (the 5/10 hair);
 - the skin is greyer and duller under a studio key than under the arena's warm light.
+
+**Tear ducts.** The owner's atlas painted the inner corners of the eyes as plain lid skin. `build_kenny_textures.caruncles` lays a small, feathered pink-red caruncle at each inner canthus (`CARUNCLES`, 65%).

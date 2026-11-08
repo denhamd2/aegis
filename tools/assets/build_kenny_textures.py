@@ -384,6 +384,23 @@ def beard_masks(point, cover, theta):
     return beard.astype(np.float32), cheek.astype(np.float32)
 
 
+## The tear ducts (caruncles): a small moist pink-red at each eye's inner
+## corner, which the owner's atlas painted over as lid skin. [centre x, y,
+## radius x, y] in atlas fractions, at the inner end of EYES' openings.
+CARUNCLES = [(0.426, 0.353, 0.0050, 0.0035), (0.570, 0.353, 0.0050, 0.0035)]
+CARUNCLE = np.array([196.0, 112.0, 104.0])
+CARUNCLE_STRENGTH = 0.65
+
+
+def caruncles(out):
+    h, w = out.shape[:2]
+    m = np.zeros((h, w), np.float32)
+    for e in CARUNCLES:
+        m = np.maximum(m, ellipse_mask(w, h, e, 3))
+    m = m[..., None] * CARUNCLE_STRENGTH
+    return out * (1 - m) + CARUNCLE * m
+
+
 def owner_face(out):
     """The owner's face texture (OWNER_FACE) over FACE_BOX, rows re-spaced,
     levelled onto the skin, its edge feathered."""
@@ -536,6 +553,7 @@ def head() -> None:
     colour = (SCALP_BLOND * (1 - root) + SCALP_ROOT * root) * np.clip(ratio, 0.8, 1.1)
     out = out * (1 - hair[..., None]) + colour * hair[..., None]
     out = owner_face(out)
+    out = caruncles(out)
     save(out, HEAD_OUT, alpha)
 
 
