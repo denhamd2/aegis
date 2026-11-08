@@ -163,9 +163,13 @@ func test_eyes_are_kennys() -> void:
 				int(size * (0.5 + 4.0 / 30.5 * sin(angle)))) / 64.0
 		white += image.get_pixel(int(size * (0.5 + 7.0 / 30.5 * cos(angle))),
 				int(size * (0.5 + 7.0 / 30.5 * sin(angle)))) / 64.0
-	assert_float(maxf(iris.r, maxf(iris.g, iris.b)) / minf(iris.r, minf(iris.g, iris.b))).is_less(1.15)
-	assert_float(iris.get_luminance()).is_less_equal(white.get_luminance())
-	assert_float(iris.get_luminance()).is_greater(white.get_luminance() * 0.6)
+	# The owner, 8 Nov: "Kenny's eyes should be dark brown". Warm (red over
+	# green over blue) and dark against the white -- but not black.
+	assert_float(iris.r).is_greater(iris.g)
+	assert_float(iris.g).is_greater(iris.b)
+	assert_float(iris.r / maxf(iris.b, 0.001)).is_greater(1.6)
+	assert_float(iris.get_luminance()).is_less(white.get_luminance() * 0.5)
+	assert_float(iris.get_luminance()).is_greater(white.get_luminance() * 0.12)
 
 
 ## Degrees round his head from the front, either side (the head's vertical
