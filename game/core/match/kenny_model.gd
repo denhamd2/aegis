@@ -51,7 +51,11 @@ const GEAR_TEXTURES := {
 ## 0.86 they took Kenny's chest to (250,245,233) on the stage lip, clipped
 ## white, where Cody's sits well inside the range. Fairer in hue, close to
 ## Cody's in level.
-const KENNY_SKIN_TINT := Color(0.72, 0.62, 0.56)
+## 8 Nov, the owner: "I think we made him too tanned ... more like the
+## references". Measured under match light his face rendered G/R 0.63, B/R
+## 0.56 against the studio three-view's forehead 0.72, 0.63: too orange, not
+## too dark. Green and blue up, his level kept.
+const KENNY_SKIN_TINT := Color(0.72, 0.68, 0.64)
 ## Cody's level, a shade warmer -- the sheet's white of the eye is pink-white
 ## under his flushed lids, not grey: the colour is in the maps now (build_eyes.py,
 ## a grey iris). The first pass set this bluer and brighter than Cody's
