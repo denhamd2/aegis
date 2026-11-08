@@ -55,7 +55,9 @@ const GEAR_TEXTURES := {
 ## references". Measured under match light his face rendered G/R 0.63, B/R
 ## 0.56 against the studio three-view's forehead 0.72, 0.63: too orange, not
 ## too dark. Green and blue up, his level kept.
-const KENNY_SKIN_TINT := Color(0.72, 0.68, 0.64)
+## Then, the owner: "You made Kenny too pale now". Halfway back: a light tan,
+## not orange.
+const KENNY_SKIN_TINT := Color(0.73, 0.65, 0.59)
 ## Cody's level, a shade warmer -- the sheet's white of the eye is pink-white
 ## under his flushed lids, not grey: the colour is in the maps now (build_eyes.py,
 ## a grey iris). The first pass set this bluer and brighter than Cody's

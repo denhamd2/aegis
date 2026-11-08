@@ -682,6 +682,10 @@ const ROMAN_BLUE := Color(0.22, 0.52, 1.0)
 ## Kenny's stage, from the owner's Dynamite clip: the set's blue flames on the
 ## screens, blue light and blue smoke round him.
 const KENNY_BLUE := Color(0.26, 0.56, 1.0)
+## The clip's white strobe, this many ticks into his walk-out; and his still
+## hold in the spotlight after the pose.
+const KENNY_STROBE_AT := 150
+const KENNY_SPOT_HOLD_TICKS := 240
 const ROMAN_PYRO_RED := Color(1.0, 0.10, 0.16)
 ## His shots. The push-in on the mark: from the ramp, a slow dolly in and a
 ## lens tightening on him. The hero shot: low at his feet looking up, for the
@@ -2162,9 +2166,12 @@ func _add_kenny_entrance(w: WrestlerController, entrance_x: float, side: String)
 	var half := emerge.lerp(lip, 0.5)
 	# Out of blue smoke (the clip, 0:30): it rises as he walks out and clears
 	# on the pyro.
+	# The clip (0:30-0:34): from behind him, low, as he walks into the light,
+	# and the white strobe a couple of seconds out.
 	_beats.append(_with(lit, {"kind": "walk", "who": w, "path": [emerge, half],
 			"speed": KENNY_WALK_SPEED, "walk_clip": KENNY_WALK_CLIP, "appear": true,
-			"shot": "stage_wide", "fog_at": emerge, "events": [[1, "fog_on"]]}))
+			"shot": "over_shoulder", "fog_at": emerge,
+			"events": [[1, "fog_on"], [KENNY_STROBE_AT, "strobe"]]}))
 	_beats.append(_with(lit, {"kind": "walk", "who": w, "path": [half, lip],
 			"speed": KENNY_WALK_SPEED, "walk_clip": KENNY_WALK_CLIP, "shot": "steadicam_low"}))
 	# On the lip, looking the building over until the lift: pushed in on, the
@@ -2188,6 +2195,10 @@ func _add_kenny_entrance(w: WrestlerController, entrance_x: float, side: String)
 	_beats.append(_with(lit, {"kind": "pose", "who": w,
 			"ticks": KENNY_POSE_TICKS - KENNY_PYRO_AT - 30, "clip": "strikes/kenny_stage_pose",
 			"facing": Vector3.BACK, "shot": "stage_wide"}))
+	# The clip (0:58-1:06): stood still in the spotlight between the flames a
+	# long beat, the building taking him in, before he bursts down the ramp.
+	_beats.append(_with(lit, {"kind": "pose", "who": w, "ticks": KENNY_SPOT_HOLD_TICKS,
+			"clip": "strikes/kenny_stand", "facing": Vector3.BACK, "shot": "ramp_long"}))
 	# Down the ramp, working both sides.
 	_add_walk_cut(w, lip, foot_of_ramp, KENNY_WALK_SPEED, KENNY_WALK_CLIP, KENNY_WALK_SHOTS,
 			KENNY_WALK_GESTURES, true)
