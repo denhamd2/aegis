@@ -11493,3 +11493,5 @@ The owner asked for Kenny to match his reference sheet, starting with height and
 
 **Left:** the pale blond curl cap reads as a helmet, and the eyes still glow (steps 5 and 7 of the review).
 
+
+**Hair, the same day.** His crown rendered (197,170,138), a pale helmet, against the sheet's wet crown at (104,70,58). `kenny_curls.py` now gives the cap and the slicked strands their own darker, warmer colours (`CAP` 88/64/46, `SLICK_ROOT`/`SLICK_TIP`), and the crown renders at (140,98,67). The ringlets already measured right and are unchanged. The rebuild is byte-identical.

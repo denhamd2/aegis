@@ -80,7 +80,13 @@ AXIS_Y = 0.095
 ## to (206,168,112), red over blue 1.84, and the curls rendered ginger-orange.
 ROOT = (98, 80, 60)
 TIP = (208, 180, 132)
-CAP = (150, 124, 88)
+## The crown, wet and slicked: the sheet's renders at (104,70,58) under arena
+## light, ours rendered (197,170,138) -- a pale helmet (the owner, 8 Nov:
+## "amazingly lifelike"). The cap and the slicked strands over it are darker
+## and warmer than the ringlets, which measured right (114,82,67).
+CAP = (88, 64, 46)
+SLICK_ROOT = (66, 48, 34)
+SLICK_TIP = (150, 116, 78)
 ## Per ringlet, the tip colour scaled by this (seeded): some curls dark
 ## dirty blond, some bright gold.
 RINGLET_TONE = (0.62, 1.08)
@@ -356,7 +362,7 @@ def build_slick(s: Scalp, arm):
     rng = np.random.default_rng(SLICK_SEED)
     verts, faces, uvs, colours, weights, normals = [], [], [], [], [], []
     roots = s.area_choice(rng, lambda c, n: True, SLICK_COUNT)
-    root_c, tip_c = linear(ROOT), linear(TIP)
+    root_c, tip_c = linear(SLICK_ROOT), linear(SLICK_TIP)
     for p, n in roots:
         side = -1.0 if p.x < CURL_PART else 1.0
         length = float(rng.uniform(*SLICK_LENGTH)) * (0.6 + 0.4 * s.topness(p, n))
