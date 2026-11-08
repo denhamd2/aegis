@@ -1,0 +1,9 @@
+// Project configuration for Aegis. Agent definitions live in
+// .opencode/agents/*.md; this file pins the free default model and selects the
+// main agent for new sessions. Existing sessions keep the agent and model they
+// were started on.
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "opencode/glm-5.3-flash-free",
+  "default_agent": "aegis-main"
+}

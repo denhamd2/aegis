@@ -36,7 +36,39 @@ Read relevant files/skills only, batch independent inspections and keep concise
 handovers. Do not add model-specific practices until applicable official
 GPT-6.1 Sol guidance has been checked; keep
 [sourced guidance](gauntlet/refs/codex_working_guidance.md) separate from project
-measurements. Work without sub-agents unless the owner asks for them.
+measurements. Use the model routing below: delegate specialist work to its
+owner instead of doing it in the main context, and keep small, self-contained
+edits in the main agent.
+
+## OpenCode model routing
+
+OpenCode discovers the project agents in `.opencode/agents/`; new sessions
+start on `aegis-main` via `.opencode/opencode.jsonc`. Every agent is pinned to a
+free model, and no routing may silently fall through to a paid one.
+
+OpenCode also reads the root `AGENTS.md` and discovers the shared skills in
+`.claude/skills/` and `.agents/skills/` from the repository root. Start a
+Beechlawn session in `games/beechlawn_rovers/` to load that project's
+`AGENTS.md` and `.agents/skills/`; a root session intentionally does not
+advertise football-only rules or skills.
+
+| Agent | Mode | Model | Delegate when |
+| --- | --- | --- | --- |
+| `aegis-main` | primary | `opencode/glm-5.3-flash-free` | Default owner for every Aegis task: plan, delegate, integrate, validate, report. |
+| `blender-specialist` | subagent | `opencode/glm-5.3-flash-free` | 3D asset work: modeling, rigging, retopology, animation, materials, UV, export. |
+| `visual-qa` | subagent | `opencode/nemotron-3.5-super-vl-free` | Reviewing rendered frames, screenshots or capture manifests; read-only. |
+| `architect` | subagent | `opencode/big-pickle` | Cross-system design, hard trade-offs, debugging strategy; read-only. |
+
+- The main agent owns integration, tests and the final report. Specialists
+  return scripts, findings or plans; they do not publish.
+- Route one owner per question. Do not fan the same question out to several
+  specialists.
+- If a pinned model is unavailable, stop and report it. Never substitute a paid
+  model, and never claim a Blender/Godot run that did not happen.
+- Android Termux has no local Blender or Godot unless a remote executor or MCP
+  bridge is already configured. Check first, then state the limitation.
+- Do not commit or push a batch unless the owner has approved that batch for
+  publication.
 
 ## Blender skills and tools
 
@@ -48,13 +80,15 @@ See `.agents/README.md` for discovery scope, invocation and client limits.
 There are 38 retained guides; `.claude/skills/BLENDER_SKILLS.md` records their
 provenance and the reason some earlier candidates were removed.
 
-In this environment, Blender 4.3.2 and `bpy` are available through the Blender
-executable (`blender -b --python <script>`). No Blender MCP tool is connected to
-this Codex session. Use a small, repeatable headless Blender script for direct
-inspection or edits; do not claim to have driven the Blender UI or an MCP
-session. Keep Godot builds and tests independent of Blender. Store generated
-sources/exports with the owning game and follow its existing naming and asset
-pipeline.
+Where Blender is installed (for example the owner's Mac), Blender 4.3.2 and
+`bpy` are available through the Blender executable
+(`blender -b --python <script>`). Android Termux does not provide Blender or
+Godot locally, and no Blender MCP tool is connected to this session. Use a
+small, repeatable headless Blender script only where a Blender binary or an
+already-configured remote executor exists; do not claim to have driven the
+Blender UI, an MCP session, or a render that did not run. Keep Godot builds and
+tests independent of Blender. Store generated sources/exports with the owning
+game and follow its existing naming and asset pipeline.
 
 Read only the guides needed for the task; do not load all 38 by default. This
 catalog covers every retained guide in `.claude/skills/` and distinguishes
