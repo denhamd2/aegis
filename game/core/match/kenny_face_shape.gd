@@ -56,6 +56,10 @@ const TABLE := [
 	[Vector3(0.058, 1.622, -0.045), Vector3(0.026, 0.026, 0.045), Vector3(0.0065, 0.0, 0.0015), true],
 	# ...the cheekbones out with it, under the eyes...
 	[Vector3(0.058, 1.668, -0.035), Vector3(0.022, 0.020, 0.035), Vector3(0.0040, 0.0, 0.0010), true],
+	# ...his brow ridge set back: Cody's stands 3-5 mm proud over the inner
+	# brows (1.74 m), where the sheet's profile runs smooth from forehead to
+	# bridge (loop 3's "what holds it at about 7")...
+	[Vector3(0.012, 1.741, 0.0), Vector3(0.022, 0.010, 0.016), Vector3(0.0, 0.0, -0.0025), true],
 	# ...and his chin carried forward, as his profile has it.
 	[Vector3(0.0, 1.600, -0.006), Vector3(0.024, 0.013, 0.020), Vector3(0.0, -0.0005, 0.0030), false],
 ]

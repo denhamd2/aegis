@@ -11515,3 +11515,5 @@ Sheet: `gauntlet/refs/characters/review/kenny_gear_pass7.jpg`. The rebuild is by
 - the chin forward 3 mm.
 
 `test_kenny_model`'s bound on how low a move may reach comes down from 1.62 m (the cheeks' foot, which kept the jaw and chin out of reach) to 1.585 m: a centimetre clear of the neck seam, which the same test still holds at 1.575 with the bake's offsets at zero. Sheet: `kenny_head_pass13.jpg` (before front and three-quarter, after, the sheet).
+
+**Brow, the same day (run 14).** Cody's brow ridge stands 3–5 mm proud over the inner brows at 1.74 m; the sheet's profile runs smooth from forehead to bridge. A `KennyFaceShape` move sets it back 2.5 mm, clear of the lids. Sheet: `kenny_head_pass14.jpg` (profile before and after, the front, the sheet's profile).
