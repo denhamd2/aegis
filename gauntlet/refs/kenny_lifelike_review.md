@@ -1,5 +1,19 @@
 # Kenny Omega: lifelike review and plan (8 Nov)
 
+## Status, end of 8 Nov
+| Area | Done | Open |
+| --- | --- | --- |
+| Height | Already right: 1.829 m (6'0") via `Roster.stature_m` | -- |
+| Face texture | The owner's GPT Image atlas over the head (`owner_face`) | -- |
+| Skin tone | Face and body one skin: face G/R 0.64 (sheet 0.65), chest 0.74 | Body detail: flush, freckles, sweat -- or the owner's GPT body atlases |
+| Hair | Crown wet dirty blond (140,98,67) against the sheet's (104,70,58); was a pale helmet | -- |
+| Eyes | Whites dimmed, lower lid on the iris: his squint | -- |
+| Walk | Already his own: `KENNY_GAIT` (hip dip 0.044 against Cody's 0.032, shoulder twist 13 against 9, longer looks) | -- |
+| Ring arrival | Wide `entry_crane`, spotlit from the steps to his mark | -- |
+| Head shape | -- | Dense photo-fit (brow, chin, face width) |
+| Poses | -- | His current routine: no write-up found and footage can't be watched here; needs the owner's description or a clip |
+
+
 ## Context
 The owner (8 Nov) asked for three things:
 1. Review our Kenny against his reference images: the face, body, skin texture and colour, height, and his entrance.
@@ -21,7 +35,7 @@ The owner (8 Nov) asked for three things:
 | Body/build | Cody's body + `BodyBulk.KENNY` (+8 mm on the arms only) | Never measured (plan item 8 is still open). Kenny is leaner through the waist, with fuller pecs and delts and a less vascular forearm | ? |
 | Height | Correct: `Roster` stands him at his billed 1.829 m (6'0") against Cody's 1.880 (`stature_scale`, applied by the title screen in every mode) | None (corrected 8 Nov: the first read missed `Roster.stature_m`) | OK |
 | Gear | Cody's atlases repainted white and gold | Not checked against the sheet's filigree, black-and-gold kneepads and boot panels at close range | ? |
-| Entrance | `_add_kenny_entrance`: walk, stage pose with pyro, hand slaps, second-rope wings | Labelled "unverified against footage". Ring arrival is too dark in the renders. His walk is Cody's gait at 1.1 m/s, not his loose, bouncy one | 6 |
+| Entrance | `_add_kenny_entrance`: walk, stage pose with pyro, hand slaps, second-rope wings | Labelled "unverified against footage". (Corrected: the walk is already his own, `KENNY_GAIT`; the ring arrival is lit since the entry crane.) | 6 |
 
 **The honest ceiling:** reshaping Cody's head tops out at about 7.5–8. The rules rule out the usual routes to "exact":
 - **AI image-to-3D:** banned by `CREDITS.md` provenance.
