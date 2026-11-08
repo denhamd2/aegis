@@ -78,68 +78,83 @@ AXIS_Y = 0.095
 ## light: median (82,67,58), 90th percentile (151,121,103), 97th (187,155,123):
 ## red over blue 1.4-1.5) and lifted to albedo. The first pass took the tips
 ## to (206,168,112), red over blue 1.84, and the curls rendered ginger-orange.
-ROOT = (98, 80, 60)
-TIP = (208, 180, 132)
+ROOT = (84, 62, 42)
+TIP = (238, 192, 110)
 ## The crown, wet and slicked: the sheet's renders at (104,70,58) under arena
 ## light, ours rendered (197,170,138) -- a pale helmet (the owner, 8 Nov:
 ## "amazingly lifelike"). The cap and the slicked strands over it are darker
 ## and warmer than the ringlets, which measured right (114,82,67).
 CAP = (88, 64, 46)
 SLICK_ROOT = (66, 48, 34)
-SLICK_TIP = (150, 116, 78)
+SLICK_TIP = (176, 138, 90)
+## And on top, a share of the slicked strands bleached (the three-view's
+## swept-back crown is streaked blond over its dark roots).
+SLICK_STREAK = (212, 176, 118)
+SLICK_STREAK_SHARE = 0.45
 ## Per ringlet, the tip colour scaled by this (seeded): some curls dark
 ## dirty blond, some bright gold.
-RINGLET_TONE = (0.62, 1.08)
+## 8 Nov, against the owner's studio three-view (gauntlet/refs/characters/
+## kenny_3view.jpg): bleached, ash and golden curls over darker roots, so
+## the spread is wider -- dark dirty-blond to near platinum.
+RINGLET_TONE = (0.85, 1.12)
 
 ## CurlCap: off the skin by this much, more on top.
 CAP_LIFT = (0.0018, 0.0035)
 
 ## CurlSlick: the part, x in metres (+X is his left).
 CURL_PART = 0.022
-SLICK_COUNT = 520
-SLICK_STEPS = 6
+SLICK_COUNT = 1000
+SLICK_STEPS = 10
 SLICK_LENGTH = (0.05, 0.13)
-SLICK_HALF_WIDTH = (0.0035, 0.0065)
+SLICK_HALF_WIDTH = (0.0025, 0.0045)
 ## Off the cap: lying flat, wet.
-SLICK_STANDOFF = (0.0022, 0.0055)
+## Lifted off the cap: swept back with body, not plastered (three-view).
+SLICK_STANDOFF = (0.004, 0.012)
 ## Sideways off the part as the strands leave the hairline.
 SLICK_SWEEP = 0.35
+SLICK_WAVE = 0.005
 SLICK_SEED = 271027
 
 ## CurlRinglets.
-RINGLET_COUNT = 120
+RINGLET_COUNT = 250
 ## Rooted behind the ears and round the back: at least this many degrees
 ## round from the front of the head, and no higher than RINGLET_ROOT_TOP.
 RINGLET_ROOT_ANGLE = 104.0
 RINGLET_ROOT_TOP = 1.80
-RINGLET_ROOT_BOTTOM = 1.60
+RINGLET_ROOT_BOTTOM = 1.55
 ## And some framing the face: rooted above and just behind the temples, round
 ## from RINGLET_FRAME_ANGLE, falling past the ears to the shoulders -- the
 ## sheet's front view has curls down both sides of his face.
-RINGLET_FRAME_COUNT = 24
-RINGLET_FRAME_ANGLE = (78.0, 104.0)
+RINGLET_FRAME_COUNT = 32
+RINGLET_FRAME_ANGLE = (92.0, 108.0)
 RINGLET_FRAME_HEIGHT = (1.72, 1.80)
 ## Length along the fall, metres: longer at the back (onto the top of the
 ## back) than at the sides (onto the shoulders).
 RINGLET_LENGTH_SIDE = (0.14, 0.22)
-RINGLET_LENGTH_BACK = (0.20, 0.30)
+RINGLET_LENGTH_BACK = (0.15, 0.21)
 ## And none below this height: the owner, 25 Oct, of the last build, "His
 ## hair looks too big" -- it reached 1.35 m. The sheet's ends lie on the tops
 ## of the shoulders and the top of the back.
-RINGLET_FLOOR = 1.43
-RINGLET_STANDOFF = (0.010, 0.024)
+RINGLET_FLOOR = 1.50
+## The three-view's hair stands well off his head, a full mass at the sides
+## and back: further out than the first groom (0.010-0.024).
+RINGLET_STANDOFF = (0.010, 0.020)
 RINGLET_DRAPE = 0.30
 ## Outward drift per unit of fall: the lengths spread a little as they hang.
-RINGLET_DRIFT = 0.12
+RINGLET_DRIFT = 0.05
 RINGLET_SIM_STEP = 0.004
-RINGLET_STEP = 0.008
+## 9-12 samples a turn at the pitch below (loop 2; 0.008 gave 6-8, kinks).
+## The art director asked for 0.003; 0.004 holds the hair near 60k triangles.
+RINGLET_STEP = 0.004
 ## Loose curls: a helix round the line, small against the clump's width.
-RINGLET_RADIUS = (0.006, 0.011)
-RINGLET_PITCH = (0.034, 0.055)
+## The three-view's are long loose waves, not tight corkscrews: wider and
+## longer per turn than the first groom's (0.006-0.011, 0.034-0.055).
+RINGLET_RADIUS = (0.010, 0.015)
+RINGLET_PITCH = (0.035, 0.050)
 RINGLET_EASE = 0.04
-RINGLET_WIDTH = ((0.020, 0.030), 0.008)
+RINGLET_WIDTH = ((0.028, 0.040), 0.014)
 ## Darker where the ringlet leaves the scalp, in the shade of the hair over it.
-RINGLET_ROOT_SHADE = 0.7
+RINGLET_ROOT_SHADE = 0.5
 RINGLET_SEED = 271028
 
 ## Weights by height (Blender z = Godot y): all Head above HEAD_Y[0], all
@@ -155,7 +170,7 @@ CLAVICLE_SHARE = 0.45
 CURL_COLUMNS = 4
 SLICK_COLUMNS = 2
 ATLAS = (1024, 2048)
-ATLAS_STRANDS = 70
+ATLAS_STRANDS = 140
 ATLAS_SEED = 271029
 ## The RGB under the strands: what the opaque cap shows between them. At
 ## 120 (linear 0.19) it took the cap to near black.
@@ -193,8 +208,10 @@ def paint_atlas(target: pathlib.Path) -> None:
     for c in range(columns):
         curly = c < CURL_COLUMNS
         centre = c * col + col * 0.5
-        waves = float(rng.uniform(5.0, 7.5)) if curly else float(rng.uniform(1.2, 2.2))
-        amp = col * (float(rng.uniform(0.18, 0.26)) if curly else 0.06)
+        # Loop 1: one or two broad S-turns a card over the helix, not the
+        # 5-7 fine waves that read as frizz; the crown's lengths wavy too.
+        waves = float(rng.uniform(1.0, 1.6)) if curly else float(rng.uniform(3.0, 4.0))
+        amp = col * (float(rng.uniform(0.10, 0.14)) if curly else 0.12)
         phase = float(rng.uniform(0.0, 2.0 * math.pi))
         for _ in range(ATLAS_STRANDS):
             x0 = centre + col * 0.40 * float(np.clip(rng.normal(0.0, 0.45), -1.0, 1.0))
@@ -205,7 +222,7 @@ def paint_atlas(target: pathlib.Path) -> None:
             for t in np.linspace(0.0, 1.0, 160):
                 x = x0 + (centre - x0) * 0.6 * t * t + a * math.sin(ph + waves * 2.0 * math.pi * t)
                 pts.append((x, t * length))
-            width = max(1, round(float(rng.uniform(1.4, 2.6)) * ss))
+            width = max(1, round(float(rng.uniform(2.0, 3.4)) * ss))
             # Most strands bright, a few dark ones through the clump.
             shade = int(rng.integers(205, 256)) if rng.random() < 0.8 else int(rng.integers(150, 200))
             dt.line(pts, fill=shade, width=width)
@@ -363,6 +380,7 @@ def build_slick(s: Scalp, arm):
     verts, faces, uvs, colours, weights, normals = [], [], [], [], [], []
     roots = s.area_choice(rng, lambda c, n: True, SLICK_COUNT)
     root_c, tip_c = linear(SLICK_ROOT), linear(SLICK_TIP)
+    streak_c = linear(SLICK_STREAK)
     for p, n in roots:
         side = -1.0 if p.x < CURL_PART else 1.0
         length = float(rng.uniform(*SLICK_LENGTH)) * (0.6 + 0.4 * s.topness(p, n))
@@ -370,7 +388,9 @@ def build_slick(s: Scalp, arm):
         standoff = float(rng.uniform(*SLICK_STANDOFF))
         column = CURL_COLUMNS + int(rng.integers(0, SLICK_COLUMNS))
         tone = float(rng.uniform(*RINGLET_TONE))
+        strand_tip = streak_c if rng.random() < SLICK_STREAK_SHARE else tip_c
         sweep = SLICK_SWEEP * side * float(rng.uniform(0.5, 1.2))
+        wave_phase = float(rng.uniform(0.0, 2.0 * math.pi))
         start = len(verts)
         q = p.copy()
         for step in range(SLICK_STEPS + 1):
@@ -385,12 +405,14 @@ def build_slick(s: Scalp, arm):
                 d = Vector((0.0, 0.0, -1.0)) - nq * (-nq.z)
             d.normalize()
             across = d.cross(nq).normalized()
-            centre = q + nq * standoff
+            # Loop 2: each strand S-waves sideways as it goes back (the
+            # top-down reference), not a straight plank.
+            centre = q + nq * standoff + across * SLICK_WAVE * math.sin(2.0 * math.pi * 1.5 * t + wave_phase)
             width = half * (1.0 - 0.6 * t * t)
             for k in (-1.0, 1.0):
                 verts.append(centre + across * width * k)
                 uvs.append(((column + 0.5 + 0.45 * k) / (CURL_COLUMNS + SLICK_COLUMNS), 1.0 - t * 0.55))
-                c = [r + (tc * tone - r) * smooth(0.0, 0.5, t) for r, tc in zip(root_c, tip_c)]
+                c = [r + (tc * tone - r) * smooth(0.0, 0.5, t) for r, tc in zip(root_c, strand_tip)]
                 colours.append(c)
                 weights.append(weights_at(centre))
                 normals.append(nq.copy())
@@ -451,7 +473,7 @@ def fall(root, normal, length, standoff, bvh):
 def build_ringlet(samples, rng, column, tone):
     """Two crossed cards round a helix about the line (roman_ringlets.py):
     one facing out from the head, one edge-on to it."""
-    verts, faces, uvs, colours, weights = [], [], [], [], []
+    verts, faces, uvs, colours, weights, normals = [], [], [], [], [], []
     radius = float(rng.uniform(*RINGLET_RADIUS))
     pitch = float(rng.uniform(*RINGLET_PITCH))
     phase = float(rng.uniform(0.0, 2.0 * math.pi))
@@ -474,22 +496,31 @@ def build_ringlet(samples, rng, column, tone):
         centre = p + radial * (radius * smooth(0.0, RINGLET_EASE, s))
         width = (w_top + (RINGLET_WIDTH[1] - w_top) * rel ** 1.5) * (0.5 + 0.5 * smooth(0.0, 0.03, s))
         shade = RINGLET_ROOT_SHADE + (1.0 - RINGLET_ROOT_SHADE) * smooth(0.0, 0.2, rel)
-        c = [min((r + (tc * tone - r) * smooth(0.0, 0.6, rel)) * shade, 1.0)
+        c = [min((r + (tc * tone - r) * smooth(0.05, 0.45, rel)) * shade, 1.0)
              for r, tc in zip(root_c, tip_c)]
         wts = weights_at(centre)
-        for card, direction in enumerate((n1, n2)):
+        # Lit as one mass, not as card faces (art director, loop 1: double-
+        # sided cards with their own normals drew black streaks): out from
+        # the skull's axis, a little up.
+        nrm = (Vector((centre.x, centre.y - AXIS_Y, 0.0)).normalized()
+               + Vector((0.0, 0.0, 0.3))).normalized()
+        # Loop 2: the two crossed cards turn with the helix (radial and its
+        # tangent cross) -- a corkscrew, where cards held on a fixed frame read
+        # as zig-zag ribbons.
+        for card, direction in enumerate((radial, tan.cross(radial).normalized())):
             for side in (-0.5, 0.5):
                 verts.append(centre + direction * (width * side))
                 uvs.append(((cols[card] + side * 0.9 + 0.5) / columns, 1.0 - rel))
                 colours.append(c)
                 weights.append(wts)
+                normals.append(nrm)
     per = 4
     for k in range(len(samples) - 1):
         for card in range(2):
             a = k * per + card * 2
             b = (k + 1) * per + card * 2
             faces.append((a, a + 1, b + 1, b))
-    return verts, faces, uvs, colours, weights
+    return verts, faces, uvs, colours, weights, normals
 
 
 def build_ringlets(s: Scalp, body, arm):
@@ -507,7 +538,7 @@ def build_ringlets(s: Scalp, body, arm):
                 and RINGLET_FRAME_HEIGHT[0] <= c.z <= RINGLET_FRAME_HEIGHT[1])
 
     roots = s.area_choice(rng, keep, RINGLET_COUNT) + s.area_choice(rng, frame, RINGLET_FRAME_COUNT)
-    verts, faces, uvs, colours, weights = [], [], [], [], []
+    verts, faces, uvs, colours, weights, normals = [], [], [], [], [], []
     count = 0
     for p, n in roots:
         back = smooth(RINGLET_ROOT_ANGLE, 170.0, round_from_front(p))
@@ -520,15 +551,16 @@ def build_ringlets(s: Scalp, body, arm):
         samples = fall(p, n, length, standoff, bvh)
         if len(samples) < 4:
             continue
-        v, f, uv, c, w = build_ringlet(samples, rng, column, tone)
+        v, f, uv, c, w, nm = build_ringlet(samples, rng, column, tone)
         base = len(verts)
         verts += v
         faces += [tuple(i + base for i in face) for face in f]
         uvs += uv
         colours += c
         weights += w
+        normals += nm
         count += 1
-    obj, tris = mesh_object("CurlRinglets", arm, verts, faces, uvs, colours, weights)
+    obj, tris = mesh_object("CurlRinglets", arm, verts, faces, uvs, colours, weights, normals)
     return obj, tris, count
 
 

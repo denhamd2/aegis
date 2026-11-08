@@ -67,6 +67,13 @@ func _ready() -> void:
 				await RenderingServer.frame_post_draw
 			get_viewport().get_texture().get_image().save_png(
 					"%s/%s_%s.png" % [_out, kind[0], view])
+	# And the head from above and a little in front -- the crown, the part
+	# and the hair's lie over the top (the owner's top-down hair reference).
+	cam.fov = 30.0
+	cam.look_at_from_position(head + Vector3(0.0, 0.48, 0.16), head, Vector3.FORWARD)
+	for frame in 3:
+		await RenderingServer.frame_post_draw
+	get_viewport().get_texture().get_image().save_png("%s/head_top.png" % _out)
 	print("MODEL_TURNAROUND done")
 	get_tree().quit()
 

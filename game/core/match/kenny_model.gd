@@ -66,7 +66,7 @@ const CURL_CARDS := CHAR + "kenny_curl_cards.png"
 ## The colour is in the curls' vertex colours (kenny_curls.py: dirty blond at
 ## the root to gold at the tips, per ringlet lighter or darker), so the
 ## material is white.
-const CURL_ROUGHNESS := 0.55
+const CURL_ROUGHNESS := 0.7
 const CAP_SPECULAR := 0.08
 const CAP_ROUGHNESS := 0.9
 
@@ -143,14 +143,14 @@ func _curl_material(cap: bool) -> StandardMaterial3D:
 		mat.metallic_specular = CAP_SPECULAR
 		mat.roughness = CAP_ROUGHNESS
 	else:
-		mat.metallic_specular = 0.25
+		mat.metallic_specular = 0.12
 		mat.roughness = CURL_ROUGHNESS
 		HairLook.apply(mat)
 	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 	if not cap:
 		mat.texture_repeat = false
 		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
-		mat.alpha_scissor_threshold = 0.3
+		mat.alpha_scissor_threshold = 0.2
 		mat.alpha_antialiasing_mode = BaseMaterial3D.ALPHA_ANTIALIASING_ALPHA_TO_COVERAGE_AND_TO_ONE
 		mat.alpha_antialiasing_edge = mat.alpha_scissor_threshold
 	return mat
