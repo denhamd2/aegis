@@ -11528,3 +11528,7 @@ Sheet: `gauntlet/refs/characters/review/kenny_gear_pass7.jpg`. The rebuild is by
 Sheet: `kenny_body_pass9.jpg`.
 
 **Finger guns.** His signature walk-out pose is the "gun point" (TV Tropes), so `Kenny_Stage_Pose`'s point at the crowd is now both hands (`point_l`). The clips were rebuilt (295) and the strike and paired libraries re-baked. The clip gates pass: `test_sixty_fps`, `test_clip_cadence`, `test_pose_lint`, `test_clip_authoring_gate` (sha re-pinned) and `test_entrance_director`.
+
+**Eyes: dark brown.** The owner: "Kenny's eyes should be dark brown". `build_eyes.KENNY_IRIS_TINT` is now (1.02, 0.66, 0.42): warm and dark, and still brown rather than black in the brow's shade under match light.
+
+**The owner's studio three-view** (`gauntlet/refs/characters/kenny_3view.jpg`) was tried as the photo-fit's profile, its 12 outline points read off the silhouette. It would move his chin back 19 mm and his lower lip 11 mm. Its profile has the chin 21 px behind the brow; the sheet's has it ahead. That is a receding chin, the opposite of his, so it was not taken (no tilt or mirroring of the marks changes the solve). It stays as a hair and colour reference.

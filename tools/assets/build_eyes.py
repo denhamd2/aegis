@@ -180,7 +180,11 @@ AUBREY_AAA = EyeSpec(centre=(0.5, 0.5), mm_per_uv=30.0, size=512,
 ## level (0.94, 1.04, 1.06) it rendered black, (0, 0, 5) against a sclera of
 ## (51, 33, 34); lifted a quarter, (9, 8, 16), a dark slate. The sheet's
 ## arena photo has the iris at about half the white's level.
-KENNY_IRIS_TINT = (1.40, 1.54, 1.57)
+## 8 Nov, the owner: "Kenny's eyes should be dark brown" (the grey-blue and
+## a three-view's hazel were both wrong). Warm and dark: red over green over
+## blue, at a level that still reads as brown, not black, in the brow's
+## shade under match light (Cody's own level rendered black there).
+KENNY_IRIS_TINT = (1.02, 0.66, 0.42)
 KENNY = dataclasses.replace(CODY, sclera=(224, 204, 194), occluded_albedo=0.72)
 KENNY_IRIS_SCALE = 0.9
 ## The sheet's close-up is lit hard: a small pupil, about a quarter of the
