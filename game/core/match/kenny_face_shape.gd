@@ -50,6 +50,14 @@ const TABLE := [
 	# And the deep crease at Cody's mouth corners filled: its shadow carried
 	# the line of the lips on past them (loop 2, run 7).
 	[Vector3(0.032, 1.639, -0.012), Vector3(0.008, 0.007, 0.010), Vector3(0.0, 0.0, 0.0015), true],
+	# 8 Nov (the owner: "matching exactly"): his face reads broad where the
+	# fit left it long and narrow -- the jaw and lower cheeks out 6.5 mm a
+	# side, at the front half of the jaw...
+	[Vector3(0.058, 1.622, -0.045), Vector3(0.026, 0.026, 0.045), Vector3(0.0065, 0.0, 0.0015), true],
+	# ...the cheekbones out with it, under the eyes...
+	[Vector3(0.058, 1.668, -0.035), Vector3(0.022, 0.020, 0.035), Vector3(0.0040, 0.0, 0.0010), true],
+	# ...and his chin carried forward, as his profile has it.
+	[Vector3(0.0, 1.600, -0.006), Vector3(0.024, 0.013, 0.020), Vector3(0.0, -0.0005, 0.0030), false],
 ]
 ## The head's skin, shaped by both; the mouth's inside, by the photo-fit, so
 ## the lips and what is behind them move together.

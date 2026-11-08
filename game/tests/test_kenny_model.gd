@@ -283,9 +283,12 @@ func test_his_head_is_fitted_and_the_neck_is_not() -> void:
 			lids += 1
 	assert_int(lids).is_greater(4)
 	# Every move is clear of the neck (the body bulk moves the neck on its own,
-	# differently for Kenny and Cody, so the table is what is checked).
+	# differently for Kenny and Cody, so the table is what is checked). Clear
+	# of the seam the bake holds (1.575) by a centimetre: 8 Nov, his jaw and
+	# chin -- the broad lower face the sheet has -- sit at 1.59-1.62, which the
+	# old bound (1.62, the cheeks' foot) put out of reach.
 	for row: Array in KennyFaceShape.TABLE:
-		assert_float((row[0] as Vector3).y - (row[1] as Vector3).y).is_greater(1.62)
+		assert_float((row[0] as Vector3).y - (row[1] as Vector3).y).is_greater(1.585)
 	# 2.8 mm at the lid's centre, less across the band.
 	assert_float(lid / lids).is_less(-0.001)
 

@@ -11508,3 +11508,10 @@ The owner asked for Kenny to match his reference sheet, starting with height and
 Sheet: `gauntlet/refs/characters/review/kenny_gear_pass7.jpg`. The rebuild is byte-identical.
 
 **His "2", the same day.** The sheet's big gold "2" scroll is now on his right thigh (gold with the panels' scrollwork, black-edged) and on the kneepad (`GLYPH_*`, `glyph`). It is drawn as a distance field over the leg's surface coordinates, so it reads the right way round from the front. Sheet: `kenny_gear_pass8.jpg`.
+
+**Head, the same day (run 13).** His face reads broad on the sheet, but the fit left it long and narrow. `KennyFaceShape` gains three moves:
+- the jaw and lower cheeks out 6.5 mm a side;
+- the cheekbones out 4 mm;
+- the chin forward 3 mm.
+
+`test_kenny_model`'s bound on how low a move may reach comes down from 1.62 m (the cheeks' foot, which kept the jaw and chin out of reach) to 1.585 m: a centimetre clear of the neck seam, which the same test still holds at 1.575 with the bake's offsets at zero. Sheet: `kenny_head_pass13.jpg` (before front and three-quarter, after, the sheet).

@@ -10,7 +10,7 @@
 | Eyes | Whites dimmed, lower lid on the iris: his squint | -- |
 | Walk | Already his own: `KENNY_GAIT` (hip dip 0.044 against Cody's 0.032, shoulder twist 13 against 9, longer looks) | -- |
 | Ring arrival | Wide `entry_crane`, spotlit from the steps to his mark | -- |
-| Head shape | -- | Dense photo-fit (brow, chin, face width) |
+| Head shape | Jaw +6.5 mm a side, cheekbones +4 mm, chin forward 3 mm (`kenny_head_pass13.jpg`) | The brow ridge in profile: a dense contour fit (`build_kenny_head.py`) |
 | Gear | Gold veins on the white, dense black scrollwork on the gold panels, boot panels wider and white-piped (`kenny_gear_pass7.jpg`) | -- (the "2" added: `kenny_gear_pass8.jpg`) |
 | Poses | -- | His current routine: no write-up found and footage can't be watched here; needs the owner's description or a clip |
 
