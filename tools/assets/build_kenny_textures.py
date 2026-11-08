@@ -529,11 +529,56 @@ def head() -> None:
     save(out, HEAD_OUT, alpha)
 
 
+## Each body atlas's material on Cody's Body mesh (KennyModel.SKIN_TEXTURES).
+BODY_MATERIAL = {
+    "cody_rhodes_ximage_f862503283dc0b8.png": "xmaterial_495900de7002683",
+    "cody_rhodes_ximage_d527779c45f15f2.png": "xmaterial_90b39911eb484a2",
+    "cody_rhodes_ximage_359c096926a07e8.png": "xmaterial_90b2b911eb46cd8",
+    "cody_rhodes_ximage_e0ec4a43013e474.png": "xmaterial_5a329cd32db96c3",
+}
+## The sheet's body (chest, back and arm panels): flushed red over the upper
+## chest, shoulders and upper back under the lights, paler down the abdomen;
+## freckled across the shoulders and upper arms. By bind-pose height (m):
+## the flush rises over BODY_FLUSH_RISE, holds, and fades out over
+## BODY_FLUSH_TOP into the neck the head atlas carries.
+BODY_FLUSH_RISE = (1.18, 1.36)
+BODY_FLUSH_TOP = (1.52, 1.58)
+BODY_FLUSH_SHADE = np.array([1.0, 0.88, 0.86])
+BODY_FLUSH = 0.7
+## Freckles: a share of texels this dense at the shoulders, thinning below
+## BODY_FRECKLE_FROM, each darkening the skin by BODY_FRECKLE_SHADE.
+BODY_FRECKLE_FROM = (1.10, 1.40)
+BODY_FRECKLE_DENSITY = 0.05
+BODY_FRECKLE_SHADE = np.array([0.84, 0.72, 0.66])
+BODY_FRECKLE_SEED = 271108
+
+
+def body_detail(rgb, src_name, mesh):
+    """The sheet's flush and freckles, placed by where each texel sits."""
+    h, w = rgb.shape[:2]
+    pts, uvs, tris = mesh[BODY_MATERIAL[src_name]]
+    point, cover = gear_points(pts, uvs, tris, (w, h))
+    y = point[..., 1]
+    flush = smoothstep(*BODY_FLUSH_RISE, y) * (1 - smoothstep(*BODY_FLUSH_TOP, y)) * BODY_FLUSH
+    rgb = rgb * (1 - flush[..., None]) + rgb * BODY_FLUSH_SHADE * flush[..., None]
+    rng = np.random.default_rng(BODY_FRECKLE_SEED + int(src_name[-11:-4], 16) % 1000)
+    noise = blur(rng.random((h, w)).astype(np.float32), 1.1)
+    want = BODY_FRECKLE_DENSITY * smoothstep(*BODY_FRECKLE_FROM, y)
+    cut = np.quantile(noise, 1 - BODY_FRECKLE_DENSITY)
+    spot = np.clip((noise - cut) / max(float(noise.max() - cut), 1e-6) * 3, 0, 1)
+    spot = spot * (want / BODY_FRECKLE_DENSITY)
+    tone = 0.5 + 0.5 * rng.random((h, w)).astype(np.float32)
+    spot = (spot * tone)[..., None]
+    return rgb * (1 - spot) + rgb * BODY_FRECKLE_SHADE * spot
+
+
 def body() -> None:
+    mesh = glb_mesh()
     for src_name, out_name in BODY.items():
         src = Image.open(CHARACTERS / src_name).convert("RGBA")
         w, h = src.size
         rgb = load(CHARACTERS / src_name) * SKIN_GAIN
+        rgb = body_detail(rgb, src_name, mesh)
         if src_name.endswith("e0ec4a43013e474.png"):
             rgb = mirrored_fill(rgb, polygon_mask(w, h, DREAM, 4))
         if src_name.endswith("d527779c45f15f2.png"):

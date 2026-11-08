@@ -5,12 +5,13 @@
 | --- | --- | --- |
 | Height | Already right: 1.829 m (6'0") via `Roster.stature_m` | -- |
 | Face texture | The owner's GPT Image atlas over the head (`owner_face`) | -- |
-| Skin tone | Face and body one skin: face G/R 0.64 (sheet 0.65), chest 0.74 | Body detail: flush, freckles, sweat -- or the owner's GPT body atlases |
+| Skin tone | Face and body one skin: face G/R 0.66 (sheet 0.65), chest 0.71; flush over the chest, shoulders and back, freckles on the shoulders (`body_detail`) | The owner's GPT body atlases, if he makes them |
 | Hair | Crown wet dirty blond (140,98,67) against the sheet's (104,70,58); was a pale helmet | -- |
 | Eyes | Whites dimmed, lower lid on the iris: his squint | -- |
 | Walk | Already his own: `KENNY_GAIT` (hip dip 0.044 against Cody's 0.032, shoulder twist 13 against 9, longer looks) | -- |
 | Ring arrival | Wide `entry_crane`, spotlit from the steps to his mark | -- |
 | Head shape | -- | Dense photo-fit (brow, chin, face width) |
+| Gear | -- | Pants, kneepads, boots: the sheet's black-and-gold filigree over white marble against our white with gold side stripes |
 | Poses | -- | His current routine: no write-up found and footage can't be watched here; needs the owner's description or a clip |
 
 
