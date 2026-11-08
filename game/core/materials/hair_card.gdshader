@@ -15,9 +15,14 @@ shader_type spatial;
 render_mode cull_disabled, depth_draw_opaque, alpha_to_coverage_and_one;
 
 uniform sampler2D albedo_tex : source_color, filter_linear_mipmap_anisotropic, repeat_disable;
-uniform float roughness = 0.45;
-uniform float specular = 0.35;
-uniform float anisotropy_ratio = 0.5;
+// Loop 8: the sheen rides the strands -- specular and the back-light scale
+// with the atlas's tone (a strand's lit side), roughness runs from matte in
+// the gaps to glossy on the crests: untinted specular everywhere read as a
+// white plastic sheet.
+uniform float rough_dark = 0.7;
+uniform float rough_bright = 0.4;
+uniform float specular = 0.2;
+uniform float anisotropy_ratio = 0.8;
 uniform float alpha_scissor = 0.25;
 uniform float backlight = 0.35;
 uniform vec3 sway = vec3(0.0);
@@ -34,9 +39,9 @@ void fragment() {
 	ALPHA = t.a;
 	ALPHA_SCISSOR_THRESHOLD = alpha_scissor;
 	ALPHA_ANTIALIASING_EDGE = alpha_scissor;
-	ROUGHNESS = roughness;
-	SPECULAR = specular;
+	ROUGHNESS = mix(rough_dark, rough_bright, t.r);
+	SPECULAR = specular * t.r;
 	ANISOTROPY = anisotropy_ratio;
 	ANISOTROPY_FLOW = vec2(0.0, 1.0);
-	BACKLIGHT = COLOR.rgb * backlight;
+	BACKLIGHT = COLOR.rgb * backlight * t.r;
 }

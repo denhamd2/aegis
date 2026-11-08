@@ -132,12 +132,12 @@ RINGLET_FRAME_ANGLE = (92.0, 108.0)
 RINGLET_FRAME_HEIGHT = (1.68, 1.82)
 ## Length along the fall, metres: longer at the back (onto the top of the
 ## back) than at the sides (onto the shoulders).
-RINGLET_LENGTH_SIDE = (0.12, 0.18)
-RINGLET_LENGTH_BACK = (0.14, 0.24)
+RINGLET_LENGTH_SIDE = (0.15, 0.22)
+RINGLET_LENGTH_BACK = (0.18, 0.28)
 ## And none below this height: the owner, 25 Oct, of the last build, "His
 ## hair looks too big" -- it reached 1.35 m. The sheet's ends lie on the tops
 ## of the shoulders and the top of the back.
-RINGLET_FLOOR = 1.52
+RINGLET_FLOOR = 1.46
 ## The three-view's hair stands well off his head, a full mass at the sides
 ## and back: further out than the first groom (0.010-0.024).
 RINGLET_STANDOFF = (0.006, 0.014)
@@ -147,7 +147,7 @@ RINGLET_DRIFT = 0.05
 RINGLET_SIM_STEP = 0.004
 ## 9-12 samples a turn at the pitch below (loop 2; 0.008 gave 6-8, kinks).
 ## The art director asked for 0.003; 0.004 holds the hair near 60k triangles.
-RINGLET_STEP = 0.007
+RINGLET_STEP = 0.008
 ## Loose curls: a helix round the line, small against the clump's width.
 ## The three-view's are long loose waves, not tight corkscrews: wider and
 ## longer per turn than the first groom's (0.006-0.011, 0.034-0.055).
@@ -162,8 +162,8 @@ RINGLET_SEED = 271028
 ## amplitude and wavelength (m); the arc length the atlas's v spans.
 CLUMP_WIDTH = (0.020, 0.030)
 CLUMP_TIP_WIDTH = 0.010
-CLUMP_AMP = (0.006, 0.010)
-CLUMP_WAVE = (0.045, 0.060)
+CLUMP_AMP = (0.004, 0.014)
+CLUMP_WAVE = (0.035, 0.070)
 CARD_V_LENGTH = 0.25
 ## The undercoat: wide, close, dark (layer AO 0.45).
 UNDERCOAT_COUNT = 40
@@ -171,6 +171,13 @@ UNDERCOAT_WIDTH = (0.05, 0.07)
 UNDERCOAT_STANDOFF = (0.003, 0.006)
 UNDERCOAT_SHADE = 0.7
 UNDERCOAT_SEED = 271030
+## Loop 8: where a length leaves the scalp (it lifts to its standoff over
+## 5 cm); and the flyaways off the outer clumps.
+ROOT_LIFT = 0.004
+FLYAWAY_PER_CARD = 1.15
+FLYAWAY_WIDTH = (0.0025, 0.004)
+FLYAWAY_LENGTH = (0.04, 0.08)
+FLYAWAY_SEGMENTS = 6
 ## The lengths beside the face (round less than FRONT_ANGLE): further off the
 ## head, drifting out, turned toward the front by FRONT_TWIST degrees.
 FRONT_ANGLE = 135.0
@@ -508,25 +515,36 @@ def build_slick(s: Scalp, arm):
 
 def fall(root, normal, length, standoff, bvh, drift=None):
     """The ringlet's line from its root, resampled every RINGLET_STEP."""
-    p = root + normal * standoff
+    # Loop 8: rooted on the scalp, lifting to its standoff over 5 cm -- a
+    # root set off the scalp read as a floating flap.
+    p = root + normal * ROOT_LIFT
     pts = [p]
     total = 0.0
     still = 0
-    pushed = False
+    slide = None
     for _ in range(4000):
         h = Vector((p.x, p.y - AXIS_Y, 0.0))
         r = h.length
         out = h / r if r > 1e-6 else Vector((0.0, 1.0, 0.0))
-        q = p + (Vector((0.0, 0.0, -1.0)) + out * (RINGLET_DRIFT if drift is None else drift)).normalized() * RINGLET_SIM_STEP
+        off = ROOT_LIFT + (standoff - ROOT_LIFT) * smooth(0.0, 0.05, total)
+        if slide is not None:
+            # Pushed below the neck's top: slide down the body, no drift.
+            d = Vector((0.0, 0.0, -1.0)) - slide * (-slide.z)
+            d = d.normalized() if d.length > 1e-6 else Vector((0.0, 0.0, -1.0))
+        else:
+            d = (Vector((0.0, 0.0, -1.0)) + out * (RINGLET_DRIFT if drift is None else drift)).normalized()
+        q = p + d * RINGLET_SIM_STEP
         loc, nrm, _, _ = bvh.find_nearest(q)
-        if loc is not None and (q - loc).dot(nrm) < standoff:
-            q = loc + nrm * standoff
-            pushed = True
-            # On the shoulders' top (an up-facing push), the length ends there,
-            # hanging, rather than splaying sideways along the traps.
-            if nrm.z > 0.4 and q.z < 1.58:
+        if loc is not None and (q - loc).dot(nrm) < off:
+            q = loc + nrm * off
+            # Loop 8: an end stops only on the flat top of a shoulder, out
+            # past the neck; on the traps' slope it slides on down (loop 7's
+            # stop at nrm.z 0.4 caught the trapezius: a bob).
+            if nrm.z > 0.75 and abs(q.x) > 0.10:
                 pts.append(q)
                 break
+            if q.z < 1.60:
+                slide = nrm.copy()
         # Not drawn in toward the neck faster than RINGLET_DRAPE per unit of fall.
         hq = Vector((q.x, q.y - AXIS_Y, 0.0))
         floor = r - RINGLET_DRAPE * max(p.z - q.z, 0.0)
@@ -574,7 +592,8 @@ def build_clump_card(samples, rng, kind, tone, shade_layer=1.0, width=None, twis
     amp = float(rng.uniform(*CLUMP_AMP))
     wave = float(rng.uniform(*CLUMP_WAVE))
     phase = float(rng.uniform(0.0, 2.0 * math.pi))
-    w0 = width if width is not None else float(rng.uniform(*CLUMP_WIDTH))
+    w0 = width if width is not None else float(rng.uniform(*CLUMP_WIDTH)) * float(rng.uniform(0.7, 1.3))
+    wave_phase = phase
     u0, u1 = strip_span(kind, int(rng.integers(0, 3)))
     total = (len(samples) - 1) * RINGLET_STEP
     root_c, tip_c = linear(ROOT), linear(TIP)
@@ -586,10 +605,15 @@ def build_clump_card(samples, rng, kind, tone, shade_layer=1.0, width=None, twis
         side = tan.cross(out).normalized()
         if twist:
             # Turned about its own line (loop 7): the cards beside the face
-            # show their face toward the front, not their edge.
-            rot = Matrix.Rotation(twist, 3, tan)
+            # show their face toward the front, not their edge -- easing in
+            # over 4 cm, so the root lies on the scalp (loop 8).
+            rot = Matrix.Rotation(twist * smooth(0.0, 0.04, s_len), 3, tan)
             out, side = rot @ out, rot @ side
-        a = 2.0 * math.pi * s_len / wave + phase
+        # The curl tightens toward the ends (loop 8): the wave's phase run
+        # up step by step at a wavelength shrinking a third by the tip.
+        if k:
+            wave_phase += 2.0 * math.pi * RINGLET_STEP / (wave * (1.0 - 0.35 * rel))
+        a = wave_phase
         ease = smooth(0.0, 0.04, s_len)
         centre = p + (side * amp * math.sin(a) + out * 0.3 * amp * math.cos(a)) * ease
         wdt = (w0 + (CLUMP_TIP_WIDTH - w0) * rel) * (0.4 + 0.6 * smooth(0.0, 0.03, s_len))
@@ -613,6 +637,44 @@ def build_clump_card(samples, rng, kind, tone, shade_layer=1.0, width=None, twis
     return verts, faces, uvs, colours, weights, normals
 
 
+def build_flyaways(samples, rng, tone):
+    """Loop 8 (review 7): thin stray strands off a clump -- rooted 30-90%
+    down it, a centimetre out, bending away from it, on the atlas's fly
+    strip. The silhouette's broken edge."""
+    verts, faces, uvs, colours, weights, normals = [], [], [], [], [], []
+    n = int(FLYAWAY_PER_CARD) + (1 if rng.random() < FLYAWAY_PER_CARD % 1.0 else 0)
+    u0, u1 = strip_span("fly", 0)
+    tip_c = linear(TIP)
+    for _ in range(n):
+        k0 = int(len(samples) * float(rng.uniform(0.3, 0.9)))
+        p, tan = samples[min(k0, len(samples) - 1)]
+        out = Vector((p.x, p.y - AXIS_Y, 0.0)).normalized()
+        start = p + out * 0.01
+        bend = float(rng.uniform(0.4, 0.8))
+        length = float(rng.uniform(*FLYAWAY_LENGTH))
+        width = float(rng.uniform(*FLYAWAY_WIDTH))
+        side = tan.cross(out).normalized()
+        base = len(verts)
+        q = start
+        for j in range(FLYAWAY_SEGMENTS + 1):
+            t = j / FLYAWAY_SEGMENTS
+            d = (tan * (1.0 - bend * t) + out * bend * t
+                 + side * float(rng.normal(0.0, 0.15))).normalized()
+            if j:
+                q = q + d * (length / FLYAWAY_SEGMENTS)
+            c = [min(tc * tone, 1.0) for tc in tip_c] + [0.6 + 0.4 * t]
+            for f in (-0.5, 0.5):
+                verts.append(q + side * width * f)
+                uvs.append((u0 + (u1 - u0) * (0.5 + f * 0.9), 1.0 - t * 0.6))
+                colours.append(c)
+                weights.append(weights_at(q))
+                normals.append(out)
+        for j in range(FLYAWAY_SEGMENTS):
+            a0 = base + j * 2
+            faces.append((a0, a0 + 1, a0 + 3, a0 + 2))
+    return verts, faces, uvs, colours, weights, normals
+
+
 def build_undercoat(s: Scalp, body, arm):
     """The dark undercoat under the lengths (review 5): wide mass cards close
     on the skull and neck, so no skin or ground shows between the curls, and
@@ -629,7 +691,7 @@ def build_undercoat(s: Scalp, body, arm):
     verts, faces, uvs, colours, weights, normals = [], [], [], [], [], []
     for p, n in roots:
         back = smooth(RINGLET_ROOT_ANGLE, 170.0, round_from_front(p))
-        length = 0.9 * (RINGLET_LENGTH_SIDE[1] + (RINGLET_LENGTH_BACK[1] - RINGLET_LENGTH_SIDE[1]) * back)
+        length = 0.85 * (RINGLET_LENGTH_SIDE[1] + (RINGLET_LENGTH_BACK[1] - RINGLET_LENGTH_SIDE[1]) * back)
         samples = fall(p, n, length, float(rng.uniform(*UNDERCOAT_STANDOFF)), bvh)
         if len(samples) < 4:
             continue
@@ -684,6 +746,14 @@ def build_ringlets(s: Scalp, body, arm):
             twist = math.radians(float(rng.uniform(*FRONT_TWIST))) * (1.0 if p.x > 0.0 else -1.0)
         v, f, uv, c, w, nm = build_clump_card(samples, rng, "clump" if count % 5 else "ringlet",
                                               tone, twist=twist)
+        fv, ff, fuv, fc, fw, fnm = build_flyaways(samples, rng, tone)
+        off_v = len(v)
+        v += fv
+        f += [tuple(i + off_v for i in face) for face in ff]
+        uv += fuv
+        c += fc
+        w += fw
+        nm += fnm
         base = len(verts)
         verts += v
         faces += [tuple(i + base for i in face) for face in f]

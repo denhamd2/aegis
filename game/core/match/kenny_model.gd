@@ -135,7 +135,7 @@ func _add_hair() -> void:
 		mesh_instance.skeleton = NodePath("..")
 		var cap := mi.name == "CurlCap"
 		mesh_instance.material_override = _curl_material(true) if cap else _card_material(
-				SLICK_SWAY if mi.name == "CurlSlick" else 1.0)
+				SLICK_SWAY if mi.name == "CurlSlick" else 1.0, mi.name == "CurlUndercoat")
 		if not cap:
 			_sway_materials.append(mesh_instance.material_override)
 		# The cap and the undercoat cast: the hair's shade on his neck.
@@ -209,11 +209,15 @@ static func step_sway(offset: Vector3, vel: Vector3, head_accel: Vector3, dt: fl
 	return offset
 
 
-func _card_material(sway_amount: float) -> ShaderMaterial:
+func _card_material(sway_amount: float, undercoat := false) -> ShaderMaterial:
 	var mat := ShaderMaterial.new()
 	mat.shader = HAIR_CARD
 	mat.set_shader_parameter("albedo_tex", load(CURL_CARDS))
-	mat.set_shader_parameter("anisotropy_ratio", HairLook.ANISOTROPY)
+	if undercoat:
+		# The undercoat is the dark between the curls: matte (review 7).
+		mat.set_shader_parameter("specular", 0.04)
+		mat.set_shader_parameter("rough_dark", 0.85)
+		mat.set_shader_parameter("rough_bright", 0.85)
 	mat.set_shader_parameter("sway_amount", sway_amount)
 	return mat
 
