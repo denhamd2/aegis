@@ -11517,3 +11517,14 @@ Sheet: `gauntlet/refs/characters/review/kenny_gear_pass7.jpg`. The rebuild is by
 `test_kenny_model`'s bound on how low a move may reach comes down from 1.62 m (the cheeks' foot, which kept the jaw and chin out of reach) to 1.585 m: a centimetre clear of the neck seam, which the same test still holds at 1.575 with the bake's offsets at zero. Sheet: `kenny_head_pass13.jpg` (before front and three-quarter, after, the sheet).
 
 **Brow, the same day (run 14).** Cody's brow ridge stands 3–5 mm proud over the inner brows at 1.74 m; the sheet's profile runs smooth from forehead to bridge. A `KennyFaceShape` move sets it back 2.5 mm, clear of the lids. Sheet: `kenny_head_pass14.jpg` (profile before and after, the front, the sheet's profile).
+
+**The owner's body skins, the same day.** The owner made GPT Image versions of the chest, abdomen and one arm atlas. They are the atlases' own sizes, so they drop in as they are.
+- **One arm serves both.** The two arm atlases share one UV layout (they correlate 0.74 as they are, 0.40 mirrored), so no mirror is needed.
+- **The shades differed** (abdomen brown, chest pink). So `owner_body` lays each in by detail transfer: Kenny's own tone (blurred over 24 texels), the one his face is matched to, times the owner's image over its own blur, clamped 0.4–1.8. This keeps the pores, chest hair, nipples, navel, freckles, knuckles and veins, and every seam agrees.
+- **The chest is re-spaced** so its nipples land on the mesh's.
+- **The edges fade.** The abdomen's left and right edges meet down his back and drew a dark line there, so the detail fades out over 48 texels at every border.
+- **No procedural freckles** go on these atlases: his images carry their own.
+
+Sheet: `kenny_body_pass9.jpg`.
+
+**Finger guns.** His signature walk-out pose is the "gun point" (TV Tropes), so `Kenny_Stage_Pose`'s point at the crowd is now both hands (`point_l`). The clips were rebuilt (295) and the strike and paired libraries re-baked. The clip gates pass: `test_sixty_fps`, `test_clip_cadence`, `test_pose_lint`, `test_clip_authoring_gate` (sha re-pinned) and `test_entrance_director`.

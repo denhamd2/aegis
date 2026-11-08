@@ -563,8 +563,71 @@ BODY_FRECKLE_SHADE = np.array([0.84, 0.72, 0.66])
 BODY_FRECKLE_SEED = 271108
 
 
+## The owner's own body skin for Kenny (8 Nov, made by the owner in GPT Image
+## from these atlases and supplied: "I have chest, abdomen and one of the
+## arms ... they are all slightly different shades, can you normalize them to
+## Kenny's correct body colour?"). One arm serves both: the two arm atlases
+## share one UV layout (arm_l correlates 0.74 with arm_r as it is, 0.40
+## mirrored). Each is laid in by detail transfer (owner_body): the tone stays
+## Kenny's retinted skin, the one his face is matched to, so every atlas
+## agrees at its seams; his images give the pores, hair, freckles, nipples,
+## navel, knuckles and veins. [source, (cols, rows)]: source pixel -> atlas
+## pixel, re-spacing the chest so its nipples land on the mesh's.
+SOURCES = REPO / "tools/assets/sources"
+OWNER_BODY = {
+    "cody_rhodes_ximage_e0ec4a43013e474.png": (
+        SOURCES / "kenny_body_chest_owner.jpg",
+        ([(0, 0), (742, 719), (1260, 1230), (2048, 2048)],
+         [(0, 0), (408, 386), (512, 512)])),
+    "cody_rhodes_ximage_f862503283dc0b8.png": (SOURCES / "kenny_body_abdomen_owner.jpg", None),
+    "cody_rhodes_ximage_d527779c45f15f2.png": (SOURCES / "kenny_body_arm_owner.jpg", None),
+    "cody_rhodes_ximage_359c096926a07e8.png": (SOURCES / "kenny_body_arm_owner.jpg", None),
+}
+## The tone is ours below this scale (texels); the owner's detail above it.
+BODY_DETAIL_SIGMA = 24.0
+BODY_DETAIL_CLAMP = (0.4, 1.8)
+BODY_EDGE = 48.0
+
+
+def remap(src, cols, rows):
+    """src (h, w, 3) resampled so source col/row a lands at atlas col/row b."""
+    h, w = src.shape[:2]
+    xs = np.interp(np.arange(w, dtype=np.float32), [c[1] for c in cols], [c[0] for c in cols])
+    ys = np.interp(np.arange(h, dtype=np.float32), [r[1] for r in rows], [r[0] for r in rows])
+    x0 = np.clip(np.floor(xs).astype(int), 0, w - 1)
+    y0 = np.clip(np.floor(ys).astype(int), 0, h - 1)
+    x1, y1 = np.clip(x0 + 1, 0, w - 1), np.clip(y0 + 1, 0, h - 1)
+    tx, ty = (xs - x0)[None, :, None], (ys - y0)[:, None, None]
+    top = src[y0][:, x0] * (1 - tx) + src[y0][:, x1] * tx
+    bottom = src[y1][:, x0] * (1 - tx) + src[y1][:, x1] * tx
+    return top * (1 - ty) + bottom * ty
+
+
+def owner_body(rgb, src_name):
+    """The owner's skin detail on Kenny's tone (OWNER_BODY)."""
+    if src_name not in OWNER_BODY:
+        return rgb
+    path, warp = OWNER_BODY[src_name]
+    h, w = rgb.shape[:2]
+    theirs = np.asarray(Image.open(path).convert("RGB").resize((w, h), Image.LANCZOS), np.float32)
+    if warp:
+        theirs = remap(theirs, *warp)
+    ratio = np.clip(theirs / np.maximum(blur(theirs, BODY_DETAIL_SIGMA), 1.0), *BODY_DETAIL_CLAMP)
+    # His images darken toward their borders, and the borders are seams: the
+    # abdomen's left and right edges meet down the middle of his back, where
+    # they drew a dark line. The detail fades to none over BODY_EDGE texels.
+    def ramp(n):
+        v = np.arange(n, dtype=np.float32)
+        r = np.clip(np.minimum(v, n - 1 - v) / BODY_EDGE, 0, 1)
+        return r * r * (3 - 2 * r)
+    edge = (ramp(h)[:, None] * ramp(w)[None, :])[..., None]
+    ratio = 1.0 + (ratio - 1.0) * edge
+    return blur(rgb, BODY_DETAIL_SIGMA) * ratio
+
+
 def body_detail(rgb, src_name, mesh):
-    """The sheet's flush and freckles, placed by where each texel sits."""
+    """The sheet's flush and freckles, placed by where each texel sits. Not
+    the freckles where the owner's skin is laid in: his carry their own."""
     h, w = rgb.shape[:2]
     pts, uvs, tris = mesh[BODY_MATERIAL[src_name]]
     point, cover = gear_points(pts, uvs, tris, (w, h))
@@ -576,7 +639,7 @@ def body_detail(rgb, src_name, mesh):
     want = BODY_FRECKLE_DENSITY * smoothstep(*BODY_FRECKLE_FROM, y)
     cut = np.quantile(noise, 1 - BODY_FRECKLE_DENSITY)
     spot = np.clip((noise - cut) / max(float(noise.max() - cut), 1e-6) * 3, 0, 1)
-    spot = spot * (want / BODY_FRECKLE_DENSITY)
+    spot = spot * (want / BODY_FRECKLE_DENSITY) * (0.0 if src_name in OWNER_BODY else 1.0)
     tone = 0.5 + 0.5 * rng.random((h, w)).astype(np.float32)
     spot = (spot * tone)[..., None]
     return rgb * (1 - spot) + rgb * BODY_FRECKLE_SHADE * spot
@@ -588,7 +651,6 @@ def body() -> None:
         src = Image.open(CHARACTERS / src_name).convert("RGBA")
         w, h = src.size
         rgb = load(CHARACTERS / src_name) * SKIN_GAIN
-        rgb = body_detail(rgb, src_name, mesh)
         if src_name.endswith("e0ec4a43013e474.png"):
             rgb = mirrored_fill(rgb, polygon_mask(w, h, DREAM, 4))
         if src_name.endswith("d527779c45f15f2.png"):
@@ -596,6 +658,10 @@ def body() -> None:
             dx, dy = int(RING_SHIFT[0] * w), int(RING_SHIFT[1] * h)
             beside = np.roll(rgb, (-dy, -dx), (0, 1))
             rgb = rgb * (1 - m[..., None]) + beside * m[..., None]
+        # The tattoos gone first, so the tone the owner's detail sits on
+        # carries no ink.
+        rgb = owner_body(rgb, src_name)
+        rgb = body_detail(rgb, src_name, mesh)
         save(rgb, CHARACTERS / out_name, np.asarray(src)[..., 3])
 
 

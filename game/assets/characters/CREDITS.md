@@ -243,6 +243,10 @@ swapped in at load:
   generated one"), painted over the atlas by the same script
   (`owner_face`, rows re-spaced to the mesh's nostrils, levelled and
   feathered). Provenance: the owner's own generation, supplied by him.
+  `kenny_body_*.png` likewise carry the owner's GPT Image body skins
+  (`tools/assets/sources/kenny_body_{chest,abdomen,arm}_owner.jpg`, one arm
+  for both), laid in by `owner_body` as detail on Kenny's own skin tone.
+  Provenance: the owner's own generations, supplied by him.
   That sheet is a likeness reference supplied by the owner; its own
   provenance is the owner's to confirm before redistribution.
 - `kenny_gear_*.png`: painted procedurally by the same script, from nothing

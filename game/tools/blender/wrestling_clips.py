@@ -2890,12 +2890,17 @@ CLIPS = {
                    hand_r=(0.80, 0.10, 1.46), hand_l=(-0.80, 0.10, 1.46),
                    elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
                    fist_r=0.1, fist_l=0.1)),
+        # 8 Nov: his signature finger guns -- both hands, out at the crowd
+        # on his right (TV Tropes: "his gun point pose (still does so to this
+        # day)"), where the first pass pointed one.
         (96,  pose(KENNY_STAND, spine=(6, -10, 0), head=(8, -30, 0),
                    hand_r=(0.66, 0.40, 1.56), elbow_r=(1.0, -0.2, 0.0),
-                   fist_r=0.95, point_r=True)),
+                   hand_l=(0.10, 0.50, 1.50), elbow_l=(-1.0, -0.3, -0.2),
+                   fist_r=0.95, point_r=True, fist_l=0.95, point_l=True)),
         (130, pose(KENNY_STAND, spine=(6, -12, 0), head=(8, -34, 0),
                    hand_r=(0.67, 0.42, 1.58), elbow_r=(1.0, -0.2, 0.0),
-                   fist_r=0.95, point_r=True)),
+                   hand_l=(0.12, 0.52, 1.52), elbow_l=(-1.0, -0.3, -0.2),
+                   fist_r=0.95, point_r=True, fist_l=0.95, point_l=True)),
         (150, KENNY_STAND),
     ],
 
