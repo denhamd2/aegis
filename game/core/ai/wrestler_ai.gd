@@ -2079,12 +2079,15 @@ func _nearest_apron_out() -> Vector3:
 	return p + axis * 3.0
 
 
-## Where he kneels to reach under: at the apron on his side, inside the lane.
+## Where he kneels to reach under: at the apron on his side, inside the lane,
+## and clear of any spot another man has already claimed.
 func _apron_spot() -> Vector3:
 	var p := Vector3(controller.global_position.x, 0.0, controller.global_position.z)
 	var axis := GrappleRig._outside_side(p)
 	var lat := Vector3(absf(axis.z), 0.0, absf(axis.x))
-	var lane := clampf(p.dot(lat), -WrestlerController.RUMMAGE_LANE + 0.4, WrestlerController.RUMMAGE_LANE - 0.4)
+	var half := WrestlerController.RUMMAGE_LANE - 0.4
+	var desired := clampf(p.dot(lat), -half, half)
+	var lane := WrestlerController.nearest_free_apron_lane(axis, lat, desired, half, controller)
 	return axis * (WrestlerController.DECK_KEEP_OUT + WrestlerController.RUMMAGE_REACH * 0.5) + lat * lane
 
 

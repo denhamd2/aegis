@@ -86,6 +86,52 @@ func test_he_pulls_out_what_he_picks() -> void:
 	assert_bool(WeaponStock.of(w).in_stock(&"steel_chair")).is_true()
 
 
+## Two men cannot kneel at the same stretch of apron; the claim clears when
+## the rummage is interrupted or the retrieve completes.
+func test_apron_retrieval_spots_are_reserved_between_the_two_men() -> void:
+	var first := _wrestler(true)
+	var second := _wrestler(true)
+	var spot := Vector3(WrestlerController.DECK_KEEP_OUT + 0.1,
+			WrestlerController.FLOOR_LEVEL, 0.4)
+	for w: WrestlerController in [first, second]:
+		w.outside_ring = true
+		w.global_position = spot
+		await _ticks(2)
+	assert_bool(first.can_rummage()).is_true()
+	assert_bool(first._weapon_input({"weapon": true})).is_true()
+	assert_bool(first.is_rummaging()).is_true()
+	# the second man at the same spot is refused, and the refusal is legible
+	assert_bool(second.can_rummage()).is_false()
+	assert_bool(second.apron_spot_blocked()).is_true()
+	assert_bool(first.apron_spot_blocked()).is_false()
+	second.global_position = Vector3(spot.x, spot.y,
+			spot.z + WrestlerController.APRON_SPOT_GAP + 0.2)
+	await _ticks(2)
+	assert_bool(second.can_rummage()).is_true()
+	assert_bool(second.apron_spot_blocked()).is_false()
+	# interrupted: the claim is gone with him out of WEAPON_ACTION
+	first.fsm.transition_to(WrestlerFSM.State.HIT_REACT)
+	await _ticks(1)
+	assert_bool(WrestlerController.apron_spot_clear(spot, second)).is_true()
+	second.global_position = spot
+	await _ticks(2)
+	assert_bool(second.can_rummage()).is_true()
+
+
+func test_the_apron_claim_clears_when_the_retrieve_completes() -> void:
+	var w := _wrestler(true)
+	w.outside_ring = true
+	var spot := Vector3(WrestlerController.DECK_KEEP_OUT + 0.1,
+			WrestlerController.FLOOR_LEVEL, 0.5)
+	w.global_position = spot
+	await _ticks(2)
+	assert_bool(w._weapon_input({"weapon": true})).is_true()
+	w._tick_weapon_action({"weapon": true, "weapon_pick": &"steel_chair"})
+	for i in WrestlerController.WEAPON_ACTION_TICKS["retrieve"]:
+		w._tick_weapon_action({})
+	assert_bool(WrestlerController.apron_spot_clear(spot)).is_true()
+
+
 func test_a_ringside_weapon_can_be_slid_under_the_bottom_rope() -> void:
 	var w := _wrestler(true)
 	w.outside_ring = true

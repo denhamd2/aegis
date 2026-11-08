@@ -51,6 +51,12 @@ func test_a_fire_far_off_or_at_his_feet_does_not_catch_him() -> void:
 
 func test_once_alight_he_stays_alight_and_the_marks_only_grow() -> void:
 	var scene := _match()
+	# This test is about the fire itself, not the crew's response. Under a
+	# slow host the 60 process frames below can take long enough for Aubrey
+	# to arrive and put him out, which made the assertion flaky.
+	var crew: Node = scene.get_node_or_null("FireCrew")
+	if crew:
+		crew.set_process(false)
 	await get_tree().process_frame
 	var a: WrestlerController = scene.get_node("WrestlerA")
 	var m := _man(a)
@@ -198,3 +204,55 @@ func test_aubrey_keeps_after_him_until_the_fire_is_out() -> void:
 		ticks += 1
 	assert_int(outs[0]).is_equal(2)
 	assert_bool(m.burning).is_false()
+
+
+## The extinguisher asset ships its own polygonal "Cloud" plume. Carried as a
+## raw instance it showed from the moment Aubrey picked it up, while the
+## particle spray is supposed to be the only discharge. The cloud stays hidden
+## and the foam leaves the horn, only while she is spraying.
+func test_the_extinguisher_hides_its_cloud_and_sprays_from_the_horn() -> void:
+	var scene: Node = auto_free(load(MATCH_SCENE).instantiate())
+	scene.entrances = false
+	add_child(scene)
+	await get_tree().process_frame
+	var a: WrestlerController = scene.get_node("WrestlerA")
+	var crew := scene.get_node("FireCrew") as FireCrew
+	var prop: Node3D = crew._prop
+	assert_object(prop).is_not_null()
+	var clouds := prop.find_children("*Cloud*", "Node3D", true, false)
+	assert_int(clouds.size()).override_failure_message(
+			"the model no longer carries the Cloud node this guards").is_greater(0)
+	for node in clouds:
+		assert_bool((node as Node3D).visible).override_failure_message(
+				"%s is visible on the carried extinguisher" % node.name).is_false()
+	assert_object(crew._muzzle).is_not_null()
+	assert_bool(crew._foam.emitting).is_false()
+	assert_bool(crew._prop.visible).is_false()
+	var m := _man(a)
+	m.ignite()
+	var sprayed := false
+	for i in 60 * 60:
+		await get_tree().physics_frame
+		if crew._step == FireCrew.Step.SPRAY:
+			sprayed = true
+			assert_bool(crew._foam.emitting).is_true()
+			assert_bool(crew._prop.visible).is_true()
+			assert_float(crew._foam.global_position.distance_to(
+					crew._muzzle.global_position)).is_less(0.05)
+			break
+	assert_bool(sprayed).override_failure_message("the spray never ran").is_true()
+	# carried back, then put away at her spot -- never popped out of existence
+	var returning := false
+	for i in 60 * 5:
+		await get_tree().physics_frame
+		if crew._step == FireCrew.Step.RETURN:
+			returning = true
+			assert_bool(crew._prop.visible).is_true()
+			break
+	assert_bool(returning).override_failure_message("the spray never ended").is_true()
+	var back := 0
+	while crew.busy() and back < 60 * 20:
+		await get_tree().physics_frame
+		back += 1
+	assert_bool(crew.busy()).is_false()
+	assert_bool(crew._prop.visible).is_false()
