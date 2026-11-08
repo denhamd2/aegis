@@ -540,7 +540,7 @@ const SPECS := {
 	## light, which is a floor nobody has ever mopped. The colour and normal
 	## maps stay, so the plate is still visibly plate.
 	##
-	## Note for the browser build: `gl_compatibility` has no SSR, so there
+	## Note for `gl_compatibility`: it has no SSR, so there
 	## this is simply a dark low-roughness floor with a specular highlight
 	## and no reflection. That is a renderer difference, recorded here and in
 	## the Environment, not a bug in the material.

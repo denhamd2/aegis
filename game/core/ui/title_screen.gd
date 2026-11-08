@@ -13,8 +13,8 @@ extends Control
 ## Drawn rather than built from Control nodes. The reason is the same one
 ## MatchHUD gives: the project ships no font, no theme and no menu art, so a
 ## node-built menu would be default-themed buttons on a grey panel. Drawing it
-## means the screen is one coherent piece of art at any resolution, including
-## the browser canvas, where the Pages build runs at whatever size the tab is.
+## means the screen is one coherent piece of art at any window resolution or
+## aspect.
 ##
 ## Nothing here touches match state. The screen hands two Roster entries to
 ## configure_match() and frees itself; the match it launches is the same
@@ -336,8 +336,8 @@ func _back() -> void:
 ## --- Launch ----------------------------------------------------------------
 
 ## The match scene and both picked models, loading on worker threads while the
-## VS card holds. Where threads are not available (the Web build) the request
-## fails and _launch() loads them the ordinary way, under the stinger.
+## VS card holds. Where threads are not available the request fails and
+## _launch() loads them the ordinary way, under the stinger.
 func _start_preloads() -> void:
 	_preloads.clear()
 	for path: String in [MATCH_SCENE_PATH, (picks[0] as Roster.Entry).model_scene,
@@ -349,7 +349,7 @@ func _start_preloads() -> void:
 
 
 ## How far the background loads have got, 0..1 (1 when there is nothing to
-## load on a thread, as on the Web build).
+## load on a thread).
 func load_progress() -> float:
 	if _preloads.is_empty():
 		return 1.0

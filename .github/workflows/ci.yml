@@ -10,14 +10,67 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # The selector diffs the change against its base, so it needs real
+          # history rather than the default single grafted commit.
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      # Selection runs before Godot is set up so a docs-only or workflow-only
+      # change never pays for a 151-suite import and run. Every answer the
+      # selector is not sure of is "full"; see tools/ci/select_tests.py.
+      - name: Select the affected gdUnit suites
+        id: select
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+          BEFORE: ${{ github.event.before }}
+          HEAD_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          base=""
+          case "$EVENT" in
+            pull_request)
+              base="origin/$BASE_REF"
+              git fetch --no-tags origin \
+                "+refs/heads/$BASE_REF:refs/remotes/origin/$BASE_REF"
+              ;;
+            push) base="$BEFORE" ;;
+          esac
+          if [ -z "$base" ] || ! git rev-parse --verify --quiet "$base^{commit}" >/dev/null; then
+            echo "::notice::No usable base revision; running the full suite."
+            python3 tools/ci/select_tests.py --full --json \
+              --output "$RUNNER_TEMP/tests.txt" > "$RUNNER_TEMP/selection.json"
+          else
+            python3 tools/ci/select_tests.py --base "$base" --head "$HEAD_SHA" \
+              --json --output "$RUNNER_TEMP/tests.txt" > "$RUNNER_TEMP/selection.json"
+          fi
+          cat "$RUNNER_TEMP/selection.json"
+          mode=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["mode"])' \
+            "$RUNNER_TEMP/selection.json")
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
+          {
+            echo "tests<<AEGIS_TESTS"
+            cat "$RUNNER_TEMP/tests.txt"
+            echo "AEGIS_TESTS"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: No suite is affected
+        if: steps.select.outputs.mode == 'none'
+        run: echo "Nothing under game/ changed; the gdUnit suite is not affected."
 
       - name: Set up Godot 4.6
+        if: steps.select.outputs.mode != 'none'
         uses: chickensoft-games/setup-godot@v2
         with:
           version: 4.6.3-stable
           use-dotnet: false
 
       - name: Install gdUnit4
+        if: steps.select.outputs.mode != 'none'
         run: |
           mkdir -p game/addons
           # v5.0.0 does not compile against Godot 4.6 (GDScript API changes);
@@ -27,21 +80,66 @@ jobs:
           cp -r /tmp/gdUnit4/addons/gdUnit4 game/addons/gdUnit4
 
       - name: Import project
+        if: steps.select.outputs.mode != 'none'
         run: godot --headless --path game --import
 
       - name: Run gdUnit4 tests
+        if: steps.select.outputs.mode != 'none'
+        env:
+          MODE: ${{ steps.select.outputs.mode }}
+          TESTS: ${{ steps.select.outputs.tests }}
         run: |
+          set -euo pipefail
+          args=()
+          if [ "$MODE" = "subset" ]; then
+            while IFS= read -r suite; do
+              if [ -n "$suite" ]; then
+                args+=(-a "$suite")
+              fi
+            done <<< "$TESTS"
+          fi
+          # A subset with no parsed suite is a selector bug, not a reason to
+          # report green without running anything.
+          if [ "${#args[@]}" -eq 0 ]; then
+            echo "::warning::Empty selection; running the full suite."
+            args=(-a res://tests)
+          fi
           godot --headless --path game \
-            -s addons/gdUnit4/bin/GdUnitCmdTool.gd \
-            -a res://tests -c --ignoreHeadlessMode
+            -s addons/gdUnit4/bin/GdUnitCmdTool.gd "${args[@]}" \
+            -c --ignoreHeadlessMode
 
-  evidence-gate-smoke:
+      # Informational, never a gate: it records where the time went so the
+      # next ID 7 step can trim setup with evidence rather than guesses.
+      - name: Profile the suite
+        if: always() && steps.select.outputs.mode != 'none'
+        run: |
+          python3 tools/ci/profile_suite.py --report game/reports \
+            --output build/ci/suite-profile.json || true
+
+      - name: Keep the test report and profile
+        if: always() && steps.select.outputs.mode != 'none'
+        uses: actions/upload-artifact@v4
+        with:
+          name: gdunit-report
+          path: |
+            game/reports
+            build/ci/suite-profile.json
+          if-no-files-found: ignore
+
+  # One job for every check that only needs Python. Each ubuntu job pays for
+  # its own checkout of a multi-gigabyte repository, so three light jobs used
+  # to download the tree three times to run for a few seconds each.
+  python-checks:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.x"
+
+      - name: Self-test test selection and profiling
+        run: python3 -m unittest discover -s tools/ci/tests -v
+
       - name: Validate evidence gate against fixture manifests
         run: |
           python3 tools/capture/evidence_gate.py tools/capture/fixtures/manifest_pass.json
@@ -74,13 +172,6 @@ jobs:
             exit 1
           fi
 
-  status-page:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.x"
       - name: Regenerate gauntlet-status.html
         run: python3 tools/capture/generate_status_page.py
       - name: Fail if status page is stale

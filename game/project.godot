@@ -102,8 +102,8 @@ common/enable_pause_aware_picking=true
 
 renderer/rendering_method="forward_plus"
 ; The Mac build (export_presets.cfg "macOS") is the full desktop look: pinned
-; to forward_plus (Metal) so it can never fall back to the Web build's
-; compatibility renderer.
+; to forward_plus (Metal) so it can never fall back to the compatibility
+; renderer.
 renderer/rendering_method.macos="forward_plus"
 renderer/rendering_method.mobile="mobile"
 ; Apple Silicon Macs read the ETC2/ASTC formats as well as the desktop ones;

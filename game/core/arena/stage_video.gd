@@ -30,7 +30,7 @@ class_name StageVideo
 ## - **`TEXTURE_FILTER_LINEAR`, not the library's mipmapped anisotropic.** A
 ##   video texture has no mip chain; asking a mipless texture for mipmapped
 ##   sampling is wasted at best and samples black on some GLES3 drivers -- and
-##   the Web build is exactly that path.
+##   the compatibility renderer is exactly that path.
 ## - **The player lives in a SubViewport.** It is a Control, so it draws; the
 ##   requirement is that it decode without any of that drawing reaching the
 ##   screen. A CanvasLayer cannot do it at any layer value -- see the comment

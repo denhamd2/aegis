@@ -41,8 +41,8 @@ enter this repo.
   (`game/assets/environment/arena_bowl.glb`) from the constants in
   `game/core/arena/arena_builder.gd`, and `build_arena.sh`, which runs it. The
   .glb is committed; Blender is not needed to build, run or test the game.
-- `.github/workflows/` — `ci.yml` (gdUnit4 suite, evidence-gate fixtures,
-  status-page staleness) and `pages.yml` (the playable Web build).
+- `.github/workflows/` — `ci.yml` (affected-suite selection, gdUnit4 suite,
+  evidence-gate fixtures, status-page staleness).
 
 ## The front end
 
@@ -55,9 +55,8 @@ screen names a wrestler.
 
 The whole screen is drawn rather than built from themed Control nodes (see
 `game/core/ui/title_screen.gd` for why), so it lays out identically at any
-resolution, including whatever size the browser canvas happens to be. The
-controls card reads the live `InputMap`, so a rebind in `project.godot`
-cannot leave it lying.
+resolution the window is given. The controls card reads the live `InputMap`,
+so a rebind in `project.godot` cannot leave it lying.
 
 `game/scenes/play.tscn` is unchanged and still goes straight to a match with
 no menu — it is what `tools/capture/` and the probes point at.
@@ -152,26 +151,18 @@ returns byte-identical output before and after the change — same winners,
 tick counts, momentum peaks and state histograms. It costs load time only:
 41s to 54s for three seeds.
 
-## Playing it in a browser
+## Where it runs
 
-`.github/workflows/pages.yml` exports the `Web` preset from
-`game/export_presets.cfg` and publishes it to GitHub Pages on every push to
-`main` or the active working branch.
+The Mac build is the delivery platform: `.github/workflows/mac.yml` exports
+the `macOS` preset (universal, `forward_plus`) and publishes it as the
+`mac-latest` release. `game/export_presets.cfg` also keeps a Linux desktop
+preset for local parity; it is not published.
 
-**That build is for playing, not for judging.** Two differences from the
-build every measurement in this README was taken on:
-
-- **It renders on `gl_compatibility`.** `project.godot` asks for
-  `forward_plus`, but Godot's Web platform falls back to the compatibility
-  renderer, and `gauntlet/refs/VISUAL_BAR.md:64-86` is explicit that a
-  `gl_compatibility` frame cannot judge this project's visual bar — the
-  exposure anchor and every silhouette number were solved on `forward_plus`.
-  Expect the ring to read differently in the browser than in the captures.
-  Never cite a Pages screenshot as visual evidence.
-- **It is single-threaded.** `variant/thread_support=false` in the preset,
-  because Godot's threaded Web build needs `SharedArrayBuffer`, which needs
-  COOP/COEP response headers, which GitHub Pages does not send. Threads off
-  is what lets it load there at all.
+Web publishing was retired in ID 7. There is no Pages workflow, no Pages
+deployment and no Web export preset. Entries below that mention the browser
+build are a development log: they describe work done while it existed, not a
+current delivery target. The `gl_compatibility` fallbacks in rendering code
+stay, because they are renderer support rather than publishing.
 
 ## Current phase
 
@@ -8635,7 +8626,8 @@ The 2K26 camera plan's status is in `gauntlet/refs/camera_aaa_plan.md`
 
 > The Android build has since been removed at the owner's request (the Mac
 > build, `.github/workflows/mac.yml`, `mac-latest` release, replaces it as the
-> playable desktop build). Touch controls and watch mode remain for the Web build.
+> playable desktop build). Touch controls (`--touch`) and watch mode remain
+> available in the desktop build.
 
 - **WATCH** on the title menu: the same select screen, both picks marked
   CPU, and the match runs AI against AI (`configure_match(..., both_ai)`).

@@ -1509,16 +1509,16 @@ func _build_stage_spots() -> void:
 ##   ERROR: shader type fog not supported in OpenGL renderer
 ##      at: shader_set_code (drivers/gles3/storage/material_storage.cpp:2238)
 ##
-## once per volume and then rendered nothing. The Web export is the case that
-## matters: Godot's Web platform falls back to gl_compatibility, so the
-## deployed build logged the error on every boot.
+## once per volume and then rendered nothing. Any gl_compatibility run -- the
+## fallback renderer on platforms without forward_plus -- logged the error on
+## every boot.
 ##
 ## Skipping the volumes there is not a downgrade of the shipping look --
 ## forward_plus is unaffected and every measured number was taken on it. It
 ## drops an error the renderer was always going to raise, for geometry it was
 ## always going to ignore. The hall does read flatter without the haze; that
 ## is a limitation of the compatibility renderer, not something to work
-## around here, and README.md says so where it warns off Pages screenshots.
+## around here.
 func _build_fog_volumes() -> void:
 	if not _supports_volumetric_fog():
 		return
@@ -1530,8 +1530,7 @@ func _build_fog_volumes() -> void:
 			0.0006, Color(0.75, 0.75, 0.78), 0.05)
 
 
-## Depth fog for the compatibility renderer, which is what the browser build
-## runs and therefore what the Pages build looks like.
+## Depth fog for the compatibility renderer.
 ##
 ## The hall reads flat there because _build_fog_volumes() returns early --
 ## FogVolume is forward_plus only -- so the far stands sit at the same clarity
