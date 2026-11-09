@@ -80,6 +80,12 @@ const ENTRANCE_PYRO_BOOST_DB := 6.0
 ## tools/audio/build_sfx_round4.py -- and the bell is a bell again.)
 const MATCH_BELL_PITCH_SCALE := 1.0
 
+## Steel and glass are bright and peaky: at the -1.5 dB ceiling their files
+## come out at -23 LUFS-loop, 3 LU under the kendo stick, the sledge and the
+## wood. The other 3 dB is added here, wherever they play. No more than 3: the
+## master limiter would start ducking the crowd on every chair shot.
+const HIT_TRIM_DB := {"hit_metal": 3.0, "hit_glass": 3.0}
+
 ## A bump: the pelvis falling faster than this and then stopping, low.
 const BUMP_FALL_SPEED := 2.0
 const BUMP_FULL_SPEED := 5.5
@@ -301,8 +307,8 @@ func watch(referee: MatchReferee, wrestlers: Array, crowd: CrowdReaction, match_
 		w.set_piece_landed.connect(_on_set_piece_landed)
 		w.smashed_into_screen.connect(func(_who: WrestlerController) -> void:
 			# the panel going: glass, the cabinet's metal, the hall
-			sfx.play_any("hit_glass", 3.0)
-			sfx.play_any("hit_metal", 0.0)
+			sfx.play_any("hit_glass", hit_level("hit_glass", 3.0))
+			sfx.play_any("hit_metal", hit_level("hit_metal", 0.0))
 			sfx.play("pyro_bang", -12.0, 1.4)
 			sfx.play_any("crowd_ooh", CROWD_REACTION_GAIN_DB + 0.0)
 			_register_chaos_activity(3.0))
@@ -495,6 +501,14 @@ static func hit_volume(move: MoveDef) -> float:
 	var total := move.damage_head + move.damage_torso + move.damage_arms + move.damage_legs
 	var t := clampf((total - HIT_DAMAGE_QUIET) / (HIT_DAMAGE_LOUD - HIT_DAMAGE_QUIET), 0.0, 1.0)
 	return lerpf(-9.0, 0.0, t)
+
+
+## The level `sound` plays at when the mix asks for `db`: steel and glass get
+## their trim (HIT_TRIM_DB), but never past +3 dB over the file -- a cue that
+## already asks for that much is left where it is.
+static func hit_level(sound: String, db: float) -> float:
+	var trim := float(HIT_TRIM_DB.get(sound, 0.0))
+	return db if trim == 0.0 else minf(db + trim, maxf(db, trim))
 
 
 ## A gun's muzzle flash is the broadcast cue; other flashes (if added later)
@@ -716,8 +730,9 @@ func _heat(who: Variant, amount: float) -> void:
 func _on_move_landed(attacker, _defender, move: MoveDef) -> void:
 	_heat(attacker, 0.12 + 0.5 * CrowdReaction.move_pop(move))
 	var sound := hit_sound(move)
-	if sound != "" and not sfx.play_any(sound, hit_volume(move)):
-		sfx.play(sound, hit_volume(move))      # a one-off: the bell, the whoosh
+	var hit_db := hit_level(sound, hit_volume(move))
+	if sound != "" and not sfx.play_any(sound, hit_db):
+		sfx.play(sound, hit_db)      # a one-off: the bell, the whoosh
 	var pop := CrowdReaction.move_pop(move)
 	if pop >= POP_MOVE:
 		sfx.play_any("crowd_pop", CROWD_REACTION_GAIN_DB + lerpf(-8.0, -2.0, clampf((pop - POP_MOVE) / (1.0 - POP_MOVE), 0.0, 1.0)))
@@ -795,12 +810,12 @@ func on_weapon_event(weapon: WeaponActor, event: String) -> void:
 				sfx.play_any("crowd_ooh", CROWD_REACTION_GAIN_DB + 1.0)
 			elif weapon.def.id == &"glass_pane":
 				# the sheet going: glass, over the thud of him and the frame
-				sfx.play_any("hit_glass", 2.0)
-				sfx.play_any("hit_glass", -2.0)
+				sfx.play_any("hit_glass", hit_level("hit_glass", 2.0))
+				sfx.play_any("hit_glass", hit_level("hit_glass", -2.0))
 				sfx.play_any("table_crack", -8.0)
 				sfx.play_any("crowd_ooh", CROWD_REACTION_GAIN_DB + 0.0)
-			elif not sfx.play_any(weapon.def.sound, -1.0):
-				sfx.play(weapon.def.sound, -1.0)
+			elif not sfx.play_any(weapon.def.sound, hit_level(weapon.def.sound, -1.0)):
+				sfx.play(weapon.def.sound, hit_level(weapon.def.sound, -1.0))
 
 
 ## Through a table: the crowd. (The crack itself is the table's "broke".)
@@ -810,7 +825,7 @@ func _on_set_piece_landed(who: WrestlerController, weapon: WeaponActor, broke: b
 	sfx.play_any("crowd_pop", CROWD_REACTION_GAIN_DB + -1.0 if broke else -5.0)
 	sfx.play_any("crowd_ooh", CROWD_REACTION_GAIN_DB + -2.0 if broke else -4.0)
 	if not broke and weapon != null:
-		sfx.play_any(weapon.def.sound, -3.0)
+		sfx.play_any(weapon.def.sound, hit_level(weapon.def.sound, -3.0))
 	_register_chaos_activity(2.0 if broke else 0.5)
 
 

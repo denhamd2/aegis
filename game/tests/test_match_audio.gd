@@ -567,6 +567,26 @@ func test_weapons_sound_like_what_they_are() -> void:
 				.is_equal(cases[id])
 
 
+## Steel and glass are 3 dB up wherever they play, and never more than 3 dB
+## over the file (sound round 4: the limiter must not pump on a chair shot).
+func test_steel_and_glass_are_lifted_three_db_and_no_further() -> void:
+	assert_float(MatchAudio.hit_level("hit_metal", -9.0)).is_equal(-6.0)
+	assert_float(MatchAudio.hit_level("hit_glass", 0.0)).is_equal(3.0)
+	assert_float(MatchAudio.hit_level("hit_glass", 2.0)).is_equal(3.0)
+	assert_float(MatchAudio.hit_level("hit_glass", 3.0)).is_equal(3.0)
+	assert_float(MatchAudio.hit_level("hit_kendo", -2.0)).is_equal(-2.0)
+	var audio: MatchAudio = auto_free(MatchAudio.new())
+	add_child(audio)
+	var heard := []
+	audio.sfx.played.connect(func(sound: String, db: float) -> void: heard.append([sound.left(sound.rfind("_")), db]))
+	var pipe := WeaponCatalog.swing_move(WeaponCatalog.by_id(&"lead_pipe"))
+	audio._on_move_landed(null, null, pipe)
+	assert_array(heard[0]).is_equal(["hit_metal", MatchAudio.hit_volume(pipe) + 3.0])
+	assert_int(SfxPool.family_size("hit_metal")).is_equal(3)
+	assert_int(SfxPool.family_size("hit_glass")).is_equal(3)
+	assert_int(SfxPool.family_size("hit_chair")).is_equal(5)
+
+
 ## Every take the new round built loads and has a body to it.
 func test_every_new_take_has_a_length() -> void:
 	for f: String in FAMILIES:

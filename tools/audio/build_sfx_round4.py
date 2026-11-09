@@ -77,6 +77,7 @@ SHA256 = {
 	"ia/Red_Library_Fire/R28-08-Torch_or_Molotov_Cocktail.wav": "c1fa755ba174d003ae5694aeedb2f60ad558c7d0020f7aa41160b9b36007bd23",
 	"ia/Red_Library_Impacts/R28-55-Thumps_on_Large_Hollow_Wooden_Surface.wav": "5e2e34c1e69af985cd3e4518b714a1ac37cb88208a76103dbd996161f00228f1",
 	"ia/Red_Library_Metal/R15-07-Metal_Clangs_and_Hollow_Hits.wav": "5b4898c9c762e55dbba0b9134eecb83d948287b65c53e562b57ba31bc2565b9e",
+	"ia/Red_Library_Metal/R16-34-Banging_Metal_Pipe.wav": "30b9ef9c8d11abfe79301114a8c2c67d18256dd73ce3233b87ac57bcb5cfe119",
 	"ia/Red_Library_Metal/R16-31-Metal_Clank_and_Ring.wav": "08043c46c7cd620f4f578e77b9db23782c20ddac959daad15b3815232d3b0203",
 	"ia/Red_Library_Voices_Men_1/R15-31-Man_Growling_and_Grunting.wav": "46f9c39d00f6bd50dd76723e7e9782e72499276c423fc7a8b1b190ed067ddd12",
 	"ia/Red_Library_Voices_Men_1/R15-33-Man_Out_of_Breath.wav": "30db51fd46456181891d00e07fa37b8b340657e073b567e27732dfc59d068376",
@@ -96,7 +97,8 @@ IA_ITEMS = {
 	"Red_Library_Fights": ["R15-12-Loud Slaps or Whacks"],
 	"Red_Library_Voices_Men_1": ["R21-08-Man Moans", "R15-31-Man Growling and Grunting",
 			"R21-14-Man Grunts and Struggles", "R15-33-Man Out of Breath"],
-	"Red_Library_Metal": ["R15-07-Metal Clangs and Hollow Hits", "R16-31-Metal Clank and Ring"],
+	"Red_Library_Metal": ["R15-07-Metal Clangs and Hollow Hits", "R16-31-Metal Clank and Ring",
+			"R16-34-Banging Metal Pipe"],
 	"Red_Library_Crashes": ["R28-13-Glass Windows Smashed"],
 	"Red_Library_Fire": ["R28-08-Torch or Molotov Cocktail", "R27-25-Large Fire Burning"],
 	"Red_Library_Crowds_Men": ["R08-34-Men Booing"],
@@ -108,8 +110,11 @@ OGA = {"rubberduck": ("https://opengameart.org/content/25-cc0-bang-firework-sfx"
 
 # ---- fetch -----------------------------------------------------------------
 def _get(url):
+	# An honest client name. BigSoundBank has answered 403 to scripted clients;
+	# if it does, download the WAV from the sound's page by hand into the cache
+	# (the sha256 table below still checks it).
 	ctx = ssl.create_default_context(cafile=os.environ.get("SSL_CERT_FILE") or None)
-	req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+	req = urllib.request.Request(url, headers={"User-Agent": "audio-build-script/1.0"})
 	with urllib.request.urlopen(req, timeout=300, context=ctx) as r:
 		return r.read()
 
@@ -408,7 +413,7 @@ def source(key):
 		"struggle": IA + "Red_Library_Voices_Men_1/R21-14-Man_Grunts_and_Struggles.wav",
 		"breath": IA + "Red_Library_Voices_Men_1/R15-33-Man_Out_of_Breath.wav",
 		"hollow": IA + "Red_Library_Metal/R15-07-Metal_Clangs_and_Hollow_Hits.wav",
-		"clank": IA + "Red_Library_Metal/R16-31-Metal_Clank_and_Ring.wav",
+		"pipe": IA + "Red_Library_Metal/R16-34-Banging_Metal_Pipe.wav",
 		"smash": IA + "Red_Library_Crashes/R28-13-Glass_Windows_Smashed.wav",
 		"molotov": IA + "Red_Library_Fire/R28-08-Torch_or_Molotov_Cocktail.wav",
 		"bigfire": IA + "Red_Library_Fire/R27-25-Large_Fire_Burning.wav",
@@ -520,6 +525,79 @@ def slot_bump():
 	save_pool(items, -21.1, note="bump_0..5")
 
 
+def _strike(src, at, length):
+	"""One hit from a recording of several: from 20 ms before `at`, peak 10 ms in."""
+	return peak_to(align_peak(cut(src, at - 0.02, length)), 0.0)
+
+
+def slot_metal():
+	"""P2 (revised). hit_metal_0..2: the lead pipe, shovel, stop sign, steps,
+	pan and chain. The body used to bury the metal; now it is a steel shovel
+	struck once (full-band), the ring of a banged pipe under it -- a different
+	single strike on every take, left to ring out -- and a low body thump.
+	Limited by at most 3.5 dB to -23 LUFS-loop; MatchAudio.HIT_TRIM_DB adds
+	the last 3 dB."""
+	shovel, pipe = source("1084"), source("pipe")
+	items = []
+	for i, (at, ring_at) in enumerate(((17.180, 2.190), (23.620, 9.275), (10.395, 12.120))):
+		# The pipe's low clatter (and the recording's hum) stay out: its ring is the part above 900 Hz.
+		ring = peak_to(fade(ff(_strike(pipe, ring_at, 1.2), "highpass=f=900"), 0.001, 0.3), 0.0)
+		x = layer([(0.0, _strike(shovel, at, 1.0), 1.0), (0.0, ring, RING), (0.003, thump(), 0.35)])
+		x = fade(trim_tail(gate(x, -46, -60, 0.3), -50), 0.002, 0.2)
+		items.append((f"hit_metal_{i}", fit(x, -23.0, 3.5)))
+	save_pool(items, -23.0, note="hit_metal_0..2")
+
+
+## The ring layer's gain against the strike it sits under.
+RING = 0.6
+
+
+def slot_chair():
+	"""P2 (revised). hit_chair_2..4 (0 and 1, real chairs, are kept): one
+	hollow steel hit each -- single strikes, cut from between their neighbours
+	-- with the top of a different shovel strike over it for the ring, and the
+	body thump. At the kept chairs' level."""
+	hollow, shovel = source("hollow"), source("1084")
+	items = []
+	for i, (at, ring_at) in zip((2, 3, 4), ((14.525, 0.185), (20.915, 3.235), (34.065, 6.935))):
+		ring = peak_to(ff(_strike(shovel, ring_at, 1.0), "highpass=f=1500"), 0.0)
+		x = layer([(0.0, _strike(hollow, at, 0.80), 1.0), (0.002, ring, 0.5), (0.003, thump(), 0.45)])
+		x = fade(trim_tail(gate(x, -34, -60, 0.25), -50), 0.002, 0.15)
+		items.append((f"hit_chair_{i}", fit(x, -24.0, 2.0)))
+	save_pool(items, -24.0, note="hit_chair_2..4")
+
+
+def resample(x, ratio):
+	"""Play `x` `ratio` times as fast (pitch and length together), linear interpolation."""
+	n = int(len(x) / ratio)
+	t = np.arange(n) * ratio
+	return np.stack([np.interp(t, np.arange(len(x)), x[:, c]) for c in range(x.shape[1])], 1).astype(np.float32)
+
+
+def slot_glass():
+	"""P3 (revised). hit_glass_0..2: the pane and the light tubes. The round-3
+	files had nothing above 4 kHz, and the first proposal was band-limited to
+	6 kHz by its optical smash. Now the shatter is full-band: a bulb bursting
+	(its pop and its tinkle) and a mirror exploding, high-passed at 400 Hz with
+	its top lifted 6 dB --
+	the mirror has two bursts, used one each, and the third take plays the
+	first 7% faster. The old window smash stays as the mid-range crash only
+	(150 Hz - 5 kHz, which also drops its 60 Hz hum), over the body thump."""
+	smash, mirror = source("smash"), source("0387")
+	items = []
+	for i, (bulb, bulb_at, mirror_at, speed, smash_at, smash_gain) in enumerate((
+			("2043", 0.076, 0.050, 1.0, 12.626, 0.20), ("2045", 0.080, 0.555, 1.0, 8.570, 0.35),
+			("2039", 0.010, 0.050, 1.07, 0.195, 0.35))):
+		pop = peak_to(align_peak(cut(source(bulb), max(0, bulb_at - 0.02), 0.5)), 0.0)
+		shards = resample(cut(mirror, max(0, mirror_at - 0.03), 0.85), speed)
+		shards = peak_to(fade(ff(align_peak(shards), "highpass=f=400,highshelf=f=7000:g=6"), 0.001, 0.25), 0.0)
+		crash = ff(align_peak(cut(smash, max(0, smash_at - 0.02), 1.0)), "highpass=f=150,lowpass=f=5000")
+		x = layer([(0.0, pop, 1.0), (0.002, shards, 1.0), (0.004, peak_to(crash, 0.0), smash_gain), (0.004, thump(), 0.3)])
+		x = fade(trim_tail(gate(x, -42, -50, 0.15), -55), 0.002, 0.15)
+		items.append((f"hit_glass_{i}", fit(x, -23.0, 3.5)))
+	save_pool(items, -23.0, note="hit_glass_0..2")
+
+
 def slot_pyro_bang():
 	"""P10 (revised). The lift charge: rubberduck's cannon_02, at -22 LUFS-loop,
 	about 6 LU under the pyro_boom it launches -- up from 8.6 LU under, but
@@ -554,7 +632,7 @@ def slot_bell():
 		save(name, peak_to(y, min(CEILING - 0.7, 20 * np.log10(float(np.abs(y).max())))))
 
 
-SLOTS = {"bump": slot_bump, "groan": slot_groan, "wind": slot_wind, "count_slap": slot_count_slap, "trims": slot_trims,
+SLOTS = {"bump": slot_bump, "metal": slot_metal, "chair": slot_chair, "glass": slot_glass, "groan": slot_groan, "wind": slot_wind, "count_slap": slot_count_slap, "trims": slot_trims,
 		"pyro_bang": slot_pyro_bang, "grunt_heavy": slot_grunt_heavy, "bell": slot_bell}
 
 if __name__ == "__main__":
