@@ -496,6 +496,30 @@ def slot_trims():
 		save(f"crowd_pop_{i}", peak_to(y, min(CEILING, 20 * np.log10(float(np.abs(y).max())))))
 
 
+def slot_bump():
+	"""P1 (revised). bump_0..5: the boom on frame 0 (it used to land 0.5-1.0 s
+	into the file) with a fast decay. Three layers, each peak-aligned 10 ms in:
+	the hollow deck, a body fall, and the canvas slap -- then the broadcast EQ
+	(1 kHz down, lows up). Six different deck thumps; the slap takes are not the
+	count slap's; the pool sits with the kept bump_6..11 at -21.1."""
+	deck, slaps = source("deck"), source("slaps")
+	DECK = (0.518, 2.686, 9.182, 12.087, 14.879, 3.405)
+	BODY = (("2452", 0.213, 0.55), ("2454", 0.322, 0.50), ("2455", 0.148, 0.55), ("2453", 0.452, 0.60),
+			("2456", 0.795, 0.60), ("2452", 0.213, 0.55))
+	SLAP = ((5.93, 0.14), (9.62, 0.25), (14.048, 0.12), (12.32, 0.30), (20.773, 0.12), (16.01, 0.25))
+	items = []
+	for i in range(6):
+		d = peak_to(align_peak(cut(deck, DECK[i] - 0.03, 0.75)), 0.0)
+		k, t, n = BODY[i]
+		b = peak_to(align_peak(cut(source(k), t - 0.02, n + 0.02)), 0.0)
+		sl = peak_to(ff(align_peak(cut(slaps, SLAP[i][0] - 0.02, 0.25)), "highpass=f=1500"), 0.0)
+		x = layer([(0.0, d, 1.0), (0.0, b, 0.8), (0.0, sl, SLAP[i][1])])
+		x = ff(x, "equalizer=f=1000:t=q:w=1:g=-3,lowshelf=f=110:g=4")
+		x = fade(trim_tail(gate(x, -36, -45, 0.12), -50), 0.002, 0.15)
+		items.append((f"bump_{i}", fit(x, -21.1, 2.0)))
+	save_pool(items, -21.1, note="bump_0..5")
+
+
 def slot_pyro_bang():
 	"""P10 (revised). The lift charge: rubberduck's cannon_02, at -22 LUFS-loop,
 	about 6 LU under the pyro_boom it launches -- up from 8.6 LU under, but
@@ -530,7 +554,7 @@ def slot_bell():
 		save(name, peak_to(y, min(CEILING - 0.7, 20 * np.log10(float(np.abs(y).max())))))
 
 
-SLOTS = {"groan": slot_groan, "wind": slot_wind, "count_slap": slot_count_slap, "trims": slot_trims,
+SLOTS = {"bump": slot_bump, "groan": slot_groan, "wind": slot_wind, "count_slap": slot_count_slap, "trims": slot_trims,
 		"pyro_bang": slot_pyro_bang, "grunt_heavy": slot_grunt_heavy, "bell": slot_bell}
 
 if __name__ == "__main__":

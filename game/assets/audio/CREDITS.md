@@ -58,6 +58,7 @@ optical transfers, so they carry little above 5 kHz.
 | `groan_3`, `groan_4` | Red Library: Voices Men 1, R15-31 "Man Growling and Grunting" | USC Cinema / Sunset Editorial (Internet Archive) | CC0 |
 | `wind_*` | Red Library: Voices Men 1, R15-33 "Man Out of Breath" | USC Cinema / Sunset Editorial (Internet Archive) | CC0 |
 | `count_slap_*` | [Red Library: Fights](https://archive.org/details/Red_Library_Fights), R15-12 "Loud Slaps or Whacks", over [Red Library: Impacts](https://archive.org/details/Red_Library_Impacts), R28-55 "Thumps on Large Hollow Wooden Surface" | USC Cinema / Sunset Editorial (Internet Archive) | CC0 |
+| `bump_0`-`bump_5` | Red Library: Impacts, R28-55 "Thumps on Large Hollow Wooden Surface" (the deck), [Body Fall 1-5](https://bigsoundbank.com/body-fall-1-s2452.html) (the man), Red Library: Fights, R15-12 "Loud Slaps or Whacks" (the canvas) | USC Cinema / Sunset Editorial (Internet Archive); Joseph SARDIN (BigSoundBank) | CC0 |
 | `pyro_boom`, `crowd_finish`, `crowd_pop_*` | the same recordings as above, with the silence before the sound cut off (the pops keep 150 ms) | | |
 | `bell_start`, `bell_end` | the same recording as above, the ring faded out 1.5 s after the last strike | | |
 | `grunt_heavy_0`-`grunt_heavy_3` | the same recording as above, re-levelled to one loudness | | |
