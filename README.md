@@ -11644,3 +11644,13 @@ The owner: "his hair should be able to move as it's long".
   - **The fist from beside him:** beside the body he alternates the stomp with dropping to a knee to punch the head, so the punches don't depend on him reaching the head.
   - **Sells:** a ground hit never emitted `hurt`, so the man down never made a sound. Now he grunts (heavy for a weapon or a punch), and the on-mat flinch is 1.6× a standing one (2.2× for a weapon).
 - **Irish whips.** "Irish whips are not working, I never see them." The whip works end to end (`rope_return_probe`: whipped, off the ropes, met with the rebound move). It was just rare: 18% of the few holds after the opening, and a seeded match ran 70 s with none. Now `WHIP_CHANCE` is 0.45.
+
+## 9 Nov (7) — Kenny's broader, rounder head
+
+- The owner: "building him a broader, rounder head". Measured on the three-view's front in eye spacings: Cody's face ran 1.93 from the eyes to the chin (Kenny's ~1.75), and Cody's jaw at the mouth was ~0.80 of his cheekbones (Kenny's ~0.89). That's a long face tapering in, against Kenny's shorter, broad lower face.
+- `KennyFaceShape.TABLE` adds:
+  - the lower jaw out 7 mm a side and the jaw angle squared out 5 mm;
+  - the lower cheeks out 3 mm and the cheekbones 4 mm;
+  - the cheek's front-to-side turn carried forward 3.5 mm, so it rounds instead of cornering;
+  - the chin up 3 mm.
+- All moves stay clear of the neck seam (`test_kenny_model`). The cheek normal bend eases to 0.30/0.35, since the broader planes catch more light.

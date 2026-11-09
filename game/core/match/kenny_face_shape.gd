@@ -71,6 +71,24 @@ const TABLE := [
 	# brow: under the truss its underside shadow and his brows merged into
 	# one dark band ("is Kenny missing his eyebrows?").
 	[Vector3(0.030, 1.733, -0.004), Vector3(0.040, 0.010, 0.030), Vector3(0.0, 0.0, -0.0030), true],
+	# 9 Nov, the owner: "building him a broader, rounder head". Measured
+	# against the three-view's front, in eye spacings: Cody's face runs 1.93
+	# from the eyes to the chin where Kenny's runs ~1.75, and Cody's jaw at
+	# the mouth is ~0.80 of his cheekbones where Kenny's is ~0.89 -- a long
+	# face tapering in, against a shorter, broad lower face. So: the jaw and
+	# lower cheeks out another 5 mm a side...
+	[Vector3(0.056, 1.615, -0.040), Vector3(0.030, 0.028, 0.045), Vector3(0.0070, 0.0, 0.0015), true],
+	# The jaw's angle, under the ear, squared out (his jaw is square, Cody's
+	# runs in to the chin)...
+	[Vector3(0.062, 1.604, -0.058), Vector3(0.026, 0.0185, 0.035), Vector3(0.0050, 0.0, 0.0), true],
+	# ...and the cheekbones broader, under the outer eye.
+	[Vector3(0.062, 1.686, -0.040), Vector3(0.024, 0.020, 0.035), Vector3(0.0040, 0.0, 0.0010), true],
+	[Vector3(0.054, 1.645, -0.035), Vector3(0.026, 0.022, 0.040), Vector3(0.0030, 0.0, 0.0015), true],
+	# ...the front-to-side turn of the cheek carried forward, so the face
+	# rounds into its sides rather than turning a corner...
+	[Vector3(0.064, 1.658, -0.042), Vector3(0.022, 0.040, 0.028), Vector3(0.0010, 0.0, 0.0035), true],
+	# ...and the chin up 3 mm: the shorter face.
+	[Vector3(0.0, 1.600, -0.010), Vector3(0.032, 0.0145, 0.030), Vector3(0.0, 0.0030, 0.0), false],
 	# ...and his chin carried forward, as his profile has it.
 	[Vector3(0.0, 1.600, -0.006), Vector3(0.024, 0.013, 0.020), Vector3(0.0, -0.0005, 0.0030), false],
 ]
@@ -147,9 +165,9 @@ const RELAX_PASSES := 14
 ## rolls off as round over a broader face, the silhouette untouched.
 ## [centre, radii, bend], mirrored.
 const SOFTEN := [
-	[Vector3(0.060, 1.662, -0.040), Vector3(0.030, 0.050, 0.045), 0.45],
+	[Vector3(0.060, 1.662, -0.040), Vector3(0.030, 0.050, 0.045), 0.30],
 	# ...down the side of the face toward the jaw, below the cheekbone.
-	[Vector3(0.064, 1.640, -0.048), Vector3(0.030, 0.040, 0.050), 0.5],
+	[Vector3(0.064, 1.640, -0.048), Vector3(0.030, 0.040, 0.050), 0.35],
 	[Vector3(0.036, 1.694, -0.018), Vector3(0.022, 0.012, 0.022), 0.35],
 ]
 
