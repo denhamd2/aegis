@@ -11672,3 +11672,9 @@ The owner: "his hair should be able to move as it's long".
 - The owner: "When each wrestler is entering through the ropes during their entrance, I want the camera to cut to a different angle further zoomed out. Use that same angle when Cody is handing his coat to Aubrey. The animations for those isn't great so I want to hide them a bit."
 - Every man's rope step, and Cody's coat-off, turn and hand-out, now cut from the ring arrival's crane to the rope wide (ringside on the hard-camera side, 3.1 m up), opened from 50° to 60°.
 - The crane's clock keeps running under the wide, so cutting back picks it up where it would have been, instead of booming down again from the top (the camera judge's warning).
+
+## 9 Nov (11) — Cody only goes up top for a man who's down
+
+- The owner: "The top rope moonsault from Cody doesn't make sense. He should only do this when his opponent is down for enough seconds to land on them. He shouldn't do it when his opponent is standing and healthy."
+- The climb onto a standing man was the crossbody: the referee sent him up as his opponent started to get up, and by the time he had walked, climbed and stepped up, the man was on his feet and fresh. The referee no longer starts it. Off the top is now only the moonsault, onto a man down in reach of a corner, who is held down while Cody climbs.
+- Pinned by `test_the_referee_never_sends_him_up_for_a_man_on_his_feet`.

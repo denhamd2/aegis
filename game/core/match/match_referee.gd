@@ -243,8 +243,12 @@ func _resolve_tick() -> void:
 		return
 	if _try_start_tie_up():
 		return
-	if _check_for_crossbody():
-		return
+	# No climb for the crossbody onto a man just up (the owner, 9 Nov: Cody's
+	# top-rope dive "doesn't make sense. He should only do this when his
+	# opponent is down for enough seconds to land on them. He shouldn't do
+	# it when his opponent is standing and healthy"). By the time he had
+	# walked, climbed and stepped up, the man was up and fresh. Off the top
+	# is the moonsault onto a man down, held down by TopRopeSpot.
 	_check_for_downed_opponent_action()
 
 ## Starts a tie-up once either wrestler pressed grapple this tick (captured
@@ -427,35 +431,6 @@ func cover_now(attacker: WrestlerController, defender: WrestlerController) -> vo
 	_pin_defender = defender
 	_rope_side = _reachable_ropes(attacker, defender)
 	attacker.begin_pin(defender, _pin_seed())
-
-
-## The crossbody (TopRopeSpot, crossbody): once a match, as the man he put
-## down starts to get up below a corner that suits it.
-const CROSSBODY_RISE_TICKS := 6
-
-
-func _check_for_crossbody() -> bool:
-	for pair in [[wrestler_a, wrestler_b], [wrestler_b, wrestler_a]]:
-		var attacker: WrestlerController = pair[0]
-		var defender: WrestlerController = pair[1]
-		if attacker.top_rope_standing_move == null or attacker._top_rope_standing_used:
-			continue
-		if defender.dead or defender.fsm.current_state != WrestlerFSM.State.GETUP \
-				or defender.fsm.ticks_in_state > CROSSBODY_RISE_TICKS:
-			continue
-		if not attacker.fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION]) \
-				or attacker.outside_ring or defender.outside_ring \
-				or attacker.last_landed_tier >= CombatSystem.Tier.FINISHER:
-			continue
-		if not TopRopeSpot.can_crossbody(defender):
-			continue
-		attacker._top_rope_standing_used = true
-		var spot := TopRopeSpot.new()
-		spot.name = "TopRopeSpot"
-		get_parent().add_child(spot)
-		spot.begin(attacker, defender, true)
-		return true
-	return false
 
 
 func _start_top_rope(attacker: WrestlerController, defender: WrestlerController) -> void:

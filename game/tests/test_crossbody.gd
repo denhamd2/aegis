@@ -70,3 +70,22 @@ func test_off_the_top_he_takes_the_man_over_and_covers() -> void:
 	# across the ring by Cody's body landing on his.
 	var fell := Vector2(roman.global_position.x - 1.0, roman.global_position.z - 1.0).length()
 	assert_float(fell).is_less(0.3)
+
+
+## The owner, 9 Nov: no climb onto a man who is up -- the AI never starts the
+## crossbody; the spot is only a moonsault onto a man down.
+func test_the_referee_never_sends_him_up_for_a_man_on_his_feet() -> void:
+	var scene := _roman_vs_cody()
+	await await_millis(40)
+	var roman := scene.get_node("WrestlerA") as WrestlerController
+	var cody := scene.get_node("WrestlerB") as WrestlerController
+	var referee := scene.get_node("MatchReferee") as MatchReferee
+	referee._tying_up = false
+	cody.global_position = Vector3(0.2, 0.0, 0.6)
+	roman.global_position = Vector3(1.0, 0.0, 1.0)
+	await get_tree().physics_frame
+	roman.fsm.current_state = WrestlerFSM.State.GETUP
+	for i in 30:
+		await get_tree().physics_frame
+	assert_object(scene.get_node_or_null("TopRopeSpot")).is_null()
+	assert_bool(cody._top_rope_standing_used).is_false()
