@@ -114,12 +114,194 @@ static func apply(root: Node) -> int:
 				n += fit(arrays, shape, index)
 			if mat_name == SKIN_MATERIAL:
 				n += RomanFaceShape.sculpt(arrays, moves())
+				relax(arrays)
+				soften(arrays)
 			moved += n
 			any = any or n > 0
 			surfaces.append(arrays)
 		if any:
 			mi.mesh = BodyBulk.rebuilt(source, surfaces)
 	return moved
+
+
+## The owner, 9 Nov: "Same with that dark shadows. The cheeks, is this from
+## Cody? I don't see it on our face texture image." It is: his photo's cheeks
+## are an even peach (unshaded, the atlas renders clean), but Cody's head
+## carries bags under the eyes and hollows under the cheekbones, and under
+## the truss key they fill with shadow -- with Kenny's shaping off as well.
+## Inside these regions the surface is relaxed (each welded vertex drawn
+## toward its neighbours' mean, RELAX_PASSES times, by the region's weight)
+## and its normals are rebuilt from the relaxed faces, so the hollows ease
+## out and shade smooth. [centre, radii, strength], mirrored about MIDLINE_X;
+## clear of the lid margins (y 1.709) and the mouth.
+const RELAX := [
+	# Under the eyes: the bags.
+	[Vector3(0.034, 1.692, -0.016), Vector3(0.022, 0.011, 0.022), 1.0],
+	# The cheek below the cheekbone, out to the side plane.
+	[Vector3(0.052, 1.664, -0.030), Vector3(0.028, 0.026, 0.034), 1.0],
+]
+const RELAX_PASSES := 14
+## And the side planes of his cheeks, where Cody's narrow, flat-fronted face
+## turns sharply away from the light (SSAO off, the band stayed: it is the
+## shape): their shading normals bent part-way to face front, so the shade
+## rolls off as round over a broader face, the silhouette untouched.
+## [centre, radii, bend], mirrored.
+const SOFTEN := [
+	[Vector3(0.060, 1.662, -0.040), Vector3(0.030, 0.050, 0.045), 0.45],
+	# ...down the side of the face toward the jaw, below the cheekbone.
+	[Vector3(0.064, 1.640, -0.048), Vector3(0.030, 0.040, 0.050), 0.5],
+	[Vector3(0.036, 1.694, -0.018), Vector3(0.022, 0.012, 0.022), 0.35],
+]
+
+
+const SOFTEN_TOWARD := Vector3(0.0, 0.6, 0.8)
+
+
+static func _soften_weight(p: Vector3) -> float:
+	var w := 0.0
+	for r: Array in SOFTEN:
+		var c: Vector3 = r[0]
+		var rad: Vector3 = r[1]
+		for side: float in [1.0, -1.0]:
+			var d := (p - Vector3(MIDLINE_X + side * c.x, c.y, c.z)) / rad
+			var t := clampf(1.0 - d.length(), 0.0, 1.0)
+			w = maxf(w, float(r[2]) * t * t * (3.0 - 2.0 * t))
+	return w
+
+
+## Bends the SOFTEN regions' normals toward the face's front (+Z).
+static func soften(arrays: Array) -> void:
+	var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	var normals = arrays[Mesh.ARRAY_NORMAL]
+	if normals == null:
+		return
+	var tangents = arrays[Mesh.ARRAY_TANGENT]
+	for v in verts.size():
+		var w := _soften_weight(verts[v])
+		if w <= 0.0:
+			continue
+		var old: Vector3 = normals[v]
+		if old.z < -0.2:
+			continue  # facing back: not his face
+		# Up and to the front: the truss keys are overhead, not at the
+		# camera -- bent only to the front, the cheeks stayed as dark.
+		var n := (old + SOFTEN_TOWARD * w * 1.8).normalized()
+		normals[v] = n
+		if tangents != null and (tangents as PackedFloat32Array).size() >= (v + 1) * 4:
+			var t := Vector3(tangents[v * 4], tangents[v * 4 + 1], tangents[v * 4 + 2])
+			t = (t - n * n.dot(t)).normalized()
+			tangents[v * 4] = t.x
+			tangents[v * 4 + 1] = t.y
+			tangents[v * 4 + 2] = t.z
+	arrays[Mesh.ARRAY_NORMAL] = normals
+	if tangents != null:
+		arrays[Mesh.ARRAY_TANGENT] = tangents
+const RELAX_RATE := 0.5
+
+
+static func _relax_weight(p: Vector3) -> float:
+	var w := 0.0
+	for r: Array in RELAX:
+		var c: Vector3 = r[0]
+		var rad: Vector3 = r[1]
+		for side: float in [1.0, -1.0]:
+			var centre := Vector3(MIDLINE_X + side * c.x, c.y, c.z)
+			var d := (p - centre) / rad
+			var t := clampf(1.0 - d.length(), 0.0, 1.0)
+			w = maxf(w, float(r[2]) * t * t * (3.0 - 2.0 * t))
+	return w
+
+
+## Relaxes the RELAX regions of one surface, in place. Returns how many
+## welded points moved.
+static func relax(arrays: Array) -> int:
+	var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX] if arrays[Mesh.ARRAY_INDEX] != null else PackedInt32Array()
+	if verts.is_empty() or indices.is_empty():
+		return 0
+	# Weld: the seams duplicate a point for each UV island.
+	var key_to := {}
+	var group := PackedInt32Array()
+	group.resize(verts.size())
+	var pos: Array[Vector3] = []
+	for v in verts.size():
+		var k := Vector3i((verts[v] * 50000.0).round())
+		var g: int = key_to.get(k, -1)
+		if g < 0:
+			g = pos.size()
+			key_to[k] = g
+			pos.append(verts[v])
+		group[v] = g
+	var weight := PackedFloat32Array()
+	weight.resize(pos.size())
+	var active := {}
+	for g in pos.size():
+		weight[g] = _relax_weight(pos[g])
+		if weight[g] > 0.0:
+			active[g] = true
+	if active.is_empty():
+		return 0
+	var nbrs := {}
+	for f in range(0, indices.size(), 3):
+		var a := group[indices[f]]
+		var b := group[indices[f + 1]]
+		var c := group[indices[f + 2]]
+		for pair: Array in [[a, b], [b, c], [c, a], [b, a], [c, b], [a, c]]:
+			if active.has(pair[0]):
+				if not nbrs.has(pair[0]):
+					nbrs[pair[0]] = {}
+				(nbrs[pair[0]] as Dictionary)[pair[1]] = true
+	for _pass in RELAX_PASSES:
+		var next := {}
+		for g: int in active:
+			var ns: Dictionary = nbrs.get(g, {})
+			if ns.is_empty():
+				continue
+			var mean := Vector3.ZERO
+			for o: int in ns:
+				mean += pos[o]
+			mean /= float(ns.size())
+			next[g] = pos[g].lerp(mean, RELAX_RATE * weight[g])
+		for g: int in next:
+			pos[g] = next[g]
+	for v in verts.size():
+		if active.has(group[v]):
+			verts[v] = pos[group[v]]
+	arrays[Mesh.ARRAY_VERTEX] = verts
+	# Normals from the relaxed faces, eased in by the weight.
+	var normals = arrays[Mesh.ARRAY_NORMAL]
+	if normals != null:
+		var acc := {}
+		for f in range(0, indices.size(), 3):
+			var ga := group[indices[f]]
+			var gb := group[indices[f + 1]]
+			var gc := group[indices[f + 2]]
+			if not (active.has(ga) or active.has(gb) or active.has(gc)):
+				continue
+			var fn := (pos[gc] - pos[ga]).cross(pos[gb] - pos[ga])
+			for g in [ga, gb, gc]:
+				acc[g] = (acc.get(g, Vector3.ZERO) as Vector3) + fn
+		var tangents = arrays[Mesh.ARRAY_TANGENT]
+		for v in verts.size():
+			var g := group[v]
+			if not active.has(g) or not acc.has(g):
+				continue
+			var built := (acc[g] as Vector3).normalized()
+			var old: Vector3 = normals[v]
+			if built.dot(old) < 0.0:
+				built = -built
+			var n := old.slerp(built, clampf(weight[g] * 1.5, 0.0, 1.0)).normalized()
+			normals[v] = n
+			if tangents != null and (tangents as PackedFloat32Array).size() >= (v + 1) * 4:
+				var t := Vector3(tangents[v * 4], tangents[v * 4 + 1], tangents[v * 4 + 2])
+				t = (t - n * n.dot(t)).normalized()
+				tangents[v * 4] = t.x
+				tangents[v * 4 + 1] = t.y
+				tangents[v * 4 + 2] = t.z
+		arrays[Mesh.ARRAY_NORMAL] = normals
+		if tangents != null:
+			arrays[Mesh.ARRAY_TANGENT] = tangents
+	return active.size()
 
 
 ## The baked rest positions, by grid cell.
