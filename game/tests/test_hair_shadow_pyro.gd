@@ -173,3 +173,15 @@ func test_codys_comets_chase_up_off_the_stage_on_his_beat() -> void:
 		last = maxf(last, float(c[0]))
 	assert_float(last + EntrancePyro.COMET_FLIGHT).is_less(
 			EntranceDirector.CODY_PUNCH - EntranceDirector.CODY_PUNCH_AT / 60.0 - EntranceDirector.CODY_PYRO)
+
+
+## The owner, 9 Nov: "black plumes of smoke rising from the back of each
+## wrestler from the start of every match". The flames' smoke is a
+## sub-emitter; it must not emit on its own off a man who isn't burning.
+func test_fire_smoke_only_puffs_off_a_dying_flame() -> void:
+	var flames := ManFire._flame_particles()
+	auto_free(flames)
+	var smoke := flames.get_node("Smoke") as GPUParticles3D
+	assert_object(smoke).is_not_null()
+	assert_bool(smoke.emitting).is_false()
+	assert_bool(flames.emitting).is_false()

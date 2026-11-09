@@ -11654,3 +11654,15 @@ The owner: "his hair should be able to move as it's long".
   - the cheek's front-to-side turn carried forward 3.5 mm, so it rounds instead of cornering;
   - the chin up 3 mm.
 - All moves stay clear of the neck seam (`test_kenny_model`). The cheek normal bend eases to 0.30/0.35, since the broader planes catch more light.
+
+## 9 Nov (8) — Powerbomb, Cross Rhodes, knees and elbows
+
+- **Powerbomb.** "cradle them on their shoulders and then powerbomb them with force." On the lift, he's now folded at the hips across the attacker's shoulders (pelvis 1.46 m, hands at the back of his thighs). The slam pitches him through 40° → 140° in seven frames, and he's driven down head and upper back first (impact at frame 37). He lands a little further out (0.55 m) and settles supine.
+- **Cross Rhodes.** "hold him from behind, and do that twisting motion ... spikes the victim on his head, it's high force." The defender starts behind-on (rotated −90°) and is pulled round into the hold, then turned through the twist. The spike now accelerates into the mat (frames 21–26), instead of easing in.
+- **Kick knees.** "during kicks, the wrestlers leg bends the wrong way sometimes." The leg IK's bend axis was taken from the pole alone. When a kicking foot is near hip height, the target's direction nearly lines up with the pole and the axis flips. A kick that names its knee now bends about the pelvis's own hinge axis once the foot is off the mat (blended in by foot height, so a planted foot or a kneel is unchanged). A pose that names a backward knee (a prone dive, a roll under the rope) is left as written.
+- **Cody's kneel elbow.** "kneel down pose, one of his elbows bends the wrong way." The right elbow pole pointed forward-out, bending the arm the wrong way (+48°). The pole now points back-down, giving −60° (a natural bend).
+- New `tools/probe/joint_audit.gd`: the signed knee and elbow bend per clip, against Idle_Ready's sign, to find backward joints.
+
+## 9 Nov (9) — Black smoke off every wrestler
+
+- The owner: "black plumes of smoke rising from the back of each wrestler from the start of every match". Root cause: the fire's new smoke (9 Nov (4)) is a sub-emitter of each wrestler's `ManFire` flames, meant to puff only where a flame dies, but it was created with `emitting = true`. So it ran on its own from the bell, off every man, at the flame's height on his back. Now it starts off and only the flames fire it. Pinned by `test_fire_smoke_only_puffs_off_a_dying_flame`.

@@ -210,7 +210,8 @@ class RigPoser:
         aim = Quaternion().slerp(rest.rotation_difference(reach), share) @ carried
         self._set(name, aim)
 
-    def _two_bone_ik(self, upper, lower, target, pole, carry=None):
+    def _two_bone_ik(self, upper, lower, target, pole, carry=None, hinge=None,
+                     explicit=False, lift=0.0):
         """Plant `lower`'s tail on `target`, bending the joint toward `pole`.
 
         Standard law-of-cosines solve. The reach is clamped just short of
@@ -228,7 +229,46 @@ class RigPoser:
         cos_a = _clamp((l1 * l1 + dist * dist - l2 * l2) / (2.0 * l1 * dist), -1.0, 1.0)
         angle = math.acos(cos_a)
 
+        # A knee is a hinge (the owner, 9 Nov: "during kicks, the wrestler's
+        # leg bends the wrong way sometimes"): its axis is the pelvis's own
+        # right-left, carried with the hips. Solved toward a forward pole, a
+        # foot kicked out forward and up ran the leg along the pole itself,
+        # the cross product went degenerate and the knee folded backward --
+        # Strike_Kick -53 deg, Strike_Kick_Heavy -81 deg (joint_audit). With
+        # the hinge, a standing leg (straight down) solves exactly as before.
+        # How far the foot is off the mat, 0 planted .. 1 clear (10 -> 30 cm),
+        # so a solve never switches in a single frame (test_clip_cadence).
+        air = _clamp((lift - 0.10) / 0.20, 0.0, 1.0)
         axis = direction.cross(pole)
+        if hinge is not None:
+            on_hinge = hinge - direction * hinge.dot(direction)
+            if on_hinge.length > 1e-3:
+                on_hinge.normalize()
+                if not explicit:
+                    # No named pole: the standing pole solves as before; the
+                    # kicks that went wrong all name theirs (below).
+                    pass
+                else:
+                    # A named pole picks the plane, but never against the
+                    # hinge (a kick's forward pole runs along a leg kicked
+                    # forward and up and folded the knee backward:
+                    # Strike_Kick_Heavy -81 deg), and in the air, the further
+                    # off the hinge it is (49 -> 63 deg), the more the hinge
+                    # takes over; planted, a knee turned out over the foot is
+                    # a stance and stays.
+                    if air <= 0.0:
+                        # Planted (a kneel, a stance): the named pole stands
+                        # as written (test_clip_cadence: Tope's roll-through
+                        # onto one knee flipped).
+                        pass
+                    elif axis.length < 0.15:
+                        axis = on_hinge
+                    else:
+                        if axis.normalized().dot(on_hinge) < 0.0:
+                            axis = -axis
+                        dot = axis.normalized().dot(on_hinge)
+                        w = air * _clamp((0.65 - dot) / 0.2, 0.0, 1.0)
+                        axis = axis.normalized().lerp(on_hinge, w)
         if axis.length < 1e-5:
             axis = direction.cross(Vector((0.0, 0.0, 1.0)))
         if axis.length < 1e-5:
@@ -422,9 +462,18 @@ class RigPoser:
                 knee = pose.get("knee_%s" % side_id)
                 knee_pole = vec(*knee) if knee \
                     else vec(0.25 if side_id == "r" else -0.25, 1.0, 0.05)
+                # The hinge: the axis a straight-down leg bends about toward
+                # the standing pole, turned with the hips. A pose that names
+                # its knee pointing back (a prone dive, a roll under the
+                # rope) means it: no hinge guard to flip it forward.
+                stand_pole = vec(0.25 if side_id == "r" else -0.25, 1.0, 0.05).normalized()
+                hinge = (_euler(*hips) @ vec(0.0, 0.0, -1.0).cross(stand_pole)).normalized()
+                if knee and knee[1] < -0.5:
+                    hinge = None
                 knee_at = self._two_bone_ik(
                     "thigh_%s" % side_id, "calf_%s" % side_id,
-                    vec(*foot), knee_pole.normalized(), carry=_euler(*hips),
+                    vec(*foot), knee_pole.normalized(), carry=_euler(*hips), hinge=hinge,
+                    explicit=bool(knee), lift=foot[2],
                 )
                 # A planted foot is flat on the canvas. Left to the chain it
                 # inherits the calf's tilt, and in STANCE that dug the right

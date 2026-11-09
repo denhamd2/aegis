@@ -187,7 +187,10 @@ static func _smoke_particles() -> GPUParticles3D:
 	p.name = "Smoke"
 	p.amount = 48
 	p.lifetime = 1.8
-	p.emitting = true
+	# A sub-emitter: it emits only when a flame dies. Left emitting on its
+	# own, it puffed black smoke off every wrestler's back from the bell
+	# (the owner, 9 Nov), on fire or not.
+	p.emitting = false
 	var m := ParticleProcessMaterial.new()
 	m.direction = Vector3.UP
 	m.spread = 20.0

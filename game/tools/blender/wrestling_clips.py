@@ -2810,6 +2810,12 @@ CLIPS = {
     # (96), held; and he rises (138). The root stays put -- the pelvis drops
     # in root space, as Corner_Climb raises it.
     "Kneel": [
+        # 9 Nov, the owner: "During Cody's entrance when he's doing his kneel
+        # down pose, one of his elbows bends the wrong way." His right: its
+        # hint pointed straight out to his side, and with the hand by his
+        # thigh the IK folded the elbow ~50 deg backward (measured against
+        # Idle_Ready's flexion, joint audit). A hand hanging at the thigh has
+        # its elbow back and a little out.
         (0,   CODY_STAND),
         (10,  pose(CODY_STAND, pelvis=(0.0, 0.08, 0.82), spine=(-6, 0, 0),
                    head=(-6, 0, 0),
@@ -2820,7 +2826,7 @@ CLIPS = {
                    ankle_r=(40, 0, 0),
                    foot_l=(-0.16, 0.40, 0.104), knee_l=(-0.2, 1.0, 0.3),
                    hand_l=(-0.04, 0.46, 0.58), elbow_l=(-1.0, 0.2, 0.0),
-                   hand_r=(0.22, 0.22, 0.60), elbow_r=(1.0, 0.0, -0.4),
+                   hand_r=(0.22, 0.22, 0.60), elbow_r=(0.5, -1.0, -0.2),
                    fist_l=0.5, fist_r=0.4)),
         (80,  pose(CODY_STAND, pelvis=(0.0, 0.04, 0.52), hips=(-4, 0, 0),
                    spine=(-17, 0, 0), head=(-32, 0, 0),
@@ -2828,7 +2834,7 @@ CLIPS = {
                    ankle_r=(40, 0, 0),
                    foot_l=(-0.16, 0.40, 0.104), knee_l=(-0.2, 1.0, 0.3),
                    hand_l=(-0.04, 0.46, 0.57), elbow_l=(-1.0, 0.2, 0.0),
-                   hand_r=(0.22, 0.22, 0.59), elbow_r=(1.0, 0.0, -0.4),
+                   hand_r=(0.22, 0.22, 0.59), elbow_r=(0.5, -1.0, -0.2),
                    fist_l=0.5, fist_r=0.4)),
         (96,  pose(CODY_STAND, pelvis=(0.0, 0.04, 0.54), hips=(-2, 0, 0),
                    spine=(4, 0, 0), head=(16, 0, 0),
@@ -2836,7 +2842,7 @@ CLIPS = {
                    ankle_r=(40, 0, 0),
                    foot_l=(-0.16, 0.40, 0.104), knee_l=(-0.2, 1.0, 0.3),
                    hand_l=(-0.04, 0.46, 0.60), elbow_l=(-1.0, 0.2, 0.0),
-                   hand_r=(0.22, 0.22, 0.62), elbow_r=(1.0, 0.0, -0.4),
+                   hand_r=(0.22, 0.22, 0.62), elbow_r=(0.5, -1.0, -0.2),
                    fist_l=0.5, fist_r=0.4)),
         (118, pose(CODY_STAND, pelvis=(0.0, 0.04, 0.54), hips=(-2, 0, 0),
                    spine=(5, 0, 0), head=(18, 0, 0),
@@ -2844,7 +2850,7 @@ CLIPS = {
                    ankle_r=(40, 0, 0),
                    foot_l=(-0.16, 0.40, 0.104), knee_l=(-0.2, 1.0, 0.3),
                    hand_l=(-0.04, 0.46, 0.60), elbow_l=(-1.0, 0.2, 0.0),
-                   hand_r=(0.22, 0.22, 0.62), elbow_r=(1.0, 0.0, -0.4),
+                   hand_r=(0.22, 0.22, 0.62), elbow_r=(0.5, -1.0, -0.2),
                    fist_l=0.5, fist_r=0.4)),
         (138, pose(CODY_STAND, pelvis=(0.0, 0.06, 0.84), spine=(2, 0, 0),
                    head=(10, 0, 0),
@@ -8782,13 +8788,18 @@ CLIPS["Cross_Rhodes_Defender"] = [
     (20, _body((-176, 0, 0), (0.0, 0.00, 1.800), **_TD_LIMBS)),
     # Spiked: the drop gathers from 20 and eases out after the impact, so the
     # impact is the fastest frame of an even ramp rather than a lone jump.
-    (22, _body((-198, 0, 0), (0.0, -0.03, 1.300), **_TD_LIMBS)),
-    (23, _body((-212, 0, 0), (0.0, -0.05, 0.950), **_TD_LIMBS)),
-    (24, _body((-226, 0, 0), (0.0, -0.08, 0.620), **dict(_TD_LIMBS,
+    # 9 Nov, the owner: "it spikes the victim on his head, it's high force".
+    # The drop ACCELERATES into the mat -- 0.14, 0.26, 0.38, 0.44 m a frame
+    # -- and the impact is its fastest frame; it used to fall fastest at the
+    # top and ease in, which read as a man set down.
+    (21, _body((-186, 0, 0), (0.0, -0.01, 1.660), **_TD_LIMBS)),
+    (22, _body((-198, 0, 0), (0.0, -0.03, 1.400), **_TD_LIMBS)),
+    (23, _body((-212, 0, 0), (0.0, -0.05, 1.020), **_TD_LIMBS)),
+    (24, _body((-228, 0, 0), (0.0, -0.09, 0.580), **dict(_TD_LIMBS,
                hand_r=(0.45, 0.00, 0.45), hand_l=(-0.45, 0.00, 0.45)))),
-    (25, _body((-240, 0, 0), (0.0, -0.12, 0.400), **dict(_TD_LIMBS,
+    (25, _body((-244, 0, 0), (0.0, -0.12, 0.330), **dict(_TD_LIMBS,
                hand_r=(0.50, 0.00, 0.40), hand_l=(-0.50, 0.00, 0.40)))),
-    (26, _body((-251, 0, 0), (0.0, -0.14, 0.300), **dict(_TD_LIMBS,
+    (26, _body((-252, 0, 0), (0.0, -0.14, 0.280), **dict(_TD_LIMBS,
                hand_r=(0.55, 0.00, 0.30), hand_l=(-0.55, 0.00, 0.30)))),
     # The legs go over.
     (28, _body((-262, 0, 0), (0.0, -0.16, 0.240), **dict(_TD_LIMBS,
@@ -8905,14 +8916,19 @@ _PB_LIFT_ATK = [
            fist_r=0.6, fist_l=0.6)),
     # Up: the man sitting on his shoulders, held round the waist.
     (20, dict(_PB_TOP_ATK)),
-    (30, dict(_PB_TOP_ATK, spine=(6, 0, 0), head=(-12, 0, 0))),
+    # His hands up on the man's hips, holding him in the cradle.
+    (30, dict(_PB_TOP_ATK, spine=(6, 0, 0), head=(-12, 0, 0),
+              hand_r=(0.22, 0.18, 1.56), hand_l=(-0.22, 0.18, 1.56))),
 ]
 _PB_LIFT_DEF = [
     (0,  dict(_LOCK_DEF)),
     (6,  _key("Liger_Bomb_Defender", 12)),
     (12, _key("Liger_Bomb_Defender", 22)),
     (20, dict(_PB_TOP_DEF)),
-    (30, dict(_PB_TOP_DEF, hips=(14, 0, 0), spine=(10, 0, 0), head=(12, 0, 0))),
+    # 9 Nov: cradled, not a plank stood on his head -- leaning back into
+    # Roman's hands, the shoulders taking his thighs.
+    (30, dict(_PB_TOP_DEF, pelvis=(0.0, 0.02, 1.46), hips=(26, 0, 0), spine=(14, 0, 0),
+              head=(10, 0, 0))),
 ]
 CLIPS["FF_Powerbomb_1_Attacker"] = _PB_LIFT_ATK + [
     # Throwing him down in front, bending with him.
@@ -8926,7 +8942,39 @@ CLIPS["FF_Powerbomb_1_Attacker"] = _PB_LIFT_ATK + [
     (51, P(pelvis=(0.0, 0.06, 0.800), hips=(-12, 0, 0), spine=(-14, 0, 0))),
     (60, P()),
 ]
-CLIPS["FF_Powerbomb_1_Defender"] = _PB_LIFT_DEF + _back_fall(30, 60, skip_hit=True, fall_z=1.00)
+# 9 Nov, the owner: "The powerbombs look bad, they need to cradle them on
+# their shoulders and then powerbomb them with force." He went over in a
+# stock back bump -- arms thrown forward, legs kicking up -- and the root
+# carried him 1.45 m out in front: a man thrown away. Now he is SLAMMED: from
+# the shoulders he goes over backward with his knees still bent over Roman's
+# arms, the drop gathering every frame (0.27, 0.35, 0.40 m), and the upper
+# back is driven into the mat with the hips still up past level (pitch 140,
+# folded) 0.95 m in front; then he unfolds flat. Keys in the body's frame
+# (_body): pitch + is over backward, 90 lying on his back, head away.
+_PB_SLAM_LEGS = dict(foot_r=(0.22, 0.36, -0.52), foot_l=(-0.22, 0.36, -0.52),
+                     knee_r=(0.4, 1.0, 0.3), knee_l=(-0.4, 1.0, 0.3), free_feet=True)
+_PB_SLAM_ARMS = dict(hand_r=(0.46, 0.16, 0.42), hand_l=(-0.46, 0.16, 0.42),
+                     elbow_r=(0.8, -0.3, 0.0), elbow_l=(-0.8, -0.3, 0.0),
+                     fist_r=0.2, fist_l=0.2, spine=(-8, 0, 0), head=(-14, 0, 0))
+CLIPS["FF_Powerbomb_1_Defender"] = _PB_LIFT_DEF + [
+    (32, _body((40, 0, 0), (0.0, 0.05, 1.46), **_PB_SLAM_LEGS, **_PB_SLAM_ARMS)),
+    (34, _body((72, 0, 0), (0.0, 0.03, 1.19), **_PB_SLAM_LEGS, **_PB_SLAM_ARMS)),
+    (35, _body((96, 0, 0), (0.0, 0.01, 0.92), **_PB_SLAM_LEGS, **_PB_SLAM_ARMS)),
+    (36, _body((120, 0, 0), (0.0, -0.02, 0.62), **_PB_SLAM_LEGS, **_PB_SLAM_ARMS)),
+    # The impact: shoulders and the back of the head into the canvas, hips
+    # still up, arms slapping out.
+    (37, _body((140, 0, 0), (0.0, -0.05, 0.48), **_PB_SLAM_LEGS,
+               **dict(_PB_SLAM_ARMS, hand_r=(0.56, 0.10, 0.20), hand_l=(-0.56, 0.10, 0.20),
+                      head=(-20, 0, 0)))),
+    (39, _body((136, 0, 0), (0.0, -0.06, 0.44), **_PB_SLAM_LEGS,
+               **dict(_PB_SLAM_ARMS, hand_r=(0.56, 0.10, 0.10), hand_l=(-0.56, 0.10, 0.10)))),
+    # Let go: he unfolds onto his back, the legs coming down.
+    (44, _body((112, 0, 0), (0.0, -0.08, 0.30), **dict(_LANDED_FLAT,
+               foot_r=(0.16, 0.20, -0.70), foot_l=(-0.16, 0.20, -0.70), free_feet=True))),
+    (49, _body((94, 0, 0), (0.0, -0.10, 0.22), **dict(_LANDED_FLAT, free_feet=True))),
+    (54, dict(SUPINE_AWAY, pelvis=(0.0, 0.0, 0.190))),
+    (60, dict(SUPINE_AWAY)),
+]
 
 # Sit-Out Powerbomb 2 (Dax Harwood's, PAC's), 60 frames / 2.0 s. The same
 # lift and beat; then he sits out under the throw, legs shooting out in
