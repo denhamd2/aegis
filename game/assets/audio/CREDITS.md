@@ -56,6 +56,7 @@ optical transfers, so they carry little above 5 kHz.
 | --- | --- | --- | --- |
 | `groan_0`-`groan_2` | [Red Library: Voices Men 1](https://archive.org/details/Red_Library_Voices_Men_1), R21-08 "Man Moans" | USC Cinema / Sunset Editorial (Internet Archive) | CC0 |
 | `groan_3`, `groan_4` | Red Library: Voices Men 1, R15-31 "Man Growling and Grunting" | USC Cinema / Sunset Editorial (Internet Archive) | CC0 |
+| `grunt_light_*` | Red Library: Voices Men 1, R15-30 "Man Breathing Heavily" | USC Cinema / Sunset Editorial (Internet Archive) | CC0 |
 | `wind_*` | Red Library: Voices Men 1, R15-33 "Man Out of Breath" | USC Cinema / Sunset Editorial (Internet Archive) | CC0 |
 | `count_slap_*` | [Red Library: Fights](https://archive.org/details/Red_Library_Fights), R15-12 "Loud Slaps or Whacks", over [Red Library: Impacts](https://archive.org/details/Red_Library_Impacts), R28-55 "Thumps on Large Hollow Wooden Surface" | USC Cinema / Sunset Editorial (Internet Archive) | CC0 |
 | `bump_0`-`bump_5` | Red Library: Impacts, R28-55 "Thumps on Large Hollow Wooden Surface" (the deck), [Body Fall 1-5](https://bigsoundbank.com/body-fall-1-s2452.html) (the man), Red Library: Fights, R15-12 "Loud Slaps or Whacks" (the canvas) | USC Cinema / Sunset Editorial (Internet Archive); Joseph SARDIN (BigSoundBank) | CC0 |

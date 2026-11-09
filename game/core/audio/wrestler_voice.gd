@@ -31,8 +31,10 @@ const HOLD_RETRY := 0.25
 const BURN_BREATH := 0.18
 ## The scream fades out over this when the fire is out.
 const BURN_FADE := 0.3
-## Level of each kind of voice, against the hits (SfxPool at 0 dB).
-const LEVEL_DB := {"grunt_light": -6.0, "grunt_heavy": -3.0, "groan": -4.0, "wind": -2.0,
+## Level of each kind of voice, against the hits (SfxPool at 0 dB). The light
+## grunts' files sit at -21 LUFS-loop and the heavy ones at -18.2, so a light
+## sell is heard 3 LU under a heavy one.
+const LEVEL_DB := {"grunt_light": -3.0, "grunt_heavy": -3.0, "groan": -4.0, "wind": -2.0,
 		"yell": -1.0, "burn_scream": 0.0}
 ## So two men do not sound like one: Roman lower, Kenny a touch higher.
 const PITCH := {"roman": 0.9, "cody": 1.0, "kenny": 1.05}

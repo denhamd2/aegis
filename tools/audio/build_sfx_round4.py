@@ -79,6 +79,7 @@ SHA256 = {
 	"ia/Red_Library_Metal/R15-07-Metal_Clangs_and_Hollow_Hits.wav": "5b4898c9c762e55dbba0b9134eecb83d948287b65c53e562b57ba31bc2565b9e",
 	"ia/Red_Library_Metal/R16-34-Banging_Metal_Pipe.wav": "30b9ef9c8d11abfe79301114a8c2c67d18256dd73ce3233b87ac57bcb5cfe119",
 	"ia/Red_Library_Metal/R16-31-Metal_Clank_and_Ring.wav": "08043c46c7cd620f4f578e77b9db23782c20ddac959daad15b3815232d3b0203",
+	"ia/Red_Library_Voices_Men_1/R15-30-Man_Breathing_Heavily.wav": "bbafac393d0f8c12f9e4d20beb2c1bff03cea605a305ba3bf86cc2da89de6952",
 	"ia/Red_Library_Voices_Men_1/R15-31-Man_Growling_and_Grunting.wav": "46f9c39d00f6bd50dd76723e7e9782e72499276c423fc7a8b1b190ed067ddd12",
 	"ia/Red_Library_Voices_Men_1/R15-33-Man_Out_of_Breath.wav": "30db51fd46456181891d00e07fa37b8b340657e073b567e27732dfc59d068376",
 	"ia/Red_Library_Voices_Men_1/R21-08-Man_Moans.wav": "0fac45f0a4a8d7fd6408e1b6a957d94890859160dc61a692516b823502414832",
@@ -96,7 +97,8 @@ IA_ITEMS = {
 	"Red_Library_Impacts": ["R28-55-Thumps on Large Hollow Wooden Surface"],
 	"Red_Library_Fights": ["R15-12-Loud Slaps or Whacks"],
 	"Red_Library_Voices_Men_1": ["R21-08-Man Moans", "R15-31-Man Growling and Grunting",
-			"R21-14-Man Grunts and Struggles", "R15-33-Man Out of Breath"],
+			"R21-14-Man Grunts and Struggles", "R15-33-Man Out of Breath",
+			"R15-30-Man Breathing Heavily"],
 	"Red_Library_Metal": ["R15-07-Metal Clangs and Hollow Hits", "R16-31-Metal Clank and Ring",
 			"R16-34-Banging Metal Pipe"],
 	"Red_Library_Crashes": ["R28-13-Glass Windows Smashed"],
@@ -411,6 +413,7 @@ def source(key):
 		"moans": IA + "Red_Library_Voices_Men_1/R21-08-Man_Moans.wav",
 		"growl": IA + "Red_Library_Voices_Men_1/R15-31-Man_Growling_and_Grunting.wav",
 		"struggle": IA + "Red_Library_Voices_Men_1/R21-14-Man_Grunts_and_Struggles.wav",
+		"huffs": IA + "Red_Library_Voices_Men_1/R15-30-Man_Breathing_Heavily.wav",
 		"breath": IA + "Red_Library_Voices_Men_1/R15-33-Man_Out_of_Breath.wav",
 		"hollow": IA + "Red_Library_Metal/R15-07-Metal_Clangs_and_Hollow_Hits.wav",
 		"pipe": IA + "Red_Library_Metal/R16-34-Banging_Metal_Pipe.wav",
@@ -617,6 +620,18 @@ def slot_grunt_heavy():
 	save_pool([(n, fit(x, -18.2, 2.0)) for n, x in items], -18.2, note="grunt_heavy_0..6")
 
 
+def slot_grunt_light():
+	"""P6 (re-sourced; the boxer was rejected). The light sell: the short low
+	"huh" of breath driven out of a man, from a recording of one breathing
+	hard -- no glove on a pad in it, f0 85-140 Hz, the room 36-44 dB under the
+	voice. The pool sits at -21 LUFS-loop and WrestlerVoice plays it at -3 dB,
+	3 LU under a heavy grunt (it used to play louder than one)."""
+	huffs = source("huffs")
+	save_pool([(f"grunt_light_{i}", fit(voice(huffs, s, n, 80, 0.10), -21.0, 2.0)) for i, (s, n) in enumerate(
+			((4.86, 0.17), (7.71, 0.31), (27.43, 0.29), (30.05, 0.10), (35.46, 0.12), (51.15, 0.12)))],
+			-21.0, note="grunt_light_0..5")
+
+
 def slot_bell():
 	"""P7 (revised). The match bells play at their recorded pitch now (a 919 Hz
 	ring bell; MatchAudio.MATCH_BELL_PITCH_SCALE 2.0 -> 1.0), so the tails that
@@ -633,7 +648,7 @@ def slot_bell():
 
 
 SLOTS = {"bump": slot_bump, "metal": slot_metal, "chair": slot_chair, "glass": slot_glass, "groan": slot_groan, "wind": slot_wind, "count_slap": slot_count_slap, "trims": slot_trims,
-		"pyro_bang": slot_pyro_bang, "grunt_heavy": slot_grunt_heavy, "bell": slot_bell}
+		"pyro_bang": slot_pyro_bang, "grunt_heavy": slot_grunt_heavy, "grunt_light": slot_grunt_light, "bell": slot_bell}
 
 if __name__ == "__main__":
 	args = sys.argv[1:]
