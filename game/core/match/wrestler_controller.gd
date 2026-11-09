@@ -603,6 +603,9 @@ const STATE_ANIMATIONS := {
 	WrestlerFSM.State.WEAPON_ACTION: "strikes/getup_rise",
 	WrestlerFSM.State.LADDER_CLIMB: "strikes/ladder_climb",
 	WrestlerFSM.State.LADDER_FALL: "strikes/ladder_fall",
+	# The climb up a cage wall; CageEscape swaps in the door's call
+	# (whoa_arms), the step out through the door (ring_exit) and the drop.
+	WrestlerFSM.State.CAGE_ESCAPE: "strikes/ladder_climb",
 }
 ## Per-role overrides on top of STATE_ANIMATIONS, looked up first when the
 ## wrestler is in a grapple and its role is known.
@@ -1850,6 +1853,8 @@ func _physics_process(delta: float) -> void:
 			elif input.get("spear_setup", false) and finisher_run_move != null \
 					and fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION]):
 				begin_spear_setup()
+			elif _pushing_into_cage(input):
+				pass
 			elif _pushing_through_ropes(input):
 				begin_rope_cross()
 			elif input.get("climb_ladder", false):
@@ -1863,9 +1868,17 @@ func _physics_process(delta: float) -> void:
 		WrestlerFSM.State.LADDER_CLIMB:
 			_tick_ladder_climb(input)
 		WrestlerFSM.State.LADDER_FALL:
-			_tick_ladder_fall()
+			if _cage_fall:
+				_tick_cage_fall(delta)
+			else:
+				_tick_ladder_fall()
 		WrestlerFSM.State.ROPE_CROSS:
 			_tick_rope_cross()
+		WrestlerFSM.State.CAGE_ESCAPE:
+			if cage_escape():
+				cage_escape().tick(self, input)
+			else:
+				end_cage_escape(false)
 		WrestlerFSM.State.TAUNT:
 			if _stalking:
 				_tick_spear_setup()
@@ -1918,7 +1931,9 @@ func _physics_process(delta: float) -> void:
 			# is needed here beyond reading the raw hold state each tick.
 			_submission_defender_input_this_tick = input.get("submission_hold", false)
 
-	if fsm.current_state == WrestlerFSM.State.ROPE_CROSS:
+	if fsm.current_state == WrestlerFSM.State.ROPE_CROSS \
+			or fsm.current_state == WrestlerFSM.State.CAGE_ESCAPE \
+			or (fsm.current_state == WrestlerFSM.State.LADDER_FALL and _cage_fall):
 		# On his scripted path: no gravity, no collision, no clamp.
 		return
 	if rope_reach:
@@ -2979,7 +2994,7 @@ func wants_screen_whip() -> bool:
 ## reach into it below) toward the ropes with real velocity -- the actual
 ## flight and rebound are handled by _process_irish_whip() once physics
 ## carries the body into a rope collider, not scripted here.
-func _begin_irish_whip(into_corner := false) -> void:
+func _begin_irish_whip(into_corner := false, into_cage := false) -> void:
 	var launch_dir := opponent.global_position - global_position
 	launch_dir.y = 0.0
 	launch_dir = launch_dir.normalized() if launch_dir.length() > 0.01 else Vector3.FORWARD
@@ -2990,6 +3005,7 @@ func _begin_irish_whip(into_corner := false) -> void:
 	opponent._irish_whip_target = self
 	opponent._irish_whip_rebounded = false
 	opponent._irish_whip_corner = into_corner
+	opponent._irish_whip_cage = into_cage
 	_rebound_pick = null
 	# The hold ends here too -- the whip replaces the grapple move.
 	_clear_grapple_roles()
@@ -3014,6 +3030,8 @@ func _process_irish_whip() -> void:
 		_tick_rope_load()
 		return
 	if _irish_whip_corner and _reached_whip_corner():
+		return
+	if _whipped_into_cage():
 		return
 	for i in get_slide_collision_count():
 		var collision := get_slide_collision(i)
@@ -4397,6 +4415,11 @@ func _resolve_pending_hits() -> void:
 	if fsm.current_state == WrestlerFSM.State.LADDER_CLIMB:
 		_begin_ladder_fall()
 		return
+	# On the cage: knocked off the wall, or out of reach (CageEscape.on_hit);
+	# at the door the blow stops him and plays out as any other.
+	if fsm.current_state == WrestlerFSM.State.CAGE_ESCAPE and cage_escape() \
+			and cage_escape().on_hit(self):
+		return
 	# Every blow that lands shows on him, whatever he is doing -- mid-punch
 	# included, where the reaction clip has to wait (below). A man fired up
 	# no-sells: he takes it without giving.
@@ -4784,7 +4807,8 @@ func _process_grapple_hold(input: Dictionary) -> void:
 	if grapple_rig and grapple_rig.is_active():
 		return
 	if input.get("run", false) or (is_ai and wants_screen_whip()):
-		_begin_irish_whip(input.get("corner", false))
+		_begin_irish_whip(input.get("corner", false),
+				_wants_cage_ram(input, input.get("corner", false)))
 		return
 	# Chain wrestling first: the read, and the holds it strings together.
 	if _tick_chain_read(input):
@@ -5450,18 +5474,29 @@ func _process_down(input: Dictionary) -> void:
 	if ladder_sell:
 		_move_ticks_remaining = maxi(_move_ticks_remaining, 30)
 		held = true
+	# The other man is climbing out of the cage: he finds it in himself to get
+	# up (CageEscape.RALLY_RATE) -- which is why an escape straight after a
+	# lesser knockdown is a near-escape, and after a finisher it is the finish.
+	var rally := opponent != null and cage_escape() != null \
+			and cage_escape().is_escaping(opponent) and not dead
+	if rally:
+		if knockdown_tier < CombatSystem.Tier.FINISHER:
+			_move_ticks_remaining = mini(_move_ticks_remaining, CageEscape.RALLY_CAP_TICKS)
+		_move_ticks_remaining -= CageEscape.RALLY_RATE - 1
 	var health := combat.health() if combat else 1.0
 	var can_quick := not held and not _hard_down and health >= QUICK_RISE_MIN_HEALTH
 	var quick_recovery: bool = can_quick and ((combat != null and combat.is_fired_up()) \
 			or not big_one and (input.get("strike", false)
 					or fsm.ticks_in_state >= quick_rise_delay(health)))
 	if quick_recovery or _move_ticks_remaining <= 0:
-		if not quick_recovery:
+		# Up off a rally, he is up quickly: the drama of the near-escape.
+		var fast := quick_recovery or rally
+		if not fast:
 			_set_state_clip(WrestlerFSM.State.GETUP, "strikes/getup_staged")
-		_rose_staged = not quick_recovery
+		_rose_staged = not fast
 		_through_hold = 0
 		fsm.transition_to(WrestlerFSM.State.GETUP)
-		_move_ticks_remaining = GETUP_RISE_FAST_TICKS if quick_recovery else GETUP_STAGED_TICKS
+		_move_ticks_remaining = GETUP_RISE_FAST_TICKS if fast else GETUP_STAGED_TICKS
 
 func _process_timed_state(input: Dictionary, next_state: WrestlerFSM.State) -> void:
 	# Bleed the hit's shove off. Without the decay the velocity set in
@@ -6557,6 +6592,154 @@ func _begin_ladder_fall() -> void:
 	velocity = away * LADDER_FALL_SHOVE + Vector3.UP * -0.35
 	_set_state_clip(WrestlerFSM.State.LADDER_FALL, "strikes/ladder_fall")
 	fsm.transition_to(WrestlerFSM.State.LADDER_FALL)
+
+
+# --- the cage (Steel Cage; CageBuilder, CageEscape) --------------------------
+
+## A man driven into the steel (a whip into it, a fall off it): the panel
+## rattles, the steel rings (MatchAudio) and the crowd reacts.
+signal hit_the_cage(wrestler: WrestlerController, strength: float)
+
+const CAGE_RAM_MOVE := preload("res://resources/moves/cage_ram.tres")
+## Pulled off a wall, his fall is eased in to the ring's clamp at this many
+## metres a tick rather than snapped to it.
+const CAGE_FALL_EASE := 0.02
+var _cage_escape: CageEscape
+var _cage_push := 0
+var _cage_fall := false
+var _cage_fall_tier := CombatSystem.Tier.POWER
+## Whipped at the steel rather than the ropes (a caged match only).
+var _irish_whip_cage := false
+
+
+## The cage escape in this match, or null (no cage).
+func cage_escape() -> CageEscape:
+	if _cage_escape != null and is_instance_valid(_cage_escape):
+		return _cage_escape
+	if not MatchRules.caged(self):
+		return null
+	_cage_escape = CageEscape.of(self)
+	return _cage_escape
+
+
+## Pushing into the cage: a player holds into the ropes (the gesture No Holds
+## Barred uses to go through them) for ROPE_PUSH_TICKS; the AI asks with
+## `cage_climb` or `cage_door`. CageEscape decides which: after a climber,
+## through the door, or up the wall.
+func _pushing_into_cage(input: Dictionary) -> bool:
+	var escape := cage_escape()
+	if escape == null or outside_ring:
+		_cage_push = 0
+		return false
+	if is_ai:
+		if input.get("cage_climb", false) or input.get("cage_door", false):
+			return escape.begin(self, not input.get("cage_door", false))
+		return false
+	if rope_side_pushed(input.get("move", Vector2.ZERO)) == Vector3.ZERO:
+		_cage_push = 0
+		return false
+	_cage_push += 1
+	if _cage_push < ROPE_PUSH_TICKS:
+		return false
+	_cage_push = 0
+	return escape.begin(self)
+
+
+## How far into the push on the cage a player is, 0..1 (the HUD).
+func cage_push_fraction() -> float:
+	return clampf(float(_cage_push) / ROPE_PUSH_TICKS, 0.0, 1.0)
+
+
+func begin_cage_escape(clip: String) -> void:
+	_cage_push = 0
+	_rope_push = 0
+	velocity = Vector3.ZERO
+	_set_state_clip(WrestlerFSM.State.CAGE_ESCAPE, clip)
+	fsm.transition_to(WrestlerFSM.State.CAGE_ESCAPE)
+
+
+## Off the cage on his feet (climbed back down, gave up at the door, or out
+## of a cage that escaping does not win).
+func end_cage_escape(_hurt: bool) -> void:
+	if fsm.current_state != WrestlerFSM.State.CAGE_ESCAPE:
+		return
+	velocity = Vector3.ZERO
+	global_position.y = maxf(global_position.y, FLOOR_LEVEL if outside_ring else MAT_LEVEL)
+	fsm.transition_to(WrestlerFSM.State.IDLE)
+
+
+## Switches the clip he is playing on the cage, mid-state.
+func cage_clip(clip: String) -> void:
+	if fsm.current_state == WrestlerFSM.State.CAGE_ESCAPE:
+		_restart_state_clip(WrestlerFSM.State.CAGE_ESCAPE, clip)
+
+
+## Off the wall and down into the ring (CageEscape.pull_off): the ladder's
+## fall, on a kinematic arc of its own (_tick_cage_fall), because the ring's
+## rope colliders stand where he starts it.
+func begin_cage_fall(shove: Vector3, from_high := false) -> void:
+	if fsm.current_state != WrestlerFSM.State.CAGE_ESCAPE:
+		return
+	_cage_fall = true
+	_cage_fall_tier = CombatSystem.Tier.SIGNATURE if from_high else CombatSystem.Tier.POWER
+	velocity = shove + Vector3.UP * -0.35
+	_set_state_clip(WrestlerFSM.State.LADDER_FALL, "strikes/ladder_fall")
+	fsm.transition_to(WrestlerFSM.State.LADDER_FALL)
+	hit_the_cage.emit(self, 1.0 + maxf(0.0, global_position.y) * 0.3)
+
+
+func _tick_cage_fall(delta: float) -> void:
+	velocity.y -= GRAVITY * delta
+	velocity.x = move_toward(velocity.x, 0.0, LADDER_FALL_SHOVE * 0.025)
+	velocity.z = move_toward(velocity.z, 0.0, LADDER_FALL_SHOVE * 0.025)
+	var p := global_position + velocity * delta
+	p.x = move_toward(p.x, clampf(p.x, -RING_KEEP_IN, RING_KEEP_IN), CAGE_FALL_EASE)
+	p.z = move_toward(p.z, clampf(p.z, -RING_KEEP_IN, RING_KEEP_IN), CAGE_FALL_EASE)
+	global_position = p
+	if p.y <= MAT_LEVEL:
+		global_position.y = MAT_LEVEL
+		velocity = Vector3.ZERO
+		_cage_fall = false
+		_go_down(_cage_fall_tier)
+
+
+## A whip in a caged match the man sending him means for the steel: the AI's
+## seeded choice (`cage`), or a player holding the weapon button -- free in a
+## cage, where there are no weapons -- as he whips.
+func _wants_cage_ram(input: Dictionary, into_corner: bool) -> bool:
+	if into_corner or not MatchRules.caged(self):
+		return false
+	return input.get("cage", false) or (not is_ai and input.get("weapon", false))
+
+
+## Whipped into the cage: at the ropes he goes on into the steel above them,
+## face first -- the panel rattles, it hurts (CAGE_RAM_MOVE), and he goes down
+## off it. As the LED wall's crash (_whipped_into_screen) is.
+func _whipped_into_cage() -> bool:
+	if not _irish_whip_cage or not MatchRules.caged(self):
+		return false
+	var dir := Vector3(velocity.x, 0.0, velocity.z)
+	if dir.length() < 1.0:
+		return false
+	var axis := CageBuilder.wall_axis(dir)
+	var p := Vector3(global_position.x, 0.0, global_position.z)
+	if p.dot(axis) < RING_KEEP_IN - 0.05:
+		return false
+	_irish_whip_cage = false
+	_irish_whip_rebounded = true
+	velocity = -axis * 0.9
+	combat.apply_damage(CAGE_RAM_MOVE)
+	var cage := CageBuilder.of(self)
+	if cage:
+		cage.rattle(p + axis * 0.6 + Vector3.UP * 1.5, 1.6)
+	if is_instance_valid(_irish_whip_target):
+		_irish_whip_target.combat.apply_momentum(CAGE_RAM_MOVE)
+	# IRISH_WHIP leads to DOWN only through the hit.
+	_play_hit_reaction(CAGE_RAM_MOVE, Sell.HEAVY)
+	fsm.transition_to(WrestlerFSM.State.HIT_REACT)
+	_go_down(CombatSystem.Tier.POWER, CAGE_RAM_MOVE)
+	hit_the_cage.emit(self, 1.6)
+	return true
 
 
 func _clear_ladder_climb() -> void:

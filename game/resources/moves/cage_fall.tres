@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="MoveDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/move_def.gd" id="1"]
+
+[resource]
+resource_name = "cage_fall"
+script = ExtResource("1")
+animation_pair_id = &"cage_fall"
+startup_frames = 1
+active_frames = 1
+recovery_frames = 1
+damage_head = 3.0
+damage_torso = 11.0
+damage_arms = 1.0
+damage_legs = 3.0
+weight_class_min = 0
+weight_class_max = 2
+leaves_defender_down = true

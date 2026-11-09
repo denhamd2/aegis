@@ -45,7 +45,14 @@ enum State {
 	## Climbing an upright ladder. Position advances on the fixed physics tick.
 	LADDER_CLIMB,
 	## Deterministic fall after a climber is struck or the ladder is tipped.
+	## Also the fall off a cage wall (CageEscape): the same drop from a height.
 	LADDER_FALL,
+	## Getting out of a cage (Steel Cage, Hell in a Cell; CageEscape): up the
+	## wall, over the top and down the outside, or calling for the door and
+	## going through it -- and a man climbing after him to pull him off. One
+	## state for all of it: CageEscape holds which part he is in. Appended
+	## for the same reason as TAUNT.
+	CAGE_ESCAPE,
 }
 
 ## Adjacency list of legal transitions. Anything not listed here is illegal.
@@ -53,9 +60,9 @@ const LEGAL_TRANSITIONS := {
 	# GRAPPLE_HOLD from IDLE/LOCOMOTION/RUN: a paired running attack skips the
 	# tie-up -- the runner connects and both men go straight into the move
 	# (WrestlerController._begin_running_paired()).
-	State.IDLE: [State.LOCOMOTION, State.RUN, State.STRIKE, State.TIE_UP, State.GRAPPLE_HOLD, State.HIT_REACT, State.STUNNED, State.PIN_ATTACKER, State.SUBMISSION_ATTACKER, State.VICTORY, State.TAUNT, State.ROPE_CROSS, State.WEAPON_ACTION, State.LADDER_CLIMB, State.IRISH_WHIP],
-	State.LOCOMOTION: [State.IDLE, State.RUN, State.STRIKE, State.TIE_UP, State.GRAPPLE_HOLD, State.HIT_REACT, State.STUNNED, State.PIN_ATTACKER, State.SUBMISSION_ATTACKER, State.VICTORY, State.TAUNT, State.ROPE_CROSS, State.WEAPON_ACTION, State.LADDER_CLIMB, State.IRISH_WHIP],
-	State.RUN: [State.LOCOMOTION, State.RUNNING_ATTACK, State.GRAPPLE_HOLD, State.IDLE, State.HIT_REACT, State.STUNNED, State.VICTORY, State.LADDER_CLIMB, State.IRISH_WHIP],
+	State.IDLE: [State.LOCOMOTION, State.RUN, State.STRIKE, State.TIE_UP, State.GRAPPLE_HOLD, State.HIT_REACT, State.STUNNED, State.PIN_ATTACKER, State.SUBMISSION_ATTACKER, State.VICTORY, State.TAUNT, State.ROPE_CROSS, State.WEAPON_ACTION, State.LADDER_CLIMB, State.IRISH_WHIP, State.CAGE_ESCAPE],
+	State.LOCOMOTION: [State.IDLE, State.RUN, State.STRIKE, State.TIE_UP, State.GRAPPLE_HOLD, State.HIT_REACT, State.STUNNED, State.PIN_ATTACKER, State.SUBMISSION_ATTACKER, State.VICTORY, State.TAUNT, State.ROPE_CROSS, State.WEAPON_ACTION, State.LADDER_CLIMB, State.IRISH_WHIP, State.CAGE_ESCAPE],
+	State.RUN: [State.LOCOMOTION, State.RUNNING_ATTACK, State.GRAPPLE_HOLD, State.IDLE, State.HIT_REACT, State.STUNNED, State.VICTORY, State.LADDER_CLIMB, State.IRISH_WHIP, State.CAGE_ESCAPE],
 	State.STRIKE: [State.IDLE, State.LOCOMOTION, State.HIT_REACT, State.STUNNED, State.VICTORY],
 	State.TIE_UP: [State.GRAPPLE_HOLD, State.IDLE, State.HIT_REACT, State.VICTORY],
 	State.GRAPPLE_HOLD: [State.MOVE_EXEC, State.IRISH_WHIP, State.IDLE, State.FINISHER, State.VICTORY],
@@ -78,6 +85,7 @@ const LEGAL_TRANSITIONS := {
 	State.WEAPON_ACTION: [State.IDLE, State.HIT_REACT, State.STUNNED, State.DOWN, State.VICTORY],
 	State.LADDER_CLIMB: [State.IDLE, State.GRAPPLE_HOLD, State.HIT_REACT, State.STUNNED, State.DOWN, State.LADDER_FALL, State.VICTORY],
 	State.LADDER_FALL: [State.DOWN, State.VICTORY],
+	State.CAGE_ESCAPE: [State.IDLE, State.HIT_REACT, State.LADDER_FALL, State.DOWN, State.VICTORY],
 }
 
 signal state_changed(previous: State, current: State)
