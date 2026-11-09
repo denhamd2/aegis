@@ -84,3 +84,28 @@ exist. The row is not marked complete until:
 | 8 Nov 2026 | `one_winged_angel` | `moves/one_winged_angel.png` | DeepSeek V4 Pro (art director) | fail — 2.5 / 3.0 / 2.5 | Weightless carry, skipped impact, no sell. Evidence: `visual-review-owa-samoan.md`. |
 | 8 Nov 2026 | `squatting_samoan_drop` | `moves/squatting_samoan_drop.png` | DeepSeek V4 Pro (art director) | fail — 3.0 / 3.5 / 3.0 | Closest of the three; same weight/impact/sell failures. Evidence: `visual-review-owa-samoan.md`. |
 | 8 Nov 2026 | `chokeslam_1` | `moves/chokeslam_1.png` | DeepSeek V4 Pro (art director) | fail — 2.5 / 3.0 / 2.5 | Peak silhouette reads; grip, impact and sell fail. Evidence: `visual-review-chokeslam.md`. |
+
+## Video-reference loop
+
+Every move below is matched to the tutorial video. Score columns are
+animation / poses / effects / selling / attacking / realism / speed / power /
+overall. A move is complete only at overall 10/10 with no factor below 9/10.
+
+| Move | Reference | Status | Score |
+| --- | --- | --- | --- |
+| High hook | 1:01.44 contact | Passed 7.0 after pivot/follow-through rework; effects/sell outstanding | 8 / 7.5 / 4 / 4 / 7.5 / 7 / 5 / 8 / **7.0** |
+| Front kick body | 1:03.95 contact | Passed 6.3; lean-back improved | 7 / 7 / 4 / 5 / 7 / 7 / 7 / 6 / **6.3** |
+| Turning back kick body | 1:06.07 contact | Passed 8.0 — adding contact hold | 8 / 9 / 4 / 7 / 8 / 8 / 7 / 8 / **8.0** |
+| Clinch knee body | 1:10.95 contact | Passed 6.5; hip thrust/head pull landed | 7 / 7 / 4 / 5 / 8 / 7 / 7 / 7 / **6.5** |
+| Running flying knee | 1:13.06 contact | Passed 6.6; crash/landing fixed | 8 / 8 / 4 / 5 / 8 / 7 / 6 / 7 / **6.6** |
+| Side kick knockdown | 1:16.68 contact | Passed 8.0 — verifying extension and hold | 8 / 9 / 4 / 7 / 8 / 8 / 7 / 8 / **8.0** |
+| Turning back kick knockdown | 1:20.26 contact | Passed 7.5 borderline — verifying heel and hold | 8 / 8 / 4 / 7 / 8 / 8 / 7 / 8 / **7.5** |
+| Combination 3-hit | 1:26.07 / 1:26.54 / 1:26.62 | Reference extracted; authoring pending | — |
+| Irish whip setup | 3:01.40–3:02.60 | Authoring worker running | — |
+| Rope rebound | 3:02.50–3:03.60 | Authoring worker running | — |
+| Rebound slam | 3:17.85–3:20.10 | Authoring worker running | — |
+| Rebound hurricanrana | 3:25.30–3:26.25 | Authoring worker running | — |
+| Running grapple | 3:49.00–3:51.20 | Patch ready; integrate after strike batch | — |
+| Head sell | 1:01.44–1:01.96 | Reference extracted; sell check pending | — |
+| Gut sell | 1:03.95–1:05.00 | Reference extracted; sell check pending | — |
+| Knockdown sells | 1:16.68–1:21.00 | Reference extracted; sell check pending | — |

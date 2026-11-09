@@ -231,6 +231,13 @@ const RECIPES := {
 	"strike_cross": {"kind": "retime", "source": "Strike_Forearm",
 		"seconds": 0.667, "file": AUTHORED},
 
+	# The tutorial high strike: a lead left hook, left fist across the jaw,
+	# right hand low. The authored 20-frame clip's contact is at 30%, so
+	# 0.61 s puts it on the 11th tick; the MoveDef's 42 ticks carry the
+	# remaining 0.09 s of recovery.
+	"strike_hook": {"kind": "retime", "source": "Strike_Hook_Left",
+		"seconds": 0.61, "file": AUTHORED},
+
 	# The heavy kick: the same posed kick as strike_kick, thrown slower. It
 	# used to retime the mocap roundhouse, which measured head-below-hips on
 	# all 57 of its frames -- the worst of the three.
@@ -246,6 +253,16 @@ const RECIPES := {
 	# recovery, never from a slower action phase.
 	"strike_kick_heavy": {"kind": "retime", "source": "Strike_Kick_Heavy",
 		"seconds": 0.950, "file": AUTHORED},
+
+	# The tutorial's front kick to the solar plexus (reference #2):
+	# 63.41 start, 63.95 contact, 64.35 recovery -- 0.94 s / 56 frames at
+	# 60 fps. The authored 28-frame clip puts contact on frame 16, so
+	# retiming it to 0.940 s lands the boot on tick 32, the 32+4+20 frame
+	# data in strike_front_kick_body.tres. The defender folds over it and
+	# stays folded: torso damage dominates, so reaction_for() picks
+	# Hit_React_Torso and sell_for() continues into Sell_Gut.
+	"strike_front_kick_body": {"kind": "retime", "source": "Strike_Front_Kick_Body",
+		"seconds": 0.94, "file": AUTHORED},
 	# DiveSpot's other ending, and the possum attack (PossumSpot).
 	"springboard_cutter_attacker": {"kind": "retime", "source": "Springboard_Cutter_Attacker",
 		"seconds": 1.600, "file": AUTHORED},
@@ -287,6 +304,14 @@ const RECIPES := {
 	# contact on frame 7 = tick 14, strike_gut_punch.tres's startup.
 	"strike_gut_punch": {"kind": "retime", "source": "Strike_Gut_Punch",
 		"seconds": 0.733, "file": AUTHORED},
+	# The clinch knee from the strike tutorial's fourth sequence
+	# (gauntlet/refs/video_refs/strikes/reference.md, section 04): 70.60 s
+	# start, 70.95 s contact, 71.37 s back to guard -- 0.77 s, 46 ticks at
+	# 60 Hz. Authored 23 frames at 30 fps (0.7667 s), contact on frame 10.5
+	# = tick 21, so retiming to 0.767 s leaves that contact on tick 21
+	# (strike_clinch_knee_body.tres's startup_frames).
+	"strike_clinch_knee_body": {"kind": "retime", "source": "Strike_Clinch_Knee_Body",
+		"seconds": 0.767, "file": AUTHORED},
 	# Cody's (wrestling_clips.py "Cody's strikes"), at their own lengths so
 	# the MoveDefs' startup_frames land on the contact frames.
 	"strike_bionic_elbow": {"kind": "retime", "source": "Strike_Bionic_Elbow",
@@ -747,6 +772,18 @@ const RECIPES := {
 		"seconds": 1.200, "file": AUTHORED},
 	"ground_pickup": {"kind": "retime", "source": "Pickup_Haul",
 		"seconds": 1.200, "file": AUTHORED},
+	"strike_turning_back_kick_body": {"kind": "retime",
+		"source": "Strike_Turning_Back_Kick_Body", "seconds": 0.9333,
+		"file": AUTHORED},
+	"strike_running_flying_knee": {"kind": "retime",
+		"source": "Strike_Running_Flying_Knee", "seconds": 1.133, "file": AUTHORED},
+	"strike_side_kick_knockdown": {"kind": "retime",
+		"source": "Strike_Side_Kick_Knockdown", "seconds": 1.0667,
+		"file": AUTHORED},
+	"strike_turning_back_kick_knockdown": {"kind": "retime",
+		"source": "Strike_Turning_Back_Kick_Knockdown", "seconds": 1.000,
+		"file": AUTHORED},
+
 }
 
 ## Clip name as registered on the wrestler's AnimationPlayer.

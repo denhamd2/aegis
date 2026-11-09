@@ -178,8 +178,13 @@ static func entries() -> Array:
 	# up the Spear, and a few lariats and knees on the run.
 	const M := "res://resources/moves/"
 	(list[0] as Entry).moveset = {
-		"strike": [M + "strike_jab.tres", M + "strike_cross.tres",
-				M + "strike_gut_punch.tres", M + "strike_kick_heavy.tres"],
+		"strike": [M + "strike_jab.tres", M + "strike_hook.tres", M + "strike_cross.tres",
+				M + "strike_gut_punch.tres", M + "strike_kick_heavy.tres",
+				M + "strike_front_kick_body.tres",
+				M + "strike_turning_back_kick_body.tres",
+				M + "strike_clinch_knee_body.tres",
+				M + "strike_side_kick_knockdown.tres",
+				M + "strike_turning_back_kick_knockdown.tres"],
 		"grapple": [M + "grapple_clinch_knee.tres", M + "grapple_vertical_suplex.tres",
 				M + "grapple_guillotine.tres"],
 		"power": [M + "power_samoan_drop.tres", M + "power_bodyslam.tres",
@@ -196,6 +201,7 @@ static func entries() -> Array:
 		"running": [M + "running_attack_clothesline.tres",
 				M + "running_clothesline_from_hell.tres", M + "running_knee_lift.tres",
 				M + "running_drive_by.tres",
+				M + "strike_running_flying_knee.tres",
 				# FF batch 5: the leaping lariat, a stretch-run special.
 				M + "ff/casualty_of_war.tres"],
 		# From the corner: only thrown at a man hanging in one. The Spear,
@@ -222,8 +228,13 @@ static func entries() -> Array:
 	# Cody's own moveset (gauntlet/refs/cody_moveset.md): the moves he hits in
 	# nearly every match, in place of the shared draw.
 	(list[1] as Entry).moveset = {
-		"strike": [M + "strike_jab.tres", M + "strike_bionic_elbow.tres",
-				M + "strike_dropdown_uppercut.tres", M + "strike_cross.tres"],
+		"strike": [M + "strike_jab.tres", M + "strike_hook.tres", M + "strike_bionic_elbow.tres",
+				M + "strike_dropdown_uppercut.tres", M + "strike_cross.tres",
+				M + "strike_front_kick_body.tres",
+				M + "strike_turning_back_kick_body.tres",
+				M + "strike_clinch_knee_body.tres",
+				M + "strike_side_kick_knockdown.tres",
+				M + "strike_turning_back_kick_knockdown.tres"],
 		"grapple": [M + "grapple_vertical_suplex.tres",
 				# FF batch 1: the suplex lift, dropped on the head.
 				M + "ff/brainbuster_1.tres",
@@ -244,7 +255,8 @@ static func entries() -> Array:
 				# FF batch 3: both knees into the jaw.
 				M + "ff/code_breaker_1.tres"],
 		"running": [M + "running_attack_clothesline.tres",
-				M + "running_single_leg_dropkick.tres"],
+				M + "running_single_leg_dropkick.tres",
+				M + "strike_running_flying_knee.tres"],
 		"submission": [M + "submission_figure_four.tres"],
 		# Whipped into the corner, chopped there Flair-style (a knife-edge
 		# chop; ff_moves_and_gameplay_plan.md, staples 4).
@@ -274,8 +286,13 @@ static func entries() -> Array:
 	# Omega), filled out with our moves of his ring style -- the chops and
 	# kicks, the suplex, the Tiger Driver '98 -- in place of the shared draw.
 	(list[2] as Entry).moveset = {
-		"strike": [M + "strike_chop.tres", M + "strike_jab.tres",
-				M + "strike_kick_heavy.tres", M + "strike_cross.tres"],
+		"strike": [M + "strike_chop.tres", M + "strike_jab.tres", M + "strike_hook.tres",
+				M + "strike_kick_heavy.tres", M + "strike_cross.tres",
+				M + "strike_front_kick_body.tres",
+				M + "strike_turning_back_kick_body.tres",
+				M + "strike_clinch_knee_body.tres",
+				M + "strike_side_kick_knockdown.tres",
+				M + "strike_turning_back_kick_knockdown.tres"],
 		# The snap dragons: the snap in his grapples, the bridging one with
 		# his power moves.
 		"grapple": [M + "grapple_vertical_suplex.tres", M + "power_bodyslam.tres",
@@ -288,7 +305,8 @@ static func entries() -> Array:
 		# And on the run: into a man doubled over, or into the face of one
 		# standing.
 		"running": [M + "ff/running_v_trigger_3.tres", M + "ff/running_v_trigger_1.tres",
-				M + "running_attack_clothesline.tres"],
+				M + "running_attack_clothesline.tres",
+				M + "strike_running_flying_knee.tres"],
 	}
 	return list
 
