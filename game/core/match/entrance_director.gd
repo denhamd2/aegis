@@ -776,8 +776,14 @@ const RING_BEHIND_FOV := 70.0
 ## him so he sits on the right third with his lead room into the ring --
 ## ropes in the foreground, him in the middle ground, the crowd behind.
 ## Inside the barricade (radius 6.0), or the front rows are in the lens.
-const ROPE_WIDE_AT := Vector3(5.6, 2.9, -0.6)
-const ROPE_WIDE_FOV := 50.0
+## The owner, 9 Nov: "When each wrestler is entering through the ropes ...
+## cut to a different angle further zoomed out. Use that same angle when Cody
+## is handing his coat to Aubrey. The animations for those isn't great so I
+## want to hide them a bit." Every man's step through the ropes and Cody's
+## coat hand-off cut to it from the ring arrival's crane (whose clock runs on
+## under it), opened out from 50 degrees.
+const ROPE_WIDE_AT := Vector3(5.6, 3.1, -0.6)
+const ROPE_WIDE_FOV := 60.0
 const ROPE_WIDE_LEAD := 1.0
 ## The hard-camera side crowd, for the WHOAs in the dark (C-MITB 12-20 s).
 const CROWD_WIDE_AT := Vector3(3.8, 1.6, 1.0)
@@ -885,6 +891,7 @@ var _dimmed := {}
 var _tinted := {}
 ## Ticks into the ring-arrival crane's move; -1 when it is not on.
 var _entry_crane_ticks := -1
+var _entry_crane_cut_back := false
 ## The stands' light before his blackout lifted it (null: not lifted).
 var _crowd_light_was: Variant = null
 var _env: Environment
@@ -2166,12 +2173,12 @@ func _add_cody_entrance(w: WrestlerController, entrance_x: float, _side: String)
 	var inward := (Vector3(mark.origin.x - stand.x, 0.0, mark.origin.z - stand.z)).normalized()
 	_beats.append({"kind": "clip", "who": w, "clip": "strikes/coat_off",
 			"ticks": 120, "from": stand, "to": stand, "facing": out_dir,
-			"shot": "entry_crane", "pass_facing": inward,
+			"shot": "rope_wide", "pass_facing": inward,
 			"events": [[1, "prop_call_coat"], [COAT_OFF_AT, "coat_off"]]})
-	_beats.append({"kind": "turn", "who": w, "facing": inward, "shot": "entry_crane"})
+	_beats.append({"kind": "turn", "who": w, "facing": inward, "shot": "rope_wide"})
 	_beats.append({"kind": "pose", "who": w, "ticks": _secs(0.0, HAND_OUT_SECONDS),
 			"clip": "strikes/prop_hand_out_r", "facing": inward,
-			"shot": "entry_crane", "events": [[1, "prop_pass_coat"]]})
+			"shot": "rope_wide", "events": [[1, "prop_pass_coat"]]})
 	_beats.append({"kind": "walk", "who": w, "path": [stand, mark.origin],
 			"speed": CODY_WALK_SPEED, "walk_clip": CODY_WALK_CLIP,
 			"shot": "ring_high_corner", "on_mat": true})
@@ -2296,7 +2303,8 @@ func _add_kenny_entrance(w: WrestlerController, entrance_x: float, side: String)
 ## approach (Roman's); `survey_clip`, if set, is played standing on the apron
 ## before he goes in; `floor_clip`, if set, is played for `floor_ticks` at the
 ## foot of the steps, facing them, on a close shot (Roman's bowed head). The
-## step through the ropes is on the wide shot, ROPE_WIDE_AT, for every man.
+## step through the ropes is on the wide shot, ROPE_WIDE_AT, for every man
+## (cut to from the crane and back).
 func _add_route_in(w: WrestlerController, cut: Vector3, speed: float,
 		walk_clip: String, split_floor: bool, survey_clip := "",
 		floor_clip := "", floor_ticks := 0) -> Vector3:
@@ -2365,7 +2373,7 @@ func _add_route_in(w: WrestlerController, cut: Vector3, speed: float,
 	inside.y = 0.0  # the canvas is level with the ring centre; the apron is not.
 	_beats.append({"kind": "clip", "who": w, "clip": "strikes/rope_step_through_apron",
 			"ticks": int(round(APRON_ROPE_SECONDS * TPS)),
-			"from": apron, "to": inside, "facing": into, "shot": "entry_crane", "plant": true})
+			"from": apron, "to": inside, "facing": into, "shot": "rope_wide", "plant": true})
 	return inside
 
 
@@ -2878,7 +2886,15 @@ func _frame(beat: Dictionary, delta: float, force_cut := false) -> void:
 func _frame_shot(beat: Dictionary, delta: float, force_cut := false) -> void:
 	if not _camera:
 		return
-	if beat.get("shot", "") != "entry_crane":
+	if beat.get("shot", "") == "rope_wide":
+		# The wide is a cut away inside the ring arrival, not the end of it:
+		# the crane's clock runs on under it, and it cuts back in where it
+		# would have been rather than booming down again from the top.
+		if _entry_crane_ticks >= 0:
+			if delta > 0.0:
+				_entry_crane_ticks += 1
+			_entry_crane_cut_back = true
+	elif beat.get("shot", "") != "entry_crane":
 		_entry_crane_ticks = -1
 	var w: WrestlerController = beat.get("who")
 	var first := force_cut or _tick == 1
@@ -2983,7 +2999,8 @@ func _frame_shot(beat: Dictionary, delta: float, force_cut := false) -> void:
 			var e_r := smoothstep(0.0, 1.0, float(_entry_crane_ticks) / float(ENTRY_CRANE_TICKS))
 			var rc := entry_crane_shot(w.global_position, _camera.hard_cam_position, e_r)
 			_camera.set_entrance_shot(rc[0], rig_clear_look(rc[0], rc[1], rc[2]), rc[2],
-					_entry_crane_ticks == 0, delta)
+					_entry_crane_ticks == 0 or _entry_crane_cut_back, delta)
+			_entry_crane_cut_back = false
 		"crane_front":
 			var fc := _flat(-w.global_transform.basis.z).normalized()
 			var e_c := smoothstep(0.0, 1.0, float(_tick) / maxf(float(beat["ticks"]), 1.0))

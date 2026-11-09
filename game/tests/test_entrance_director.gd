@@ -296,6 +296,28 @@ func test_both_entrances_climb_from_the_stair_foot_to_the_apron() -> void:
 	assert_int(rope_steps).is_equal(2)
 
 
+## The owner, 9 Nov: through the ropes and Cody's coat hand-off "cut to a
+## different angle further zoomed out" -- the rope wide, wider than before,
+## and the ring arrival's crane carries on under it rather than restarting.
+func test_the_rope_step_and_coat_hand_off_cut_to_the_rope_wide() -> void:
+	assert_float(EntranceDirector.ROPE_WIDE_FOV).is_greater(50.0)
+	var scene := _match(true, "roman", "cody")
+	var director: EntranceDirector = scene.get_node("EntranceDirector")
+	var rope_steps := 0
+	var coat := 0
+	for beat: Dictionary in director._beats:
+		if beat.get("clip") == "strikes/rope_step_through_apron":
+			rope_steps += 1
+			assert_str(str(beat.get("shot"))).is_equal("rope_wide")
+		if beat.get("clip") in ["strikes/coat_off", "strikes/prop_hand_out_r"] \
+				and (beat.get("events", []) as Array).any(
+					func(e: Array) -> bool: return String(e[1]).contains("coat")):
+			coat += 1
+			assert_str(str(beat.get("shot"))).is_equal("rope_wide")
+	assert_int(rope_steps).is_equal(2)
+	assert_int(coat).is_equal(2)
+
+
 ## Roman's own routine holds to the same contract, and his props and pyro are
 ## gone by the bell.
 func test_romans_entrance_is_continuous_and_cleans_up() -> void:

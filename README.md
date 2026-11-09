@@ -11666,3 +11666,9 @@ The owner: "his hair should be able to move as it's long".
 ## 9 Nov (9) — Black smoke off every wrestler
 
 - The owner: "black plumes of smoke rising from the back of each wrestler from the start of every match". Root cause: the fire's new smoke (9 Nov (4)) is a sub-emitter of each wrestler's `ManFire` flames, meant to puff only where a flame dies, but it was created with `emitting = true`. So it ran on its own from the bell, off every man, at the flame's height on his back. Now it starts off and only the flames fire it. Pinned by `test_fire_smoke_only_puffs_off_a_dying_flame`.
+
+## 9 Nov (10) — A wider cut through the ropes and for Cody's coat
+
+- The owner: "When each wrestler is entering through the ropes during their entrance, I want the camera to cut to a different angle further zoomed out. Use that same angle when Cody is handing his coat to Aubrey. The animations for those isn't great so I want to hide them a bit."
+- Every man's rope step, and Cody's coat-off, turn and hand-out, now cut from the ring arrival's crane to the rope wide (ringside on the hard-camera side, 3.1 m up), opened from 50° to 60°.
+- The crane's clock keeps running under the wide, so cutting back picks it up where it would have been, instead of booming down again from the top (the camera judge's warning).
