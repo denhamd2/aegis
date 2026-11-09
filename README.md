@@ -11625,3 +11625,8 @@ The owner: "his hair should be able to move as it's long".
   - groans: four low takes from OpenGameArt's CC0 "grunts of male death and pain", trimmed and down 12%;
   - yells: down 15% at the same tempo.
   Freesound is blocked from this environment, so it uses sources reachable here. Credits updated.
+
+## 9 Nov (4) — Realistic fire; dangerous weapons under the apron
+
+- **Fire.** "Make fire look more realistic." Every fire (a man alight, flaming tables, venue fires, pyro jets) drew one static procedural sprite, additive, and the venue's 64 overlapped ~35 deep into a white column. `core/materials/flame.gdshader` now draws each tongue with scrolling noise: edges that waver and licks that break off the tip. It's coloured by its own heat (pale core, orange body, deep red edges), soft against bodies and the floor, and fades before the card edge so no rectangles show. Fewer, larger tongues (venue 22, a man 16). A man's flames leave smoke puffs where they die (`smoke.gdshader`, a sub-emitter).
+- **Under the apron.** "Add a few of the more dangerous weapons under the ring apron." In No Holds Barred, `WeaponStock.APRON_LAYOUT` lays six at ringside half under the skirt from the bell: barbed-wire bat, sledgehammer, light tubes, nail board, barbed-wire chair, knife. They're loose floor weapons either man can grab.

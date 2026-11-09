@@ -26,6 +26,16 @@ const STAGE_LAYOUT := [
 	[&"barbed_wire_bat", Vector3(2.6, 0.0, -32.2)], [&"handgun", Vector3(3.9, 0.0, -32.2)],
 ]
 const STAGE_WEAPON_LIFETIME_TICKS := 60 * 180
+## The owner, 9 Nov: "Add a few of the more dangerous weapons under the ring
+## apron." Laid on the floor at ringside, pushed half under the skirt
+## (RingBuilder.APRON_OUT 3.20) mid-side, clear of the steps' corner, from
+## the bell: there for either man to drag out.
+const APRON_LAYOUT := [
+	[&"barbed_wire_bat", Vector3(-3.42, 0.0, 1.1)], [&"sledgehammer", Vector3(-3.42, 0.0, -0.9)],
+	[&"light_tubes", Vector3(0.9, 0.0, 3.42)], [&"board_with_nails", Vector3(-1.0, 0.0, -3.42)],
+	[&"barbed_wire_chair", Vector3(3.42, 0.0, 1.0)], [&"knife", Vector3(3.42, 0.0, -0.6)],
+]
+var apron_actors: Array[WeaponActor] = []
 
 var actors: Array[WeaponActor] = []
 var stage_actors: Array[WeaponActor] = []
@@ -93,6 +103,28 @@ func seed_stage_weapons() -> void:
 		# stood on its point is not laid out
 		actor._rest_on_floor(WeaponActor.ground_under(actor.global_position))
 		stage_actors.append(actor)
+
+
+## Seed the ringside floor under the apron once at bell time, as the deck.
+func seed_apron_weapons() -> void:
+	if not MatchRules.no_holds_barred(self) or not apron_actors.is_empty():
+		return
+	for i in APRON_LAYOUT.size():
+		var id: StringName = APRON_LAYOUT[i][0]
+		var def := WeaponCatalog.by_id(id)
+		if def == null:
+			continue
+		var actor := pull(def)
+		actor.name = "ApronWeapon%02d_%s" % [i, id]
+		actor.mode = WeaponActor.Mode.FLOOR
+		actor.match_lifetime_limit = STAGE_WEAPON_LIFETIME_TICKS
+		actor.global_position = APRON_LAYOUT[i][1]
+		# Along the apron, as if slid out from under it.
+		var at: Vector3 = APRON_LAYOUT[i][1]
+		actor.rotation.y = 0.0 if absf(at.x) > absf(at.z) else PI * 0.5
+		actor.rotation.y += float(i % 2) * 0.35 - 0.17
+		actor._rest_on_floor(WeaponActor.ground_under(actor.global_position))
+		apron_actors.append(actor)
 
 
 ## The nearest stage prop still lying loose, for an AI making a weapon run.

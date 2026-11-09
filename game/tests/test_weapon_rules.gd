@@ -192,6 +192,27 @@ func test_no_holds_barred_lays_out_the_dangerous_weapons_on_the_stage() -> void:
 
 ## The gun waits for the finish (the owner, 20 Oct: out from the bell, it
 ## ended matches too soon): not under the ring, not off the stage, not off the
+## The owner, 9 Nov: "Add a few of the more dangerous weapons under the ring
+## apron." Laid at ringside half under the skirt, loose, from the bell.
+func test_no_holds_barred_lays_dangerous_weapons_under_the_apron() -> void:
+	var arena: Node3D = auto_free(Node3D.new())
+	MatchRules.set_mode(arena, MatchRules.Mode.NO_HOLDS_BARRED)
+	add_child(arena)
+	var w: WrestlerController = WRESTLER_SCENE.instantiate()
+	arena.add_child(w)
+	var stock := WeaponStock.of(w)
+	stock.seed_apron_weapons()
+	stock.seed_apron_weapons()
+	assert_int(stock.apron_actors.size()).is_equal(WeaponStock.APRON_LAYOUT.size())
+	for actor in stock.apron_actors:
+		assert_int(actor.mode).is_equal(WeaponActor.Mode.FLOOR)
+		var reach := maxf(absf(actor.global_position.x), absf(actor.global_position.z))
+		# just outside the skirt, not in the ring and not out by the barricade
+		assert_float(reach).is_between(RingBuilder.APRON_OUT, RingBuilder.APRON_OUT + 0.4)
+		assert_bool(actor.def.id in WrestlerAI.WILD_WEAPONS or actor.def.id == &"knife").is_true()
+	assert_object(stock.nearest_loose(Vector3(-4.2, 0.0, 1.0), false, 2.0)).is_not_null()
+
+
 ## floor until MatchFlow says the match may end; everything else from the bell.
 func test_the_gun_is_only_there_for_the_finish() -> void:
 	var arena: Node3D = auto_free(Node3D.new())

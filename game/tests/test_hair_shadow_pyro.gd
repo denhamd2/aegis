@@ -131,8 +131,10 @@ func test_no_sparkler_or_waterfall_pyro() -> void:
 		# waterfall points down.
 		assert_bool(m.direction.y < 0.0).override_failure_message("a falling sheet").is_false()
 		var shell := is_equal_approx(p.explosiveness, 1.0) and m.spread >= 179.0
+		# A flame: drawn by the flame shader (ManFire.tongue_pass, 9 Nov).
 		var flame := p.lifetime <= 1.0 and p.draw_pass_1 is QuadMesh \
-				and ((p.draw_pass_1 as QuadMesh).material as StandardMaterial3D).albedo_texture != null
+				and (p.draw_pass_1 as QuadMesh).material is ShaderMaterial \
+				and ((p.draw_pass_1 as QuadMesh).material as ShaderMaterial).shader == ManFire.FLAME_SHADER
 		# the puff a comet jet leaves at its top
 		var smoke := p.has_meta("smoke")
 		assert_bool(shell or flame or smoke).override_failure_message(

@@ -950,7 +950,7 @@ func _flames() -> GPUParticles3D:
 	m.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
 	m.emission_sphere_radius = 0.45
 	m.direction = Vector3.UP
-	m.spread = 14.0
+	m.spread = 24.0
 	m.initial_velocity_min = 1.6
 	m.initial_velocity_max = 2.8
 	m.gravity = Vector3(0.0, 1.2, 0.0)          # hot gas rises
@@ -975,7 +975,9 @@ func _flames() -> GPUParticles3D:
 	p.process_material = m
 	# tongues licking up, the shared fire sprite (ManFire.tongue_pass)
 	p.draw_pass_1 = ManFire.tongue_pass(Vector2(0.75, 1.8), Color(1.2, 1.05, 1.0))
-	p.amount = 64
+	# 64 tongues overlapped ~35 deep and summed to a white column (9 Nov,
+	# "make fire look more realistic"): fewer, each one read.
+	p.amount = 22
 	p.lifetime = 0.9
 	p.fixed_fps = 60
 	p.visibility_aabb = AABB(Vector3(-3, -1, -3), Vector3(6, 7, 6))

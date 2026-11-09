@@ -162,20 +162,64 @@ func _set_burn() -> void:
 ## at the tip -- `size` across and up, its root a little below the particle
 ## so a tongue stands up off where it was born. Additive and tinted by the
 ## particle's colour ramp, the way the round puffs were.
+## 9 Nov (the owner: "Make fire look more realistic"): drawn by
+## flame.gdshader -- each tongue wavers and licks, coloured by its own heat --
+## where a static sprite piled into one blown-out ball.
 static func tongue_pass(size: Vector2, tint := Color.WHITE) -> QuadMesh:
 	var quad := QuadMesh.new()
 	quad.size = size
 	quad.center_offset = Vector3(0.0, size.y * 0.36, 0.0)
-	var mat := StandardMaterial3D.new()
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
-	mat.vertex_color_use_as_albedo = true
-	mat.albedo_color = tint
-	mat.albedo_texture = WeaponActor.flame_tongue()
+	var mat := ShaderMaterial.new()
+	mat.shader = FLAME_SHADER
+	mat.set_shader_parameter("tint", tint)
 	quad.material = mat
 	return quad
+
+
+const FLAME_SHADER := preload("res://core/materials/flame.gdshader")
+const SMOKE_SHADER := preload("res://core/materials/smoke.gdshader")
+
+
+## Smoke where each flame dies (the flames' sub-emitter): dark, rising,
+## spreading, gone in a couple of seconds.
+static func _smoke_particles() -> GPUParticles3D:
+	var p := GPUParticles3D.new()
+	p.name = "Smoke"
+	p.amount = 48
+	p.lifetime = 1.8
+	p.emitting = true
+	var m := ParticleProcessMaterial.new()
+	m.direction = Vector3.UP
+	m.spread = 20.0
+	m.initial_velocity_min = 0.3
+	m.initial_velocity_max = 0.6
+	m.gravity = Vector3(0.0, 0.25, 0.0)
+	m.damping_min = 0.4
+	m.damping_max = 0.8
+	m.scale_min = 0.6
+	m.scale_max = 1.0
+	var grow := Curve.new()
+	grow.add_point(Vector2(0.0, 0.35))
+	grow.add_point(Vector2(1.0, 1.0))
+	var grow_tex := CurveTexture.new()
+	grow_tex.curve = grow
+	m.scale_curve = grow_tex
+	var grad := Gradient.new()
+	grad.offsets = PackedFloat32Array([0.0, 0.2, 1.0])
+	grad.colors = PackedColorArray([Color(1, 1, 1, 0.0), Color(1, 1, 1, 0.8), Color(1, 1, 1, 0.0)])
+	var ramp := GradientTexture1D.new()
+	ramp.gradient = grad
+	m.color_ramp = ramp
+	m.angle_min = -180.0
+	m.angle_max = 180.0
+	p.process_material = m
+	var quad := QuadMesh.new()
+	quad.size = Vector2(0.4, 0.4)
+	var mat := ShaderMaterial.new()
+	mat.shader = SMOKE_SHADER
+	quad.material = mat
+	p.draw_pass_1 = quad
+	return p
 
 
 ## A fire's particles leaning a little this way and that, as flames do.
@@ -187,7 +231,8 @@ static func flicker(m: ParticleProcessMaterial) -> void:
 ## His flames over his body: a box over his chest of softer tongues than the
 ## stock flame, so they sit on him rather than piling into one white ball.
 static func _as_tongues(p: GPUParticles3D) -> void:
-	p.amount = 46
+	# 46 piled into one white column under the arena's glow (9 Nov).
+	p.amount = 16
 	var m := p.process_material as ParticleProcessMaterial
 	m.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
 	m.emission_box_extents = Vector3(0.22, 0.45, 0.16)
@@ -239,6 +284,13 @@ static func _flame_particles() -> GPUParticles3D:
 	p.process_material = m
 	flicker(m)
 	p.draw_pass_1 = tongue_pass(Vector2(0.2, 0.5))
+	# One puff of smoke where every third tongue dies.
+	var smoke := _smoke_particles()
+	p.add_child(smoke)
+	p.sub_emitter = NodePath("Smoke")
+	m.sub_emitter_mode = ParticleProcessMaterial.SUB_EMITTER_AT_END
+	m.sub_emitter_amount_at_end = 1
+	m.sub_emitter_keep_velocity = false
 	return p
 
 
