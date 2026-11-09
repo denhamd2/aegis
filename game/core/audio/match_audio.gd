@@ -73,9 +73,12 @@ const ROCKET_BLAST_DB := 6.0
 ## lift doubles the signal amplitude; the master compressor and limiter keep
 ## stacked bursts from clipping.
 const ENTRANCE_PYRO_BOOST_DB := 6.0
-## The opening and finish bells are short broadcast cues. Double playback
-## speed gives them the quick, bright ring of a live wrestling bell.
-const MATCH_BELL_PITCH_SCALE := 2.0
+## The opening and finish bells ring at the pitch they were recorded at: a
+## 919 Hz ring bell. (They used to play at double speed, an octave up, for a
+## quick bright cue; that also halved a 7-10 s ring. The quickness is now in
+## the files -- the tails are faded to 4.3 s and 5.7 s by
+## tools/audio/build_sfx_round4.py -- and the bell is a bell again.)
+const MATCH_BELL_PITCH_SCALE := 1.0
 
 ## A bump: the pelvis falling faster than this and then stopping, low.
 const BUMP_FALL_SPEED := 2.0

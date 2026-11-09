@@ -58,7 +58,11 @@ optical transfers, so they carry little above 5 kHz.
 | `groan_3`, `groan_4` | Red Library: Voices Men 1, R15-31 "Man Growling and Grunting" | USC Cinema / Sunset Editorial (Internet Archive) | CC0 |
 | `wind_*` | Red Library: Voices Men 1, R15-33 "Man Out of Breath" | USC Cinema / Sunset Editorial (Internet Archive) | CC0 |
 | `count_slap_*` | [Red Library: Fights](https://archive.org/details/Red_Library_Fights), R15-12 "Loud Slaps or Whacks", over [Red Library: Impacts](https://archive.org/details/Red_Library_Impacts), R28-55 "Thumps on Large Hollow Wooden Surface" | USC Cinema / Sunset Editorial (Internet Archive) | CC0 |
-| `pyro_boom`, `crowd_finish` | the same recordings as above, with the silence before the sound cut off | | |
+| `pyro_boom`, `crowd_finish`, `crowd_pop_*` | the same recordings as above, with the silence before the sound cut off (the pops keep 150 ms) | | |
+| `bell_start`, `bell_end` | the same recording as above, the ring faded out 1.5 s after the last strike | | |
+| `grunt_heavy_0`-`grunt_heavy_3` | the same recording as above, re-levelled to one loudness | | |
+| `grunt_heavy_4`-`grunt_heavy_6` | Red Library: Voices Men 1, R21-14 "Man Grunts and Struggles" | USC Cinema / Sunset Editorial (Internet Archive) | CC0 |
+| `pyro_bang` | [25 CC0 bang / firework sfx](https://opengameart.org/content/25-cc0-bang-firework-sfx), `cannon_02` | rubberduck | CC0 |
 
 The entrance music in `music/` is the full soundtrack of the owner-supplied
 entrance videos (Google Drive, 2026-09-26; 3:38 each), cut out by

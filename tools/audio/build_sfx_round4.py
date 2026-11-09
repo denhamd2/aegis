@@ -379,6 +379,21 @@ def limit(x, max_db=3.5, ceiling=CEILING):
 	return peak_to(y, ceiling)
 
 
+def fit(x, target, max_gr, ceiling=CEILING):
+	"""`x` at `target` LUFS-loop under `ceiling`. If its peak would pass the
+	ceiling, the limiter takes the transient down, in 0.5 dB steps and never by
+	more than `max_gr`; a take that still cannot reach the target comes back
+	as loud as it can go (and save_pool brings the pool down to it)."""
+	y = level(x, target, ceiling)
+	gr = 0.0
+	while iloop(y) < target - 0.05 and gr < max_gr:
+		gr = min(gr + 0.5, max_gr)
+		y = level(limit(x, gr, ceiling), target, ceiling)
+	if gr:
+		print(f"    limiter: {gr:.1f} dB off the transient")
+	return y
+
+
 # ---- sources ---------------------------------------------------------------
 _src = {}
 
@@ -468,9 +483,55 @@ def slot_trims():
 	pyro_boom lands on the burst and crowd_finish on the bell (approved)."""
 	_trim_lead("pyro_boom", 0.002, 0.002)
 	_trim_lead("crowd_finish", 0.03, 0.03)
+	# The pops (revised): 150 ms of the crowd drawing breath is kept on every
+	# one. crowd_pop fires on the landing frame, and a crowd that roars inside
+	# 30 ms reacts before a person could; the 0.6-1.1 s on pops 2 and 4 was
+	# simply late. The whoosh is not trimmed: its rise is what makes it one.
+	for i in range(5):
+		x = repo(f"crowd_pop_{i}")
+		m = np.abs(x.mean(1))
+		onset = int(np.argmax(m > m.max() * 0.1))      # -20 dB re the peak, on the mono sum
+		y = fade(x[max(0, onset - int(0.150 * SR)):].copy(), 0.03, 0.0)
+		print(f"  crowd_pop_{i}: {(len(x) - len(y)) / SR * 1000:.0f} ms of lead-in removed")
+		save(f"crowd_pop_{i}", peak_to(y, min(CEILING, 20 * np.log10(float(np.abs(y).max())))))
 
 
-SLOTS = {"groan": slot_groan, "wind": slot_wind, "count_slap": slot_count_slap, "trims": slot_trims}
+def slot_pyro_bang():
+	"""P10 (revised). The lift charge: rubberduck's cannon_02, at -22 LUFS-loop,
+	about 6 LU under the pyro_boom it launches -- up from 8.6 LU under, but
+	still clearly the smaller sound."""
+	x = start_at(cut(load_native(RD + "cannon_02.ogg"), 0.0, 1.3), -20, 0.001)
+	save("pyro_bang", level(fade(trim_tail(x, -60), 0.001, 0.2), -22.0))
+
+
+def slot_grunt_heavy():
+	"""P13 (revised). Three more heavy grunts, each cut to ONE effort (a pool
+	grunt fires on one blow), and the four kept ones re-levelled: they ran
+	-16.0 to -20.2, a 4.2 LU spread, and now the pool of seven sits at -18.2."""
+	strug = source("struggle")
+	items = [(f"grunt_heavy_{i}", repo(f"grunt_heavy_{i}")) for i in range(4)]
+	items += [(f"grunt_heavy_{4 + i}", voice(strug, s, n, 80, tail)) for i, (s, n, tail) in enumerate(
+			((17.50, 0.40, 0.11), (25.45, 0.22, 0.13), (34.60, 0.22, 0.06)))]
+	save_pool([(n, fit(x, -18.2, 2.0)) for n, x in items], -18.2, note="grunt_heavy_0..6")
+
+
+def slot_bell():
+	"""P7 (revised). The match bells play at their recorded pitch now (a 919 Hz
+	ring bell; MatchAudio.MATCH_BELL_PITCH_SCALE 2.0 -> 1.0), so the tails that
+	double speed used to halve are shortened here instead: a 2 s fade from 1.5 s
+	after the last strike. bell_ding (the weapon) is untouched."""
+	for name, last_strike in (("bell_start", 0.84), ("bell_end", 2.17)):
+		x = repo(name)
+		end = int((last_strike + 1.5 + 2.0) * SR)
+		y = x[:end].copy()
+		n = int(2.0 * SR)
+		y[end - n:] *= (np.linspace(1, 0, n) ** 2)[:, None]
+		# A bell's partials beat: 0.7 dB more headroom keeps the true peak under -1.
+		save(name, peak_to(y, min(CEILING - 0.7, 20 * np.log10(float(np.abs(y).max())))))
+
+
+SLOTS = {"groan": slot_groan, "wind": slot_wind, "count_slap": slot_count_slap, "trims": slot_trims,
+		"pyro_bang": slot_pyro_bang, "grunt_heavy": slot_grunt_heavy, "bell": slot_bell}
 
 if __name__ == "__main__":
 	args = sys.argv[1:]

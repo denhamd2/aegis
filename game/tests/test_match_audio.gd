@@ -38,7 +38,11 @@ func test_cody_crowd_chant_is_only_enabled_for_a_cody_match() -> void:
 	assert_bool(MatchAudio.cody_is_in_match([roman])).is_false()
 
 
-func test_opening_and_finish_bells_play_at_double_speed() -> void:
+func test_opening_and_finish_bells_ring_at_their_recorded_pitch_and_are_short() -> void:
+	assert_float(MatchAudio.MATCH_BELL_PITCH_SCALE).is_equal(1.0)
+	# Short cues, not a 10 s ring under the opening call and the finish call.
+	assert_float(SfxPool.stream("bell_start").get_length()).is_less(4.6)
+	assert_float(SfxPool.stream("bell_end").get_length()).is_less(6.0)
 	var audio: MatchAudio = auto_free(MatchAudio.new())
 	add_child(audio)
 	audio.opening_bell()
