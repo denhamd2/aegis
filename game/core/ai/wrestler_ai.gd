@@ -360,7 +360,12 @@ const CHAIN_READ_TICK := 8
 ## with his stamina like a strike reversal's does.
 const CHAIN_REVERSAL_CHANCE := 0.3
 ## How often a hold the AI has the better of ends in an Irish whip.
-const WHIP_CHANCE := 0.18
+## 0.18 -> 0.45 (the owner, 9 Nov: "Irish whips are not working, I never see
+## them"): the whip itself works end to end (rope_return_probe), but at 0.18
+## of the few holds after the opening a match went by with none (moveset_tally
+## seed 1, 70 s: no whip). A whip, then the lariat or big boot off the ropes,
+## is a staple of the match, not a rarity.
+const WHIP_CHANCE := 0.45
 ## Of those whips, the share sent into a corner rather than the ropes, by a
 ## man with something to do to him there (a corner strike or a corner move).
 const CORNER_WHIP_SHARE := 0.4

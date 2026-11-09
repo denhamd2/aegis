@@ -4018,6 +4018,11 @@ const GROUND_START_RANGE := 0.9
 const GROUND_STEP_TICKS := 6
 ## A man hit on the mat stays down at least this much longer.
 const GROUND_HOLD_DOWN_TICKS := 30
+## And longer for a weapon brought down on him.
+const GROUND_WEAPON_HOLD_TICKS := 90
+## His flinch on the mat, against a standing one's (HitFlinch.strength_of).
+const GROUND_FLINCH := 1.6
+const GROUND_WEAPON_FLINCH := 2.2
 
 ## Ground blows he takes before the man in control hauls him up, how close to
 ## his head that man stands to do it, and whether this knockdown's haul is spent.
@@ -4043,6 +4048,33 @@ static func zone_along_body(z: float) -> String:
 	if z >= LEGS_ZONE_Z:
 		return "legs"
 	return "body"
+
+
+## The owner, 9 Nov: "Wrestlers should be able to hit the other wrestler who
+## is down. They should be able to bend down to punch them, stand and kick
+## them, and hit them with weapons. The victim should sell these blows."
+## A melee weapon in his hands comes down on the man on the mat (a swing at
+## a man down never landed: DOWN is UNHITTABLE for standing strikes). Beside
+## the body he alternates the stomp with the fist from one knee, so the
+## punches come too, not only from the head.
+func ground_move_now(victim: WrestlerController, zone: String) -> MoveDef:
+	if has_weapon() and ground_weapon_ok(held_weapon.def):
+		return WeaponCatalog.swing_move(held_weapon.def)
+	if zone == "body" and victim.ground_attacks_taken % 2 == 1:
+		return GROUND_FIST
+	return ground_move_for(zone)
+
+
+## A weapon he can bring down on a man on the mat: swung or carried, not a
+## gun, launcher, spray or whip.
+static func ground_weapon_ok(def: WeaponDef) -> bool:
+	return def != null and def.swing in [WeaponDef.Swing.OVERHEAD, WeaponDef.Swing.SIDE,
+			WeaponDef.Swing.THRUST, WeaponDef.Swing.CHOP, WeaponDef.Swing.PUNCH]
+
+
+## Where on him `move` lands from `zone`: the fist goes to the head.
+static func ground_zone_for(move: MoveDef, zone: String) -> String:
+	return "head" if move == GROUND_FIST else zone
 
 
 static func ground_move_for(zone: String) -> MoveDef:
@@ -4074,17 +4106,17 @@ func can_ground_attack(victim: WrestlerController) -> bool:
 	if Engine.get_physics_frames() - victim._last_ground_hit_frame < GROUND_GAP_TICKS:
 		return false
 	var zone := downed_zone(victim, global_position)
-	var move := ground_move_for(zone)
+	var move := ground_move_now(victim, zone)
 	if victim._move_ticks_remaining < move.startup_frames + 6:
 		return false
-	var flat := ground_target(victim, zone) - global_position
+	var flat := ground_target(victim, ground_zone_for(move, zone)) - global_position
 	flat.y = 0.0
 	return flat.length() <= GROUND_START_RANGE
 
 
 func begin_ground_attack(victim: WrestlerController) -> void:
-	var zone := downed_zone(victim, global_position)
-	var move := ground_move_for(zone)
+	var move := ground_move_now(victim, downed_zone(victim, global_position))
+	var zone := ground_zone_for(move, downed_zone(victim, global_position))
 	var target := ground_target(victim, zone)
 	var flat := target - global_position
 	flat.y = 0.0
@@ -4157,8 +4189,17 @@ func _take_ground_hit(attacker: WrestlerController, move: MoveDef, zone: String)
 	attacker.combat.apply_momentum(move)
 	attacker.move_landed.emit(attacker, self, move)
 	_move_ticks_remaining = maxi(_move_ticks_remaining, GROUND_HOLD_DOWN_TICKS)
+	var weapon := attacker._is_weapon_swing(move)
+	if weapon:
+		# Worn like any other blow with it; a chair dents, a tube shatters.
+		attacker.held_weapon.hit(hash([attacker.name, Engine.get_physics_frames()]))
+		_move_ticks_remaining = maxi(_move_ticks_remaining, GROUND_WEAPON_HOLD_TICKS)
+	# He sells it on the mat (9 Nov): the body jolts away from the blow --
+	# harder than a standing flinch, hardest for a weapon -- and he grunts.
 	if hit_flinch:
-		hit_flinch.hit(attacker.global_position, zone, HitFlinch.strength_of(move))
+		hit_flinch.hit(attacker.global_position, zone,
+				minf(HitFlinch.strength_of(move) * (GROUND_WEAPON_FLINCH if weapon else GROUND_FLINCH), 2.0))
+	hurt.emit(Sell.HEAVY if weapon or move == GROUND_FIST else Sell.MEDIUM, move)
 
 
 # --- reversals (gauntlet/refs/animation_gap.md, Phase 4) ---------------------

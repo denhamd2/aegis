@@ -29,3 +29,20 @@ func test_ground_attacks_are_wearing_down_not_a_shortcut() -> void:
 	for m: MoveDef in [WrestlerController.GROUND_FIST, WrestlerController.GROUND_STOMP_BODY,
 			WrestlerController.GROUND_STOMP_LEGS]:
 		assert_float(m.momentum_gain).is_less_equal(1.0)
+
+
+## The owner, 9 Nov: "hit them with weapons ... bend down to punch them". A
+## swung or carried weapon comes down on a man on the mat; a gun or a spray
+## does not. Beside his body the fist alternates with the stomp, and the
+## fist goes to his head.
+func test_weapons_and_the_fist_on_a_man_down() -> void:
+	assert_bool(WrestlerController.ground_weapon_ok(WeaponCatalog.by_id(&"steel_chair"))).is_true()
+	assert_bool(WrestlerController.ground_weapon_ok(WeaponCatalog.by_id(&"sledgehammer"))).is_true()
+	assert_bool(WrestlerController.ground_weapon_ok(WeaponCatalog.by_id(&"kendo_stick"))).is_true()
+	assert_bool(WrestlerController.ground_weapon_ok(WeaponCatalog.by_id(&"handgun"))).is_false()
+	assert_bool(WrestlerController.ground_weapon_ok(WeaponCatalog.by_id(&"fire_extinguisher"))).is_false()
+	assert_str(WrestlerController.ground_zone_for(WrestlerController.GROUND_FIST, "body")).is_equal("head")
+	assert_str(WrestlerController.ground_zone_for(WrestlerController.GROUND_STOMP_BODY, "body")).is_equal("body")
+	# A blow on the mat is sold harder than one standing.
+	assert_float(WrestlerController.GROUND_FLINCH).is_greater(1.0)
+	assert_float(WrestlerController.GROUND_WEAPON_FLINCH).is_greater(WrestlerController.GROUND_FLINCH)
