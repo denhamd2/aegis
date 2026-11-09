@@ -11614,3 +11614,14 @@ The owner: "his hair should be able to move as it's long".
 - **Kenny's "crease" and "missing" eyebrows were one thing.** Cody's brow ridge (peak y 1.730, the forehead 6–8 mm behind it by 1.750) throws its underside into shadow under the truss. The light, soft brows from the photo merged into that shadow as one dark band. It shows with no reshape at all, so it's Cody's geometry. `KennyFaceShape` now fills the step above the ridge and sets the ridge back along its width. `brow_hairs` darkens and sharpens the photo's brow hairs (hairs only, not the skin round them).
 - **Hair colour.** "A bit less blonde, just some blonde highlights but generally a little more brown": the lengths are light brown (tip 184,134,82). 30% of clumps carry the blonde (`PLATINUM_TONE` 1.30–1.50).
 - Backlog rows 11 and 12 (two-sided ladder, ladder-top pose close-up) are tagged with the owner's 9 Nov request.
+
+## 9 Nov (3) — No stall before the face-off, poses at the face-off, no shots from behind, new pain voices
+
+- **Straight to the corners.** The owner: "There's still stalling after they hand over their props ... They stand in front of each other staring, instead they should just each walk to their corner." Each entrance now ends in his start corner (`faceoff_corner`), facing the other man's. The mid-ring stand and the second walk are gone (`_add_faceoff` keeps a walk only if a man is short of his corner). His last walk is framed by `ring_high_corner`, not the entry crane, which swung into the rig as he crossed the ring.
+- **Poses at the face-off, then a grapple.** Nose to nose they each hit their signature (`faceoff_pose_clip`): Roman's finger, Cody's arms out, Kenny's arms up and finger guns, 2.6 s on a wider two-shot (`_faceoff_pose_wide`). Then a 1.5 s stare on the push-in, and the bell. The AI opens with a grapple (`_opening_grapple_done`). Checked by tests. **Not yet seen on a render:** the probe's skip options don't reach the face-off.
+- **No camera from behind.** "The camera angle behind the wrestlers during the entrances, get rid of it." `corner_low` was inside the ring behind him on the turnbuckles; it now shoots from outside the corner, low and in front (`corner_front_shot`). `over_shoulder` is out of every walk rotation (now `barricade_track`), Kenny's walk-out (now `steadicam_front`) and Cody's ramp stand (now `lip_hero`).
+- **Pain voices.** "They sound like an elephant whaling." Measured: the light grunts and groans sat at 270–390 Hz, held and tonal for up to 0.6 s. `tools/audio/rework_pain_vox.py` (deterministic) remakes them:
+  - light grunts: the 0.2 s onsets of the low, breathy heavy grunts (114–170 Hz);
+  - groans: four low takes from OpenGameArt's CC0 "grunts of male death and pain", trimmed and down 12%;
+  - yells: down 15% at the same tempo.
+  Freesound is blocked from this environment, so it uses sources reachable here. Credits updated.

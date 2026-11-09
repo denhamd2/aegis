@@ -183,11 +183,16 @@ func test_every_shot_a_beat_uses_can_be_framed() -> void:
 					.override_failure_message("no framing for " + str(shot[0])).is_true()
 
 
+## The owner, 9 Nov: "The camera angle behind the wrestlers during the
+## entrances, get rid of it as it looks bad." No walk cut from behind him.
 func test_the_walk_cuts_follow_from_behind_as_2k26_does() -> void:
 	var cody := EntranceDirector.CODY_WALK_SHOTS.map(func(s: Array) -> String: return s[0])
 	var roman := EntranceDirector.ROMAN_WALK_SHOTS.map(func(s: Array) -> String: return s[0])
-	assert_array(cody).contains(["crane_front", "over_shoulder", "steadicam_low"])
-	assert_array(roman).contains(["crane_front", "steadicam_low", "over_shoulder"])
+	var kenny := EntranceDirector.KENNY_WALK_SHOTS.map(func(s: Array) -> String: return s[0])
+	assert_array(cody).contains(["crane_front", "barricade_track", "steadicam_low"])
+	assert_array(roman).contains(["crane_front", "steadicam_low", "barricade_track"])
+	for list: Array in [cody, roman, kenny]:
+		assert_array(list).not_contains(["over_shoulder"])
 	# The owner, 3 Nov: "too many camera angles", and not the chest-up
 	# handheld: three angles on the walk.
 	for list: Array in [EntranceDirector.CODY_WALK_SHOTS, EntranceDirector.ROMAN_WALK_SHOTS,
@@ -337,8 +342,9 @@ func test_codys_walk_gestures_are_each_seen_once() -> void:
 func test_the_face_off_and_match_intro_use_broadcast_pacing() -> void:
 	assert_float(EntranceDirector.STAREDOWN_CLOSE).is_less(EntranceDirector.FACEOFF_CAM_DISTANCE)
 	assert_float(EntranceDirector.STAREDOWN_FOV).is_less(EntranceDirector.FACEOFF_CAM_FOV)
-	assert_float(float(EntranceDirector.FACEOFF_STARE_TICKS) / EntranceDirector.TPS) \
-			.is_between(4.0, 6.0)
+	# 9 Nov: their poses, then the stare -- together still 4-6 s to the bell.
+	assert_float(float(EntranceDirector.FACEOFF_POSE_TICKS + EntranceDirector.FACEOFF_STARE_TICKS)
+			/ EntranceDirector.TPS).is_between(4.0, 6.0)
 	# Card, check and corner mediums have distinct short holds before the bell.
 	assert_float(float(EntranceDirector.INTRO_CARD_TICKS) / EntranceDirector.TPS).is_equal(3.0)
 	assert_float(float(EntranceDirector.INTRO_CHECK_TICKS) / EntranceDirector.TPS).is_equal(2.0)

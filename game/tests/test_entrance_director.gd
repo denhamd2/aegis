@@ -788,9 +788,10 @@ func test_skip_entrance_skips_one_man_at_a_time() -> void:
 	var scene := _match(true, "roman", "cody")
 	var a: WrestlerController = scene.get_node("WrestlerA")
 	var b: WrestlerController = scene.get_node("WrestlerB")
-	var mark_a := a.global_transform
-	var mark_b := b.global_transform
 	var director: EntranceDirector = scene.get_node("EntranceDirector")
+	# Where each entrance ends: his corner for the start (9 Nov).
+	var mark_a: Transform3D = director._entrance_mark[a]
+	var mark_b: Transform3D = director._entrance_mark[b]
 	var rang := [false]
 	director.bell.connect(func(): rang[0] = true)
 	for _i in 30:
@@ -975,8 +976,16 @@ func test_the_match_starts_from_the_corners_on_the_stare() -> void:
 	var beats: Array = director._beats
 	var stare: Dictionary = beats[-1]
 	assert_str(stare.get("shot", "")).is_equal("staredown_push")
-	var walk_in: Dictionary = beats[-2]
+	# 9 Nov: their poses before the stare.
+	var poses: Dictionary = beats[-2]
+	assert_bool(poses.get("pose_wide", false)).is_true()
+	for move: Array in poses["moves"]:
+		assert_str(move[4]).is_equal(EntranceDirector.faceoff_pose_clip(move[0]))
+	var walk_in: Dictionary = beats[-3]
 	assert_str(walk_in.get("shot", "")).is_equal("faceoff_side")
+	# Each entrance ends in his corner: no stand in mid-ring first.
+	for man: WrestlerController in [a, b]:
+		assert_float(_flat(director._entrance_mark[man].origin).length()).is_greater(2.0)
 	var corners := {}
 	for move: Array in walk_in["moves"]:
 		corners[move[0]] = move[1]
@@ -1011,7 +1020,7 @@ func test_the_walks_to_the_corners_and_the_stare_play_clips_made_for_their_speed
 	var scene := _match(true, "roman", "cody")
 	var director: EntranceDirector = scene.get_node("EntranceDirector")
 	var beats: Array = director._beats
-	var walk_in: Dictionary = beats[-2]
+	var walk_in: Dictionary = beats[-3]
 	var to_corners: Dictionary
 	for beat: Dictionary in beats:
 		if beat.get("shot", "") == "faceoff" and beat.get("kind", "") == "pair":
@@ -1019,7 +1028,10 @@ func test_the_walks_to_the_corners_and_the_stare_play_clips_made_for_their_speed
 			break
 	var authored := {EntranceDirector.FACEOFF_WALK_CLIP: EntranceDirector.FACEOFF_WALK_SPEED,
 			EntranceDirector.FACEOFF_CORNER_CLIP: EntranceDirector.FACEOFF_CORNER_SPEED}
+	# (No walk to the corners when the entrances end there, 9 Nov.)
 	for beat: Dictionary in [to_corners, walk_in]:
+		if beat.is_empty() or _flat((beat["moves"][0] as Array)[2] - (beat["moves"][0] as Array)[1]).length() < 0.05:
+			continue
 		for move: Array in beat["moves"]:
 			var clip: String = move[4]
 			assert_bool(authored.has(clip)).override_failure_message("%s walks on %s" % [beat["shot"], clip]).is_true()

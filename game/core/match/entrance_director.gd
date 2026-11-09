@@ -150,7 +150,12 @@ const FACEOFF_WALK_MAX := 9.0
 ## The broadcast frame (16:9): the lens is vertical.
 const FRAME_ASPECT := 16.0 / 9.0
 ## The stare-down: one slow push into their faces, then the bell.
-const FACEOFF_STARE_TICKS := 300
+const FACEOFF_STARE_TICKS := 90
+## Their poses at the face-off (faceoff_pose_clip): Kenny's arms-up and
+## finger guns run 2.5 s; Roman's finger and Cody's arms hold their last frame.
+const FACEOFF_POSE_TICKS := 156
+const FACEOFF_POSE_CAM_DISTANCE := 4.4
+const FACEOFF_POSE_CAM_FOV := 42.0
 
 # --- Camera shots (project values; refs/camera.md measures none of these) ---
 ## The face-off two-shot: from the hard camera's side of the pair, square to
@@ -249,6 +254,15 @@ static func crane_front_shot(at: Vector3, fwd: Vector3, e: float) -> Array:
 ## The ring-arrival crane at eased progress `e` on a man at `man`: [camera,
 ## look, fov]. `toward` picks the side of the corner it stands (the hard
 ## camera's).
+## Where "corner_low" stands: out past the entry corner's post, low.
+static func corner_front_shot() -> Vector3:
+	var out := RingBuilder.step_out_dir(ENTRY_CORNER)
+	var pad := Vector3(ENTRY_CORNER.x, 0.0, ENTRY_CORNER.y) * RingBuilder.TURNBUCKLE_PAD_XZ
+	var right := Vector3.UP.cross(out).normalized()
+	return pad + out * CORNER_FRONT_OUT + right * CORNER_FRONT_SIDE \
+			+ Vector3.UP * CORNER_FRONT_HEIGHT
+
+
 static func entry_crane_shot(man: Vector3, toward: Vector3, e: float) -> Array:
 	var post := Vector3(ENTRY_CORNER.x * RingBuilder.POST_XZ, 0.0,
 			ENTRY_CORNER.y * RingBuilder.POST_XZ)
@@ -467,8 +481,8 @@ const ROMAN_BOW_TICKS := 240
 ## track, over the shoulder. The high side and the arena-high wides are gone:
 ## both framed him as a small dark figure on an unlit ramp.
 const ROMAN_WALK_SHOTS := [["crane_front", 8 * ROMAN_BEAT], ["steadicam_low", 6 * ROMAN_BEAT],
-		["steadicam_low", 6 * ROMAN_BEAT], ["over_shoulder", 5 * ROMAN_BEAT],
-		["crane_front", 7 * ROMAN_BEAT], ["over_shoulder", 5 * ROMAN_BEAT],
+		["steadicam_low", 6 * ROMAN_BEAT], ["barricade_track", 5 * ROMAN_BEAT],
+		["crane_front", 7 * ROMAN_BEAT], ["barricade_track", 5 * ROMAN_BEAT],
 		["steadicam_low", 5 * ROMAN_BEAT]]
 ## Until then the broadcast shows the building and his video: six shots, each
 ## a slow move eased in and out (blender-cameras: push-ins, a truck, a wide
@@ -577,7 +591,9 @@ const CODY_WHOA_LOW_TICKS := 200
 ## jacket's back, a close front, then the barricade. `arena_high` is gone: it
 ## showed him as a dot on a dark ramp, the shot Roman's cut also lost.
 ## [shot, seconds], cycled; whole beats of his music (A4).
-const CODY_WALK_SHOTS := [["crane_front", 8 * CODY_BEAT], ["over_shoulder", 5 * CODY_BEAT],
+## The owner, 9 Nov: no shots from behind him ("over_shoulder" was): the
+## barricade's track alongside, a little ahead, his face and the crowd.
+const CODY_WALK_SHOTS := [["crane_front", 8 * CODY_BEAT], ["barricade_track", 5 * CODY_BEAT],
 		["steadicam_low", 10 * CODY_BEAT]]
 ## What he does with his arms on the walk (refs/entrances.md, C-39 / C-SS /
 ## C-SNME): yells at one side of the aisle with a fist up, points a fan out,
@@ -650,7 +666,7 @@ const KENNY_POSE_TICKS := 300
 const KENNY_WINGS_TICKS := 240
 ## Down the ramp as Cody's cut is, on his beat; hands slapped along one side
 ## of the aisle and then the other (wrestling_clips.py KENNY_GESTURES).
-const KENNY_WALK_SHOTS := [["crane_front", 8 * KENNY_BEAT], ["over_shoulder", 5 * KENNY_BEAT],
+const KENNY_WALK_SHOTS := [["crane_front", 8 * KENNY_BEAT], ["barricade_track", 5 * KENNY_BEAT],
 		["steadicam_low", 10 * KENNY_BEAT]]
 const KENNY_WALK_GESTURES := ["strikes/kenny_walk_slap_l", "strikes/kenny_walk_slap_r"]
 ## His video starting on the big screen: from a crane over the floor, square
@@ -663,8 +679,10 @@ const TRON_SHOT_AT := Vector3(0.0, 5.4, -8.0)
 const TRON_SHOT_FOV := 30.0
 const PORTAL_LONG_FOV := Vector2(19.0, 14.0)
 const STEADICAM_FOV := 32.0
-const CORNER_LOW_AT := Vector3(1.2, 1.25, -1.2)
-const CORNER_LOW_FOV := 50.0
+const CORNER_FRONT_OUT := 3.4
+const CORNER_FRONT_SIDE := 0.9
+const CORNER_FRONT_HEIGHT := 1.0
+const CORNER_FRONT_FOV := 40.0
 ## Cues inside his clips, in ticks from the clip's start (clip frame x 2):
 ## Title_Unbuckle opens the belt on frame 20 and it moves from his waist to
 ## his left hand on frame 22; Finger_Raise's arm arrives on frame 14 -- the
@@ -960,6 +978,18 @@ func begin(match_root: Node) -> void:
 		var to_other := _flat(other.global_position - me.global_position)
 		if to_other.length() > 0.01:
 			mark.basis = _facing_basis(to_other)
+		# The owner, 9 Nov: "There's still stalling after they hand over
+		# their props and finish their entrance poses. They stand in front
+		# of each other staring, instead they should just each walk to their
+		# corner." Each entrance ends in his corner for the start
+		# (faceoff_corner), facing the other man's -- not on a mark in the
+		# middle, from which _add_faceoff then walked him to it.
+		var corner := faceoff_corner(mark.origin, -1.0 if me == _a else 1.0)
+		var other_corner := faceoff_corner(other.global_position, 1.0 if me == _a else -1.0)
+		var across := _flat(other_corner - corner)
+		mark.origin = Vector3(corner.x, mark.origin.y, corner.z)
+		if across.length() > 0.01:
+			mark.basis = _facing_basis(across)
 		_mark[me] = mark
 		_entrance_mark[me] = mark
 
@@ -1274,13 +1304,18 @@ func _add_faceoff() -> void:
 	# wrestlers were not there" -- they were, in the entrance dark. Up on the
 	# card, the fade was still under way, and the walk and the card's wide of
 	# the corners showed silhouettes.
-	_beats.append({"kind": "pair", "ticks": walk_out, "shot": "faceoff",
-			"events": [[1, "lights_up"]], "moves": [
-			[_a, a.origin, ca, to_a, FACEOFF_CORNER_CLIP],
-			[_b, b.origin, cb, to_b, FACEOFF_CORNER_CLIP]]})
+	# Their entrances end in these corners now (the owner, 9 Nov): a walk
+	# only when a skip or a route left a man short of his.
+	var walked := maxf(to_a.length(), to_b.length()) > 0.05
+	if walked:
+		_beats.append({"kind": "pair", "ticks": walk_out, "shot": "faceoff",
+				"events": [[1, "lights_up"]], "moves": [
+				[_a, a.origin, ca, to_a, FACEOFF_CORNER_CLIP],
+				[_b, b.origin, cb, to_b, FACEOFF_CORNER_CLIP]]})
 	var face_a := _flat(cb - ca)
 	var face_b := -face_a
-	_beats.append({"kind": "pair", "ticks": FACEOFF_CORNER_TURN_TICKS, "shot": "faceoff", "moves": [
+	_beats.append({"kind": "pair", "ticks": FACEOFF_CORNER_TURN_TICKS, "shot": "faceoff",
+			"events": [] if walked else [[1, "lights_up"]], "moves": [
 			[_a, ca, ca, face_a, _wait_clip(_a)], [_b, cb, cb, face_b, _wait_clip(_b)]]})
 	_add_intro(Transform3D(_facing_basis(face_a), ca), Transform3D(_facing_basis(face_b), cb),
 			face_a, face_b)
@@ -1292,13 +1327,34 @@ func _add_faceoff() -> void:
 			"events": [[1, "house_down"]], "moves": [
 			[_a, ca, a_in, face_a, FACEOFF_WALK_CLIP],
 			[_b, cb, b_in, face_b, FACEOFF_WALK_CLIP]]})
+	# The owner, 9 Nov: "When they face off, I want each of them to hit their
+	# pose. Then they should start with a grapple." Each man's signature
+	# (faceoff_pose_clip) nose to nose, then a short stare to the bell; the
+	# opening is a grapple (WrestlerAI._opening_grapple_done).
+	_beats.append({"kind": "pair", "ticks": FACEOFF_POSE_TICKS, "shot": "staredown_push",
+			"pose_wide": true, "events": [[1, "faceoff_tension"], [1, "flash_burst"]],
+			"moves": [[_a, a_in, a_in, face_a, faceoff_pose_clip(_a)],
+					[_b, b_in, b_in, face_b, faceoff_pose_clip(_b)]]})
 	_beats.append({"kind": "pair", "ticks": FACEOFF_STARE_TICKS, "shot": "staredown_push",
-			"snap_end": true, "events": [[1, "faceoff_tension"], [1, "flash_burst"]],
+			"snap_end": true,
 			"moves": [[_a, a_in, a_in, face_a, "strikes/face_off"],
 					[_b, b_in, b_in, face_b, "strikes/face_off"]]})
 	# The match starts where the stare ends: the bell finds them here.
 	_mark[_a] = Transform3D(_facing_basis(face_a), a_in)
 	_mark[_b] = Transform3D(_facing_basis(face_b), b_in)
+
+
+## His signature pose at the face-off: Roman's finger, Cody's arms out,
+## Kenny's arms up and finger guns.
+static func faceoff_pose_clip(w: WrestlerController) -> String:
+	match w.entrance_style:
+		"roman":
+			return "strikes/finger_hold"
+		"cody":
+			return "strikes/whoa_arms"
+		"kenny":
+			return "strikes/kenny_stage_pose"
+	return "strikes/win_celebrate"
 
 
 ## A man's corner for the start: the one on his own side of the ring
@@ -1388,9 +1444,9 @@ func _add_entrance(w: WrestlerController, entrance_x: float, side: String) -> vo
 	var mark: Transform3D = _mark[w]
 	_beats.append({"kind": "walk", "who": w,
 			"path": [inside, mark.origin],
-			"shot": "entry_crane", "on_mat": true})
+			"shot": "ring_high_corner", "on_mat": true})
 	_beats.append({"kind": "turn", "who": w, "facing": -mark.basis.z,
-			"shot": "entry_crane", "settle": true, "snap_end": true,
+			"shot": "ring_high_corner", "settle": true, "snap_end": true,
 			"events": [[SETTLE_TICKS, "tron_off"]]})
 
 
@@ -1921,7 +1977,7 @@ func _add_roman_entrance(w: WrestlerController, entrance_x: float, side: String)
 	var mark: Transform3D = _mark[w]
 	_beats.append({"kind": "walk", "who": w, "path": [centre, mark.origin],
 			"speed": ROMAN_WALK_SPEED, "walk_clip": ROMAN_WALK_CLIP,
-			"shot": "entry_crane", "on_mat": true})
+			"shot": "ring_high_corner", "on_mat": true})
 	_beats.append({"kind": "turn", "who": w, "facing": -mark.basis.z,
 			"shot": "end_wide", "settle": true, "snap_end": true,
 			"events": [[SETTLE_TICKS, "tron_off"], [SETTLE_TICKS, "dim_off"]]})
@@ -2060,7 +2116,7 @@ func _add_cody_entrance(w: WrestlerController, entrance_x: float, _side: String)
 	if kneel_from - at_lip > 0.6:
 		_beats.append({"kind": "pose", "who": w, "lights": "RB",
 				"ticks": _secs(at_lip, kneel_from), "clip": "strikes/cody_stand",
-				"facing": Vector3.BACK, "shot": "over_shoulder"})
+				"facing": Vector3.BACK, "shot": "lip_hero"})
 	# The kneel at the top of the ramp, on a long lens from down it.
 	_beats.append({"kind": "pose", "who": w, "lights": "RB", "ticks": CODY_KNEEL_TICKS,
 			"clip": "strikes/kneel", "facing": Vector3.BACK, "shot": "ramp_long"})
@@ -2118,15 +2174,15 @@ func _add_cody_entrance(w: WrestlerController, entrance_x: float, _side: String)
 			"shot": "entry_crane", "events": [[1, "prop_pass_coat"]]})
 	_beats.append({"kind": "walk", "who": w, "path": [stand, mark.origin],
 			"speed": CODY_WALK_SPEED, "walk_clip": CODY_WALK_CLIP,
-			"shot": "entry_crane", "on_mat": true})
+			"shot": "ring_high_corner", "on_mat": true})
 	# On him while the coat goes to the timekeeper's table: the far end wide
 	# held empty for the whole carry -- 10.5 s of one static frame on the
 	# 3 Nov storyboard. The end wide is the handover's alone.
 	_beats.append({"kind": "turn", "who": w, "facing": -mark.basis.z,
-			"shot": "entry_crane", "settle": true, "snap_end": true,
+			"shot": "ring_high_corner", "settle": true, "snap_end": true,
 			"events": [[SETTLE_TICKS, "tron_off"]]})
 	# Nothing moves on until the coat is on the timekeeper's table.
-	_beats.append({"kind": "hold", "who": w, "ticks": 30, "shot": "entry_crane",
+	_beats.append({"kind": "hold", "who": w, "ticks": 30, "shot": "ring_high_corner",
 			"wait_idle": true})
 
 
@@ -2170,7 +2226,7 @@ func _add_kenny_entrance(w: WrestlerController, entrance_x: float, side: String)
 	# and the white strobe a couple of seconds out.
 	_beats.append(_with(lit, {"kind": "walk", "who": w, "path": [emerge, half],
 			"speed": KENNY_WALK_SPEED, "walk_clip": KENNY_WALK_CLIP, "appear": true,
-			"shot": "over_shoulder", "fog_at": emerge,
+			"shot": "steadicam_front", "fog_at": emerge,
 			"events": [[1, "fog_on"], [KENNY_STROBE_AT, "strobe"]]}))
 	_beats.append(_with(lit, {"kind": "walk", "who": w, "path": [half, lip],
 			"speed": KENNY_WALK_SPEED, "walk_clip": KENNY_WALK_CLIP, "shot": "steadicam_low"}))
@@ -2224,7 +2280,7 @@ func _add_kenny_entrance(w: WrestlerController, entrance_x: float, side: String)
 	var mark: Transform3D = _mark[w]
 	_beats.append({"kind": "walk", "who": w, "path": [stand, mark.origin],
 			"speed": KENNY_WALK_SPEED, "walk_clip": KENNY_WALK_CLIP,
-			"shot": "entry_crane", "on_mat": true})
+			"shot": "ring_high_corner", "on_mat": true})
 	_beats.append({"kind": "turn", "who": w, "facing": -mark.basis.z,
 			"shot": "end_wide", "settle": true, "snap_end": true,
 			"events": [[SETTLE_TICKS, "tron_off"], [SETTLE_TICKS, "dim_off"]]})
@@ -2879,7 +2935,15 @@ func _frame_shot(beat: Dictionary, delta: float, force_cut := false) -> void:
 			_camera.set_entrance_shot(w.global_position + fwd3 * 3.2 + Vector3.UP * 1.55,
 					w.global_position + Vector3.UP * 1.5, STEADICAM_FOV, first, delta)
 		"corner_low":
-			_camera.set_entrance_shot(CORNER_LOW_AT, _head_of(w), CORNER_LOW_FOV, true)
+			# The owner, 9 Nov: "The camera angle behind the wrestlers during
+			# the entrances, get rid of it as it looks bad." This was inside
+			# the ring behind him as he faced out from the turnbuckles. Now
+			# outside the corner, low on the floor in front of him and a
+			# little to the side, up at him on the ropes with the building
+			# behind him (as PostMatch frames the winner's corner).
+			var at_c := corner_front_shot()
+			_camera.set_entrance_shot(at_c, _head_of(w) + Vector3.DOWN * 0.1, CORNER_FRONT_FOV,
+					first and not _was_shot("corner_low"), delta)
 		"face_walk":
 			var head := _head_of(w)
 			var fwd := -w.global_transform.basis.z
@@ -3101,6 +3165,9 @@ static func faceoff_crane(e: float) -> Array:
 ## The stare-down as the owner asked for it: one slow push from the profile
 ## two-shot into their faces over the whole hold, no cut.
 func _staredown_push(first: bool, delta: float) -> void:
+	if _beats[_beat].get("pose_wide", false):
+		_faceoff_pose_wide(first, delta)
+		return
 	var t := clampf(float(_tick) / maxf(float(_beats[_beat]["ticks"]), 1.0), 0.0, 1.0)
 	var e := smoothstep(0.0, 1.0, t)
 	var heads := (_head_of(_a) + _head_of(_b)) * 0.5
@@ -3113,6 +3180,19 @@ func _staredown_push(first: bool, delta: float) -> void:
 			+ Vector3.UP * lerpf(FACEOFF_CAM_HEIGHT, heads.y - mid.y - 0.03, e)
 	_camera.set_entrance_shot(at, heads + Vector3.DOWN * lerpf(0.1, 0.02, e),
 			lerpf(FACEOFF_CAM_FOV, STAREDOWN_FOV, e), first, delta)
+	_key_on_pair()
+
+
+## Their face-off poses (faceoff_pose_clip): the stare's side, back far
+## enough for arms over their heads; the stare's push starts from here.
+func _faceoff_pose_wide(first: bool, delta: float) -> void:
+	var mid := (_a.global_position + _b.global_position) * 0.5
+	var across := _flat(_b.global_position - _a.global_position).normalized()
+	var side := Vector3.UP.cross(across).normalized()
+	if side.dot(_camera.hard_cam_position - mid) < 0.0:
+		side = -side
+	_camera.set_entrance_shot(mid + side * FACEOFF_POSE_CAM_DISTANCE + Vector3.UP * 1.35,
+			mid + Vector3.UP * 1.45, FACEOFF_POSE_CAM_FOV, first, delta)
 	_key_on_pair()
 
 

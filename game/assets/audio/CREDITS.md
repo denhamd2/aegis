@@ -30,7 +30,10 @@ anyway.
 | `hit_can_0` | [trashcan](https://freesound.org/people/stomachache/sounds/44871/) | stomachache | CC0 |
 | `hit_sledge_*` | [Hitting a brick with a sledgehammer](https://freesound.org/people/JesterWhoo/sounds/706979/) | JesterWhoo | CC0 |
 | `hit_ladder_*`, `desk_crash_0` | [Rubber Metal Wood Impact Collision Bang](https://freesound.org/people/qubodup/sounds/54850/), with [Iron-Wood Slam](https://freesound.org/people/Hakren/sounds/372877/) | qubodup, Hakren | CC0 |
-| `grunt_light_*`, `groan_*` | [male pain sound effects](https://freesound.org/people/rockittt/sounds/442288/) | rockittt | CC0 |
+| `groan_*` (9 Nov) | [grunts of male death and pain](https://opengameart.org/content/grunts-male-death-and-pain), trimmed and pitched down 12% (`tools/audio/rework_pain_vox.py`) | thebardofblasphemy | CC0 |
+| `grunt_light_*` (9 Nov) | the onsets of `grunt_heavy_*` below, 0.2 s (`tools/audio/rework_pain_vox.py`) | Halgrimm | CC0 |
+| `yell_*` (9 Nov) | the takes below, pitched down 15% at the same tempo (`tools/audio/rework_pain_vox.py`) | | |
+| (until 9 Nov) `grunt_light_*`, `groan_*` | [male pain sound effects](https://freesound.org/people/rockittt/sounds/442288/) | rockittt | CC0 |
 | `grunt_heavy_*` | [human grunts 3](https://freesound.org/people/Halgrimm/sounds/218895/) | Halgrimm | CC0 |
 | `yell_*`, `burn_scream_*` | [Male Screams [1]](https://freesound.org/people/marc3122/sounds/556976/) | marc3122 | CC0 |
 | `burn_scream_*` | [Man screaming](https://freesound.org/people/Archeos/sounds/325548/), [Moans and screams of agony of military soldiers](https://freesound.org/people/qubodup/sounds/166943/) | Archeos, qubodup | CC0 |
