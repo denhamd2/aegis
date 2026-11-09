@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="MoveDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/move_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+resource_name = "High Hook"
+animation_pair_id = &"strike_hook"
+startup_frames = 11
+active_frames = 4
+recovery_frames = 27
+reversal_window_start = 11
+reversal_window_end = 15
+damage_head = 6.0
+strike_hand = 1
+damage_torso = 2.0
+damage_arms = 0.0
+damage_legs = 0.0
+contact_offset = Vector3(0.0, 1.48, -0.72)
+contact_radius = 0.13
+momentum_cost = 0.0
+momentum_gain = 6.0
+weight_class_min = 0
+weight_class_max = 2
+required_opponent_state = -1
