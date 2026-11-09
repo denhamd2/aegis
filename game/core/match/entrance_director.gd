@@ -242,13 +242,64 @@ static func rig_points() -> PackedVector3Array:
 ## man, whose aim is not a constant a test can check.
 ## The walk's crane at eased progress `e`: [camera, look, fov] for a man at
 ## `at` walking along `fwd` (flat).
-static func crane_front_shot(at: Vector3, fwd: Vector3, e: float) -> Array:
+static func crane_front_shot(at: Vector3, fwd: Vector3, e: float,
+		height: Vector2 = CRANE_FRONT_HEIGHT, fov: Vector2 = CRANE_FRONT_FOV) -> Array:
 	var right := Vector3.UP.cross(-fwd).normalized()
 	var cam := at + fwd * lerpf(CRANE_FRONT_AHEAD.x, CRANE_FRONT_AHEAD.y, e) \
 			+ right * lerpf(CRANE_FRONT_SIDE.x, CRANE_FRONT_SIDE.y, e) \
-			+ Vector3.UP * lerpf(CRANE_FRONT_HEIGHT.x, CRANE_FRONT_HEIGHT.y, e)
+			+ Vector3.UP * lerpf(height.x, height.y, e)
 	return [cam, at + Vector3.UP * lerpf(CRANE_FRONT_LOOK.x, CRANE_FRONT_LOOK.y, e),
-			lerpf(CRANE_FRONT_FOV.x, CRANE_FRONT_FOV.y, e)]
+			lerpf(fov.x, fov.y, e)]
+
+
+# --- Roman's low framings (pure: [camera, look, fov] for a man at `at` going
+# or facing along `fwd`, flat). His right is UP.cross(-fwd). -------------------
+
+## The lower-third frame: his crane's landing, held, backing ahead of him.
+static func low_lead_shot(at: Vector3, fwd: Vector3) -> Array:
+	return crane_front_shot(at, fwd, 1.0, ROMAN_CRANE_HEIGHT, ROMAN_CRANE_FOV)
+
+
+static func low_wide_up_shot(at: Vector3, fwd: Vector3) -> Array:
+	var right := Vector3.UP.cross(-fwd).normalized()
+	return [at + fwd * LOW_WIDE_UP_AHEAD + right * LOW_WIDE_UP_SIDE
+			+ Vector3.UP * LOW_WIDE_UP_HEIGHT, at + Vector3.UP * LOW_WIDE_UP_LOOK,
+			LOW_WIDE_UP_FOV]
+
+
+## On the side of the aisle away from where he is (the hard camera's, -X, on
+## the ramp), inside the barricade, never closer than BARRICADE_LOW_CLEAR to
+## the floor under the lens.
+static func barricade_low_shot(at: Vector3, fwd: Vector3) -> Array:
+	var right := Vector3.UP.cross(-fwd).normalized()
+	if right.x * at.x > 0.0:
+		right = -right
+	var cam := at + right * BARRICADE_LOW_SIDE + fwd * BARRICADE_LOW_AHEAD \
+			+ Vector3.UP * BARRICADE_LOW_HEIGHT
+	cam.y = maxf(cam.y, surface_y(cam) + BARRICADE_LOW_CLEAR)
+	return [cam, at + Vector3.UP * BARRICADE_LOW_LOOK, BARRICADE_LOW_FOV]
+
+
+static func face_up_shot(at: Vector3, head: Vector3, fwd: Vector3) -> Array:
+	var right := Vector3.UP.cross(-fwd).normalized()
+	return [at + fwd * FACE_UP_AHEAD + right * FACE_UP_SIDE + Vector3.UP * FACE_UP_HEIGHT,
+			head, FACE_UP_FOV]
+
+
+static func ring_low_up_shot(at: Vector3, fwd: Vector3) -> Array:
+	var right := Vector3.UP.cross(-fwd).normalized()
+	return [at + fwd * RING_LOW_UP_AHEAD + right * RING_LOW_UP_SIDE
+			+ Vector3.UP * RING_LOW_UP_HEIGHT, at + Vector3.UP * RING_LOW_UP_LOOK,
+			RING_LOW_UP_FOV]
+
+
+## At eased progress `e` of its slow arc in.
+static func ring_hero_shot(at: Vector3, fwd: Vector3, e: float) -> Array:
+	var right := Vector3.UP.cross(-fwd).normalized()
+	var a := deg_to_rad(lerpf(RING_HERO_ANGLE.x, RING_HERO_ANGLE.y, e))
+	var dir := fwd * cos(a) + right * sin(a)
+	return [at + dir * lerpf(RING_HERO_DISTANCE.x, RING_HERO_DISTANCE.y, e)
+			+ Vector3.UP * RING_HERO_HEIGHT, at + Vector3.UP * RING_HERO_LOOK, RING_HERO_FOV]
 
 
 ## The ring-arrival crane at eased progress `e` on a man at `man`: [camera,
@@ -469,21 +520,74 @@ const ROMAN_FINGER_DOWN := ROMAN_MUSIC_HIT + 16 * ROMAN_BEAT
 const ROMAN_RED_TICKS := 90
 ## Head bowed at ringside (R-41 2:42-3:04 is twenty seconds; held here four).
 const ROMAN_BOW_TICKS := 240
-## The walk, cut the way R-41 cuts it: the low ultra-wide steadicam backing
-## ahead of him, a very wide from high every six to eight seconds, and once
-## over his shoulder down the ramp (R-CJ). [shot, seconds], cycled; each a
-## whole number of beats (A4).
-## The second pass of the cycle trades the low lens for the chest-high one
-## and the barricade track (2K26 Roman 2:35-3:10), so the low ultra-wide is
-## his signature, not the whole walk.
-## 2K26's walk (roman_entrance_aaa_plan.md step 4): waist-up, the lens backing
-## ahead of him with the wall behind, long holds, a telephoto face, the low
-## track, over the shoulder. The high side and the arena-high wides are gone:
-## both framed him as a small dark figure on an unlit ramp.
-const ROMAN_WALK_SHOTS := [["crane_front", 8 * ROMAN_BEAT], ["steadicam_low", 6 * ROMAN_BEAT],
-		["steadicam_low", 6 * ROMAN_BEAT], ["barricade_track", 5 * ROMAN_BEAT],
-		["crane_front", 7 * ROMAN_BEAT], ["barricade_track", 5 * ROMAN_BEAT],
-		["steadicam_low", 5 * ROMAN_BEAT]]
+## The walk (the owner, 9 Nov: "a few too many crane shots ... keep the angles
+## below his waist which look up, eg the angle during his lower third").
+## Cut on his music's bar lines (four beats from ROMAN_FINGER_DOWN; 34 is the
+## one cut off a bar, forced by the 9 s cap) after the one walk crane
+## (ROMAN_CRANE_BEATS, its own beat): the side track from the barricade
+## between every pair of fronts, so the two low fronts -- the ultra-wide and
+## the lower-third frame, about the same size of him -- never cut into each
+## other. Explicit, not cycled: with the crane it covers the whole ramp.
+## Every lens is below his waist and tilted up at him -- the gimbal an
+## operator carries underslung walking backwards down a ramp (the Megalodon
+## rig of SmackDown's 2021 entrances), at two focal lengths.
+const ROMAN_CRANE_BEATS := 8
+const ROMAN_WALK_SHOTS := [["barricade_low", 4 * ROMAN_BEAT], ["low_wide_up", 8 * ROMAN_BEAT],
+		["barricade_low", 4 * ROMAN_BEAT], ["low_lead", 10 * ROMAN_BEAT],
+		["barricade_low", 6 * ROMAN_BEAT], ["low_wide_up", 8 * ROMAN_BEAT],
+		["barricade_low", 4 * ROMAN_BEAT], ["low_lead", 10 * ROMAN_BEAT]]
+## Roman's one walk crane booms but does not zoom (the owner: "a bit too much
+## crane zooming"): the lens held, and it lands exactly on `low_lead`, the
+## frame under his lower third, a metre over his feet -- under his pelvis
+## (1.905 m man), looking up into his chest.
+const ROMAN_CRANE_HEIGHT := Vector2(4.2, 1.0)
+const ROMAN_CRANE_FOV := Vector2(34.0, 34.0)
+## The ultra-wide low gimbal (R-41 1:18-1:52): close ahead of him, a hand to
+## his right, the lens below his waist tilted up past his chest to the roof.
+const LOW_WIDE_UP_AHEAD := 1.7
+const LOW_WIDE_UP_SIDE := 0.3
+const LOW_WIDE_UP_HEIGHT := 0.9
+const LOW_WIDE_UP_LOOK := 1.6
+const LOW_WIDE_UP_FOV := 50.0
+## Alongside from the barricade with the lens below his waist. Inside the ramp
+## barricade's inner face (RAMP_BARRICADE_OFFSET 2.45 less half its 0.18 m
+## panel), never in it, and never under the floor beside the ramp.
+const BARRICADE_LOW_SIDE := 2.15
+const BARRICADE_LOW_AHEAD := 1.2
+const BARRICADE_LOW_HEIGHT := 0.95
+const BARRICADE_LOW_LOOK := 1.4
+const BARRICADE_LOW_FOV := 38.0
+const BARRICADE_LOW_CLEAR := 0.9
+## The telephoto face on the lip (R-41 1:04), from his chest up into his eyes.
+const FACE_UP_AHEAD := 3.6
+const FACE_UP_SIDE := 0.35
+const FACE_UP_HEIGHT := 1.45
+const FACE_UP_FOV := 16.0
+## The finger in the ring (R-39; 2K26 3:28, 3:46): low in front of him, the
+## finger up against the lights -- low and tilted enough to look up, not so
+## much that the ring rig comes into the top of frame.
+const RING_LOW_UP_AHEAD := 3.0
+const RING_LOW_UP_SIDE := 0.5
+const RING_LOW_UP_HEIGHT := 1.0
+const RING_LOW_UP_LOOK := 1.7
+const RING_LOW_UP_FOV := 40.0
+## Hands on hips and the ula fala off: a true three-quarter on his right,
+## 40 to 50 degrees round from his facing, low, closing in a little, inside
+## the ropes.
+const RING_HERO_ANGLE := Vector2(40.0, 50.0)
+const RING_HERO_DISTANCE := Vector2(2.3, 2.1)
+const RING_HERO_HEIGHT := 0.75
+const RING_HERO_LOOK := 1.65
+const RING_HERO_FOV := 40.0
+## His portal on a held long lens (R-41: a static head-on long lens).
+const ROMAN_PORTAL_FOV := 16.0
+## The lip's three shots, as shares of the time he stands there.
+const ROMAN_LIP_SHARES := [0.36, 0.26, 0.38]
+## Whose lower third goes up on the director's own clock (the ramp card)
+## rather than on the announcer's audio: a commentary line on the shared
+## voice lane can hold Justin's name back, and the camera has the card's
+## frame waiting for it (`low_lead`).
+const CARD_ON_SCHEDULE := ["roman"]
 ## Until then the broadcast shows the building and his video: six shots, each
 ## a slow move eased in and out (blender-cameras: push-ins, a truck, a wide
 ## establishing lens), in seconds. [from, to, look_from, look_to, fov_from,
@@ -512,7 +616,7 @@ const ROMAN_INTRO_SHOTS := [
 	[Vector3(0.0, ArenaBuilder.SCREEN_CENTER_Y - 0.3, ArenaBuilder.SCREEN_FACE_Z + ROMAN_WALL_BACK),
 		Vector3(0.0, ArenaBuilder.SCREEN_CENTER_Y - 0.3, ArenaBuilder.SCREEN_FACE_Z + ROMAN_WALL_BACK - 0.6),
 		Vector3(0.0, ArenaBuilder.SCREEN_CENTER_Y - 0.25, ArenaBuilder.SCREEN_FACE_Z),
-		Vector3(0.0, ArenaBuilder.SCREEN_CENTER_Y - 0.25, ArenaBuilder.SCREEN_FACE_Z), 34.0, 33.0, 6.0],
+		Vector3(0.0, ArenaBuilder.SCREEN_CENTER_Y - 0.25, ArenaBuilder.SCREEN_FACE_Z), 34.0, 34.0, 6.0],
 ]
 ## The owner: no close-ups of an empty tunnel, ever. There used to be a long
 ## lens creeping into the empty portals here -- eleven seconds of it, then
@@ -705,13 +809,16 @@ const KENNY_BLUE := Color(0.26, 0.56, 1.0)
 const KENNY_STROBE_AT := 150
 const KENNY_SPOT_HOLD_TICKS := 240
 const ROMAN_PYRO_RED := Color(1.0, 0.10, 0.16)
-## His shots. The push-in on the mark: from the ramp, a slow dolly in and a
-## lens tightening on him. The hero shot: low at his feet looking up, for the
-## title. The wide: the whole set, for the pyro. The ring low: from the mat
-## under the ropes, for the finger in the ring.
-const PUSH_FROM := Vector3(0.0, 1.8, -24.5)
-const PUSH_TO := Vector3(0.0, 1.7, -27.4)
-const PUSH_FOV := Vector2(34.0, 28.0)
+## His shots. On the mark ("stage_push"): from the ramp, head-on, the whole
+## man with his wall above him, five metres off, the lens under his waist --
+## locked (the owner, 9 Nov: "a bit too much crane zooming"; it was a dolly
+## and a lens tightening on top of the camera's own push-in, and every cut
+## out of it was a punch-in on the same axis). The hero shot: low at his feet
+## looking up, for the title. The wide: the whole set, for the pyro. The ring
+## low: from the mat under the ropes, for the finger in the ring.
+const PUSH_FROM := Vector3(0.0, 1.3, ArenaBuilder.STAGE_FRONT - 0.6 + 5.0)
+const PUSH_TO := PUSH_FROM
+const PUSH_FOV := Vector2(33.0, 33.0)
 ## Eye level, not a worm's-eye: 2K26's entrance mids sit at chest-to-eye
 ## height (owner: "I don't like the low camera facing up"; cody_roman_2k26.md).
 const HERO_OFFSET := Vector3(0.9, 1.45, 3.0)
@@ -738,8 +845,10 @@ const ARENA_HIGH_AT := Vector3(6.5, 5.0, 12.0)
 const ARENA_HIGH_FOV := 50.0
 ## Behind him, over his shoulder, down the ramp at the crowd (R-CJ).
 const OVER_SHOULDER_FOV := 50.0
-## Low on the ramp looking up at him small under the set (R-41 50-58 s).
-const RAMP_LOW_WIDE_AT := Vector3(0.0, 1.8, ArenaBuilder.STAGE_FRONT + 8.5)
+## Low on the ramp looking up at him under the set (R-41 50-58 s): the lens
+## 0.9 m over the deck he stands on, below his waist, locked.
+const RAMP_LOW_WIDE_AT := Vector3(0.0, ArenaBuilder.STAGE_DECK_Y + 0.9,
+		ArenaBuilder.STAGE_FRONT + 8.5)
 const RAMP_LOW_WIDE_FOV := 46.0
 ## A long lens from down the ramp on him at the lip (C-MITB, the kneel).
 const RAMP_LONG_BACK := 9.0
@@ -1213,9 +1322,10 @@ func _schedule_call(w: WrestlerController, first_beat: int) -> void:
 	var said := start + int(round(RingAnnouncer.name_at(style) * TPS))
 	if w == _b and RingAnnouncer.has_call("intro"):
 		said += int(round(RingAnnouncer.length_of("intro") * TPS))
-	if said <= end:
+	if said <= end and not (style in CARD_ON_SCHEDULE):
 		_called[w] = true
 	else:
+		# Off the director's clock: the ramp card at half way (or this cue).
 		_card_at(w, target)
 
 
@@ -1905,58 +2015,69 @@ func _add_roman_entrance(w: WrestlerController, entrance_x: float, side: String)
 			"ticks": _secs(0.0, ROMAN_INTRO_SECONDS), "shot": "intro",
 			"events": [[1, "tron_on"], [1, "dim_on"]]})
 	# In his portal, head bowed, while the music builds: the long lens dead on
-	# the portal, creeping in (2K26 2:08-2:17, him small under his wall).
+	# the portal, held (2K26 2:08-2:17, him small under his wall; R-41's static
+	# head-on long lens -- no creep, the owner's "too much zooming").
 	_beats.append(_with(blue, {"kind": "pose", "who": w,
 			"ticks": _secs(ROMAN_INTRO_SECONDS, portal_end),
 			"clip": "strikes/head_bow", "facing": Vector3.BACK,
-			"shot": "portal_long", "portal": emerge, "push_from": 0,
+			"shot": "portal_long", "portal": emerge, "push_from": 0, "lens": ROMAN_PORTAL_FOV,
 			"push_over": _secs(ROMAN_INTRO_SECONDS, portal_end),
 			"appear": true, "props": true, "path": [emerge, emerge + Vector3.BACK * 0.1],
 			"events": [[1, "pyro_stage"]]}))
-	var third := emerge.lerp(lip, 1.0 / 3.0)
-	var two_thirds := emerge.lerp(lip, 2.0 / 3.0)
-	# The walk out: his wall behind him at the long lens, then chest-up at
-	# the lens backing ahead of him (2K26 2:35), then his face.
-	_beats.append(_with(blue, {"kind": "walk", "who": w, "path": [emerge, third],
+	var half := emerge.lerp(lip, 0.5)
+	# The walk out: his wall behind him at the long lens, then the low
+	# ultra-wide gimbal backing ahead of him to the lip (the owner, 9 Nov: the
+	# crane that was here and the chest-high lens are gone).
+	_beats.append(_with(blue, {"kind": "walk", "who": w, "path": [emerge, half],
 			"speed": ROMAN_WALK_SPEED, "walk_clip": ROMAN_WALK_CLIP, "shot": "stage"}))
-	_beats.append(_with(blue, {"kind": "walk", "who": w, "path": [third, two_thirds],
+	_beats.append(_with(blue, {"kind": "walk", "who": w, "path": [half, lip],
 			"speed": ROMAN_WALK_SPEED, "walk_clip": ROMAN_WALK_CLIP,
-			"shot": "crane_front"}))
-	_beats.append(_with(blue, {"kind": "walk", "who": w, "path": [two_thirds, lip],
-			"speed": ROMAN_WALK_SPEED, "walk_clip": ROMAN_WALK_CLIP,
-			"shot": "steadicam_low"}))
-	# On the lip, the building looked over: the push in, the telephoto
-	# face, the low three-quarter -- sharing what is left before the finger.
-	var push_s := lip_s * 0.42
-	var face_s := lip_s * 0.30
+			"shot": "low_wide_up"}))
+	# On the lip, the building looked over: the locked low full figure, the
+	# telephoto face, then the low three-quarter -- which carries on, one arc,
+	# through the finger going up to the slam (it was a 0.47 s cut to another
+	# angle, `hero_low`, straight into the pyro wide).
+	var push_s: float = lip_s * float(ROMAN_LIP_SHARES[0])
+	var face_s: float = lip_s * float(ROMAN_LIP_SHARES[1])
 	var t0 := portal_end + walk_s
+	var hero_from := t0 + push_s + face_s
+	var hero_ticks := _secs(hero_from, ROMAN_MUSIC_HIT + ROMAN_PYRO_WIDE)
 	_beats.append(_with(blue, {"kind": "pose", "who": w,
 			"ticks": _secs(t0, t0 + push_s),
 			"clip": "strikes/roman_stand", "facing": Vector3.BACK,
-			"shot": "stage_push"}))
+			"shot": "stage_push", "locked": true}))
 	_beats.append(_with(blue, {"kind": "pose", "who": w,
-			"ticks": _secs(t0 + push_s, t0 + push_s + face_s),
+			"ticks": _secs(t0 + push_s, hero_from),
 			"clip": "strikes/roman_stand", "facing": Vector3.BACK,
-			"shot": "steadicam_low"}))
+			"shot": "face_up", "locked": true}))
 	_beats.append(_with(blue, {"kind": "pose", "who": w,
-			"ticks": _secs(t0 + push_s + face_s, finger_start),
+			"ticks": _secs(hero_from, finger_start),
 			"clip": "strikes/roman_stand", "facing": Vector3.BACK,
-			"shot": "lip_hero"}))
+			"shot": "lip_hero", "arc_from": 0, "arc_over": hero_ticks}))
 	# The finger, and on the slam the pyro and the room red, on a very wide.
 	_beats.append(_with(blue, {"kind": "pose", "who": w,
 			"ticks": _secs(finger_start, ROMAN_MUSIC_HIT + ROMAN_PYRO_WIDE),
 			"clip": "strikes/finger_hold", "facing": Vector3.BACK,
-			"shot": "hero_low",
+			"shot": "lip_hero", "arc_from": _secs(hero_from, finger_start),
+			"arc_over": hero_ticks,
 			"events": [[FINGER_PYRO_AT, "pyro_roman"], [FINGER_PYRO_AT, "accent_red"],
 					[FINGER_PYRO_AT + ROMAN_RED_TICKS, "accent_back"]]}))
 	# Held, under the low wide from the ramp.
 	_beats.append(_with(blue, {"kind": "pose", "who": w,
 			"ticks": _secs(ROMAN_MUSIC_HIT + ROMAN_PYRO_WIDE, ROMAN_FINGER_DOWN),
 			"clip": "strikes/finger_hold", "facing": Vector3.BACK,
-			"shot": "ramp_low_wide"}))
-	# The walk: all of it, cut the way the broadcast cuts it.
+			"shot": "ramp_low_wide", "locked": true}))
+	# The walk: the one crane off the finger coming down, from high off his
+	# right shoulder down onto the lower-third frame, its lens held; then all
+	# of the ramp on the low gimbal and the barricade, cut on the bar.
 	var foot := Vector3(0.0, 0.0, -ArenaBuilder.BARRICADE_RADIUS - 0.2)
-	_add_walk_cut(w, lip, foot, ROMAN_WALK_SPEED, ROMAN_WALK_CLIP, ROMAN_WALK_SHOTS,
+	var crane_to := lip.lerp(foot, minf(ROMAN_CRANE_BEATS * ROMAN_BEAT * ROMAN_WALK_SPEED
+			/ _flat(lip).distance_to(_flat(foot)), 1.0))
+	_beats.append({"kind": "walk", "who": w, "path": [lip, crane_to],
+			"speed": ROMAN_WALK_SPEED, "walk_clip": ROMAN_WALK_CLIP, "shot": "crane_front",
+			"crane_height": ROMAN_CRANE_HEIGHT, "crane_fov": ROMAN_CRANE_FOV,
+			"ramp_card": true})
+	_add_walk_cut(w, crane_to, foot, ROMAN_WALK_SPEED, ROMAN_WALK_CLIP, ROMAN_WALK_SHOTS,
 			[], true)
 	# Ringside, the head bowed, then up the steps and through the ropes.
 	var in_at := _add_route_in(w, foot, ROMAN_WALK_SPEED, ROMAN_WALK_CLIP, true, "",
@@ -1967,20 +2088,29 @@ func _add_roman_entrance(w: WrestlerController, entrance_x: float, side: String)
 			"shot": "entry_crane", "on_mat": true})
 	_beats.append({"kind": "turn", "who": w, "facing": Vector3.BACK,
 			"shot": "entry_crane"})
-	# The finger to the hard camera, then hands on hips, staring, close.
+	# The finger again, from low in front of him, up against the lights (R-39;
+	# 2K26 3:28) -- it was on the arrival crane, which by then stands behind
+	# him. Then hands on hips, staring, and the ula fala lifted off, on one
+	# low three-quarter that closes in a little: Aubrey, back from the
+	# timekeeper, walks into it for the ula fala. It used to restart the
+	# arrival crane from the top for the ula fala.
 	_beats.append({"kind": "pose", "who": w, "ticks": 240,
 			"clip": "strikes/finger_hold", "facing": Vector3.BACK,
-			"shot": "entry_crane"})
-	# Hands on hips; Aubrey, back from the timekeeper, comes for the ula fala.
+			"shot": "ring_low_up", "locked": true})
+	var hero_ticks_in := 300 + 90
 	_beats.append({"kind": "pose", "who": w, "ticks": 300,
 			"clip": "strikes/hands_hips", "facing": Vector3.BACK,
-			"shot": "steadicam_low", "events": [[1, "prop_call_fala"]]})
+			"shot": "ring_hero_low", "arc_from": 0, "arc_over": hero_ticks_in,
+			"events": [[1, "prop_call_fala"]]})
 	_beats.append({"kind": "pose", "who": w, "ticks": 90,
 			"clip": "strikes/ula_fala_off", "facing": Vector3.BACK,
-			"shot": "entry_crane", "events": [[ULA_FALA_LIFT_AT, "fala_off"]]})
+			"shot": "ring_hero_low", "arc_from": 300, "arc_over": hero_ticks_in,
+			"events": [[ULA_FALA_LIFT_AT, "fala_off"]]})
+	# The hand-off, high on the corner: the whole ring, him and Aubrey (the
+	# hard camera's side, R-41 3:24), and on through his walk to his mark.
 	_beats.append({"kind": "pose", "who": w, "ticks": _secs(0.0, HAND_OUT_SECONDS),
 			"clip": "strikes/prop_hand_out_r", "facing": Vector3.BACK,
-			"shot": "entry_crane", "events": [[1, "prop_pass_fala"]]})
+			"shot": "ring_high_corner", "events": [[1, "prop_pass_fala"]]})
 	var mark: Transform3D = _mark[w]
 	_beats.append({"kind": "walk", "who": w, "path": [centre, mark.origin],
 			"speed": ROMAN_WALK_SPEED, "walk_clip": ROMAN_WALK_CLIP,
@@ -2943,9 +3073,11 @@ func _frame_shot(beat: Dictionary, delta: float, force_cut := false) -> void:
 			var portal: Vector3 = beat.get("portal", w.global_position)
 			var e := clampf(float(_tick + int(beat.get("push_from", 0)))
 					/ float(beat.get("push_over", 400)), 0.0, 1.0)
+			# Roman's is held on one lens (R-41: a static head-on long lens).
+			var lens_p: float = beat.get("lens", lerpf(PORTAL_LONG_FOV.x, PORTAL_LONG_FOV.y, e))
 			_camera.set_entrance_shot(Vector3(portal.x * 0.55, 1.6, -21.0),
-					portal + Vector3.UP * 1.5,
-					lerpf(PORTAL_LONG_FOV.x, PORTAL_LONG_FOV.y, e), true)
+					portal + Vector3.UP * 1.5, lens_p, true, delta, true,
+					not beat.has("lens"))
 		"steadicam":
 			var fwd3 := -w.global_transform.basis.z
 			_camera.set_entrance_shot(w.global_position + fwd3 * 3.2 + Vector3.UP * 1.55,
@@ -2977,7 +3109,8 @@ func _frame_shot(beat: Dictionary, delta: float, force_cut := false) -> void:
 			var e := t * t * (3.0 - 2.0 * t)
 			_camera.set_entrance_shot(PUSH_FROM.lerp(PUSH_TO, e),
 					w.global_position + Vector3.UP * 1.45,
-					lerpf(PUSH_FOV.x, PUSH_FOV.y, e), true)
+					lerpf(PUSH_FOV.x, PUSH_FOV.y, e), true, delta, true,
+					not beat.get("locked", false))
 		"hero_low":
 			_camera.set_entrance_shot(w.global_position + HERO_OFFSET,
 					w.global_position + Vector3.UP * 1.6, HERO_FOV, true)
@@ -3004,7 +3137,8 @@ func _frame_shot(beat: Dictionary, delta: float, force_cut := false) -> void:
 		"crane_front":
 			var fc := _flat(-w.global_transform.basis.z).normalized()
 			var e_c := smoothstep(0.0, 1.0, float(_tick) / maxf(float(beat["ticks"]), 1.0))
-			var crane := crane_front_shot(w.global_position, fc, e_c)
+			var crane := crane_front_shot(w.global_position, fc, e_c,
+					beat.get("crane_height", CRANE_FRONT_HEIGHT), beat.get("crane_fov", CRANE_FRONT_FOV))
 			_camera.set_entrance_shot(crane[0], crane[1], crane[2], first, delta)
 		"steadicam_front":
 			# 2K26's walk: backing ahead of him at chest height on a normal
@@ -3047,8 +3181,9 @@ func _frame_shot(beat: Dictionary, delta: float, force_cut := false) -> void:
 					w.global_position + f5 * 12.0 + Vector3.UP * 0.8, OVER_SHOULDER_FOV),
 					OVER_SHOULDER_FOV, first, delta)
 		"ramp_low_wide":
-			_camera.set_entrance_shot(RAMP_LOW_WIDE_AT, w.global_position + Vector3.UP * 2.2,
-					RAMP_LOW_WIDE_FOV, true)
+			_camera.set_entrance_shot(RAMP_LOW_WIDE_AT, w.global_position
+					+ Vector3.UP * (2.0 if beat.get("locked", false) else 2.2),
+					RAMP_LOW_WIDE_FOV, true, delta, true, not beat.get("locked", false))
 		"ramp_long":
 			_camera.set_entrance_shot(Vector3(w.global_position.x * 0.5, 0.9,
 					w.global_position.z + RAMP_LONG_BACK), w.global_position + Vector3.UP * 1.0,
@@ -3076,13 +3211,41 @@ func _frame_shot(beat: Dictionary, delta: float, force_cut := false) -> void:
 			_camera.set_entrance_shot(Vector3(side_x, RAMP_SIDE_HIGH_Y,
 					w.global_position.z + RAMP_SIDE_HIGH_LEAD),
 					w.global_position + Vector3.UP * 1.2, RAMP_SIDE_HIGH_FOV, first, delta)
+		"low_lead":
+			var sl := low_lead_shot(w.global_position, _flat(-w.global_transform.basis.z).normalized())
+			_camera.set_entrance_shot(sl[0], sl[1], sl[2], first, delta)
+		"low_wide_up":
+			var sw := low_wide_up_shot(w.global_position,
+					_flat(-w.global_transform.basis.z).normalized())
+			_camera.set_entrance_shot(sw[0], sw[1], sw[2], first, delta)
+		"barricade_low":
+			var sb := barricade_low_shot(w.global_position,
+					_flat(-w.global_transform.basis.z).normalized())
+			_camera.set_entrance_shot(sb[0], sb[1], sb[2], first, delta)
+		"face_up":
+			var sf := face_up_shot(w.global_position, _head_of(w),
+					_flat(-w.global_transform.basis.z).normalized())
+			_camera.set_entrance_shot(sf[0], sf[1], sf[2], first, delta, true, false)
+		"ring_low_up":
+			var su := ring_low_up_shot(w.global_position,
+					_flat(-w.global_transform.basis.z).normalized())
+			_camera.set_entrance_shot(su[0], su[1], su[2], first, delta, true, false)
+		"ring_hero_low":
+			var e_rh := smoothstep(0.0, 1.0, float(_tick + int(beat.get("arc_from", 0)))
+					/ maxf(float(beat.get("arc_over", beat["ticks"])), 1.0))
+			var sh := ring_hero_shot(w.global_position,
+					_flat(-w.global_transform.basis.z).normalized(), e_rh)
+			_camera.set_entrance_shot(sh[0], sh[1], sh[2],
+					first and not _was_shot("ring_hero_low"), delta)
 		"ring_high_corner":
 			_camera.set_entrance_shot(RING_HIGH_CORNER_AT, w.global_position + Vector3.UP * 1.0,
 					RING_HIGH_CORNER_FOV, true)
 		"lip_hero":
 			# On the lip: low, three-quarter from his left, looking up at him
 			# with his wall behind -- a slow arc in (2K26's hero grammar).
-			var e_h := smoothstep(0.0, 1.0, float(_tick) / maxf(float(beat["ticks"]), 1.0))
+			# One arc across beats when the beat says so (Roman's lip and finger).
+			var e_h := smoothstep(0.0, 1.0, float(_tick + int(beat.get("arc_from", 0)))
+					/ maxf(float(beat.get("arc_over", beat["ticks"])), 1.0))
 			var side_h := Vector3(-1.0, 0.0, 0.0).rotated(Vector3.UP, lerpf(0.55, 0.35, e_h))
 			_camera.set_entrance_shot(w.global_position + side_h * lerpf(3.4, 2.8, e_h)
 					+ Vector3.UP * 0.75, w.global_position + Vector3.UP * 1.55, 34.0,
