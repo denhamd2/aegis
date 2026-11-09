@@ -8,6 +8,25 @@ signal finished
 
 const WINNER_HOLD := 3.0
 const CELEBRATION := [["close", 2.2], ["ringside", 2.0], ["arena", 2.6], ["hero", 2.4]]
+## The owner, 9 Nov: "For the post match celebration, instead of Aubrey
+## raising their hand, have them climb a turnbuckle and celebrate, basically
+## like they do during their entrance." He walks to the nearest corner clear
+## of the loser, climbs to the second rope facing out (EntranceDirector's
+## corner beats: CORNER_ROOT_M off the pad, the same climb, pose and step
+## down), then the celebration shots and, in a title match, the belt.
+const CORNER_WALK_SPEED := 1.3
+const CORNER_TURN := 0.5
+const CORNER_CLIMB := 1.2
+const CORNER_POSE := 3.6
+const CORNER_DOWN := 1.0
+const CORNER_WALK_CLIP := "strikes/entrance_walk"
+## The loser's body keeps a corner this far clear of him.
+const CORNER_CLEAR := 1.4
+var _corner_plan: Array = []
+var _corner_step := 0
+var _corner_from := Vector3.ZERO
+var _corner_stand := Vector3.ZERO
+var _corner_out := Vector3.ZERO
 const RATING_HOLD := 3.6
 ## The title presented (TitlePresentation): the celebration holds on him and
 ## Aubrey until he has it up, then a last close shot of him with it.
@@ -50,7 +69,7 @@ func begin(p_camera: MatchCamera, p_winner: WrestlerController, p_loser: Wrestle
 	_layer.add_child(_rating)
 	_card.show_card(_name(winner), "WINNER")
 	_shot_winner_low(0.0)
-	_present_title()
+	_plan_corner()
 
 
 func is_done() -> bool:
@@ -78,7 +97,10 @@ func _process(delta: float) -> void:
 			_shot_winner_low(delta)
 			if _stage_t >= WINNER_HOLD:
 				_card.hide_card()
-				_next("celebrate")
+				_next("corner" if not _corner_plan.is_empty() else "celebrate")
+				_start_corner_step()
+		"corner":
+			_run_corner(delta)
 		"celebrate":
 			var step: Array = CELEBRATION[_celeb]
 			_shot_celebration(String(step[0]), delta)
@@ -86,6 +108,8 @@ func _process(delta: float) -> void:
 				_celeb += 1
 				_stage_t = 0.0
 				if _celeb >= CELEBRATION.size():
+					if _title == null:
+						_present_title()
 					if _title != null and not _title.is_done():
 						_celeb = CELEBRATION.size() - 1
 						_next("title")
@@ -106,6 +130,92 @@ func _process(delta: float) -> void:
 				_rating.visible = false
 				_done = true
 				finished.emit()
+
+
+## The nearest corner whose pad is clear of the loser, and the beats to
+## climb it. Empty (he celebrates where he stands) without a ring to climb.
+func _plan_corner() -> void:
+	if winner == null or not winner.has_method("play_presentation_clip"):
+		return
+	var p := winner.global_position
+	var best := Vector2.ZERO
+	var best_d := INF
+	for corner: Vector2 in [Vector2(1, 1), Vector2(1, -1), Vector2(-1, 1), Vector2(-1, -1)]:
+		var pad := Vector3(corner.x, 0.0, corner.y) * RingBuilder.TURNBUCKLE_PAD_XZ
+		if loser != null and Vector2(loser.global_position.x - pad.x,
+				loser.global_position.z - pad.z).length() < CORNER_CLEAR:
+			continue
+		var d := Vector2(p.x - pad.x, p.z - pad.z).length()
+		if d < best_d:
+			best_d = d
+			best = corner
+	if best == Vector2.ZERO:
+		return
+	_corner_out = RingBuilder.step_out_dir(best)
+	var pad := Vector3(best.x, 0.0, best.y) * RingBuilder.TURNBUCKLE_PAD_XZ
+	_corner_stand = pad - _corner_out * EntranceDirector.CORNER_ROOT_M
+	_corner_stand.y = p.y
+	_corner_from = p
+	var walk := Vector2(_corner_stand.x - p.x, _corner_stand.z - p.z).length() / CORNER_WALK_SPEED
+	_corner_plan = [["walk", CORNER_WALK_CLIP, maxf(walk, 0.3)],
+			["turn", CORNER_WALK_CLIP, CORNER_TURN],
+			["climb", "strikes/corner_climb", CORNER_CLIMB],
+			["pose", corner_pose_clip(winner), CORNER_POSE],
+			["down", "strikes/corner_down", CORNER_DOWN]]
+
+
+## His own corner pose from his entrance.
+static func corner_pose_clip(w: WrestlerController) -> String:
+	if w != null and w.entrance_style == "kenny":
+		return "strikes/kenny_corner_wings"
+	return "strikes/corner_pose"
+
+
+func _start_corner_step() -> void:
+	if _stage != "corner":
+		return
+	if _corner_step >= _corner_plan.size():
+		_next("celebrate")
+		return
+	var step: Array = _corner_plan[_corner_step]
+	# Out of the VICTORY clip on the first, then clip to clip.
+	winner.play_presentation_clip(String(step[1]), _corner_step == 0)
+
+
+func _run_corner(delta: float) -> void:
+	var step: Array = _corner_plan[_corner_step]
+	var t := clampf(_stage_t / float(step[2]), 0.0, 1.0)
+	match String(step[0]):
+		"walk":
+			var at := _corner_from.lerp(_corner_stand, t)
+			var dir := _corner_stand - _corner_from
+			dir.y = 0.0
+			winner.global_position = at
+			if dir.length() > 0.05:
+				winner.rotation.y = rotate_toward(winner.rotation.y,
+						atan2(-dir.x, -dir.z), EntranceDirector.TURN_RATE * delta)
+			# Not "ringside": that sits out past the corner he is walking
+			# to, and its post hid him.
+			_shot_celebration("close", delta)
+		_:
+			winner.global_position = _corner_stand
+			# Facing out over the crowd, as on the way in.
+			winner.rotation.y = rotate_toward(winner.rotation.y,
+					atan2(-_corner_out.x, -_corner_out.z), EntranceDirector.TURN_RATE * delta)
+			_shot_corner(delta)
+	if _stage_t >= float(step[2]):
+		_corner_step += 1
+		_stage_t = 0.0
+		_start_corner_step()
+
+
+## Out past the post in front of him, below his feet, up at him on the ropes.
+func _shot_corner(delta: float) -> void:
+	var p := _corner_stand
+	var right := Vector3.UP.cross(_corner_out).normalized()
+	var at := p + _corner_out * 3.4 + right * 0.9 + Vector3.UP * 1.0
+	camera.set_entrance_shot(at, _head(winner) + Vector3.DOWN * 0.1, 38.0,
+			_stage_t <= delta * 1.5 and _corner_step == 2, delta)
 
 
 ## The belt to the winner during the uninterrupted celebration.

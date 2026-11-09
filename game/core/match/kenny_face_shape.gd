@@ -60,6 +60,17 @@ const TABLE := [
 	# brows (1.74 m), where the sheet's profile runs smooth from forehead to
 	# bridge (loop 3's "what holds it at about 7")...
 	[Vector3(0.012, 1.741, 0.0), Vector3(0.022, 0.010, 0.016), Vector3(0.0, 0.0, -0.0025), true],
+	# 9 Nov, the owner: "What's the crease above his eyes? It's not there in
+	# our head texture." Cody's brow ridge peaks at y 1.730 and the forehead
+	# falls 6-8 mm behind it by 1.750 before its own gentle slope: a concave
+	# step that renders as a dark furrow across his brow (ambient occlusion
+	# under the truss key; it is there with no reshape at all). Filled
+	# forward, so ridge runs into forehead.
+	[Vector3(0.022, 1.756, -0.004), Vector3(0.036, 0.013, 0.030), Vector3(0.0, 0.0, 0.0035), true],
+	# The ridge itself set back along its whole width, not just the inner
+	# brow: under the truss its underside shadow and his brows merged into
+	# one dark band ("is Kenny missing his eyebrows?").
+	[Vector3(0.030, 1.733, -0.004), Vector3(0.040, 0.010, 0.030), Vector3(0.0, 0.0, -0.0030), true],
 	# ...and his chin carried forward, as his profile has it.
 	[Vector3(0.0, 1.600, -0.006), Vector3(0.024, 0.013, 0.020), Vector3(0.0, -0.0005, 0.0030), false],
 ]

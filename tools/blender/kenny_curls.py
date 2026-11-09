@@ -80,25 +80,28 @@ NAPE = (110.0, 1.56)
 ## light: median (82,67,58), 90th percentile (151,121,103), 97th (187,155,123):
 ## red over blue 1.4-1.5) and lifted to albedo. The first pass took the tips
 ## to (206,168,112), red over blue 1.84, and the curls rendered ginger-orange.
-ROOT = (82, 56, 36)
-TIP = (240, 184, 104)
+ROOT = (70, 48, 32)
+## The owner, 9 Nov: "Make it a bit less blonde, just some blonde highlights
+## but generally a little more brown, check the references" -- the lengths
+## a light brown, the platinum share (PLATINUM_*) carrying the blonde.
+TIP = (184, 134, 82)
 ## The crown, wet and slicked: the sheet's renders at (104,70,58) under arena
 ## light, ours rendered (197,170,138) -- a pale helmet (the owner, 8 Nov:
 ## "amazingly lifelike"). The cap and the slicked strands over it are darker
 ## and warmer than the ringlets, which measured right (114,82,67).
 CAP = (88, 64, 46)
 SLICK_ROOT = (66, 48, 34)
-SLICK_TIP = (176, 138, 90)
+SLICK_TIP = (150, 112, 74)
 ## And on top, a share of the slicked strands bleached (the three-view's
 ## swept-back crown is streaked blond over its dark roots).
-SLICK_STREAK = (212, 176, 118)
+SLICK_STREAK = (206, 166, 108)
 SLICK_STREAK_SHARE = 0.45
 ## Per ringlet, the tip colour scaled by this (seeded): some curls dark
 ## dirty blond, some bright gold.
 ## 8 Nov, against the owner's studio three-view (gauntlet/refs/characters/
 ## kenny_3view.jpg): bleached, ash and golden curls over darker roots, so
 ## the spread is wider -- dark dirty-blond to near platinum.
-RINGLET_TONE = (0.55, 1.25)
+RINGLET_TONE = (0.60, 1.12)
 
 ## CurlCap: off the skin by this much, more on top.
 CAP_LIFT = (0.0018, 0.0035)
@@ -196,8 +199,8 @@ FRONT_TWIST = (30.0, 55.0)
 FRONT_FLOOR = 1.50
 BACK_CLAMP_X = 0.15
 ## A fifth of the clumps platinum at their crests.
-PLATINUM_SHARE = 0.2
-PLATINUM_TONE = (1.15, 1.30)
+PLATINUM_SHARE = 0.30
+PLATINUM_TONE = (1.30, 1.50)
 ## Flyaways: fewer, longer, on the silhouette's sides only.
 FLY_ANGLE = (80.0, 150.0)
 ## The crown: slicked only in front of SLICK_ANGLE; wavy clumps behind it.

@@ -416,6 +416,29 @@ def cheek_lift(out):
     return np.clip(out * (1 - m) + out * CHEEK_GAIN * m, 0, 255)
 
 
+## The owner, 9 Nov: "Is Kenny missing his eyebrows? They should match the
+## texture image." His photo's brows came through levelled to a light tan
+## and soft; under the truss they vanished into the brow ridge's shadow.
+## Over each brow the hairs (darker than the skin round them) are darkened
+## and their contrast raised.
+BROWS = [(0.385, 0.305, 0.078, 0.024), (0.612, 0.305, 0.078, 0.024)]
+BROW_DARKEN = 0.55
+BROW_CONTRAST = 1.8
+
+
+def brow_hairs(out):
+    h, w = out.shape[:2]
+    m = np.zeros((h, w), np.float32)
+    for e in BROWS:
+        m = np.maximum(m, ellipse_mask(w, h, e, 10))
+    lum = out.mean(2)
+    local = blur(lum, 8.0)
+    hair = np.clip((local - lum) / 25.0, 0.0, 1.0) * m
+    detail = out - blur(out, 8.0)
+    dark = out * (1 - (1 - BROW_DARKEN) * hair[..., None]) + detail * (BROW_CONTRAST - 1.0) * m[..., None]
+    return np.clip(dark, 0, 255)
+
+
 def caruncles(out):
     h, w = out.shape[:2]
     m = np.zeros((h, w), np.float32)
@@ -578,6 +601,7 @@ def head() -> None:
     out = out * (1 - hair[..., None]) + colour * hair[..., None]
     out = owner_face(out)
     out = cheek_lift(out)
+    out = brow_hairs(out)
     out = caruncles(out)
     save(out, HEAD_OUT, alpha)
 

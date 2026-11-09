@@ -332,7 +332,17 @@ func _process(delta: float) -> void:
 				_set_mode(Mode.BELL if _winner else Mode.FOLLOW)
 		Mode.BELL:
 			if _mode_time >= _clip_length("strikes/ref_call_bell"):
-				_set_mode(Mode.TO_WINNER)
+				# The owner, 9 Nov: no hand raise -- the winner climbs a
+				# turnbuckle to celebrate (PostMatch). She steps back across
+				# the ring from him and watches.
+				var at := _flat(_winner.global_position) if _winner else Vector3.ZERO
+				var away := -at.normalized() if at.length() > 0.2 else Vector3.BACK
+				_errand_target = _inside(away * AFTER_BELL_STEP)
+				_errand_face = at - _errand_target
+				_errand_faced = false
+				_separating = false
+				_checking = false
+				_set_mode(Mode.ERRAND)
 		Mode.TO_WINNER:
 			_square_winner(delta)
 			var spot := _inside(_flat(_winner.global_position) + WINNER_SIDE)
@@ -347,6 +357,10 @@ func _process(delta: float) -> void:
 
 ## The winner turns square to the hard camera (-X) so his raised left arm is
 ## on her side and the two wrists meet (Ref_Raise_Hand / Win_Arm_Raised).
+## How far across the ring from the winner's side she stands after the bell.
+const AFTER_BELL_STEP := 1.4
+
+
 func _square_winner(delta: float) -> void:
 	if _winner and is_instance_valid(_winner):
 		_winner.rotation.y = lerp_angle(_winner.rotation.y, PI * 0.5, 1.0 - exp(-delta * 5.0))

@@ -1,6 +1,6 @@
 extends GdUnitTestSuite
 ## After the three: the loser stays laid out on the mat through the whole
-## post-match, and the winner ends up beside Aubrey with his arm raised.
+## post-match, and the winner climbs a turnbuckle to celebrate.
 
 var _scene: Node
 var _saved_replays: CameraSettings.Replays
@@ -62,24 +62,28 @@ func test_gunshot_victim_is_covered_and_stays_down_after_the_match() -> void:
 		await get_tree().process_frame
 	assert_float(_pelvis_y(loser)).is_less(0.6)
 	assert_int(winner.fsm.current_state).is_equal(WrestlerFSM.State.VICTORY)
-	# Run the whole post-match; the loser never gets up. The referee raises
-	# the winner's hand, then the title is presented (TitlePresentation), which
-	# takes her off it, so the raise is checked on the frames it is held.
+	# Run the whole post-match; the loser never gets up. The owner, 9 Nov:
+	# no hand raise -- the winner climbs a turnbuckle and celebrates.
 	var worst := 0.0
 	var actor: RefereeActor = _scene.referee_actor
 	var raised := false
-	var gap := INF
+	var posed := false
 	for i in 2400:
 		await get_tree().process_frame
 		worst = maxf(worst, _pelvis_y(loser))
 		if actor.mode == RefereeActor.Mode.RAISE:
 			raised = true
-			gap = minf(gap, actor.raise_hand_gap())
+		if pm._stage == "corner" and pm._corner_step == 3 \
+				and winner._presentation_clip == PostMatch.corner_pose_clip(winner):
+			posed = true
+			# Up on the second rope, in the corner, facing out.
+			var flat := Vector2(winner.global_position.x, winner.global_position.z)
+			assert_float(flat.length()).is_greater(2.0)
 		if pm.is_done():
 			break
 	assert_float(worst).is_less(0.6)
-	assert_bool(raised).is_true()
-	assert_float(gap).is_less(0.25)
+	assert_bool(raised).is_false()
+	assert_bool(posed).is_true()
 
 
 func test_a_standing_loser_is_put_on_the_mat_for_the_post_match() -> void:
