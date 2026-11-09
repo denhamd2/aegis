@@ -39,6 +39,27 @@ anyway.
 | `burn_scream_*` | [Man screaming](https://freesound.org/people/Archeos/sounds/325548/), [Moans and screams of agony of military soldiers](https://freesound.org/people/qubodup/sounds/166943/) | Archeos, qubodup | CC0 |
 | `ui_*` | [Interface Sounds](https://kenney.nl/assets/interface-sounds) | Kenney | CC0 |
 
+### Sound round 4 (9 Nov)
+
+Built by `tools/audio/build_sfx_round4.py`, which pins every source by sha256.
+The rows below replace the rows above for the files they name.
+
+The Red Library recordings are items of the Internet Archive's
+[USC sound-effect archive](https://archive.org/details/usc-sound-effect-archive):
+1930s-40s Hollywood optical sound effects from the USC Cinema / Sunset
+Editorial library, donated to USC, digitised and published by the archive
+under CC0 (each item's `licenseurl` is
+`creativecommons.org/publicdomain/zero/1.0/`, checked at download). They are
+optical transfers, so they carry little above 5 kHz.
+
+| Files | Source | Author | Licence |
+| --- | --- | --- | --- |
+| `groan_0`-`groan_2` | [Red Library: Voices Men 1](https://archive.org/details/Red_Library_Voices_Men_1), R21-08 "Man Moans" | USC Cinema / Sunset Editorial (Internet Archive) | CC0 |
+| `groan_3`, `groan_4` | Red Library: Voices Men 1, R15-31 "Man Growling and Grunting" | USC Cinema / Sunset Editorial (Internet Archive) | CC0 |
+| `wind_*` | Red Library: Voices Men 1, R15-33 "Man Out of Breath" | USC Cinema / Sunset Editorial (Internet Archive) | CC0 |
+| `count_slap_*` | [Red Library: Fights](https://archive.org/details/Red_Library_Fights), R15-12 "Loud Slaps or Whacks", over [Red Library: Impacts](https://archive.org/details/Red_Library_Impacts), R28-55 "Thumps on Large Hollow Wooden Surface" | USC Cinema / Sunset Editorial (Internet Archive) | CC0 |
+| `pyro_boom`, `crowd_finish` | the same recordings as above, with the silence before the sound cut off | | |
+
 The entrance music in `music/` is the full soundtrack of the owner-supplied
 entrance videos (Google Drive, 2026-09-26; 3:38 each), cut out by
 `tools/audio/build_entrance_music.py`: the same recordings the titantron
