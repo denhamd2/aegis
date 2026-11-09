@@ -392,6 +392,28 @@ CARUNCLE = np.array([196.0, 112.0, 104.0])
 CARUNCLE_STRENGTH = 0.65
 
 
+## The owner, 8 Nov: "Are his cheeks still too dark vs the reference image? I
+## don't think his cheeks were that dark in the head texture I supplied." They
+## were not: the atlas carries his photo's cheeks (G/R 0.60, the forehead's),
+## but the cheek planes turn down and out from the truss key, and in shadow the
+## skin's scatter goes red -- under match light they rendered brick red, G/R
+## 0.38-0.46 against his forehead's 0.63 (Cody's cheeks, on the same mesh with
+## flatter planes: 0.50-0.56). So the cheeks are lifted in the albedo, green and
+## blue most, to render as the photo shows them.
+CHEEK_LIFT = [(0.372, 0.430, 0.080, 0.060), (0.624, 0.430, 0.080, 0.060)]
+CHEEK_GAIN = np.array([1.10, 1.24, 1.28])
+CHEEK_FEATHER = 36
+
+
+def cheek_lift(out):
+    h, w = out.shape[:2]
+    m = np.zeros((h, w), np.float32)
+    for e in CHEEK_LIFT:
+        m = np.maximum(m, ellipse_mask(w, h, e, CHEEK_FEATHER))
+    m = m[..., None]
+    return np.clip(out * (1 - m) + out * CHEEK_GAIN * m, 0, 255)
+
+
 def caruncles(out):
     h, w = out.shape[:2]
     m = np.zeros((h, w), np.float32)
@@ -553,6 +575,7 @@ def head() -> None:
     colour = (SCALP_BLOND * (1 - root) + SCALP_ROOT * root) * np.clip(ratio, 0.8, 1.1)
     out = out * (1 - hair[..., None]) + colour * hair[..., None]
     out = owner_face(out)
+    out = cheek_lift(out)
     out = caruncles(out)
     save(out, HEAD_OUT, alpha)
 
