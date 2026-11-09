@@ -400,9 +400,11 @@ CARUNCLE_STRENGTH = 0.65
 ## 0.38-0.46 against his forehead's 0.63 (Cody's cheeks, on the same mesh with
 ## flatter planes: 0.50-0.56). So the cheeks are lifted in the albedo, green and
 ## blue most, to render as the photo shows them.
-CHEEK_LIFT = [(0.372, 0.430, 0.080, 0.060), (0.624, 0.430, 0.080, 0.060)]
-CHEEK_GAIN = np.array([1.10, 1.24, 1.28])
-CHEEK_FEATHER = 36
+## 9 Nov, second pass: the lift reached out to the cheekbones' outer planes
+## (a red band stayed there, toward the ears) and a little stronger.
+CHEEK_LIFT = [(0.355, 0.440, 0.105, 0.075), (0.641, 0.440, 0.105, 0.075)]
+CHEEK_GAIN = np.array([1.12, 1.30, 1.34])
+CHEEK_FEATHER = 44
 
 
 def cheek_lift(out):
@@ -703,7 +705,40 @@ def body() -> None:
         # carries no ink.
         rgb = owner_body(rgb, src_name)
         rgb = body_detail(rgb, src_name, mesh)
+        if out_name == "kenny_body_chest.png":
+            rgb = shrink_nipples(rgb)
         save(rgb, CHARACTERS / out_name, np.asarray(src)[..., 3])
+
+
+## The owner, 9 Nov: "his nipples are slightly too large". Each areola is
+## drawn in toward its centre (chest atlas px), NIPPLE_SCALE of its size at
+## the middle, the warp easing out to nothing by NIPPLE_REACH.
+NIPPLES = [(724.0, 381.0), (1231.0, 383.0)]
+NIPPLE_SCALE = 0.72
+NIPPLE_REACH = 80.0
+
+
+def shrink_nipples(rgb):
+    h, w = rgb.shape[:2]
+    out = rgb.copy()
+    r = int(NIPPLE_REACH) + 2
+    for cx, cy in NIPPLES:
+        x0, y0 = int(cx) - r, int(cy) - r
+        ys, xs = np.mgrid[y0:y0 + 2 * r, x0:x0 + 2 * r].astype(np.float32)
+        dx, dy = xs - cx, ys - cy
+        d = np.sqrt(dx * dx + dy * dy)
+        t = np.clip(d / NIPPLE_REACH, 0.0, 1.0)
+        ease = t * t * (3.0 - 2.0 * t)
+        # Sample further out than we are: the features shrink inward.
+        f = (1.0 / NIPPLE_SCALE) * (1.0 - ease) + ease
+        sx = np.clip(cx + dx * f, 0, w - 1.001)
+        sy = np.clip(cy + dy * f, 0, h - 1.001)
+        ix, iy = np.floor(sx).astype(int), np.floor(sy).astype(int)
+        fx, fy = (sx - ix)[..., None], (sy - iy)[..., None]
+        a = rgb[iy, ix] * (1 - fx) + rgb[iy, ix + 1] * fx
+        b = rgb[iy + 1, ix] * (1 - fx) + rgb[iy + 1, ix + 1] * fx
+        out[y0:y0 + 2 * r, x0:x0 + 2 * r] = a * (1 - fy) + b * fy
+    return out
 
 
 def glb_mesh() -> dict:

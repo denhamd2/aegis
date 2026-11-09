@@ -140,7 +140,7 @@ RINGLET_LENGTH_BACK = (0.16, 0.25)
 RINGLET_FLOOR = 1.46
 ## The three-view's hair stands well off his head, a full mass at the sides
 ## and back: further out than the first groom (0.010-0.024).
-RINGLET_STANDOFF = (0.006, 0.014)
+RINGLET_STANDOFF = (0.004, 0.010)
 RINGLET_DRAPE = 0.30
 ## Outward drift per unit of fall: the lengths spread a little as they hang.
 RINGLET_DRIFT = 0.05
@@ -164,9 +164,9 @@ RINGLET_ROOT_SHADE = 0.45
 RINGLET_SEED = 271028
 ## Clump cards (loop 6): width at the root, at the tip; the S-wave's
 ## amplitude and wavelength (m); the arc length the atlas's v spans.
-CLUMP_WIDTH = (0.020, 0.030)
+CLUMP_WIDTH = (0.017, 0.026)
 CLUMP_TIP_WIDTH = 0.010
-CLUMP_AMP = (0.004, 0.014)
+CLUMP_AMP = (0.003, 0.010)
 CLUMP_WAVE = (0.045, 0.070)
 CARD_V_LENGTH = 0.25
 ## The undercoat: wide, close, dark (layer AO 0.45).
@@ -186,8 +186,10 @@ FLYAWAY_FLOOR = 1.44
 ## The lengths beside the face (round less than FRONT_ANGLE): further off the
 ## head, drifting out, turned toward the front by FRONT_TWIST degrees.
 FRONT_ANGLE = 135.0
-FRONT_STANDOFF = (0.012, 0.030)
-FRONT_DRIFT = 0.18
+## The owner, 9 Nov: "make his hair a little less big, like you had it
+## previously" -- the front locks stand off less, the curls swing narrower.
+FRONT_STANDOFF = (0.006, 0.016)
+FRONT_DRIFT = 0.12
 FRONT_TWIST = (30.0, 55.0)
 ## Loop 9 (review 8): the front locks end at the collarbone; the back's held
 ## inside the shoulders' width.

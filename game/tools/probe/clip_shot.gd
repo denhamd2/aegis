@@ -40,6 +40,9 @@ var _settle_frames := 3
 ## shapes on a detailed roster model.
 var _expression := Vector2.ZERO
 var _view_filter := ""
+## Raises the body views' camera and aim by this much: a pose stood on the
+## turnbuckles (Kenny_Corner_Wings) is otherwise above the frame.
+var _lift := 0.0
 
 ## Camera positions, as {name: [eye, aim]}.
 ##
@@ -80,6 +83,8 @@ func _ready() -> void:
 			var weights := args[i + 1].split(",")
 			if weights.size() == 2:
 				_expression = Vector2(weights[0].to_float(), weights[1].to_float())
+		elif args[i] == "--lift" and i + 1 < args.size():
+			_lift = args[i + 1].to_float()
 		elif args[i] == "--view" and i + 1 < args.size():
 			_view_filter = args[i + 1]
 	_run()
@@ -193,8 +198,8 @@ func _run() -> void:
 				player.pause()  # settle rendering at this exact authored sample
 				if _hand == "":
 					var spot: Array = views[view_name]
-					cam.global_position = spot[0]
-					cam.look_at(spot[1], Vector3.UP)
+					cam.global_position = (spot[0] as Vector3) + Vector3.UP * _lift
+					cam.look_at((spot[1] as Vector3) + Vector3.UP * _lift, Vector3.UP)
 				else:
 					# The skeleton applies the seek on its own update, not here.
 					await get_tree().process_frame

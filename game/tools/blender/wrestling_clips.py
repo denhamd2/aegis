@@ -2999,24 +2999,30 @@ CLIPS = {
         # 8 Nov, the owner's Dynamite clip (0:42): both arms straight up
         # overhead, index fingers pointing to the roof, chest up, head back --
         # not the arms-wide first pass.
+        # 9 Nov, the owner: "when he does his pose ... his arms get distorted".
+        # Straight up, the upper arm swung ~170 deg out to the side and the
+        # skin under it (weights transferred onto Cody's statue) pulled into
+        # two flaps off his sides. The hands now go up a little wider and
+        # forward of the head: the same arms-up read, with part of the raise
+        # taken forward, where the armpit holds.
         (12,  pose(KENNY_STAND, pelvis=(0.0, 0.0, 0.912), spine=(14, 0, 0),
                    head=(16, 0, 0),
-                   hand_r=(0.26, 0.10, 2.06), hand_l=(-0.26, 0.10, 2.06),
+                   hand_r=(0.34, 0.24, 1.98), hand_l=(-0.34, 0.24, 1.98),
                    elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
                    fist_r=0.95, fist_l=0.95, point_r=True, point_l=True)),
         (18,  pose(KENNY_STAND, pelvis=(0.0, 0.0, 0.906), spine=(12, 0, 0),
                    head=(16, 0, 0),
-                   hand_r=(0.25, 0.10, 2.03), hand_l=(-0.25, 0.10, 2.03),
+                   hand_r=(0.33, 0.24, 1.96), hand_l=(-0.33, 0.24, 1.96),
                    elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
                    fist_r=0.95, fist_l=0.95, point_r=True, point_l=True)),
         (50,  pose(KENNY_STAND, pelvis=(0.0, 0.0, 0.910), spine=(15, 0, 0),
                    head=(20, 0, 0),
-                   hand_r=(0.26, 0.08, 2.06), hand_l=(-0.26, 0.08, 2.06),
+                   hand_r=(0.34, 0.22, 1.98), hand_l=(-0.34, 0.22, 1.98),
                    elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
                    fist_r=0.95, fist_l=0.95, point_r=True, point_l=True)),
         (84,  pose(KENNY_STAND, pelvis=(0.0, 0.0, 0.906), spine=(12, 0, 0),
                    head=(16, 0, 3),
-                   hand_r=(0.25, 0.10, 2.02), hand_l=(-0.25, 0.10, 2.02),
+                   hand_r=(0.33, 0.24, 1.95), hand_l=(-0.33, 0.24, 1.95),
                    elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
                    fist_r=0.95, fist_l=0.95, point_r=True, point_l=True)),
         # 8 Nov: his signature finger guns -- both hands, out at the crowd
