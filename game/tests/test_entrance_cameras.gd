@@ -600,7 +600,7 @@ func _audit_roman(styles: Array) -> Dictionary:
 			(a["side"] as Array).append("%s not on his right" % shot)
 		if shot in ROMAN_RING_FRONT and (pos - at).dot(facing) <= 0.0:
 			(a["side"] as Array).append("%s not in front of him" % shot)
-		if shot in ["ring_low_up", "ring_hero_low"] \
+		if shot == "ring_low_up" \
 				and EntranceDirector.rig_in_frame(pos, pos + fwd, camera.fov) > 0:
 			(a["rig"] as Array).append(shot)
 		if shot == "ring_hero_low" and maxf(absf(pos.x), absf(pos.z)) > RingBuilder.ROPE_SPAN - 0.3:
@@ -699,7 +699,7 @@ func test_romans_crane_lands_on_his_lower_third_frame() -> void:
 	var lead := EntranceDirector.low_lead_shot(at, fwd)
 	assert_vector((landing[0] as Vector3)).is_equal(lead[0])
 	assert_float(float(landing[2])).is_equal(float(lead[2]))
-	assert_float((lead[0] as Vector3).y - at.y).is_equal_approx(1.0, 0.001)
+	assert_float((lead[0] as Vector3).y - at.y).is_equal_approx(0.85, 0.001)
 	# The crane holds its lens: it booms, it does not zoom.
 	var top := EntranceDirector.crane_front_shot(at, fwd, 0.0,
 			EntranceDirector.ROMAN_CRANE_HEIGHT, EntranceDirector.ROMAN_CRANE_FOV)
@@ -713,16 +713,14 @@ func test_romans_crane_lands_on_his_lower_third_frame() -> void:
 		var cam: Vector3 = shot[0]
 		var look: Vector3 = shot[1]
 		var base := at if cam.z < -10.0 else Vector3(-0.4, 0, -0.6)
-		assert_float(cam.y - base.y).is_less(1.05)
+		assert_float(cam.y - base.y).is_less(0.9)
 		var up := rad_to_deg(atan2(look.y - cam.y, Vector2(look.x - cam.x, look.z - cam.z).length()))
 		assert_float(up).is_greater(5.0)
 
 
 ## The finger in the ring is rig-clear on its own aim: nothing tips it down.
+## (The three-quarter after it is backlit by the rig on purpose, 2K26 3:46.)
 func test_romans_ring_finger_sees_no_rig() -> void:
 	var at := Vector3(-0.4, 0, -0.6)
 	var shot := EntranceDirector.ring_low_up_shot(at, Vector3(0, 0, 1))
 	assert_int(EntranceDirector.rig_in_frame(shot[0], shot[1], shot[2])).is_equal(0)
-	for e: float in [0.0, 0.5, 1.0]:
-		var hero := EntranceDirector.ring_hero_shot(at, Vector3(0, 0, 1), e)
-		assert_int(EntranceDirector.rig_in_frame(hero[0], hero[1], hero[2])).is_equal(0)

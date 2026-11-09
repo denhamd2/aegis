@@ -538,15 +538,15 @@ const ROMAN_WALK_SHOTS := [["barricade_low", 4 * ROMAN_BEAT], ["low_wide_up", 8 
 		["barricade_low", 4 * ROMAN_BEAT], ["low_lead", 10 * ROMAN_BEAT]]
 ## Roman's one walk crane booms but does not zoom (the owner: "a bit too much
 ## crane zooming"): the lens held, and it lands exactly on `low_lead`, the
-## frame under his lower third, a metre over his feet -- under his pelvis
-## (1.905 m man), looking up into his chest.
-const ROMAN_CRANE_HEIGHT := Vector2(4.2, 1.0)
+## frame under his lower third, 0.85 m over his feet -- under his pelvis
+## bone (0.90-0.96 m through his walk, measured), looking up into his chest.
+const ROMAN_CRANE_HEIGHT := Vector2(4.2, 0.85)
 const ROMAN_CRANE_FOV := Vector2(34.0, 34.0)
 ## The ultra-wide low gimbal (R-41 1:18-1:52): close ahead of him, a hand to
 ## his right, the lens below his waist tilted up past his chest to the roof.
 const LOW_WIDE_UP_AHEAD := 1.7
 const LOW_WIDE_UP_SIDE := 0.3
-const LOW_WIDE_UP_HEIGHT := 0.9
+const LOW_WIDE_UP_HEIGHT := 0.85
 const LOW_WIDE_UP_LOOK := 1.6
 const LOW_WIDE_UP_FOV := 50.0
 ## Alongside from the barricade with the lens below his waist. Inside the ramp
@@ -554,10 +554,10 @@ const LOW_WIDE_UP_FOV := 50.0
 ## panel), never in it, and never under the floor beside the ramp.
 const BARRICADE_LOW_SIDE := 2.15
 const BARRICADE_LOW_AHEAD := 1.2
-const BARRICADE_LOW_HEIGHT := 0.95
+const BARRICADE_LOW_HEIGHT := 0.85
 const BARRICADE_LOW_LOOK := 1.4
 const BARRICADE_LOW_FOV := 38.0
-const BARRICADE_LOW_CLEAR := 0.9
+const BARRICADE_LOW_CLEAR := 0.85
 ## The telephoto face on the lip (R-41 1:04), from his chest up into his eyes.
 const FACE_UP_AHEAD := 3.6
 const FACE_UP_SIDE := 0.35
@@ -565,15 +565,20 @@ const FACE_UP_HEIGHT := 1.45
 const FACE_UP_FOV := 16.0
 ## The finger in the ring (R-39; 2K26 3:28, 3:46): low in front of him, the
 ## finger up against the lights -- low and tilted enough to look up, not so
-## much that the ring rig comes into the top of frame.
-const RING_LOW_UP_AHEAD := 3.0
+## much that the ring rig comes into the top of frame. Measured against
+## rig_in_frame: at 3.0 m, 40 degrees and an aim of 1.7 the grid's far lines
+## were in it (30 points); from 3.5 m on a 34-degree lens aimed at 1.4 none
+## is, and the top of frame is 2.55 m up at him, over the finger.
+const RING_LOW_UP_AHEAD := 3.5
 const RING_LOW_UP_SIDE := 0.5
-const RING_LOW_UP_HEIGHT := 1.0
-const RING_LOW_UP_LOOK := 1.7
-const RING_LOW_UP_FOV := 40.0
+const RING_LOW_UP_HEIGHT := 0.85
+const RING_LOW_UP_LOOK := 1.4
+const RING_LOW_UP_FOV := 34.0
 ## Hands on hips and the ula fala off: a true three-quarter on his right,
 ## 40 to 50 degrees round from his facing, low, closing in a little, inside
-## the ropes.
+## the ropes. This close and this far tilted the rig's lamps are behind his
+## head, on purpose: 2K26 3:46, "low in the ring, backlit by the rig". (The
+## rig-out-of-frame rule is for the wides.)
 const RING_HERO_ANGLE := Vector2(40.0, 50.0)
 const RING_HERO_DISTANCE := Vector2(2.3, 2.1)
 const RING_HERO_HEIGHT := 0.75
@@ -816,7 +821,7 @@ const ROMAN_PYRO_RED := Color(1.0, 0.10, 0.16)
 ## out of it was a punch-in on the same axis). The hero shot: low at his feet
 ## looking up, for the title. The wide: the whole set, for the pyro. The ring
 ## low: from the mat under the ropes, for the finger in the ring.
-const PUSH_FROM := Vector3(0.0, 1.3, ArenaBuilder.STAGE_FRONT - 0.6 + 5.0)
+const PUSH_FROM := Vector3(0.0, ArenaBuilder.STAGE_DECK_Y + 0.8, ArenaBuilder.STAGE_FRONT - 0.6 + 5.0)
 const PUSH_TO := PUSH_FROM
 const PUSH_FOV := Vector2(33.0, 33.0)
 ## Eye level, not a worm's-eye: 2K26's entrance mids sit at chest-to-eye
@@ -846,8 +851,8 @@ const ARENA_HIGH_FOV := 50.0
 ## Behind him, over his shoulder, down the ramp at the crowd (R-CJ).
 const OVER_SHOULDER_FOV := 50.0
 ## Low on the ramp looking up at him under the set (R-41 50-58 s): the lens
-## 0.9 m over the deck he stands on, below his waist, locked.
-const RAMP_LOW_WIDE_AT := Vector3(0.0, ArenaBuilder.STAGE_DECK_Y + 0.9,
+## 0.8 m over the deck he stands on, below his waist, locked.
+const RAMP_LOW_WIDE_AT := Vector3(0.0, ArenaBuilder.STAGE_DECK_Y + 0.8,
 		ArenaBuilder.STAGE_FRONT + 8.5)
 const RAMP_LOW_WIDE_FOV := 46.0
 ## A long lens from down the ramp on him at the lip (C-MITB, the kneel).
@@ -2013,7 +2018,11 @@ func _add_roman_entrance(w: WrestlerController, entrance_x: float, side: String)
 	var lip_s := maxf(finger_start - portal_end - walk_s, 3.0)
 	_beats.append({"kind": "hold", "who": w,
 			"ticks": _secs(0.0, ROMAN_INTRO_SECONDS), "shot": "intro",
-			"events": [[1, "tron_on"], [1, "dim_on"]]})
+			# The stage pyro on the intro's last tick, so its wide is up as
+			# he appears: fired on his first tick, the long lens showed for
+			# one frame between the wall and the pyro wide.
+			"events": [[1, "tron_on"], [1, "dim_on"],
+					[_secs(0.0, ROMAN_INTRO_SECONDS), "pyro_stage"]]})
 	# In his portal, head bowed, while the music builds: the long lens dead on
 	# the portal, held (2K26 2:08-2:17, him small under his wall; R-41's static
 	# head-on long lens -- no creep, the owner's "too much zooming").
@@ -2022,8 +2031,7 @@ func _add_roman_entrance(w: WrestlerController, entrance_x: float, side: String)
 			"clip": "strikes/head_bow", "facing": Vector3.BACK,
 			"shot": "portal_long", "portal": emerge, "push_from": 0, "lens": ROMAN_PORTAL_FOV,
 			"push_over": _secs(ROMAN_INTRO_SECONDS, portal_end),
-			"appear": true, "props": true, "path": [emerge, emerge + Vector3.BACK * 0.1],
-			"events": [[1, "pyro_stage"]]}))
+			"appear": true, "props": true, "path": [emerge, emerge + Vector3.BACK * 0.1]}))
 	var half := emerge.lerp(lip, 0.5)
 	# The walk out: his wall behind him at the long lens, then the low
 	# ultra-wide gimbal backing ahead of him to the lip (the owner, 9 Nov: the
