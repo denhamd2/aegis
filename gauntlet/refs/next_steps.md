@@ -9,9 +9,9 @@ are historical, including their stale “working tree”, move-count and CI clai
 
 ## Published and remaining acceptance
 
-Latest Mac app: **`c805d2d551a70e566262ba6ac05ea6f4370e9c4a`**, verified against
-`mac-latest`, successful [Mac run 42405043123](https://github.com/denhamd2/aegis/actions/runs/42405043123),
-`Aegis.zip` 982,718,501 bytes. [Download](https://github.com/denhamd2/aegis/releases/tag/mac-latest).
+Latest Mac app: **`bf053267128f95bdc0420521d3756f1d30b1e530`**, verified against
+`mac-latest`, successful [Mac run 42419291426](https://github.com/denhamd2/aegis/actions/runs/42419291426),
+`Aegis.zip` 982,718,615 bytes. [Download](https://github.com/denhamd2/aegis/releases/tag/mac-latest).
 Documentation receipt `6527b5f` does not change the app.
 
 | ID | Published work | Evidence and remaining limits |
@@ -23,6 +23,7 @@ Documentation receipt `6527b5f` does not change the app.
 | 4 | Attempt-based move/family history and phase-aware working offence; `c805d2d` | In 12 matched seeded games: vertical suplexes 58→54; adjacent big-move repeats 21→15; repeats within the last two big attempts 53→41. Improvement is modest; constrained movesets can still repeat. |
 | 5 | Earned close standing Spear opportunities, legal start gates and interrupted-stalk cleanup; `c805d2d` | Running Spears 10→20 in the same comparison; all 20 committed paired moves landed. This sample does not demonstrate missed/countered Spears; approach interruption is tested. |
 | 6 | Legal running-attack selection, acceptance-based cooldown, distance-aware return and bounded deceleration; `c805d2d` | Actual-ring rebound and isolated failure/recovery checks pass. Whole-match rope-run success rate is not classified by the probe; rope-run counts were 35→29. |
+| 8 | Signature/finisher shake tied to the slam's own contact frame; signature trauma no longer stacked with big-strike trauma; `bf053267` | Focused GdUnit coverage added for contact timing, clamps, 0.75 vs 1.0 trauma, shake OFF and settle-without-pause, but **not executed locally** (no Godot on Termux). CI 42419291422 passed; Mac run 42419291426 succeeded and `mac-latest` points at the commit. Native shake feel awaits owner review. |
 
 IDs 4–6 have **99 passing focused checks** and 12 completed matches per version.
 [Evidence and limitations](ai_running_offence_2026_11_07/validation.md).
@@ -43,10 +44,10 @@ all smaller improvements.
 
 | Rank | ID | Work / next deliverable | Impact | Effort | Why here / dependencies |
 | ---: | --- | --- | --- | --- | --- |
-| 1 | 7 | Faster validation and Mac-only delivery | Very high enabling impact | M | Reduces the cost of every later batch. Profile setup separately; use safe fixtures and affected-subsystem selection, retain full regressions for broad changes, audit Web dependencies before retiring publishing. Preserve Mac builds/shared code. |
-| 2 | 13a | Punch corrections: first active move-family batch | Very high | M per batch; L overall | Seen throughout every match. Start with the most visible joint/contact failures against available Fight Forever footage; review both bodies, contacts and recovery. |
-| 3 | 8 | Existing signature/finisher impact shake | High | S–M | Strong broadcast payoff for limited scope. Trigger only at actual impact, respect settings, stay brief, and never pause animation. |
-| 4 | 9–10 | Weapon retrieval and extinguisher pickup/effect lifecycle | High in weapon matches | S–M each | Related prop-interaction batch: distinct reserved apron locations with cleanup; remove pickup cloud and keep spray confined to the authored action. Keep commits separate. |
+| 1 | 7 | Faster validation and Mac-only delivery — **implemented in this batch; publication check pending** | Very high enabling impact | M | Reduces the cost of every later batch. Profile setup separately; use safe fixtures and affected-subsystem selection, retain full regressions for broad changes, audit Web dependencies before retiring publishing. Preserve Mac builds/shared code. |
+| 2 | 13a | Punch corrections: first active move-family batch — **source re-keyed and pose-audited in this batch; regeneration and focused tests pending on Mac** | Very high | M per batch; L overall | Seen throughout every match. Start with the most visible joint/contact failures against available Fight Forever footage; review both bodies, contacts and recovery. Jab, cross, gut punch, Bionic Elbow and dropdown uppercut now meet the phase, contact-height, gaze, reach and mat-clearance criteria; the Bionic Elbow is elbow-led at head height with the measurement tool extended to measure the elbow. See [validation](punch_corrections_2026_11_08/validation.md). |
+| 3 | 8 | Existing signature/finisher impact shake — **published in `bf053267`** | High | S–M | Strong broadcast payoff for limited scope. Trigger only at actual impact, respect settings, stay brief, and never pause animation. |
+| 4 | 9–10 | Weapon retrieval and extinguisher pickup/effect lifecycle — **implemented in this batch; tests and renders pending on Mac** | High in weapon matches | S–M each | Related prop-interaction batch: distinct reserved apron locations with cleanup; remove pickup cloud and keep spray confined to the authored action. Apron claims are 1.1 m apart, released on completion/interruption/cancellation, with a `APRON TAKEN · STEP ALONG` HUD cue and a visible AI step to a free lane; the extinguisher's Cloud root is hidden, foam leaves the muzzle, the horn aims with a controlled tank-down roll, the prop appears in her hand at the grab and is carried back before being put away. See [validation](weapons_2026_11_08/validation.md). |
 | 5 | 19–20 | Blood default and bounded sweat assessment/tuning | Medium | S + S–M | Cheap surface/settings batch before larger reauthoring. Raise blood one capped step while preserving saved choices/OFF. Compare early/mid/late sweat first; tune modestly only if justified and avoid uniformly glossy skin. Do not hold the blood fix for an open-ended material overhaul. |
 | 6 | 14 | Cross Rhodes attacker/defender correction | High | M–L | Cody's finish is a prominent identity moment. Reauthor hold, rotation, descent, impact and release together against the existing reference. |
 | 7 | 13b–c | Kicks, then lariats, in separate family batches | Very high | M per batch; L overall | Completes the frequent core offence after the first punch pass and quick fixes. Cover every active variant; do not mark ID 13 complete after punches alone. |
@@ -59,14 +60,14 @@ all smaller improvements.
 | 14 | X1 | Roman/Cody body-morph and attire-fit audit | High | M–L | Carried forward from the older backlog. Compare supplied silhouettes; make narrow mesh/weight edits. Remeasure paired grips, contacts and collision assumptions before any rig-dimension change. |
 | 15 | X2 | Skin/attire and canvas/apron polish | Medium | M | Carried-forward surface work. Judge under the revised accepted lighting. Fold narrow changes into 20/21/X1 when they share materials or real-mesh validation. |
 | 16 | X3 | Broader ladder offence and safe interruption variants | Medium | M–L | Existing ladder dive/laid-out slam are implemented, but need native review. After 16–18 and that review, author the remaining ladder swing/interruption variants rather than replacing the established spot. |
-| 17 | 22 | Complete the remaining Fight Forever reference catalogue | High breadth, lower immediate return per move | L programme; small family batches | Reconcile actual motion/contact/gameplay completion, then prioritise current-roster fits and shared families. Audit overlapping catalogue entries during 13/14/15 to avoid duplicate work. Include both roles, contacts, recovery and wiring; deploy every completed batch. |
+| 17 | 22 | Complete the remaining Fight Forever reference catalogue — **plan drafted; roster-fit moves are all built (29/29), 119 remain for other wrestlers** | High breadth, lower immediate return per move | L programme; small family batches | Reconcile actual motion/contact/gameplay completion, then prioritise current-roster fits and shared families. Audit overlapping catalogue entries during 13/14/15 to avoid duplicate work. Include both roles, contacts, recovery and wiring; deploy every completed batch. See [the FF plan](ff_remaining_plan_2026_11_08.md). |
 
 All original IDs 7–22 remain in scope. **13a/b/c** are delivery slices of ID 13;
 **X1–X3** preserve older open work and do not silently expand the roster or the
 established move-reference catalogue. Item 22's resources/`is_built()` flags alone
-do not establish completed, correct animations; the current catalogue contains 146 entries, but replace the historical “3 of
-146 built” claim with an audited per-move completion ledger before quoting
-completed-animation progress.
+do not establish completed, correct animations; the current catalogue contains 146 entries. The measured ledger is **27/146 built (19 authored `ff_*` clips plus 8 mapped existing moves), all 29 roster fits built, 119 remaining for other wrestlers**; replace the historical “3 of
+146 built” claim with the audited per-move completion ledger in
+[the FF plan](ff_remaining_plan_2026_11_08.md) before quoting completed-animation progress.
 
 ## Parallel acceptance and follow-up track
 

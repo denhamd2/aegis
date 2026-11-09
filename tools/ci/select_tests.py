@@ -245,9 +245,14 @@ def git_changed(root: Path, base: str, head: str) -> list[str]:
 
     Deletions are included on purpose: a deleted game file must reach select()
     so it can force a full run instead of looking like an unrelated change.
+    Rename detection is disabled for the same reason: a game file moved out of
+    game/ would otherwise be reported only as its new, harmless-looking path.
     """
     result = subprocess.run(
-        ["git", "diff", "--name-only", "--diff-filter=ACMRD", base, head],
+        # T (type change, e.g. a game file replaced by a symlink) is also a
+        # change to the project even when the path stays the same.
+        ["git", "diff", "--name-only", "--no-renames", "--diff-filter=ACMRDT",
+         base, head],
         cwd=root, capture_output=True, text=True, check=True,
     )
     return [line for line in result.stdout.splitlines() if line.strip()]

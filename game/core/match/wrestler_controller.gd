@@ -1702,6 +1702,9 @@ func play_paired_pose(move: MoveDef, is_attacker: bool) -> bool:
 	return true
 
 func _on_fsm_state_changed(_previous: WrestlerFSM.State, current: WrestlerFSM.State) -> void:
+	if current != WrestlerFSM.State.WEAPON_ACTION:
+		# The rummage/retrieve is over, broken or cancelled: free the apron.
+		_release_apron_spot()
 	if current == WrestlerFSM.State.IDLE and _previous == WrestlerFSM.State.GETUP:
 		# Up off the mat, holding what hurts -- and groggy after a slow rise,
 		# a hard knockdown or when he is hurt (groggy_for).
@@ -6059,6 +6062,12 @@ const RUMMAGE_RELEASE_TICKS := 3
 ## nearer a corner than this along the side.
 const RUMMAGE_REACH := 0.45
 const RUMMAGE_LANE := 2.4
+## Two men cannot kneel at the same stretch of apron: a claimed spot keeps
+## anyone else this far away along the side (the kneeling pair need the room).
+## Claims are released when the rummage/retrieve sequence ends, is interrupted
+## or is cancelled; see begin_weapon_action and _on_fsm_state_changed.
+const APRON_SPOT_GAP := 1.1
+static var _apron_claims: Dictionary = {}
 const LADDER_INTERACT_REACH := 1.55
 const LADDER_CLIMB_SPEED := 1.05
 const LADDER_FRONT_OFFSET := 0.72
@@ -6170,9 +6179,80 @@ func can_rummage() -> bool:
 	if not fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION]):
 		return false
 	var p := Vector3(global_position.x, 0.0, global_position.z)
+	if not apron_spot_clear(p, self):
+		# another man is already kneeling there: he steps along the apron
+		return false
 	var axis := GrappleRig._outside_side(p)
 	var lateral := absf(p.z) if axis.x != 0.0 else absf(p.x)
 	return p.dot(axis) <= DECK_KEEP_OUT + RUMMAGE_REACH and lateral <= RUMMAGE_LANE
+
+
+## At a reachable apron stretch that another man has claimed: the rummage is
+## refused here, and MatchHUD says so instead of leaving the press looking
+## like a dead button.
+func apron_spot_blocked() -> bool:
+	if not MatchRules.no_holds_barred(self) or not outside_ring or has_weapon():
+		return false
+	if not fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION]):
+		return false
+	var p := Vector3(global_position.x, 0.0, global_position.z)
+	var axis := GrappleRig._outside_side(p)
+	var lateral := absf(p.z) if axis.x != 0.0 else absf(p.x)
+	if p.dot(axis) > DECK_KEEP_OUT + RUMMAGE_REACH or lateral > RUMMAGE_LANE:
+		return false
+	return not apron_spot_clear(p, self)
+
+
+## The apron-side stretches currently claimed by men rummaging or retrieving.
+## Dead instances are pruned so a freed wrestler cannot reserve a spot forever.
+static func _prune_apron_claims() -> void:
+	for id: int in _apron_claims.keys():
+		if not is_instance_id_valid(id):
+			_apron_claims.erase(id)
+
+
+## Whether `spot` is clear of every other man's claim.
+static func apron_spot_clear(spot: Vector3, exclude: Node = null) -> bool:
+	_prune_apron_claims()
+	var flat := Vector3(spot.x, 0.0, spot.z)
+	var exclude_id := exclude.get_instance_id() if exclude else 0
+	for id: int in _apron_claims:
+		if id == exclude_id:
+			continue
+		var claim: Vector3 = _apron_claims[id]
+		if flat.distance_to(claim) < APRON_SPOT_GAP:
+			return false
+	return true
+
+
+## The nearest lane along an apron side that is clear of the other claim, so
+## the AI walks to a free spot instead of crowding one. `lane_half` is the
+## furthest either way along the side.
+static func nearest_free_apron_lane(axis: Vector3, lateral_axis: Vector3,
+		desired_lane: float, lane_half: float, exclude: Node) -> float:
+	_prune_apron_claims()
+	var stand := DECK_KEEP_OUT + RUMMAGE_REACH * 0.5
+	for step in 7:
+		var offset := 0.0
+		if step > 0:
+			var magnitude := float((step + 1) / 2) * APRON_SPOT_GAP
+			offset = magnitude if step % 2 == 1 else -magnitude
+		var lane := clampf(desired_lane + offset, -lane_half, lane_half)
+		if apron_spot_clear(axis * stand + lateral_axis * lane, exclude):
+			return lane
+	return clampf(desired_lane, -lane_half, lane_half)
+
+
+func _claim_apron_spot() -> void:
+	_apron_claims[get_instance_id()] = Vector3(global_position.x, 0.0, global_position.z)
+
+
+func _release_apron_spot() -> void:
+	_apron_claims.erase(get_instance_id())
+
+
+func _exit_tree() -> void:
+	_release_apron_spot()
 
 
 ## A held weapon can be fed under the bottom rope from the apron lane. The
@@ -6550,6 +6630,9 @@ func begin_weapon_action(action: String) -> void:
 	_rummage_released = 0
 	_weapon_action_ticks = 0
 	velocity = Vector3.ZERO
+	if action == "rummage" or action == "retrieve":
+		# This stretch of apron is his until the sequence ends or is broken.
+		_claim_apron_spot()
 	if action == "rummage":
 		var axis := GrappleRig._outside_side(Vector3(global_position.x, 0.0, global_position.z))
 		look_at(global_position - axis, Vector3.UP)

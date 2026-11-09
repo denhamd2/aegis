@@ -421,18 +421,28 @@ func _draw_controls(view: Vector2) -> void:
 	var nhb := MatchRules.no_holds_barred(wrestler_a)
 	var text := controls_text(nhb)
 	# Where he can reach under the ring, say so: the wheel is otherwise
-	# invisible until it is open.
+	# invisible until it is open. If the stretch is claimed by the other man,
+	# say that too -- a press that does nothing reads as a dead button.
 	for w: WrestlerController in [wrestler_a, wrestler_b]:
-		if nhb and not w.is_ai and w.can_rummage():
-			var prompt := "HOLD %s  ·  WEAPONS" % key_for("weapon")
-			var pw := _controls_font.get_string_size(prompt, HORIZONTAL_ALIGNMENT_LEFT, -1,
-					size_px * 2).x
-			var pat := Vector2((view.x - pw) * 0.5, view.y * 0.80)
-			draw_rect(Rect2(pat.x - size_px, pat.y - size_px * 1.9, pw + size_px * 2,
-					size_px * 2.6), Color(0, 0, 0, 0.55))
-			draw_string(_controls_font, pat, prompt, HORIZONTAL_ALIGNMENT_LEFT, -1, size_px * 2,
-					Color(1.0, 0.86, 0.35))
-			break
+		if not nhb or w.is_ai:
+			continue
+		var prompt := ""
+		var tint := Color(1.0, 0.86, 0.35)
+		if w.can_rummage():
+			prompt = "HOLD %s  ·  WEAPONS" % key_for("weapon")
+		elif w.apron_spot_blocked():
+			prompt = "APRON TAKEN  ·  STEP ALONG"
+			tint = Color(0.94, 0.66, 0.46)
+		if prompt == "":
+			continue
+		var pw := _controls_font.get_string_size(prompt, HORIZONTAL_ALIGNMENT_LEFT, -1,
+				size_px * 2).x
+		var pat := Vector2((view.x - pw) * 0.5, view.y * 0.80)
+		draw_rect(Rect2(pat.x - size_px, pat.y - size_px * 1.9, pw + size_px * 2,
+				size_px * 2.6), Color(0, 0, 0, 0.55))
+		draw_string(_controls_font, pat, prompt, HORIZONTAL_ALIGNMENT_LEFT, -1, size_px * 2,
+				tint)
+		break
 	var w := _controls_font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, size_px).x
 	var at := Vector2((view.x - w) * 0.5, view.y - view.y * 0.022)
 	draw_rect(Rect2(at.x - size_px * 0.6, at.y - size_px * 0.95, w + size_px * 1.2,

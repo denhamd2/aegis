@@ -22,7 +22,7 @@ ledger is the completion record for that gate.
 | `cody_cutter_5` | cutter | reused | pending | pending | Batch sheet only. |
 | `inverted_ddt_1` | ddt | authored | pending | pending | Batch sheet only. |
 | `cross_rhodes` | driver | reused | pending | pending | Batch sheet only. |
-| `one_winged_angel` | driver | authored | side/close done | pass with watch item | 7-beat side sheet reviewed 8 Nov: carry reads, defender lands flat, attacker recovers. Match-camera and close-up still pending. Grip 4.5 cm. |
+| `one_winged_angel` | driver | authored | side/close done | fail (AAA bar) | Art-director 2.5/3.0/2.5. Weightless carry, skipped impact, no sell. Grip 4.5 cm. |
 | `tiger_driver_98` | driver | authored | pending | pending | Batch sheet only. |
 | `running_v_trigger_1` | knee | authored | pending | pending | Batch sheet only. |
 | `running_v_trigger_3` | knee | authored | pending | pending | Batch sheet only. |
@@ -32,10 +32,10 @@ ledger is the completion record for that gate.
 | `fireman_carry_bomb_2` | powerbomb | authored | pending | pending | Batch sheet only. |
 | `powerbomb_1` | powerbomb | authored | pending | pending | Batch sheet only. |
 | `sit_out_powerbomb_2` | powerbomb | authored | pending | pending | Batch sheet only. |
-| `chokeslam_1` | slam | authored | pending | pending | Batch sheet only; wiring fixed. |
+| `chokeslam_1` | slam | authored | side/close done | fail (AAA bar) | Art-director 2.5/3.0/2.5. Peak silhouette reads; grip, impact and sell fail. |
 | `oklahoma_stampede` | slam | authored | pending | pending | Batch sheet only; recovery watch item. |
 | `scoop_slam_2` | slam | reused | pending | pending | Batch sheet only. |
-| `squatting_samoan_drop` | slam | reused | pending | pending | Batch sheet only; grip reauthored. |
+| `squatting_samoan_drop` | slam | reused | side/close done | fail (AAA bar) | Art-director 3.0/3.5/3.0. Closest of the three; same weight/impact/sell failures. |
 | `spear_2` | spear | reused | pending | pending | Batch sheet only. |
 | `spinebuster_5` | spinebuster | authored | pending | pending | Batch sheet only. |
 | `figure_four_leglock` | submission | reused | pending | pending | Batch sheet only. |
@@ -81,4 +81,6 @@ exist. The row is not marked complete until:
 | Date | Move | Sheet | Reviewer | Verdict | Notes |
 | --- | --- | --- | --- | --- | --- |
 | 8 Nov 2026 | all 27 | pending | — | pending | Backfill sheets not yet rendered. |
-| 8 Nov 2026 | `one_winged_angel` | `moves/one_winged_angel.png` | main agent | pass with watch item | Side/close only; match-camera sheet pending. Grip 4.5 cm. |
+| 8 Nov 2026 | `one_winged_angel` | `moves/one_winged_angel.png` | DeepSeek V4 Pro (art director) | fail — 2.5 / 3.0 / 2.5 | Weightless carry, skipped impact, no sell. Evidence: `visual-review-owa-samoan.md`. |
+| 8 Nov 2026 | `squatting_samoan_drop` | `moves/squatting_samoan_drop.png` | DeepSeek V4 Pro (art director) | fail — 3.0 / 3.5 / 3.0 | Closest of the three; same weight/impact/sell failures. Evidence: `visual-review-owa-samoan.md`. |
+| 8 Nov 2026 | `chokeslam_1` | `moves/chokeslam_1.png` | DeepSeek V4 Pro (art director) | fail — 2.5 / 3.0 / 2.5 | Peak silhouette reads; grip, impact and sell fail. Evidence: `visual-review-chokeslam.md`. |

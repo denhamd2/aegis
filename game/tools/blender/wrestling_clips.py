@@ -55,7 +55,7 @@ Contact frames are placed at each move's own `startup_frames` fraction so
 that retiming in `resources/animations/strike_recipes.gd` lands the hit on
 the tick the MoveDef declares:
 
-    strike_jab        9/31 ticks -> frame  5 of 16
+    strike_jab        10/30 ticks -> frame  6 of 18
     strike_cross     12/40       -> frame  6 of 20
     strike_kick       8/35       -> frame  5 of 20
     strike_kick_heavy 12/57      -> frame  6 of 29
@@ -1476,120 +1476,206 @@ CLIPS = {
     # fist is 0.66-0.70 forward, landing the strike from the 1.10 m the AI
     # circles at (test_ai_spacing).
 
-    # 16 frames, the worked LEFT, contact on frame 5 (= tick 10 of
-    # strike_jab.tres). The quick one: a short load, the left shoulder rolled
-    # back and the fist up by the ear, then round to the jaw with a half-step
-    # in, finishing across him.
+    # 18 frames, the worked LEFT jab, contact on frame 6 (= tick 10 of
+    # strike_jab.tres, which runs 30 ticks: 10 startup + 4 active + 16
+    # recovery). Wrestling jab: open low hands, weight shifts forward, left
+    # shoulder rolls back and the fist cocks by the ear (anticipation 4
+    # frames), then explosive round to the jaw with a half-step in on the
+    # lead foot (action 2 frames), follow-through across the body (4 frames),
+    # recovery to READY (8 frames). The head counter-turns against the chest
+    # so the eyes stay on the man through contact. Hands stay open between
+    # shots.
     "Strike_Jab": [
+        # Frame 0: READY - open hands low, coiled over lead foot
         (0,  R()),
-        (2,  R(pelvis=(0.02, -0.03, 0.800), hips=(-6, -10, 0), spine=(-12, -14, 0),
+        # Frame 2: Early anticipation - weight shifts, left shoulder begins to roll back
+        (2,  R(pelvis=(0.01, -0.02, 0.795), hips=(-4, -6, 0), spine=(-10, -8, 0),
+               head=(4, 10, 0),
+               hand_l=(-0.28, 0.18, 1.42), elbow_l=(-0.8, -0.1, 0.3),
+               hand_r=(0.22, 0.38, 1.18), fist_l=0.5, fist_r=0.3)),
+        # Frame 4: Peak anticipation - fully loaded, fist by ear, shoulder rolled back
+        (4,  R(pelvis=(0.02, -0.03, 0.800), hips=(-6, -10, 0), spine=(-12, -14, 0),
                head=(6, 16, 0),
                hand_l=(-0.34, 0.06, 1.50), elbow_l=(-1.0, -0.2, 0.4),
                hand_r=(0.20, 0.36, 1.20), fist_l=0.9)),
-        # Contact: round to the jaw, the left shoulder driven through, a half
-        # step in on the lead foot.
-        (5,  R(pelvis=(-0.02, 0.08, 0.810), hips=(-8, 16, 0), spine=(-14, 30, 0),
-               head=(8, -22, 0), clav_l=(0, 20, 0),
+        # Frame 6: CONTACT - explosive round to jaw, half-step in, left shoulder
+        # driven through; the head stays on the target as the chest turns.
+        (6,  R(pelvis=(-0.02, 0.08, 0.810), hips=(-8, 16, 0), spine=(-14, 30, 0),
+               head=(8, -40, 0), clav_l=(0, 20, 0),
                hand_l=(0.04, 0.66, 1.46), elbow_l=(-1.0, 0.0, 0.3),
                hand_r=(0.18, 0.30, 1.16), fist_l=0.95,
                foot_l=(-0.21, 0.32, 0.104), foot_r=(0.27, -0.18, 0.125),
                ankle_r=(18, 0, 0))),
-        # Follow-through: across the body, the turn still going.
-        (8,  R(pelvis=(-0.02, 0.08, 0.806), hips=(-8, 20, 0), spine=(-14, 36, 0),
-               head=(8, -26, 0), clav_l=(0, 12, 0),
-               hand_l=(0.22, 0.46, 1.34), elbow_l=(-0.9, 0.2, 0.2),
-               hand_r=(0.20, 0.30, 1.14), fist_l=0.9,
-               foot_l=(-0.21, 0.32, 0.104), foot_r=(0.27, -0.18, 0.118),
-               ankle_r=(12, 0, 0))),
-        (12, R(pelvis=(0.0, 0.05, 0.792), hips=(-8, 4, 0), spine=(-18, 12, 0),
-               head=(8, -6, 0),
-               hand_l=(-0.12, 0.38, 1.18), foot_l=(-0.22, 0.28, 0.104))),
-        (16, R(foot_l=(-0.23, 0.26, 0.104))),
+        # Frame 8: Follow-through - arm across body, turn continuing, gaze held
+        (8,  R(pelvis=(-0.02, 0.08, 0.808), hips=(-8, 22, 0), spine=(-14, 38, 0),
+               head=(8, -48, 0), clav_l=(0, 16, 0),
+               hand_l=(0.18, 0.52, 1.38), elbow_l=(-0.9, 0.1, 0.2),
+               hand_r=(0.19, 0.32, 1.15), fist_l=0.9,
+               foot_l=(-0.21, 0.32, 0.104), foot_r=(0.27, -0.18, 0.120),
+               ankle_r=(14, 0, 0))),
+        # Frame 10: Late follow-through - arm wrapping across, head following
+        (10, R(pelvis=(-0.01, 0.06, 0.804), hips=(-8, 18, 0), spine=(-16, 32, 0),
+               head=(6, -38, 0), clav_l=(0, 8, 0),
+               hand_l=(0.28, 0.42, 1.30), elbow_l=(-0.8, 0.3, 0.1),
+               hand_r=(0.21, 0.34, 1.13), fist_l=0.7,
+               foot_l=(-0.21, 0.30, 0.104), foot_r=(0.27, -0.19, 0.112),
+               ankle_r=(8, 0, 0))),
+        # Frame 13: Early recovery - coming back square, hand dropping open
+        (13, R(pelvis=(0.0, 0.04, 0.792), hips=(-8, 8, 0), spine=(-18, 16, 0),
+               head=(4, -18, 0),
+               hand_l=(-0.08, 0.36, 1.20), elbow_l=(-0.6, 0.0, -0.2),
+               hand_r=(0.24, 0.38, 1.16), fist_l=0.3, fist_r=0.3,
+               foot_l=(-0.22, 0.28, 0.104), foot_r=(0.27, -0.20, 0.104))),
+        # Frame 18: Back to READY - open hands low, coiled
+        (18, R(fist_l=0.3, fist_r=0.3, foot_l=(-0.23, 0.26, 0.104))),
     ],
 
-    # 20 frames, the worked RIGHT HAND, contact on frame 6 (= tick 12 of
-    # strike_cross.tres). The shot both men throw most in the 2K26 match: the
-    # right shoulder loads back and high, the fist cocked beside the head and
-    # the left hand reaching out to the man's shoulder; then the lead foot
-    # steps in, the hips and shoulders whip round, and the fist comes round
-    # to the jaw with the elbow bent -- a hook's arc, not a straight line --
-    # and carries on across the body.
+    # 20 frames, the worked RIGHT cross, contact on frame 6 (= tick 12 of
+    # strike_cross.tres). The shot both men throw most: right shoulder loads
+    # back and high, fist cocked beside the head, left hand reaches to the
+    # man's shoulder (anticipation 5 frames); lead foot steps in, hips and
+    # shoulders whip round, fist comes ROUND to jaw with bent elbow -- a hook's
+    # arc, not a straight line -- and carries across the body (action 2 frames,
+    # follow-through 5 frames). Recovery to READY with open low hands (7 frames).
     #
     # Negative spine yaw and negative clav_r carry the RIGHT shoulder forward
     # (the sign Strike_Forearm's reach sweep measured: yaw -30, clav -20 put
     # the shoulder 0.205 forward).
     "Strike_Forearm": [
+        # Frame 0: READY - open hands low, coiled
         (0,  R()),
-        # Load: weight back on the right foot, right shoulder back and up.
-        (3,  R(pelvis=(0.04, -0.05, 0.808), hips=(-4, 12, 0), spine=(-8, 22, -4),
+        # Frame 2: Early anticipation - weight shifts back, right shoulder starts loading
+        (2,  R(pelvis=(0.02, -0.03, 0.805), hips=(-2, 6, 0), spine=(-4, 12, -2),
+               head=(4, -10, 0), clav_r=(0, 4, 4),
+               hand_r=(0.30, 0.08, 1.50), elbow_r=(0.8, -0.2, 0.3),
+               hand_l=(-0.14, 0.48, 1.34), elbow_l=(-0.7, -0.1, -0.3),
+               fist_r=0.7, fist_l=0.3)),
+        # Frame 3: Mid anticipation - shoulder back and up, fist cocking by head
+        (3,  R(pelvis=(0.03, -0.04, 0.807), hips=(-3, 10, 0), spine=(-6, 18, -3),
+               head=(5, -15, 0), clav_r=(0, 8, 6),
+               hand_r=(0.33, -0.02, 1.55), elbow_r=(0.9, -0.3, 0.4),
+               hand_l=(-0.12, 0.52, 1.38), elbow_l=(-0.8, -0.2, -0.4),
+               fist_r=0.9, fist_l=0.35)),
+        # Frame 4: Peak anticipation - fully loaded, weight on right foot, fist by ear
+        (4,  R(pelvis=(0.04, -0.05, 0.808), hips=(-4, 12, 0), spine=(-8, 22, -4),
                head=(6, -18, 0), clav_r=(0, 10, 8),
                hand_r=(0.36, -0.04, 1.58), elbow_r=(1.0, -0.4, 0.5),
                hand_l=(-0.12, 0.52, 1.38), elbow_l=(-0.8, -0.2, -0.4),
                fist_r=0.95, fist_l=0.35)),
-        # Contact: the step in, the turn, the fist round to the jaw.
+        # Frame 6: CONTACT - step in, hips/shoulders whip, hook arc to jaw.
+        # The lead hand stays on the man's shoulder through the shot instead
+        # of retracting, and the head counter-turns to keep the eyes on him.
         (6,  R(pelvis=(-0.02, 0.12, 0.818), hips=(-8, -18, 0), spine=(-14, -32, 0),
-               head=(8, 20, 0), clav_r=(0, -20, 0),
+               head=(8, 42, 0), clav_r=(0, -20, 0),
                hand_r=(-0.08, 0.70, 1.48), elbow_r=(1.0, 0.0, 0.3),
-               hand_l=(-0.20, 0.30, 1.22), elbow_l=(-0.7, -0.3, -0.6),
+               hand_l=(-0.16, 0.54, 1.36), elbow_l=(-0.7, -0.3, -0.6),
                fist_r=1.0, fist_l=0.5,
                foot_l=(-0.21, 0.40, 0.104), foot_r=(0.27, -0.18, 0.130),
                ankle_r=(24, 0, 0))),
-        # Follow-through: across his own body, shoulders still turning.
-        (9,  R(pelvis=(-0.03, 0.12, 0.810), hips=(-8, -24, 0), spine=(-16, -40, 0),
-               head=(8, 26, 0), clav_r=(0, -14, 0),
-               hand_r=(-0.30, 0.46, 1.32), elbow_r=(0.9, 0.2, 0.0),
-               hand_l=(-0.22, 0.26, 1.16), fist_r=0.95, fist_l=0.5,
-               foot_l=(-0.21, 0.40, 0.104), foot_r=(0.27, -0.18, 0.124),
-               ankle_r=(18, 0, 0))),
-        # Coming back square over the planted feet, the hand dropping open.
-        (14, R(pelvis=(0.0, 0.08, 0.790), hips=(-8, -6, 0), spine=(-18, -10, 0),
-               head=(8, 6, 0),
-               hand_r=(0.10, 0.40, 1.14), foot_l=(-0.22, 0.34, 0.104))),
-        (20, R(foot_l=(-0.23, 0.28, 0.104))),
+        # Frame 8: Follow-through - arm across body, lead hand still on the
+        # shoulder, shoulders still turning.
+        (8,  R(pelvis=(-0.03, 0.12, 0.814), hips=(-8, -22, 0), spine=(-15, -37, 0),
+               head=(8, 48, 0), clav_r=(0, -18, 0),
+               hand_r=(-0.22, 0.56, 1.38), elbow_r=(0.95, 0.1, 0.2),
+               hand_l=(-0.20, 0.50, 1.32), fist_r=0.98, fist_l=0.5,
+               foot_l=(-0.21, 0.40, 0.104), foot_r=(0.27, -0.18, 0.127),
+               ankle_r=(21, 0, 0))),
+        # Frame 11: Late follow-through - arm wrapping across, control hand
+        # releasing, turn continuing.
+        (11, R(pelvis=(-0.03, 0.11, 0.810), hips=(-8, -24, 0), spine=(-16, -40, 0),
+               head=(8, 44, 0), clav_r=(0, -16, 0),
+               hand_r=(-0.35, 0.44, 1.30), elbow_r=(0.9, 0.2, 0.0),
+               hand_l=(-0.22, 0.46, 1.26), fist_r=0.95, fist_l=0.5,
+               foot_l=(-0.21, 0.40, 0.104), foot_r=(0.27, -0.18, 0.122),
+               ankle_r=(16, 0, 0))),
+        # Frame 14: Early recovery - coming back square, hand dropping open
+        (14, R(pelvis=(0.0, 0.08, 0.790), hips=(-8, -10, 0), spine=(-18, -18, 0),
+               head=(6, 18, 0), clav_r=(0, -6, 0),
+               hand_r=(0.05, 0.38, 1.18), elbow_r=(0.7, 0.0, -0.2),
+               hand_l=(-0.18, 0.28, 1.16), fist_r=0.5, fist_l=0.35,
+               foot_l=(-0.22, 0.34, 0.104), foot_r=(0.27, -0.20, 0.110))),
+        # Frame 17: Mid recovery - nearly back to stance
+        (17, R(pelvis=(0.01, 0.04, 0.785), hips=(-8, -4, 0), spine=(-20, -8, 0),
+               head=(4, 8, 0),
+               hand_r=(0.15, 0.38, 1.16), fist_r=0.3, fist_l=0.3,
+               foot_l=(-0.22, 0.30, 0.104), foot_r=(0.27, -0.22, 0.104))),
+        # Frame 20: Back to READY - open hands low, coiled
+        (20, R(fist_r=0.3, fist_l=0.3, foot_l=(-0.23, 0.28, 0.104))),
     ],
 
     # Cody's strikes (refs/cody_moveset.md) -------------------------------
 
     # 27 frames / 0.9 s: the BIONIC ELBOW, his father's. The shimmy first --
     # the hips wiggled side to side, fists up at the chest, playing to the
-    # building -- then the right elbow cocked high and driven down and
-    # forward into the side of the head, lunging so it reaches from the 1.1 m
-    # the AI circles at (see Strike_Forearm's note on reach). Contact frame
-    # 15 = tick 30, strike_bionic_elbow.tres's startup.
+    # building (anticipation 12 frames) -- then the right elbow cocked high and
+    # driven down and forward into the side of the head, lunging (action 3
+    # frames, contact on frame 15), follow-through 3 frames, recovery to
+    # READY (9 frames). Contact frame 15 = tick 30, strike_bionic_elbow.tres's
+    # startup.
+    #
+    # Authored on READY, not STANCE: every other strike starts and ends on the
+    # open-hand stance the idle loops on, and starting this one in a closed
+    # fist at chest height gave a guard snap on entry and exit.
+    # The contact is at head height: the elbow drives down THROUGH the side of
+    # the head rather than stopping at the collarbone, and the head
+    # counter-turns to keep the eyes on the man.
     "Strike_Bionic_Elbow": [
-        (0,  P()),
-        (4,  P(pelvis=(0.03, 0.0, 0.830), hips=(0, 12, 0), spine=(0, -8, 0),
+        # Frame 0: READY - relaxed, open hands
+        (0,  R()),
+        # Frame 4: Shimmy left - hips sway, fists up
+        (4,  R(pelvis=(0.03, 0.0, 0.830), hips=(0, 12, 0), spine=(0, -8, 0),
                head=(4, -6, 0),
                hand_r=(0.20, 0.20, 1.30), hand_l=(-0.20, 0.20, 1.30),
                fist_r=0.9, fist_l=0.9)),
-        (8,  P(pelvis=(-0.03, 0.0, 0.830), hips=(0, -12, 0), spine=(0, 8, 0),
+        # Frame 8: Shimmy right - hips sway opposite
+        (8,  R(pelvis=(-0.03, 0.0, 0.830), hips=(0, -12, 0), spine=(0, 8, 0),
                head=(4, 6, 0),
                hand_r=(0.20, 0.20, 1.30), hand_l=(-0.20, 0.20, 1.30),
                fist_r=0.9, fist_l=0.9)),
-        # Cocked: the elbow up, the fist by his ear.
-        (12, P(pelvis=(0.0, -0.02, 0.870), hips=(0, 10, 0), spine=(6, 14, 0),
+        # Frame 12: Cocked - elbow high, fist by ear
+        (12, R(pelvis=(0.0, -0.02, 0.870), hips=(0, 10, 0), spine=(6, 14, 0),
                head=(4, -8, 0),
                hand_r=(0.18, -0.02, 1.64), elbow_r=(0.4, 0.5, 0.8),
                hand_l=(-0.22, 0.24, 1.28), fist_r=0.9, fist_l=0.8)),
-        # CONTACT: down and through, the body behind it.
-        (15, P(pelvis=(-0.02, 0.12, 0.840), hips=(-6, -16, 0), spine=(-14, -26, 0),
-               head=(6, 14, 0), clav_r=(0, -18, 0),
-               hand_r=(0.00, 0.66, 1.40), elbow_r=(0.5, 1.0, 0.3),
+        # Frame 15: CONTACT - the elbow driven down and forward THROUGH the
+        # side of the head, forearm folded so the ELBOW is the leading point,
+        # body behind it, eyes on the man.
+        (15, R(pelvis=(-0.02, 0.12, 0.840), hips=(-6, -16, 0), spine=(-14, -26, 0),
+               head=(6, 34, 0), clav_r=(0, -18, 0),
+               hand_r=(0.10, 0.35, 1.45), elbow_r=(0.5, 1.0, 0.3),
                hand_l=(-0.24, 0.20, 1.20), fist_r=0.95, fist_l=0.8,
-               foot_l=(-0.19, 0.36, 0.104))),
-        (18, P(pelvis=(-0.02, 0.10, 0.830), hips=(-6, -14, 0), spine=(-16, -22, 0),
-               head=(4, 10, 0),
-               hand_r=(-0.10, 0.54, 1.14), elbow_r=(0.5, 1.0, 0.0),
+               foot_l=(-0.23, 0.36, 0.104))),
+        # Frame 19: Follow-through - elbow carrying down through the target
+        (19, R(pelvis=(-0.02, 0.10, 0.830), hips=(-6, -14, 0), spine=(-16, -22, 0),
+               head=(4, 30, 0),
+               hand_r=(0.08, 0.32, 1.30), elbow_r=(0.5, 1.0, 0.0),
                hand_l=(-0.24, 0.20, 1.18), fist_r=0.9, fist_l=0.8,
-               foot_l=(-0.19, 0.36, 0.104))),
-        (27, P()),
+               foot_l=(-0.23, 0.36, 0.104))),
+        # Frame 21: Early recovery - pulling back
+        (21, R(pelvis=(-0.01, 0.05, 0.820), hips=(-4, -8, 0), spine=(-12, -10, 0),
+               head=(2, 16, 0),
+               hand_r=(0.05, 0.40, 1.20), elbow_r=(0.4, 0.6, 0.0),
+               hand_l=(-0.22, 0.22, 1.22), fist_r=0.6, fist_l=0.5,
+               foot_l=(-0.22, 0.30, 0.104))),
+        # Frame 24: Mid recovery
+        (24, R(pelvis=(0.0, 0.02, 0.810), hips=(-2, -4, 0), spine=(-8, -4, 0),
+               head=(2, 6, 0),
+               hand_r=(0.15, 0.30, 1.24), fist_r=0.3, fist_l=0.3,
+               foot_l=(-0.23, 0.26, 0.104))),
+        # Frame 27: Back to READY
+        (27, R()),
     ],
 
     # 24 frames / 0.8 s: the DROPDOWN UPPERCUT. He drops low under the man
-    # (5) and springs straight up with the right hand into the chin, up on
-    # his toes (11: contact = tick 22, strike_dropdown_uppercut.tres).
+    # (anticipation frames 5 and 9), then springs straight up with the right
+    # hand into the chin, up on his toes (contact frame 11 = tick 22,
+    # strike_dropdown_uppercut.tres). Follow-through frame 15, recovery to
+    # READY by frame 24. The torso drives up through the target instead of
+    # leaning back, and the head stays on the man.
     "Strike_Dropdown_Uppercut": [
+        # Frame 0: READY
         (0,  P()),
+        # Frame 5: Dropped low under the man - deep knee bend, hands out front
         (5,  P(pelvis=(0.0, 0.04, 0.600), hips=(-30, 0, 0), spine=(-24, 0, 0),
                head=(14, 0, 0),
                # Out in front of the dipped chest: at fwd 0.24-0.26 the
@@ -1598,21 +1684,38 @@ CLIPS = {
                fist_r=0.9, fist_l=0.8,
                foot_r=(0.25, -0.12, 0.104), foot_l=(-0.23, 0.18, 0.104),
                knee_r=(0.3, 1.0, 0.2), knee_l=(-0.3, 1.0, 0.2))),
+        # Frame 9: Rising - legs extending, right hand starting up
         (9,  P(pelvis=(0.0, 0.08, 0.800), hips=(-10, -6, 0), spine=(-8, -10, 0),
                head=(8, 0, 0),
                hand_r=(0.10, 0.42, 1.10), hand_l=(-0.24, 0.24, 1.10),
                fist_r=1.0, fist_l=0.8)),
-        # CONTACT: up through the chin, on his toes.
-        (11, P(pelvis=(0.0, 0.12, 0.930), hips=(4, -12, 0), spine=(8, -18, 0),
-               head=(-4, 8, 0), clav_r=(0, -14, 0),
+        # Frame 11: CONTACT - up through the chin, on his toes, torso driving
+        # UP through the target rather than leaning back; the head counter-turns
+        # against the chest so the eyes stay on him.
+        (11, P(pelvis=(0.0, 0.12, 0.940), hips=(4, -12, 0), spine=(0, -18, 0),
+               head=(0, 30, 0), clav_r=(0, -14, 0),
                hand_r=(0.02, 0.62, 1.60), elbow_r=(0.6, -0.3, -0.8),
                hand_l=(-0.26, 0.20, 1.12), fist_r=1.0, fist_l=0.8,
                foot_r=(0.23, -0.17, 0.150), ankle_r=(24, 0, 0),
                foot_l=(-0.19, 0.20, 0.140), ankle_l=(20, 0, 0))),
-        (14, P(pelvis=(0.0, 0.10, 0.900), hips=(2, -10, 0), spine=(6, -14, 0),
-               head=(-2, 6, 0),
+        # Frame 15: Follow-through - hand driving up past the chin
+        (15, P(pelvis=(0.0, 0.10, 0.900), hips=(2, -10, 0), spine=(0, -14, 0),
+               head=(0, 26, 0),
                hand_r=(0.00, 0.48, 1.78), elbow_r=(0.6, -0.3, -0.8),
                hand_l=(-0.26, 0.20, 1.12), fist_r=1.0, fist_l=0.8)),
+        # Frame 18: Early recovery - coming down square
+        (18, P(pelvis=(0.0, 0.06, 0.870), hips=(0, -4, 0), spine=(-4, -6, 0),
+               head=(4, 2, 0),
+               hand_r=(0.12, 0.34, 1.48), hand_l=(-0.24, 0.26, 1.20),
+               fist_r=0.6, fist_l=0.5,
+               foot_r=(0.25, -0.18, 0.115), ankle_r=(8, 0, 0),
+               foot_l=(-0.21, 0.20, 0.112), ankle_l=(6, 0, 0))),
+        # Frame 21: Mid recovery
+        (21, P(pelvis=(0.0, 0.03, 0.820), hips=(-2, -2, 0), spine=(-6, -2, 0),
+               head=(4, 2, 0),
+               hand_r=(0.18, 0.34, 1.32), fist_r=0.3, fist_l=0.3,
+               foot_r=(0.26, -0.20, 0.104), foot_l=(-0.22, 0.20, 0.104))),
+        # Frame 24: Back to READY
         (24, P()),
     ],
 
@@ -1693,30 +1796,53 @@ CLIPS = {
     # there, and the fist goes in under the ribs -- the body shot that folds
     # a man in half in the 2K26 exchanges.
     "Strike_Gut_Punch": [
+        # Frame 0: READY
         (0,  R()),
+        # Frame 3: Early anticipation - dip, weight shifts, right shoulder loads
         (3,  R(pelvis=(0.03, -0.02, 0.760), hips=(-10, 14, 0), spine=(-22, 18, 0),
                head=(12, -14, 0), clav_r=(0, 8, -4),
-               hand_r=(0.32, 0.06, 1.00), elbow_r=(0.7, -0.6, -0.4),
+               hand_r=(0.32, 0.06, 0.96), elbow_r=(0.7, -0.6, -0.4),
                hand_l=(-0.12, 0.58, 1.40), elbow_l=(-0.8, -0.2, -0.3),
                fist_r=0.95, fist_l=0.35)),
-        # Contact: in under the ribs, the shoulder behind it.
-        (7,  R(pelvis=(-0.02, 0.14, 0.770), hips=(-12, -16, 0), spine=(-24, -26, 0),
-               head=(14, 18, 0), clav_r=(0, -18, 0),
-               hand_r=(-0.02, 0.66, 1.06), elbow_r=(0.5, -0.6, -0.6),
+        # Frame 5: Mid anticipation - deeper dip, fist cocking
+        (5,  R(pelvis=(0.02, -0.01, 0.750), hips=(-12, 16, 0), spine=(-24, 20, 0),
+               head=(14, -16, 0), clav_r=(0, 10, -6),
+               hand_r=(0.34, 0.04, 0.98), elbow_r=(0.8, -0.7, -0.5),
+               hand_l=(-0.10, 0.60, 1.42), elbow_l=(-0.8, -0.2, -0.3),
+               fist_r=1.0, fist_l=0.35)),
+        # Frame 7: CONTACT - fist driven UP under the ribs, shoulder behind it,
+        # eyes on the man as the torso turns through.
+        (7,  R(pelvis=(-0.02, 0.14, 0.772), hips=(-12, -16, 0), spine=(-24, -26, 0),
+               head=(14, 34, 0), clav_r=(0, -18, 0),
+               hand_r=(-0.02, 0.66, 1.14), elbow_r=(0.5, -0.6, -0.6),
                hand_l=(-0.10, 0.60, 1.40), elbow_l=(-0.8, -0.2, -0.3),
                fist_r=1.0, fist_l=0.35,
                foot_l=(-0.21, 0.40, 0.104), foot_r=(0.27, -0.18, 0.124),
                ankle_r=(20, 0, 0))),
-        (11, R(pelvis=(-0.02, 0.13, 0.774), hips=(-12, -14, 0), spine=(-22, -22, 0),
-               head=(14, 16, 0), clav_r=(0, -12, 0),
-               hand_r=(0.02, 0.56, 1.10), elbow_r=(0.5, -0.6, -0.6),
+        # Frame 10: Follow-through - driving up through, left hand holding
+        (10, R(pelvis=(-0.02, 0.13, 0.774), hips=(-12, -14, 0), spine=(-22, -22, 0),
+               head=(14, 28, 0), clav_r=(0, -12, 0),
+               hand_r=(0.02, 0.56, 1.18), elbow_r=(0.5, -0.6, -0.6),
                hand_l=(-0.12, 0.54, 1.36),
                fist_r=1.0, fist_l=0.35,
                foot_l=(-0.21, 0.40, 0.104), foot_r=(0.27, -0.18, 0.118),
                ankle_r=(14, 0, 0))),
+        # Frame 13: Late follow-through
+        (13, R(pelvis=(-0.01, 0.11, 0.776), hips=(-10, -10, 0), spine=(-20, -16, 0),
+               head=(12, 20, 0), clav_r=(0, -8, 0),
+               hand_r=(0.06, 0.48, 1.20), elbow_r=(0.6, -0.4, -0.4),
+               hand_l=(-0.14, 0.50, 1.32), fist_r=0.9, fist_l=0.35,
+               foot_l=(-0.21, 0.36, 0.104), foot_r=(0.27, -0.20, 0.110))),
+        # Frame 16: Early recovery - pulling back, upright
         (16, R(pelvis=(0.0, 0.08, 0.784), hips=(-8, -4, 0), spine=(-20, -4, 0),
-               head=(8, 6, 0), foot_l=(-0.22, 0.32, 0.104))),
-        (22, R(foot_l=(-0.23, 0.26, 0.104))),
+               head=(8, 6, 0), fist_r=0.5, fist_l=0.35,
+               foot_l=(-0.22, 0.32, 0.104), foot_r=(0.27, -0.22, 0.104))),
+        # Frame 19: Mid recovery
+        (19, R(pelvis=(0.01, 0.04, 0.786), hips=(-8, -2, 0), spine=(-18, -2, 0),
+               head=(6, 4, 0), fist_r=0.3, fist_l=0.3,
+               foot_l=(-0.22, 0.28, 0.104), foot_r=(0.27, -0.22, 0.104))),
+        # Frame 22: Back to READY
+        (22, R(fist_r=0.3, fist_l=0.3, foot_l=(-0.23, 0.26, 0.104))),
     ],
 
     # === taking them ====================================================

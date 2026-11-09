@@ -220,6 +220,18 @@ class GitDiffTest(unittest.TestCase):
         self.assertEqual(report["mode"], "full")
         self.assertIn("cannot resolve", report["reason"])
 
+    def test_a_game_file_moved_out_of_game_is_still_a_deletion(self) -> None:
+        # Rename detection would report only the new gauntlet/ path, making an
+        # archived game file look like a docs-only change. Keep both sides.
+        (self.root / "gauntlet").mkdir()
+        self._git("mv", "game/core/spare.gd", "gauntlet/spare.gd")
+        self._git("commit", "-q", "-m", "archive spare")
+        changed = sel.git_changed(self.root, "HEAD~1", "HEAD")
+        self.assertEqual(changed, ["game/core/spare.gd", "gauntlet/spare.gd"])
+        report = sel.select(self.root, changed, 0.8, False)
+        self.assertEqual(report["mode"], "full")
+        self.assertIn("cannot resolve", report["reason"])
+
 
 if __name__ == "__main__":
     unittest.main()
