@@ -190,7 +190,10 @@ func test_the_walk_cuts_follow_from_behind_as_2k26_does() -> void:
 	var roman := EntranceDirector.ROMAN_WALK_SHOTS.map(func(s: Array) -> String: return s[0])
 	var kenny := EntranceDirector.KENNY_WALK_SHOTS.map(func(s: Array) -> String: return s[0])
 	assert_array(cody).contains(["crane_front", "barricade_track", "steadicam_low"])
-	assert_array(roman).contains(["crane_front", "steadicam_low", "barricade_track"])
+	# Roman's: the owner, 9 Nov -- below his waist, looking up. His one walk
+	# crane is its own beat ahead of the list (ROMAN_CRANE_BEATS).
+	assert_array(roman).contains(["barricade_low", "low_wide_up", "low_lead"])
+	assert_array(roman).not_contains(["crane_front"])
 	for list: Array in [cody, roman, kenny]:
 		assert_array(list).not_contains(["over_shoulder"])
 	# The owner, 3 Nov: "too many camera angles", and not the chest-up
@@ -238,6 +241,22 @@ func test_roman_cuts_land_on_his_music_beat() -> void:
 	for shot: Array in EntranceDirector.ROMAN_WALK_SHOTS:
 		assert_bool(on_grid.call(float(shot[1]))) \
 				.override_failure_message("off the beat: " + str(shot)).is_true()
+	# And on the bar (four beats from the finger coming down, the grid's
+	# phase on the slam): the crane, then every cut but the one the 9 s cap
+	# forces (the lower-third frame's ten beats).
+	var at := EntranceDirector.ROMAN_CRANE_BEATS
+	assert_int(at % 4).is_equal(0)
+	var off_bar := 0
+	var shots := EntranceDirector.ROMAN_WALK_SHOTS
+	for k in shots.size():
+		at += int(roundf(float(shots[k][1]) / beat))
+		# (the last shot is cut short by the foot of the ramp, not on a cut)
+		if k < shots.size() - 1 and at % 4 != 0:
+			off_bar += 1
+	assert_int(off_bar).override_failure_message("cuts off the bar: %d" % off_bar).is_less_equal(1)
+	# The list and the crane cover the whole ramp: it never cycles.
+	var ramp := (ArenaBuilder.STAGE_FRONT - 0.6) - (-ArenaBuilder.BARRICADE_RADIUS - 0.2)
+	assert_float(float(at) * beat * EntranceDirector.ROMAN_WALK_SPEED).is_greater_equal(absf(ramp))
 
 
 ## Cody's walk cuts are whole beats of his music too.
@@ -287,7 +306,10 @@ func test_the_camera_waits_for_him_before_the_tunnel() -> void:
 
 ## The owner: Cody's ramp was "mostly low angle". Over each man's walks, the
 ## lens is down at his hips (under 0.8 m above his feet) for at most a
-## quarter of the time.
+## quarter of the time. Roman's walk is low ON PURPOSE -- the owner, 9 Nov:
+## "keep the angles below his waist which look up ... they are realistic" --
+## with every lens at 0.85 m or more: under his waist, never at his shins.
+## Do not "fix" his low walk to Cody's rule.
 func test_the_walk_is_mostly_at_eye_level() -> void:
 	for styles: Array in [["roman", "cody"]]:
 		var count := {}
@@ -468,3 +490,237 @@ func test_the_ring_arrival_is_one_crane_move() -> void:
 	assert_int(seen["crane"]).is_greater(600)
 	assert_int(seen["rig"]).override_failure_message("rig in the arrival crane").is_equal(0)
 	assert_int(seen["lost"]).override_failure_message("lost him %d ticks" % seen["lost"]).is_less(30)
+
+
+# --- Roman's camera (the owner, 9 Nov: "a few too many crane shots ... keep
+# the angles below his waist which look up (eg the angle during his lower
+# third display) ... just a bit too much crane zooming") ---------------------
+
+## His low framings: lens under his pelvis, aim above the lens.
+const ROMAN_LOW := ["low_lead", "low_wide_up", "barricade_low", "ring_low_up",
+		"ring_hero_low", "lip_hero", "ramp_low_wide", "stage_push"]
+## On the ramp: on his right. In the ring: in front of him.
+const ROMAN_RAMP_SIDE := ["crane_front", "low_lead", "low_wide_up", "barricade_low"]
+const ROMAN_RING_FRONT := ["ring_low_up", "ring_hero_low"]
+## Not his: the ring arrival and the step through the ropes are shared by
+## every man's entrance and shot by the arrival crane and the rope wide.
+const SHARED_SHOTS := ["entry_crane", "rope_wide"]
+
+
+static func _is_roman(beat: Dictionary) -> bool:
+	var w: WrestlerController = beat.get("who")
+	return w != null and w.entrance_style == "roman"
+
+
+## What the lens is on this tick, as a viewer sees it: the pyro wide when it
+## holds the frame, otherwise the beat's shot.
+static func _seen(director: EntranceDirector, beat: Dictionary) -> String:
+	return "pyro_wide" if director.pyro_wide_on() else String(beat.get("shot", beat["kind"]))
+
+
+## One pass over Roman's whole entrance, in either order, measuring every
+## tick: the shots and cuts as seen, the lens against his pelvis, which side
+## of him it is on, what is between it and him, what it is near, the zoom,
+## the cranes and his lower third.
+func _audit_roman(styles: Array) -> Dictionary:
+	var a := {"segments": [], "zoom": [], "high": [], "flat": [], "side": [],
+			"blocked": [], "near": [], "rig": [], "ropes": [], "cranes": 0,
+			"card": [], "ticks": 0}
+	var last := {"key": "", "start": 0, "fov": -1.0, "pos": Vector3.INF, "crane": -1,
+			"beat": -1}
+	var tick := [0]
+	var scene: Node = load("res://scenes/match.tscn").instantiate()
+	scene.entrances = true
+	(scene.get_node("WrestlerA") as WrestlerController).entrance_style = styles[0]
+	(scene.get_node("WrestlerB") as WrestlerController).entrance_style = styles[1]
+	add_child(scene)
+	var director: EntranceDirector = scene.get_node("EntranceDirector")
+	var camera: Camera3D = scene.get_node("MatchCamera")
+	var ref: Node3D = scene.get_node_or_null("RefereeActor")
+	while tick[0] < 30000 and not director._done:
+		director._physics_process(1.0 / 60.0)
+		tick[0] += 1
+		var i := mini(director._beat, director._beats.size() - 1)
+		var beat: Dictionary = director._beats[i]
+		if not _is_roman(beat):
+			last["key"] = ""
+			continue
+		var w: WrestlerController = beat["who"]
+		var shot := String(beat.get("shot", beat["kind"]))
+		var key := _seen(director, beat)
+		var pos := camera.global_position
+		var fwd := -camera.global_basis.z
+		a["ticks"] += 1
+		# Cuts and holds, as seen.
+		if key != last["key"]:
+			if last["key"] != "":
+				(a["segments"] as Array).append([last["key"], last["start"], tick[0]])
+			last["key"] = key
+			last["start"] = tick[0]
+		elif last["pos"] != Vector3.INF and pos.distance_to(last["pos"]) < 0.3 \
+				and absf(camera.fov - float(last["fov"])) > 0.001 and not shot in SHARED_SHOTS:
+			(a["zoom"] as Array).append("%s %.2f->%.2f" % [shot, last["fov"], camera.fov])
+		last["pos"] = pos
+		last["fov"] = camera.fov
+		# Crane moves: Roman's walk crane, and every (re)start of the arrival's.
+		if shot == "crane_front" and i != int(last["beat"]) \
+				and String((director._beats[i - 1] as Dictionary).get("shot", "")) != "crane_front":
+			a["cranes"] += 1
+		if shot == "entry_crane" and director._entry_crane_ticks == 0 and int(last["crane"]) != 0:
+			a["cranes"] += 1
+		last["crane"] = director._entry_crane_ticks
+		last["beat"] = i
+		if director._card.is_showing():
+			(a["card"] as Array).append([tick[0], key])
+		if key == "pyro_wide" or shot in SHARED_SHOTS:
+			continue
+		var at := w.global_position
+		var facing := Vector3(-w.global_basis.z.x, 0.0, -w.global_basis.z.z).normalized()
+		var right := Vector3.UP.cross(-facing).normalized()
+		if shot in ROMAN_LOW:
+			var pelvis := w._bone_world("pelvis")
+			if pelvis != Vector3.INF and pos.y >= pelvis.y:
+				(a["high"] as Array).append("%s %.2f over a %.2f pelvis" % [shot, pos.y - at.y,
+						pelvis.y - at.y])
+			if rad_to_deg(asin(clampf(fwd.y, -1.0, 1.0))) < 5.0:
+				(a["flat"] as Array).append("%s %.1f deg" % [shot, rad_to_deg(asin(fwd.y))])
+			# Nobody between the lens and his head or chest.
+			for o in [director._a, director._b, ref, director._keeper]:
+				var other := o as Node3D
+				if other == null or other == w or not other.visible:
+					continue
+				for target: float in [1.3, 1.7]:
+					var seg_to := at + Vector3.UP * target
+					for h: float in [1.0, 1.6]:
+						var p := other.global_position + Vector3.UP * h
+						var q := Geometry3D.get_closest_point_to_segment(p, pos, seg_to)
+						if q.distance_to(p) < 0.5 and q.distance_to(seg_to) > 0.3:
+							(a["blocked"] as Array).append("%s by %s" % [shot, other.name])
+		if shot in ROMAN_RAMP_SIDE and (pos - at).dot(right) <= 0.0:
+			(a["side"] as Array).append("%s not on his right" % shot)
+		if shot in ROMAN_RING_FRONT and (pos - at).dot(facing) <= 0.0:
+			(a["side"] as Array).append("%s not in front of him" % shot)
+		if shot == "ring_low_up" \
+				and EntranceDirector.rig_in_frame(pos, pos + fwd, camera.fov) > 0:
+			(a["rig"] as Array).append(shot)
+		if shot == "ring_hero_low" and maxf(absf(pos.x), absf(pos.z)) > RingBuilder.ROPE_SPAN - 0.3:
+			(a["ropes"] as Array).append(str(pos))
+		# The near plane: the deck, ramp, floor or canvas under it; the ramp's
+		# barricade panels beside it; the ring posts.
+		var ground := EntranceDirector.surface_y(pos)
+		if maxf(absf(pos.x), absf(pos.z)) < RingBuilder.APRON_OUT:
+			ground = 0.0
+		var why := ""
+		if pos.y < ground + 0.15:
+			why = "%.2f over the surface" % (pos.y - ground)
+		if pos.z > ArenaBuilder.STAGE_FRONT and pos.z < ArenaBuilder.RAMP_FOOT_Z \
+				and absf(pos.x) > ArenaBuilder.RAMP_HALF_WIDTH:
+			var inner := ArenaBuilder.RAMP_BARRICADE_OFFSET - 0.09
+			if absf(pos.x) > inner - 0.15 and absf(pos.x) < inner + 0.18 + 0.15:
+				why = "in the ramp barricade at x %.2f" % pos.x
+		for sx: float in [-1.0, 1.0]:
+			for sz: float in [-1.0, 1.0]:
+				if Vector2(pos.x - sx * RingBuilder.POST_XZ, pos.z - sz * RingBuilder.POST_XZ) \
+						.length() < 0.25 and pos.y < 1.6:
+					why = "at a ring post"
+		if why != "":
+			(a["near"] as Array).append("%s %s" % [shot, why])
+	if last["key"] != "":
+		(a["segments"] as Array).append([last["key"], last["start"], tick[0]])
+	scene.free()
+	return a
+
+
+func _check_roman(a: Dictionary, label: String) -> void:
+	assert_int(int(a["ticks"])).override_failure_message(label + ": Roman never ran") \
+			.is_greater(3000)
+	# At most two crane moves: his walk crane and the ring arrival's.
+	assert_int(int(a["cranes"])).override_failure_message(
+			"%s: %d crane moves" % [label, a["cranes"]]).is_less_equal(2)
+	# No zoom inside any shot of his.
+	assert_array(a["zoom"]).override_failure_message(
+			"%s zooms: %s" % [label, (a["zoom"] as Array).slice(0, 4)]).is_empty()
+	# Below his waist, looking up.
+	assert_array(a["high"]).override_failure_message(
+			"%s over the pelvis: %s" % [label, (a["high"] as Array).slice(0, 4)]).is_empty()
+	assert_array(a["flat"]).override_failure_message(
+			"%s not looking up: %s" % [label, (a["flat"] as Array).slice(0, 4)]).is_empty()
+	assert_array(a["side"]).override_failure_message(
+			"%s line: %s" % [label, (a["side"] as Array).slice(0, 4)]).is_empty()
+	assert_array(a["blocked"]).override_failure_message(
+			"%s blocked: %s" % [label, (a["blocked"] as Array).slice(0, 4)]).is_empty()
+	assert_array(a["near"]).override_failure_message(
+			"%s near plane: %s" % [label, (a["near"] as Array).slice(0, 4)]).is_empty()
+	assert_array(a["rig"]).override_failure_message(
+			"%s rig in frame: %s" % [label, (a["rig"] as Array).slice(0, 4)]).is_empty()
+	assert_array(a["ropes"]).override_failure_message(
+			"%s out of the ropes: %s" % [label, (a["ropes"] as Array).slice(0, 4)]).is_empty()
+	# No flash cuts; the two low fronts never cut into each other.
+	var segments: Array = a["segments"]
+	for k in segments.size():
+		var s: Array = segments[k]
+		if String(s[0]) in SHARED_SHOTS + ["end_wide"]:
+			continue
+		assert_int(int(s[2]) - int(s[1])).override_failure_message(
+				"%s: %s on screen %d ticks" % [label, s[0], int(s[2]) - int(s[1])]).is_greater_equal(90)
+		if k > 0:
+			var pair := [String(segments[k - 1][0]), String(s[0])]
+			pair.sort()
+			assert_bool(pair == ["low_lead", "low_wide_up"]).override_failure_message(
+					label + ": low_wide_up cut straight to low_lead").is_false()
+	# His lower third: only over the lower-third frame, 1.5 s clear of both
+	# its cuts (and its 0.42 s build out before the far one).
+	var card: Array = a["card"]
+	assert_int(card.size()).override_failure_message(label + ": no card").is_greater(200)
+	for c: Array in card:
+		assert_str(String(c[1])).override_failure_message(
+				label + ": the card over " + String(c[1])).is_equal("low_lead")
+	for s: Array in segments:
+		if String(s[0]) == "low_lead" and int(card[0][0]) >= int(s[1]) and int(card[0][0]) < int(s[2]):
+			assert_int(int(card[0][0]) - int(s[1])).is_greater_equal(90)
+			assert_int(int(s[2]) - int(card[-1][0]) - 25).is_greater_equal(90)
+
+
+func test_romans_camera_when_he_walks_second() -> void:
+	_check_roman(_audit_roman(["roman", "cody"]), "second")
+
+
+func test_romans_camera_when_he_walks_first() -> void:
+	_check_roman(_audit_roman(["cody", "roman"]), "first")
+
+
+## The pure framings: the crane lands exactly on the lower-third frame, a
+## metre up; every low lens is under his waist and looks up at him.
+func test_romans_crane_lands_on_his_lower_third_frame() -> void:
+	var at := Vector3(0.0, 0.0, -20.0)
+	var fwd := Vector3(0.0, 0.0, 1.0)
+	var landing := EntranceDirector.crane_front_shot(at, fwd, 1.0,
+			EntranceDirector.ROMAN_CRANE_HEIGHT, EntranceDirector.ROMAN_CRANE_FOV)
+	var lead := EntranceDirector.low_lead_shot(at, fwd)
+	assert_vector((landing[0] as Vector3)).is_equal(lead[0])
+	assert_float(float(landing[2])).is_equal(float(lead[2]))
+	assert_float((lead[0] as Vector3).y - at.y).is_equal_approx(0.85, 0.001)
+	# The crane holds its lens: it booms, it does not zoom.
+	var top := EntranceDirector.crane_front_shot(at, fwd, 0.0,
+			EntranceDirector.ROMAN_CRANE_HEIGHT, EntranceDirector.ROMAN_CRANE_FOV)
+	assert_float(float(top[2])).is_equal(float(lead[2]))
+	assert_float((top[0] as Vector3).y).is_greater(3.5)
+	for shot: Array in [lead, EntranceDirector.low_wide_up_shot(at, fwd),
+			EntranceDirector.barricade_low_shot(at, fwd),
+			EntranceDirector.ring_low_up_shot(Vector3(-0.4, 0, -0.6), fwd),
+			EntranceDirector.ring_hero_shot(Vector3(-0.4, 0, -0.6), fwd, 0.0),
+			EntranceDirector.ring_hero_shot(Vector3(-0.4, 0, -0.6), fwd, 1.0)]:
+		var cam: Vector3 = shot[0]
+		var look: Vector3 = shot[1]
+		var base := at if cam.z < -10.0 else Vector3(-0.4, 0, -0.6)
+		assert_float(cam.y - base.y).is_less(0.9)
+		var up := rad_to_deg(atan2(look.y - cam.y, Vector2(look.x - cam.x, look.z - cam.z).length()))
+		assert_float(up).is_greater(5.0)
+
+
+## The finger in the ring is rig-clear on its own aim: nothing tips it down.
+## (The three-quarter after it is backlit by the rig on purpose, 2K26 3:46.)
+func test_romans_ring_finger_sees_no_rig() -> void:
+	var at := Vector3(-0.4, 0, -0.6)
+	var shot := EntranceDirector.ring_low_up_shot(at, Vector3(0, 0, 1))
+	assert_int(EntranceDirector.rig_in_frame(shot[0], shot[1], shot[2])).is_equal(0)

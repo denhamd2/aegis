@@ -11691,3 +11691,35 @@ The owner: "his hair should be able to move as it's long".
 - Measured off the supplied mesh, the top of his shoulders was a shelf: from the side of the neck out past the shoulder joint the skin stayed at 1.55-1.59 m, 11-14 cm above the joint, and higher 10 cm out than on the centre line. `CodyBodyShape` (new, applied at load after the face) lowers that shelf with one broad smooth field so the trapezius slopes from neck to shoulder, and draws the sides of the neck in 7 mm. Rest geometry only; bones, weights and clips are untouched. Kenny, built on Cody's body, gets it too.
 - `BodyBulk.CODY`: the clavicle gain, which thickened the neck and raised the same ramp, cut from 12 mm to 3 mm; the upper arm from 16 mm to 12 mm.
 - Checked on `model_turnaround` front, three-quarter, side and back, before and after.
+
+## 10 Nov (3) — Roman's entrance: one crane, the low angles kept, no zooming
+
+- The owner: "There are a few too many crane shots ... Ensure to keep the angles below his waist which look up (eg the angle during his lower third display), I like those angles as they are realistic. Otherwise there's just a bit too much crane zooming." A camera-director pass proposed a new sequence. A judge reviewed it (7/10, 15 changes), and it was revised before it was built. The proposal and the review are kept outside the repo.
+- **Crane moves: 7 → 2.** There were four walk cranes on the ramp, one on the stage walk-out, the ring arrival's crane, and that crane restarting from 5.2 m for the ula fala. Now there is one walk crane off the finger coming down, plus the ring arrival's crane, whose clock carries across the new rope wide (9 Nov (10)). The walk crane keeps a fixed 34° lens: it booms but no longer zooms. It lands exactly on the frame the owner liked under his lower third (`low_lead`, `EntranceDirector.low_lead_shot`), now 0.85 m over his feet, below his pelvis bone (0.90–0.96 m through his walk, measured), looking up into his chest.
+- **The lower-third angle.** Under the old cut the card went up mid-boom. The lens was below his chest for only the last ~0.6 s of the card's 4 s; what the owner remembered was the crane's landing. That landing is now a held shot, and the card sits inside it with ~2 s to spare at each end. The card now comes off the director's own clock (`CARD_ON_SCHEDULE`, the ramp card at half way), not the announcer's audio. A commentary line on the shared voice lane could hold Justin's name back, and the card with it.
+- **The walk** (R-41's grammar and the 2021 SmackDown gimbal, the Megalodon rig carried underslung ahead of the talent) is cut on the bar lines of his music. After the crane it alternates three framings, all below the waist and looking up:
+  - `low_lead` (34°);
+  - `low_wide_up`, the ultra-wide (0.85 m up, 50°);
+  - `barricade_low`, the side track (0.85 m up), moved inside the ramp barricade's inner face rather than into the panel.
+
+  A side shot always sits between the two fronts, so they never jump-cut into each other.
+- **The stage and the lip.**
+  - The portal long lens is held at 16° instead of creeping, and the stage pyro fires a tick earlier, so that lens no longer flashes for one frame before the pyro wide.
+  - The lip's push-in is a locked, low, head-on full figure.
+  - The face is a telephoto from his chest.
+  - The finger now goes up on the low three-quarter (`lip_hero`, one arc across both beats). The old 0.47 s cut to `hero_low` straight into the pyro wide is gone.
+  - The finger hold is the low ramp wide lowered to 0.8 m and locked.
+  - `set_entrance_shot` gains `push`: a held shot can stay locked (no creep-in) and still breathe.
+- **In the ring.** The finger had been on the finished arrival crane, which stood behind him (the owner, 9 Nov: no shots from behind). It is now low in front of him (`ring_low_up`: 0.85 m up, 3.5 m off, 34°), clear of the rig on its own aim; the judge's 1.0 m / 3.0 m / 40° had 30 rig points in frame when measured. Hands on hips and the ula fala off are one low three-quarter (`ring_hero_low`, 40→50°), inside the ropes, backlit by the rig as 2K26's is. The hand-off goes to the high corner.
+- Cody and Kenny are unchanged, and so are the step through the ropes and Cody's coat (9 Nov (10)).
+- **Tests** (`test_entrance_cameras.gd`). `_audit_roman` plays his whole entrance in both orders and checks, tick by tick:
+  - at most two crane moves;
+  - no zoom inside a shot;
+  - every low framing's lens is under his `pelvis` bone and aimed at least 5° up;
+  - the side of the line in his frame;
+  - nobody (the other man, Aubrey, the timekeeper) between the lens and him;
+  - no lens in the deck, a barricade panel or a post;
+  - no shot on screen under 1.5 s, and the two fronts never adjacent;
+  - the card only over `low_lead`, 1.5 s clear of both cuts.
+
+  The walk test now pins his three kinds and the bar lines. The eye-level test says his low walk is the owner's choice.

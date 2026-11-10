@@ -640,8 +640,10 @@ var _shot_at := Vector3.INF
 var _shot_look := Vector3.INF
 
 
+## `push` false locks a held shot: no slow push-in, but the handheld drift
+## and breathing stay (`motion` false takes all three away).
 func set_entrance_shot(at: Vector3, look: Vector3, lens: float, snap: bool,
-		delta: float = 1.0 / 60.0, motion: bool = true) -> void:
+		delta: float = 1.0 / 60.0, motion: bool = true, push: bool = true) -> void:
 	mode = Mode.ENTRANCE
 	_previous_mode = Mode.ENTRANCE
 	fov = lens
@@ -654,7 +656,7 @@ func set_entrance_shot(at: Vector3, look: Vector3, lens: float, snap: bool,
 	if motion:
 		var reach := at.distance_to(look)
 		var e := smoothstep(0.0, SHOT_PUSH_MAX / SHOT_PUSH_RATE, _shot_t)
-		if snap:
+		if snap and push:
 			at += (look - at).normalized() * reach * SHOT_PUSH_MAX * e
 		var drift := SHOT_DRIFT * clampf(reach / 4.0, 0.5, 2.0)
 		at += Vector3(sin(_shot_t * 2.2) * 0.6 + sin(_shot_t * 3.7 + 1.0) * 0.4,
