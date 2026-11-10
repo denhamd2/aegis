@@ -87,6 +87,14 @@ func _ready() -> void:
 	wrestler_a.match_seed = match_seed
 	wrestler_b.match_seed = match_seed
 	referee.match_won.connect(_on_match_won)
+	# A caged match: the cage round the ring, and the way out of it.
+	if MatchRules.caged(self):
+		var cage := CageBuilder.build(self, CageBuilder.Spec.for_mode(MatchRules.mode_of(self)))
+		var escape := CageEscape.new()
+		escape.name = "CageEscape"
+		escape.cage = cage
+		add_child(escape)
+		escape.escaped.connect(referee.declare_escape)
 	# The shape of the match: feeling-out, heat, hope, cut-off, comeback, finish.
 	var flow := MatchFlow.new()
 	flow.name = "MatchFlow"

@@ -207,6 +207,7 @@ func _draw() -> void:
 	if referee:
 		_draw_count(view)
 		_draw_hold(view)
+	_draw_escape(view)
 	_draw_controls(view)
 
 
@@ -371,6 +372,62 @@ func _draw_hold(view: Vector2) -> void:
 			HORIZONTAL_ALIGNMENT_CENTER, bar.x, font_size, NAME_COLOR)
 
 
+## A man getting out of the cage (CageEscape): a bar in his colour, centre
+## bottom where the hold meter sits, filling over the whole way out, with
+## where he has got to over it -- for both players, as 2K shows it, because
+## the man down needs to see how long he has.
+const ESCAPE_BG := Color(0.06, 0.06, 0.08, 0.82)
+const ESCAPE_LABEL := Color(1.0, 0.86, 0.35)
+
+
+func _draw_escape(view: Vector2) -> void:
+	if wrestler_a == null or wrestler_b == null:
+		return
+	var escape := wrestler_a.cage_escape()
+	if escape == null:
+		return
+	for w: WrestlerController in [wrestler_a, wrestler_b]:
+		if not escape.is_escaping(w):
+			continue
+		var fill := escape.progress(w)
+		var bar := Vector2(view.x * 0.30, view.y * 0.022)
+		var origin := Vector2((view.x - bar.x) * 0.5, view.y - bar.y - view.y * 0.13)
+		draw_rect(Rect2(origin - Vector2(2, 2), bar + Vector2(4, 4)), ESCAPE_BG)
+		var accent := w.attire_accent if w.attire_accent.a > 0.0 else \
+				(MOMENTUM_A if w == wrestler_a else MOMENTUM_B)
+		draw_rect(Rect2(origin, Vector2(bar.x * fill, bar.y)), accent)
+		# Where he can no longer be stopped.
+		if escape.is_stoppable(w):
+			draw_rect(Rect2(origin, bar), Color(1, 1, 1, 0.25), false, 1.0)
+		var font := TitleArt.teko(500) if _controls_font == null else _controls_font
+		var font_size := int(maxf(12.0, bar.y * 1.4))
+		var label := "%s  ·  %s" % [w.display_name.to_upper(), escape.phase_name(w)]
+		draw_string(font, Vector2(origin.x, origin.y - bar.y * 0.45), label,
+				HORIZONTAL_ALIGNMENT_CENTER, bar.x, font_size, ESCAPE_LABEL)
+		break
+
+
+## The cage prompt for the man being played: at the wall, what pushing into it
+## does; with the other man on his way out, that he can still stop him.
+func cage_prompt(w: WrestlerController) -> String:
+	var escape := w.cage_escape()
+	if escape == null or w.is_ai:
+		return ""
+	var other := wrestler_b if w == wrestler_a else wrestler_a
+	if other and escape.is_escaping(other) and escape.is_stoppable(other):
+		return "STOP HIM  ·  " + ("GET TO THE DOOR" if escape.climb_of(other).route \
+				== CageEscape.Route.DOOR else "PUSH INTO THE CAGE BESIDE HIM")
+	if not w.fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION,
+			WrestlerFSM.State.RUN]):
+		return ""
+	if escape.at_door(w):
+		return "PUSH TO THE DOOR  ·  CALL FOR IT" if MatchRules.escape_wins(w) \
+				else "PUSH TO THE DOOR  ·  OUT OF THE CELL"
+	if escape.at_wall(w):
+		return "PUSH INTO THE CAGE  ·  CLIMB"
+	return ""
+
+
 ## The keys, small, along the bottom between the plates (owner request), for
 ## a player's match only -- WATCH has nobody to control. Read from the
 ## InputMap so a rebind shows up here without editing this.
@@ -381,14 +438,19 @@ const CONTROLS := [["MOVE", ["move_up", "move_left", "move_down", "move_right"]]
 ## weapon wheel ... how do I trigger it?"): the wheel opens only outside the
 ## ring, by an apron, empty-handed, with WEAPON held.
 const NHB_CONTROLS := [["WEAPON (BY THE APRON)", ["weapon"]], ["SLIDE / THROW", ["throw"]]]
+## A caged match: the weapon key, held as he whips, sends the man into the
+## steel; pushing into the cage climbs it (the prompt says so at the wall).
+const CAGE_CONTROLS := [["+RUN IN A HOLD: INTO THE STEEL", ["weapon"]]]
 var _controls_text := {}
 var _controls_font: Font
 
 
-func controls_text(nhb := false) -> String:
-	if not _controls_text.has(nhb):
+func controls_text(nhb := false, caged := false) -> String:
+	var key_of := int(nhb) + 2 * int(caged)
+	if not _controls_text.has(key_of):
 		var parts: Array[String] = []
-		for row: Array in CONTROLS + (NHB_CONTROLS if nhb else []):
+		for row: Array in CONTROLS + (NHB_CONTROLS if nhb else []) \
+				+ (CAGE_CONTROLS if caged else []):
 			var keys: Array[String] = []
 			for action: String in row[1]:
 				var key := key_for(action)
@@ -396,8 +458,8 @@ func controls_text(nhb := false) -> String:
 					keys.append(key)
 			if not keys.is_empty():
 				parts.append("%s %s" % ["".join(keys) if keys.size() > 1 else keys[0], row[0]])
-		_controls_text[nhb] = "   ·   ".join(parts)
-	return _controls_text[nhb]
+		_controls_text[key_of] = "   ·   ".join(parts)
+	return _controls_text[key_of]
 
 
 ## The first keyboard key bound to `action`, as the title screen labels it.
@@ -419,16 +481,18 @@ func _draw_controls(view: Vector2) -> void:
 		_controls_font = TitleArt.teko(500)
 	var size_px := int(view.y * 0.020)
 	var nhb := MatchRules.no_holds_barred(wrestler_a)
-	var text := controls_text(nhb)
+	var text := controls_text(nhb, MatchRules.caged(wrestler_a))
 	# Where he can reach under the ring, say so: the wheel is otherwise
 	# invisible until it is open. If the stretch is claimed by the other man,
 	# say that too -- a press that does nothing reads as a dead button.
 	for w: WrestlerController in [wrestler_a, wrestler_b]:
-		if not nhb or w.is_ai:
+		var prompt := cage_prompt(w)
+		if (not nhb and prompt == "") or w.is_ai:
 			continue
-		var prompt := ""
 		var tint := Color(1.0, 0.86, 0.35)
-		if w.can_rummage():
+		if prompt != "":
+			pass
+		elif w.can_rummage():
 			prompt = "HOLD %s  ·  WEAPONS" % key_for("weapon")
 		elif w.apron_spot_blocked():
 			prompt = "APRON TAKEN  ·  STEP ALONG"

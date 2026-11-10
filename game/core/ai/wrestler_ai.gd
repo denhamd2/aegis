@@ -422,7 +422,10 @@ func _chain_input() -> Dictionary:
 		# into the ropes instead (the Irish whip) -- and is waiting when he
 		# comes off them. Seeded, like every other roll.
 		elif _opening_grapple_done() and _chain_rng().randf() < WHIP_CHANCE:
-			return {"run": true, "corner": _wants_corner_whip()}
+			var corner := _wants_corner_whip()
+			return {"run": true, "corner": corner, "cage": not corner \
+					and MatchRules.caged(controller) \
+					and _chain_rng().randf() < CAGE_WHIP_SHARE}
 		if not _opening_grapple_done():
 			var roll := _chain_rng().randi_range(1, 5)
 			_chain_plan = 1 if roll <= CHAIN_LINK_WEIGHTS[0] else (
@@ -571,6 +574,142 @@ var ladder_climbs := 0
 ## On his way to the foot of a ladder he stood up, for the dive.
 func going_for_ladder() -> bool:
 	return _ladder_walk_ticks > 0 and not _ladder_attempted_for_down
+
+
+# --- the cage (Steel Cage: gauntlet/refs/steel_cage.md) ----------------------
+#
+# 2K's advice is the AI's rule: go for the cage only with the other man down
+# off something big. Off a signature he rallies (CageEscape.RALLY_*) and gets
+# to the wall in time -- the near-escape, pulled off the top. Off a finisher
+# he does not, and that is how a cage match the story gives to this man ends
+# by escape (ESCAPE_FINISH_SHARE of them). The rest end on the pin.
+
+## Escape attempts in a match: near-escapes, and the one that wins.
+const CAGE_ATTEMPTS_MAX := 3
+## The chance, off a signature before the finish, that he goes for the cage.
+const NEAR_ESCAPE_CHANCE := 0.5
+## Of the cage matches the story gives him, the share he ends by escaping.
+const ESCAPE_FINISH_SHARE := 0.4
+## Decided as the man goes down: no later than this into the knockdown.
+const ESCAPE_DECIDE_WINDOW := 40
+## Walking to the wall longer than this, he gives it up.
+const CAGE_WALK_GIVE_UP := 240
+## At the wall: this close to his spot.
+const CAGE_SPOT_REACH := 0.3
+var cage_attempts := 0
+var _cage_going := false
+var _cage_door := false
+var _cage_spot := Vector3.INF
+var _cage_walk := 0
+var _cage_decided_for := -1
+var _escape_finish := -1
+var _cage_rolls := 0
+## Of his whips at a side in a cage, the share sent into the steel.
+const CAGE_WHIP_SHARE := 0.5
+
+
+## On his way to the cage wall (or the door) to get out.
+func going_for_escape() -> bool:
+	return _cage_going
+
+
+func _cage_rng(salt: int) -> RandomNumberGenerator:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = _match_seed * 7919 + _player_index * 613 + salt
+	return rng
+
+
+func _ends_by_escape() -> bool:
+	if _escape_finish < 0:
+		_escape_finish = 1 if _cage_rng(1).randf() < ESCAPE_FINISH_SHARE else 0
+	return _escape_finish == 1
+
+
+func _wants_cage_escape() -> bool:
+	if not MatchRules.escape_wins(controller) or cage_attempts >= CAGE_ATTEMPTS_MAX \
+			or controller.outside_ring or target.dead \
+			or target.fsm.current_state != WrestlerFSM.State.DOWN \
+			or target.fsm.ticks_in_state > ESCAPE_DECIDE_WINDOW \
+			or target.knockdown_tier < CombatSystem.Tier.SIGNATURE:
+		return false
+	# Once a knockdown. The frame only tells knockdowns apart; the roll is
+	# salted by a count, so a replay rolls the same whatever frame it is.
+	var knockdown := Engine.get_physics_frames() - target.fsm.ticks_in_state
+	if _cage_decided_for == knockdown:
+		return false
+	_cage_decided_for = knockdown
+	_cage_rolls += 1
+	var flow := controller.flow
+	if flow == null:
+		return true
+	if flow.finish_allowed():
+		return flow.winner == controller and _ends_by_escape() \
+				and target.knockdown_tier >= CombatSystem.Tier.FINISHER
+	return target.knockdown_tier == CombatSystem.Tier.SIGNATURE \
+			and _cage_rng(100 + _cage_rolls).randf() < NEAR_ESCAPE_CHANCE
+
+
+## The cage, for the AI: stopping the other man getting out (up the wall after
+## him, or a blow at the door), or going for it himself.
+func _cage_input(distance: float) -> Dictionary:
+	var escape := controller.cage_escape()
+	if escape == null:
+		return {}
+	if escape.is_escaping(target) and escape.is_stoppable(target):
+		_cage_going = false
+		var c := escape.climb_of(target)
+		if c.route == CageEscape.Route.DOOR:
+			if distance <= WrestlerController.STRIKE_HIT_RANGE:
+				return {"strike": true}
+			var to_him := _flat(target.global_position - controller.global_position).normalized()
+			return {"move": Vector2(to_him.x, to_him.z), "run": distance > 2.0}
+		return _to_cage_spot(escape.chase_spot(target, controller.global_position), c.axis,
+				"cage_climb")
+	if not _cage_going and _wants_cage_escape():
+		_cage_going = true
+		_cage_walk = 0
+		cage_attempts += 1
+		_plan_cage_route(escape)
+	if not _cage_going:
+		return {}
+	_cage_walk += 1
+	if target.fsm.current_state != WrestlerFSM.State.DOWN or _cage_walk > CAGE_WALK_GIVE_UP:
+		_cage_going = false
+		return {}
+	var axis := CageBuilder.wall_axis(_cage_spot)
+	var got := _to_cage_spot(_cage_spot, axis, "cage_door" if _cage_door else "cage_climb")
+	if got.has("cage_climb") or got.has("cage_door"):
+		_cage_going = false
+	return got
+
+
+## The door when it is about as near as the nearest wall (it is quicker, and
+## a man at it is also easier to stop), otherwise straight up the nearest
+## wall, kept off the corner posts.
+const DOOR_PREFERENCE := 0.5
+
+
+func _plan_cage_route(escape: CageEscape) -> void:
+	var spec := escape.cage.spec if escape.cage else CageBuilder.Spec.steel_cage()
+	var me := _flat(controller.global_position)
+	var door_spot := spec.door_axis * WrestlerController.RING_KEEP_IN
+	var axis := CageBuilder.wall_axis(me)
+	var lat := CageBuilder.lateral_of(axis)
+	var keep := spec.half - CageEscape.CORNER_KEEP - 0.1
+	var wall_spot := axis * WrestlerController.RING_KEEP_IN + lat * clampf(me.dot(lat), -keep, keep)
+	if axis == spec.door_axis:
+		# On the door's own wall, the door is the way.
+		wall_spot = door_spot
+	_cage_door = _flat(door_spot - me).length() <= _flat(wall_spot - me).length() + DOOR_PREFERENCE
+	_cage_spot = door_spot if _cage_door else wall_spot
+
+
+func _to_cage_spot(spot: Vector3, axis: Vector3, intent: String) -> Dictionary:
+	var to := _flat(spot - controller.global_position)
+	if to.length() <= CAGE_SPOT_REACH:
+		return {intent: true, "move": Vector2(axis.x, axis.z)}
+	var dir := to.normalized()
+	return {"move": Vector2(dir.x, dir.z), "run": to.length() > 1.6}
 
 
 func _wants_taunt() -> bool:
@@ -848,6 +987,10 @@ func _poll_input() -> Dictionary:
 		return input
 	if _roll_guard():
 		return {"guard": true}
+	# The cage: stop him getting out, or get out himself.
+	var caged := _cage_input(distance)
+	if not caged.is_empty():
+		return caged
 	# No Holds Barred: out for a weapon, or using the one in his hands --
 	# unless a ladder he stood up is ready for its dive: then up it, not off
 	# for another weapon (nhb_weapon_probe seed 1, 2 Nov: he stood it up

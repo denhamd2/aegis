@@ -312,6 +312,11 @@ func watch(referee: MatchReferee, wrestlers: Array, crowd: CrowdReaction, match_
 			sfx.play("pyro_bang", -12.0, 1.4)
 			sfx.play_any("crowd_ooh", CROWD_REACTION_GAIN_DB + 0.0)
 			_register_chaos_activity(3.0))
+		w.hit_the_cage.connect(func(_who: WrestlerController, strength: float) -> void:
+			# the steel: the panel's crash and the chain link ringing
+			sfx.play_any("hit_metal", clampf(-4.0 + strength * 3.0, -4.0, 3.0))
+			sfx.play_any("crowd_ooh", CROWD_REACTION_GAIN_DB - 2.0 + strength)
+			_register_chaos_activity(1.5 * strength))
 		w.through_desk.connect(func(_who: WrestlerController) -> void:
 			# the desk going: the boards, the monitors' glass and the steel
 			# (desk_crash_0, made for it). The crowd's pop is set_piece_landed's.

@@ -305,6 +305,10 @@ func _check_for_downed_opponent_action() -> void:
 		# dive (nhb_weapon_probe seed 4, 2 Nov).
 		if attacker.is_ai and attacker.ai and attacker.ai.going_for_ladder():
 			continue
+		# Going for the cage instead of the cover (WrestlerAI, the escape):
+		# not stopped on his way to the wall by a stomp or a haul up.
+		if attacker.is_ai and attacker.ai and attacker.ai.going_for_escape():
+			continue
 		# Worked before he is covered (Phase 4, position): a stomp or a fist,
 		# by where the standing man is -- up to GROUND_ATTACKS_MAX a knockdown,
 		# never after a finisher, whose knockdown is the cover.
@@ -801,6 +805,16 @@ func _resolve_tie_up(attacker: WrestlerController, defender: WrestlerController)
 	defender._is_grapple_attacker = false
 	attacker.fsm.transition_to(WrestlerFSM.State.GRAPPLE_HOLD)
 	defender.fsm.transition_to(WrestlerFSM.State.GRAPPLE_HOLD)
+
+## Out of the cage, both feet on the floor (CageEscape.escaped): the match is
+## his, if escaping wins this one (the Steel Cage) and nothing has ended it.
+func declare_escape(winner: WrestlerController) -> void:
+	if _match_over or winner == null or not MatchRules.escape_wins(winner):
+		return
+	if _pinning or _submissioning:
+		return
+	_declare_winner(winner, "escape")
+
 
 func _declare_winner(winner: WrestlerController, method: String) -> void:
 	_match_over = true
