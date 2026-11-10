@@ -87,6 +87,24 @@ func test_a_knockdown_ends_on_a_groan_as_he_lands() -> void:
 	assert_array(said).contains_exactly(["groan"])
 
 
+func test_every_second_time_down_the_wind_goes_out_of_him() -> void:
+	var scene := _match()
+	await get_tree().process_frame
+	var a: WrestlerController = scene.get_node("WrestlerA")
+	var v := _voice(a)
+	v.set_process(false)
+	var said := []
+	v.said.connect(func(f: String, s: String) -> void: said.append([f, s.left(s.rfind("_"))]))
+	for i in 4:
+		a.knocked_down.emit(a)
+		v._since = INF
+		v._process(WrestlerVoice.DOWN_GROAN_DELAY + 0.01)
+	assert_array(said).contains_exactly(
+			[["groan", "groan"], ["wind", "wind"], ["groan", "groan"], ["wind", "wind"]])
+	assert_int(SfxPool.family_size("wind")).is_equal(4)
+	assert_int(SfxPool.family_size("groan")).is_equal(5)
+
+
 func test_a_locked_submission_draws_spaced_cries_until_release() -> void:
 	var scene := _match()
 	await get_tree().process_frame

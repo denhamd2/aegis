@@ -4,14 +4,15 @@ extends Node3D
 ## strike reads, and a man on fire screaming until he is put out).
 ##
 ## A grunt on a blow, a heavy grunt on a hard one, a groan when he hits the mat
-## and a yell for the worst of it -- a blade, a wipeout, a signature or a
+## (every second time down, the wind knocked out of him instead) and a yell for
+## the worst of it -- a blade, a wipeout, a signature or a
 ## finisher. Set alight (ManFire.ignited) he screams take after take, a breath
 ## between them, until he is put out (ManFire.extinguished): the scream fades
 ## and he ends on a groan.
 ##
 ## Presentation only: nothing in a match reads what he said. The takes are
 ## the CC0 voices tools/audio/build_sfx.py writes (grunt_light_*, grunt_heavy_*,
-## groan_*, yell_*, burn_scream_*). Picks are seeded from the match seed and
+## groan_*, wind_*, yell_*, burn_scream_*). Picks are seeded from the match seed and
 ## his name, so a replay says the same; never the global generator, which the
 ## match seed is drawn from.
 
@@ -30,9 +31,11 @@ const HOLD_RETRY := 0.25
 const BURN_BREATH := 0.18
 ## The scream fades out over this when the fire is out.
 const BURN_FADE := 0.3
-## Level of each kind of voice, against the hits (SfxPool at 0 dB).
-const LEVEL_DB := {"grunt_light": -6.0, "grunt_heavy": -3.0, "groan": -4.0, "yell": -1.0,
-		"burn_scream": 0.0}
+## Level of each kind of voice, against the hits (SfxPool at 0 dB). The light
+## grunts' files sit at -21 LUFS-loop and the heavy ones at -18.2, so a light
+## sell is heard 3 LU under a heavy one.
+const LEVEL_DB := {"grunt_light": -3.0, "grunt_heavy": -3.0, "groan": -4.0, "wind": -2.0,
+		"yell": -1.0, "burn_scream": 0.0}
 ## So two men do not sound like one: Roman lower, Kenny a touch higher.
 const PITCH := {"roman": 0.9, "cody": 1.0, "kenny": 1.05}
 const DETUNE := 0.03
@@ -51,6 +54,7 @@ var _seeded := false
 var _since := INF
 var _last := {}
 var _groan_in := -1.0
+var _downs := 0
 var _hold_in := -1.0
 var _breath := -1.0
 var _fading := -1.0
@@ -66,11 +70,26 @@ static func attach(w: WrestlerController, fire: ManFire = null) -> WrestlerVoice
 	v._player = v._make_player("Say")
 	v._scream = v._make_player("Scream")
 	w.hurt.connect(v.hurt)
-	w.knocked_down.connect(func(_who: WrestlerController) -> void: v._groan_in = DOWN_GROAN_DELAY)
+	w.knocked_down.connect(func(_who: WrestlerController) -> void: v._went_down())
 	if fire:
 		fire.ignited.connect(func(_who: WrestlerController) -> void: v.start_screaming())
 		fire.extinguished.connect(func(_who: WrestlerController) -> void: v.stop_screaming())
 	return v
+
+
+## Knocked down: he is heard as he lands.
+func _went_down() -> void:
+	_downs += 1
+	_groan_in = DOWN_GROAN_DELAY
+
+
+## What he lets out on the mat. The first time down it is a groan; after that
+## a groan and the wind going out of him take turns, so a man bumped five times
+## does not moan five times. Put out of a fire, it is always the groan.
+func _down_family() -> String:
+	if _downs > 0 and _downs % 2 == 0 and SfxPool.family_size("wind") > 0:
+		return "wind"
+	return "groan"
 
 
 func _make_player(n: String) -> AudioStreamPlayer3D:
@@ -150,6 +169,7 @@ func stop_screaming() -> void:
 	_breath = -1.0
 	_fading = BURN_FADE
 	_since = INF
+	_downs = 0
 	_groan_in = BURN_FADE
 
 
@@ -169,7 +189,7 @@ func _process(delta: float) -> void:
 	if _groan_in >= 0.0:
 		_groan_in -= delta
 		if _groan_in < 0.0:
-			say("groan")
+			say(_down_family())
 	if screaming and not _scream.playing:
 		if _breath < 0.0:
 			_breath = BURN_BREATH

@@ -39,6 +39,36 @@ anyway.
 | `burn_scream_*` | [Man screaming](https://freesound.org/people/Archeos/sounds/325548/), [Moans and screams of agony of military soldiers](https://freesound.org/people/qubodup/sounds/166943/) | Archeos, qubodup | CC0 |
 | `ui_*` | [Interface Sounds](https://kenney.nl/assets/interface-sounds) | Kenney | CC0 |
 
+### Sound round 4 (9 Nov)
+
+Built by `tools/audio/build_sfx_round4.py`, which pins every source by sha256.
+The rows below replace the rows above for the files they name.
+
+The Red Library recordings are items of the Internet Archive's
+[USC sound-effect archive](https://archive.org/details/usc-sound-effect-archive):
+1930s-40s Hollywood optical sound effects from the USC Cinema / Sunset
+Editorial library, donated to USC, digitised and published by the archive
+under CC0 (each item's `licenseurl` is
+`creativecommons.org/publicdomain/zero/1.0/`, checked at download). They are
+optical transfers, so they carry little above 5 kHz.
+
+| Files | Source | Author | Licence |
+| --- | --- | --- | --- |
+| `groan_0`-`groan_2` | [Red Library: Voices Men 1](https://archive.org/details/Red_Library_Voices_Men_1), R21-08 "Man Moans" | USC Cinema / Sunset Editorial (Internet Archive) | CC0 |
+| `groan_3`, `groan_4` | Red Library: Voices Men 1, R15-31 "Man Growling and Grunting" | USC Cinema / Sunset Editorial (Internet Archive) | CC0 |
+| `grunt_light_*` | Red Library: Voices Men 1, R15-30 "Man Breathing Heavily" | USC Cinema / Sunset Editorial (Internet Archive) | CC0 |
+| `wind_*` | Red Library: Voices Men 1, R15-33 "Man Out of Breath" | USC Cinema / Sunset Editorial (Internet Archive) | CC0 |
+| `count_slap_*` | [Red Library: Fights](https://archive.org/details/Red_Library_Fights), R15-12 "Loud Slaps or Whacks", over [Red Library: Impacts](https://archive.org/details/Red_Library_Impacts), R28-55 "Thumps on Large Hollow Wooden Surface" | USC Cinema / Sunset Editorial (Internet Archive) | CC0 |
+| `bump_0`-`bump_5` | Red Library: Impacts, R28-55 "Thumps on Large Hollow Wooden Surface" (the deck), [Body Fall 1-5](https://bigsoundbank.com/body-fall-1-s2452.html) (the man), Red Library: Fights, R15-12 "Loud Slaps or Whacks" (the canvas) | USC Cinema / Sunset Editorial (Internet Archive); Joseph SARDIN (BigSoundBank) | CC0 |
+| `hit_metal_*` | [Shot of shovel](https://bigsoundbank.com/shot-shovel-s1084.html) (the strike), [Red Library: Metal](https://archive.org/details/Red_Library_Metal), R16-34 "Banging Metal Pipe" (the ring), Body Fall 3 (the thump) | Joseph SARDIN (BigSoundBank); USC Cinema / Sunset Editorial (Internet Archive) | CC0 |
+| `hit_chair_2`-`hit_chair_4` | Red Library: Metal, R15-07 "Metal Clangs and Hollow Hits", with the top of Shot of shovel and Body Fall 3 | USC Cinema / Sunset Editorial (Internet Archive); Joseph SARDIN (BigSoundBank) | CC0 |
+| `hit_glass_*` | [A mirror explodes](https://bigsoundbank.com/mirror-explodes-s0387.html) and [Bulb bursting 1, 5, 7](https://bigsoundbank.com/bulb-bursting-1-s2039.html) (the shatter), [Red Library: Crashes](https://archive.org/details/Red_Library_Crashes), R28-13 "Glass Windows Smashed" (the mid-range crash), Body Fall 3 | Joseph SARDIN (BigSoundBank); USC Cinema / Sunset Editorial (Internet Archive) | CC0 |
+| `pyro_boom`, `crowd_finish`, `crowd_pop_*` | the same recordings as above, with the silence before the sound cut off (the pops keep 150 ms) | | |
+| `bell_start`, `bell_end` | the same recording as above, the ring faded out 1.5 s after the last strike | | |
+| `grunt_heavy_0`-`grunt_heavy_3` | the same recording as above, re-levelled to one loudness | | |
+| `grunt_heavy_4`-`grunt_heavy_6` | Red Library: Voices Men 1, R21-14 "Man Grunts and Struggles" | USC Cinema / Sunset Editorial (Internet Archive) | CC0 |
+| `pyro_bang` | [25 CC0 bang / firework sfx](https://opengameart.org/content/25-cc0-bang-firework-sfx), `cannon_02` | rubberduck | CC0 |
+
 The entrance music in `music/` is the full soundtrack of the owner-supplied
 entrance videos (Google Drive, 2026-09-26; 3:38 each), cut out by
 `tools/audio/build_entrance_music.py`: the same recordings the titantron

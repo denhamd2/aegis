@@ -38,7 +38,11 @@ func test_cody_crowd_chant_is_only_enabled_for_a_cody_match() -> void:
 	assert_bool(MatchAudio.cody_is_in_match([roman])).is_false()
 
 
-func test_opening_and_finish_bells_play_at_double_speed() -> void:
+func test_opening_and_finish_bells_ring_at_their_recorded_pitch_and_are_short() -> void:
+	assert_float(MatchAudio.MATCH_BELL_PITCH_SCALE).is_equal(1.0)
+	# Short cues, not a 10 s ring under the opening call and the finish call.
+	assert_float(SfxPool.stream("bell_start").get_length()).is_less(4.6)
+	assert_float(SfxPool.stream("bell_end").get_length()).is_less(6.0)
 	var audio: MatchAudio = auto_free(MatchAudio.new())
 	add_child(audio)
 	audio.opening_bell()
@@ -561,6 +565,26 @@ func test_weapons_sound_like_what_they_are() -> void:
 		var def := WeaponCatalog.by_id(id)
 		assert_str(MatchAudio.hit_sound(WeaponCatalog.swing_move(def))).override_failure_message(String(id)) \
 				.is_equal(cases[id])
+
+
+## Steel and glass are 3 dB up wherever they play, and never more than 3 dB
+## over the file (sound round 4: the limiter must not pump on a chair shot).
+func test_steel_and_glass_are_lifted_three_db_and_no_further() -> void:
+	assert_float(MatchAudio.hit_level("hit_metal", -9.0)).is_equal(-6.0)
+	assert_float(MatchAudio.hit_level("hit_glass", 0.0)).is_equal(3.0)
+	assert_float(MatchAudio.hit_level("hit_glass", 2.0)).is_equal(3.0)
+	assert_float(MatchAudio.hit_level("hit_glass", 3.0)).is_equal(3.0)
+	assert_float(MatchAudio.hit_level("hit_kendo", -2.0)).is_equal(-2.0)
+	var audio: MatchAudio = auto_free(MatchAudio.new())
+	add_child(audio)
+	var heard := []
+	audio.sfx.played.connect(func(sound: String, db: float) -> void: heard.append([sound.left(sound.rfind("_")), db]))
+	var pipe := WeaponCatalog.swing_move(WeaponCatalog.by_id(&"lead_pipe"))
+	audio._on_move_landed(null, null, pipe)
+	assert_array(heard[0]).is_equal(["hit_metal", MatchAudio.hit_volume(pipe) + 3.0])
+	assert_int(SfxPool.family_size("hit_metal")).is_equal(3)
+	assert_int(SfxPool.family_size("hit_glass")).is_equal(3)
+	assert_int(SfxPool.family_size("hit_chair")).is_equal(5)
 
 
 ## Every take the new round built loads and has a body to it.
