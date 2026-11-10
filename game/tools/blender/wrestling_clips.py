@@ -7943,14 +7943,19 @@ CLIPS["Spear_Setup"] = [
 # behind him (-fwd).
 TOP_ROPE_FOOT_UP = 1.20 + 0.06  # RingBuilder.ROPE_HEIGHT_TOP, plus the sole
 TOP_ON = dict(
-    CODY_STAND, pelvis=(0.0, 0.16, 1.90), hips=(-28, 0, 0), spine=(-10, 0, 0),
-    head=(10, 0, 0),
-    # Arms out wide for balance, elbows soft and pointing DOWN. The first cut
-    # had the hands low in front of his hips with nothing to hold, and the
-    # solver folded the elbows out and back -- the owner: "his arm looks bent
-    # the wrong way".
-    hand_r=(0.64, 0.12, 2.30), hand_l=(-0.64, 0.12, 2.30),
-    elbow_r=(0.3, -0.4, -1.0), elbow_l=(-0.3, -0.4, -1.0),
+    # Fairly upright over bent knees: hunched 38 degrees forward with his
+    # head hung, the traps stood up either side of his neck like horns.
+    CODY_STAND, pelvis=(0.0, 0.22, 1.90), hips=(-12, 0, 0), spine=(-2, 0, 0),
+    head=(2, 0, 0),
+    # Arms out and DOWN for balance, below the shoulders, elbows bent and
+    # pointing back. The first cut had the hands low in front of his hips and
+    # the solver folded the elbows out and back ("his arm looks bent the
+    # wrong way"); the second held them straight out behind his shoulders at
+    # shoulder height, which dragged the girdle up into his neck -- the
+    # owner, 9 Nov: "his arms morph when he's standing on the ropes".
+    hand_r=(0.46, 0.40, 2.04), hand_l=(-0.46, 0.40, 2.04),
+    elbow_r=(0.6, -1.0, -0.2), elbow_l=(-0.6, -1.0, -0.2),
+    clav_follow=False,
     fist_r=0.2, fist_l=0.2,
     foot_r=(0.20, CORNER_FOOT_FWD, TOP_ROPE_FOOT_UP),
     foot_l=(-0.20, CORNER_FOOT_FWD, TOP_ROPE_FOOT_UP),
@@ -7977,8 +7982,8 @@ CLIPS["Top_Rope_Step"] = [
               foot_l=(-0.20, CORNER_FOOT_FWD, TOP_ROPE_FOOT_UP + 0.12))),
     (32, TOP_ON),
     # The look back over his right shoulder: there he is.
-    (44, pose(TOP_ON, spine=(-8, 24, 0), head=(4, 40, 0))),
-    (54, pose(TOP_ON, spine=(-8, 26, 0), head=(4, 44, 0))),
+    (44, pose(TOP_ON, spine=(-2, 24, 0), head=(2, 40, 0))),
+    (54, pose(TOP_ON, spine=(-2, 26, 0), head=(2, 44, 0))),
     (60, TOP_ON),
 ]
 
