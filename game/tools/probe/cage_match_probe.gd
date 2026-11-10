@@ -47,7 +47,7 @@ func _run(seed_value: int) -> Dictionary:
 		w.is_ai = true
 		if w.ai:
 			w.ai.setup_jitter(seed_value, w.player_index)
-	var out := {"method": "none", "winner": "", "seconds": 0.0, "rams": 0, "falls_high": 0}
+	var out := {"method": "none", "winner": "", "seconds": 0.0}
 	var events: Array = []
 	var start := Engine.get_physics_frames()
 	var now := func() -> float: return snappedf((Engine.get_physics_frames() - start) / 60.0, 0.1)
@@ -60,10 +60,6 @@ func _run(seed_value: int) -> Dictionary:
 	escape.pulled_off.connect(func(c: WrestlerController, by: WrestlerController) -> void:
 		events.append("%s %s pulled off at %.1f m by %s" % [now.call(), c.entrance_style,
 				c.global_position.y, by.entrance_style if by else "a blow"]))
-	for w: WrestlerController in [a, b]:
-		w.hit_the_cage.connect(func(_who: WrestlerController, s: float) -> void:
-			if s >= 1.6:
-				out["rams"] = int(out["rams"]) + 1)
 	var tick := 0
 	while tick < _budget and out["winner"] == "":
 		await get_tree().physics_frame
@@ -71,6 +67,7 @@ func _run(seed_value: int) -> Dictionary:
 	for i in 5:
 		await get_tree().physics_frame
 	out["seconds"] = snappedf(tick / 60.0, 0.1)
+	out["rams"] = a.cage_rams + b.cage_rams
 	out["attempts"] = escape.attempts
 	out["pull_offs"] = escape.pull_offs
 	out["events"] = events

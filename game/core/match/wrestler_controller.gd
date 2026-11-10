@@ -4339,7 +4339,9 @@ func _resolve_pending_hits() -> void:
 	# force an illegal FSM transition.
 	var moves := _pending_hits.duplicate()
 	_pending_hits.clear()
-	if UNHITTABLE_STATES.has(fsm.current_state):
+	# Falling (off a ladder or a cage wall): nothing more lands until he does.
+	if UNHITTABLE_STATES.has(fsm.current_state) \
+			or fsm.current_state == WrestlerFSM.State.LADDER_FALL:
 		_pending_fatal_shot = false
 		_pending_bullet_impact = Vector3.INF
 		return
@@ -6610,6 +6612,8 @@ var _cage_fall := false
 var _cage_fall_tier := CombatSystem.Tier.POWER
 ## Whipped at the steel rather than the ropes (a caged match only).
 var _irish_whip_cage := false
+## Times he has been whipped into the steel this match (probes, tests).
+var cage_rams := 0
 
 
 ## The cage escape in this match, or null (no cage).
@@ -6739,6 +6743,7 @@ func _whipped_into_cage() -> bool:
 	fsm.transition_to(WrestlerFSM.State.HIT_REACT)
 	_go_down(CombatSystem.Tier.POWER, CAGE_RAM_MOVE)
 	hit_the_cage.emit(self, 1.6)
+	cage_rams += 1
 	return true
 
 

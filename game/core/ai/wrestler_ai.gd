@@ -422,7 +422,10 @@ func _chain_input() -> Dictionary:
 		# into the ropes instead (the Irish whip) -- and is waiting when he
 		# comes off them. Seeded, like every other roll.
 		elif _opening_grapple_done() and _chain_rng().randf() < WHIP_CHANCE:
-			return {"run": true, "corner": _wants_corner_whip()}
+			var corner := _wants_corner_whip()
+			return {"run": true, "corner": corner, "cage": not corner \
+					and MatchRules.caged(controller) \
+					and _chain_rng().randf() < CAGE_WHIP_SHARE}
 		if not _opening_grapple_done():
 			var roll := _chain_rng().randi_range(1, 5)
 			_chain_plan = 1 if roll <= CHAIN_LINK_WEIGHTS[0] else (
@@ -600,6 +603,9 @@ var _cage_spot := Vector3.INF
 var _cage_walk := 0
 var _cage_decided_for := -1
 var _escape_finish := -1
+var _cage_rolls := 0
+## Of his whips at a side in a cage, the share sent into the steel.
+const CAGE_WHIP_SHARE := 0.5
 
 
 ## On his way to the cage wall (or the door) to get out.
@@ -626,11 +632,13 @@ func _wants_cage_escape() -> bool:
 			or target.fsm.ticks_in_state > ESCAPE_DECIDE_WINDOW \
 			or target.knockdown_tier < CombatSystem.Tier.SIGNATURE:
 		return false
-	# Once a knockdown.
+	# Once a knockdown. The frame only tells knockdowns apart; the roll is
+	# salted by a count, so a replay rolls the same whatever frame it is.
 	var knockdown := Engine.get_physics_frames() - target.fsm.ticks_in_state
 	if _cage_decided_for == knockdown:
 		return false
 	_cage_decided_for = knockdown
+	_cage_rolls += 1
 	var flow := controller.flow
 	if flow == null:
 		return true
@@ -638,7 +646,7 @@ func _wants_cage_escape() -> bool:
 		return flow.winner == controller and _ends_by_escape() \
 				and target.knockdown_tier >= CombatSystem.Tier.FINISHER
 	return target.knockdown_tier == CombatSystem.Tier.SIGNATURE \
-			and _cage_rng(100 + knockdown).randf() < NEAR_ESCAPE_CHANCE
+			and _cage_rng(100 + _cage_rolls).randf() < NEAR_ESCAPE_CHANCE
 
 
 ## The cage, for the AI: stopping the other man getting out (up the wall after
