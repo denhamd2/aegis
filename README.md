@@ -11678,3 +11678,9 @@ The owner: "his hair should be able to move as it's long".
 - The owner: "The top rope moonsault from Cody doesn't make sense. He should only do this when his opponent is down for enough seconds to land on them. He shouldn't do it when his opponent is standing and healthy."
 - The climb onto a standing man was the crossbody: the referee sent him up as his opponent started to get up, and by the time he had walked, climbed and stepped up, the man was on his feet and fresh. The referee no longer starts it. Off the top is now only the moonsault, onto a man down in reach of a corner, who is held down while Cody climbs.
 - Pinned by `test_the_referee_never_sends_him_up_for_a_man_on_his_feet`.
+
+## 10 Nov (1) — Cody's stance on the top rope; sound round 4
+
+- The owner: "his arms morph when he's standing on the ropes for that move", then on the first fix, "Arms and shoulders deformed". The stance (`TOP_ON` in `wrestling_clips.py`) held his hands straight out behind his shoulders at shoulder height while he hunched 38 degrees forward, which dragged the shoulder girdle up into his neck. He now stands fairly upright over bent knees, arms out and down with the elbows bent back, clavicles at rest. Checked on rendered frames (`face_shot --clips strikes/top_rope_step --body`).
+- Sound round 4 merged (the reviewed revisions): ring bumps that land on their frame, steel that rings and glass with a top end, low groans, a real count slap, winded breaths, one-effort heavy grunts, breath-driven light sells, the bell at its own pitch, pyro and the finish roar on their frame. Sources and licences in `game/assets/audio/CREDITS.md`; rebuilt by `tools/audio/build_sfx_round4.py`.
+- Open: `test_pair_clearance` reports Cross Rhodes' facelock hands 0.10 m off their hold (limit 0.05); not touched by this change. The owner also asked for a review of Cody's proportions around the arms, neck and shoulders.
