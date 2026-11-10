@@ -101,11 +101,12 @@ overall. A move is complete only at overall 10/10 with no factor below 9/10.
 | Side kick knockdown | 1:16.68 contact | Passed 8.0 — verifying extension and hold | 8 / 9 / 4 / 7 / 8 / 8 / 7 / 8 / **8.0** |
 | Turning back kick knockdown | 1:20.26 contact | Passed 7.5 borderline — verifying heel and hold | 8 / 8 / 4 / 7 / 8 / 8 / 7 / 8 / **7.5** |
 | Combination 3-hit | 1:26.07 / 1:26.54 / 1:26.62 | Reference extracted; authoring pending | — |
-| Irish whip setup | 3:01.40–3:02.60 | Authoring worker running | — |
-| Rope rebound | 3:02.50–3:03.60 | Authoring worker running | — |
-| Rebound slam | 3:17.85–3:20.10 | Authoring worker running | — |
-| Rebound hurricanrana | 3:25.30–3:26.25 | Authoring worker running | — |
-| Running grapple | 3:49.00–3:51.20 | Patch ready; integrate after strike batch | — |
+| Irish whip setup | 3:01.40–3:02.60 | Scored 7.0; borderline fail on grip close-up; rope contact unverified | 8 / 7 / 4 / 6 / 8 / 7 / 8 / 7 / **7.0** |
+| Rope rebound | 3:02.50–3:03.60 | Scored 6.5; needs a rope-visible render of the absorb | 8 / 7 / 4 / 6 / 7 / 6 / 8 / 7 / **6.5** |
+| Rebound slam | 3:17.85–3:20.10 | Scored 7.0; impact contact needs a close-up | 8 / 7 / 4 / 6 / 8 / 7 / 8 / 7 / **7.0** |
+| Rebound hurricanrana | 3:25.30–3:26.25 | Scored 7.5; passes borderline; inversion alignment below resolution | 9 / 7 / 4 / 7 / 8 / 7 / 8 / 7 / **7.5** |
+| Return run / far-rope stop | 3:03.56–3:05.15 | Scored 6.5; braking foot plant needs a close-up | 8 / 7 / 4 / 6 / 7 / 7 / 8 / 6 / **6.5** |
+| Running grapple | 3:49.00–3:51.20 | Scored 7.5; passes borderline; apex head/neck below resolution | 8 / 7 / 4 / 6 / 8 / 7 / 9 / 7 / **7.5** |
 | Head sell | 1:01.44–1:01.96 | Reference extracted; sell check pending | — |
 | Gut sell | 1:03.95–1:05.00 | Reference extracted; sell check pending | — |
 | Knockdown sells | 1:16.68–1:21.00 | Reference extracted; sell check pending | — |

@@ -567,7 +567,11 @@ const STATE_ANIMATIONS := {
 	# Generated: "Roll" is a tucked forward roll and 0.63s shorter than the
 	# state, so the wrestler curled into a ball on the mat and froze in it.
 	WrestlerFSM.State.GETUP: "strikes/getup_rise",
-	WrestlerFSM.State.IRISH_WHIP: "strikes/irish_whip_throw",
+	# The man on the end of a whip is running at 9 m/s, not throwing one. The
+	# old "irish_whip_throw" was the attacker's gesture played on the victim.
+	# Generated at 9 m/s (Whip_Run) so the planted foot matches the launch;
+	# a voluntary rope run overrides this with run_drive in begin_rope_run().
+	WrestlerFSM.State.IRISH_WHIP: "strikes/whip_run",
 	# Authored clothesline, cut to the 69 frames both running_attack_*.tres
 	# share. This was Punch_Cross: a wrestler sprinted the width of the ring
 	# and threw a boxing jab, and because neither running-attack MoveDef sets
@@ -650,6 +654,10 @@ const PAIRED_POSES := preload("res://resources/animations/paired_poses.tres")
 const StrikeRecipes := preload("res://resources/animations/strike_recipes.gd")
 const STRIKE_CLIPS := preload("res://resources/animations/strike_clips.tres")
 const LADDER_AERIAL_MOVE := preload("res://resources/moves/ladder_aerial.tres") as MoveDef
+## The two-man setup/release of the Irish whip. It is a transition, not a
+## tier move: _begin_irish_whip() plays it through GrappleRig and then gives
+## the launched man his 9 m/s velocity. See paired_recipes.gd "whip_setup".
+const WHIP_SETUP_MOVE := preload("res://resources/moves/whip_setup.tres") as MoveDef
 ## Ticks (at 60Hz) to cross-fade between clips.
 const ANIMATION_BLEND_TICKS := 6
 ## How long the Inertializer carries the old pose into a new clip, by the state
@@ -745,6 +753,34 @@ var _irish_whip_return_ticks_remaining: int = 0
 ## Who to auto-steer back toward during the whip-return phase -- the
 ## original attacker, set by _begin_irish_whip().
 var _irish_whip_target: WrestlerController
+
+## Where the return run crosses the ring to, set from the rebound's own
+## direction in _tick_rope_load(). Reference section 03 is a pass, not a
+## collision: the runner goes by the attacker and stops at the FAR ropes.
+## The shoulder-to-shoulder lane around the other man is a separate steer
+## (_whip_pass_set), so this point stays the straight rebound line.
+var _whip_far_at := Vector3.ZERO
+var _whip_far_set := false
+## A one-shot lane change through the whipper's shoulder line. Committed
+## WHIP_PASS_RANGE out and held until he is WHIP_PASS_AHEAD behind, so the
+## runner commits to a side instead of weaving.
+var _whip_pass_set := false
+## The pass is behind him. Stops the lane change from being re-committed
+## when the whipper is still inside WHIP_PASS_RANGE as the runner comes out
+## of it -- re-committing would turn the exit back toward him and make the
+## runner circle instead of finishing the cross.
+var _whip_pass_done := false
+## Which side of the whipper the lane is on: +1 or -1 along the line's
+## perpendicular. Chosen when the pass is committed.
+var _whip_pass_side := 1.0
+## 0..1 ease into the lane. A 1 m lane change at 7 m/s is a real cut; the
+## blend keeps it from snapping the root yaw in a single tick.
+var _whip_pass_blend := 0.0
+## Ticks of the far-rope stop's absorb still to play. The clip runs in IDLE
+## with `_set_state_clip()`, but ordinary idle input stays closed for this
+## long so an AI who decides to move on the first tick cannot cut the
+## absorb off before it lands.
+var _far_rope_stop_ticks: int = 0
 
 ## Whether MatchReferee._check_for_cover() may start a new pin on this
 ## wrestler right now. True by default and after a genuine knockdown (an
@@ -1738,8 +1774,17 @@ func _on_fsm_state_changed(_previous: WrestlerFSM.State, current: WrestlerFSM.St
 		# Caught, hit or stopped: the run back off the ropes is over.
 		_irish_whip_return_ticks_remaining = 0
 		_whip_meet_ticks = -1
+		_whip_far_set = false
+		_whip_far_at = Vector3.ZERO
+		_whip_pass_set = false
+		_whip_pass_done = false
+		_whip_pass_side = 1.0
+		_whip_pass_blend = 0.0
 		if current != WrestlerFSM.State.IRISH_WHIP:
 			rope_running = false
+	if current != WrestlerFSM.State.IDLE:
+		# A hit, a strike, or anything else takes the stop's absorb away.
+		_far_rope_stop_ticks = 0
 	if current != WrestlerFSM.State.TAUNT:
 		_stalking = false
 	if not _anim_playback:
@@ -2161,6 +2206,20 @@ func _take_wheel_pick() -> StringName:
 	return pick
 
 func _process_free_movement(delta: float, input: Dictionary) -> void:
+	if fsm.current_state == WrestlerFSM.State.IDLE and _far_rope_stop_ticks > 0:
+		# Section 03's two-handed stop: the absorb clip owns the next 0.8 s.
+		# Closing ordinary idle input here is what keeps an AI who already
+		# wants to move from cutting the stop off on its first tick -- the
+		# crossfade into the clip is smooth, but a one-tick look at it is
+		# still a pop. The clip ends on READY, so restarting idle_ready at
+		# the end is the same pose.
+		_far_rope_stop_ticks -= 1
+		_stop_dead()
+		_wants_tie_up_this_tick = false
+		if _far_rope_stop_ticks == 0:
+			_restart_state_clip(WrestlerFSM.State.IDLE,
+					clip_for_state(WrestlerFSM.State.IDLE, _is_grapple_attacker))
+		return
 	if fsm.current_state == WrestlerFSM.State.RUN and _irish_whip_return_ticks_remaining > 0:
 		_process_irish_whip_return(input)
 		return
@@ -2814,6 +2873,12 @@ var _rebound_pick: MoveDef
 ## Whipped into a corner rather than the ropes: he is trapped against the
 ## turnbuckle when he reaches it (_reached_whip_corner()).
 var _irish_whip_corner := false
+## Whether the setup pair currently playing was aimed at a corner. Held on the
+## whipper until `grapple_finished`; the victim's `_irish_whip_corner` is only
+## set when the launch is applied.
+var _whip_setup_corner := false
+## Whether that setup pair was aimed into the cage rather than the ropes.
+var _whip_setup_cage := false
 
 
 ## Running the ropes (the owner, 3 Nov: "the wrestlers didn't run the ropes"):
@@ -2826,6 +2891,45 @@ var rope_running := false
 const ROPE_RUN_RECOVERY_TICKS := 12
 const ROPE_RUN_RETURN_MAX := 90
 var _rope_run_recovery := 0
+
+## The return run and far-rope stop (gauntlet/refs/video_refs/whip_rebound/
+## reference.md section 03). A thrown man comes off the rebound running, goes
+## BY the whipper -- no contact, no strike, no sell -- and stops at the
+## opposite ropes. `strikes/return_run` is the stride cycle; the stop is a
+## one-shot absorb authored from a sprint contact to the idle stance.
+const RETURN_RUN_CLIP := "strikes/return_run"
+const FAR_ROPE_STOP_CLIP := "strikes/far_rope_stop"
+## Far_Rope_Stop is 24 authored frames at 30 fps / 0.8 s. Kept in ticks here
+## because the IDLE state has no move clock of its own. tests/
+## test_authored_clips.gd pins the clip length.
+const FAR_ROPE_STOP_TICKS := 48
+## Centre-to-centre lane the pass keeps around the whipper: two 0.4 m
+## capsules need 0.8 m not to collide; a shoulder-to-shoulder pass reads at
+## this and still sits inside REBOUND_CATCH_RANGE for a real catch.
+const WHIP_PASS_LANE := 1.00
+## Commit to the pass this far out, so the lane change starts as a run and
+## not a sidestep at the last metre. Inside it the runner steers through a
+## line offset WHIP_PASS_LANE from the whipper; outside it he runs the
+## straight far-rope line.
+const WHIP_PASS_RANGE := 3.00
+## The pass is complete when the whipper is this far behind him. Keeps the
+## exit from re-committing to the lane as the runner comes out of it.
+const WHIP_PASS_AHEAD := 0.35
+## Lane-following gain and forward look-ahead, in metres. The correction is
+## eased in over WHIP_PASS_EASE_TICKS so the root does not snap its yaw.
+const WHIP_PASS_GAIN := 2.0
+const WHIP_PASS_LOOKAHEAD := 3.5
+const WHIP_PASS_EASE_TICKS := 9
+## Stop this far from the far-rope point. The return line aims
+## WHIP_FAR_ROPE_INSET inside RING_KEEP_IN, so the body centre stops at
+## about 2.0 m from the ring centre -- roughly 0.55 m short of the rope
+## line at 2.55. That is the reach of the authored contact pose (hands
+## 0.58 m forward of the root on frame 6), so the hands and chest finish the
+## last of the gap instead of the capsule colliding with the rope and
+## sliding along it.
+const WHIP_FAR_ROPE_TRIGGER := 0.30
+## How far inside RING_KEEP_IN the return line aims.
+const WHIP_FAR_ROPE_INSET := 0.35
 
 
 func can_rope_run() -> bool:
@@ -2856,6 +2960,13 @@ func begin_rope_run() -> bool:
 	_irish_whip_target = opponent
 	_irish_whip_rebounded = false
 	_irish_whip_corner = false
+	_whip_far_at = Vector3.ZERO
+	_whip_far_set = false
+	_whip_pass_set = false
+	_whip_pass_done = false
+	_whip_pass_side = 1.0
+	_whip_pass_blend = 0.0
+	_far_rope_stop_ticks = 0
 	rope_running = true
 	_rope_run_recovery = 0
 	look_at(global_position + dir, Vector3.UP)
@@ -2989,24 +3100,72 @@ func wants_screen_whip() -> bool:
 
 
 ## Called by the attacker's own _process_grapple_hold() when it chooses to
-## whip instead of resolving a normal grapple move. Launches the defender
-## (this call's `opponent`, from the defender's own perspective once we
-## reach into it below) toward the ropes with real velocity -- the actual
-## flight and rebound are handled by _process_irish_whip() once physics
-## carries the body into a rope collider, not scripted here.
+## whip instead of resolving a normal grapple move. The two-man setup/release
+## (Whip_Setup_Attacker/Defender) is played through GrappleRig first; the
+## launch velocity is applied only when `grapple_finished` fires, so the
+## victim leaves on the pair's final, already 9 m/s stride rather than being
+## teleported onto it. With no rig (tests, grey-box) it falls back to the old
+## immediate launch. Into-cage whips use the same pair and carry the cage
+## flag through to the victim.
 func _begin_irish_whip(into_corner := false, into_cage := false) -> void:
+	_whip_setup_corner = into_corner
+	_whip_setup_cage = into_cage
+	_rebound_pick = null
+	if opponent == null:
+		fsm.transition_to(WrestlerFSM.State.IDLE)
+		return
+	if grapple_rig == null or WHIP_SETUP_MOVE == null:
+		_launch_whip_victim()
+		return
+	if grapple_rig.is_active():
+		return
+	# Both men stay in GRAPPLE_HOLD while the rig plays the pair: that is the
+	# state play_paired_pose() poses them in, and the victim's run-out state
+	# must not start until the pair has handed him over.
+	_is_grapple_attacker = true
+	opponent._is_grapple_attacker = false
+	grapple_rig.begin(self, opponent, WHIP_SETUP_MOVE)
+	grapple_rig.grapple_finished.connect(_on_whip_setup_finished, CONNECT_ONE_SHOT)
+
+
+## `grapple_finished` for the whip setup pair. Launch only now: the pair's
+## last root key is already moving at IRISH_WHIP_LAUNCH_SPEED, and Whip_Run
+## frame 0 is its last pose, so the velocity is a continuation, not a shove.
+func _on_whip_setup_finished(_attacker: Node3D, _defender: Node3D) -> void:
+	_launch_whip_victim()
+
+
+## Gives the victim the whip's real launch velocity, aimed from where the pair
+## finished, and hands him to IRISH_WHIP (Whip_Run) with the attacker free.
+func _launch_whip_victim() -> void:
+	if opponent == null or not is_instance_valid(opponent):
+		_clear_grapple_roles()
+		fsm.transition_to(WrestlerFSM.State.IDLE)
+		return
 	var launch_dir := opponent.global_position - global_position
 	launch_dir.y = 0.0
 	launch_dir = launch_dir.normalized() if launch_dir.length() > 0.01 else Vector3.FORWARD
-	if into_corner:
+	if _whip_setup_corner:
 		launch_dir = corner_whip_dir(opponent.global_position, launch_dir)
 	opponent.velocity = launch_dir * IRISH_WHIP_LAUNCH_SPEED
 	opponent._irish_whip_launch_velocity = opponent.velocity
 	opponent._irish_whip_target = self
 	opponent._irish_whip_rebounded = false
-	opponent._irish_whip_corner = into_corner
-	opponent._irish_whip_cage = into_cage
-	_rebound_pick = null
+	opponent._irish_whip_corner = _whip_setup_corner
+	opponent._irish_whip_cage = _whip_setup_cage
+	# The man being whipped is the runner: he sprints away into the ropes,
+	# he does not play the thrower's sling. On rope contact _begin_rope_load()
+	# restarts IRISH_WHIP on the chest-first absorb pose (reference video 02).
+	# A voluntary rope run still uses run_drive, which is authored for 7 m/s,
+	# while this victim is travelling at 9.
+	opponent._set_state_clip(WrestlerFSM.State.IRISH_WHIP, "strikes/whip_run")
+	opponent._whip_far_at = Vector3.ZERO
+	opponent._whip_far_set = false
+	opponent._whip_pass_set = false
+	opponent._whip_pass_done = false
+	opponent._whip_pass_side = 1.0
+	opponent._whip_pass_blend = 0.0
+	opponent._far_rope_stop_ticks = 0
 	# The hold ends here too -- the whip replaces the grapple move.
 	_clear_grapple_roles()
 	fsm.transition_to(WrestlerFSM.State.IDLE)
@@ -3104,11 +3263,12 @@ func _whipped_into_screen() -> bool:
 ## and throw it back. The rope collider stops the capsule's centre 0.38 m
 ## short of where his back first touches the real ropes at 3.1, so he first
 ## travels that gap at full speed (ROPE_LOAD_FREE), then the ropes take him
-## ROPE_LOAD_DEPTH further on a half-sine -- a mass on a spring, stopped and
-## returned -- and he comes back out of them at the rebound's speed. At 9 m/s
-## that is ~14 ticks in the ropes, against the footage's ~0.25 s contact;
-## the live ropes (core/ring/ring_ropes.gd) see his back go 0.4 m past their
-## line and give that far.
+## ROPE_LOAD_DEPTH further on a half-sine -- a mass on a spring, stopped --
+## and hold him at full depth until ROPE_LOAD_HOLD_SECONDS, while the authored
+## Whip_Rope_Absorb plays its 0.50 s chest-contact/sink/push-off beat. Then he
+## comes back out of them at the rebound's speed. The live ropes
+## (core/ring/ring_ropes.gd) see his back go 0.4 m past their line and give
+## that far.
 ##
 ## Kinematic and closed-form in ticks, so deterministic. The rope collider he
 ## is in is excepted from his collision for the load and until he is back
@@ -3116,6 +3276,13 @@ func _whipped_into_screen() -> bool:
 ## aside for the same span (it would snap him back to 2.6).
 const ROPE_LOAD_FREE := 0.38
 const ROPE_LOAD_DEPTH := 0.40
+## How long the root is held at full depth before the ropes throw him back.
+## The half-sine alone reaches full depth at ~0.11 s (9 m/s), but the authored
+## Whip_Rope_Absorb plays chest contact -> deep compression -> push-off ->
+## first return step over 0.50 s (reference video 02, 183.10 -> 183.60). The
+## hold lets that whole clip play against the loaded ropes instead of being
+## cut off at its first deep frame.
+const ROPE_LOAD_HOLD_SECONDS := 0.50
 ## Longest he can be out in the ropes before being put back regardless -- a
 ## load interrupted by something that holds him still must not strand him
 ## outside the ring with the rope collider switched off.
@@ -3145,18 +3312,37 @@ func _begin_rope_load(normal: Vector3, rope: Node) -> void:
 	_rope_load_body = rope as CollisionObject3D
 	if _rope_load_body:
 		add_collision_exception_with(_rope_load_body)
+	# Chest contact: the sprint ends here. Restart IRISH_WHIP on the absorb
+	# clip mid-state so it always opens on the contact pose no matter which
+	# tick the collider was reached (reference video 02, 183.10). The clip
+	# runs contact -> deep seated compression -> push-off -> first return
+	# step; RUN's run_drive takes over from the last pose.
+	_restart_state_clip(WrestlerFSM.State.IRISH_WHIP, "strikes/whip_rope_absorb")
 
 
 ## Where the load has him `seconds` after it began, as distance out past
 ## where the collider stopped him; -1 once the ropes have thrown him back.
+##
+## The half-sine takes him to full depth and then the root is held there
+## until ROPE_LOAD_HOLD_SECONDS, so Whip_Rope_Absorb can play its whole
+## 0.50 s (contact -> deepest compression -> push-off -> first return step)
+## before the rebound. Without the plateau the drop was back at -1.0 at
+## ~0.18 s and the clip was cut before its deepest key.
 static func rope_load_offset(seconds: float, speed: float) -> float:
 	var t_free := ROPE_LOAD_FREE / speed
 	if seconds < t_free:
 		return speed * seconds
 	var omega := speed / ROPE_LOAD_DEPTH
 	var u := seconds - t_free
-	if u < PI / omega:
+	# The sine reaches full depth after a quarter period (t_free + pi/2w),
+	# not after a half period -- holding at the half-period would snap the
+	# root 0.38 m outward from a part-way sine value.
+	var t_peak := t_free + PI / (2.0 * omega)
+	if seconds < t_peak:
 		return ROPE_LOAD_FREE + ROPE_LOAD_DEPTH * sin(omega * u)
+	# Full depth: hold the root at the loaded ropes while the absorb plays.
+	if seconds < maxf(ROPE_LOAD_HOLD_SECONDS, t_peak):
+		return ROPE_LOAD_FREE + ROPE_LOAD_DEPTH
 	return -1.0
 
 
@@ -3165,8 +3351,9 @@ func _tick_rope_load() -> void:
 	_rope_load_tick += 1
 	var x := rope_load_offset(_rope_load_tick * dt, _rope_load_speed)
 	if x < 0.0:
-		# Thrown back: out of the ropes at the rebound's speed, the way he
-		# went in reflected, as the old instant bounce gave.
+		# The hold is over (Whip_Rope_Absorb has reached its first return
+		# step): thrown back, out of the ropes at the rebound's speed, the way
+		# he went in reflected, as the old instant bounce gave.
 		global_position = _rope_load_from + _rope_load_out * ROPE_LOAD_FREE \
 				+ _rope_load_along * (_rope_load_tick * dt)
 		velocity = (-_rope_load_out * _rope_load_speed + _rope_load_along) \
@@ -3181,6 +3368,25 @@ func _tick_rope_load() -> void:
 			var travel := ceili(maxf(0.0, gap - STRIKE_HIT_RANGE) / RUN_SPEED * Engine.physics_ticks_per_second)
 			_irish_whip_return_ticks_remaining = clampi(travel + ROPE_RUN_RECOVERY_TICKS + 6,
 					IRISH_WHIP_RETURN_TICKS, ROPE_RUN_RETURN_MAX)
+		elif not rope_running:
+			# A thrown man does not home on the whipper: section 03's return
+			# is a pass, and the far ropes are the destination. The point is
+			# fixed now, off the rebound's own direction, so the route cannot
+			# change under him while a catch can still start.
+			_whip_far_at = _far_rope_from_here(velocity)
+			_whip_far_set = true
+			var to_far := Vector2(_whip_far_at.x - global_position.x,
+					_whip_far_at.z - global_position.z)
+			var travel := ceili(to_far.length() / RUN_SPEED
+					* Engine.physics_ticks_per_second)
+			_irish_whip_return_ticks_remaining = clampi(travel + 8,
+					IRISH_WHIP_RETURN_TICKS, ROPE_RUN_RETURN_MAX)
+		# The stride cycle, looped for as long as the return lasts. Set before
+		# the transition so _on_fsm_state_changed() consumes it. A voluntary
+		# rope run keeps RUN's own run_drive clip -- it is a charge at the
+		# other man, not this reference's pass.
+		if not rope_running:
+			_set_state_clip(WrestlerFSM.State.RUN, RETURN_RUN_CLIP)
 		fsm.transition_to(WrestlerFSM.State.RUN)
 		return
 	var want := _rope_load_from + _rope_load_out * x \
@@ -3208,10 +3414,14 @@ func _end_rope_load_when_clear() -> void:
 
 ## Autopilot phase right after a rope rebound -- see
 ## _irish_whip_return_ticks_remaining's doc comment for why this can't just
-## hand control to normal _process_free_movement() immediately. Steers
-## deterministically toward _irish_whip_target at RUN_SPEED (no player/AI
-## input drives direction here, matching a real rebound's momentum), while
-## still allowing a running attack the moment it's in range.
+## hand control to normal _process_free_movement() immediately.
+##
+## A self-initiated rope run (`rope_running`) is physics-driven back toward
+## the man it is aimed at, and may become a running attack. A man THROWN into
+## the ropes does not home: reference section 03 is a pure locomotion beat,
+## so he carries the rebound's line past the whipper and stops at the far
+## ropes (_process_whip_pass). No player/AI input drives direction in either
+## case, matching a real rebound's momentum.
 func _process_irish_whip_return(input: Dictionary) -> void:
 	_irish_whip_return_ticks_remaining -= 1
 	if rope_running:
@@ -3245,6 +3455,14 @@ func _process_irish_whip_return(input: Dictionary) -> void:
 			if face.length() > 0.1:
 				look_at(global_position + face, Vector3.UP)
 		return
+	if not rope_running:
+		# Section 03: a thrown man's return is a pass. He keeps running the
+		# line the rebound gave him, goes by the whipper (who may still catch
+		# him with try_rebound_move()), and stops at the far ropes. He does
+		# NOT get a free running attack here -- the runner's turn to swing is
+		# a different beat (reference section 04), not the whip's momentum.
+		_process_whip_pass()
+		return
 	if _irish_whip_target and is_instance_valid(_irish_whip_target):
 		var dir := _irish_whip_target.global_position - global_position
 		dir.y = 0.0
@@ -3254,6 +3472,120 @@ func _process_irish_whip_return(input: Dictionary) -> void:
 			velocity.z = dir.z * RUN_SPEED
 			look_at(global_position + dir, Vector3.UP)
 	_maybe_start_running_attack(input)
+
+
+## One tick of the thrown man's return run: follow the fixed far-rope line,
+## ease onto a lane one shoulder-width to the whipper's side while he is
+## ahead, and start the absorb when the lane is behind and the far rope is
+## close. See _irish_whip_return_ticks_remaining's doc comment for why this
+## does not hand steering to _process_free_movement().
+func _process_whip_pass() -> void:
+	if not _whip_far_set:
+		# Defensive: a return set up by something other than _tick_rope_load()
+		# (a test, a saved state) still gets a destination. Down his own
+		# facing puts the far ropes ahead of him, which is the way the
+		# rebound threw him.
+		var toward := -global_transform.basis.z
+		if _irish_whip_target and is_instance_valid(_irish_whip_target):
+			toward = _irish_whip_target.global_position - global_position
+		_whip_far_at = _far_rope_from_here(toward)
+		_whip_far_set = true
+	var to_far := _whip_far_at - global_position
+	to_far.y = 0.0
+	if to_far.length() < 0.05:
+		_begin_far_rope_stop()
+		return
+	var line := to_far.normalized()
+	if _whip_pass_set:
+		if not _irish_whip_target or not is_instance_valid(_irish_whip_target):
+			_whip_pass_set = false
+			_whip_pass_done = true
+		else:
+			var to_him := _irish_whip_target.global_position - global_position
+			to_him.y = 0.0
+			var along := to_him.dot(line)
+			if along < -WHIP_PASS_AHEAD:
+				# Past him: the lane change is over.
+				_whip_pass_set = false
+				_whip_pass_done = true
+			else:
+				var perp := Vector3(-line.z, 0.0, line.x)
+				var lateral := (global_position
+						- _irish_whip_target.global_position).dot(perp)
+				_whip_pass_blend = minf(1.0, _whip_pass_blend
+						+ 1.0 / float(WHIP_PASS_EASE_TICKS))
+				var ahead := clampf(along + 0.4, 0.4, WHIP_PASS_LOOKAHEAD)
+				var correction := _whip_pass_blend * WHIP_PASS_GAIN \
+						* (_whip_pass_side * WHIP_PASS_LANE - lateral)
+				var goal := line * ahead + perp * correction
+				if goal.length() > 0.01:
+					var dir := goal.normalized()
+					velocity.x = dir.x * RUN_SPEED
+					velocity.z = dir.z * RUN_SPEED
+					look_at(global_position + dir, Vector3.UP)
+					return
+				_whip_pass_set = false
+				_whip_pass_done = true
+	elif not _whip_pass_done and _irish_whip_target and is_instance_valid(_irish_whip_target):
+		var to_him := _irish_whip_target.global_position - global_position
+		to_him.y = 0.0
+		var along := to_him.dot(line)
+		# Commit only when he is actually between us and the far rope. This
+		# tick keeps the straight line; the ease starts on the next one.
+		if to_him.length() <= WHIP_PASS_RANGE and along > 0.0:
+			var perp := Vector3(-line.z, 0.0, line.x)
+			var offset := global_position - _irish_whip_target.global_position
+			offset.y = 0.0
+			_whip_pass_side = 1.0 if offset.dot(perp) >= 0.0 else -1.0
+			_whip_pass_set = true
+			_whip_pass_blend = 0.0
+	# Not in the lane change (or just out of it): the far rope is the line.
+	if to_far.length() <= WHIP_FAR_ROPE_TRIGGER \
+			or _irish_whip_return_ticks_remaining <= 0:
+		_begin_far_rope_stop()
+		return
+	velocity.x = line.x * RUN_SPEED
+	velocity.z = line.z * RUN_SPEED
+	look_at(global_position + line, Vector3.UP)
+
+
+## The far-rope stop: zero the run on the tick he reaches the trigger and
+## enter IDLE with `strikes/far_rope_stop`. IDLE is used rather than a new
+## FSM state because the clip is a one-shot recovery and control should come
+## back the moment it has absorbed; _far_rope_stop_ticks holds ordinary idle
+## input off for its length so the absorb is not cut off mid-way. The blend
+## into it is the state machine's normal crossfade, and the clip's first
+## frame is a sprint contact, so there is no snap.
+func _begin_far_rope_stop() -> void:
+	velocity = Vector3.ZERO
+	_irish_whip_return_ticks_remaining = 0
+	_whip_meet_ticks = -1
+	_whip_far_at = Vector3.ZERO
+	_whip_far_set = false
+	_whip_pass_set = false
+	_whip_pass_done = false
+	_whip_pass_side = 1.0
+	_whip_pass_blend = 0.0
+	_far_rope_stop_ticks = FAR_ROPE_STOP_TICKS
+	_set_state_clip(WrestlerFSM.State.IDLE, FAR_ROPE_STOP_CLIP)
+	fsm.transition_to(WrestlerFSM.State.IDLE)
+
+
+## The point on the far rope this rebound is heading for. `dir` is the
+## rebound's own direction, so a rebound along +X comes back along -X; the
+## other coordinate stays where it is rather than cutting across the ring
+## to a corner. The shoulder-to-shoulder lane around the whipper is handled
+## by the steer in _process_whip_pass(), not by bending this point.
+func _far_rope_from_here(dir: Vector3) -> Vector3:
+	var flat := Vector3(dir.x, 0.0, dir.z)
+	if flat.length() < 0.01:
+		flat = -global_transform.basis.z
+	flat = flat.normalized()
+	var edge := RING_KEEP_IN - WHIP_FAR_ROPE_INSET
+	var here := global_position
+	if absf(flat.x) >= absf(flat.z):
+		return Vector3(signf(flat.x) * edge, here.y, clampf(here.z, -edge, edge))
+	return Vector3(clampf(here.x, -edge, edge), here.y, signf(flat.z) * edge)
 
 func _start_move(state: WrestlerFSM.State, move: MoveDef) -> void:
 	if state in [WrestlerFSM.State.STRIKE, WrestlerFSM.State.RUNNING_ATTACK]:

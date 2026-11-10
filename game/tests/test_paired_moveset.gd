@@ -52,7 +52,8 @@ const SCOPED_FINISHER := 3  # + the 2K26 variant Superman Punch into the Spear (
 ## The 25 running attacks recreated from the supplied WWE 2K25 reel, each a
 ## paired move so the victim's half is keyed against the hit.
 ## Plus the corner run-ins, roster-only: Roman's Spear and Cody's knee.
-const SCOPED_RUNNING := 28
+## Plus the tutorial's running inverted drop.
+const SCOPED_RUNNING := 29
 ## What match.tscn's shared pool hands out: Roman's Drive-By is on his roster only.
 const SHARED_RUNNING_POOL := 25
 ## Chain wrestling's links (Phase 4): headlock, wristlock, waistlock.
@@ -62,6 +63,12 @@ const SCOPED_LADDER := 1
 ## No Holds Barred's table lay: the body slam's lift, set down on a table for
 ## the dive off the top through him (GrappleRig.TABLE_LAY).
 const SCOPED_TABLE := 1
+## The Irish whip's setup/release pair. A transition played by
+## WrestlerController._begin_irish_whip(), not a tier.
+const SCOPED_WHIP := 1
+## The tutorial's rope-catch moves: the catch-and-slam and the rana counter,
+## both drawn from roster rebound pools.
+const SCOPED_REBOUND := 2
 
 func _paired_move_names() -> Array[String]:
 	var names: Array[String] = []
@@ -103,6 +110,8 @@ func test_the_moveset_covers_everything_architecture_scopes() -> void:
 	var chain := 0
 	var ladder := 0
 	var table := 0
+	var whip := 0
+	var rebound := 0
 	var cut: Array[String] = []
 	for name in _paired_move_names():
 		if name.begins_with("grapple_"):
@@ -121,6 +130,10 @@ func test_the_moveset_covers_everything_architecture_scopes() -> void:
 			ladder += 1
 		elif name.begins_with("table_"):
 			table += 1
+		elif name.begins_with("whip_"):
+			whip += 1
+		elif name.begins_with("rebound_"):
+			rebound += 1
 		elif name.begins_with("ff_") and FFMoveLibrary.MOVES.has(name.trim_prefix("ff_")):
 			pass  # the Fight Forever library, which grows move by move
 		else:
@@ -135,6 +148,8 @@ func test_the_moveset_covers_everything_architecture_scopes() -> void:
 	assert_int(chain).is_equal(SCOPED_CHAIN)
 	assert_int(ladder).is_equal(SCOPED_LADDER)
 	assert_int(table).is_equal(SCOPED_TABLE)
+	assert_int(whip).is_equal(SCOPED_WHIP)
+	assert_int(rebound).is_equal(SCOPED_REBOUND)
 	# The removed family leaves nothing behind: a reversal clip still in the
 	# library would be an animation no MoveDef names and nothing can play.
 	assert_array(cut).override_failure_message(
@@ -284,6 +299,9 @@ func test_the_match_scene_gives_both_wrestlers_the_whole_moveset() -> void:
 	# The table lay is the AI's table spot's (WrestlerAI._table_lay_input):
 	# chosen for the hold beside a table in the ring, never from a tier.
 	reachable["table_lay"] = true
+	# The whip setup is played by _begin_irish_whip() out of a won grapple
+	# hold, then hands the victim to Whip_Run; it is never drawn from a tier.
+	reachable["whip_setup"] = true
 	var unreachable: Array[String] = []
 	for name in _paired_move_names():
 		if not reachable.has(name):

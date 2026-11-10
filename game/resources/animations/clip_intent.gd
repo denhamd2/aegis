@@ -21,6 +21,11 @@ const LEAN := {
 	"Clinch_Knee_Attacker": [0.27, "forward"],
 	# Folding round the knee as it lands, frame 18 of 30.
 	"Clinch_Knee_Defender": [0.6, "forward"],
+	# The return sprint is a forward drive, and the far-rope absorb is the
+	# chest going into the ropes -- the shot reads as leaning back if either
+	# flips. Frame 6 of Far_Rope_Stop is the contact.
+	"Return_Run": [0.0, "forward"],
+	"Far_Rope_Stop": [0.25, "forward"],
 }
 
 ## Clips authored in world space against a floor that is not the mat

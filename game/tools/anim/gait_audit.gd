@@ -36,6 +36,12 @@ const OFFICIAL_SCENE := "res://scenes/aubrey_model.tscn"
 const CYCLES := {
 	"walk_stalk": 3.5,   # MOVE_SPEED
 	"run_drive": 7.0,    # RUN_SPEED
+	"whip_run": 9.0,     # IRISH_WHIP_LAUNCH_SPEED
+	# The Irish whip's return run (reference section 03): same stride and
+	# cadence as run_drive, so the same engine speed. It must be audited too
+	# -- the cycle is regenerated from _gait(), and a retime that drifted
+	# from RUN_SPEED would skate here exactly as it would in RUN.
+	"return_run": 7.0,   # RUN_SPEED, the whip return
 	"run_jog": 4.2,      # JOG_SPEED (outside the ring)
 	"walk_slow": 1.0,    # EntranceDirector.FACEOFF_CORNER_SPEED
 	"walk_staredown": 0.6,  # EntranceDirector.FACEOFF_WALK_SPEED

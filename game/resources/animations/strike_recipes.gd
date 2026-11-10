@@ -534,10 +534,31 @@ const RECIPES := {
 	"run_drive": {"kind": "retime", "source": "Run_Drive",
 		"seconds": 0.667, "file": AUTHORED, "loop": true},
 
+	# The Irish whip's return run (reference section 03): Run_Drive's cadence
+	# at the same 7.0 m/s, with the chest taller and the head up looking at
+	# the man he is about to pass. Same 20 authored frames, so the same
+	# 0.667 s and the same planted rate as run_drive above.
+	"return_run": {"kind": "retime", "source": "Return_Run",
+		"seconds": 0.667, "file": AUTHORED, "loop": true},
+
 	# The jog outside the ring: Run_Jog's own 22 frames at 30 fps, tied to
 	# WrestlerController.JOG_SPEED through its generated contact phase.
 	"run_jog": {"kind": "retime", "source": "Run_Jog",
 		"seconds": 0.733, "file": AUTHORED, "loop": true},
+
+	# The whipped runner (reference video 02). Not a paired move: the FSM's
+	# IRISH_WHIP state is the runner on his way to the ropes, and RUN takes
+	# him back off them. Whip_Run is a 0.400 s loop: two 0.20 s steps at the
+	# whip's own 9.0 m/s launch, so the planted foot travels at engine speed
+	# (0.60 m in 0.0667 s) and the cadence matches the footage. The rope
+	# collision cuts it. Whip_Rope_Absorb is 0.500 s from chest contact to
+	# the first return step (reference contact 183.10, deepest 183.46,
+	# push-off 183.56, end 183.60). See notes.md for the state wiring and the
+	# rope-load hold that lets the full absorb play.
+	"whip_run": {"kind": "retime", "source": "Whip_Run",
+		"seconds": 0.400, "file": AUTHORED, "loop": true},
+	"whip_rope_absorb": {"kind": "retime", "source": "Whip_Rope_Absorb",
+		"seconds": 0.500, "file": AUTHORED},
 
 	# TIE_UP played "Push", a two-armed shove -- closer than the one-armed
 	# point it replaced, but still a man pushing a crate. A collar-and-elbow
@@ -675,6 +696,14 @@ const RECIPES := {
 	# IRISH_WHIP played "Push", a shove straight ahead. A whip turns the
 	# hips and slings the other man PAST you.
 	"irish_whip_throw": {"kind": "retime", "source": "Irish_Whip_Throw",
+		"seconds": 0.800, "file": AUTHORED},
+
+	# The far-rope stop that ends the return (reference section 03, contact
+	# 184.97 / reset 185.15): 24 authored frames / 0.8 s, one shot. The
+	# controller enters IDLE with it and holds ordinary input off for
+	# WrestlerController.FAR_ROPE_STOP_TICKS so the absorb cannot be cut
+	# short; the last frame is READY, which is Idle_Ready's first frame.
+	"far_rope_stop": {"kind": "retime", "source": "Far_Rope_Stop",
 		"seconds": 0.800, "file": AUTHORED},
 
 	# RUNNING_ATTACK plays Punch_Cross today: a wrestler sprints the width of

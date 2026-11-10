@@ -547,6 +547,32 @@ const RECIPES := {
 		],
 		"defender_grips_until": 0.50,
 	},
+	# Running grapple + inverted drop, from the reference video's running-moves
+	# section: start 229.00, contact 230.23, lift 230.70, impact 230.95, cut
+	# 231.20. He sprints in, catches the man chest-to-chest in a waist wrap,
+	# extends the hips to turn him upside down across his body, and drops him
+	# on the head and upper back. The victim's root never leaves the mat -- the
+	# inversion is bone pose in his own body frame, see Run_Grapple_* in
+	# tools/blender/wrestling_clips.py.
+	"running_grapple_inverted_drop": {
+		"authored": {"attacker": "Run_Grapple_Attacker", "defender": "Run_Grapple_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Punch_Cross", "at": 0.50},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Idle", "at": 0.00},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		# He braces on his feet to the catch. Once lifted, the authored arms
+		# carry him; no IK reach for the man who threw him.
+		"defender_grips_until": 0.0,
+		# The release is the impact cue, tick 118 of the 132-tick clip
+		# (1.95 s on the reference grid, authored frame 59). The helper reads a
+		# FRACTION of the clip, so write the ratio, not 118 or 1.95 (a value
+		# >= 1.0 would read as "never release" and keep the grip IK on him).
+		"attacker_grips_until": 118.0 / 132.0,  # 1.95 s / 2.2 s: impact cue
+	},
 	# Roman's own signature -- see Superman_Punch_Attacker.
 	"signature_superman_punch": {
 		"authored": {"attacker": "Superman_Punch_Attacker", "defender": "Superman_Punch_Defender"},
@@ -742,6 +768,44 @@ const RECIPES := {
 		],
 		"defender_grips_until": 0.55,
 	},
+	# The rebound catch and standing slam from the whip/rebound reference
+	# (gauntlet/refs/video_refs/whip_rebound/reference.md, section 04).
+	# CATCH-ONLY trim: WrestlerController.try_rebound_move() fires while the
+	# defender is already returning off the ropes, so the clip starts at the
+	# catch (reference 199.42), not at the 197.85 release. Catch/lift/impact
+	# are 0.00 / 0.13 / 0.30 s; the sell runs to 1.633 s. Both grips are off:
+	# the arms are authored hand by hand, and the default grip IK would drag
+	# them onto his chest during the catch.
+	"rebound_slam": {
+		"authored": {"attacker": "Rebound_Slam_Attacker", "defender": "Rebound_Slam_Defender"},
+		# Fallback samples, used only if the authored clips are missing.
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.07, "clip": "PickUp_Table", "at": 0.45},
+			{"t": 0.13, "clip": "PickUp_Table", "at": 0.80},
+			{"t": 0.20, "clip": "PickUp_Table", "at": 0.45},
+			{"t": 0.30, "clip": "PickUp_Table", "at": 0.45},
+			{"t": 0.47, "clip": "Idle", "at": 0.00},
+			{"t": 1.10, "clip": "Idle", "at": 0.00},
+			{"t": 1.63, "clip": "Idle", "at": 0.00},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.07, "clip": "Jump", "at": 0.50},
+			{"t": 0.13, "clip": "Jump", "at": 0.50},
+			{"t": 0.20, "clip": "Jump", "at": 0.50},
+			{"t": 0.30, "clip": "Death01", "at": 0.90},
+			{"t": 0.47, "clip": "Death01", "at": 1.60},
+			{"t": 1.10, "clip": "Death01", "at": 1.60},
+			{"t": 1.63, "clip": "Death01", "at": 1.60},
+		],
+		"attacker_grips_until": 0.0,
+		"defender_grips_until": 0.0,
+		# Effect cue for the effects layer. The reference's impact is tick 112
+		# from the 197.85 release; because this clip starts at the 199.42
+		# catch, the same frame is clip tick 18 / frame 9 / t 0.30.
+		"cues": [{"tick": 112, "clip_tick": 18, "t": 0.30, "effect": "impact_burst"}],
+	},
 	# Cody's -- see Pedigree_Attacker. Double underhook, then down on the knees.
 	"signature_pedigree": {
 		"authored": {"attacker": "Pedigree_Attacker", "defender": "Pedigree_Defender"},
@@ -784,6 +848,35 @@ const RECIPES := {
 			{"t": 0.60, "clip": "Death01", "at": 1.60},
 		],
 		"defender_grips_until": 0.25,
+	},
+	# Rebound hurricanrana (whip_rebound reference 05, 205.30-206.25): the
+	# man returning off the ropes is taken over in a forward somersault, the
+	# attacker landing astride his chest. Triggered by try_rebound_move()
+	# on an is_whip_returning() runner; GrappleRig's lead-in brakes the
+	# return before the clip starts. Take-off at 0.12 s and the impact at
+	# 0.75 s (206.05, tick 45) are the reference beats, so the trajectory
+	# and the MoveDef's contact cue agree. The reference cuts at 0.95 s; the
+	# clip runs 1.333 s (80 ticks) to carry the attacker's stand-up exit tail. Authored
+	# in Blender against each other -- see Rebound_Hurricanrana_* in
+	# wrestling_clips.py; the samples are only the fallback for a glb
+	# without them.
+	"rebound_hurricanrana": {
+		"authored": {"attacker": "Rebound_Hurricanrana_Attacker", "defender": "Rebound_Hurricanrana_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.35, "clip": "Jump", "at": 0.50},
+			{"t": 0.75, "clip": "Sitting_Enter", "at": 0.60},
+			{"t": 0.95, "clip": "Idle", "at": 0.00},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.35, "clip": "Roll", "at": 0.70},
+			{"t": 0.75, "clip": "Death01", "at": 0.90},
+			{"t": 0.95, "clip": "Death01", "at": 1.60},
+		],
+		# He lets go of the legs as the flip starts; past the take-off his
+		# arms are the sell's, not a hold.
+		"defender_grips_until": 0.20,
 	},
 	# --- AEW Fight Forever library (FFMoveLibrary) ------------------------
 	# Cody's special -- see FF_Tiger_Driver_98_Attacker in wrestling_clips.py.
@@ -1056,6 +1149,43 @@ const RECIPES := {
 		],
 		"defender_grips_until": 0.60,
 		"attacker_grips_until": 0.52,
+	},
+	# The Irish whip's setup and release (video reference #1, 181.40-182.60):
+	# a two-handed wrist grip, a hip/knee pull, the defender turned 180
+	# degrees, let go, and away on his first running stride. 1.20 s, and both
+	# halves are keyed against each other in wrestling_clips.py
+	# (Whip_Setup_Attacker / Whip_Setup_Defender).
+	#
+	# The hands are authored, not drawn by the generic grip IK: this move
+	# changes *what* the attacker holds -- wrist, then chest/waist, then
+	# nothing -- and no single contact family describes that. PairedContacts
+	# lists it as "none" for the same reason. The defender never holds the
+	# attacker; his left hand is up for balance only.
+	#
+	# It is a transition rather than a standalone MoveDef: the whip is thrown
+	# out of a won grapple hold by WrestlerController._begin_irish_whip(),
+	# which launches the defender into IRISH_WHIP. See notes.md for the
+	# proposed wiring (a whip_setup MoveDef played by GrappleRig before the
+	# launch) and its limits.
+	"whip_setup": {
+		"authored": {"attacker": "Whip_Setup_Attacker", "defender": "Whip_Setup_Defender"},
+		# Fallbacks only: used if the authored clips are missing.
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.45, "clip": "PickUp_Table", "at": 0.45},
+			{"t": 0.90, "clip": "Sword_Attack", "at": 0.80},
+			{"t": 1.20, "clip": "Idle", "at": 0.00},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.45, "clip": "Sitting_Enter", "at": 0.60},
+			{"t": 0.90, "clip": "Idle", "at": 0.00},
+			{"t": 1.20, "clip": "Idle", "at": 0.00},
+		],
+		# The right hand lets go of the defender's left arm at 1.067 s
+		# (frame 32 of 36); the left hand follows a couple of frames later.
+		"attacker_grips_until": 0.89,
+		"defender_grips_until": 0.0,
 	},
 }
 
@@ -1593,6 +1723,37 @@ const TRAJECTORIES := {
 		},
 	},
 
+	# Running grapple + inverted drop (229.00-231.20): the runner starts four
+	# metres out (x 4.00 against the victim's -0.40) and covers 3.45 m to the
+	# contact tick at t1.23, accelerating from the sprint start to about
+	# 5.6 m/s. The run is the engine's own Run_Drive stride cycle sampled onto
+	# the clip (Run_Grapple_Attacker), not a slower table. He drives forward
+	# under him for the lift, then steps back off him as he comes down. The
+	# victim is pulled to the attacker's chest, lifted -- his root never
+	# leaves the mat; the height is bone pose (Run_Grapple_Defender) -- swung
+	# to the attacker's left so he lies beside the stance rather than through
+	# it, and dropped on his head and upper back at t1.95. Roots stay at y = 0.
+	"running_grapple_inverted_drop": {
+		"length": 2.2,
+		"attacker": {
+			"pos": [[0.00, 4.00, 0.00, 0.00], [0.15, 3.95, 0.00, 0.00],
+					[0.30, 3.80, 0.00, 0.00], [0.45, 3.54, 0.00, 0.00],
+					[0.60, 3.18, 0.00, 0.00], [0.75, 2.72, 0.00, 0.00],
+					[0.90, 2.15, 0.00, 0.00], [1.05, 1.49, 0.00, 0.00],
+					[1.15, 0.98, 0.00, 0.00], [1.23, 0.55, 0.00, -0.02],
+					[1.45, 0.30, 0.00, -0.02], [1.70, 0.15, 0.00, 0.00],
+					[1.95, 0.18, 0.00, 0.02], [2.20, 0.55, 0.00, 0.05]],
+			"rot": [[0.00, 0.0, 90.0, 0.0], [2.20, 0.0, 90.0, 0.0]],
+		},
+		"defender": {
+			"pos": [[0.00, -0.40, 0.00, 0.00], [0.60, -0.40, 0.00, 0.00],
+					[1.23, -0.30, 0.00, 0.06], [1.45, -0.28, 0.00, 0.10],
+					[1.70, -0.28, 0.00, 0.20], [1.95, -0.50, 0.00, 0.34],
+					[2.20, -0.56, 0.00, 0.38]],
+			"rot": [[0.00, 0.0, -90.0, 0.0], [2.20, 0.0, -90.0, 0.0]],
+		},
+	},
+
 	# --- finisher tier -------------------------------------------------
 	# Roman's Spear: he shoves off, loads 0.9 m back, and charges through
 	# the victim's midsection -- 1.6 m in six frames -- going down on top of
@@ -1863,6 +2024,33 @@ const TRAJECTORIES := {
 					[1.30, -0.45, 0.00, 0.00], [1.37, -0.65, 0.00, 0.00],
 					[2.00, -0.65, 0.00, 0.00]],
 			"rot": [[0.00, 0.0, -90.0, 0.0], [2.00, 0.0, -90.0, 0.0]],
+		},
+	},
+	# The rebound catch and standing slam (reference #4), CATCH-ONLY:
+	# 1.633 s = reference 199.42 (catch) to 201.05 (end of sell), 98 ticks.
+	# The first key is the catch position. The old trajectory ran the defender
+	# out to x -3.00 and back; that away run and its far-rope key are gone
+	# with the trim, so no root path to the ropes remains. The catch is
+	# mid-ring: attacker x -0.05, defender x -0.70, 0.65 m apart, with the
+	# attacker side-stepped +0.34 Z to keep the bodies clear. The defender
+	# comes in another 0.05 m for the lift at 0.13 s, then is carried 0.20 m
+	# out and dropped at 0.30 s. Every root y is 0.00: the lift, the drop and
+	# the sell are bone pose, not root height. The defender's end yaw (-90)
+	# leaves him on his back with his head toward the attacker, which is how
+	# SUPINE lies.
+	"rebound_slam": {
+		"length": 1.6333,
+		"attacker": {
+			"pos": [[0.00, -0.05, 0.00, 0.34], [0.13, -0.06, 0.00, 0.34],
+					[0.30, -0.03, 0.00, 0.34], [0.68, 0.00, 0.00, 0.34],
+					[1.13, 0.02, 0.00, 0.34], [1.6333, 0.02, 0.00, 0.34]],
+			"rot": [[0.00, 0.0, 90.0, 0.0], [1.6333, 0.0, 90.0, 0.0]],
+		},
+		"defender": {
+			"pos": [[0.00, -0.70, 0.00, 0.00], [0.13, -0.75, 0.00, 0.00],
+					[0.30, -0.95, 0.00, 0.00], [0.68, -0.95, 0.00, 0.00],
+					[1.6333, -0.95, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, -90.0, 0.0], [1.6333, 0.0, -90.0, 0.0]],
 		},
 	},
 	# The Pedigree: bent double at his waist, down with him onto the knees.
@@ -2307,6 +2495,90 @@ const TRAJECTORIES := {
 					[2.37, -1.20, 0.00, 0.00], [2.47, -1.40, 0.00, 0.00],
 					[2.60, -1.70, 0.00, 0.00], [3.13, -1.70, 0.00, 0.00]],
 			"rot": [[0.00, 0.0, -90.0, 0.0], [3.13, 0.0, -90.0, 0.0]],
+		},
+	},
+	# Irish whip setup and release (reference #1). Authored against
+	# Whip_Setup_Attacker/Defender at 30 fps: keys on 0, 4, 7, 11, 16, 22,
+	# 27, 32 and 36, the last as long as the 1.20 s clip.
+	#
+	# The pair starts closer than a throw -- 0.52 m between the roots,
+	# chest-to-chest -- and the defender is pulled in to 0.36 m by the spin,
+	# then turned under the attacker's hands. His yaw runs -90 -> -80 -> -18
+	# -> +13 -> +75 -> +90 -> +98 -> +94 -> +92 -> +90: 165 degrees by the
+	# spin at 0.533, an 8-degree over-rotation through the through/loaded
+	# beats, settling back to +90 on the first stride. The intermediate keys
+	# keep the 180 from interpolating the ambiguous long way and pin the
+	# wrist grip at the turn's fastest section. The attacker's yaw only
+	# winds a few degrees: he is already facing the way the defender ends
+	# up, so his feet step in behind him (x 0.26 -> 0.10) rather than
+	# turning. z carries the attacker slightly to the defender's left so the
+	# right arm can reach round his chest, as it does on the reference.
+	# Nobody leaves the mat. The victim's last two position keys run at the
+	# 9.0 m/s IRISH_WHIP launch speed (1.15 s and 1.20 s), so the root exits
+	# the pair at the same velocity `_launch_whip_victim()` gives the body
+	# and Whip_Run's planted foot; there is no acceleration step at the seam.
+	"whip_setup": {
+		"length": 1.2,
+		"attacker": {
+			"pos": [[0.000, 0.26, 0.00, 0.00], [0.133, 0.25, 0.00, 0.01],
+					[0.233, 0.24, 0.00, 0.01], [0.367, 0.22, 0.00, 0.02],
+					[0.533, 0.20, 0.00, 0.04], [0.733, 0.10, 0.00, 0.08],
+					[0.900, 0.10, 0.00, 0.12], [1.067, 0.14, 0.00, 0.06],
+					[1.200, 0.20, 0.00, 0.04]],
+			"rot": [[0.000, 0.0, 90.0, 0.0], [0.367, 0.0, 92.0, 0.0],
+					[0.533, 0.0, 90.0, 0.0], [0.733, 0.0, 86.0, 0.0],
+					[0.900, 0.0, 88.0, 0.0], [1.067, 0.0, 90.0, 0.0],
+					[1.200, 0.0, 90.0, 0.0]],
+		},
+		"defender": {
+			"pos": [[0.000, -0.26, 0.00, 0.00], [0.133, -0.24, 0.00, 0.01],
+					[0.233, -0.22, 0.00, 0.02], [0.367, -0.17, 0.00, 0.03],
+					[0.533, -0.16, 0.00, 0.01], [0.733, -0.20, 0.00, -0.02],
+					[0.900, -0.24, 0.00, 0.00], [1.067, -0.26, 0.00, 0.02],
+					# The first stride leaves at the 9.0 m/s launch speed so
+					# the handoff to Whip_Run (and to the physics launch) does
+					# not change velocity: 0.747 m in 0.083 s, then 0.450 m in
+					# 0.050 s. Both intervals are 9.0 m/s.
+					[1.150, -1.007, 0.00, 0.03], [1.200, -1.457, 0.00, 0.04]],
+			"rot": [[0.000, 0.0, -90.0, 0.0], [0.267, 0.0, -90.0, 0.0],
+					[0.367, 0.0, -80.0, 0.0], [0.433, 0.0, -18.0, 0.0],
+					[0.467, 0.0, 13.0, 0.0], [0.533, 0.0, 75.0, 0.0],
+					[0.600, 0.0, 90.0, 0.0], [0.733, 0.0, 98.0, 0.0],
+					[0.900, 0.0, 94.0, 0.0], [1.067, 0.0, 92.0, 0.0],
+					[1.150, 0.0, 91.0, 0.0], [1.200, 0.0, 90.0, 0.0]],
+		},
+	},
+
+	# Rebound hurricanrana (whip_rebound reference 05). The trigger is
+	# try_rebound_move() on a man in is_whip_returning(); GrappleRig's
+	# _lead_in walks him from his 7 m/s return onto the first mark at
+	# 1.6 m/s before this trajectory starts. The attacker jumps forward into
+	# him and flips over, landing astride his chest; the defender is pulled
+	# forward under him. Nobody's root leaves the mat: the jump and both
+	# somersaults are bone pose in the two halves, and the roots only carry
+	# the pair 0.58 m / 0.30 m forward. Keyed to the reference beats: 0.12
+	# take-off, 0.20 lock, 0.35 inverted, 0.55 apex, 0.67 dive, 0.75 impact
+	# (tick 45, the MoveDef's contact cue), 0.95 settle. The 1.333 s (80-tick) length
+	# carries the exit tail the reference does not show: the attacker stands
+	# up out of the seat, so both halves hand over in a standing IDLE /
+	# downed-sell state rather than being levelled by GrappleRig.
+	"rebound_hurricanrana": {
+		"length": 1.3333,
+		"attacker": {
+			"pos": [[0.00, 0.40, 0.00, 0.00], [0.12, 0.36, 0.00, 0.00],
+					[0.20, 0.28, 0.00, 0.00], [0.35, 0.15, 0.00, 0.00],
+					[0.55, 0.05, 0.00, 0.00], [0.67, -0.05, 0.00, 0.00],
+					[0.75, -0.12, 0.00, 0.00], [0.95, -0.15, 0.00, 0.00],
+					[1.3333, -0.15, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, 90.0, 0.0], [1.3333, 0.0, 90.0, 0.0]],
+		},
+		"defender": {
+			"pos": [[0.00, -0.40, 0.00, 0.00], [0.12, -0.40, 0.00, 0.00],
+					[0.20, -0.38, 0.00, 0.00], [0.35, -0.35, 0.00, 0.00],
+					[0.55, -0.32, 0.00, 0.00], [0.67, -0.30, 0.00, 0.00],
+					[0.75, -0.30, 0.00, 0.00], [0.95, -0.30, 0.00, 0.00],
+					[1.3333, -0.30, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, -90.0, 0.0], [1.3333, 0.0, -90.0, 0.0]],
 		},
 	},
 }

@@ -45,7 +45,12 @@ measurements and the derivations from them. It is not a matter of taste.
     that mass on that spring).
   - The game's whip launches at 9 m/s (`IRISH_WHIP_LAUNCH_SPEED`), which is
     gameplay tuning, not measurement. The load depth is therefore capped
-    rather than scaled with speed.
+    rather than scaled with speed. The half-sine reaches that cap in ~0.11 s;
+    the root is then **held at full depth for 0.50 s** (`ROPE_LOAD_HOLD_SECONDS`)
+    so `Whip_Rope_Absorb` can play its reference-timed chest contact → deepest
+    compression → push-off, and is thrown back at `IRISH_WHIP_REBOUND_DAMPING`
+    after the clip's last key. The hold is presentation, not a spring
+    derivation: it is longer than the ~0.25 s contact above.
 - **Free vibration.**
   - A span's fundamental is f₁ = (1/2L)·√(T/μ). For a ~6 m span of taped 1 in
     cable at working tension, that gives 7–10 Hz.
@@ -61,7 +66,7 @@ measurements and the derivations from them. It is not a matter of taste.
 | Contact | Where it lives | Target | Measured (`tools/probe/rope_shot.tscn`) |
 | --- | --- | --- | --- |
 | Rebound off the ropes (dive spot) | `Rope_Rebound` clip; body side-on, arm over the top rope | 0.3–0.5 m | 0.49 m peak on the top and middle ropes (0.53 before contacts were rate-limited) |
-| Irish whip into the ropes | `wrestler_controller.gd` rope load | 0.3–0.5 m, ~0.25 s contact | see the rope-load tests |
+| Irish whip into the ropes | `wrestler_controller.gd` rope load + `Whip_Rope_Absorb` | 0.3–0.5 m, 0.50 s held contact | see the rope-load tests |
 | Out through the ropes (roll out) | contact only | ropes part | 0.23 m |
 | Tope suicida through the ropes | contact only | ropes part | 0.34 m |
 | Roll in under the bottom rope | contact only | rope lifted | 0.38 m |

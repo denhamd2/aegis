@@ -436,6 +436,15 @@ func _compute_pair_transform(attacker: Node3D, defender: Node3D) -> Transform3D:
 ## half-width.
 const ROPE_SAFE := 2.8
 
+## Moves whose run-up begins against the ropes need a tighter clamp than
+## ROPE_SAFE: at 2.8 the capsule centre is already through the rope surface
+## (3.1 m line less the 0.35 m capsule). `running_grapple_inverted_drop`
+## authors a 4.0 m start; 2.55 puts that start on the surface and keeps its
+## 3.45 m approach (4.00 - 1.45 shift).
+const ROPE_SAFE_BY_MOVE := {
+	&"running_grapple_inverted_drop": 2.55,
+}
+
 ## How far to slide a move's frame so every root key of its trajectory lands
 ## inside ROPE_SAFE. Zero for nearly every move -- a throw's keys stay within
 ## a metre of the midpoint, which RING_HALF_EXTENT already keeps 1.1 m clear
@@ -449,6 +458,9 @@ static func inside_ropes_shift(xform: Transform3D, move: MoveDef) -> Vector3:
 	var spec: Dictionary = PairedRecipes.TRAJECTORIES.get(String(move.animation_pair_id), {})
 	if spec.is_empty():
 		return Vector3.ZERO
+	var safe: float = ROPE_SAFE
+	if ROPE_SAFE_BY_MOVE.has(move.animation_pair_id):
+		safe = float(ROPE_SAFE_BY_MOVE[move.animation_pair_id])
 	var lo := Vector2(INF, INF)
 	var hi := Vector2(-INF, -INF)
 	for role: String in ["attacker", "defender"]:
@@ -457,8 +469,8 @@ static func inside_ropes_shift(xform: Transform3D, move: MoveDef) -> Vector3:
 			lo = Vector2(minf(lo.x, p.x), minf(lo.y, p.z))
 			hi = Vector2(maxf(hi.x, p.x), maxf(hi.y, p.z))
 	var shift := Vector3.ZERO
-	shift.x = minf(0.0, ROPE_SAFE - hi.x) + maxf(0.0, -ROPE_SAFE - lo.x)
-	shift.z = minf(0.0, ROPE_SAFE - hi.y) + maxf(0.0, -ROPE_SAFE - lo.y)
+	shift.x = minf(0.0, safe - hi.x) + maxf(0.0, -safe - lo.x)
+	shift.z = minf(0.0, safe - hi.y) + maxf(0.0, -safe - lo.y)
 	return shift
 
 ## Where a role's clip starts, in the pair frame: the first key of that

@@ -202,6 +202,7 @@ static func entries() -> Array:
 				M + "running_clothesline_from_hell.tres", M + "running_knee_lift.tres",
 				M + "running_drive_by.tres",
 				M + "strike_running_flying_knee.tres",
+				M + "running_grapple_inverted_drop.tres",
 				# FF batch 5: the leaping lariat, a stretch-run special.
 				M + "ff/casualty_of_war.tres"],
 		# From the corner: only thrown at a man hanging in one. The Spear,
@@ -214,7 +215,9 @@ static func entries() -> Array:
 		"rebound": [M + "ff/spinebuster_5.tres", M + "power_samoan_drop.tres",
 				M + "power_powerslam.tres",
 				# FF batch 2: caught, carried at a run and powerslammed.
-				M + "ff/oklahoma_stampede.tres"],
+				M + "ff/oklahoma_stampede.tres",
+				# The tutorial's catch-and-slam and the rana counter.
+				M + "rebound_slam.tres", M + "rebound_hurricanrana.tres"],
 		# From the mat: sweeps the legs of a man standing over him (PossumSpot).
 		"possum": [M + "possum_sweep.tres"],
 		# Beside the Spear: the Superman Punch into it, his 2K26 "super"
@@ -256,7 +259,8 @@ static func entries() -> Array:
 				M + "ff/code_breaker_1.tres"],
 		"running": [M + "running_attack_clothesline.tres",
 				M + "running_single_leg_dropkick.tres",
-				M + "strike_running_flying_knee.tres"],
+				M + "strike_running_flying_knee.tres",
+				M + "running_grapple_inverted_drop.tres"],
 		"submission": [M + "submission_figure_four.tres"],
 		# Whipped into the corner, chopped there Flair-style (a knife-edge
 		# chop; ff_moves_and_gameplay_plan.md, staples 4).
@@ -267,7 +271,8 @@ static func entries() -> Array:
 		# At a man he whipped into the ropes: the dropdown uppercut ("drops
 		# under a charging man, pops up into the chin", cody_moveset.md) and
 		# the powerslam.
-		"rebound": [M + "strike_dropdown_uppercut.tres", M + "power_powerslam.tres"],
+		"rebound": [M + "strike_dropdown_uppercut.tres", M + "power_powerslam.tres",
+				M + "rebound_slam.tres", M + "rebound_hurricanrana.tres"],
 		# The Cross Rhodes as Fight Forever does it (the owner, 19 Oct): the
 		# hold, the spin and the spike, 0.83 s to impact. It replaces the
 		# 2K26 from-behind set-up, which ran 2.5 s.
@@ -306,7 +311,12 @@ static func entries() -> Array:
 		# standing.
 		"running": [M + "ff/running_v_trigger_3.tres", M + "ff/running_v_trigger_1.tres",
 				M + "running_attack_clothesline.tres",
-				M + "strike_running_flying_knee.tres"],
+				M + "strike_running_flying_knee.tres",
+				M + "running_grapple_inverted_drop.tres"],
+		# Off the ropes: the rebound V-Trigger, and the tutorial's catch slam
+		# and rana counter.
+		"rebound": [M + "ff/v_trigger_1.tres", M + "rebound_slam.tres",
+				M + "rebound_hurricanrana.tres"],
 	}
 	return list
 
