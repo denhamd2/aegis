@@ -87,6 +87,9 @@ func _ready() -> void:
 	BodyBulk.apply(self, get_game_skeleton(), _body_gains())
 	# The face at rest, before anything reads the head.
 	_shape_face()
+	# His yoke, after the face: KennyFaceShape matches the head by its
+	# supplied rest positions.
+	CodyBodyShape.apply(self)
 	# Before the animations: they add the helpers' tracks if the bones exist.
 	HipHelpers.install(get_game_skeleton())
 	# The same fix at the shoulders: an arm raised overhead (the win, the

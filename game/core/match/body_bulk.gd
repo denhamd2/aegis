@@ -20,11 +20,16 @@ extends RefCounted
 ## presentation, applied once when the model loads.
 
 ## Bone name -> metres outward at full weight.
+## The clavicle's weights run up the trapezius to the side of the neck, so a
+## gain there thickens his neck and raises a ramp from it to the deltoid --
+## the owner, 10 Nov: "body shape around his arms neck and shoulders, still
+## doesn't look like right proportions". Kept to a quarter of what it was,
+## and the upper arm eased, so the bulk sits on the arm and not the yoke.
 const CODY := {
-	"upperarm_l": 0.016, "upperarm_r": 0.016,
-	"lowerarm_l": 0.007, "lowerarm_r": 0.007,
-	"clavicle_l": 0.012, "clavicle_r": 0.012,
-	"spine_03": 0.007,
+	"upperarm_l": 0.012, "upperarm_r": 0.012,
+	"lowerarm_l": 0.006, "lowerarm_r": 0.006,
+	"clavicle_l": 0.003, "clavicle_r": 0.003,
+	"spine_03": 0.006,
 }
 ## Kenny, on Cody's model: leaner than Cody -- the sheet's turnaround is a
 ## cut, athletic build, not a heavyweight's -- so about half Cody's gains.

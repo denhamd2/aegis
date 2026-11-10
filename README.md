@@ -11684,3 +11684,10 @@ The owner: "his hair should be able to move as it's long".
 - The owner: "his arms morph when he's standing on the ropes for that move", then on the first fix, "Arms and shoulders deformed". The stance (`TOP_ON` in `wrestling_clips.py`) held his hands straight out behind his shoulders at shoulder height while he hunched 38 degrees forward, which dragged the shoulder girdle up into his neck. He now stands fairly upright over bent knees, arms out and down with the elbows bent back, clavicles at rest. Checked on rendered frames (`face_shot --clips strikes/top_rope_step --body`).
 - Sound round 4 merged (the reviewed revisions): ring bumps that land on their frame, steel that rings and glass with a top end, low groans, a real count slap, winded breaths, one-effort heavy grunts, breath-driven light sells, the bell at its own pitch, pyro and the finish roar on their frame. Sources and licences in `game/assets/audio/CREDITS.md`; rebuilt by `tools/audio/build_sfx_round4.py`.
 - Open: `test_pair_clearance` reports Cross Rhodes' facelock hands 0.10 m off their hold (limit 0.05); not touched by this change. The owner also asked for a review of Cody's proportions around the arms, neck and shoulders.
+
+## 10 Nov (2) — Cody's neck and shoulders
+
+- The owner: "Review Cody's body shape around his arms neck and shoulders, still doesn't look like right proportions".
+- Measured off the supplied mesh, the top of his shoulders was a shelf: from the side of the neck out past the shoulder joint the skin stayed at 1.55-1.59 m, 11-14 cm above the joint, and higher 10 cm out than on the centre line. `CodyBodyShape` (new, applied at load after the face) lowers that shelf with one broad smooth field so the trapezius slopes from neck to shoulder, and draws the sides of the neck in 7 mm. Rest geometry only; bones, weights and clips are untouched. Kenny, built on Cody's body, gets it too.
+- `BodyBulk.CODY`: the clavicle gain, which thickened the neck and raised the same ramp, cut from 12 mm to 3 mm; the upper arm from 16 mm to 12 mm.
+- Checked on `model_turnaround` front, three-quarter, side and back, before and after.
