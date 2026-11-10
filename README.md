@@ -11738,3 +11738,11 @@ The owner: "new match types ... 1) Hell in a Cell 2) Ladder Match 3) TLC match 4
 - **HUD.** An ESCAPE bar in the escaper's colour, centre bottom, with where he is (CLIMBING, OVER THE TOP, DOOR OPENING, THROUGH THE DOOR...), outlined while he can still be stopped. A prompt at the wall (PUSH INTO THE CAGE · CLIMB, PUSH TO THE DOOR · CALL FOR IT), and STOP HIM while the other man is going.
 - **Tests.** `test_steel_cage` (20). The regression set for what it touches all passes: FSM, state animations, authored clips, IK, loop reachability, NHB outside, ladder climb, rope clamp, whip rebound, HUD, title screen, weapon AI, determinism. Probes: `cage_shot` (Forward+ frames of each beat), `cage_match_probe` (seeded AI-vs-AI cage matches: how each ends, attempts, pull-offs, rams, and each run twice to check the end state matches).
 - **Not yet.** No new animation clips: the climb, the straddle and the descent reuse `ladder_climb`, and the drop `idle_ready`. `wrestling_clips.py` has work in progress on main, so a straddle-over clip and a drop-and-land are a follow-up, to be authored there.
+
+## 10 Nov (5) — Tables that break like tables
+
+- The owner: "table breaks - ensure carnage for both normal table breaks, glass table breaks and announce table breaks. The table should spectacularly break, look realistic and make a loud crash sound".
+- Looks: `BreakDebris` (new) carries the loose wreckage. The wooden table snaps through the middle and throws board chips, long splinters and a puff of dust; the glass bursts into shards with a shower of glittering fragments that rain down and stay on the mat. Checked on `tools/probe/break_shot.tscn` (new: the set piece on a bare stage, grabbed at ticks after the break).
+- Sound: three built families, `table_break_*`, `glass_break_*` and `desk_break_*`, each one loud file of the boards or sheet going, the pieces and the man landing in it (-8 to -11 LUFS against the old crack's -14). Cut from CC0 Red Library recordings by `tools/audio/build_break_sfx.py`; nothing synthesised. Sources in `game/assets/audio/CREDITS.md`.
+- Pinned by `test_the_break_sounds_are_there_for_the_table_the_glass_and_the_desk`.
+- Open: the announce desk's own debris has not been looked at on a rendered frame.

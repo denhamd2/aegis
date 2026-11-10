@@ -320,7 +320,9 @@ func watch(referee: MatchReferee, wrestlers: Array, crowd: CrowdReaction, match_
 		w.through_desk.connect(func(_who: WrestlerController) -> void:
 			# the desk going: the boards, the monitors' glass and the steel
 			# (desk_crash_0, made for it). The crowd's pop is set_piece_landed's.
-			sfx.play_any("desk_crash", 2.0))
+			# desk_break: the worktop and panels caving, the monitors going.
+			sfx.play_any("desk_break", 4.0)
+			sfx.play_any("desk_crash", 0.0))
 		_cooldown[w] = 0.0
 		_falls[w] = []
 	referee.match_won.connect(_on_match_won)
@@ -809,15 +811,18 @@ func on_weapon_event(weapon: WeaponActor, event: String) -> void:
 				# loud thunderous smash noise of the table"): the boards going,
 				# the heavier crash of the desk under them, and a low boom for
 				# the body through it.
-				sfx.play_any("table_crack", 3.0)
-				sfx.play_any("desk_crash", 1.0)
+				# table_break: the board cracking through, the splinters,
+				# the legs going and the man landing in it, as one loud file
+				# (tools/audio/build_break_sfx.py; the owner, 9 Nov: "make a
+				# loud crash sound").
+				sfx.play_any("table_break", 4.0)
 				sfx.play("pyro_boom", -4.0, 0.55)
 				sfx.play_any("crowd_ooh", CROWD_REACTION_GAIN_DB + 1.0)
 			elif weapon.def.id == &"glass_pane":
 				# the sheet going: glass, over the thud of him and the frame
-				sfx.play_any("hit_glass", hit_level("hit_glass", 2.0))
+				# glass_break: the sheet bursting and the shards raining down
+				sfx.play_any("glass_break", 3.0)
 				sfx.play_any("hit_glass", hit_level("hit_glass", -2.0))
-				sfx.play_any("table_crack", -8.0)
 				sfx.play_any("crowd_ooh", CROWD_REACTION_GAIN_DB + 0.0)
 			elif not sfx.play_any(weapon.def.sound, hit_level(weapon.def.sound, -1.0)):
 				sfx.play(weapon.def.sound, hit_level(weapon.def.sound, -1.0))

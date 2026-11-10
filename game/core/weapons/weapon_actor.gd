@@ -42,6 +42,9 @@ const SLIDE_DRAG := 5.0
 const HIT_RADIUS := 0.55
 ## Broken pieces lie this long before they go.
 const PIECES_LINGER := 6.0
+## A set piece a man went through (a table, the glass) is wreckage that stays
+## where it fell for this long (the owner: "carnage"), not six seconds.
+const SET_PIECE_LINGER := 75.0
 ## A broken piece whose origin is this near the floor is the legs.
 const LEGS_BELOW := 0.25
 ## A broken piece is kept this far (flat) from any of the bones of the man it
@@ -1102,24 +1105,22 @@ func shatter(seed: int, body: Node3D = null) -> void:
 		if base != String(node.name) and by_name.has(base):
 			(node as Node3D).reparent(by_name[base])
 			parts.erase(node)
+	var linger := SET_PIECE_LINGER if def.set_piece else PIECES_LINGER
+	_linger = linger
+	# its life in the match runs on past the break, so the wreck is not
+	# freed from under the camera while it is still lying there
+	match_lifetime_limit = maxi(match_lifetime_limit, match_lifetime_ticks + int((linger + 1.0) * 60.0))
 	for node in parts:
 		var n := node as Node3D
 		if n == null:
 			continue
-		var out := (n.global_position - keep.origin)
-		out.y = 0.0
-		out = out.normalized() if out.length() > 0.01 else Vector3(rng.randf_range(-1, 1), 0, rng.randf_range(-1, 1)).normalized()
-		var v: Vector3
-		var spin: Vector3
-		if n.global_position.y - keep.origin.y < LEGS_BELOW:
-			# the legs' frame: knocked over where it stood, not thrown
-			v = out * rng.randf_range(0.3, 0.8) + Vector3.UP * rng.randf_range(0.4, 0.8)
-			var over := Vector3.UP.cross(out) * signf(rng.randf_range(-1, 1) + 0.001)
-			spin = over * rng.randf_range(5.0, 8.0)
-		else:
-			v = out * rng.randf_range(0.8, 2.6) + Vector3.UP * rng.randf_range(0.6, 1.8)
-			spin = Vector3(rng.randf_range(-9, 9), rng.randf_range(-6, 6), rng.randf_range(-9, 9))
-		_pieces.append([n, v, spin, false])
+		var launch := _launch(n, keep, rng)
+		_pieces.append([n, launch[0], launch[1], false])
+	match def.id:
+		&"table":
+			_splinter(keep, rng.randi(), linger)
+		&"glass_pane":
+			_spray_glass(keep, rng.randi(), linger)
 	if ablaze:
 		_burn_pieces()
 	broke.emit(self)
@@ -1128,7 +1129,7 @@ func shatter(seed: int, body: Node3D = null) -> void:
 
 func _tick_pieces(delta: float) -> void:
 	_broken_for += delta
-	if _broken_for >= PIECES_LINGER:
+	if _broken_for >= _linger:
 		visible = false
 		set_physics_process(false)
 		return
@@ -1136,7 +1137,11 @@ func _tick_pieces(delta: float) -> void:
 		if piece[3]:
 			continue
 		var n: Node3D = piece[0]
+		if piece.size() > 4:
+			_settle_piece(piece, delta)
+			continue
 		var v: Vector3 = piece[1]
+		var s: Vector3 = piece[2]
 		v.y -= GRAVITY * delta
 		var p := n.global_position + v * delta
 		var push := _clear_of_body(n, p)
@@ -1146,11 +1151,25 @@ func _tick_pieces(delta: float) -> void:
 			var into := -push.normalized()
 			if v.dot(into) > 0.0:
 				v -= into * v.dot(into)
+		# it turns on the floor as well as in the air: a leg buckling over
+		# about its foot, a half of the top folding down onto its broken edge
+		if s.length() > 0.0:
+			n.global_rotate(s.normalized(), s.length() * delta)
+		n.global_position = p
+		# the floor meets its lowest corner, not its middle: a half of the
+		# top tipped on its broken edge stands on that edge
 		var ground := ground_under(p) + 0.01
-		if p.y <= ground:
-			p.y = ground
-			if v.length() < 1.0:
-				piece[3] = true
+		var low := _lowest(n)
+		if low <= ground:
+			n.global_position.y += ground - low
+			if v.y < 0.0:
+				v = Vector3(v.x * 0.45, -v.y * 0.2, v.z * 0.45)
+				s *= 0.6
+			s *= exp(-PIECE_FLOOR_SPIN_DRAG * delta)
+			if v.length() < 1.0 and s.length() < PIECE_REST_SPIN:
+				# it goes down onto its flattest side over a few frames, not
+				# in one: the half of the top on its edge falls flat
+				var from := n.global_transform
 				_lie_on_flattest_side(n, ground)
 				# turned flat it may have swung into him: off him again
 				for i in 8:
@@ -1158,14 +1177,185 @@ func _tick_pieces(delta: float) -> void:
 					if off.length() < 0.005:
 						break
 					n.global_position += off
-			v = Vector3(v.x * 0.4, -v.y * 0.2, v.z * 0.4)
-		else:
-			var s: Vector3 = piece[2]
-			if s.length() > 0.0:
-				n.global_rotate(s.normalized(), s.length() * delta)
-		if not piece[3]:
-			n.global_position = p
+				var to := n.global_transform
+				n.global_transform = from
+				piece.append_array([0.0, from, to])
 		piece[1] = v
+		piece[2] = s
+
+
+## Going down onto its flattest side: PIECE_SETTLE seconds, falling (eased
+## in), then at rest.
+const PIECE_SETTLE := 0.14
+
+
+func _settle_piece(piece: Array, delta: float) -> void:
+	var n: Node3D = piece[0]
+	piece[4] = float(piece[4]) + delta
+	var k := clampf(float(piece[4]) / PIECE_SETTLE, 0.0, 1.0)
+	k = k * k
+	var a: Transform3D = piece[5]
+	var b: Transform3D = piece[6]
+	n.global_transform = Transform3D(a.basis.orthonormalized().slerp(b.basis.orthonormalized(), k),
+			a.origin.lerp(b.origin, k))
+	if k >= 1.0:
+		n.global_transform = b
+		piece[3] = true
+
+
+## Spin a piece on the floor loses per second, and below which (with it
+## slow) it lies down.
+const PIECE_FLOOR_SPIN_DRAG := 4.0
+const PIECE_REST_SPIN := 1.5
+var _linger := PIECES_LINGER
+
+
+## The lowest point of a piece (its mesh's box, and its trim's) in the world.
+static func _lowest(n: Node3D) -> float:
+	var low := n.global_position.y
+	var mi := n as MeshInstance3D
+	if mi and mi.mesh:
+		low = (mi.global_transform * mi.mesh.get_aabb()).position.y
+	for c in n.get_children():
+		var cm := c as MeshInstance3D
+		if cm and cm.mesh:
+			low = minf(low, (cm.global_transform * cm.mesh.get_aabb()).position.y)
+	return low
+
+
+## A piece's launch as it breaks: [velocity, spin], by what it is.
+##
+## The table (the owner: "spectacularly break, look realistic") goes the way a
+## banquet table goes under a man: the two halves of the top split at the
+## crack and fold down into a V, broken edges first, driven down by him and
+## drifting apart; the U legs buckle in under the break, tops toward the
+## middle, feet kicking out; the loose chunks off the break fly.
+##
+## The glass bursts from where he came through it: the shards round the middle
+## are driven down, the rest thrown out flat across the floor; the frame's
+## bars drop and the trestles go over outward.
+func _launch(n: Node3D, keep: Transform3D, rng: RandomNumberGenerator) -> Array:
+	var out := (n.global_position - keep.origin)
+	out.y = 0.0
+	var reach := out.length()
+	out = out.normalized() if reach > 0.01 else Vector3(rng.randf_range(-1, 1), 0, rng.randf_range(-1, 1)).normalized()
+	# turning about this tips its top toward the middle (its inner edge down)
+	var fold := out.cross(Vector3.UP)
+	var low := n.global_position.y - keep.origin.y < LEGS_BELOW
+	var wobble := Vector3(rng.randf_range(-1, 1), rng.randf_range(-1, 1), rng.randf_range(-1, 1))
+	if def.id == &"table":
+		var nm := String(n.name)
+		if nm.ends_with("__piece_00") or nm.ends_with("__piece_01"):
+			return [out * rng.randf_range(0.35, 0.75) + Vector3.DOWN * rng.randf_range(1.4, 2.2),
+					fold * rng.randf_range(3.2, 4.2) + wobble * 0.5]
+		if low:
+			return [out * rng.randf_range(0.25, 0.6) + Vector3.UP * rng.randf_range(0.1, 0.3),
+					fold * rng.randf_range(5.5, 7.0) + wobble * 0.4]
+		return [out * rng.randf_range(1.6, 3.6) + Vector3.UP * rng.randf_range(1.6, 3.2),
+				wobble * 14.0]
+	if def.id == &"glass_pane":
+		if low:
+			# a trestle, over outward
+			return [out * rng.randf_range(0.3, 0.7) + Vector3.UP * rng.randf_range(0.1, 0.3),
+					-fold * rng.randf_range(4.0, 6.0) + wobble * 0.5]
+		var mi := n as MeshInstance3D
+		var thin := mi != null and mi.mesh != null and mi.mesh.get_aabb().size.y < 0.012
+		if not thin:
+			# a bar of the frame, dropping and twisting
+			return [out * rng.randf_range(0.4, 1.1) + Vector3.UP * rng.randf_range(0.2, 0.6),
+					wobble * 3.0]
+		if reach < 0.35:
+			return [out * rng.randf_range(0.6, 1.6) + Vector3.DOWN * rng.randf_range(0.8, 2.2),
+					wobble * 10.0]
+		return [out * rng.randf_range(1.8, 4.0) + Vector3.UP * rng.randf_range(0.4, 1.4),
+				wobble * 12.0]
+	if low:
+		# the legs' frame: knocked over where it stood, not thrown
+		var over := Vector3.UP.cross(out) * signf(rng.randf_range(-1, 1) + 0.001)
+		return [out * rng.randf_range(0.3, 0.8) + Vector3.UP * rng.randf_range(0.4, 0.8),
+				over * rng.randf_range(5.0, 8.0)]
+	return [out * rng.randf_range(0.8, 2.6) + Vector3.UP * rng.randf_range(0.6, 1.8),
+			Vector3(rng.randf_range(-9, 9), rng.randf_range(-6, 6), rng.randf_range(-9, 9))]
+
+
+## The splinters, slivers and chunks of board a table throws as it goes, out
+## of the crack and off the ends of the break, in its own wood; the sawdust
+## hanging where it split and the chips sprayed out. Seeded, so a replay
+## breaks it the same way.
+const TABLE_SPLINTERS := 30
+const TABLE_CHUNKS := 9
+
+
+func _splinter(keep: Transform3D, seed: int, linger: float) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed
+	var debris := BreakDebris.make("Debris", linger)
+	debris.ground = Callable(self, &"_debris_ground")
+	add_child(debris)
+	var wood: Material = null
+	for mi: MeshInstance3D in _roots[def.broken].find_children("*__piece_00", "MeshInstance3D", true, false):
+		wood = mi.get_active_material(0)
+	var top := keep.origin + Vector3.UP * 0.73
+	var along := keep.basis.x.normalized()
+	var across := keep.basis.z.normalized()
+	for i in TABLE_SPLINTERS + TABLE_CHUNKS:
+		var chunk := i >= TABLE_SPLINTERS
+		var mesh: ArrayMesh
+		if chunk:
+			mesh = BreakDebris.sliver(rng.randf_range(0.08, 0.24), rng.randf_range(0.05, 0.14), 0.022, 0.7)
+		else:
+			mesh = BreakDebris.sliver(rng.randf_range(0.06, 0.28), rng.randf_range(0.008, 0.025),
+					rng.randf_range(0.004, 0.012), rng.randf_range(0.05, 0.3))
+		# out of the crack, across the width of the top
+		var at := top + across * rng.randf_range(-0.36, 0.36) + along * rng.randf_range(-0.12, 0.2)
+		var side := signf(rng.randf_range(-1, 1) + 0.001)
+		var out := (along * side * rng.randf_range(0.5, 1.0) + across * rng.randf_range(-0.8, 0.8)).normalized()
+		var v := out * rng.randf_range(1.5, 5.5 if not chunk else 3.5) + Vector3.UP * rng.randf_range(1.2, 4.0)
+		var spin := Vector3(rng.randf_range(-1, 1), rng.randf_range(-1, 1), rng.randf_range(-1, 1)).normalized() \
+				* rng.randf_range(8.0, 22.0)
+		var basis := Basis.looking_at(out, Vector3.UP).rotated(out, rng.randf_range(-0.6, 0.6)) \
+				* Basis(Vector3.UP, PI * 0.5)
+		debris.add_mesh(mesh, wood, at, basis, v, spin)
+	var crack := top + along * 0.08
+	debris.burst(crack, "chips")
+	debris.burst(crack + Vector3.DOWN * 0.2, "sawdust")
+
+
+## The glass: a shower of glittering micro-shards out over the floor round
+## where he went through, the glints flying with them, and the shards lying
+## there catching the light. The sheet's own shards take the same finish.
+const GLASS_SHARDS := 110
+
+
+func _spray_glass(keep: Transform3D, seed: int, linger: float) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed
+	var debris := BreakDebris.make("Debris", linger)
+	debris.ground = Callable(self, &"_debris_ground")
+	add_child(debris)
+	var glass := BreakDebris.glass_material()
+	for entry: Array in _pieces:
+		var mi := entry[0] as MeshInstance3D
+		if mi and mi.mesh and mi.mesh.get_aabb().size.y < 0.012:
+			mi.material_override = glass
+	var top := keep.origin + Vector3.UP * 0.81
+	for i in GLASS_SHARDS:
+		var ang := rng.randf() * TAU
+		var r := sqrt(rng.randf()) * 0.45
+		var at := top + Vector3(cos(ang) * r, rng.randf_range(-0.02, 0.02), sin(ang) * r)
+		var out := Vector3(cos(ang), 0.0, sin(ang))
+		var v := out * rng.randf_range(0.8, 4.5) + Vector3.UP * rng.randf_range(-1.5, 2.0)
+		var spin := Vector3(rng.randf_range(-1, 1), rng.randf_range(-1, 1), rng.randf_range(-1, 1)).normalized() \
+				* rng.randf_range(10.0, 30.0)
+		var size := rng.randf_range(0.015, 0.07) if i % 6 else rng.randf_range(0.07, 0.13)
+		debris.add_mesh(BreakDebris.shard(rng, size), glass, at, Basis(Vector3.UP, rng.randf() * TAU), v, spin)
+	debris.burst(top, "glints")
+	debris.burst(top + Vector3.DOWN * 0.3, "glints", 0.6)
+	debris.twinkle(Vector3(keep.origin.x, ground_under(keep.origin), keep.origin.z), 1.6, 9.0)
+
+
+func _debris_ground(p: Vector3) -> float:
+	return ground_under(p)
 
 
 ## A piece come to rest: turned by quarter turns to whichever way up puts its

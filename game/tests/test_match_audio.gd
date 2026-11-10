@@ -609,3 +609,12 @@ func test_the_entrance_music_sits_over_the_crowd() -> void:
 	var audio: MatchAudio = auto_free(MatchAudio.new())
 	add_child(audio)
 	assert_bool(audio._entrance_music_on()).is_false()
+
+
+func test_the_break_sounds_are_there_for_the_table_the_glass_and_the_desk() -> void:
+	# The owner, 9 Nov: "The table should spectacularly break ... and make a
+	# loud crash sound" -- one built family each (tools/audio/build_break_sfx.py).
+	for family: String in ["table_break", "glass_break", "desk_break"]:
+		assert_int(SfxPool.family_size(family)).override_failure_message(
+				"no %s_* sounds" % family).is_greater(1)
+		assert_float(SfxPool.stream(family + "_0").get_length()).is_greater(0.8)
