@@ -345,6 +345,7 @@ func _drive(w: WrestlerController, beat: Dictionary, t: float, delta: float) -> 
 func _event(what: String) -> void:
 	match what:
 		"tope_hit":
+			get_tree().call_group("match_camera", "add_trauma", MatchCamera.TRAUMA_DIVE)
 			var tope := load(TOPE_MOVE) as MoveDef
 			if tope:
 				defender.combat.apply_damage(tope)

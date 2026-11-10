@@ -261,3 +261,21 @@ func test_the_shake_settles_briefly_without_pausing_anything() -> void:
 	assert_float(camera._trauma).is_equal(0.0)    # under 0.3 s at 60 fps
 	assert_float(Engine.time_scale).is_equal_approx(time_scale, 0.0001)
 	assert_bool(get_tree().paused).is_false()
+
+
+func test_more_moves_shake_the_camera_as_fight_forever_does() -> void:
+	# The owner, 9 Nov: "I want the camera shake effect more more moves,
+	# similar to aew fight forever". A solid strike short of a big one, a
+	# weapon shot and a throw each carry a shake; a dive is near the top.
+	assert_float(MatchCamera.MEDIUM_STRIKE_DAMAGE).is_less(MatchCamera.BIG_STRIKE_DAMAGE)
+	assert_float(MatchCamera.TRAUMA_MEDIUM_STRIKE).is_between(0.3, MatchCamera.TRAUMA_BIG_STRIKE)
+	assert_float(MatchCamera.TRAUMA_WEAPON).is_greater(MatchCamera.TRAUMA_BIG_STRIKE)
+	assert_float(MatchCamera.TRAUMA_THROW).is_between(0.4, MatchCamera.TRAUMA_SIGNATURE)
+	assert_float(MatchCamera.TRAUMA_DIVE).is_greater(MatchCamera.TRAUMA_SIGNATURE)
+	# The spots reach the camera through its group.
+	var camera := MatchCamera.new()
+	add_child(camera)
+	camera.add_to_group("match_camera")
+	get_tree().call_group("match_camera", "add_trauma", MatchCamera.TRAUMA_DIVE)
+	assert_float(camera._trauma).is_equal_approx(MatchCamera.TRAUMA_DIVE, 0.001)
+	camera.queue_free()

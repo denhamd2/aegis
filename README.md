@@ -11746,3 +11746,10 @@ The owner: "new match types ... 1) Hell in a Cell 2) Ladder Match 3) TLC match 4
 - Sound: three built families, `table_break_*`, `glass_break_*` and `desk_break_*`, each one loud file of the boards or sheet going, the pieces and the man landing in it (-8 to -11 LUFS against the old crack's -14). Cut from CC0 Red Library recordings by `tools/audio/build_break_sfx.py`; nothing synthesised. Sources in `game/assets/audio/CREDITS.md`.
 - Pinned by `test_the_break_sounds_are_there_for_the_table_the_glass_and_the_desk`.
 - Open: the announce desk's own debris has not been looked at on a rendered frame.
+
+## 10 Nov (6) — The camera shakes on more moves
+
+- The owner: "I want the camera shake effect more more moves, similar to aew fight forever".
+- Before, only big strikes, signatures, finishers, knockdowns, table breaks and gunshots shook it. Now also: a solid strike short of a big one (damage 5 and up), every weapon shot (harder for a big one), every throw or slam that leaves him down (on its contact frame; holds do not), a man into the cage steel, through the announce desk or into the screen, and a dive or moonsault landing. Jabs still do not shake.
+- The throw's shake and the slam cut's shake land on the same frame; they now take the larger of the two instead of summing to the ceiling.
+- The setting (off / low / high) scales all of it as before. Pinned by `test_more_moves_shake_the_camera_as_fight_forever_does`.

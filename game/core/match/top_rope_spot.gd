@@ -328,6 +328,7 @@ func _event(what: String) -> void:
 			defender.hit_flinch.hit(attacker.global_position, "body", 1.0)
 		return
 	if what == "landed" and attacker.top_rope_move:
+		get_tree().call_group("match_camera", "add_trauma", MatchCamera.TRAUMA_DIVE)
 		defender.combat.apply_damage(attacker.top_rope_move)
 		attacker.combat.apply_momentum(attacker.top_rope_move)
 		if defender.hit_flinch:

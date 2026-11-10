@@ -338,6 +338,18 @@ const TRAUMA_BLAST := 0.95
 ## finisher, whatever shot it is on (the owner, 19 Oct). Fired on the move's
 ## own contact frame (MoveDef.startup_frames), once a move. The BROADCAST
 ## finisher sequence keeps its own shake (_finish_impact).
+## More moves shake, the way AEW Fight Forever's camera does (the owner, 9
+## Nov: "I want the camera shake effect more more moves, similar to aew fight
+## forever"): a solid strike that is not yet a big one, every weapon shot,
+## every throw and slam that leaves him down (on its contact frame), a man
+## into the steel, through the desk or the screen, and a dive landing.
+## Jabs still do not: a shake on every punch read as the camera flinching.
+const MEDIUM_STRIKE_DAMAGE := 5.0
+const TRAUMA_MEDIUM_STRIKE := 0.4
+const TRAUMA_WEAPON := 0.6
+const TRAUMA_BIG_WEAPON := 0.75
+const TRAUMA_THROW := 0.5
+const TRAUMA_DIVE := 0.85
 const TRAUMA_SIGNATURE := 0.75
 const TRAUMA_FINISHER := 1.0
 ## Where in the paired move the shake is due (its progress), and how hard;
@@ -489,6 +501,10 @@ func _ready() -> void:
 		wc.fired_up.connect(func(who): _try_cut(Cut.FIRE_UP, who, null))
 		wc.knocked_down.connect(func(_who): add_trauma(TRAUMA_KNOCKDOWN))
 		wc.set_piece_landed.connect(_on_set_piece_landed)
+		wc.hit_the_cage.connect(func(_who, strength: float):
+			add_trauma(clampf(0.35 * strength, 0.3, TRAUMA_TABLE)))
+		wc.through_desk.connect(func(_who): add_trauma(TRAUMA_TABLE))
+		wc.smashed_into_screen.connect(func(_who): add_trauma(TRAUMA_TABLE))
 		wc.weapon_retrieval_started.connect(_on_weapon_retrieval_started)
 	add_to_group(WeaponActor.LISTENERS)
 	add_to_group("match_camera")
@@ -1317,6 +1333,9 @@ func _arm_impact_shake(wrestler: WrestlerController, move: MoveDef) -> void:
 		_impact_shake = TRAUMA_FINISHER
 	elif tier == CombatSystem.Tier.SIGNATURE or _is_signature(move):
 		_impact_shake = TRAUMA_SIGNATURE
+	elif move.leaves_defender_down:
+		# Any throw or slam that puts him on the mat; holds do not shake.
+		_impact_shake = TRAUMA_THROW
 	else:
 		return
 	_impact_shake_at = impact_fraction(move)
@@ -1329,7 +1348,9 @@ func _impact_shake_due() -> void:
 		_impact_shake_at = -1.0
 		return
 	if grapple_rig.progress() >= _impact_shake_at:
-		add_trauma(_impact_shake)
+		# Up to this shake, not on top of one already running: the slam cut
+		# shakes on the same frame, and the two summed hit the ceiling.
+		_trauma = maxf(_trauma, _impact_shake)
 		_impact_shake_at = -1.0
 
 
@@ -1472,7 +1493,10 @@ func _on_move_landed(attacker: WrestlerController, defender: WrestlerController,
 	var big := damage >= BIG_STRIKE_DAMAGE
 	# 2K26 shakes on a big blow, not on every punch: a shake on every jab
 	# read as the camera flinching, not the man.
-	var trauma := TRAUMA_BIG_STRIKE if big else 0.0
+	var trauma := TRAUMA_BIG_STRIKE if big else (
+			TRAUMA_MEDIUM_STRIKE if damage >= MEDIUM_STRIKE_DAMAGE else 0.0)
+	if WeaponCatalog.of_move(move) != null:
+		trauma = maxf(trauma, TRAUMA_BIG_WEAPON if big else TRAUMA_WEAPON)
 	# a struck signature or finisher (a Superman Punch, a kick) shakes as the
 	# paired ones do, on the blow. Take the larger of the two, never their
 	# sum: stacking put every big signature blow at the finisher's ceiling.
@@ -1694,7 +1718,7 @@ func _event_shot(delta: float) -> bool:
 					and contact_reached(grapple_rig.progress(), _cut_impact_at) \
 					and not _cut_landed:
 				_cut_landed = true
-				add_trauma(TRAUMA_SLAM)
+				_trauma = maxf(_trauma, TRAUMA_SLAM)
 		Cut.HERO:
 			# The taunt: low, in front of him, up at him against the lights.
 			var right := Vector3.UP.cross(-facing).normalized()
