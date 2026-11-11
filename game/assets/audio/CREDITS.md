@@ -86,6 +86,13 @@ metadata stripped. It plays under the Dynamite broadcast opening and is not
 used on the title screen. Same caveats as the entrance music:
 owner-supplied, not a licensed or CC0 source.
 
+`music/cell_lowering.ogg` is the owner-supplied Hell in a Cell lowering
+track ("Imminent Danger (Cage Lowering)", WWE Uncaged IX, 44.7 s), supplied
+2026-11-11 and transcoded from the owner's mp3 to Vorbis q6 with metadata
+stripped. It plays once, unlooped, from the start of the cell's descent and
+fades out at the bell (MatchAudio.CELL_MUSIC). Same caveats as the entrance
+music: owner-supplied, not a licensed or CC0 source.
+
 `announcer/` holds four ring-announcer calls (Justin Roberts): the main-event
 intro, Roman Reigns' and Cody Rhodes' (owner-supplied mp3s, 2026-10-06) and
 Kenny Omega's (2026-10-26: "Making his way to the ring ... he is the best bout

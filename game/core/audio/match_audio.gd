@@ -203,6 +203,54 @@ const DYNAMITE_OPENING_THEME := "res://assets/audio/music/title_theme.ogg"
 const DYNAMITE_OPENING_THEME_DB := -3.0
 const DYNAMITE_OPENING_FADE_IN := 1.0
 const DYNAMITE_OPENING_FADE_OUT := 1.5
+## Hell in a Cell's lowering music (the owner, 11 Nov: "play the attached
+## music when the cell is lowering (no looping)"): owner-supplied, from the
+## first inch of the descent, once through; it runs on under the face-off and
+## fades out at the bell. The crowd ducks under it as under an entrance song.
+const CELL_MUSIC := "res://assets/audio/music/cell_lowering.ogg"
+const CELL_MUSIC_DB := 0.0
+const CELL_MUSIC_FADE_OUT := 2.0
+var _cell_music: AudioStreamPlayer
+var _cell_music_fade := -1.0
+
+
+func _start_cell_music() -> void:
+	if not ResourceLoader.exists(CELL_MUSIC):
+		return
+	var stream := load(CELL_MUSIC) as AudioStreamOggVorbis
+	if stream == null:
+		return
+	stream = stream.duplicate() as AudioStreamOggVorbis
+	stream.loop = false
+	if _cell_music:
+		_cell_music.queue_free()
+	_cell_music = AudioStreamPlayer.new()
+	_cell_music.name = "CellLoweringMusic"
+	_cell_music.stream = stream
+	_cell_music.volume_db = CELL_MUSIC_DB
+	add_child(_cell_music)
+	_cell_music.play()
+	_cell_music_fade = -1.0
+
+
+## Whether it is playing (and not on its way out).
+func cell_music_on() -> bool:
+	return _cell_music != null and _cell_music.playing and _cell_music_fade < 0.0
+
+
+func _tick_cell_music(delta: float) -> void:
+	if _cell_music == null or _cell_music_fade < 0.0:
+		return
+	_cell_music_fade += delta
+	var amount := clampf(_cell_music_fade / CELL_MUSIC_FADE_OUT, 0.0, 1.0)
+	_cell_music.volume_db = lerpf(CELL_MUSIC_DB, -60.0, amount)
+	if amount >= 1.0:
+		_cell_music.stop()
+		_cell_music.queue_free()
+		_cell_music = null
+		_cell_music_fade = -1.0
+
+
 ## Under music the crowd dips, it does not vanish: a live room is not turned
 ## down for a song. The owner, 2 Nov: the crowd "drown[s] out the entrance
 ## music. Make the entrance music louder." Measured, the crowd loops sat 6-9 dB
@@ -399,6 +447,8 @@ func _on_post_match_finished() -> void:
 ## The opening bell, whether after the entrances or on tick one.
 func opening_bell() -> void:
 	sfx.play("bell_start", -2.0, MATCH_BELL_PITCH_SCALE)
+	if _cell_music and _cell_music.playing and _cell_music_fade < 0.0:
+		_cell_music_fade = 0.0
 	chants.bell()
 
 
@@ -437,6 +487,14 @@ func _on_cue(what: String) -> void:
 		# Excalibur answers Tony's line on Kenny, which answers Justin's call.
 		_queue_commentary("excalibur_kenny_resume")
 	match what:
+		"cell_lower":
+			_start_cell_music()
+		"cell_landed":
+			# The steel hitting the floor: the panels' crash, a low thump
+			# under it, and the room going up.
+			sfx.play_any("hit_metal", 3.0)
+			sfx.play("pyro_bang", -10.0, 0.7)
+			sfx.play_any("crowd_pop", CROWD_REACTION_GAIN_DB + -2.0)
 		"pyro_opening":
 			# The cold open's show, sound on its own timings (EntrancePyro.
 			# _opening_show): the flame chase roaring, a launch and a burst for
@@ -945,6 +1003,7 @@ func _tick_opening_theme(delta: float) -> void:
 func _process(delta: float) -> void:
 	_commentary_clock += delta
 	_tick_opening_theme(delta)
+	_tick_cell_music(delta)
 	_chaos_activity = maxf(0.0, _chaos_activity - delta * CHAOS_COMMENTARY_DECAY_PER_SECOND)
 	var voice_busy := _voice_lane.has_voice() if _voice_lane else _commentary_voice.playing
 	if not _commentary_queue.is_empty() and not voice_busy:
@@ -985,7 +1044,7 @@ func _process(delta: float) -> void:
 	boo = cool(boo, delta)
 	cheer = cool(cheer, delta)
 	var levels := bed_levels(intensity)
-	var duck_to := THEME_DUCK_DB if _entrance_music_on() else 0.0
+	var duck_to := THEME_DUCK_DB if _entrance_music_on() or cell_music_on() else 0.0
 	if _theme:
 		_theme_fade = minf(_theme_fade + delta / THEME_FADE_IN, 1.0)
 		_theme.volume_db = lerpf(-40.0, THEME_DB, _theme_fade * _theme_fade)

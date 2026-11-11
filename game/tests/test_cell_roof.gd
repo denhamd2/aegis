@@ -214,3 +214,15 @@ func test_hung_for_the_entrances_then_lowered_and_padlocked() -> void:
 	assert_float(cage.global_position.y).is_equal_approx(0.0, 0.001)
 	assert_bool(roof.door_locked).is_true()
 	assert_bool(cage.has_padlock()).is_true()
+
+
+func test_the_lowering_music_plays_once_and_fades_at_the_bell() -> void:
+	var scene := _match()
+	await _ticks(2)
+	var audio: MatchAudio = scene.audio
+	assert_object(audio).is_not_null()
+	audio._on_cue("cell_lower")
+	assert_bool(audio.cell_music_on()).is_true()
+	assert_bool((audio._cell_music.stream as AudioStreamOggVorbis).loop).is_false()
+	audio.opening_bell()
+	assert_bool(audio.cell_music_on()).is_false()
