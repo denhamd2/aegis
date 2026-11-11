@@ -11863,6 +11863,16 @@ surface shows what it reflects, which is black. Frame and wire are now light
 galvanised steel, less metallic so the arena lights light them. Hell in a
 Cell's frame members are 2.4× deeper, like the box truss in the references.
 
+### TLC
+
+TLC is the Ladder match plus tables and chairs. At the bell, two tables, two
+ladders and four steel chairs are laid out on the ringside floor round all four
+sides (`WeaponStock.seed_tlc`). The AI's weapon runs favour them four to one.
+The table spots from Lights Out are all on.
+
+The Ladder match's ladders no longer wear out. Every weapon used to expire
+after 45 s, so a ladder stood under the belt would have vanished mid-match.
+
 Tests: `test_hell_in_a_cell` and `test_ladder_match` are new. The cage,
 ladder, whip, rope and Lights Out suites all pass. Probe:
 `tools/probe/gimmick_shot.gd`.

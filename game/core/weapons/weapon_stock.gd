@@ -81,9 +81,43 @@ func _takeable(a: Variant) -> bool:
 ## Takes `def` out from under the ring: a new actor in the scene.
 func pull(def: WeaponDef) -> WeaponActor:
 	var a := WeaponActor.make(def)
+	# The Ladder match's ladders are its furniture, not a weapon that wears
+	# out: one stood under the belt must not vanish after 45 s.
+	if def and def.id == &"ladder" and MatchRules.prize_hangs(self):
+		a.match_lifetime_limit = 1 << 30
 	add_child(a)
 	actors.append(a)
 	return a
+
+
+## TLC: tables, ladders and chairs laid out on the ringside floor at the
+## bell, round all four sides, besides what is under the ring.
+const TLC_LAYOUT := [
+	[&"table", Vector3(-4.5, 0.0, 1.6)], [&"table", Vector3(4.5, 0.0, -1.6)],
+	[&"ladder", Vector3(1.4, 0.0, 4.5)], [&"ladder", Vector3(-1.4, 0.0, -4.5)],
+	[&"steel_chair", Vector3(-4.4, 0.0, -1.8)], [&"steel_chair", Vector3(4.4, 0.0, 2.0)],
+	[&"steel_chair", Vector3(-2.2, 0.0, 4.4)], [&"steel_chair", Vector3(2.4, 0.0, -4.4)],
+]
+const TLC_LIFETIME_TICKS := 60 * 600
+var tlc_actors: Array[WeaponActor] = []
+
+
+func seed_tlc() -> void:
+	if not MatchRules.tables_and_chairs(self) or not tlc_actors.is_empty():
+		return
+	for i in TLC_LAYOUT.size():
+		var def := WeaponCatalog.by_id(TLC_LAYOUT[i][0])
+		if def == null:
+			continue
+		var actor := pull(def)
+		actor.name = "TLC%02d_%s" % [i, def.id]
+		actor.mode = WeaponActor.Mode.FLOOR
+		actor.match_lifetime_limit = maxi(actor.match_lifetime_limit, TLC_LIFETIME_TICKS)
+		var at: Vector3 = TLC_LAYOUT[i][1]
+		actor.global_position = at
+		actor.rotation.y = (0.0 if absf(at.x) > absf(at.z) else PI * 0.5) + float(i % 3) * 0.2 - 0.2
+		actor._rest_on_floor(WeaponActor.ground_under(actor.global_position))
+		tlc_actors.append(actor)
 
 
 ## Seed the deck once at bell time. Stage weapons are ordinary loose actors:

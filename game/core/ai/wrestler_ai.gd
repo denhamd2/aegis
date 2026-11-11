@@ -2175,6 +2175,9 @@ const LADDER_DUE_AT := 150.0
 const LADDER_RUNS_MAX := 2
 
 
+const TLC_WEIGHT := 4.0
+
+
 func ladder_due() -> bool:
 	# The Ladder match: one to stand under the belt, whenever none is there.
 	if MatchRules.prize_hangs(controller):
@@ -2226,6 +2229,10 @@ func choose_weapon(rng: RandomNumberGenerator) -> StringName:
 				w *= LADDER_WEIGHT
 		elif def.id in CARNAGE_WEAPONS:
 			w *= CARNAGE_WEIGHT
+		# TLC: the match is named for them.
+		if MatchRules.tables_and_chairs(controller) \
+				and def.id in [&"table", &"ladder", &"steel_chair"]:
+			w *= TLC_WEIGHT
 		w /= pow(REPEAT_WEAPON_DIVISOR, float(maxi(int(_picked_weapons.get(def.id, 0)),
 				int(used_weapons.get(def.id, 0)))))
 		ids.append(def.id)

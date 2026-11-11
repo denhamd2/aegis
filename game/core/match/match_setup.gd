@@ -164,6 +164,7 @@ func _ready() -> void:
 		# so nobody could pick a stage weapon up.
 		WeaponStock.of(wrestler_a).seed_stage_weapons()
 		WeaponStock.of(wrestler_a).seed_apron_weapons()
+		WeaponStock.of(wrestler_a).seed_tlc()
 	if TouchControls.wanted(not wrestler_a.is_ai or not wrestler_b.is_ai):
 		var touch := TouchControls.new()
 		touch.name = "TouchControls"

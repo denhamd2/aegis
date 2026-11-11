@@ -80,7 +80,7 @@ const MESH_CELLS := 8
 const MESH_TEXTURE_SIZE := 256
 ## The wire, as a fraction of a cell, and the colours (galvanised wire on a
 ## dark painted frame).
-const WIRE_WIDTH := 0.16
+const WIRE_WIDTH := 0.24
 ## Galvanised steel, frame and wire alike (the owner, 11 Nov: "should not be
 ## black. They should be a steel colour", with Hell in a Cell and Steel Cage
 ## references): a light, bright zinc grey that reads silver under the arena

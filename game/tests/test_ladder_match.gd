@@ -149,3 +149,26 @@ func test_no_pinfalls_in_a_ladder_match() -> void:
 	roman.is_ai = false
 	await _ticks(60)
 	assert_int(roman.fsm.current_state).is_not_equal(WrestlerFSM.State.PIN_ATTACKER)
+
+
+func test_tlc_lays_tables_ladders_and_chairs_round_the_ring() -> void:
+	var scene := _match(MatchRules.Mode.TLC)
+	await _ticks(2)
+	var stock := WeaponStock.of(scene.get_node("WrestlerA"))
+	var ids := {}
+	for a in stock.tlc_actors:
+		ids[a.def.id] = int(ids.get(a.def.id, 0)) + 1
+		# On the floor outside the ring.
+		assert_bool(absf(a.global_position.x) > RingBuilder.MAT_HALF \
+				or absf(a.global_position.z) > RingBuilder.MAT_HALF).is_true()
+	assert_int(int(ids.get(&"table", 0))).is_equal(2)
+	assert_int(int(ids.get(&"ladder", 0))).is_equal(2)
+	assert_int(int(ids.get(&"steel_chair", 0))).is_equal(4)
+	assert_object(scene.get_node_or_null("HangingPrize")).is_not_null()
+
+
+func test_a_ladder_in_a_ladder_match_does_not_wear_out() -> void:
+	var scene := _match()
+	await _ticks(2)
+	var ladder := WeaponStock.of(scene.get_node("WrestlerA")).pull(WeaponCatalog.by_id(&"ladder"))
+	assert_int(ladder.match_lifetime_limit).is_greater(60 * 60 * 30)
