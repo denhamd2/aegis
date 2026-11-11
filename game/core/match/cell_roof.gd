@@ -182,6 +182,7 @@ func _holds_cutters(w: WrestlerController) -> bool:
 ## Which side of the cell's walls each man is on the floor: inside, unless
 ## he went out through the door, down off the roof or over its edge.
 var _outside := {}
+const DOOR_PASSED := 0.45
 
 
 func is_outside_cell(w: WrestlerController) -> bool:
@@ -199,7 +200,14 @@ func keep_cell_side(w: WrestlerController, p: Vector3) -> Vector3:
 	# Through the open door (its collision is a real opening now): whichever
 	# side of the wall he steps onto is his side.
 	if cage.door_open_amount() > 0.6 and cage.in_door_lane(p, -WrestlerController.BODY_RADIUS):
-		_outside[w] = cage.is_outside(p)
+		# Only once he is clearly through: standing in the doorway he stays
+		# on the side he came from (flipping there sent the other man back
+		# and forth through it after him -- flow_probe seed 1, 11 Nov).
+		var past := p.dot(cage.spec.door_axis) - half()
+		if past > DOOR_PASSED:
+			_outside[w] = true
+		elif past < -DOOR_PASSED:
+			_outside[w] = false
 		return p
 	var r := WrestlerController.BODY_RADIUS + 0.05
 	if is_outside_cell(w):
@@ -252,7 +260,6 @@ func begin(w: WrestlerController) -> bool:
 	elif at_climbable_wall(p):
 		r = {"kind": "up", "phase": 0, "t": 0, "from": p}
 		climbs += 1
-		print("DBGC up ", w.name, " t=", Engine.get_physics_frames() / 60, " opp_roof=", w.opponent.on_roof, " opp_out=", is_outside_cell(w.opponent), " opp_st=", WrestlerFSM.State.keys()[w.opponent.fsm.current_state])
 	else:
 		return false
 	# The door: padlocked, it needs the cutters (phase 0 cuts the chain);
@@ -362,7 +369,6 @@ func _next(w: WrestlerController, r: Dictionary) -> void:
 
 func _finish(w: WrestlerController, onto_roof: bool) -> void:
 	var r: Dictionary = _routes.get(w, {})
-	print("DBGC finish ", w.name, " ", r.get("kind", ""), " t=", Engine.get_physics_frames() / 60)
 	match r.get("kind", ""):
 		"door_out", "down":
 			_outside[w] = true

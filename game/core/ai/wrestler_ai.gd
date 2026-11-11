@@ -598,6 +598,11 @@ const CELL_ROLLS := 3
 var _cell_rolls := 0
 var _cell_rolled_for := -1
 var _cell_plan := -1        # -1 undecided, 0 no, 1 the roof
+## Ticks alone on the roof waiting for him; past ROOF_WAIT_TICKS, down.
+var _roof_alone := 0
+const ROOF_WAIT_TICKS := 60 * 7
+## Been up and come back down: the roof is spent for this man.
+var _roof_done := false
 var _cell_ticks := 0
 const CELL_GIVE_UP := 60 * 40
 
@@ -633,11 +638,22 @@ func _cell_input(distance: float) -> Dictionary:
 	if roof == null or roof.busy(controller):
 		return {}
 	var p := controller.global_position
-	# Left up there after the other man went over: back down.
+	# Up there alone: wait a while for him to follow (he is on his way up
+	# when he is out on the floor); then -- or at once, after he went over --
+	# back down, and the roof is done with (flow_probe seed 1, 11 Nov: up,
+	# straight down, up again, 28 times, the other man never reaching it).
 	if controller.on_roof and not target.on_roof and not roof.busy(target):
+		_roof_alone += 1
+		var coming := roof.is_outside_cell(target) and roof.falls == 0 \
+				and target.fsm.current_state != WrestlerFSM.State.DOWN
+		if coming and _roof_alone < ROOF_WAIT_TICKS:
+			return {"move": Vector2.ZERO}
+		_cell_plan = 0
+		_roof_done = true
 		if roof.at_roof_front_edge(p):
 			return {"cell_route": true}
 		return _to_cell_point(roof, _roof_front_point(roof), false)
+	_roof_alone = 0
 	if controller.on_roof:
 		return _roof_fight(roof, distance)
 	# On the floor, on the other side of the walls from him: round to the
@@ -645,16 +661,17 @@ func _cell_input(distance: float) -> Dictionary:
 	if not target.on_roof and not roof.busy(target) and not roof.door_locked \
 			and roof.is_outside_cell(controller) != roof.is_outside_cell(target):
 		return _through_cell_door(roof)
+	var other: WrestlerAI = target.ai if target else null
+	var following := not _roof_done and other != null and other.going_for_the_roof() \
+			and (target.on_roof or roof.busy(target) or _outside_cell(roof, target.global_position))
 	# Both out on the floor, round the walls from each other: round the
-	# outside lane to him.
+	# outside lane to him -- unless one of them is on his way up.
 	if not target.on_roof and not roof.busy(target) and roof.is_outside_cell(controller) \
-			and roof.is_outside_cell(target) and (_cell_plan != 1 or roof.falls > 0):
+			and roof.is_outside_cell(target) and not following \
+			and (_cell_plan != 1 or roof.falls > 0):
 		var round := _round_the_cell(roof, target.global_position)
 		if not round.is_empty():
 			return round
-	var other: WrestlerAI = target.ai if target else null
-	var following := other != null and other.going_for_the_roof() \
-			and (target.on_roof or roof.busy(target) or _outside_cell(roof, target.global_position))
 	# Rolled once a knockdown, a few times a match, past CELL_DUE_AT.
 	if _cell_plan < 1 and _cell_rolls < CELL_ROLLS and controller.flow \
 			and controller.flow.seconds() > CELL_DUE_AT \
@@ -670,6 +687,9 @@ func _cell_input(distance: float) -> Dictionary:
 			_cell_plan = 1 if rng.randf() < CELL_ROOF_CHANCE else 0
 	if _cell_plan == 1 and roof.falls > 0:
 		_cell_plan = 0
+	if _roof_done:
+		_cell_plan = 0
+		following = false
 	if _cell_plan != 1 and not following:
 		return {}
 	_cell_ticks += 1
