@@ -2011,6 +2011,12 @@ const TRAJECTORIES := {
 		},
 	},
 	# The Samoan Drop: carried across the shoulders, then off them in front.
+	# The Samoan drop (11 Nov re-key): carried across Roman's shoulders, the
+	# man goes back over with him as Roman falls onto his own back, and lands
+	# across the mat just beyond Roman's head (x 1.65 against Roman's 0.40,
+	# his head about 1.15). From 1.30 s to 1.50 s the clip's body yaw runs 90
+	# -> 0 and the root turns the other way, -90 -> 0, so the world pose holds
+	# while the frame comes round to SELL_AWAY's.
 	"power_samoan_drop": {
 		"length": 2.0,
 		"attacker": {
@@ -2020,10 +2026,11 @@ const TRAJECTORIES := {
 		"defender": {
 			"pos": [[0.00, -0.40, 0.00, 0.00], [0.27, -0.10, 0.00, 0.00],
 					[0.53, 0.34, 0.00, 0.00], [0.93, 0.34, 0.00, 0.00],
-					[1.10, 0.20, 0.00, 0.00], [1.20, -0.05, 0.00, 0.00],
-					[1.30, -0.45, 0.00, 0.00], [1.37, -0.65, 0.00, 0.00],
-					[2.00, -0.65, 0.00, 0.00]],
-			"rot": [[0.00, 0.0, -90.0, 0.0], [2.00, 0.0, -90.0, 0.0]],
+					[1.07, 0.62, 0.00, 0.00], [1.20, 1.15, 0.00, 0.00],
+					[1.30, 1.65, 0.00, 0.00], [2.00, 1.65, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, -90.0, 0.0], [1.30, 0.0, -90.0, 0.0],
+					[1.40, 0.0, -45.0, 0.0], [1.50, 0.0, 0.0, 0.0],
+					[2.00, 0.0, 0.0, 0.0]],
 		},
 	},
 	# The rebound catch and standing slam (reference #4), CATCH-ONLY:

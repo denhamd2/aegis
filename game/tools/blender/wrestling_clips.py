@@ -6476,10 +6476,15 @@ CLIPS["Alabama_Slam_Defender"] = [
 
 # The Samoan Drop, 60 frames / 2.0 s. Roman ducks in and hoists the man
 # across both shoulders, face up, head to Roman's left and feet to his right
-# (a fireman's carry); a beat to show him off; then Roman drops to a crouch
-# and the man falls away off his shoulders in front, back first. The carried
-# body lies along the lateral axis: hips pitch 88 tips him onto his back,
-# yaw 90 turns that length across Roman's shoulders.
+# (a fireman's carry); a beat to show him off; then Roman FALLS BACK onto his
+# own back and takes the man down with him, who lands flat on his back across
+# the mat just beyond Roman's head -- the two of them in a T. (The owner, 11
+# Nov: "re-key the Samoan drop ... to look like the real move". It was a
+# crouch with the man sliding off the front, which is a different move.) The
+# carried body lies along the lateral axis: hips pitch 88 tips him onto his
+# back, yaw 90 turns that length across Roman's shoulders; he keeps that yaw
+# all the way down, and his root turns by the same 90 degrees on the landing
+# (paired_recipes.gd power_samoan_drop) so the settle is SELL_AWAY.
 _SAM_LIMBS = dict(spine=(-4, 0, 0), head=(-6, 0, 0),
                   hand_r=(0.34, 0.06, -0.10), hand_l=(-0.34, 0.06, -0.10),
                   elbow_r=(0.8, -0.2, -0.3), elbow_l=(-0.8, -0.2, -0.3),
@@ -6506,38 +6511,25 @@ CLIPS["Samoan_Drop_Attacker"] = [
     # Up, the man across his shoulders.
     (16, dict(_SAM_HOLD)),
     (28, dict(_SAM_HOLD, spine=(-16, 0, 0), head=(10, 0, 0))),
-    # Drops: knees give, he sits into a crouch as the man leaves his shoulders.
-    (34, P(pelvis=(0.0, 0.06, 0.640), hips=(-12, 0, 0), spine=(-18, 0, 0),
-           head=(-8, 0, 0),
-           hand_r=(0.28, 0.36, 0.90), hand_l=(-0.28, 0.36, 0.90),
-           fist_r=0.5, fist_l=0.5,
-           foot_r=(0.26, -0.10, 0.104), foot_l=(-0.24, 0.12, 0.104))),
-    # The contact: hips under him, spine folded, the arms driving down.
-    (40, P(pelvis=(0.0, 0.10, 0.430), hips=(-28, 0, 0), spine=(-36, 0, 0),
-           head=(-16, 0, 0),
-           hand_r=(0.30, 0.50, 0.46), hand_l=(-0.30, 0.50, 0.46),
-           fist_r=0.4, fist_l=0.4,
-           foot_r=(0.30, -0.16, 0.104), foot_l=(-0.26, 0.24, 0.104))),
-    # Recoil: the body absorbs the bump, then he stays down a beat.
-    (42, P(pelvis=(0.0, 0.08, 0.500), hips=(-22, 0, 0), spine=(-28, 0, 0),
-           head=(-12, 0, 0),
-           hand_r=(0.28, 0.44, 0.56), hand_l=(-0.28, 0.44, 0.56),
-           fist_r=0.3, fist_l=0.3,
-           foot_r=(0.30, -0.14, 0.104), foot_l=(-0.26, 0.22, 0.104))),
-    # Effort: hands on the knees, head down before he rises.
-    (48, P(pelvis=(0.0, 0.08, 0.700), hips=(-18, 0, 0), spine=(-26, 0, 0),
-           head=(-14, 0, 0),
-           hand_r=(0.24, 0.34, 0.84), hand_l=(-0.24, 0.34, 0.84),
-           fist_r=0.2, fist_l=0.2,
-           foot_r=(0.30, -0.12, 0.104), foot_l=(-0.26, 0.18, 0.104))),
-    (54, P(pelvis=(0.0, 0.08, 0.720), hips=(-14, 0, 0), spine=(-22, 0, 0),
-           head=(-10, 0, 0),
-           hand_r=(0.24, 0.34, 0.88), hand_l=(-0.24, 0.34, 0.88))),
-    (57, P(pelvis=(0.0, 0.04, 0.790), hips=(-8, 0, 0), spine=(-12, 0, 0),
-           head=(-4, 0, 0),
-           hand_r=(0.24, 0.30, 1.02), hand_l=(-0.24, 0.30, 1.02))),
-    (60, P()),
-]
+    # Over backward, the man still on his shoulders: the weight goes back,
+    # the hips go under, and he sits through it onto his back.
+    (32, dict(pelvis=(0.0, -0.08, 0.720), hips=(16, 0, 0), spine=(6, 0, 0),
+              head=(-8, 0, 0),
+              hand_r=(0.24, 0.04, 1.36), hand_l=(-0.24, 0.04, 1.36),
+              elbow_r=(0.8, -0.3, 0.0), elbow_l=(-0.8, -0.3, 0.0),
+              fist_r=0.8, fist_l=0.8,
+              foot_r=(0.30, 0.10, 0.104), foot_l=(-0.28, 0.14, 0.104))),
+    (36, dict(pelvis=(0.0, -0.22, 0.500), hips=(46, 0, 0), spine=(12, 0, 0),
+              head=(-20, 0, 0),
+              hand_r=(0.24, -0.10, 1.10), hand_l=(-0.24, -0.10, 1.10),
+              fist_r=0.7, fist_l=0.7,
+              foot_r=(0.20, 0.38, 0.104), foot_l=(-0.20, 0.34, 0.104))),
+    # The impact: flat on his back, his arms still up where the man was.
+    (39, pose(ATK_BACK, hand_r=(0.24, -0.46, 0.46), hand_l=(-0.24, -0.46, 0.46))),
+    (41, pose(ATK_BACK, pelvis=(0.0, 0.0, 0.200),
+              hand_r=(0.30, -0.40, 0.30), hand_l=(-0.30, -0.40, 0.30))),
+    (46, pose(ATK_BACK, hand_r=(0.34, -0.30, 0.10), hand_l=(-0.34, -0.30, 0.10))),
+] + _get_up(48, 60, lying=True)
 CLIPS["Samoan_Drop_Defender"] = [
     (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(-14, 0, 0),
            hand_r=(0.22, 0.46, 1.32), hand_l=(-0.20, 0.48, 1.30),
@@ -6552,19 +6544,19 @@ CLIPS["Samoan_Drop_Defender"] = [
     (28, _body((88, 90, 0), (0.0, 0.00, 1.450), **dict(_SAM_LIMBS,
                spine=(-10, 0, 0), head=(-12, 0, 0),
                hand_r=(0.34, 0.02, -0.16), hand_l=(-0.34, 0.02, -0.16)))),
-    # Tipping forward off him, turning back to lie along the way he faces.
-    (35, _body((78, 60, 0), (0.0, -0.10, 1.250), **_SAM_LIMBS)),
-    (38, _body((68, 28, 0), (0.0, -0.14, 0.900), **_SAM_LIMBS)),
-    # The back hits: shoulders flat, legs still up, arms slapping out.
-    (39, _yawed(S(pelvis=(0.0, -0.05, 0.300), spine=(20, 0, 0), head=(26, 0, 0),
-                   hand_r=(-0.55, 0.14, 0.12), hand_l=(0.55, 0.14, 0.12),
-                   foot_r=(-0.12, -0.70, 0.34), foot_l=(0.10, -0.72, 0.36)))),
-    # Rebound: the body bounces once, then settles.
-    (42, _yawed(S(pelvis=(0.0, 0.0, 0.200), spine=(-2, 0, 0), head=(-4, 0, 0),
-                   hand_r=(-0.50, 0.14, 0.10), hand_l=(0.50, 0.14, 0.10),
-                   foot_r=(-0.14, -0.72, 0.26), foot_l=(0.12, -0.74, 0.28)))),
-    # The sell: asymmetric, head lolled, one arm across the chest.
-    (46, dict(SELL_AWAY, pelvis=(0.0, 0.0, 0.190))),
+    # Going back with Roman, still across his shoulders and face up.
+    (32, _body((86, 90, 0), (0.0, 0.00, 1.340), **dict(_SAM_LIMBS,
+               spine=(-8, 0, 0), head=(-10, 0, 0)))),
+    (36, _body((88, 90, 0), (0.0, 0.00, 0.860), **dict(_SAM_LIMBS,
+               spine=(-4, 0, 0), head=(-4, 0, 0),
+               hand_r=(0.40, 0.04, -0.06), hand_l=(-0.40, 0.04, -0.06)))),
+    # The back hits the mat, across: arms slapping out, legs up a touch.
+    (39, _body((92, 90, 0), (0.0, 0.00, 0.240), **dict(_SAM_LIMBS, **_LANDED_FLAT))),
+    # Rebound, and the root's quarter turn takes over the yaw (the world pose
+    # does not move): settled as SELL_AWAY.
+    (42, _body((88, 45, 0), (0.0, 0.00, 0.280), **dict(_SAM_LIMBS, **_LANDED_FLAT))),
+    (45, _body((88, 0, 0), (0.0, 0.00, 0.210), **dict(_SAM_LIMBS, **_LANDED_FLAT))),
+    (50, dict(SELL_AWAY, pelvis=(0.0, 0.0, 0.190))),
     (60, dict(SELL_AWAY)),
 ]
 
