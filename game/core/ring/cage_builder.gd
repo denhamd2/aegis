@@ -256,6 +256,104 @@ func set_door_open(t: float) -> void:
 		_door_pivot.rotation.y = _door_hinge_sign() * swing
 
 
+# --------------------------------------------------------------------------
+# The hoist (Hell in a Cell): up in the rafters for the entrances, lowered on
+# its four chains once both men are in the ring (the owner, 11 Nov: "the cell
+# should lower after the entrances"). Presentation only -- gameplay reads the
+# Spec, and CellRoof ignores the walls until the cell is down.
+
+signal landed
+## Raised: the foot of its walls clear above the ring truss (ArenaBuilder.
+## TRUSS_Y 9.2, fixtures to 8.5), so no entrance shot looks through it.
+const HOIST_LIFT := 10.6
+## Its chains run up to the roof steel.
+const CHAIN_TOP_Y := ArenaBuilder.ROOF_Y
+const CHAIN_RADIUS := 0.035
+var lift := 0.0
+var _chains: Array[MeshInstance3D] = []
+var _lowering_from := 0.0
+var _lowering_ticks := 0
+var _lowering_t := -1
+
+
+func is_lowered() -> bool:
+	return lift <= 0.0005 and _lowering_t < 0
+
+
+## Hangs it `h` metres above where it stands, chains showing while it hangs.
+func set_lift(h: float) -> void:
+	lift = maxf(h, 0.0)
+	position.y = lift
+	if lift > 0.0 and _chains.is_empty():
+		_build_chains()
+	for c in _chains:
+		c.visible = lift > 0.0005
+		if c.visible:
+			var length := CHAIN_TOP_Y - (spec.top_y + lift)
+			(c.mesh as CylinderMesh).height = maxf(length, 0.01)
+			c.position.y = spec.top_y + length * 0.5
+
+
+## Brings it down over `seconds`, eased in and out (a hoist starts and stops
+## gently), then `landed`.
+func lower(seconds: float) -> void:
+	_lowering_from = lift
+	_lowering_ticks = maxi(1, int(round(seconds * Engine.physics_ticks_per_second)))
+	_lowering_t = 0
+
+
+## Where the descent is, 0..1 (1 once down).
+func lowering_progress() -> float:
+	if _lowering_t < 0:
+		return 1.0 if lift <= 0.0005 else 0.0
+	return float(_lowering_t) / float(_lowering_ticks)
+
+
+func _physics_process(_delta: float) -> void:
+	if _lowering_t < 0:
+		return
+	_lowering_t += 1
+	var e := smoothstep(0.0, 1.0, float(_lowering_t) / float(_lowering_ticks))
+	set_lift(_lowering_from * (1.0 - e))
+	if _lowering_t >= _lowering_ticks:
+		_lowering_t = -1
+		set_lift(0.0)
+		for axis: Vector3 in axes():
+			rattle(axis * spec.half + Vector3.UP * spec.base_y, 1.6)
+		landed.emit()
+
+
+## Down at once (the entrances skipped).
+func land_now() -> void:
+	if is_lowered():
+		return
+	_lowering_t = -1
+	set_lift(0.0)
+	landed.emit()
+
+
+func _build_chains() -> void:
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(0.32, 0.33, 0.35)
+	mat.metallic = 0.7
+	mat.roughness = 0.4
+	for sx in [-1.0, 1.0]:
+		for sz in [-1.0, 1.0]:
+			var mi := MeshInstance3D.new()
+			mi.name = "HoistChain"
+			var m := CylinderMesh.new()
+			m.top_radius = CHAIN_RADIUS
+			m.bottom_radius = CHAIN_RADIUS
+			m.radial_segments = 8
+			m.rings = 1
+			mi.mesh = m
+			mi.material_override = mat
+			mi.position = Vector3(sx * spec.half, spec.top_y, sz * spec.half)
+			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			add_child(mi)
+			_chains.append(mi)
+
+
 ## A man driven into the steel at `at`: the panel he hit shakes and settles.
 func rattle(at: Vector3, strength := 1.0) -> void:
 	var axis := wall_axis(at)

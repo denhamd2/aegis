@@ -194,6 +194,8 @@ func set_outside_cell(w: WrestlerController, out: bool) -> void:
 
 ## Holds `p` (a man on the floor) on his side of the walls.
 func keep_cell_side(w: WrestlerController, p: Vector3) -> Vector3:
+	if not cage.is_lowered():
+		return p     # still hanging over the ring: nothing to keep him off
 	var r := WrestlerController.BODY_RADIUS + 0.05
 	if is_outside_cell(w):
 		# His capsule clear of the walls -- round the corner posts, not
@@ -228,7 +230,7 @@ func busy(w: WrestlerController) -> bool:
 ## Starts whichever route `w` stands at: the door (either way), up the wall,
 ## or down off the roof. False if there is none from where he is.
 func begin(w: WrestlerController) -> bool:
-	if busy(w):
+	if busy(w) or not cage.is_lowered():
 		return false
 	var p := w.global_position
 	var r := {}

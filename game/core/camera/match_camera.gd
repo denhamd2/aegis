@@ -542,6 +542,70 @@ func _up_the_cell() -> bool:
 	return false
 
 
+# --- Hell in a Cell (gauntlet/refs/hell_in_a_cell_camera.md) ----------------
+## The camera the owner's question was about (11 Nov: "the cell is blocking
+## ... much of the views during the match"): every coverage stands 6-9 m off
+## the pair, and the cell's walls are 4.7 m from the centre, so every shot
+## looked through a wall -- the mesh greying it and the rails and posts across
+## it. Inside the cell the camera comes in along its own line of sight to
+## CELL_CAMERA_IN inside the walls, the TV handheld in there with them, and the
+## lens widens by the same ratio so the pair fill the frame as they did.
+const CELL_CAMERA_IN := 0.4
+const CELL_MAX_FOV := 74.0
+var _cell: CellRoof
+var _cell_looked := false
+
+
+func _cell_down() -> CellRoof:
+	if not _cell_looked:
+		_cell_looked = true
+		_cell = CellRoof.of(self)
+	if _cell == null or not is_instance_valid(_cell) or not _cell.cage.is_lowered():
+		return null
+	return _cell
+
+
+func _fight_in_cell(cell: CellRoof) -> bool:
+	for w in [wrestler_a, wrestler_b]:
+		var c := w as WrestlerController
+		if c and (cell.is_outside_cell(c) or c.on_roof or cell.busy(c)):
+			return false
+	return true
+
+
+func _fight_out_of_cell(cell: CellRoof) -> bool:
+	for w in [wrestler_a, wrestler_b]:
+		var c := w as WrestlerController
+		if c and not (cell.is_outside_cell(c) and not c.on_roof):
+			return false
+	return true
+
+
+## `at` brought in toward `look` along the line between them until it is
+## within `limit` of the centre on X and Z; [where, how many times nearer].
+static func cell_pull_in(look: Vector3, at: Vector3, limit: float) -> Array:
+	var d := at - look
+	var h := Vector2(d.x, d.z)
+	if h.length() < 0.001:
+		return [at, 1.0]
+	var t := INF
+	for i in 2:
+		var hi := h.x if i == 0 else h.y
+		var li := look.x if i == 0 else look.z
+		if absf(hi) > 0.0001:
+			t = minf(t, (limit - signf(hi) * li) / absf(hi))
+	t = clampf(t, 0.05, 1.0)
+	if t >= 1.0:
+		return [at, 1.0]
+	return [look + d * t, 1.0 / t]
+
+
+## The lens that keeps a subject `k` times nearer the same size, capped.
+static func widened_fov(base_deg: float, k: float) -> float:
+	var half := atan(tan(deg_to_rad(base_deg) * 0.5) * k)
+	return minf(rad_to_deg(half * 2.0), CELL_MAX_FOV)
+
+
 func _physics_process(delta: float) -> void:
 	if mode == Mode.ENTRANCE:
 		# EntranceDirector owns the camera until the bell.
@@ -572,12 +636,18 @@ func _physics_process(delta: float) -> void:
 	var target_position: Vector3
 	var aim: float
 
+	var cell := _cell_down()
+	var cell_k := 1.0
 	if mode == Mode.HARD_CAM:
 		# A fixed camera does not follow. It sits in its seat and pans, which
 		# is why the master is the shot that reads as coverage rather than as
 		# a rig strapped to the wrestlers.
 		target_position = hard_cam_position
 		aim = hard_cam_aim
+		if cell and _fight_in_cell(cell):
+			var hc := cell_pull_in(midpoint + Vector3.UP * aim, target_position, cell.half() - CELL_CAMERA_IN)
+			target_position = hc[0]
+			cell_k = hc[1]
 	else:
 		var separation := wrestler_a.global_position.distance_to(wrestler_b.global_position)
 		var distance := framing_distance(separation)
@@ -605,6 +675,11 @@ func _physics_process(delta: float) -> void:
 			distance = minf(FF_DISTANCE + FF_DISTANCE_PER_M * separation, FF_MAX_DISTANCE)
 		else:
 			bearing = _from_the_crowd_side(bearing, midpoint)
+		if cell and not up_high and _fight_out_of_cell(cell):
+			# Round the outside of the cell: from the crowd side of the wall
+			# they are at, looking back over the barricade at them and the
+			# steel -- never across the cell through two walls.
+			bearing = CageBuilder.wall_axis(midpoint)
 		var to_camera := bearing * distance
 		# Three heights, not two. The finisher cut's low angle is deliberate --
 		# camera.md: "drops lower, closer to mat height, for a grounded,
@@ -638,6 +713,13 @@ func _physics_process(delta: float) -> void:
 		target_position = midpoint + to_camera + Vector3.UP * eye_height
 		if gameplay and not _fight_outside():
 			target_position = _outside_ring(target_position, bearing)
+		if cell and not up_high and _fight_in_cell(cell):
+			var pc := cell_pull_in(midpoint + Vector3.UP * aim, target_position,
+					cell.half() - CELL_CAMERA_IN)
+			target_position = pc[0]
+			cell_k = pc[1]
+	if cell_k > 1.0001:
+		fov = widened_fov(fov, cell_k)
 
 	if mode == _previous_mode and not _snap_next:
 		var speed := follow_speed if mode == Mode.RINGSIDE else cut_speed

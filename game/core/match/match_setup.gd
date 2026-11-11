@@ -96,7 +96,16 @@ func _ready() -> void:
 			roof.name = "CellRoof"
 			roof.cage = cage
 			add_child(roof)
-			roof.lock_door()
+			if entrances and not (CaptureHarness != null and CaptureHarness.is_capturing()) \
+					and record_replay_path == "":
+				# Hung in the rafters for the entrances; EntranceDirector lowers
+				# it after the introductions, and the referee's padlock goes on
+				# when it lands (or at the bell, if the entrances are skipped).
+				cage.set_lift(CageBuilder.HOIST_LIFT)
+				cage.set_door_open(1.0)
+				cage.landed.connect(roof.lock_door)
+			else:
+				roof.lock_door()
 		# Hell in a Cell has no escape win: the cell only keeps them in.
 		if MatchRules.escape_wins(self):
 			var escape := CageEscape.new()
@@ -292,6 +301,11 @@ func _set_look(look: ArenaLighting.Look) -> void:
 
 func _begin_live() -> void:
 	_set_look(ArenaLighting.Look.MATCH)
+	# The cell is down by the bell whatever happened before it (the
+	# entrances skipped, or cut short).
+	var cage := CageBuilder.of(self)
+	if cage and not cage.is_lowered():
+		cage.land_now()
 	if audio:
 		audio.opening_bell()
 	if referee_actor:

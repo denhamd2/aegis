@@ -186,3 +186,31 @@ func test_off_the_roof_edge_onto_the_man_down_below() -> void:
 	assert_int(roman.fsm.current_state).is_equal(WrestlerFSM.State.DOWN)
 	assert_float(cody.combat.health()).is_less(health)
 	assert_float(roman.global_position.distance_to(cody.global_position)).is_less(1.0)
+
+
+func test_hung_for_the_entrances_then_lowered_and_padlocked() -> void:
+	var scene := _match()
+	await _ticks(2)
+	var m: Array = _men(scene)
+	var roman: WrestlerController = m[0]
+	var roof := scene.get_node("CellRoof") as CellRoof
+	var cage := roof.cage
+	# As MatchSetup hangs it when the entrances run.
+	roof.door_locked = false
+	cage.set_padlock(false)
+	cage.set_lift(CageBuilder.HOIST_LIFT)
+	cage.landed.connect(roof.lock_door)
+	assert_bool(cage.is_lowered()).is_false()
+	assert_float(cage.global_position.y + cage.spec.base_y).is_greater(ArenaBuilder.TRUSS_Y)
+	# Hanging, its walls hold no one: he walks from the floor into the ring.
+	var p := Vector3(0.0, WrestlerController.FLOOR_LEVEL, roof.half() - 0.3)
+	assert_vector(roof.keep_cell_side(roman, p)).is_equal(p)
+	assert_bool(roof.begin(roman)).is_false()
+	cage.lower(1.0)
+	await _ticks(30)
+	assert_float(cage.lift).is_between(0.1, CageBuilder.HOIST_LIFT - 0.1)
+	await _ticks(40)
+	assert_bool(cage.is_lowered()).is_true()
+	assert_float(cage.global_position.y).is_equal_approx(0.0, 0.001)
+	assert_bool(roof.door_locked).is_true()
+	assert_bool(cage.has_padlock()).is_true()

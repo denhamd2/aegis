@@ -26,18 +26,22 @@ func _ready() -> void:
 	DirAccess.make_dir_recursive_absolute(_out)
 	Engine.max_physics_steps_per_frame = 1
 	await get_tree().process_frame
-	for s: String in ["cell", "cage", "ladder", "casket", "ambulance", "roof"]:
+	for s: String in ["cell", "cage", "ladder", "casket", "ambulance", "roof", "cellcam", "lowering"]:
 		if _only.is_empty() or _only.has(s):
 			await call("_" + s)
 	print("GIMMICK_SHOT done")
 	get_tree().quit()
 
 
-func _scene(mode: int, keep_arena := false) -> Node:
+func _scene(mode: int, keep_arena := false, keep_camera := false) -> Node:
 	var scene: Node = load("res://scenes/match.tscn").instantiate()
 	TitleScreen.configure_match(scene, Roster.by_id("roman"), Roster.by_id("cody"), 7, false, mode)
-	for heavy in (["RingReflections", "MatchHUD", "MatchCamera"] if keep_arena
-			else ["Arena", "RingReflections", "MatchHUD", "MatchCamera"]):
+	var heavy_parts := ["RingReflections", "MatchHUD"]
+	if not keep_camera:
+		heavy_parts.append("MatchCamera")
+	if not keep_arena:
+		heavy_parts.append("Arena")
+	for heavy in heavy_parts:
 		if scene.has_node(heavy):
 			scene.get_node(heavy).free()
 	var sun := DirectionalLight3D.new()
@@ -233,4 +237,75 @@ func _roof() -> void:
 		if shots2.has(tick):
 			await _shoot(shots2[tick])
 			RenderingServer.render_loop_enabled = false
+	await _done(scene)
+
+
+## The match camera in Hell in a Cell: as it was (outside the walls, looking
+## through them) and as it is (in with them), the pair in the ring, then out
+## in the lane round the cell.
+func _cellcam() -> void:
+	var scene: Node = await _scene(MatchRules.Mode.HELL_IN_A_CELL, _arena, true)
+	var roman := scene.get_node("WrestlerA") as WrestlerController
+	var cody := scene.get_node("WrestlerB") as WrestlerController
+	var cam := scene.get_node("MatchCamera") as MatchCamera
+	var roof := scene.get_node("CellRoof") as CellRoof
+	for w in [roman, cody]:
+		w.set_physics_process(false)
+	var spots := {"centre": [Vector3(-0.7, 0, 0.6), Vector3(0.7, 0, -0.2)],
+			"corner": [Vector3(-2.3, 0, 2.2), Vector3(-1.2, 0, 2.6)]}
+	for name: String in spots:
+		roman.global_position = spots[name][0]
+		cody.global_position = spots[name][1]
+		roman.face(cody.global_position - roman.global_position)
+		cody.face(roman.global_position - cody.global_position)
+		for pass_i in 2:
+			cam._cell_looked = pass_i == 0
+			cam._cell = null
+			cam._snap_next = true
+			for i in 30:
+				await get_tree().physics_frame
+			await _shoot("cellcam_%s_%s" % [name, "before" if pass_i == 0 else "after"])
+			RenderingServer.render_loop_enabled = false
+	# Out round the cell, on its -X side.
+	var h := roof.half()
+	for w in [roman, cody]:
+		w.outside_ring = true
+		roof.set_outside_cell(w, true)
+	roman.global_position = Vector3(-(h + 0.6), WrestlerController.FLOOR_LEVEL, 0.6)
+	cody.global_position = Vector3(-(h + 0.6), WrestlerController.FLOOR_LEVEL, -0.6)
+	cam._cell_looked = false
+	cam._snap_next = true
+	for i in 30:
+		await get_tree().physics_frame
+	await _shoot("cellcam_outside_after")
+	await _done(scene)
+
+
+## The cell coming down after the entrances, on the lowering's own shot.
+func _lowering() -> void:
+	var scene: Node = await _scene(MatchRules.Mode.HELL_IN_A_CELL, true)
+	var cage := CageBuilder.of(scene)
+	var director := EntranceDirector.new()
+	cage.set_lift(CageBuilder.HOIST_LIFT)
+	var pyro := EntrancePyro.new()
+	scene.add_child(pyro)
+	var camera := _cam(scene, Vector3.ZERO, Vector3(0, 0, -1), EntranceDirector.CELL_LOWER_FOV)
+	cage.lower(EntranceDirector.CELL_LOWER_SECONDS)
+	var total := int(EntranceDirector.CELL_LOWER_SECONDS * 60)
+	var shots := {2: "lowering_hung", total / 2: "lowering_half", total - 40: "lowering_near",
+			total + 6: "lowering_landed"}
+	RenderingServer.render_loop_enabled = false
+	for t in range(1, total + 8):
+		var sh := director.cell_lower_shot(cage, float(t) / float(total + 84))
+		camera.global_position = sh[0]
+		camera.look_at(sh[1], Vector3.UP)
+		if t % 33 == 0:
+			pyro.cell_strobe(cage.global_position.y + cage.spec.top_y)
+		if t == total + 1:
+			pyro.cell_landed()
+		await get_tree().physics_frame
+		if shots.has(t):
+			await _shoot(shots[t])
+			RenderingServer.render_loop_enabled = false
+	director.free()
 	await _done(scene)

@@ -1507,6 +1507,50 @@ func _add_intro(a: Transform3D, b: Transform3D, face_a: Vector3, face_b: Vector3
 			"focus": first, "moves": hold})
 	_beats.append({"kind": "pair", "ticks": INTRO_CLOSE_TICKS, "shot": "corner_intro",
 			"focus": last, "moves": hold})
+	_add_cell_lowering(hold)
+
+
+## Hell in a Cell: the cell has hung in the rafters through the entrances
+## (CageBuilder.HOIST_LIFT); with both men introduced it comes down over them
+## on its chains (the owner, 11 Nov: "the cell should lower after the
+## entrances"). WWE's own write-ups describe the descent as the tension beat
+## -- the men in their corners staring up at it -- and give no lighting cue,
+## so this is ours: the house down, the cell lit by white strobe hits off the
+## truss as it drops, and one big flash and the crowd's pop as it lands.
+const CELL_LOWER_SECONDS := 9.0
+const CELL_LANDED_HOLD := 1.4
+const CELL_STROBE_FIRST := 0.8
+const CELL_STROBE_GAP := 0.55
+const CELL_HOUSE_DIM := 0.28
+const CELL_AMBIENT_DIM := 0.35
+
+
+func _add_cell_lowering(hold: Array) -> void:
+	var cage := CageBuilder.of(_match)
+	if cage == null or cage.lift <= 0.0:
+		return
+	var land := int(round(CELL_LOWER_SECONDS * TPS))
+	var events := [[1, "cell_lower"]]
+	var t := CELL_STROBE_FIRST
+	while t < CELL_LOWER_SECONDS - 0.3:
+		events.append([int(round(t * TPS)), "cell_strobe"])
+		t += CELL_STROBE_GAP
+	events.append([land + 1, "cell_landed"])
+	_beats.append({"kind": "pair", "ticks": land + int(round(CELL_LANDED_HOLD * TPS)),
+			"shot": "cell_lower", "events": events, "moves": hold})
+
+
+## Low on the hard camera's side, looking up at the cell hanging over the
+## ring, tilting down with it as it comes and easing in a little.
+const CELL_LOWER_FROM := Vector3(-11.5, 1.2, 7.2)
+const CELL_LOWER_TO := Vector3(-9.6, 2.4, 6.0)
+const CELL_LOWER_FOV := 48.0
+
+
+func cell_lower_shot(cage: CageBuilder, e: float) -> Array:
+	var at := CELL_LOWER_FROM.lerp(CELL_LOWER_TO, smoothstep(0.0, 1.0, e))
+	var look_y := maxf(cage.spec.base_y + cage.lift + 2.2, 1.2)
+	return [at, Vector3(0.0, look_y, 0.0), CELL_LOWER_FOV]
 
 
 ## Which man the referee checks: the one whose mark is nearer where she
@@ -2704,6 +2748,33 @@ func _event(w: WrestlerController, what: String) -> void:
 			# house_down re-applied the look at the walk-in. Re-apply it here.
 			if _lights and _lights.has_method("set_look"):
 				_lights.set_look(_lights.look)
+		"cell_lower":
+			var cage := CageBuilder.of(_match)
+			if cage:
+				cage.lower(CELL_LOWER_SECONDS)
+			_dim_house(true, CELL_HOUSE_DIM, CELL_AMBIENT_DIM)
+			if _crowd:
+				_crowd.pop(0.5)
+		"cell_strobe":
+			if _pyro == null:
+				_pyro = EntrancePyro.new()
+				_pyro.name = "EntrancePyro"
+				add_child(_pyro)
+			var cage_s := CageBuilder.of(_match)
+			_pyro.cell_strobe(cage_s.global_position.y + cage_s.spec.top_y if cage_s else 6.0)
+		"cell_landed":
+			if _pyro == null:
+				_pyro = EntrancePyro.new()
+				_pyro.name = "EntrancePyro"
+				add_child(_pyro)
+			_pyro.cell_landed()
+			_dim_house(false)
+			if _lights and _lights.has_method("set_look"):
+				_lights.set_look(_lights.look)
+			if _crowd:
+				_crowd.pop(1.0)
+			if _camera:
+				_camera.add_trauma(0.35)
 		"house_down":
 			# Pre-bell: the crowd down, the ring kept at full (unlike
 			# _dim_house, which takes the ring keys down with the house).
@@ -3289,6 +3360,11 @@ func _frame_shot(beat: Dictionary, delta: float, force_cut := false) -> void:
 					RING_BEHIND_OUT_FOV, true)
 		"end_wide":
 			_camera.set_entrance_shot(END_WIDE_AT, END_WIDE_LOOK, END_WIDE_FOV, true)
+		"cell_lower":
+			var cage_c := CageBuilder.of(_match)
+			if cage_c:
+				var sh := cell_lower_shot(cage_c, float(_tick) / maxf(float(beat["ticks"]), 1.0))
+				_camera.set_entrance_shot(sh[0], sh[1], sh[2], first, delta)
 		"staredown_push":
 			_staredown_push(first, delta)
 		"match_card":

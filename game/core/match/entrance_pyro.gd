@@ -183,6 +183,24 @@ func fire(cue: String) -> void:
 			_flash(Vector3(0.0, 4.5, 0.0), 14.0, 16.0, 0.5)
 
 
+## Hell in a Cell's descent (EntranceDirector._add_cell_lowering): white
+## strobe hits off the truss corners round the cell's top as it drops, round
+## the four in turn so the light walks the steel; and the flash as it lands.
+var _cell_strobes := 0
+
+
+func cell_strobe(top_y: float) -> void:
+	var k := _cell_strobes % 4
+	_cell_strobes += 1
+	var corner := Vector3(1.0 if k == 0 or k == 3 else -1.0, 0.0, 1.0 if k < 2 else -1.0)
+	_flash(Vector3(corner.x * 4.2, minf(top_y + 0.8, 8.6), corner.z * 4.2), 26.0, 18.0, 0.12,
+			STROBE_COLOR)
+
+
+func cell_landed() -> void:
+	_flash(Vector3(0.0, 6.5, 0.0), 40.0, 22.0, 0.3, STROBE_COLOR)
+
+
 ## The cold open, after the owner's AEW Dynamite reference (3 Nov): about ten
 ## seconds of gold flame jets chasing along the stage front in time with
 ## volleys of comet rockets past the wall, then a multicolour concussion --
