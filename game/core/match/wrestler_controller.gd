@@ -1741,6 +1741,13 @@ func play_paired_pose(move: MoveDef, is_attacker: bool) -> bool:
 	return true
 
 func _on_fsm_state_changed(_previous: WrestlerFSM.State, current: WrestlerFSM.State) -> void:
+	if current != WrestlerFSM.State.RUN:
+		_run_in_pick = null
+	if _run_in_brake > 0.0 and current != WrestlerFSM.State.RUNNING_ATTACK:
+		# Stopped or hit out of the run-in: none of it carries on.
+		_run_in_brake = 0.0
+		velocity.x = 0.0
+		velocity.z = 0.0
 	if current != WrestlerFSM.State.WEAPON_ACTION:
 		# The rummage/retrieve is over, broken or cancelled: free the apron.
 		_release_apron_spot()
@@ -1902,6 +1909,10 @@ func _physics_process(delta: float) -> void:
 				pass
 			elif _pushing_through_ropes(input):
 				begin_rope_cross()
+			elif (input.get("tip_ladder", false) or input.get("strike", false)) \
+					and can_tip_ladder():
+				# The other man up the ladder: a shove at it sends him off.
+				tip_ladder()
 			elif input.get("climb_ladder", false):
 				begin_ladder_climb(climbable_ladder_nearby())
 			elif _weapon_input(input):
@@ -2773,10 +2784,24 @@ func _strike_reaches(move: MoveDef) -> bool:
 ## is only ever called while already in RUN (both the player/AI-steered
 ## case, from _process_free_movement(), and the post-whip autopilot case,
 ## from _process_irish_whip_return()).
+## How far out a running strike starts at full speed: it brakes over its
+## wind-up into contact (_start_move), so it is thrown from the distance that
+## wind-up covers, not once he has already arrived and would have to stop.
+## A run of 7 m/s braking to nothing over 18 ticks covers 1.05 m.
+const RUN_IN_REACH := 1.8
+var _run_in_pick: MoveDef
+
+
+## How far out this man, as he is moving now, starts a running attack.
+func running_attack_reach() -> float:
+	return RUN_IN_REACH if Vector2(velocity.x, velocity.z).length() > 5.0 else STRIKE_HIT_RANGE
+
+
 func _maybe_start_running_attack(input: Dictionary) -> void:
-	if not input.get("strike", false) or opponent == null or not _in_range(STRIKE_HIT_RANGE) \
+	if not input.get("strike", false) or opponent == null or not _in_range(running_attack_reach()) \
 			or UNHITTABLE_STATES.has(opponent.fsm.current_state):
 		return
+	var close := _in_range(STRIKE_HIT_RANGE)
 	var legal: Array[MoveDef] = []
 	for candidate: MoveDef in [running_attack_move] + running_attack_move_pool:
 		if not _move_weight_legal(candidate):
@@ -2789,7 +2814,16 @@ func _maybe_start_running_attack(input: Dictionary) -> void:
 		legal.append(candidate)
 	if legal.is_empty():
 		return
-	var move := _pick_tier_move(legal[0], legal.slice(1))
+	# Chosen once for the run, so the wait for a two-man move is not
+	# re-rolled into a strike every tick (_run_in_pick, cleared with the run).
+	var move := _run_in_pick if _run_in_pick and legal.has(_run_in_pick) \
+			else _pick_tier_move(legal[0], legal.slice(1))
+	_run_in_pick = move
+	# The strikes go from the run-in reach; the two-man moves catch him
+	# where they always did, close.
+	if not close and PairedRecipes.RECIPES.has(String(move.animation_pair_id)):
+		return
+	_run_in_pick = null
 	if _can_run_into_paired(move):
 		_begin_running_paired(move)
 	else:
@@ -3169,6 +3203,10 @@ func _launch_whip_victim() -> void:
 	# The hold ends here too -- the whip replaces the grapple move.
 	_clear_grapple_roles()
 	fsm.transition_to(WrestlerFSM.State.IDLE)
+	# And the whipper is let go of the pair's last pose: the state machine
+	# was still on GRAPPLE_HOLD's node, so he stood frozen with his arm out
+	# while the man ran the ropes (the owner, 11 Nov: "very clunky").
+	_restart_state_clip(WrestlerFSM.State.IDLE, clip_for_state(WrestlerFSM.State.IDLE, false))
 	opponent.fsm.transition_to(WrestlerFSM.State.IRISH_WHIP)
 
 ## Checks the *previous* tick's move_and_slide() collision report (the
@@ -3350,14 +3388,24 @@ func _tick_rope_load() -> void:
 	var dt := 1.0 / Engine.physics_ticks_per_second
 	_rope_load_tick += 1
 	var x := rope_load_offset(_rope_load_tick * dt, _rope_load_speed)
+	var push := _turn_off_the_ropes(dt)
+	if x > 0.0:
+		# Pushed back out of them as he turns: at the throw-back he is where
+		# the collider stopped him, so nothing snaps.
+		x -= ROPE_LOAD_DEPTH * push
 	if x < 0.0:
 		# The hold is over (Whip_Rope_Absorb has reached its first return
 		# step): thrown back, out of the ropes at the rebound's speed, the way
 		# he went in reflected, as the old instant bounce gave.
+		# The push-off has carried him back to where the collider stopped
+		# him (_turn_off_the_ropes), so this is a step, not the 0.4 m pop in
+		# one tick it was. And at the run's own speed, so the stride out of
+		# the push-off is the run's (9 x 0.85 = 7.65 m/s, then 7.0).
 		global_position = _rope_load_from + _rope_load_out * ROPE_LOAD_FREE \
 				+ _rope_load_along * (_rope_load_tick * dt)
 		velocity = (-_rope_load_out * _rope_load_speed + _rope_load_along) \
 				* IRISH_WHIP_REBOUND_DAMPING
+		velocity = velocity.limit_length(RUN_SPEED)
 		_irish_whip_rebounded = true
 		_irish_whip_return_ticks_remaining = IRISH_WHIP_RETURN_TICKS
 		if rope_running and is_instance_valid(_irish_whip_target):
@@ -3393,6 +3441,45 @@ func _tick_rope_load() -> void:
 			+ _rope_load_along * (_rope_load_tick * dt)
 	want.y = global_position.y
 	velocity = (want - global_position) / dt
+
+
+## He turns round in the ropes as they push him off -- over the last
+## ROPE_TURN_TICKS of the load, the push-off and the first stride of
+## Whip_Rope_Absorb -- so he leaves them already facing the ring. The return
+## run's look_at used to spin him 180 degrees on the spot on its first tick,
+## which the inertializer turned out over a quarter second of sprinting
+## sideways. Turned here a step a tick, shown as it is.
+const ROPE_TURN_TICKS := 16
+
+
+## Returns how far through the turn he is, 0..1 (eased), which is also how
+## far the ropes have pushed him back out of their full depth.
+func _turn_off_the_ropes(dt: float) -> float:
+	var hold := maxf(ROPE_LOAD_HOLD_SECONDS,
+			ROPE_LOAD_FREE / _rope_load_speed + PI * ROPE_LOAD_DEPTH / (2.0 * _rope_load_speed))
+	var end_tick := ceili(hold / dt)
+	var from_tick := end_tick - ROPE_TURN_TICKS
+	if _rope_load_tick <= from_tick:
+		return 0.0
+	if _rope_load_tick > end_tick + 1:
+		return 1.0
+	var into := Vector3(_rope_load_out.x, 0.0, _rope_load_out.z).normalized()
+	var back := -into * _rope_load_speed + _rope_load_along
+	back.y = 0.0
+	if back.length() < 0.01:
+		return 0.0
+	var yaw_in := atan2(-into.x, -into.z)
+	var yaw_out := atan2(-back.x, -back.z)
+	# Round the side he is going: toward the along-the-ropes drift, else to
+	# his right.
+	var turn := wrapf(yaw_out - yaw_in, -PI, PI)
+	if absf(absf(turn) - PI) < 0.05:
+		turn = PI if _rope_load_along.dot(into.cross(Vector3.UP)) >= 0.0 else -PI
+	var t := clampf(float(_rope_load_tick - from_tick) / float(ROPE_TURN_TICKS), 0.0, 1.0)
+	if inertializer:
+		inertializer.skip_next_turn()
+	rotation.y = yaw_in + turn * smoothstep(0.0, 1.0, t)
+	return smoothstep(0.0, 1.0, t)
 
 
 ## Hands the rope collider back once he is inside where it stopped him.
@@ -3604,8 +3691,32 @@ func _start_move(state: WrestlerFSM.State, move: MoveDef) -> void:
 	# of a post-whip RUNNING_ATTACK drifted ~0.74m in Y over its 20-tick
 	# HIT_REACT window with no other cause -- stale velocity, not gravity
 	# (there isn't any) or the reversal animation (which ends at y=0.0).
+	var carried := Vector3(velocity.x, 0.0, velocity.z)
 	velocity = Vector3.ZERO
+	_run_in_brake = 0.0
+	if state == WrestlerFSM.State.RUNNING_ATTACK and carried.length() > 0.5 \
+			and opponent and is_instance_valid(opponent):
+		# One motion, not a stop and a swing (the owner: "running moves ...
+		# one continuous motion, no stop before impact"): the run carries
+		# into the strike, braking over what is left of the gap to the
+		# contact, rather than dead in one tick with the clip's strides
+		# played on the spot.
+		var gap := Vector2(opponent.global_position.x - global_position.x,
+				opponent.global_position.z - global_position.z).length()
+		var budget := maxf(0.0, gap - RUN_IN_CONTACT_GAP)
+		if budget > 0.02:
+			var speed := carried.length()
+			var ticks := clampf(2.0 * budget / speed * Engine.physics_ticks_per_second,
+					2.0, float(maxi(move.startup_frames, 2)))
+			velocity = carried
+			_run_in_brake = speed / ticks
 	fsm.transition_to(state)
+
+
+## A running attack lands with the men this far apart, centre to centre: the
+## run brakes into it from wherever it began (_start_move).
+const RUN_IN_CONTACT_GAP := 0.75
+var _run_in_brake := 0.0
 
 ## States a wrestler cannot be struck out of by an opposing strike/grapple —
 ## already down, mid-getup, or committed to a pin/submission/finisher
@@ -3627,6 +3738,13 @@ func _process_active_move(input: Dictionary) -> void:
 	if not _active_move:
 		fsm.transition_to(WrestlerFSM.State.IDLE)
 		return
+	if _run_in_brake > 0.0:
+		var flat := Vector3(velocity.x, 0.0, velocity.z)
+		flat = flat.move_toward(Vector3.ZERO, _run_in_brake)
+		velocity.x = flat.x
+		velocity.z = flat.z
+		if flat.length() < 0.01:
+			_run_in_brake = 0.0
 	var frame_offset := _active_move.total_frames() - _move_ticks_remaining
 	var in_active_frames := frame_offset >= _active_move.startup_frames \
 		and frame_offset < _active_move.startup_frames + _active_move.active_frames
@@ -6776,8 +6894,12 @@ func set_up_ladder_nearby(max_distance := WeaponStock.PICKUP_REACH) -> WeaponAct
 		return null
 	var best: WeaponActor
 	var best_distance := max_distance
+	# The Ladder match: one knocked flat is picked up again too, or the
+	# match would stall on a ladder nobody could lift.
+	var flat_too := MatchRules.prize_hangs(self)
 	for actor: WeaponActor in stock.set_up_pieces():
-		if actor.def == null or actor.def.id != &"ladder" or not actor.is_climbable_ladder():
+		if actor.def == null or actor.def.id != &"ladder" \
+				or not (actor.is_climbable_ladder() or flat_too):
 			continue
 		var d := Vector2(actor.global_position.x - global_position.x,
 				actor.global_position.z - global_position.z).length()
@@ -6865,8 +6987,16 @@ func _tick_ladder_climb(input: Dictionary) -> void:
 	# Placed, not driven: the climb set velocity.y and _apply_gravity zeroes
 	# it on a ladder, so he never left the canvas.
 	velocity = Vector3.ZERO
-	global_position = Vector3(_ladder_start.x, wanted_y, _ladder_start.z)
+	# In toward the ladder as he goes up it: the A-frame's rails close in to
+	# the top, and a man held at its foot's distance all the way up leaned
+	# out off it over the mat with his boots stretched back to the rungs.
+	var top := ladder_top_stand(_ladder_actor)
+	var inward := smoothstep(0.0, 1.0, _ladder_climb_progress)
+	global_position = Vector3(lerpf(_ladder_start.x, top.x, inward), wanted_y,
+			lerpf(_ladder_start.z, top.z, inward))
 	_update_ladder_climb_ik()
+	if _tick_unhook():
+		return
 	if _ladder_climb_progress <= 0.001 and direction < 0.0:
 		global_position.y = _ladder_base_y
 		velocity = Vector3.ZERO
@@ -7059,7 +7189,15 @@ func _whipped_into_cage() -> bool:
 		return false
 	var axis := CageBuilder.wall_axis(dir)
 	var p := Vector3(global_position.x, 0.0, global_position.z)
-	if p.dot(axis) < RING_KEEP_IN - 0.05:
+	# The Steel Cage stands on the apron; Hell in a Cell's walls are out past
+	# the ringside mats, and only a man on the floor reaches them.
+	var cell := CageBuilder.of(self)
+	var wall_in := RING_KEEP_IN - 0.05
+	if cell and cell.spec.base_y < -0.5:
+		if not outside_ring:
+			return false
+		wall_in = cell.spec.half - 0.55
+	if p.dot(axis) < wall_in:
 		return false
 	_irish_whip_cage = false
 	_irish_whip_rebounded = true
@@ -7080,6 +7218,11 @@ func _whipped_into_cage() -> bool:
 
 
 func _clear_ladder_climb() -> void:
+	if _unhooking:
+		_unhooking = false
+		var prize := HangingPrize.of(self)
+		if prize:
+			prize.let_go()
 	if weapon_grip:
 		weapon_grip.clear_ladder_climb()
 	_ladder_actor = null
@@ -7109,7 +7252,94 @@ func _update_ladder_climb_ik() -> void:
 	var left_foot := _ladder_limb_target(foot_want, 0.0, -right * LADDER_FOOT_HALF, 0.0)
 	right_foot.origin += Vector3.UP * 0.02
 	left_foot.origin += Vector3.UP * 0.02
+	# At the top under the belt (the Ladder match): both hands off the rails
+	# and up to its hook, tugging.
+	var prize := HangingPrize.of(self) if _unhooking else null
+	if prize:
+		var reach := smoothstep(0.0, 1.0, minf(1.0, _unhook_ticks / 18.0))
+		var tug := sin(_unhook_ticks * 0.45) * 0.035
+		var r_at := prize.grip(1.0) + Vector3.DOWN * tug
+		var l_at := prize.grip(-1.0) + Vector3.DOWN * tug
+		right_hand.origin = right_hand.origin.lerp(r_at, reach)
+		left_hand.origin = left_hand.origin.lerp(l_at, reach)
 	weapon_grip.climb_ladder(_ladder_actor, right_hand, left_hand, right_foot, left_foot)
+
+
+## --- The Ladder match (HangingPrize; gauntlet/refs/ladder_match.md) ----------
+## On the ladder's top under the belt, he reaches up and tugs at it. Knocked
+## off (any hit on a man up a ladder: _begin_ladder_fall) and the clip
+## springs back; HangingPrize.UNHOOK_TICKS of it and it comes down.
+var _unhooking := false
+var _unhook_ticks := 0
+
+
+func is_unhooking() -> bool:
+	return _unhooking
+
+
+func _tick_unhook() -> bool:
+	if not MatchRules.prize_hangs(self) or _ladder_climb_progress < 0.97:
+		return false
+	var prize := HangingPrize.of(self)
+	if prize == null or not prize.reachable_from(global_position):
+		return false
+	if not _unhooking:
+		_unhooking = true
+		_unhook_ticks = 0
+	_unhook_ticks += 1
+	_update_ladder_climb_ik()
+	prize.tug(self)
+	return prize.won_by != null
+
+
+## Where a ladder stood up near the belt goes in a Ladder match: so that the
+## man who climbs it (from its front, LADDER_FRONT_OFFSET out) is under it.
+static func ladder_under_prize(at: Vector3, yaw: float) -> Vector3:
+	var front := Vector3(sin(yaw), 0.0, cos(yaw))
+	return Vector3(HangingPrize.AT.x, at.y, HangingPrize.AT.z) + front * LADDER_TOP_IN
+
+
+## Where on the floor plan a man stands at the top of `ladder`: just in front
+## of its apex, on the face he climbs.
+const LADDER_TOP_IN := 0.24
+
+
+static func ladder_top_stand(ladder: Node3D) -> Vector3:
+	return ladder.global_transform * Vector3(0.0, 0.0, -LADDER_TOP_IN)
+## Stood up within this of the belt's spot, it goes under it.
+const PRIZE_LADDER_SNAP := 2.2
+
+
+## Tipping the ladder over with the other man on it: the cheapest way to stop
+## him in a Ladder match. A shove at the ladder sends him off it.
+func can_tip_ladder() -> bool:
+	if opponent == null or opponent.fsm.current_state != WrestlerFSM.State.LADDER_CLIMB \
+			or not fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION,
+				WrestlerFSM.State.RUN]) or outside_ring or has_weapon():
+		return false
+	var ladder := opponent._ladder_actor
+	if not is_instance_valid(ladder):
+		return false
+	return Vector2(ladder.global_position.x - global_position.x,
+			ladder.global_position.z - global_position.z).length() <= LADDER_TIP_REACH
+
+
+const LADDER_TIP_REACH := 1.45
+
+
+func tip_ladder() -> bool:
+	if not can_tip_ladder():
+		return false
+	var ladder := opponent._ladder_actor
+	var face := ladder.global_position - global_position
+	face.y = 0.0
+	if face.length() > 0.05:
+		look_at(global_position + face, Vector3.UP)
+	if strike_move:
+		_set_state_clip(WrestlerFSM.State.STRIKE, StrikeRecipes.clip(String(strike_move.animation_pair_id)))
+		_start_move(WrestlerFSM.State.STRIKE, strike_move)
+	opponent._begin_ladder_fall()
+	return true
 
 
 ## Rungs each hand or boot goes up at a time.
@@ -7325,7 +7555,13 @@ func _tick_weapon_action(input: Dictionary) -> void:
 				var w := held_weapon
 				_let_go()
 				var spot := upright_ladder_spot(global_position - global_basis.z * 0.95, outside_ring)
-				w.set_up_at(spot, upright_ladder_yaw(spot, rotation.y, outside_ring), "Ladder_Open")
+				var yaw := upright_ladder_yaw(spot, rotation.y, outside_ring)
+				# Under the belt, if he stands it up near it (the Ladder match).
+				if MatchRules.prize_hangs(self) and not outside_ring \
+						and Vector2(spot.x - HangingPrize.AT.x, spot.z - HangingPrize.AT.z).length() \
+						<= PRIZE_LADDER_SNAP:
+					spot = ladder_under_prize(spot, yaw)
+				w.set_up_at(spot, yaw, "Ladder_Open")
 		"light":
 			_tick_light()
 	if _weapon_action_ticks >= int(WEAPON_ACTION_TICKS[_weapon_action]):

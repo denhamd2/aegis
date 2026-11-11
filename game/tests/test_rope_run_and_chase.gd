@@ -121,7 +121,10 @@ func test_a_real_rope_rebound_continues_into_an_attack() -> void:
 		await get_tree().physics_frame
 		if runner.is_whip_returning():
 			rebounded = true
-		if not runner._attempted_moves.is_empty():
+		# Into a running strike or a two-man move -- the plain clothesline
+		# has no pair id, so it leaves no attempt record to look for.
+		if runner.fsm.current_state in [WrestlerFSM.State.GRAPPLE_HOLD,
+				WrestlerFSM.State.RUNNING_ATTACK]:
 			attacked = true
 			break
 	assert_bool(rebounded).override_failure_message("Never returned from the actual ring ropes").is_true()

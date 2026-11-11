@@ -90,11 +90,17 @@ func _ready() -> void:
 	# A caged match: the cage round the ring, and the way out of it.
 	if MatchRules.caged(self):
 		var cage := CageBuilder.build(self, CageBuilder.Spec.for_mode(MatchRules.mode_of(self)))
-		var escape := CageEscape.new()
-		escape.name = "CageEscape"
-		escape.cage = cage
-		add_child(escape)
-		escape.escaped.connect(referee.declare_escape)
+		# Hell in a Cell has no escape win: the cell only keeps them in.
+		if MatchRules.escape_wins(self):
+			var escape := CageEscape.new()
+			escape.name = "CageEscape"
+			escape.cage = cage
+			add_child(escape)
+			escape.escaped.connect(referee.declare_escape)
+	# The Ladder match and TLC: the belt hung over the ring, pulled down to win.
+	if MatchRules.prize_hangs(self):
+		var prize := HangingPrize.build(self)
+		prize.taken.connect(referee.declare_prize)
 	# The shape of the match: feeling-out, heat, hope, cut-off, comeback, finish.
 	var flow := MatchFlow.new()
 	flow.name = "MatchFlow"

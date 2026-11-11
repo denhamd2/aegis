@@ -89,7 +89,9 @@ func pull(def: WeaponDef) -> WeaponActor:
 ## Seed the deck once at bell time. Stage weapons are ordinary loose actors:
 ## either wrestler can take them and their normal wear/lifetime still applies.
 func seed_stage_weapons() -> void:
-	if not MatchRules.no_holds_barred(self) or not stage_actors.is_empty():
+	# Not inside Hell in a Cell: the stage is out past its walls.
+	if not MatchRules.no_holds_barred(self) or MatchRules.caged(self) \
+			or not stage_actors.is_empty():
 		return
 	for i in STAGE_LAYOUT.size():
 		var id: StringName = STAGE_LAYOUT[i][0]

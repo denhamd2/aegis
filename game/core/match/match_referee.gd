@@ -325,6 +325,10 @@ func _check_for_downed_opponent_action() -> void:
 				and attacker.can_pickup(defender):
 			attacker.begin_pickup(defender)
 			return
+		# No pinfalls in a Ladder, TLC, Casket or Ambulance match: the man
+		# down is worked over or put where he is meant to go, not covered.
+		if not MatchRules.pins_count(self):
+			continue
 		if defender.fsm.current_state == WrestlerFSM.State.DOWN \
 				and defender._cover_eligible \
 				and wants_cover(defender) \
@@ -452,7 +456,8 @@ func _start_dive(attacker: WrestlerController, defender: WrestlerController) -> 
 	spot.begin(attacker, defender)
 
 func _wants_own_hold(attacker: WrestlerController) -> bool:
-	return attacker.submission_move != null and not attacker._submission_move_used \
+	return MatchRules.pins_count(attacker) \
+			and attacker.submission_move != null and not attacker._submission_move_used \
 			and attacker.last_landed_tier < CombatSystem.Tier.FINISHER
 
 func _start_own_hold(attacker: WrestlerController, defender: WrestlerController) -> void:
@@ -814,6 +819,22 @@ func declare_escape(winner: WrestlerController) -> void:
 	if _pinning or _submissioning:
 		return
 	_declare_winner(winner, "escape")
+
+
+## The belt pulled down off its hook (HangingPrize.taken): the Ladder match
+## and TLC are his.
+func declare_prize(winner: WrestlerController) -> void:
+	if _match_over or winner == null or not MatchRules.prize_hangs(winner):
+		return
+	_declare_winner(winner, "ladder")
+
+
+## Shut in (the casket's lid, the ambulance's doors): the match is the other
+## man's.
+func declare_shut_in(winner: WrestlerController, method: String) -> void:
+	if _match_over or winner == null or MatchRules.pins_count(winner):
+		return
+	_declare_winner(winner, method)
 
 
 func _declare_winner(winner: WrestlerController, method: String) -> void:

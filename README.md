@@ -11777,3 +11777,92 @@ The hurricanrana counter off the ropes, which came in with the 10 Nov whip
 batch, is Kenny's alone as well. Roman and Cody keep the rebound slam.
 
 `test_movesets_fit_each_style` checks that only Kenny has these moves.
+
+## 11 Nov (2) — The Irish whip and the rope run, smoothed
+
+The owner: "the animation for the Irish whip and running the ropes looks very
+clunky. Review these and fix them."
+
+I rendered a whip and a rope run frame by frame with a new probe,
+`tools/probe/whip_shot.gd`. It shows the ring and the two men every few ticks
+and logs each man's state, speed and facing per tick. It found five problems,
+all now fixed in `wrestler_controller.gd`:
+
+- **The whipper froze.** After letting go, Roman stood in the pair's last pose,
+  arm out, for over a second while Cody ran the ropes. The state machine was
+  still on the hold's node. He now goes back to his stance as he lets go.
+- **He spun on the spot coming off the ropes.** He hit the ropes chest first,
+  then on the first tick of the return run the root turned 180°. The
+  inertializer spread that turn over a quarter second of sprinting sideways.
+  Now he turns in the ropes as they push him off (`_turn_off_the_ropes`, the
+  last 16 ticks of the load), so he leaves them already facing the ring.
+- **He popped 0.4 m.** The throw-back put him back where the rope collider had
+  stopped him, in one tick. The push-off now eases him back there during the
+  turn, so nothing snaps.
+- **His speed stepped.** It went 9 → 7.65 → 7 m/s. He now comes off the ropes
+  at the run's own speed.
+- **Running attacks stopped dead.** The run-in went from 7 m/s to nothing in
+  one tick, then the clothesline played its strides on the spot. It is now one
+  motion: the strike is thrown from 1.8 m out (`RUN_IN_REACH`) and he brakes
+  over its wind-up into contact. The two-man running moves are still picked as
+  often, and still catch him close. This also covers backlog #57.
+
+Tests: the whip, rope, running-attack, cage and Lights Out suites, 75 cases,
+all pass. `test_a_real_rope_rebound_continues_into_an_attack` now detects the
+attack by his state. The plain clothesline leaves no attempt record, so the old
+check missed it.
+
+## 11 Nov (3) — Hell in a Cell, the Ladder match, and steel-coloured cages
+
+The owner asked for "Hell in a Cell, Ladder, TLC, Casket, Ambulance matches".
+This entry covers the first two. The select screen's match-type bar is now two
+rows, to fit eight types.
+
+### Hell in a Cell
+
+The spec is in `gauntlet/refs/hell_in_a_cell.md`.
+
+- A roofed cell, 6.1 m tall, stands on the arena floor round the ring and the
+  ringside mats, inside the barricade. It is
+  `CageBuilder.Spec.hell_in_a_cell()`, built in code.
+- Pinfall or submission only. Escaping does not win.
+- Anything goes inside: no DQ, falls count anywhere, and the weapons under the
+  ring are in play. The stage's weapons are not, because the stage is outside
+  the walls.
+- A man whipped on the floor goes into the cell wall: it rattles and he goes
+  down. In the ring, a whip still goes to the ropes.
+
+### The Ladder match
+
+The belt hangs over the ring on a cable (`HangingPrize`), out of reach from the
+mat.
+
+- A ladder stood up near the belt goes under it.
+- The man who climbs it stands on top, reaches up with both hands and tugs.
+  After 2.5 s the belt comes down and the match is his (`declare_prize`).
+- Any hit on him, or a shove at the ladder (`tip_ladder`, strike beside it),
+  knocks him off, and the belt springs back.
+- No pinfalls or submissions.
+- The AI fetches a ladder from under the ring and stands it under the belt
+  once the other man is down or away. It climbs when the way is clear. The man
+  down gets up to tip him off, unless the match's story gives the climber the
+  finish (`MatchFlow`).
+
+A fix for every ladder climb came out of this. He was held at the ladder
+foot's distance all the way up, so at the top he leaned out over the mat with
+his boots stretched back to the rungs. He now comes in toward the apex as he
+climbs and stands on top of it.
+
+### Steel, not black
+
+The owner: "The hell In a cell and the steel cage should not be black. They
+should be a steel colour like the attached reference images."
+
+The frame was near-black, highly metallic paint. In a dark arena, a metallic
+surface shows what it reflects, which is black. Frame and wire are now light
+galvanised steel, less metallic so the arena lights light them. Hell in a
+Cell's frame members are 2.4× deeper, like the box truss in the references.
+
+Tests: `test_hell_in_a_cell` and `test_ladder_match` are new. The cage,
+ladder, whip, rope and Lights Out suites all pass. Probe:
+`tools/probe/gimmick_shot.gd`.

@@ -423,9 +423,13 @@ func _chain_input() -> Dictionary:
 		# comes off them. Seeded, like every other roll.
 		elif _opening_grapple_done() and _chain_rng().randf() < WHIP_CHANCE:
 			var corner := _wants_corner_whip()
+			# Into the steel: the Steel Cage's walls from in the ring, Hell
+			# in a Cell's from the floor (always there: no ropes to run).
+			var cell := MatchRules.mode_of(controller) == MatchRules.Mode.HELL_IN_A_CELL
 			return {"run": true, "corner": corner, "cage": not corner \
 					and MatchRules.caged(controller) \
-					and _chain_rng().randf() < CAGE_WHIP_SHARE}
+					and (controller.outside_ring if cell else not controller.outside_ring) \
+					and (cell or _chain_rng().randf() < CAGE_WHIP_SHARE)}
 		if not _opening_grapple_done():
 			var roll := _chain_rng().randi_range(1, 5)
 			_chain_plan = 1 if roll <= CHAIN_LINK_WEIGHTS[0] else (
@@ -574,6 +578,115 @@ var ladder_climbs := 0
 ## On his way to the foot of a ladder he stood up, for the dive.
 func going_for_ladder() -> bool:
 	return _ladder_walk_ticks > 0 and not _ladder_attempted_for_down
+
+
+# --- the Ladder match (HangingPrize; gauntlet/refs/ladder_match.md) ---------
+#
+# A ladder stood up under the belt is climbed when the other man is down or
+# out of the ring; the other man gets up to stop him and tips the ladder, or
+# hits him off it. Only when the story gives the finish to the climber
+# (MatchFlow.finish_allowed, flow.winner) does the man down stay down.
+
+var _going_for_prize := false
+## Climbs he makes for it in a match before he gives up and fights on.
+const PRIZE_CLIMBS_MAX := 12
+var prize_climbs := 0
+
+
+func going_for_prize() -> bool:
+	return _going_for_prize
+
+
+func _prize_finish_for(climber: WrestlerController) -> bool:
+	var flow := climber.flow
+	return flow != null and flow.finish_allowed() and flow.winner == climber
+
+
+func _climbing_for_prize() -> bool:
+	if not MatchRules.prize_hangs(controller):
+		return false
+	if controller.is_unhooking():
+		return true
+	var ladder := _ladder_under_prize()
+	return ladder != null and controller._ladder_actor == ladder
+
+
+## The ladder stood up under the belt, or null.
+func _ladder_under_prize() -> WeaponActor:
+	if not MatchRules.prize_hangs(controller) or controller.get_parent() == null:
+		return null
+	var stock := WeaponStock.of(controller)
+	if stock == null:
+		return null
+	for a in stock.set_up_pieces():
+		if a.def.id != &"ladder" or not a.is_climbable_ladder():
+			continue
+		var mount := WrestlerController.ladder_top_stand(a)
+		if Vector2(mount.x - HangingPrize.AT.x, mount.z - HangingPrize.AT.z).length() \
+				<= HangingPrize.REACH_XZ:
+			return a
+	return null
+
+
+func _nearest_ring_ladder() -> WeaponActor:
+	var best: WeaponActor = null
+	var best_d := INF
+	for a in WeaponStock.of(controller).set_up_pieces():
+		if a.def.id != &"ladder":
+			continue
+		var p := a.global_position
+		if absf(p.x) > WrestlerController.RING_KEEP_IN or absf(p.z) > WrestlerController.RING_KEEP_IN:
+			continue
+		var d := _flat(p - controller.global_position).length()
+		if d < best_d:
+			best = a
+			best_d = d
+	return best
+
+
+func _prize_input(distance: float) -> Dictionary:
+	_going_for_prize = false
+	if not MatchRules.prize_hangs(controller) or controller.outside_ring:
+		return {}
+	var prize := HangingPrize.of(controller)
+	if prize == null or prize.won_by:
+		return {}
+	# He is up there: tip it, or get to it.
+	if target.fsm.current_state == WrestlerFSM.State.LADDER_CLIMB:
+		if controller.can_tip_ladder():
+			return {"tip_ladder": true}
+		var ladder: WeaponActor = target._ladder_actor
+		if is_instance_valid(ladder):
+			var to := _flat(ladder.global_position - controller.global_position)
+			return {"move": Vector2(to.normalized().x, to.normalized().z), "run": to.length() > 2.0}
+		return {}
+	var under := _ladder_under_prize()
+	# None under it and none left under the ring: the one lying in the ring
+	# (knocked flat off the last climb) is picked up and stood up again.
+	if under == null and not controller.has_weapon() and _weapon_plan == WeaponPlan.NONE \
+			and not WeaponStock.of(controller).in_stock(&"ladder"):
+		var flat := _nearest_ring_ladder()
+		if flat:
+			var to := _flat(flat.global_position - controller.global_position)
+			if to.length() <= WeaponStock.PICKUP_REACH * 0.9:
+				_weapon_plan = WeaponPlan.FETCH
+				_weapon_ticks = 0
+				_fetch_inside = true
+				return {"weapon": true}
+			return {"move": Vector2(to.normalized().x, to.normalized().z)}
+	if under == null or controller.has_weapon() or prize_climbs >= PRIZE_CLIMBS_MAX:
+		return {}
+	var clear := target.fsm.current_state == WrestlerFSM.State.DOWN or target.outside_ring \
+			or distance > 3.2
+	if not clear:
+		return {}
+	_going_for_prize = true
+	if controller.climbable_ladder_nearby() == under:
+		prize_climbs += 1
+		return {"climb_ladder": true}
+	var foot := under.global_transform * Vector3(0.0, 0.0, -WrestlerController.LADDER_FRONT_OFFSET)
+	var to_foot := _flat(foot - controller.global_position)
+	return {"move": Vector2(to_foot.normalized().x, to_foot.normalized().z), "run": to_foot.length() > 2.0}
 
 
 # --- the cage (Steel Cage: gauntlet/refs/steel_cage.md) ----------------------
@@ -903,6 +1016,9 @@ func _poll_input() -> Dictionary:
 	if not controller or not target:
 		return {}
 	if controller.fsm.current_state == WrestlerFSM.State.LADDER_CLIMB:
+		# The Ladder match: up to the belt, and he stays there tugging.
+		if _climbing_for_prize():
+			return {"move": Vector2(0.0, -1.0)}
 		if controller.can_start_ladder_aerial():
 			return {"grapple": true}
 		var axis := -1.0 if controller.ladder_climb_progress() < 0.92 else 1.0
@@ -922,6 +1038,13 @@ func _poll_input() -> Dictionary:
 			and controller.is_ai and not controller.dead:
 		# He sells while the other man goes up the ladder over him: up in the
 		# second it took to reach its foot, the dive never came (nhb seed 4).
+		# ...except when it is the belt he is going up for: then he gets up
+		# to stop him, unless the story says this is the finish.
+		if MatchRules.prize_hangs(controller) and target.ai \
+				and (target.fsm.current_state == WrestlerFSM.State.LADDER_CLIMB
+					or target.ai.going_for_prize()):
+			return {"strike": controller.fsm.ticks_in_state >= AI_DOWN_RECOVERY_DELAY_TICKS / 2
+					and not _prize_finish_for(target)}
 		if target.fsm.current_state == WrestlerFSM.State.LADDER_CLIMB \
 				or (target.ai and target.ai.going_for_ladder()):
 			return {"strike": false}
@@ -959,7 +1082,8 @@ func _poll_input() -> Dictionary:
 		# Off the ropes he ran himself: his running attack as he reaches him.
 		if controller.rope_running:
 			var gap := _flat(target.global_position - controller.global_position).length()
-			return {"strike": gap <= WrestlerController.STRIKE_HIT_RANGE + 0.4}
+			return {"strike": gap <= maxf(WrestlerController.STRIKE_HIT_RANGE + 0.4,
+					controller.running_attack_reach())}
 		return {}
 	# He sent the other man into the ropes: he stands his ground and meets him
 	# coming back with his rebound move (WrestlerController.try_rebound_move()
@@ -991,6 +1115,10 @@ func _poll_input() -> Dictionary:
 	var caged := _cage_input(distance)
 	if not caged.is_empty():
 		return caged
+	# The Ladder match: up for the belt, or stop the man going up for it.
+	var prize := _prize_input(distance)
+	if not prize.is_empty():
+		return prize
 	# No Holds Barred: out for a weapon, or using the one in his hands --
 	# unless a ladder he stood up is ready for its dive: then up it, not off
 	# for another weapon (nhb_weapon_probe seed 1, 2 Nov: he stood it up
@@ -1193,7 +1321,7 @@ func _poll_input() -> Dictionary:
 		# transitions there when run is pressed AND there is movement to make.
 		input["move"] = Vector2(dir.x, dir.z)
 		input["run"] = true
-		if distance <= WrestlerController.STRIKE_HIT_RANGE:
+		if distance <= controller.running_attack_reach():
 			# Keep the request latched until the controller accepts a legal
 			# running attack. A temporarily busy target must not consume it.
 			input["strike"] = true
@@ -2048,6 +2176,10 @@ const LADDER_RUNS_MAX := 2
 
 
 func ladder_due() -> bool:
+	# The Ladder match: one to stand under the belt, whenever none is there.
+	if MatchRules.prize_hangs(controller):
+		return not controller.has_weapon() and _ladder_under_prize() == null \
+				and WeaponStock.of(controller).in_stock(&"ladder")
 	if not MatchRules.no_holds_barred(controller) or controller.flow == null:
 		return false
 	if controller.flow.seconds() < LADDER_DUE_AT:
@@ -2205,6 +2337,10 @@ func _weapon_input(input: Dictionary, to_target: Vector3, distance: float) -> Di
 
 
 func _wants_weapon() -> bool:
+	if MatchRules.prize_hangs(controller) and _weapon_roll <= 0 and _opening_grapple_done() \
+			and ladder_due():
+		_weapon_roll = WEAPON_ROLL_TICKS
+		return true
 	if _weapon_runs >= WEAPON_RUNS or _weapon_roll > 0 or not _opening_grapple_done():
 		return false
 	if controller.combat.can_finisher() and _opponent_is_ripe():
@@ -2304,6 +2440,19 @@ func _use_input(input: Dictionary, to_target: Vector3, distance: float) -> Dicti
 	# beside a standing man it went down flat like a table, and a flat
 	# ladder is never climbed (the owner, 2 Nov: "I never saw the ladder ...
 	# climbed or jumped off of"). Once he is down it is stood up by him.
+	# The Ladder match: in the ring, stood up under the belt -- with the
+	# other man down or out of the way; swung at him if he is on top of him.
+	if def.id == &"ladder" and MatchRules.prize_hangs(controller) and not controller.outside_ring \
+			and (target.fsm.current_state == WrestlerFSM.State.DOWN or distance > 2.5):
+		var under := _flat(HangingPrize.AT - controller.global_position)
+		if under.length() > 1.2:
+			input["move"] = Vector2(under.normalized().x, under.normalized().z)
+			return input
+		input["move"] = Vector2.ZERO
+		input["grapple"] = true
+		input["set_ladder_upright"] = true
+		_weapon_plan = WeaponPlan.NONE
+		return input
 	var ladder_first := def.id == &"ladder" and target.fsm.current_state != WrestlerFSM.State.DOWN \
 			and not controller.outside_ring
 	if def.set_up != "" and def.set_piece and not target.is_crossing_ropes() and not ladder_first:

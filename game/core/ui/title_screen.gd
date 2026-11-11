@@ -880,41 +880,52 @@ func _draw_select(view: Vector2) -> void:
 ## The match type, between the "PLAYER 1" line and the cards: every mode as a
 ## cut chip, the chosen one lit gold, the others dim, and the hint that up
 ## and down switch it.
+const MODE_ROW := 4
+
+
 func _draw_mode_bar(safe: Rect2, unit: float) -> void:
 	_mode_rects.clear()
-	var size := int(unit * 0.040)
-	var track := unit * 0.006
-	var pad := Vector2(unit * 0.030, unit * 0.014)
-	var widths: Array[float] = []
-	var total := 0.0
-	var gap := unit * 0.024
-	for label: String in MatchRules.LABELS:
-		var w := TitleArt.tracked_width(_font, label, size, track) + pad.x * 2.0
-		widths.append(w)
-		total += w
-	total += gap * (widths.size() - 1)
-	var x := safe.get_center().x - total * 0.5
-	var y := safe.position.y + unit * 0.200
+	var size := int(unit * 0.028)
+	var track := unit * 0.004
+	var pad := Vector2(unit * 0.022, unit * 0.008)
+	var gap := unit * 0.016
 	var h := size + pad.y * 2.0
-	for i in MatchRules.LABELS.size():
-		var rect := Rect2(x, y, widths[i], h)
-		_mode_rects.append(rect)
-		var on := i == match_mode
-		TitleArt.draw_cut_panel(self, rect, h * 0.35,
-				Color(TitleArt.KEY_PANEL, 0.92 if on else 0.6),
-				TitleArt.KEY_GOLD if on else Color(TitleArt.KEY_GOLD_DIM, 0.6),
-				maxf(1.0, unit * (0.003 if on else 0.0015)))
-		TitleArt.draw_tracked(self, _font,
-				Vector2(rect.position.x + pad.x, rect.position.y + pad.y + size * 0.82),
-				MatchRules.LABELS[i], size, track,
-				TitleArt.KEY_GOLD if on else Color(TitleArt.STEEL, 0.55))
-		x += widths[i] + gap
+	# Two rows of MODE_ROW: eight match types do not fit across one.
+	var count := MatchRules.LABELS.size()
+	for row in ceili(float(count) / MODE_ROW):
+		var first := row * MODE_ROW
+		var last := mini(first + MODE_ROW, count)
+		var widths: Array[float] = []
+		var total := 0.0
+		for i in range(first, last):
+			var w := TitleArt.tracked_width(_font, MatchRules.LABELS[i], size, track) + pad.x * 2.0
+			widths.append(w)
+			total += w
+		total += gap * (widths.size() - 1)
+		var x := safe.get_center().x - total * 0.5
+		# Between the side label (0.155) and the cards (0.29).
+		var y := safe.position.y + unit * 0.172 + row * (h + unit * 0.006)
+		for k in widths.size():
+			var i := first + k
+			var rect := Rect2(x, y, widths[k], h)
+			_mode_rects.append(rect)
+			var on := i == match_mode
+			TitleArt.draw_cut_panel(self, rect, h * 0.35,
+					Color(TitleArt.KEY_PANEL, 0.92 if on else 0.6),
+					TitleArt.KEY_GOLD if on else Color(TitleArt.KEY_GOLD_DIM, 0.6),
+					maxf(1.0, unit * (0.003 if on else 0.0015)))
+			TitleArt.draw_tracked(self, _font,
+					Vector2(rect.position.x + pad.x, rect.position.y + pad.y + size * 0.82),
+					MatchRules.LABELS[i], size, track,
+					TitleArt.KEY_GOLD if on else Color(TitleArt.STEEL, 0.55))
+			x += widths[k] + gap
 	if phase == Phase.SELECT:
 		var hint := "▲ ▼  MATCH TYPE"
 		var hs := int(unit * 0.022)
+		var end := _mode_rects.back() as Rect2
 		TitleArt.draw_tracked(self, _font,
-				Vector2(x + gap * 0.5, y + pad.y + size * 0.78), hint, hs, unit * 0.003,
-				Color(TitleArt.STEEL, 0.6))
+				Vector2(end.end.x + gap * 1.5, end.position.y + pad.y + size * 0.78), hint, hs,
+				unit * 0.003, Color(TitleArt.STEEL, 0.6))
 
 
 func _draw_card(rect: Rect2, entry: Roster.Entry, active: bool,

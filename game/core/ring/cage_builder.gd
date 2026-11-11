@@ -38,12 +38,34 @@ class Spec:
 	var door_height := 2.05
 	## A roof over the whole of it (Hell in a Cell).
 	var roof := false
+	## The frame's members, as a multiple of the Steel Cage's tubes: Hell in
+	## a Cell is built of box truss, several times as deep.
+	var frame_scale := 1.0
 
 	static func steel_cage() -> Spec:
 		return Spec.new()
 
+	## Hell in a Cell (gauntlet/refs/hell_in_a_cell.md): a roofed cell on the
+	## arena floor round the ring and the ringside mats, inside the barricade,
+	## about twenty feet tall, its door on the entrance side.
+	static func hell_in_a_cell() -> Spec:
+		var s := Spec.new()
+		s.half = 5.55
+		s.base_y = ArenaBuilder.FLOOR_Y
+		s.top_y = ArenaBuilder.FLOOR_Y + 6.1
+		s.rails = [0.0, 0.18, 0.36, 0.55, 0.78, 1.0]
+		s.bays = 6
+		s.door_axis = Vector3(0.0, 0.0, -1.0)
+		s.door_width = 1.4
+		s.door_height = 2.3
+		s.roof = true
+		s.frame_scale = 2.4
+		return s
+
 	## The spec for a caged match type (MatchRules.Mode).
-	static func for_mode(_mode: int) -> Spec:
+	static func for_mode(mode: int) -> Spec:
+		if mode == MatchRules.Mode.HELL_IN_A_CELL:
+			return hell_in_a_cell()
 		return steel_cage()
 
 
@@ -59,8 +81,13 @@ const MESH_TEXTURE_SIZE := 256
 ## The wire, as a fraction of a cell, and the colours (galvanised wire on a
 ## dark painted frame).
 const WIRE_WIDTH := 0.16
-const WIRE_COLOR := Color(0.62, 0.64, 0.66)
-const FRAME_COLOR := Color(0.09, 0.09, 0.10)
+## Galvanised steel, frame and wire alike (the owner, 11 Nov: "should not be
+## black. They should be a steel colour", with Hell in a Cell and Steel Cage
+## references): a light, bright zinc grey that reads silver under the arena
+## lights. Not too metallic: a fully metallic surface takes its colour from
+## what it reflects, and in a dark arena that is black.
+const WIRE_COLOR := Color(0.84, 0.86, 0.88)
+const FRAME_COLOR := Color(0.74, 0.76, 0.79)
 ## The door swings this far open (radians) when fully open.
 const DOOR_OPEN_ANGLE := deg_to_rad(105.0)
 ## A panel a man is driven into shakes this far, and settles this fast.
@@ -231,7 +258,7 @@ func _build_wall(wall: Node3D, axis: Vector3, frame: Material, wire: Material) -
 		var s := -spec.half + span * float(i) / float(spec.bays)
 		if is_door and s > door_l - 0.15 and s < door_r + 0.15:
 			continue
-		_post(wall, axis * spec.half + lat * s, POST_SIZE * 0.8, frame)
+		_post(wall, axis * spec.half + lat * s, (POST_SIZE * spec.frame_scale) * 0.8, frame)
 	# The mesh: the wall's whole face, less the doorway.
 	if is_door:
 		_panel(wall, axis, lat, -spec.half, door_l, spec.base_y, spec.top_y, wire)
@@ -245,7 +272,7 @@ func _build_wall(wall: Node3D, axis: Vector3, frame: Material, wire: Material) -
 func _build_posts(frame: Material) -> void:
 	for sx: float in [-1.0, 1.0]:
 		for sz: float in [-1.0, 1.0]:
-			_post(self, Vector3(sx * spec.half, 0.0, sz * spec.half), POST_SIZE, frame)
+			_post(self, Vector3(sx * spec.half, 0.0, sz * spec.half), (POST_SIZE * spec.frame_scale), frame)
 
 
 func _door_hinge_sign() -> float:
@@ -264,23 +291,23 @@ func _build_door(wall: Node3D, axis: Vector3, lat: Vector3, frame: Material,
 	var r := spec.door_width * 0.5
 	var top := spec.base_y + spec.door_height
 	# The jambs and the header, fixed to the wall.
-	_post_span(wall, axis * spec.half + lat * l, spec.base_y, spec.top_y, JAMB_SIZE, frame)
-	_post_span(wall, axis * spec.half + lat * r, spec.base_y, spec.top_y, JAMB_SIZE, frame)
+	_post_span(wall, axis * spec.half + lat * l, spec.base_y, spec.top_y, (JAMB_SIZE * spec.frame_scale), frame)
+	_post_span(wall, axis * spec.half + lat * r, spec.base_y, spec.top_y, (JAMB_SIZE * spec.frame_scale), frame)
 	_rail(wall, axis, lat, l, r, top, frame)
 	# The leaf, on a pivot at the hinge jamb.
 	_door_pivot = Node3D.new()
 	_door_pivot.name = "DoorPivot"
 	_door_pivot.position = axis * spec.half + lat * l
 	wall.add_child(_door_pivot)
-	var leaf_w := spec.door_width - JAMB_SIZE
-	var inset := JAMB_SIZE * 0.5
+	var leaf_w := spec.door_width - (JAMB_SIZE * spec.frame_scale)
+	var inset := (JAMB_SIZE * spec.frame_scale) * 0.5
 	for y: float in [spec.base_y + 0.06, spec.base_y + spec.door_height * 0.5, top - 0.06]:
 		_box(_door_pivot, Vector3(0, y, 0) + lat * (inset + leaf_w * 0.5),
-				_size_along(lat, leaf_w, RAIL_SIZE * 0.8), frame)
+				_size_along(lat, leaf_w, (RAIL_SIZE * spec.frame_scale) * 0.8), frame)
 	_box(_door_pivot, Vector3(0, (spec.base_y + top) * 0.5, 0) + lat * (inset + 0.02),
-			Vector3(RAIL_SIZE * 0.8, top - spec.base_y, RAIL_SIZE * 0.8), frame)
+			Vector3((RAIL_SIZE * spec.frame_scale) * 0.8, top - spec.base_y, (RAIL_SIZE * spec.frame_scale) * 0.8), frame)
 	_box(_door_pivot, Vector3(0, (spec.base_y + top) * 0.5, 0) + lat * (inset + leaf_w - 0.02),
-			Vector3(RAIL_SIZE * 0.8, top - spec.base_y, RAIL_SIZE * 0.8), frame)
+			Vector3((RAIL_SIZE * spec.frame_scale) * 0.8, top - spec.base_y, (RAIL_SIZE * spec.frame_scale) * 0.8), frame)
 	# Its mesh, in the pivot's frame (the wall's plane passes through it).
 	var quad := _quad_mesh(lat, inset, inset + leaf_w, spec.base_y, top, 0.0)
 	var mi := MeshInstance3D.new()
@@ -299,8 +326,8 @@ func _build_roof(frame: Material, wire: Material) -> void:
 	var span := spec.half * 2.0
 	for i in range(0, spec.bays + 1):
 		var s := -spec.half + span * float(i) / float(spec.bays)
-		_box(self, Vector3(s, y, 0), Vector3(RAIL_SIZE, RAIL_SIZE, span), frame)
-		_box(self, Vector3(0, y, s), Vector3(span, RAIL_SIZE, RAIL_SIZE), frame)
+		_box(self, Vector3(s, y, 0), Vector3((RAIL_SIZE * spec.frame_scale), (RAIL_SIZE * spec.frame_scale), span), frame)
+		_box(self, Vector3(0, y, s), Vector3(span, (RAIL_SIZE * spec.frame_scale), (RAIL_SIZE * spec.frame_scale)), frame)
 	var mesh := ArrayMesh.new()
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
@@ -360,7 +387,7 @@ func _rail(parent: Node3D, axis: Vector3, lat: Vector3, from: float, to: float, 
 	if to - from < 0.01:
 		return
 	var centre := axis * spec.half + lat * ((from + to) * 0.5) + Vector3.UP * y
-	_box(parent, centre, _size_along(lat, to - from, RAIL_SIZE), mat)
+	_box(parent, centre, _size_along(lat, to - from, (RAIL_SIZE * spec.frame_scale)), mat)
 
 
 func _post(parent: Node3D, at: Vector3, size: float, mat: Material) -> void:
@@ -425,8 +452,9 @@ func _quad_mesh(lat: Vector3, from: float, to: float, y0: float, y1: float,
 func _frame_material() -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
 	m.albedo_color = FRAME_COLOR
-	m.metallic = 0.75
-	m.roughness = 0.42
+	m.metallic = 0.45
+	m.roughness = 0.34
+	m.metallic_specular = 0.7
 	return m
 
 
@@ -434,8 +462,9 @@ func _mesh_material() -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
 	m.albedo_texture = mesh_texture()
 	m.albedo_color = Color.WHITE
-	m.metallic = 0.6
-	m.roughness = 0.38
+	m.metallic = 0.3
+	m.roughness = 0.36
+	m.metallic_specular = 0.7
 	# Alpha-blended with mipmaps: up close, wire; at broadcast distance the
 	# mipmaps average it into the grey haze a real cage is on television.
 	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA

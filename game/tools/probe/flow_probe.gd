@@ -126,13 +126,11 @@ func _run(seed_value: int) -> Dictionary:
 	# there were no Irish whips"): whips thrown, charges, running attacks.
 	for w: WrestlerController in [a, b]:
 		w.fsm.state_changed.connect(func(_f: int, to: int) -> void:
-			match to:
-				WrestlerFSM.State.IRISH_WHIP:
-					mix["whipped"] = mix.get("whipped", 0) + 1
-				WrestlerFSM.State.RUN:
-					mix["runs"] = mix.get("runs", 0) + 1
-				WrestlerFSM.State.RUNNING_ATTACK:
-					mix["running_attacks"] = mix.get("running_attacks", 0) + 1)
+			var key: String = {WrestlerFSM.State.IRISH_WHIP: "whipped", WrestlerFSM.State.RUN: "runs",
+					WrestlerFSM.State.RUNNING_ATTACK: "running_attacks"}.get(to, "")
+			if key != "":
+				mix[key] = mix.get(key, 0) + 1
+		)
 	var start := Engine.get_physics_frames()
 	t0[0] = start
 	var per_tick: Array = []    # [kind a, kind b]
