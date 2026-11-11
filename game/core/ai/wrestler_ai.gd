@@ -413,6 +413,10 @@ func _chain_input() -> Dictionary:
 		# The heel in control slows it down: a headlock, held link after
 		# link, the man in it fighting to get out -- the rest hold of the
 		# heat (gauntlet/refs/ff_ai_flow.md). His hope spot is the reversal.
+		# The Casket, the Ambulance: on the floor with him in his hands
+		# and it there, he sends him at it (ShutIn decides if it holds).
+		if _wants_shut_in_whip():
+			return {"run": true, "shut_in": true}
 		if _opening_grapple_done() and controller.flow \
 				and controller.flow.wants_stall(controller) \
 				and _chain_rng().randf() < REST_HOLD_CHANCE:
@@ -578,6 +582,54 @@ var ladder_climbs := 0
 ## On his way to the foot of a ladder he stood up, for the dive.
 func going_for_ladder() -> bool:
 	return _ladder_walk_ticks > 0 and not _ladder_attempted_for_down
+
+
+# --- the Casket and Ambulance matches (ShutIn) ------------------------------
+#
+# Fought out to it, he whips the other man at it from the floor. Before the
+# story's finish it is a near-miss (ShutIn), so he can go for it whenever it
+# is there, up to SHUT_IN_TRIES a match; the man down is hauled up to be
+# sent. Away from it on the floor, he heads for it when he has the upper hand.
+
+const SHUT_IN_TRIES := 5
+const SHUT_IN_FROM := 5.5
+const SHUT_IN_WHIP_CHANCE := 0.75
+
+
+func _wants_shut_in_whip() -> bool:
+	var shut := ShutIn.of(controller)
+	if shut == null or shut.busy() or shut.attempts >= SHUT_IN_TRIES or not controller.outside_ring \
+			or not target.outside_ring or not _opening_grapple_done():
+		return false
+	var m: Vector3 = shut.container.mouth()
+	if _flat(m - target.global_position).length() > SHUT_IN_FROM:
+		return false
+	return _chain_rng().randf() < SHUT_IN_WHIP_CHANCE
+
+
+## On the floor, the man down or groggy: toward the casket (the ambulance),
+## taking him with him by hauling him up near it. {} to fall through.
+func _shut_in_input(distance: float) -> Dictionary:
+	var shut := ShutIn.of(controller)
+	if shut == null or shut.busy() or shut.attempts >= SHUT_IN_TRIES:
+		return {}
+	if not controller.outside_ring or not target.outside_ring or controller.has_weapon():
+		return {}
+	var m: Vector3 = shut.container.mouth()
+	var him_to := _flat(m - target.global_position).length()
+	# He is down by it: up on his feet to be sent in.
+	if target.fsm.current_state == WrestlerFSM.State.DOWN and him_to <= SHUT_IN_FROM \
+			and not target.dead:
+		if controller.can_pickup(target):
+			controller.begin_pickup(target)
+			return {"move": Vector2.ZERO}
+		var to_him := _flat(target.global_position - controller.global_position)
+		return {"move": Vector2(to_him.normalized().x, to_him.normalized().z)}
+	# Standing by it: in to grab him.
+	if him_to <= SHUT_IN_FROM and distance > 1.0 and target.fsm.current_state != WrestlerFSM.State.DOWN:
+		var to := _flat(target.global_position - controller.global_position)
+		return {"move": Vector2(to.normalized().x, to.normalized().z)}
+	return {}
 
 
 # --- the Ladder match (HangingPrize; gauntlet/refs/ladder_match.md) ---------
@@ -1115,6 +1167,10 @@ func _poll_input() -> Dictionary:
 	var caged := _cage_input(distance)
 	if not caged.is_empty():
 		return caged
+	# The Casket, the Ambulance: him up and at it.
+	var shut := _shut_in_input(distance)
+	if not shut.is_empty():
+		return shut
 	# The Ladder match: up for the belt, or stop the man going up for it.
 	var prize := _prize_input(distance)
 	if not prize.is_empty():

@@ -26,7 +26,7 @@ func _ready() -> void:
 	DirAccess.make_dir_recursive_absolute(_out)
 	Engine.max_physics_steps_per_frame = 1
 	await get_tree().process_frame
-	for s: String in ["cell", "cage", "ladder"]:
+	for s: String in ["cell", "cage", "ladder", "casket", "ambulance"]:
 		if _only.is_empty() or _only.has(s):
 			await call("_" + s)
 	print("GIMMICK_SHOT done")
@@ -140,3 +140,44 @@ func _ladder() -> void:
 	_cam(scene, Vector3(-3.5, 1.6, 3.0), Vector3(0, 3.6, 0), 60.0)
 	await _shoot("ladder_won_low")
 	await _done(scene)
+
+
+func _shut_in(mode: int, name: String, cam_at: Vector3, look_at_y := 0.0) -> void:
+	var scene: Node = await _scene(mode, name == "ambulance" or _arena)
+	var roman := scene.get_node("WrestlerA") as WrestlerController
+	var cody := scene.get_node("WrestlerB") as WrestlerController
+	var shut := scene.get_node("ShutIn") as ShutIn
+	var m: Vector3 = shut.container.mouth()
+	for w in [roman, cody]:
+		w.outside_ring = true
+	cody.global_position = m + Vector3(0.3, 0.0, 0.0) if name == "casket" else m + Vector3(0, 0, 0.3)
+	roman.global_position = m + (Vector3(1.6, 0.0, 0.2) if name == "casket" else Vector3(0.2, 0, 1.6))
+	await get_tree().physics_frame
+	var look: Vector3 = shut.container.lip()
+	_cam(scene, cam_at, look + Vector3(0, look_at_y, 0), 50.0)
+	await _shoot(name + "_open")
+	RenderingServer.render_loop_enabled = false
+	cody._irish_whip_target = roman
+	cody._irish_whip_rebounded = false
+	cody._irish_whip_shut_in = true
+	cody.velocity = (m - cody.global_position).normalized() * 2.0
+	cody._irish_whip_launch_velocity = cody.velocity
+	cody.fsm.transition_to(WrestlerFSM.State.IRISH_WHIP)
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	shut._holds = true
+	var shots := {12: "_tumble", 30: "_in", 70: "_closing", 140: "_shut"}
+	for tick in range(1, 150):
+		await get_tree().physics_frame
+		if shots.has(tick):
+			await _shoot(name + shots[tick])
+			RenderingServer.render_loop_enabled = false
+	await _done(scene)
+
+
+func _casket() -> void:
+	await _shut_in(MatchRules.Mode.CASKET, "casket", Vector3(-1.4, 1.6, 4.6))
+
+
+func _ambulance() -> void:
+	await _shut_in(MatchRules.Mode.AMBULANCE, "ambulance", Vector3(3.2, 1.8, -3.0))

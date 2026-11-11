@@ -11876,3 +11876,31 @@ after 45 s, so a ladder stood under the belt would have vanished mid-match.
 Tests: `test_hell_in_a_cell` and `test_ladder_match` are new. The cage,
 ladder, whip, rope and Lights Out suites all pass. Probe:
 `tools/probe/gimmick_shot.gd`.
+
+## 11 Nov (4) — The Casket and Ambulance matches
+
+The last two of the owner's five match types. Specs:
+`gauntlet/refs/casket_match.md` and `ambulance_match.md`.
+
+- **The props:** an original casket at ringside (black lacquer, brass bars,
+  satin lining, on a draped bier), and an original unbranded ambulance backed
+  down the ramp with its rear doors open. Both are built in code.
+- **The shared finish (`ShutIn`):** whipped at the casket's open side or the
+  ambulance's open back, he goes up over the side into it and lies there. The
+  man who sent him shuts the lid or the doors, and that wins.
+- **Near-misses:** before the match's story reaches its finish, he gets a hand
+  to the lid, shoves it back into the other man and climbs out.
+- **A new FSM state, `SHUT_IN`:** a scripted path with no gravity or
+  collision, which no strike can interrupt.
+- **AI:** on the floor near the container, it hauls the man down up, grabs him
+  and sends him in.
+
+Frames from `gimmick_shot.gd --only casket,ambulance` show the ambulance
+sequence end to end: the tumble in, lying there, the doors swinging shut. The
+casket's frames were blocked by the ring post at that camera angle; that gets
+a better angle in the next pass. Tests: `test_shut_in` (6 cases) passes, with
+the cage, whip and rope suites.
+
+One earlier note: the "chain-link wire thicker" sentence in 11 Nov (3) did not
+make it into that entry. The wire is half as thick again (`WIRE_WIDTH` 0.24),
+so the cage panels read as the grey mesh in the references.

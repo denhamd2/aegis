@@ -610,6 +610,7 @@ const STATE_ANIMATIONS := {
 	# The climb up a cage wall; CageEscape swaps in the door's call
 	# (whoa_arms), the step out through the door (ring_exit) and the drop.
 	WrestlerFSM.State.CAGE_ESCAPE: "strikes/ladder_climb",
+	WrestlerFSM.State.SHUT_IN: "strikes/ladder_fall",
 }
 ## Per-role overrides on top of STATE_ANIMATIONS, looked up first when the
 ## wrestler is in a grapple and its role is known.
@@ -1935,6 +1936,11 @@ func _physics_process(delta: float) -> void:
 				cage_escape().tick(self, input)
 			else:
 				end_cage_escape(false)
+		WrestlerFSM.State.SHUT_IN:
+			if is_instance_valid(_shut_in):
+				_shut_in.tick(self)
+			else:
+				end_shut_in()
 		WrestlerFSM.State.TAUNT:
 			if _stalking:
 				_tick_spear_setup()
@@ -1989,6 +1995,7 @@ func _physics_process(delta: float) -> void:
 
 	if fsm.current_state == WrestlerFSM.State.ROPE_CROSS \
 			or fsm.current_state == WrestlerFSM.State.CAGE_ESCAPE \
+			or fsm.current_state == WrestlerFSM.State.SHUT_IN \
 			or (fsm.current_state == WrestlerFSM.State.LADDER_FALL and _cage_fall):
 		# On his scripted path: no gravity, no collision, no clamp.
 		return
@@ -2217,6 +2224,13 @@ func _take_wheel_pick() -> StringName:
 	return pick
 
 func _process_free_movement(delta: float, input: Dictionary) -> void:
+	if _closing_ticks > 0 and fsm.current_state == WrestlerFSM.State.IDLE:
+		_closing_ticks -= 1
+		_stop_dead()
+		if _closing_ticks == 0:
+			_restart_state_clip(WrestlerFSM.State.IDLE,
+					clip_for_state(WrestlerFSM.State.IDLE, _is_grapple_attacker))
+		return
 	if fsm.current_state == WrestlerFSM.State.IDLE and _far_rope_stop_ticks > 0:
 		# Section 03's two-handed stop: the absorb clip owns the next 0.8 s.
 		# Closing ordinary idle input here is what keeps an AI who already
@@ -3141,9 +3155,10 @@ func wants_screen_whip() -> bool:
 ## teleported onto it. With no rig (tests, grey-box) it falls back to the old
 ## immediate launch. Into-cage whips use the same pair and carry the cage
 ## flag through to the victim.
-func _begin_irish_whip(into_corner := false, into_cage := false) -> void:
+func _begin_irish_whip(into_corner := false, into_cage := false, into_shut_in := false) -> void:
 	_whip_setup_corner = into_corner
 	_whip_setup_cage = into_cage
+	_whip_setup_shut_in = into_shut_in and not into_corner
 	_rebound_pick = null
 	if opponent == null:
 		fsm.transition_to(WrestlerFSM.State.IDLE)
@@ -3181,12 +3196,20 @@ func _launch_whip_victim() -> void:
 	launch_dir = launch_dir.normalized() if launch_dir.length() > 0.01 else Vector3.FORWARD
 	if _whip_setup_corner:
 		launch_dir = corner_whip_dir(opponent.global_position, launch_dir)
+	# At the casket, or the back of the ambulance.
+	var shut := ShutIn.of(self) if _whip_setup_shut_in else null
+	if shut and shut.container:
+		var to: Vector3 = shut.container.mouth() - opponent.global_position
+		to.y = 0.0
+		if to.length() > 0.05:
+			launch_dir = to.normalized()
 	opponent.velocity = launch_dir * IRISH_WHIP_LAUNCH_SPEED
 	opponent._irish_whip_launch_velocity = opponent.velocity
 	opponent._irish_whip_target = self
 	opponent._irish_whip_rebounded = false
 	opponent._irish_whip_corner = _whip_setup_corner
 	opponent._irish_whip_cage = _whip_setup_cage
+	opponent._irish_whip_shut_in = shut != null
 	# The man being whipped is the runner: he sprints away into the ropes,
 	# he does not play the thrower's sling. On rope contact _begin_rope_load()
 	# restarts IRISH_WHIP on the chest-first absorb pose (reference video 02).
@@ -3229,6 +3252,8 @@ func _process_irish_whip() -> void:
 	if _irish_whip_corner and _reached_whip_corner():
 		return
 	if _whipped_into_cage():
+		return
+	if _whipped_into_shut_in():
 		return
 	for i in get_slide_collision_count():
 		var collision := get_slide_collision(i)
@@ -3732,6 +3757,7 @@ const UNHITTABLE_STATES: Array[WrestlerFSM.State] = [
 	WrestlerFSM.State.SUBMISSION_DEFENDER,
 	WrestlerFSM.State.FINISHER,
 	WrestlerFSM.State.MOVE_EXEC,
+	WrestlerFSM.State.SHUT_IN,
 ]
 
 func _process_active_move(input: Dictionary) -> void:
@@ -5260,7 +5286,8 @@ func _process_grapple_hold(input: Dictionary) -> void:
 		return
 	if input.get("run", false) or (is_ai and wants_screen_whip()):
 		_begin_irish_whip(input.get("corner", false),
-				_wants_cage_ram(input, input.get("corner", false)))
+				_wants_cage_ram(input, input.get("corner", false)),
+				_wants_shut_in_whip(input))
 		return
 	# Chain wrestling first: the read, and the holds it strings together.
 	if _tick_chain_read(input):
@@ -7263,6 +7290,103 @@ func _update_ladder_climb_ik() -> void:
 		right_hand.origin = right_hand.origin.lerp(r_at, reach)
 		left_hand.origin = left_hand.origin.lerp(l_at, reach)
 	weapon_grip.climb_ladder(_ladder_actor, right_hand, left_hand, right_foot, left_foot)
+
+
+## --- The Casket and Ambulance matches (ShutIn) ------------------------------
+var _whip_setup_shut_in := false
+var _irish_whip_shut_in := false
+var _shut_in: ShutIn
+## Ticks still shutting the lid (the doors) on the other man.
+var _closing_ticks := 0
+
+
+## A whip at the casket or the ambulance: the AI's ask, or the player's when
+## he is outside within reach of one with the other man in his hands.
+func _wants_shut_in_whip(input: Dictionary) -> bool:
+	var shut := ShutIn.of(self)
+	if shut == null or shut.busy() or not outside_ring:
+		return false
+	if input.get("shut_in", false):
+		return true
+	if is_ai or opponent == null:
+		return false
+	var m: Vector3 = shut.container.mouth()
+	return Vector2(opponent.global_position.x - m.x, opponent.global_position.z - m.z).length() \
+			<= SHUT_IN_WHIP_REACH
+const SHUT_IN_WHIP_REACH := 6.0
+
+
+func _whipped_into_shut_in() -> bool:
+	if not _irish_whip_shut_in:
+		return false
+	var shut := ShutIn.of(self)
+	if shut == null or shut.busy() or not shut.at_mouth(global_position):
+		return false
+	_irish_whip_shut_in = false
+	_irish_whip_rebounded = true
+	return shut.begin(self, _irish_whip_target if is_instance_valid(_irish_whip_target) else opponent)
+
+
+func begin_shut_in(by: ShutIn) -> void:
+	_shut_in = by
+	_irish_whip_shut_in = false
+	velocity = Vector3.ZERO
+	if inertializer:
+		inertializer.skip_next_turn()
+	_set_state_clip(WrestlerFSM.State.SHUT_IN, "strikes/ladder_fall")
+	fsm.transition_to(WrestlerFSM.State.SHUT_IN)
+
+
+func lie_in_shut_in() -> void:
+	_restart_state_clip(WrestlerFSM.State.SHUT_IN, clip_for_state(WrestlerFSM.State.DOWN, false))
+
+
+func shove_out_of_shut_in() -> void:
+	_restart_state_clip(WrestlerFSM.State.SHUT_IN, "strikes/getup_rise")
+
+
+func climb_out_of_shut_in() -> void:
+	_restart_state_clip(WrestlerFSM.State.SHUT_IN, "strikes/walk_slow_look")
+
+
+func end_shut_in() -> void:
+	_shut_in = null
+	if fsm.current_state == WrestlerFSM.State.SHUT_IN:
+		fsm.transition_to(WrestlerFSM.State.IDLE)
+
+
+func is_shut_in() -> bool:
+	return fsm.current_state == WrestlerFSM.State.SHUT_IN
+
+
+## The man who sent him in, at the lid (the doors), shutting it.
+func begin_closing(container: Node3D) -> void:
+	if not fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION, WrestlerFSM.State.RUN]):
+		return
+	if fsm.current_state == WrestlerFSM.State.RUN:
+		fsm.transition_to(WrestlerFSM.State.IDLE)
+	var m: Vector3 = container.mouth()
+	var back := (global_position - m)
+	back.y = 0.0
+	if back.length() > 1.2 or back.length() < 0.3:
+		back = (m - (container.lip() as Vector3))
+		back.y = 0.0
+	global_position = Vector3(m.x, global_position.y, m.z) + back.normalized() * 0.35
+	var face: Vector3 = container.lip() - global_position
+	face.y = 0.0
+	if face.length() > 0.05:
+		look_at(global_position + face, Vector3.UP)
+	velocity = Vector3.ZERO
+	_closing_ticks = ShutIn.CLOSE_TICKS + 6
+	_restart_state_clip(WrestlerFSM.State.IDLE, "strikes/weapon_set_up")
+
+
+## The lid shoved back up into him: off it, a step back.
+func knocked_back_by_lid() -> void:
+	_closing_ticks = 0
+	var back := -global_basis.z * -1.0
+	velocity = Vector3(back.x, 0.0, back.z) * 1.6
+	_restart_state_clip(WrestlerFSM.State.IDLE, clip_for_state(WrestlerFSM.State.IDLE, false))
 
 
 ## --- The Ladder match (HangingPrize; gauntlet/refs/ladder_match.md) ----------

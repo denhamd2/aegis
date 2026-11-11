@@ -53,6 +53,9 @@ enum State {
 	## state for all of it: CageEscape holds which part he is in. Appended
 	## for the same reason as TAUNT.
 	CAGE_ESCAPE,
+	## Bundled into the casket or the ambulance and held there (ShutIn): on
+	## its scripted path, then lying in it -- or climbing back out.
+	SHUT_IN,
 }
 
 ## Adjacency list of legal transitions. Anything not listed here is illegal.
@@ -71,7 +74,7 @@ const LEGAL_TRANSITIONS := {
 	State.DOWN: [State.GETUP, State.GRAPPLE_HOLD, State.PIN_DEFENDER, State.SUBMISSION_DEFENDER, State.VICTORY],
 	State.GETUP: [State.IDLE, State.HIT_REACT, State.VICTORY],
 	# STUNNED: whipped into a corner, he is trapped against the turnbuckle.
-	State.IRISH_WHIP: [State.RUN, State.HIT_REACT, State.STUNNED, State.VICTORY],
+	State.IRISH_WHIP: [State.RUN, State.HIT_REACT, State.STUNNED, State.VICTORY, State.SHUT_IN],
 	State.RUNNING_ATTACK: [State.IDLE, State.HIT_REACT, State.DOWN, State.VICTORY],
 	State.STUNNED: [State.IDLE, State.HIT_REACT, State.DOWN, State.VICTORY],
 	State.PIN_ATTACKER: [State.IDLE, State.GETUP, State.FINISHER, State.VICTORY],
@@ -86,6 +89,7 @@ const LEGAL_TRANSITIONS := {
 	State.LADDER_CLIMB: [State.IDLE, State.GRAPPLE_HOLD, State.HIT_REACT, State.STUNNED, State.DOWN, State.LADDER_FALL, State.VICTORY],
 	State.LADDER_FALL: [State.DOWN, State.VICTORY],
 	State.CAGE_ESCAPE: [State.IDLE, State.HIT_REACT, State.LADDER_FALL, State.DOWN, State.VICTORY],
+	State.SHUT_IN: [State.IDLE, State.DOWN, State.HIT_REACT, State.VICTORY],
 }
 
 signal state_changed(previous: State, current: State)

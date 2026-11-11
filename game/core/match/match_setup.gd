@@ -97,6 +97,14 @@ func _ready() -> void:
 			escape.cage = cage
 			add_child(escape)
 			escape.escaped.connect(referee.declare_escape)
+	# The Casket and the Ambulance: shut him in it to win (ShutIn).
+	if MatchRules.casket(self) or MatchRules.ambulance(self):
+		var shut := ShutIn.new()
+		shut.name = "ShutIn"
+		shut.container = CasketProp.build(self) if MatchRules.casket(self) \
+				else AmbulanceProp.build(self)
+		add_child(shut)
+		shut.shut.connect(referee.declare_shut_in)
 	# The Ladder match and TLC: the belt hung over the ring, pulled down to win.
 	if MatchRules.prize_hangs(self):
 		var prize := HangingPrize.build(self)
