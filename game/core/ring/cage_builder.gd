@@ -55,7 +55,9 @@ class Spec:
 	## about twenty feet tall, its door on the entrance side.
 	static func hell_in_a_cell() -> Spec:
 		var s := Spec.new()
-		s.half = 5.55
+		# In from the barricade (6.0) far enough that a man knocked off the
+		# roof's side lands in the gap, not inside the wall.
+		s.half = 4.7
 		s.base_y = ArenaBuilder.FLOOR_Y
 		s.top_y = ArenaBuilder.FLOOR_Y + 6.1
 		# The owner's references (Hell in a Cell from the hard camera, the
@@ -180,6 +182,70 @@ func door_open_amount() -> float:
 
 # --------------------------------------------------------------------------
 # Presentation
+
+## Hell in a Cell's door, padlocked shut by the referee once both men are in:
+## a loop of heavy chain through the door frame and the jamb, and a padlock on
+## it. Off when the chain is cut (CellRoof): the lock and chain fall to the
+## floor in front of the door.
+var _padlock: Node3D
+
+
+func set_padlock(on: bool) -> void:
+	if not on:
+		if _padlock:
+			_padlock.queue_free()
+			_padlock = null
+		return
+	if _padlock or _door_pivot == null:
+		return
+	var steel := StandardMaterial3D.new()
+	steel.albedo_color = Color(0.55, 0.56, 0.58)
+	steel.metallic = 0.8
+	steel.roughness = 0.35
+	var brass := StandardMaterial3D.new()
+	brass.albedo_color = Color(0.78, 0.6, 0.28)
+	brass.metallic = 0.9
+	brass.roughness = 0.3
+	_padlock = Node3D.new()
+	_padlock.name = "Padlock"
+	add_child(_padlock)
+	var axis := spec.door_axis
+	var lat := lateral_of(axis)
+	var latch := axis * (spec.half + 0.06) + lat * (spec.door_width * 0.5) \
+			+ Vector3.UP * (spec.base_y + 1.05)
+	# The chain: links wound round the door's edge and the jamb.
+	for k in 9:
+		var a := TAU * float(k) / 9.0
+		var link := MeshInstance3D.new()
+		var torus := TorusMesh.new()
+		torus.inner_radius = 0.012
+		torus.outer_radius = 0.026
+		link.mesh = torus
+		link.material_override = steel
+		link.position = latch + lat * (cos(a) * 0.09) + Vector3.UP * (sin(a) * 0.11)
+		link.rotation = Vector3(PI * 0.5 * float(k % 2), a, 0.0)
+		_padlock.add_child(link)
+	var body := MeshInstance3D.new()
+	var bm := BoxMesh.new()
+	bm.size = Vector3(0.07, 0.08, 0.035)
+	body.mesh = bm
+	body.material_override = brass
+	body.position = latch + Vector3.DOWN * 0.15 + axis * 0.02
+	_padlock.add_child(body)
+	var shackle := MeshInstance3D.new()
+	var ring := TorusMesh.new()
+	ring.inner_radius = 0.022
+	ring.outer_radius = 0.03
+	shackle.mesh = ring
+	shackle.material_override = steel
+	shackle.position = latch + Vector3.DOWN * 0.1 + axis * 0.02
+	shackle.rotation = Vector3(PI * 0.5, 0.0, 0.0)
+	_padlock.add_child(shackle)
+
+
+func has_padlock() -> bool:
+	return _padlock != null
+
 
 ## Opens the door to `t` (0 shut, 1 wide open).
 func set_door_open(t: float) -> void:

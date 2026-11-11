@@ -528,6 +528,20 @@ func _process(_delta: float) -> void:
 		motion_blur.intensity = blur_intensity()
 
 
+## On or up the side of Hell in a Cell: the camera stands off further and
+## higher, looking down onto the roof.
+const ROOF_DISTANCE := 6.5
+const ROOF_LIFT := 1.6
+
+
+func _up_the_cell() -> bool:
+	for w in [wrestler_a, wrestler_b]:
+		var c := w as WrestlerController
+		if c and (c.on_roof or (c.is_on_cell_route() and c.global_position.y > 1.0)):
+			return true
+	return false
+
+
 func _physics_process(delta: float) -> void:
 	if mode == Mode.ENTRANCE:
 		# EntranceDirector owns the camera until the bell.
@@ -567,6 +581,11 @@ func _physics_process(delta: float) -> void:
 	else:
 		var separation := wrestler_a.global_position.distance_to(wrestler_b.global_position)
 		var distance := framing_distance(separation)
+		# Up on Hell in a Cell (or climbing it): back and up with them, so the
+		# roof and the drop either side of it are in the shot.
+		var up_high := _up_the_cell()
+		if up_high:
+			distance = maxf(distance, ROOF_DISTANCE)
 		if mode == Mode.RINGSIDE and CameraSettings.gameplay():
 			distance = maxf(distance, GAMEPLAY_MIN_DISTANCE)
 		# The bearing is a PROPERTY OF THE SHOT, not of wherever the camera
@@ -613,6 +632,9 @@ func _physics_process(delta: float) -> void:
 			# lying on the floor is hidden by it.
 			eye_height += OUTSIDE_LIFT
 			aim = minf(aim, 0.5)
+		if up_high:
+			eye_height += ROOF_LIFT
+			aim = 0.9
 		target_position = midpoint + to_camera + Vector3.UP * eye_height
 		if gameplay and not _fight_outside():
 			target_position = _outside_ring(target_position, bearing)

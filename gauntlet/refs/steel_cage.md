@@ -96,3 +96,17 @@ charlieintel.com (WWE 2K24 Hell in a Cell guide),
 sportskeeda.com (WWE 2K24 Hell in a Cell guide),
 gamepur.com (How to win a Steel Cage match in WWE 2K Battlegrounds),
 channellife.co.nz and jumpdashroll.com (AEW Fight Forever reviews).
+
+
+## 11 Nov: the reference's shape, and the door by hand
+
+- The owner's reference image 4: four panels across each wall, two rows, and a
+  flat lip of ladder truss round the top (`CageBuilder._build_top_lip`).
+- **Rules, researched:** pinfall, submission, or escape. Escape is over the
+  top, or out of the door with both feet on the floor. No DQ, no count-out.
+- **The door:** the owner asked that wrestlers open and close it themselves.
+  The man works the latch and swings it open himself (`DOOR_UNLOCK_TICKS`
+  20, `DOOR_OPEN_TICKS` 80, 1.3 s); it used to wait 6 s for the official.
+  It swings shut behind a man who lets go, or is hit at it.
+- **Off the top:** from the top of the wall, over a man down in the ring
+  within 3.4 m, he dives onto him (`begin_high_dive`).

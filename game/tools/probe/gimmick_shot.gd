@@ -26,7 +26,7 @@ func _ready() -> void:
 	DirAccess.make_dir_recursive_absolute(_out)
 	Engine.max_physics_steps_per_frame = 1
 	await get_tree().process_frame
-	for s: String in ["cell", "cage", "ladder", "casket", "ambulance"]:
+	for s: String in ["cell", "cage", "ladder", "casket", "ambulance", "roof"]:
 		if _only.is_empty() or _only.has(s):
 			await call("_" + s)
 	print("GIMMICK_SHOT done")
@@ -181,3 +181,56 @@ func _casket() -> void:
 
 func _ambulance() -> void:
 	await _shut_in(MatchRules.Mode.AMBULANCE, "ambulance", Vector3(3.2, 1.8, -3.0))
+
+
+func _roof() -> void:
+	var scene: Node = await _scene(MatchRules.Mode.HELL_IN_A_CELL, true)
+	var roman := scene.get_node("WrestlerA") as WrestlerController
+	var cody := scene.get_node("WrestlerB") as WrestlerController
+	var roof := scene.get_node("CellRoof") as CellRoof
+	(scene.get_node("MatchReferee") as MatchReferee).set_physics_process(false)
+	for w in [roman, cody]:
+		w.outside_ring = true
+		w.on_roof = true
+	var h := roof.half()
+	roman.global_position = Vector3(-(h - 0.55), roof.surface_y(), 0.4)
+	cody.global_position = Vector3(-(h - 1.6), roof.surface_y(), 0.4)
+	roman.face(Vector3(1, 0, 0))
+	cody.face(Vector3(-1, 0, 0))
+	# A table stood up on the floor below that side.
+	var table := WeaponStock.of(roman).pull(WeaponCatalog.by_id(&"table"))
+	table.set_up_at(Vector3(-(h + 0.5), ArenaBuilder.FLOOR_Y, 0.4), PI * 0.5, "Table_Up")
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	_cam(scene, Vector3(-11.0, 7.4, 7.5), Vector3(-2.0, 4.6, 0.0), 50.0)
+	await _shoot("roof_fight")
+	_cam(scene, Vector3(-9.5, 2.2, 6.5), Vector3(-5.0, 2.0, 0.4), 55.0)
+	RenderingServer.render_loop_enabled = false
+	roman.combat.limb_damage["torso"] = CombatSystem.KICKOUT_DAMAGE_REFERENCE * 0.8
+	roman.fsm.transition_to(WrestlerFSM.State.HIT_REACT)
+	roman._go_down(CombatSystem.Tier.POWER)
+	var shots := {6: "roof_over", 22: "roof_falling", 34: "roof_table", 70: "roof_landed"}
+	for tick in range(1, 72):
+		await get_tree().physics_frame
+		if shots.has(tick):
+			await _shoot(shots[tick])
+			RenderingServer.render_loop_enabled = false
+	# Cody on a centre panel, slammed through it.
+	var c := roof.cage.bay_centre(1, 1)
+	cody.global_position = Vector3(c.x + 0.3, roof.surface_y(), c.z + 0.3)
+	await get_tree().physics_frame
+	for i in 3:
+		roof.landed(cody, CombatSystem.Tier.POWER)
+	_cam(scene, Vector3(-6.5, 7.8, 5.0), Vector3(0.0, 4.0, 0.0), 55.0)
+	await _shoot("roof_dented")
+	RenderingServer.render_loop_enabled = false
+	cody.fsm.transition_to(WrestlerFSM.State.HIT_REACT)
+	cody._go_down(CombatSystem.Tier.POWER)
+	_cam(scene, Vector3(-6.0, 3.2, 4.6), Vector3(0.0, 2.2, 0.0), 62.0)
+	var shots2 := {8: "panel_gone", 26: "panel_falling", 60: "panel_landed"}
+	for tick in range(1, 62):
+		await get_tree().physics_frame
+		if shots2.has(tick):
+			await _shoot(shots2[tick])
+			RenderingServer.render_loop_enabled = false
+	await _done(scene)

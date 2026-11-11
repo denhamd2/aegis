@@ -1910,6 +1910,9 @@ func _physics_process(delta: float) -> void:
 				pass
 			elif _pushing_at_cell(input):
 				pass
+			elif (input.get("dive", false) or (not is_ai and input.get("grapple", false))) \
+					and can_high_dive():
+				begin_high_dive(opponent)
 			elif _pushing_through_ropes(input):
 				begin_rope_cross()
 			elif (input.get("tip_ladder", false) or input.get("strike", false)) \
@@ -1936,7 +1939,10 @@ func _physics_process(delta: float) -> void:
 		WrestlerFSM.State.ROPE_CROSS:
 			_tick_rope_cross()
 		WrestlerFSM.State.CAGE_ESCAPE:
-			if cage_escape():
+			if (input.get("dive", false) or (not is_ai and input.get("grapple", false))) \
+					and can_high_dive():
+				begin_high_dive(opponent)
+			elif cage_escape():
 				cage_escape().tick(self, input)
 			else:
 				end_cage_escape(false)
@@ -2673,6 +2679,10 @@ func is_crossing_ropes() -> bool:
 func keep_on_the_floor() -> void:
 	var p := global_position
 	var fixed := ringside_floor_point(p, _desk_open())
+	# Hell in a Cell: on his own side of its walls.
+	var cell := CellRoof.of(self) if not on_roof else null
+	if cell and not cell.busy(self):
+		fixed = cell.keep_cell_side(self, fixed)
 	if MatchRules.no_holds_barred(self):
 		# Up the ramp and onto the stage, through the barricade's gap: the
 		# nearer of the two standable areas, so the walk from one onto the
@@ -5011,6 +5021,11 @@ func fire_up() -> void:
 func _begin_hit_reaction(move: MoveDef) -> void:
 	if _bumping:
 		return                           # on his way down: the fall plays out
+	# Halfway through the ropes (or out of the Cell's door, up its wall):
+	# the damage counts, the reaction waits -- there is no legal way out of
+	# a scripted crossing into a sell.
+	if fsm.current_state == WrestlerFSM.State.ROPE_CROSS:
+		return
 	# Backed into a corner, the turnbuckle takes it: trapped there, or hit
 	# again while he is.
 	if _try_corner_trap():
@@ -5891,6 +5906,10 @@ func _take_fatal_gunshot() -> void:
 
 
 func _go_down(tier := -1, move: MoveDef = null) -> void:
+	# Mid-crossing of the ropes: he finishes the crossing first (the scripted
+	# path has no legal way into a knockdown).
+	if fsm.current_state == WrestlerFSM.State.ROPE_CROSS:
+		return
 	_bumping = false
 	if fsm.current_state == WrestlerFSM.State.HIT_REACT or fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION, WrestlerFSM.State.RUN, WrestlerFSM.State.STRIKE]):
 		fsm.transition_to(WrestlerFSM.State.HIT_REACT)
@@ -6724,6 +6743,9 @@ const KEEP_WEAPON_STATES: Array[WrestlerFSM.State] = [
 	WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION, WrestlerFSM.State.RUN,
 	WrestlerFSM.State.STRIKE, WrestlerFSM.State.WEAPON_ACTION, WrestlerFSM.State.ROPE_CROSS,
 	WrestlerFSM.State.HIT_REACT, WrestlerFSM.State.TAUNT,
+	# Out of the Cell and up it with a weapon in his hand (the owner, 11 Nov:
+	# "bring them up to the roof with them if they wish").
+	WrestlerFSM.State.CELL_CLIMB,
 ]
 ## A rocket goes wide this often -- past him and into whatever is behind him:
 ## a post, a barricade, the desk, a screen, the crowd (VenueDamage). Off his
@@ -7450,6 +7472,59 @@ func begin_roof_fall(v: Vector3, into_ring: bool) -> void:
 	hit_the_cage.emit(self, 2.0)
 
 
+## Off a height onto the man down below it (the owner, 11 Nov: "climb up
+## each, jump off each"): from the top of the Steel Cage's wall into the ring,
+## or off the edge of the Cell's roof to the floor. A kinematic arc onto him
+## over HIGH_DIVE_SECONDS; both are down after it.
+const HIGH_DIVE_SECONDS := 0.9
+const HIGH_DIVE_REACH := 3.4
+var _dive_onto: WrestlerController
+
+
+func can_high_dive() -> bool:
+	if opponent == null or opponent.dead or opponent.fsm.current_state != WrestlerFSM.State.DOWN:
+		return false
+	var flat := Vector2(opponent.global_position.x - global_position.x,
+			opponent.global_position.z - global_position.z).length()
+	if flat > HIGH_DIVE_REACH or opponent.global_position.y > global_position.y - 1.5:
+		return false
+	if fsm.current_state == WrestlerFSM.State.CAGE_ESCAPE:
+		var esc := cage_escape()
+		return esc != null and esc.climb_of(self) != null \
+				and global_position.y > esc.climb_top_y() - 1.0 and not opponent.outside_ring
+	if on_roof and fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION]):
+		var roof := CellRoof.of(self)
+		return roof != null and roof.edge_gap(global_position) < 1.2 and opponent.outside_ring
+	return false
+
+
+func begin_high_dive(onto: WrestlerController) -> void:
+	var esc := cage_escape()
+	if esc and esc.climb_of(self):
+		esc.forget(self)
+	var roof := CellRoof.of(self)
+	if roof:
+		roof.abandon(self)
+	var to := onto.global_position - global_position
+	var t := HIGH_DIVE_SECONDS
+	var v := Vector3(to.x / t, (to.y + 0.5 * GRAVITY * t * t) / t, to.z / t)
+	face(Vector3(to.x, 0.0, to.z))
+	_dive_onto = onto
+	var into_ring := not onto.outside_ring
+	on_roof = false
+	_roof_fall = true
+	_roof_fall_into_ring = into_ring
+	_roof_fall_table_done = true
+	_teeter_ticks = 0
+	velocity = v
+	_set_state_clip(WrestlerFSM.State.LADDER_FALL, "strikes/tope_attacker")
+	fsm.transition_to(WrestlerFSM.State.LADDER_FALL)
+	high_dive.emit(self, onto)
+
+
+signal high_dive(diver: WrestlerController, onto: WrestlerController)
+
+
 func _tick_roof_fall(delta: float) -> void:
 	velocity.y -= GRAVITY * delta
 	var p := global_position + velocity * delta
@@ -7464,7 +7539,7 @@ func _tick_roof_fall(delta: float) -> void:
 		# desk side, where the desk is.
 		var cell := CageBuilder.of(self)
 		if cell:
-			var lim := cell.spec.half + 0.42
+			var lim := cell.spec.half + 0.5
 			if absf(p.x) < lim and absf(p.z) < lim:
 				if absf(p.x) >= absf(p.z):
 					p.x = signf(p.x) * lim
@@ -7492,6 +7567,19 @@ func _tick_roof_fall(delta: float) -> void:
 	velocity = Vector3.ZERO
 	_roof_fall = false
 	outside_ring = not _roof_fall_into_ring
+	var cell_roof := CellRoof.of(self)
+	if cell_roof:
+		var h := cell_roof.half()
+		cell_roof.set_outside_cell(self, absf(global_position.x) > h or absf(global_position.z) > h)
+	if _dive_onto and is_instance_valid(_dive_onto):
+		# Onto him: it is his fall too, and it costs the diver a little less.
+		_dive_onto.combat.apply_damage(ROOF_FALL_MOVE, 1.8)
+		_dive_onto._move_ticks_remaining = maxi(_dive_onto._move_ticks_remaining, 240)
+		combat.apply_damage(ROOF_FALL_MOVE, 0.9)
+		_dive_onto = null
+		hit_the_cage.emit(self, 3.0)
+		_go_down(CombatSystem.Tier.SIGNATURE, ROOF_FALL_MOVE)
+		return
 	combat.apply_damage(ROOF_FALL_MOVE,
 			CellRoof.THROUGH_DAMAGE if _roof_fall_into_ring else CellRoof.FALL_DAMAGE)
 	if ragdoll:

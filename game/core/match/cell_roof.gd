@@ -60,7 +60,12 @@ const FALL_DAMAGE := 2.6
 const THROUGH_DAMAGE := 2.2
 
 var cage: CageBuilder
+## Padlocked by the referee once both men are in (gauntlet/refs/
+## hell_in_a_cell.md): only the wire cutters open it.
+var door_locked := false
 var door_forced := false
+## Snipping the chain, with the cutters in his hands at the door.
+const CUT_TICKS := 90
 var damage := {}            # Vector2i bay -> dents
 var broken := {}            # Vector2i bay -> true
 var falls := 0
@@ -69,6 +74,7 @@ var _routes := {}           # WrestlerController -> Dictionary
 var _breaking := {}         # Vector2i -> ticks since it gave way
 
 signal panel_broke(bay: Vector2i)
+signal door_cut(by: WrestlerController)
 signal fell_off(wrestler: WrestlerController, through_roof: bool)
 
 
@@ -146,17 +152,73 @@ func at_climbable_wall(p: Vector3) -> bool:
 	var lat := Vector3(absf(a.z), 0.0, absf(a.x))
 	var along := p.dot(lat)
 	var out := p.dot(a)
+	# Off the door, and on the ramp side, where the barricade is not in the
+	# way (ArenaBuilder.RAMP_BARRICADE_OFFSET).
 	return out > half() and out < half() + 1.1 \
-			and absf(along) > cage.spec.door_width * 0.5 + 0.35 \
-			and absf(along) < half() - 0.6
+			and absf(along) > cage.spec.door_width * 0.5 + 0.2 \
+			and absf(along) < ArenaBuilder.RAMP_BARRICADE_OFFSET - 0.4
 
 
 ## On the roof over the front wall, close enough to its edge to go down it.
 func at_roof_front_edge(p: Vector3) -> bool:
 	var a := door_axis()
 	var lat := Vector3(absf(a.z), 0.0, absf(a.x))
-	return p.dot(a) > half() - 1.1 and absf(p.dot(lat)) < half() - 0.6 \
-			and absf(p.dot(lat)) > cage.spec.door_width * 0.5 + 0.35
+	return p.dot(a) > half() - 1.1 \
+			and absf(p.dot(lat)) < ArenaBuilder.RAMP_BARRICADE_OFFSET - 0.4 \
+			and absf(p.dot(lat)) > cage.spec.door_width * 0.5 + 0.2
+
+
+func lock_door() -> void:
+	door_locked = true
+	door_forced = false
+	cage.set_door_open(0.0)
+	cage.set_padlock(true)
+
+
+func _holds_cutters(w: WrestlerController) -> bool:
+	return w.has_weapon() and w.held_weapon.def.id == &"wire_cutters"
+
+
+## Which side of the cell's walls each man is on the floor: inside, unless
+## he went out through the door, down off the roof or over its edge.
+var _outside := {}
+
+
+func is_outside_cell(w: WrestlerController) -> bool:
+	return bool(_outside.get(w, false))
+
+
+func set_outside_cell(w: WrestlerController, out: bool) -> void:
+	_outside[w] = out
+
+
+## Holds `p` (a man on the floor) on his side of the walls.
+func keep_cell_side(w: WrestlerController, p: Vector3) -> Vector3:
+	var r := WrestlerController.BODY_RADIUS + 0.05
+	if is_outside_cell(w):
+		# His capsule clear of the walls -- round the corner posts, not
+		# square: past a corner the barricade's chamfer leaves him a metre,
+		# and a square keep-out would wedge him between the two.
+		var h := half()
+		var near := Vector3(clampf(p.x, -h, h), p.y, clampf(p.z, -h, h))
+		var off := Vector3(p.x - near.x, 0.0, p.z - near.z)
+		if absf(p.x) < h and absf(p.z) < h:
+			if absf(p.x) > absf(p.z):
+				p.x = signf(p.x) * (h + r)
+			else:
+				p.z = signf(p.z if p.z != 0.0 else 1.0) * (h + r)
+		elif off.length() < r:
+			var corner_r := r if (absf(off.x) < 0.001 or absf(off.z) < 0.001) \
+					else WrestlerController.BODY_RADIUS + 0.02
+			if off.length() < corner_r:
+				var n := off.normalized() if off.length() > 0.0001 else Vector3(signf(p.x), 0, 0)
+				p.x = near.x + n.x * corner_r
+				p.z = near.z + n.z * corner_r
+		return p
+	var keep := half() - r
+	p.x = clampf(p.x, -keep, keep)
+	p.z = clampf(p.z, -keep, keep)
+	return p
 
 
 func busy(w: WrestlerController) -> bool:
@@ -185,9 +247,12 @@ func begin(w: WrestlerController) -> bool:
 		climbs += 1
 	else:
 		return false
-	# The door already open: straight through.
+	# The door: padlocked, it needs the cutters (phase 0 cuts the chain);
+	# open, straight through.
 	if r["kind"] in ["door_out", "door_in"]:
-		r["phase"] = 1 if door_forced else 0
+		if door_locked and not _holds_cutters(w):
+			return false
+		r["phase"] = 1 if not door_locked else 0
 	_routes[w] = r
 	w.begin_cell_route(_clip_for(r))
 	return true
@@ -196,7 +261,7 @@ func begin(w: WrestlerController) -> bool:
 func _clip_for(r: Dictionary) -> String:
 	match r["kind"]:
 		"door_out", "door_in":
-			return "strikes/whoa_arms" if int(r["phase"]) == 0 else "strikes/walk_crowd"
+			return "strikes/weapon_set_up" if int(r["phase"]) == 0 else "strikes/walk_crowd"
 		"up":
 			return "strikes/ladder_climb" if int(r["phase"]) == 0 else "strikes/apron_climb"
 		"down":
@@ -227,13 +292,16 @@ func tick(w: WrestlerController) -> void:
 			var start := _door_inside() if inside else _door_outside()
 			var goal := _door_outside() if inside else _door_inside()
 			if int(r["phase"]) == 0:
-				# Shaking the locked door, then through it.
+				# Snipping the chain with the cutters, then the door swings.
 				w.face(a if inside else -a)
 				w.global_position = w.global_position.lerp(start, 0.15)
-				cage.rattle(a * half() + Vector3.UP * (cage.spec.base_y + 1.2), 0.5)
-				cage.set_door_open(clampf(float(t - DOOR_FORCE_TICKS + 12) / 12.0, 0.0, 1.0) * 0.4)
-				if t >= DOOR_FORCE_TICKS:
+				if t == CUT_TICKS - 20:
+					cage.rattle(a * half() + Vector3.UP * (cage.spec.base_y + 1.1), 0.4)
+				if t >= CUT_TICKS:
+					door_locked = false
 					door_forced = true
+					cage.set_padlock(false)
+					door_cut.emit(w)
 					_next(w, r)
 				return
 			var s := clampf(float(t) / DOOR_WALK_TICKS, 0.0, 1.0)
@@ -285,6 +353,12 @@ func _next(w: WrestlerController, r: Dictionary) -> void:
 
 
 func _finish(w: WrestlerController, onto_roof: bool) -> void:
+	var r: Dictionary = _routes.get(w, {})
+	match r.get("kind", ""):
+		"door_out", "down":
+			_outside[w] = true
+		"door_in":
+			_outside[w] = false
 	_routes.erase(w)
 	w.on_roof = onto_roof
 	w.outside_ring = true

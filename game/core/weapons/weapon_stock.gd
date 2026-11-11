@@ -161,6 +161,19 @@ func seed_apron_weapons() -> void:
 		actor.rotation.y += float(i % 2) * 0.35 - 0.17
 		actor._rest_on_floor(WeaponActor.ground_under(actor.global_position))
 		apron_actors.append(actor)
+	# Hell in a Cell: the bolt cutters for the padlocked door, under the
+	# ring on the door's side.
+	if MatchRules.mode_of(self) == MatchRules.Mode.HELL_IN_A_CELL:
+		var cutters := pull(WeaponCatalog.by_id(&"wire_cutters"))
+		cutters.name = "ApronWeapon_wire_cutters"
+		cutters.mode = WeaponActor.Mode.FLOOR
+		cutters.match_lifetime_limit = 1 << 30
+		# Out in the floor lane on the door's side, between the apron and the
+		# cell wall (half 5.0), where a man can stand over them.
+		cutters.global_position = Vector3(1.4, ArenaBuilder.FLOOR_Y, -4.3)
+		cutters.rotation.y = PI * 0.5
+		cutters._rest_on_floor(WeaponActor.ground_under(cutters.global_position))
+		apron_actors.append(cutters)
 
 
 ## The nearest stage prop still lying loose, for an AI making a weapon run.

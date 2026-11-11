@@ -90,6 +90,13 @@ func _ready() -> void:
 	# A caged match: the cage round the ring, and the way out of it.
 	if MatchRules.caged(self):
 		var cage := CageBuilder.build(self, CageBuilder.Spec.for_mode(MatchRules.mode_of(self)))
+		# Hell in a Cell: the door padlocked once they are in, and the roof.
+		if MatchRules.mode_of(self) == MatchRules.Mode.HELL_IN_A_CELL:
+			var roof := CellRoof.new()
+			roof.name = "CellRoof"
+			roof.cage = cage
+			add_child(roof)
+			roof.lock_door()
 		# Hell in a Cell has no escape win: the cell only keeps them in.
 		if MatchRules.escape_wins(self):
 			var escape := CageEscape.new()

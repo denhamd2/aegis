@@ -28,6 +28,9 @@ const S := WrestlerFSM.State
 var _seeds: Array = [1, 2, 3]
 var _wrestlers := "roman,cody"
 var _budget := 40000
+## MatchRules.Mode to play (--mode 3 for Hell in a Cell).
+var _mode := 0
+var _roof_ticks := 0
 var _strip := 0
 var _moves := false
 var _rows: Array = []
@@ -42,6 +45,7 @@ func _ready() -> void:
 			"--seeds": _seeds = Array(args[i + 1].split(",")).map(func(s): return int(s))
 			"--wrestlers": _wrestlers = args[i + 1]
 			"--budget": _budget = int(args[i + 1])
+			"--mode": _mode = int(args[i + 1])
 			"--strip": _strip = int(args[i + 1])
 			"--moves": _moves = args[i + 1] == "1"
 	for s in _seeds:
@@ -71,7 +75,7 @@ func _run(seed_value: int) -> Dictionary:
 	var scene: Node = load(MATCH_SCENE).instantiate()
 	if _wrestlers != "mannequin":
 		var pair := Roster.pair_from_spec(_wrestlers)
-		TitleScreen.configure_match(scene, pair[0], pair[1], seed_value)
+		TitleScreen.configure_match(scene, pair[0], pair[1], seed_value, false, _mode)
 	scene.match_seed = seed_value
 	add_child(scene)
 	var a: WrestlerController = scene.get_node("WrestlerA")
@@ -135,17 +139,32 @@ func _run(seed_value: int) -> Dictionary:
 	t0[0] = start
 	var per_tick: Array = []    # [kind a, kind b]
 	var tick := 0
+	_roof_ticks = 0
 	while tick < _budget and won[0] == "":
+		if a.on_roof or b.on_roof:
+			_roof_ticks += 1
+		if OS.get_environment("FLOW_TRACE") != "" and tick % 300 == 0:
+			print("TRACE %4d  A %s %s w=%s  B %s %s w=%s" % [tick / 60,
+					WrestlerFSM.State.keys()[a.fsm.current_state], a.global_position.snappedf(0.1),
+					a.held_weapon.def.id if a.has_weapon() else "-",
+					WrestlerFSM.State.keys()[b.fsm.current_state], b.global_position.snappedf(0.1),
+					b.held_weapon.def.id if b.has_weapon() else "-"])
 		await get_tree().physics_frame
 		tick += 1
 		per_tick.append([kind(a.fsm.current_state), kind(b.fsm.current_state)])
 	if a.ai and b.ai:
 		mix["rope_runs"] = a.ai.rope_runs + b.ai.rope_runs
+	var roof := scene.get_node_or_null("CellRoof") as CellRoof
+	if roof:
+		print("seed %d  CELL  door %s  climbs %d  falls %d  panels broken %d  roof ticks %d" % [
+				seed_value, "cut" if not roof.door_locked else "locked", roof.climbs, roof.falls,
+				roof.broken.size(), _roof_ticks])
 	scene.queue_free()
 	await get_tree().process_frame
 	for e in landed_at:
 		e[0] -= start
 	print("seed %d  FINISH %s  MIX %s" % [seed_value, finish[0] if finish[0] != "" else "no winner", mix])
+
 	return _measure(seed_value, per_tick, landed_at)
 
 

@@ -584,6 +584,247 @@ func going_for_ladder() -> bool:
 	return _ladder_walk_ticks > 0 and not _ladder_attempted_for_down
 
 
+# --- Hell in a Cell's roof (CellRoof) ----------------------------------------
+#
+# Once a match, off a big knockdown past CELL_DUE_AT, he decides to take it to
+# the roof (CELL_ROOF_CHANCE, seeded): the cutters from under the ring, the
+# chain cut, out of the door and up the front wall. The other man follows him
+# out and up. Up there they fight as anywhere; the edge and the panels
+# (CellRoof) do the rest. After a fall, the man left up there climbs down.
+
+const CELL_DUE_AT := 90.0
+const CELL_ROOF_CHANCE := 0.5
+const CELL_ROLLS := 3
+var _cell_rolls := 0
+var _cell_rolled_for := -1
+var _cell_plan := -1        # -1 undecided, 0 no, 1 the roof
+var _cell_ticks := 0
+const CELL_GIVE_UP := 60 * 40
+
+
+var _high_dive_rolled := false
+var _high_dives := 0
+
+
+func _wants_high_dive() -> bool:
+	if _high_dives >= 1:
+		return false
+	if _high_dive_rolled:
+		return false
+	_high_dive_rolled = true
+	if _cell_rng().randf() >= 0.55:
+		return false
+	_high_dives += 1
+	return true
+
+
+func going_for_the_roof() -> bool:
+	return _cell_plan == 1
+
+
+func _cell_rng() -> RandomNumberGenerator:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = _match_seed * 4813 + _player_index * 97 + 31
+	return rng
+
+
+func _cell_input(distance: float) -> Dictionary:
+	var roof := CellRoof.of(controller)
+	if roof == null or roof.busy(controller):
+		return {}
+	var p := controller.global_position
+	# Left up there after the other man went over: back down.
+	if controller.on_roof and not target.on_roof and not roof.busy(target):
+		if roof.at_roof_front_edge(p):
+			return {"cell_route": true}
+		return _to_cell_point(roof, _roof_front_point(roof), false)
+	if controller.on_roof:
+		return _roof_fight(roof, distance)
+	# On the floor, on the other side of the walls from him: round to the
+	# door and through it (it is open once the chain has been cut).
+	if not target.on_roof and not roof.busy(target) and not roof.door_locked \
+			and roof.is_outside_cell(controller) != roof.is_outside_cell(target):
+		return _through_cell_door(roof)
+	# Both out on the floor, round the walls from each other: round the
+	# outside lane to him.
+	if not target.on_roof and not roof.busy(target) and roof.is_outside_cell(controller) \
+			and roof.is_outside_cell(target) and (_cell_plan != 1 or roof.falls > 0):
+		var round := _round_the_cell(roof, target.global_position)
+		if not round.is_empty():
+			return round
+	var other: WrestlerAI = target.ai if target else null
+	var following := other != null and other.going_for_the_roof() \
+			and (target.on_roof or roof.busy(target) or _outside_cell(roof, target.global_position))
+	# Rolled once a knockdown, a few times a match, past CELL_DUE_AT.
+	if _cell_plan < 1 and _cell_rolls < CELL_ROLLS and controller.flow \
+			and controller.flow.seconds() > CELL_DUE_AT \
+			and target.fsm.current_state == WrestlerFSM.State.DOWN \
+			and target.knockdown_tier >= CombatSystem.Tier.POWER:
+		var knockdown := Engine.get_physics_frames() - target.fsm.ticks_in_state
+		if knockdown != _cell_rolled_for:
+			_cell_rolled_for = knockdown
+			_cell_rolls += 1
+			var rng := _cell_rng()
+			for i in _cell_rolls:
+				rng.randf()
+			_cell_plan = 1 if rng.randf() < CELL_ROOF_CHANCE else 0
+	if _cell_plan == 1 and roof.falls > 0:
+		_cell_plan = 0
+	if _cell_plan != 1 and not following:
+		return {}
+	_cell_ticks += 1
+	if _cell_ticks > CELL_GIVE_UP:
+		_cell_plan = 0
+		return {}
+	# Out on the ramp side: up the front wall (the leader's side of the door,
+	# the follower's the other).
+	if _outside_cell(roof, p):
+		if roof.at_climbable_wall(p):
+			return {"cell_route": true}
+		return _to_cell_point(roof, _climb_foot(roof, -1.0 if following and _cell_plan != 1 else 1.0), false)
+	# In the ring: out of it toward the door.
+	if not controller.outside_ring:
+		var out := _through_ropes_toward(roof.door_axis() * (roof.half() - 0.7))
+		return {"move": out, "rope_cross": controller.can_cross_ropes(), "run": true}
+	# Locked, no cutters in hand: get them.
+	if roof.door_locked and not (controller.has_weapon()
+			and controller.held_weapon.def.id == &"wire_cutters"):
+		if controller.has_weapon():
+			return {"grapple": true}          # drops what he has
+		var cutters := _loose_cutters()
+		if cutters == null:
+			return {}
+		var to := _flat(cutters.global_position - p)
+		if to.length() <= WeaponStock.PICKUP_REACH * 0.9:
+			return {"weapon": true}
+		return {"move": Vector2(to.normalized().x, to.normalized().z), "run": to.length() > 2.0}
+	return _to_cell_point(roof, roof.door_axis() * (roof.half() - 0.75)
+			+ Vector3.UP * WrestlerController.FLOOR_LEVEL, true)
+
+
+## Up there with him: no ropes, no ring to go back to -- close in and work
+## him over: strikes, and the grapples that dent the panels or put him over
+## the edge (CellRoof). Every ROOF_BEAT ticks a choice, seeded.
+const ROOF_BEAT := 24
+const ROOF_GRAPPLE_SHARE := 0.4
+var _roof_beat := 0
+
+
+func _roof_fight(roof: CellRoof, distance: float) -> Dictionary:
+	if not target.on_roof:
+		return {}
+	if target.fsm.current_state == WrestlerFSM.State.DOWN:
+		# The referee's ground work (stomps, the haul up) takes it from here;
+		# just stand over him.
+		var to_him := _flat(target.global_position - controller.global_position)
+		if to_him.length() > 1.1:
+			return {"move": Vector2(to_him.normalized().x, to_him.normalized().z)}
+		return {"move": Vector2.ZERO}
+	var to := _flat(target.global_position - controller.global_position)
+	if distance > WrestlerController.STRIKE_HIT_RANGE - 0.1:
+		return {"move": Vector2(to.normalized().x, to.normalized().z)}
+	_roof_beat += 1
+	if _roof_beat % ROOF_BEAT != 0:
+		return {"move": Vector2.ZERO}
+	var rng := _cell_rng()
+	for i in _roof_beat / ROOF_BEAT % 37:
+		rng.randf()
+	if rng.randf() < ROOF_GRAPPLE_SHARE:
+		return {"grapple": true}
+	return {"strike": true}
+
+
+func _through_cell_door(roof: CellRoof) -> Dictionary:
+	var p := controller.global_position
+	var a := roof.door_axis()
+	if roof.is_outside_cell(controller):
+		if roof.in_door_lane_outside(p):
+			return {"cell_route": true}
+		var door_out := a * (roof.half() + 0.9)
+		# Round the corner on his side first, then along the front.
+		if p.dot(a) < roof.half() + 0.2:
+			var lat := Vector3(absf(a.z), 0.0, absf(a.x))
+			var side := signf(p.dot(lat)) if p.dot(lat) != 0.0 else 1.0
+			return _to_cell_point(roof, a * (roof.half() + 0.55) + lat * side * (roof.half() + 0.55), false)
+		return _to_cell_point(roof, door_out, false)
+	if not controller.outside_ring:
+		var out := _through_ropes_toward(a * (roof.half() - 0.7))
+		return {"move": out, "rope_cross": controller.can_cross_ropes()}
+	if roof.in_door_lane_inside(p):
+		return {"cell_route": true}
+	return _to_cell_point(roof, a * (roof.half() - 0.75), false)
+
+
+## Toward `goal` round the outside of the walls: straight when the wall is
+## not between, else to the outside corner that shortens the way most. {}
+## when the way is clear (the ordinary chase takes it).
+func _round_the_cell(roof: CellRoof, goal: Vector3) -> Dictionary:
+	var p := controller.global_position
+	var h := roof.half()
+	if not _cell_between(h, p, goal) or _flat(goal - p).length() < 1.6:
+		return {}
+	# The corner a man can stand at: in from the barricade's chamfer.
+	var c := h + 0.3
+	var best := Vector3.ZERO
+	var cost := INF
+	for sx in [-1.0, 1.0]:
+		for sz in [-1.0, 1.0]:
+			var corner := Vector3(sx * c, p.y, sz * c)
+			if _flat(corner - p).length() < 0.8 or _cell_between(h, p, corner):
+				continue
+			var k := _flat(corner - p).length() + _flat(goal - corner).length() \
+					+ (6.0 if _cell_between(h, corner, goal) else 0.0)
+			if k < cost:
+				cost = k
+				best = corner
+	if cost == INF:
+		return {}
+	var to := _flat(best - p)
+	return {"move": Vector2(to.normalized().x, to.normalized().z), "run": to.length() > 2.5}
+
+
+## Does the cell (half `h`) stand between a and b on the floor?
+static func _cell_between(h: float, a: Vector3, b: Vector3) -> bool:
+	var lim := h + 0.1
+	for i in 9:
+		var q := a.lerp(b, (i + 1) / 10.0)
+		if absf(q.x) < lim and absf(q.z) < lim:
+			return true
+	return false
+
+
+func _outside_cell(roof: CellRoof, p: Vector3) -> bool:
+	return roof.is_outside_cell(controller) and not controller.on_roof
+
+
+func _climb_foot(roof: CellRoof, side := 1.0) -> Vector3:
+	var a := roof.door_axis()
+	var lat := Vector3(absf(a.z), 0.0, absf(a.x))
+	return a * (roof.half() + 0.45) + lat * (1.45 * side)
+
+
+func _roof_front_point(roof: CellRoof) -> Vector3:
+	var a := roof.door_axis()
+	var lat := Vector3(absf(a.z), 0.0, absf(a.x))
+	return a * (roof.half() - 0.6) + lat * 1.45
+
+
+## Walk to `goal`, then push at the route there (`cell_route`).
+func _to_cell_point(roof: CellRoof, goal: Vector3, route: bool) -> Dictionary:
+	var to := _flat(goal - controller.global_position)
+	if to.length() <= 0.6 and route:
+		return {"cell_route": true}
+	return {"move": Vector2(to.normalized().x, to.normalized().z), "run": to.length() > 2.5}
+
+
+func _loose_cutters() -> WeaponActor:
+	var stock := WeaponStock.of(controller)
+	for a in stock.actors:
+		if is_instance_valid(a) and a.def.id == &"wire_cutters" and a.mode == WeaponActor.Mode.FLOOR:
+			return a
+	return null
+
+
 # --- the Casket and Ambulance matches (ShutIn) ------------------------------
 #
 # Fought out to it, he whips the other man at it from the floor. Before the
@@ -1067,6 +1308,10 @@ func _strut_input(input: Dictionary) -> Dictionary:
 func _poll_input() -> Dictionary:
 	if not controller or not target:
 		return {}
+	# Up the cage or on the Cell's roof over the man down below: off it onto
+	# him, once a match (the owner, 11 Nov: "jump off each").
+	if controller.can_high_dive() and _wants_high_dive():
+		return {"dive": true}
 	if controller.fsm.current_state == WrestlerFSM.State.LADDER_CLIMB:
 		# The Ladder match: up to the belt, and he stays there tugging.
 		if _climbing_for_prize():
@@ -1167,6 +1412,10 @@ func _poll_input() -> Dictionary:
 	var caged := _cage_input(distance)
 	if not caged.is_empty():
 		return caged
+	# Hell in a Cell: out of it with the cutters, and up onto the roof.
+	var cell := _cell_input(distance)
+	if not cell.is_empty():
+		return cell
 	# The Casket, the Ambulance: him up and at it.
 	var shut := _shut_in_input(distance)
 	if not shut.is_empty():
@@ -2275,6 +2524,9 @@ func choose_weapon(rng: RandomNumberGenerator) -> StringName:
 	var total := 0.0
 	for def: WeaponDef in WeaponCatalog.all():
 		if not stock.in_stock(def.id):
+			continue
+		# The cutters are Hell in a Cell's, for its padlock (CellRoof).
+		if def.id == &"wire_cutters":
 			continue
 		var w := 1.0
 		if _owns(def):
