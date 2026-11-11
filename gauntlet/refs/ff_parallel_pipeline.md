@@ -60,9 +60,30 @@ single-writer.
 5. Ground, corner, top rope, rope, apron, springboard.
 6. Taunts, signatures, specials, stolen finishers.
 
+## Scoped pose pre-flight
+
+A full bake is about 15 minutes, and PoseLint samples all 300+ clips after it.
+Do not pay that twice for one bad hand pose.
+
+After the author patches are merged and before the full bake:
+
+1. Bake only the batch's new clips to a throwaway GLB:
+   `AEGIS_ONLY_CLIPS=<Clip_A>,<Clip_B> AEGIS_CLIP_OUTPUT=/tmp/batch.glb blender
+   -b --python game/tools/blender/wrestling_clips.py`.
+2. Import it and run PoseLint (or the pose probe) on those clips only.
+3. Fix hand-through-torso and below-mat defects in the source.
+4. Run the single full bake once the scoped poses are clean.
+
+This is the cheap gate that would have caught the rana defender's hand and the
+whip setup hands before the first full whip bake.
+
 ## Current batch
 
-- Reference workers running: strikes, whip/rebound/running, selling.
-- First authored move: high strike (video contact 1:08.6).
-- Shared bake running in a detached session so a server restart does not
-  cancel it.
+- Delivered: the seven-strike batch (faac7316).
+- In delivery: the six whip/rebound pieces, with the corrected hand poses and
+  rebound/running wiring.
+- In the integration branch: German suplex, delayed vertical suplex, Olympic
+  slam and the corner cravat/head strike, all desk-reviewed; scoped pose
+  pre-flight next.
+- Next: the universal impact-presentation pass (see
+  `impact_presentation_plan.md`).

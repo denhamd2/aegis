@@ -35,6 +35,10 @@ const MOVES := {
 	"chain_headlock": "neck",
 	"chain_wristlock": "wringer",
 	"chain_waistlock": "waist_behind",
+	# The Irish whip's setup/release: the hands move from the defender's right
+	# wrist to his chest and waist and then let go, so no one contact family
+	# describes the whole move. Both halves author the hands directly.
+	"whip_setup": "none",
 	# The headlock family.
 	"signature_neckbreaker": "neck",
 	"running_reverse_swing_neckbreaker": "neck",
@@ -54,6 +58,7 @@ const MOVES := {
 	"signature_backbreaker": "waist",
 	"running_float_over_liger_bomb": "waist",
 	"running_tilt_a_whirl_backstabber": "waist",
+	"running_grapple_inverted_drop": "waist",
 	# Cradled.
 	"power_bodyslam": "legs",
 	"table_lay": "legs",
@@ -66,6 +71,10 @@ const MOVES := {
 	"signature_pedigree": "wrist",
 	"grapple_guillotine": "facelock",
 	"running_drive_by": "none",
+	# The hurricanrana's hands are on his left arm/shoulder, which is not one
+	# of the holds above: drawn to "neck" or "waist" they would leave the
+	# arm he is actually gripping and pull his hands through the flip.
+	"rebound_hurricanrana": "none",
 	"running_corner_spear": "none",
 	"running_corner_knee": "none",
 	"running_fallaway_moonsault_slam": "legs",

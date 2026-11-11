@@ -112,8 +112,9 @@ func test_a_boot_on_the_rope_presses_it_down() -> void:
 	assert_float(absf(mid.x)).is_less(0.01)
 
 ## The whip's rope load: free travel to the real ropes, a half-sine into
-## them peaking ROPE_LOAD_DEPTH further on, then thrown back; ~0.25 s in all
-## at the launch speed, the contact time refs/ropes.md derives.
+## them peaking ROPE_LOAD_DEPTH further on, a hold at full depth while the
+## 0.50 s Whip_Rope_Absorb plays, then thrown back. The old load returned at
+## ~0.18 s and cut the absorb before its deepest frame.
 func test_rope_load_carries_him_into_the_ropes_and_back() -> void:
 	var v := WrestlerController.IRISH_WHIP_LAUNCH_SPEED
 	var peak := 0.0
@@ -123,7 +124,13 @@ func test_rope_load_carries_him_into_the_ropes_and_back() -> void:
 		t += 0.001
 	assert_float(peak).is_equal_approx(
 			WrestlerController.ROPE_LOAD_FREE + WrestlerController.ROPE_LOAD_DEPTH, 0.01)
-	assert_float(t).is_between(0.15, 0.30)
+	assert_float(t).is_between(0.45, 0.55)
+	# Full depth is held from the peak through the absorb clip's 0.50 s.
+	assert_float(WrestlerController.rope_load_offset(0.30, v)).is_equal_approx(
+			WrestlerController.ROPE_LOAD_FREE + WrestlerController.ROPE_LOAD_DEPTH, 0.01)
+	assert_float(WrestlerController.rope_load_offset(
+			WrestlerController.ROPE_LOAD_HOLD_SECONDS - 0.001, v)).is_equal_approx(
+			WrestlerController.ROPE_LOAD_FREE + WrestlerController.ROPE_LOAD_DEPTH, 0.01)
 	# Continuous where the free travel meets the ropes.
 	var t_free := WrestlerController.ROPE_LOAD_FREE / v
 	assert_float(WrestlerController.rope_load_offset(t_free - 0.0005, v)).is_equal_approx(

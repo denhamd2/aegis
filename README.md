@@ -11773,4 +11773,7 @@ The 9 Nov strike batch had gone into all three movesets. Now, in
 - **Cody** is a boxer with the Bionic Elbow: jab, hook, cross and the dropdown
   uppercut. The new kicks and knees are all gone.
 
-`test_movesets_fit_each_style` checks that only Kenny has them.
+The hurricanrana counter off the ropes, which came in with the 10 Nov whip
+batch, is Kenny's alone as well. Roman and Cody keep the rebound slam.
+
+`test_movesets_fit_each_style` checks that only Kenny has these moves.

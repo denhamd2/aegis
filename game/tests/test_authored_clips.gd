@@ -38,6 +38,10 @@ const AUTHORED_LENGTHS := {
 	# check; this line and the recipe's `seconds` must move together.
 	"walk_stalk": 0.533,          # loops; 16 frames at 30fps
 	"run_drive": 0.667,           # loops; matches the rig's Sprint
+	"whip_run": 0.400,            # loops; two 0.20 s steps at 9.0 m/s
+	"whip_rope_absorb": 0.500,    # contact -> push-off, 15 frames at 30fps
+	"return_run": 0.667,          # loops; the whip return, 20 frames at 30fps
+	"far_rope_stop": 0.800,       # one shot; 24 frames at 30fps
 	"tie_up_collar": 1.000,
 	"down_supine": 1.333,
 	"finisher_drive": 1.333,
@@ -58,7 +62,8 @@ const AUTHORED_LENGTHS := {
 ## LOOP_NONE and the rig's own Idle/Walk/Sprint carry LOOP_LINEAR, so a
 ## generated replacement that forgets this plays once and freezes -- in the
 ## three states that are on screen for most of a match.
-const MUST_LOOP := ["idle_ready", "walk_stalk", "run_drive",
+const MUST_LOOP := ["idle_ready", "walk_stalk", "run_drive", "whip_run",
+	"return_run",
 	"tie_up_collar", "down_supine", "submission_work",
 	"grapple_hold_neutral", "grapple_hold_attacker", "grapple_hold_defender"]
 

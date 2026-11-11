@@ -16,10 +16,18 @@ func _roman_vs_cody() -> Node:
 
 
 ## Puts `whipper` and `runner` in a hold and has `whipper` throw the whip.
+##
+## The whip's setup/release is now a paired performance played through
+## GrappleRig, so the state does not flip to IRISH_WHIP until that 1.2 s pair
+## (plus its walk-in) finishes. Wait for it here; callers `await _whip(...)`.
 func _whip(whipper: WrestlerController, runner: WrestlerController, corner := false) -> void:
 	whipper.fsm.current_state = WrestlerFSM.State.GRAPPLE_HOLD
 	runner.fsm.current_state = WrestlerFSM.State.GRAPPLE_HOLD
 	whipper._begin_irish_whip(corner)
+	for _i in 600:
+		if runner.fsm.current_state == WrestlerFSM.State.IRISH_WHIP:
+			return
+		await get_tree().physics_frame
 
 
 func test_roman_and_cody_carry_their_rebound_moves() -> void:
@@ -32,9 +40,10 @@ func test_roman_and_cody_carry_their_rebound_moves() -> void:
 	# Batch 2 of the FF library adds the Oklahoma Stampede: caught, carried.
 	assert_array(ids.call(roman.rebound_moves)) \
 		.contains_exactly(["ff_spinebuster_5", "power_samoan_drop", "power_powerslam",
-				"ff_oklahoma_stampede"])
+				"ff_oklahoma_stampede", "rebound_slam"])
 	assert_array(ids.call(cody.rebound_moves)) \
-		.contains_exactly(["strike_dropdown_uppercut", "power_powerslam"])
+		.contains_exactly(["strike_dropdown_uppercut", "power_powerslam",
+				"rebound_slam"])
 	# What each does to a man whipped into the corner: Roman's clotheslines,
 	# Cody's knife-edge chops.
 	assert_str(String(roman.corner_strike_move.animation_pair_id)) \
@@ -51,7 +60,7 @@ func test_the_whipper_catches_him_coming_off_the_ropes() -> void:
 	roman.global_position = Vector3(-0.5, 0.0, 0.0)
 	cody.global_position = Vector3(0.5, 0.0, 0.0)
 	await get_tree().physics_frame
-	_whip(roman, cody)
+	await _whip(roman, cody)
 	assert_int(cody.fsm.current_state).is_equal(WrestlerFSM.State.IRISH_WHIP)
 	var returned := false
 	var caught := false
@@ -79,7 +88,7 @@ func test_a_rebound_strike_lands_as_he_arrives() -> void:
 	cody.global_position = Vector3(0.5, 0.0, 0.0)
 	roman.global_position = Vector3(-0.5, 0.0, 0.0)
 	await get_tree().physics_frame
-	_whip(cody, roman)
+	await _whip(cody, roman)
 	# Cody's draw puts the uppercut first; fix it for the test.
 	cody._rebound_pick = cody.rebound_moves[0]
 	var thrown_at := -1.0
@@ -109,6 +118,64 @@ func test_a_rebound_strike_lands_as_he_arrives() -> void:
 	assert_int(roman.fsm.current_state).is_not_equal(WrestlerFSM.State.RUNNING_ATTACK)
 
 
+func test_an_uncatch_return_passes_the_whipper_and_stops_at_the_far_ropes() -> void:
+	# Section 03 of the reference is the other half of the whip: when the
+	# whipper does not take the catch, the runner does not stop dead in
+	# front of him. He passes shoulder-to-shoulder, keeps the rebound's line
+	# across the ring, and takes the two-handed stop at the far ropes.
+	var scene: Node = auto_free(load(MATCH).instantiate())
+	TitleScreen.configure_match(scene, Roster.by_id("roman"), Roster.by_id("cody"), 1, true)
+	for part in ["Arena", "LightRig"]:
+		scene.get_node(part).free()
+	scene.entrances = false
+	add_child(scene)
+	var whipper := scene.get_node("WrestlerA") as WrestlerController
+	var runner := scene.get_node("WrestlerB") as WrestlerController
+	scene.get_node("MatchReferee").set_physics_process(false)
+	# Neither man decides anything: the catch is exactly what this test
+	# omits, so the runner has to finish the beat on his own.
+	whipper.is_ai = false
+	runner.is_ai = false
+	whipper.global_position = Vector3.ZERO
+	runner.global_position = Vector3(1.5, 0.0, 0.0)
+	await get_tree().physics_frame
+	_whip(whipper, runner)
+
+	var run_clip := ""
+	var returned := false
+	var closest := INF
+	var stopped := false
+	for i in 240:
+		await get_tree().physics_frame
+		if runner.is_whip_returning():
+			returned = true
+			closest = minf(closest,
+					runner.global_position.distance_to(whipper.global_position))
+			if run_clip == "":
+				var run_sm := runner.anim_tree.tree_root as AnimationNodeStateMachine
+				var run_node := run_sm.get_node("RUN") as AnimationNodeAnimation
+				run_clip = String(run_node.animation)
+		if runner._far_rope_stop_ticks > 0:
+			stopped = true
+			break
+	assert_bool(returned).override_failure_message(
+			"the runner never came back off the ropes").is_true()
+	assert_bool(stopped).override_failure_message(
+			"the return never reached the far-rope stop").is_true()
+	assert_str(run_clip).is_equal(WrestlerController.RETURN_RUN_CLIP)
+	# Shoulder-to-shoulder, not through him: the lane is ~1.0 m and the
+	# capsules would hold at 0.8 anyway, so anything under 0.6 means the
+	# pass lane did not commit.
+	assert_float(closest).is_greater(0.6)
+	assert_float(runner.global_position.x).is_less(-1.5)
+	assert_int(runner.fsm.current_state).is_equal(WrestlerFSM.State.IDLE)
+	var idle_sm := runner.anim_tree.tree_root as AnimationNodeStateMachine
+	var idle_node := idle_sm.get_node("IDLE") as AnimationNodeAnimation
+	assert_str(String(idle_node.animation)).is_equal(WrestlerController.FAR_ROPE_STOP_CLIP)
+	# The return is locomotion: no free running attack came out of it.
+	assert_dict(runner._attempted_moves).is_empty()
+
+
 func test_whipped_into_a_corner_he_is_trapped_against_the_turnbuckle() -> void:
 	var scene := _roman_vs_cody()
 	await await_millis(40)
@@ -117,7 +184,7 @@ func test_whipped_into_a_corner_he_is_trapped_against_the_turnbuckle() -> void:
 	roman.global_position = Vector3(0.0, 0.0, 0.0)
 	cody.global_position = Vector3(1.0, 0.0, 0.5)
 	await get_tree().physics_frame
-	_whip(roman, cody, true)
+	await _whip(roman, cody, true)
 	var trapped := false
 	for i in 90:
 		await get_tree().physics_frame
