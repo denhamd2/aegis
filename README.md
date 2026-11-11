@@ -11987,3 +11987,46 @@ including new ones for the lowering and the music. AI-vs-AI Hell in a Cell
 (seed 1) ends with a pinfall winner after the door cut and a roof fight.
 Still to do: rendered review of the lowering and the inside camera; the fall
 and panel-break camera cuts.
+
+## 11 Nov (7) — The padlock, a real door, falls on camera, slammed into the steel
+
+The owner: "do 1-7" from the Hell in a Cell backlog.
+
+- **Renders reviewed:**
+  - the in-cell match camera (before and after: the rails and posts no longer
+    cross the action);
+  - the lowering (hung among the rig lights, the camera tilting down with it,
+    landing square round the ring).
+  - A ring post filled the foreground of the corner shot, so the inside
+    camera now stays above the post tops.
+- **Camera cuts for the cell's falls:**
+  - off the edge: from the floor along the wall, looking up the steel and
+    panning down with him;
+  - through a panel: from the mat, up through the hole.
+  - Both cut under every camera setting.
+- **The referee's padlock:**
+  - As the cell comes down, Aubrey crosses to the ropes on the door's side.
+  - When it lands she signals, the shot cuts to the latch, and the chain and
+    padlock go on with a clank.
+  - With the entrances skipped, it is locked at the bell.
+- **A real door:** the door's wall has a true opening now, and the leaf has
+  its own collision that swings with it. A man who walks through the open
+  door is on the other side once he is clearly through it.
+- **Slammed into the steel:** a power move or bigger landing within a metre
+  of a cage or cell wall drives the man into it. The panel rattles, there is
+  extra damage, and the crowd reacts.
+- **Steel cage dive:** already wired in the controller and AI. The flow probe
+  now counts dives and cage slams.
+- **Two AI loops found and fixed** (flow_probe, Hell in a Cell):
+  - a man in the open doorway flipped sides every frame, and the other man
+    chased him back and forth through it;
+  - the first man onto the roof climbed straight back down when the other had
+    not followed yet, then went back up, 28 times. Now he waits up to 7 s,
+    then comes down for good.
+- **The "both standing idle" figure** counts walking and running too, so the
+  trips round the cell inflate it; the singles baseline is still to compare.
+
+Tests: steel cage 20/20, after updating two for the new door collision.
+Deployed at the owner's request ("commit and deploy now so i can play it")
+while the three-seed Hell in a Cell flow probe and the new cell tests were
+still running. Results follow in the next entry.
