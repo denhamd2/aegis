@@ -252,6 +252,7 @@ func begin(w: WrestlerController) -> bool:
 	elif at_climbable_wall(p):
 		r = {"kind": "up", "phase": 0, "t": 0, "from": p}
 		climbs += 1
+		print("DBGC up ", w.name, " t=", Engine.get_physics_frames() / 60, " opp_roof=", w.opponent.on_roof, " opp_out=", is_outside_cell(w.opponent), " opp_st=", WrestlerFSM.State.keys()[w.opponent.fsm.current_state])
 	else:
 		return false
 	# The door: padlocked, it needs the cutters (phase 0 cuts the chain);
@@ -361,6 +362,7 @@ func _next(w: WrestlerController, r: Dictionary) -> void:
 
 func _finish(w: WrestlerController, onto_roof: bool) -> void:
 	var r: Dictionary = _routes.get(w, {})
+	print("DBGC finish ", w.name, " ", r.get("kind", ""), " t=", Engine.get_physics_frames() / 60)
 	match r.get("kind", ""):
 		"door_out", "down":
 			_outside[w] = true
