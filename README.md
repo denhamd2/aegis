@@ -11753,3 +11753,24 @@ The owner: "new match types ... 1) Hell in a Cell 2) Ladder Match 3) TLC match 4
 - Before, only big strikes, signatures, finishers, knockdowns, table breaks and gunshots shook it. Now also: a solid strike short of a big one (damage 5 and up), every weapon shot (harder for a big one), every throw or slam that leaves him down (on its contact frame; holds do not), a man into the cage steel, through the announce desk or into the screen, and a dive or moonsault landing. Jabs still do not shake.
 - The throw's shake and the slam cut's shake land on the same frame; they now take the larger of the two instead of summing to the ceiling.
 - The setting (off / low / high) scales all of it as before. Pinned by `test_more_moves_shake_the_camera_as_fight_forever_does`.
+
+## 11 Nov (1) — Each man throws the strikes of his own style
+
+The owner: "Cody and Roman are doing the back spinning kicks, that shouldn't be
+in their moveset. It makes more sense for Kenny. Review all the new moves we
+created and assign them to the appropriate wrestlers based on their usual
+styles."
+
+The 9 Nov strike batch had gone into all three movesets. Now, in
+`core/ui/roster.gd`:
+
+- **Kenny** keeps every new strike: both turning back kicks, the side kick, the
+  clinch knee and the flying knee. He also gains the cyclone kick and the
+  spinning back elbow, which were sitting unused in the shared pool.
+- **Roman** keeps his punches, the gut punch, the heavy kick (his big boot) and
+  the front kick. The spinning, side and flying kicks and the clinch knee are
+  gone.
+- **Cody** is a boxer with the Bionic Elbow: jab, hook, cross and the dropdown
+  uppercut. The new kicks and knees are all gone.
+
+`test_movesets_fit_each_style` checks that only Kenny has them.

@@ -180,11 +180,10 @@ static func entries() -> Array:
 	(list[0] as Entry).moveset = {
 		"strike": [M + "strike_jab.tres", M + "strike_hook.tres", M + "strike_cross.tres",
 				M + "strike_gut_punch.tres", M + "strike_kick_heavy.tres",
-				M + "strike_front_kick_body.tres",
-				M + "strike_turning_back_kick_body.tres",
-				M + "strike_clinch_knee_body.tres",
-				M + "strike_side_kick_knockdown.tres",
-				M + "strike_turning_back_kick_knockdown.tres"],
+				# A big man's front kick; the spinning and MMA kicks are
+				# Kenny's (the owner, 11 Nov: "Cody and Roman are doing the
+				# back spinning kicks, that shouldn't be in their moveset").
+				M + "strike_front_kick_body.tres"],
 		"grapple": [M + "grapple_clinch_knee.tres", M + "grapple_vertical_suplex.tres",
 				M + "grapple_guillotine.tres"],
 		"power": [M + "power_samoan_drop.tres", M + "power_bodyslam.tres",
@@ -201,7 +200,6 @@ static func entries() -> Array:
 		"running": [M + "running_attack_clothesline.tres",
 				M + "running_clothesline_from_hell.tres", M + "running_knee_lift.tres",
 				M + "running_drive_by.tres",
-				M + "strike_running_flying_knee.tres",
 				# FF batch 5: the leaping lariat, a stretch-run special.
 				M + "ff/casualty_of_war.tres"],
 		# From the corner: only thrown at a man hanging in one. The Spear,
@@ -229,12 +227,8 @@ static func entries() -> Array:
 	# nearly every match, in place of the shared draw.
 	(list[1] as Entry).moveset = {
 		"strike": [M + "strike_jab.tres", M + "strike_hook.tres", M + "strike_bionic_elbow.tres",
-				M + "strike_dropdown_uppercut.tres", M + "strike_cross.tres",
-				M + "strike_front_kick_body.tres",
-				M + "strike_turning_back_kick_body.tres",
-				M + "strike_clinch_knee_body.tres",
-				M + "strike_side_kick_knockdown.tres",
-				M + "strike_turning_back_kick_knockdown.tres"],
+				# A boxer's hands and the Bionic Elbow; no MMA kicks (11 Nov).
+				M + "strike_dropdown_uppercut.tres", M + "strike_cross.tres"],
 		"grapple": [M + "grapple_vertical_suplex.tres",
 				# FF batch 1: the suplex lift, dropped on the head.
 				M + "ff/brainbuster_1.tres",
@@ -255,8 +249,7 @@ static func entries() -> Array:
 				# FF batch 3: both knees into the jaw.
 				M + "ff/code_breaker_1.tres"],
 		"running": [M + "running_attack_clothesline.tres",
-				M + "running_single_leg_dropkick.tres",
-				M + "strike_running_flying_knee.tres"],
+				M + "running_single_leg_dropkick.tres"],
 		"submission": [M + "submission_figure_four.tres"],
 		# Whipped into the corner, chopped there Flair-style (a knife-edge
 		# chop; ff_moves_and_gameplay_plan.md, staples 4).
@@ -306,7 +299,9 @@ static func entries() -> Array:
 		# standing.
 		"running": [M + "ff/running_v_trigger_3.tres", M + "ff/running_v_trigger_1.tres",
 				M + "running_attack_clothesline.tres",
-				M + "strike_running_flying_knee.tres"],
+				M + "strike_running_flying_knee.tres",
+				# The striker's spinning moves, his alone (11 Nov).
+				M + "running_cyclone_kick.tres", M + "running_spinning_back_elbow.tres"],
 	}
 	return list
 

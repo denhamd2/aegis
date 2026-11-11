@@ -491,6 +491,24 @@ func test_cody_fights_with_his_own_moveset() -> void:
 	assert_object(roman.submission_move).is_null()
 
 
+## Each man throws the strikes of his own style (the owner, 11 Nov: "Cody and
+## Roman are doing the back spinning kicks ... It makes more sense for
+## Kenny"): the spinning, side and flying kicks and knees are Kenny's alone.
+func test_movesets_fit_each_style() -> void:
+	const KENNYS := ["strike_turning_back_kick_body.tres",
+			"strike_turning_back_kick_knockdown.tres", "strike_side_kick_knockdown.tres",
+			"strike_clinch_knee_body.tres", "strike_running_flying_knee.tres",
+			"running_cyclone_kick.tres", "running_spinning_back_elbow.tres"]
+	for id in ["roman", "cody", "kenny"]:
+		var files: Array = []
+		for tier: String in ["strike", "running"]:
+			for path: String in Roster.by_id(id).moveset[tier]:
+				files.append(path.get_file())
+		for f in KENNYS:
+			assert_bool(files.has(f)).override_failure_message(
+					"%s and %s" % [id, f]).is_equal(id == "kenny")
+
+
 func test_intervening_strikes_do_not_erase_a_recent_suplex() -> void:
 	var attacker := _make_attacker()
 	var suplex := _make_move(&"grapple_vertical_suplex")
