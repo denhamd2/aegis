@@ -11929,3 +11929,61 @@ wrestlers".
 
 Rendered in the arena and compared with the references. Tests: the cage, cell
 and weapon suites pass (78 cases).
+
+## 11 Nov (6) — The Hell in a Cell roof, the cell lowering, and a camera for inside the cell
+
+The owner asked for a fight on the roof, researched against the 2K games: "the
+camera follows them up there ... they should be able to teeter off the edge
+... fall off or be pushed or knocked off ... crashing to the ground or through
+a table below like a ragdoll ... the panel opens and the victim falls through
+the roof". Then: "Act as our camera director to come up with a hell in a cell
+specific camera plan so the cell doesn't spoil the view", "the cell should
+lower after the entrances", and "play the attached music when the cell is
+lowering (no looping)".
+
+- **The door and the roof:**
+  - The referee padlocks the door. Wire cutters from under the ring cut it
+    open in 1.5 s.
+  - Men climb the front wall onto the roof and back down. A weapon in hand
+    goes up with them.
+  - At the edge they teeter. A spent man knocked down near it goes over, to
+    the floor, through a table stood below, or onto the desk. A ragdoll
+    (`FallRagdoll`) carries the limbs on the way down.
+  - A man can dive off the roof's edge onto a man lying below.
+  - The middle four roof panels dent under slams, sag, and on the fourth
+    swing open, dropping the man into the ring.
+- **AI:** late in the match, after a big knockdown, one man fetches the
+  cutters, cuts the lock and goes up; the other follows. On the roof they
+  strike and grapple. After a fall the man left up there climbs down, and the
+  two find each other round the outside of the cell.
+- **The cell came in from 5.0 m to 4.7 m** from the ring's centre. At 5.0 a
+  man could not get round its corners past the barricade's chamfer, so after a
+  fall both men stalled on opposite sides and the match never ended. The
+  corners are now rounded in the keep-out too.
+- **The cell lowers after the entrances:**
+  - During the entrances it hangs on four chains above the lighting truss.
+  - After the corner introductions it comes down over 9 s. The house goes
+    dark and white strobes fire round the truss corners in turn.
+  - It lands with a flash, a steel crash, the walls rattling and the crowd
+    popping, and the padlock goes on.
+  - Online sources describe the descent as a tension beat, with the men
+    staring up at it, but give no lighting cue; the strobes are our design.
+- **The owner's lowering music** ("Imminent Danger") plays once from the
+  start of the descent, runs under the face-off and fades out at the bell.
+  The crowd ducks under it. It is credited in `assets/audio/CREDITS.md` as
+  owner-supplied.
+- **The match camera inside the cell:**
+  - Every coverage stood 6–9 m out, so it looked through the cell's walls,
+    and the default camera's line crossed the upper rail.
+  - Now, with both men inside, it comes in along its own line of sight to
+    just inside the walls, at the same angle, with a wider lens so they stay
+    the same size.
+  - With both men outside the cell, it shoots from the crowd side of the wall
+    they are at.
+  - The plan is in `gauntlet/refs/hell_in_a_cell_camera.md`.
+
+Tests: the cell, Hell in a Cell and steel cage suites pass (33 cases),
+including new ones for the lowering and the music. AI-vs-AI Hell in a Cell
+(seed 1) ends with a pinfall winner after the door cut and a roof fight.
+Still to do: rendered review of the lowering and the inside camera; the fall
+and panel-break camera cuts.
