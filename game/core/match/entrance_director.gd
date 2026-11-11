@@ -1521,6 +1521,8 @@ const CELL_LOWER_SECONDS := 9.0
 const CELL_LANDED_HOLD := 1.4
 const CELL_STROBE_FIRST := 0.8
 const CELL_STROBE_GAP := 0.55
+const CELL_DOOR_TICKS := 170
+const CELL_PADLOCK_AT := 80
 const CELL_HOUSE_DIM := 0.28
 const CELL_AMBIENT_DIM := 0.35
 
@@ -1538,6 +1540,11 @@ func _add_cell_lowering(hold: Array) -> void:
 	events.append([land + 1, "cell_landed"])
 	_beats.append({"kind": "pair", "ticks": land + int(round(CELL_LANDED_HOLD * TPS)),
 			"shot": "cell_lower", "events": events, "moves": hold})
+	# Down: the referee, at the ropes on the door's side since it started
+	# down (RefereeActor), signals for it, and the chain goes round the door
+	# and the padlock snaps shut -- on a close-up of the latch.
+	_beats.append({"kind": "pair", "ticks": CELL_DOOR_TICKS, "shot": "cell_door",
+			"events": [[CELL_PADLOCK_AT, "cell_padlock"]], "moves": hold})
 
 
 ## Low on the hard camera's side, looking up at the cell hanging over the
@@ -1545,6 +1552,17 @@ func _add_cell_lowering(hold: Array) -> void:
 const CELL_LOWER_FROM := Vector3(-11.5, 1.2, 7.2)
 const CELL_LOWER_TO := Vector3(-9.6, 2.4, 6.0)
 const CELL_LOWER_FOV := 48.0
+
+
+## The padlock going on: outside the door, low and to the latch side, the
+## chain and lock in the foreground and the referee beyond them at the ropes.
+func cell_door_shot(cage: CageBuilder) -> Array:
+	var a := cage.spec.door_axis
+	var lat := CageBuilder.lateral_of(a)
+	var latch := cage.door_centre() + lat * (cage.spec.door_width * 0.5) + a * 0.06 \
+			+ Vector3.UP * 1.05
+	var at := latch + a * 1.25 + lat * 0.55 + Vector3.UP * 0.25
+	return [at, latch.lerp(Vector3(0.0, 1.0, 0.0), 0.18), 40.0]
 
 
 func cell_lower_shot(cage: CageBuilder, e: float) -> Array:
@@ -2762,6 +2780,10 @@ func _event(w: WrestlerController, what: String) -> void:
 				add_child(_pyro)
 			var cage_s := CageBuilder.of(_match)
 			_pyro.cell_strobe(cage_s.global_position.y + cage_s.spec.top_y if cage_s else 6.0)
+		"cell_padlock":
+			var roof := CellRoof.of(_match)
+			if roof and not roof.door_locked:
+				roof.lock_door()
 		"cell_landed":
 			if _pyro == null:
 				_pyro = EntrancePyro.new()
@@ -3360,6 +3382,11 @@ func _frame_shot(beat: Dictionary, delta: float, force_cut := false) -> void:
 					RING_BEHIND_OUT_FOV, true)
 		"end_wide":
 			_camera.set_entrance_shot(END_WIDE_AT, END_WIDE_LOOK, END_WIDE_FOV, true)
+		"cell_door":
+			var cage_d := CageBuilder.of(_match)
+			if cage_d:
+				var sd := cell_door_shot(cage_d)
+				_camera.set_entrance_shot(sd[0], sd[1], sd[2], first, delta)
 		"cell_lower":
 			var cage_c := CageBuilder.of(_match)
 			if cage_c:

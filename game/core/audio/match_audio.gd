@@ -489,6 +489,9 @@ func _on_cue(what: String) -> void:
 	match what:
 		"cell_lower":
 			_start_cell_music()
+		"cell_padlock":
+			# The chain round the door and the lock snapping shut.
+			sfx.play_any("hit_metal", -9.0, 0.15)
 		"cell_landed":
 			# The steel hitting the floor: the panels' crash, a low thump
 			# under it, and the room going up.

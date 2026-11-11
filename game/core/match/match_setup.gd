@@ -103,7 +103,6 @@ func _ready() -> void:
 				# when it lands (or at the bell, if the entrances are skipped).
 				cage.set_lift(CageBuilder.HOIST_LIFT)
 				cage.set_door_open(1.0)
-				cage.landed.connect(roof.lock_door)
 			else:
 				roof.lock_door()
 		# Hell in a Cell has no escape win: the cell only keeps them in.
@@ -306,6 +305,9 @@ func _begin_live() -> void:
 	var cage := CageBuilder.of(self)
 	if cage and not cage.is_lowered():
 		cage.land_now()
+	var roof := CellRoof.of(self)
+	if roof and not roof.door_locked and not roof.door_forced:
+		roof.lock_door()
 	if audio:
 		audio.opening_bell()
 	if referee_actor:

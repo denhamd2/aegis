@@ -196,6 +196,11 @@ func set_outside_cell(w: WrestlerController, out: bool) -> void:
 func keep_cell_side(w: WrestlerController, p: Vector3) -> Vector3:
 	if not cage.is_lowered():
 		return p     # still hanging over the ring: nothing to keep him off
+	# Through the open door (its collision is a real opening now): whichever
+	# side of the wall he steps onto is his side.
+	if cage.door_open_amount() > 0.6 and cage.in_door_lane(p, -WrestlerController.BODY_RADIUS):
+		_outside[w] = cage.is_outside(p)
+		return p
 	var r := WrestlerController.BODY_RADIUS + 0.05
 	if is_outside_cell(w):
 		# His capsule clear of the walls -- round the corner posts, not

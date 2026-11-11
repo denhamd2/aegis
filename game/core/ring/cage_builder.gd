@@ -614,13 +614,19 @@ func _build_collision() -> void:
 	var h := _height()
 	var span := spec.half * 2.0
 	for axis: Vector3 in axes():
-		var shape := CollisionShape3D.new()
-		var box := BoxShape3D.new()
 		var lat := lateral_of(axis)
-		box.size = lat * span + axis.abs() * 0.04 + Vector3.UP * h
-		shape.shape = box
-		shape.position = axis * spec.half + Vector3.UP * (spec.base_y + h * 0.5)
-		body.add_child(shape)
+		if axis == spec.door_axis and _door_pivot:
+			# A real opening: the wall either side of the door and above it;
+			# the leaf carries its own collision and swings with it.
+			var l := -spec.door_width * 0.5
+			var r := spec.door_width * 0.5
+			var door_top := spec.base_y + spec.door_height
+			_wall_box(body, axis, lat, -spec.half, l, spec.base_y, spec.top_y)
+			_wall_box(body, axis, lat, r, spec.half, spec.base_y, spec.top_y)
+			_wall_box(body, axis, lat, l, r, door_top, spec.top_y)
+			_build_door_collision(lat)
+			continue
+		_wall_box(body, axis, lat, -spec.half, spec.half, spec.base_y, spec.base_y + h)
 	if spec.roof:
 		# A bay of the roof each, so one can give way (CellRoof).
 		for i in spec.bays:
@@ -633,6 +639,33 @@ func _build_collision() -> void:
 				shape.name = "RoofShape_%d_%d" % [i, j]
 				body.add_child(shape)
 				_roof_shapes[Vector2i(i, j)] = shape
+
+
+func _wall_box(body: StaticBody3D, axis: Vector3, lat: Vector3, from: float, to: float,
+		y0: float, y1: float) -> void:
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = lat.abs() * (to - from) + axis.abs() * 0.04 + Vector3.UP * (y1 - y0)
+	shape.shape = box
+	shape.position = axis * spec.half + lat * ((from + to) * 0.5) + Vector3.UP * ((y0 + y1) * 0.5)
+	body.add_child(shape)
+
+
+## The door leaf's collision, on its pivot: shut, it fills the opening; open,
+## it stands out from the wall where the leaf is.
+func _build_door_collision(lat: Vector3) -> void:
+	var leaf := StaticBody3D.new()
+	leaf.name = "DoorCollision"
+	_door_pivot.add_child(leaf)
+	var leaf_w := spec.door_width - (JAMB_SIZE * spec.frame_scale)
+	var inset := (JAMB_SIZE * spec.frame_scale) * 0.5
+	var top := spec.base_y + spec.door_height
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = lat.abs() * leaf_w + spec.door_axis.abs() * 0.04 + Vector3.UP * (top - spec.base_y)
+	shape.shape = box
+	shape.position = lat * (inset + leaf_w * 0.5) + Vector3.UP * ((spec.base_y + top) * 0.5)
+	leaf.add_child(shape)
 
 
 # --------------------------------------------------------------------------

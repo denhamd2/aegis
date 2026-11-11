@@ -226,3 +226,49 @@ func test_the_lowering_music_plays_once_and_fades_at_the_bell() -> void:
 	assert_bool((audio._cell_music.stream as AudioStreamOggVorbis).loop).is_false()
 	audio.opening_bell()
 	assert_bool(audio.cell_music_on()).is_false()
+
+
+func test_a_big_grapple_by_the_wall_drives_him_into_the_steel() -> void:
+	var scene := _match()
+	await _ticks(2)
+	var m: Array = _men(scene)
+	var roman: WrestlerController = m[0]
+	var cody: WrestlerController = m[1]
+	var roof := scene.get_node("CellRoof") as CellRoof
+	for w in [roman, cody]:
+		w.outside_ring = true
+	# Out on the floor inside the cell, by its +X wall.
+	cody.global_position = Vector3(roof.half() - 0.6, WrestlerController.FLOOR_LEVEL, 1.0)
+	roman.global_position = Vector3(roof.half() - 1.4, WrestlerController.FLOOR_LEVEL, 1.0)
+	var power: MoveDef = roman.power_move if roman.power_move else roman.power_move_pool[0]
+	var hits: Array = []
+	cody.hit_the_cage.connect(func(_w: WrestlerController, s: float) -> void: hits.append(s))
+	var health := cody.combat.health()
+	roman._grapple_into_the_steel(power)
+	assert_int(roman.cage_rams).is_equal(1)
+	assert_int(hits.size()).is_equal(1)
+	assert_float(cody.combat.health()).is_less(health)
+	# In the middle of the floor, nowhere near a wall: nothing.
+	cody.global_position = Vector3(3.6, WrestlerController.FLOOR_LEVEL, 0.0)
+	roman._grapple_into_the_steel(power)
+	assert_int(roman.cage_rams).is_equal(1)
+
+
+func test_through_the_open_door_he_is_on_the_other_side() -> void:
+	var scene := _match()
+	await _ticks(2)
+	var m: Array = _men(scene)
+	var roman: WrestlerController = m[0]
+	var roof := scene.get_node("CellRoof") as CellRoof
+	var a := roof.door_axis()
+	var inside := a * (roof.half() - 0.5)
+	assert_bool(roof.is_outside_cell(roman)).is_false()
+	# Shut: held inside.
+	var out := a * (roof.half() + 0.5)
+	assert_float(roof.keep_cell_side(roman, out).dot(a)).is_less(roof.half())
+	# Open: he steps through, and the far side is his now.
+	roof.cage.set_door_open(1.0)
+	assert_vector(roof.keep_cell_side(roman, out)).is_equal(out)
+	assert_bool(roof.is_outside_cell(roman)).is_true()
+	assert_vector(roof.keep_cell_side(roman, inside)).is_equal(inside)
+	assert_bool(roof.is_outside_cell(roman)).is_false()

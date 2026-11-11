@@ -5647,6 +5647,7 @@ func _resolve_grapple_move(move: MoveDef) -> void:
 	if opponent.impact_sell:
 		opponent.impact_sell.react_to_move(move)
 	move_landed.emit(self, opponent, move)
+	_grapple_into_the_steel(move)
 	combat.apply_momentum(move)
 	# Recorded on landing rather than on selection: a grapple that gets
 	# reversed was never thrown, so it must not unlock the rung above it.
@@ -7315,6 +7316,42 @@ func _whipped_into_cage() -> bool:
 	hit_the_cage.emit(self, 1.6)
 	cage_rams += 1
 	return true
+
+
+## A big grapple thrown against the cage (the owner: "be slammed into each
+## by their opponent"): a power move or bigger landing with the man within
+## CAGE_SLAM_REACH of a wall on his own level drives him into the steel --
+## the panel rattles, it hurts (CAGE_RAM_MOVE), the crowd reacts.
+const CAGE_SLAM_REACH := 1.0
+
+
+func _grapple_into_the_steel(move: MoveDef) -> void:
+	if move == null or not MatchRules.caged(self) or opponent == null or opponent.on_roof:
+		return
+	if tier_of(move) < CombatSystem.Tier.POWER:
+		return
+	var cage := CageBuilder.of(self)
+	if cage == null:
+		return
+	var p := opponent.global_position
+	# Hell in a Cell's walls stand on the floor; a man in the ring is not
+	# near them. The Steel Cage's stand on the apron, round the ring.
+	if cage.spec.base_y < -0.5 and not opponent.outside_ring:
+		return
+	var d := cage_wall_distance(cage, p)
+	if d > CAGE_SLAM_REACH:
+		return
+	var axis := CageBuilder.wall_axis(p)
+	opponent.combat.apply_damage(CAGE_RAM_MOVE)
+	cage.rattle(axis * cage.spec.half + Vector3.UP * (cage.spec.base_y + 1.4), 1.8)
+	opponent.hit_the_cage.emit(opponent, 1.8)
+	cage_rams += 1
+
+
+## How far `p` is from the nearest wall of `cage`, inside or out.
+static func cage_wall_distance(cage: CageBuilder, p: Vector3) -> float:
+	var m := maxf(absf(p.x), absf(p.z))
+	return absf(cage.spec.half - m)
 
 
 func _clear_ladder_climb() -> void:

@@ -135,6 +135,11 @@ func _run(seed_value: int) -> Dictionary:
 			if key != "":
 				mix[key] = mix.get(key, 0) + 1
 		)
+	# The caged matches' set pieces: dives off the top, men driven into the
+	# steel.
+	for w: WrestlerController in [a, b]:
+		w.high_dive.connect(func(_d: WrestlerController, _o: WrestlerController) -> void:
+			mix["high_dives"] = mix.get("high_dives", 0) + 1)
 	var start := Engine.get_physics_frames()
 	t0[0] = start
 	var per_tick: Array = []    # [kind a, kind b]
@@ -154,6 +159,8 @@ func _run(seed_value: int) -> Dictionary:
 		per_tick.append([kind(a.fsm.current_state), kind(b.fsm.current_state)])
 	if a.ai and b.ai:
 		mix["rope_runs"] = a.ai.rope_runs + b.ai.rope_runs
+	if MatchRules.caged(scene):
+		mix["cage_rams"] = a.cage_rams + b.cage_rams
 	var roof := scene.get_node_or_null("CellRoof") as CellRoof
 	if roof:
 		print("seed %d  CELL  door %s  climbs %d  falls %d  panels broken %d  roof ticks %d" % [

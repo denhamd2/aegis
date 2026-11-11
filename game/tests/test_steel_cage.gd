@@ -85,8 +85,11 @@ func test_the_cage_stands_on_the_apron_edge_with_a_door_and_collision() -> void:
 	for axis: Vector3 in CageBuilder.axes():
 		assert_object(_cage.get_node_or_null("Wall_%s" % _cage._axis_name(axis))).is_not_null()
 	var body := _cage.get_node("CageCollision") as StaticBody3D
-	assert_int(body.get_child_count()).is_equal(4)
+	# Three walls whole; the door's wall round a real opening (either side of
+	# the door and above it); the leaf's own collision on its pivot.
+	assert_int(body.get_child_count()).is_equal(6)
 	assert_object(_cage.find_child("DoorPivot", true, false)).is_not_null()
+	assert_object(_cage.find_child("DoorCollision", true, false)).is_not_null()
 	# The door is in the -X wall, centred, and only there.
 	assert_bool(_cage.in_door_lane(Vector3(-2.5, 0, 0.2))).is_true()
 	assert_bool(_cage.in_door_lane(Vector3(-2.5, 0, 1.4))).is_false()
@@ -115,7 +118,8 @@ func test_the_mesh_texture_is_wire_on_clear_and_the_same_every_run() -> void:
 func test_the_door_swings_out_of_the_cage() -> void:
 	_build_cage()
 	var pivot := _cage.find_child("DoorPivot", true, false) as Node3D
-	var leaf := pivot.get_child(pivot.get_child_count() - 1) as Node3D
+	# The leaf's collision, which swings with it.
+	var leaf := (pivot.get_node("DoorCollision") as Node3D).get_child(0) as Node3D
 	var shut := leaf.global_position
 	_cage.set_door_open(1.0)
 	var open := leaf.global_position

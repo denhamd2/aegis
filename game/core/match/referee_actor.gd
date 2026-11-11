@@ -131,6 +131,10 @@ var _separated := false
 var _faceoff_wait := false
 ## The shots she spends in the neutral corner: the corner close-ups after
 ## her check, the walk out of the corners and the stare.
+## Where she signals for the cell's padlock from: inside the ropes on the
+## door's side.
+const CELL_SIGNAL_IN := 2.55
+var _cell_errand := false
 const FACEOFF_WAIT_SHOTS := ["corner_intro", "faceoff_side", "staredown_push"]
 var _separating := false
 ## Seconds she has stood between them; she steps clear after SEPARATE_HOLD.
@@ -180,6 +184,21 @@ func follow(director: EntranceDirector) -> void:
 		# began, and crossed the back of the shot between them, and stood
 		# 0.8 m off the checked man's shoulder through his close-up.
 		_faceoff_wait = shot in FACEOFF_WAIT_SHOTS
+		# Hell in a Cell: as it comes down she crosses to the ropes on the
+		# door's side and waits facing it; once it is down she signals for
+		# the padlock (EntranceDirector's "cell_door"), then back to work.
+		if shot == "cell_lower" and mode == Mode.PARK:
+			var roof := CellRoof.of(self)
+			if roof:
+				_cell_errand = true
+				begin_errand()
+				errand_go(roof.door_axis() * CELL_SIGNAL_IN + CageBuilder.lateral_of(roof.door_axis()) * 0.6,
+						roof.door_axis())
+		elif shot == "cell_door" and _cell_errand:
+			errand_play("strikes/ref_reach")
+		elif _cell_errand:
+			_cell_errand = false
+			end_errand()
 		if shot == "faceoff" and mode == Mode.PARK and not _separated:
 			_separated = true
 			_separating = true)

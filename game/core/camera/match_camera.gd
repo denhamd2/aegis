@@ -310,12 +310,17 @@ const FF_STAGE_DIR := Vector3(0, 0, -1)
 ## Short cuts to the action, each back to the coverage it cut from. None
 ## lands within MIN_SHOT of the last cut (D1: no shot under 0.8 s), and none
 ## pre-empts a finisher or a pin, which have their own shots.
-enum Cut { STRIKE, SLAM, HERO, FIRE_UP, CUTAWAY, WEAPON, TABLE, WEAPON_RETRIEVE }
+enum Cut { STRIKE, SLAM, HERO, FIRE_UP, CUTAWAY, WEAPON, TABLE, WEAPON_RETRIEVE, ROOF_FALL, PANEL_FALL }
 const MIN_SHOT := 0.8
 ## A strike worth a cut: the cross, the uppercut, the elbow, the kicks.
 const BIG_STRIKE_DAMAGE := 9.0
 const CUT_HOLD := {Cut.STRIKE: 0.85, Cut.SLAM: 0.35, Cut.HERO: 1.5, Cut.FIRE_UP: 1.3, Cut.CUTAWAY: 1.6,
-		Cut.WEAPON: 0.9, Cut.TABLE: 1.4, Cut.WEAPON_RETRIEVE: 1.4}
+		Cut.WEAPON: 0.9, Cut.TABLE: 1.4, Cut.WEAPON_RETRIEVE: 1.4, Cut.ROOF_FALL: 2.6,
+		Cut.PANEL_FALL: 2.4}
+## The cell's two set pieces are cut to under every coverage, gameplay's
+## continuous view included, and over whatever shot is up: the fall is the
+## match's biggest moment and the default camera cannot see it.
+const CELL_FALL_CUTS := [Cut.ROOF_FALL, Cut.PANEL_FALL]
 ## Trauma (0..1, squared into the shake) per kind of impact.
 ## An ordinary strike no longer shakes the camera (_on_move_landed); kept for
 ## anything that still asks for a light shake.
@@ -508,6 +513,18 @@ func _ready() -> void:
 		wc.weapon_retrieval_started.connect(_on_weapon_retrieval_started)
 	add_to_group(WeaponActor.LISTENERS)
 	add_to_group("match_camera")
+	_bind_cell.call_deferred()
+
+
+var _cut_fixed_at := Vector3.INF
+
+
+func _bind_cell() -> void:
+	var cell := CellRoof.of(self)
+	if cell == null:
+		return
+	cell.fell_off.connect(func(w: WrestlerController, through_roof: bool) -> void:
+		_try_cut(Cut.PANEL_FALL if through_roof else Cut.ROOF_FALL, w, null))
 
 ## The blur's shutter for this frame (MotionBlur.intensity): none when it is
 ## off or the frame cut, a light smear in open play, a heavier one through a
@@ -551,6 +568,7 @@ func _up_the_cell() -> bool:
 ## CELL_CAMERA_IN inside the walls, the TV handheld in there with them, and the
 ## lens widens by the same ratio so the pair fill the frame as they did.
 const CELL_CAMERA_IN := 0.4
+const CELL_CAMERA_MIN_Y := 2.3
 const CELL_MAX_FOV := 74.0
 var _cell: CellRoof
 var _cell_looked := false
@@ -718,6 +736,10 @@ func _physics_process(delta: float) -> void:
 					cell.half() - CELL_CAMERA_IN)
 			target_position = pc[0]
 			cell_k = pc[1]
+			# Pulled in low, a ring post filled the foreground (the corner
+			# render, 11 Nov): over the post tops, looking down past them.
+			if cell_k > 1.0001:
+				target_position.y = maxf(target_position.y, CELL_CAMERA_MIN_Y)
 	if cell_k > 1.0001:
 		fov = widened_fov(fov, cell_k)
 
@@ -1680,18 +1702,20 @@ func _try_cut(kind: int, subject: Node3D, other: Node3D, hold_override := -1.0,
 	# the exception: the pose is a deliberate character beat, worth a brief
 	# hero close-up before returning to the same ringside camera. The Enda sign
 	# insert is also an explicit editorial cutaway requested by MatchAudio.
-	if CameraSettings.gameplay() and kind != Cut.HERO and not enda_exception:
+	var set_piece := kind in CELL_FALL_CUTS
+	if CameraSettings.gameplay() and kind != Cut.HERO and not enda_exception and not set_piece:
 		return false
 	# Fight Forever stays wide through ordinary strikes; the close-ups are the
 	# grapples (_ff_grapple_cut), the signature and special strikes
 	# (_on_move_landed), the taunt, and the set pieces.
 	if CameraSettings.fight_forever() and kind == Cut.CUTAWAY and not enda_exception:
 		return false
-	if mode != Mode.HARD_CAM and mode != Mode.RINGSIDE:
+	if mode != Mode.HARD_CAM and mode != Mode.RINGSIDE and not (set_piece and mode == Mode.EVENT_CUT):
 		return false
-	if _held < MIN_SHOT or (referee != null and referee.is_pin_active()):
+	if (_held < MIN_SHOT and not set_piece) or (referee != null and referee.is_pin_active()):
 		return false
 	_cut_return = master_mode()
+	_cut_fixed_at = Vector3.INF
 	_cut_ff_impact = -1.0
 	_cut_ff_special = false
 	_cut_impact_at = -1.0
@@ -1864,6 +1888,28 @@ func _event_shot(delta: float) -> bool:
 			look = s + Vector3.UP * 0.85
 			lens = 38.0
 			focus = true
+		Cut.ROOF_FALL:
+			# Off the top of the cell: on the floor a few metres along the
+			# wall he goes over, low, looking up the steel at the edge and
+			# panning down with him to the floor (or the table, or the desk).
+			if _cut_fixed_at == Vector3.INF:
+				var axis := CageBuilder.wall_axis(s)
+				var lat := Vector3(absf(axis.z), 0.0, absf(axis.x))
+				var along := signf(s.dot(lat)) if absf(s.dot(lat)) > 0.3 else 1.0
+				_cut_fixed_at = axis * (ArenaBuilder.BARRICADE_RADIUS - 0.35) \
+						- lat * along * 2.8 + Vector3.UP * (ArenaBuilder.FLOOR_Y + 0.5)
+			at = _cut_fixed_at
+			look = s + Vector3.UP * 0.6
+			lens = 62.0
+		Cut.PANEL_FALL:
+			# Through the roof: on the mat, low, looking up through the hole
+			# as he comes down into the ring.
+			if _cut_fixed_at == Vector3.INF:
+				var toward := _flat(hard_cam_position).normalized()
+				_cut_fixed_at = Vector3(s.x, 0.0, s.z) + toward * 2.4 + Vector3.UP * 0.5
+			at = _cut_fixed_at
+			look = s + Vector3.UP * 0.4
+			lens = 66.0
 		Cut.TABLE:
 			# Through the table: down at the wreck, low and wide, square to him.
 			at = s + side * 3.2 - line * 0.6 + Vector3.UP * 0.6

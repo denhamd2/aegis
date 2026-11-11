@@ -26,7 +26,7 @@ func _ready() -> void:
 	DirAccess.make_dir_recursive_absolute(_out)
 	Engine.max_physics_steps_per_frame = 1
 	await get_tree().process_frame
-	for s: String in ["cell", "cage", "ladder", "casket", "ambulance", "roof", "cellcam", "lowering"]:
+	for s: String in ["cell", "cage", "ladder", "casket", "ambulance", "roof", "cellcam", "lowering", "fallcam", "doorcam"]:
 		if _only.is_empty() or _only.has(s):
 			await call("_" + s)
 	print("GIMMICK_SHOT done")
@@ -307,5 +307,63 @@ func _lowering() -> void:
 		if shots.has(t):
 			await _shoot(shots[t])
 			RenderingServer.render_loop_enabled = false
+	director.free()
+	await _done(scene)
+
+
+## The match camera's cuts for the cell's two falls: off the edge (from the
+## floor, looking up the steel) and through a panel (from the mat, up through
+## the hole).
+func _fallcam() -> void:
+	var scene: Node = await _scene(MatchRules.Mode.HELL_IN_A_CELL, _arena, true)
+	var roman := scene.get_node("WrestlerA") as WrestlerController
+	var cody := scene.get_node("WrestlerB") as WrestlerController
+	var roof := scene.get_node("CellRoof") as CellRoof
+	(scene.get_node("MatchReferee") as MatchReferee).set_physics_process(false)
+	for w in [roman, cody]:
+		w.outside_ring = true
+		w.on_roof = true
+	var h := roof.half()
+	roman.global_position = Vector3(-(h - 0.55), roof.surface_y(), 0.4)
+	cody.global_position = Vector3(-(h - 1.6), roof.surface_y(), 0.4)
+	for i in 40:
+		await get_tree().physics_frame
+	await _shoot("fallcam_roof")
+	RenderingServer.render_loop_enabled = false
+	roman.combat.limb_damage["torso"] = CombatSystem.KICKOUT_DAMAGE_REFERENCE * 0.8
+	roman.fsm.transition_to(WrestlerFSM.State.HIT_REACT)
+	roman._go_down(CombatSystem.Tier.POWER)
+	var shots := {4: "fallcam_over", 24: "fallcam_falling", 60: "fallcam_landed"}
+	for t in range(1, 62):
+		await get_tree().physics_frame
+		if shots.has(t):
+			await _shoot(shots[t])
+			RenderingServer.render_loop_enabled = false
+	for i in 200:
+		await get_tree().physics_frame
+	# Cody through a centre panel.
+	var c := roof.cage.bay_centre(1, 1)
+	cody.global_position = Vector3(c.x + 0.3, roof.surface_y(), c.z + 0.3)
+	for i in 3:
+		roof.landed(cody, CombatSystem.Tier.POWER)
+	cody.fsm.transition_to(WrestlerFSM.State.HIT_REACT)
+	cody._go_down(CombatSystem.Tier.POWER)
+	var shots2 := {6: "fallcam_panel_gone", 22: "fallcam_panel_falling", 50: "fallcam_panel_landed"}
+	for t in range(1, 52):
+		await get_tree().physics_frame
+		if shots2.has(t):
+			await _shoot(shots2[t])
+			RenderingServer.render_loop_enabled = false
+	await _done(scene)
+
+
+## The padlock going on, on its close-up.
+func _doorcam() -> void:
+	var scene: Node = await _scene(MatchRules.Mode.HELL_IN_A_CELL, true)
+	var roof := scene.get_node("CellRoof") as CellRoof
+	var director := EntranceDirector.new()
+	var sh := director.cell_door_shot(roof.cage)
+	_cam(scene, sh[0], sh[1], sh[2])
+	await _shoot("doorcam_locked")
 	director.free()
 	await _done(scene)
