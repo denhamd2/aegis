@@ -375,6 +375,12 @@ func _compute_pair_transform(attacker: Node3D, defender: Node3D) -> Transform3D:
 	# authored against mat level, and either wrestler may be mid-drift.
 	midpoint.y = anchor.global_position.y if anchor else 0.0
 	var outside := attacker is WrestlerController and (attacker as WrestlerController).outside_ring
+	# On top of Hell in a Cell: played where they stand, at the roof's height,
+	# kept a metre in from its edge (CellRoof decides who goes over it).
+	var roof := CellRoof.of(attacker) if attacker is WrestlerController \
+			and (attacker as WrestlerController).on_roof else null
+	if roof:
+		outside = false
 	var up_the_ramp := outside and ArenaBuilder.in_entrance_way(midpoint)
 	var at_desk := outside and not up_the_ramp and in_desk_bay(midpoint)
 	if at_desk:
@@ -400,6 +406,11 @@ func _compute_pair_transform(attacker: Node3D, defender: Node3D) -> Transform3D:
 		var lat := Vector3(absf(axis.z), 0.0, absf(axis.x))
 		var along := clampf(midpoint.dot(lat), -OUTSIDE_ALONG, OUTSIDE_ALONG)
 		midpoint = axis * OUTSIDE_LANE + lat * along + Vector3.UP * midpoint.y
+	elif roof:
+		var keep := roof.half() - CellRoof.MOVE_KEEP_IN
+		midpoint.x = clampf(midpoint.x, -keep, keep)
+		midpoint.z = clampf(midpoint.z, -keep, keep)
+		midpoint.y = roof.surface_y()
 	else:
 		# Keep the move inside the ring. A suspended body ignores collision for
 		# the whole clip, so a throw started against the ropes would otherwise

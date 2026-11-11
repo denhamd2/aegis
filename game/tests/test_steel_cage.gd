@@ -305,7 +305,7 @@ func test_a_blow_at_the_door_stops_him_and_the_door_shuts() -> void:
 	var w := _wrestler(Vector3(-2.5, 0.0, 0.1))
 	await _ticks(2)
 	assert_bool(_escape.begin(w)).is_true()
-	await _ticks(CageEscape.DOOR_UNLOCK_TICKS + 60)
+	await _ticks(CageEscape.DOOR_UNLOCK_TICKS + (CageEscape.DOOR_OPEN_TICKS - CageEscape.DOOR_UNLOCK_TICKS) / 2)
 	assert_float(_cage.door_open_amount()).is_greater(0.0)
 	w._pending_hits.append(JAB)
 	w._resolve_pending_hits()

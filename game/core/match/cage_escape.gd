@@ -42,11 +42,13 @@ const OVER_TICKS := 240
 const OVER_SAFE := 0.65
 const DESCEND_TICKS := 100
 const DROP_TICKS := 32
-## The door: the official outside unlocks it, then swings it open; he goes
-## through on DOOR_OPEN_TICKS. A player who lets go of the push this long
-## gives up, and the door is shut again.
-const DOOR_UNLOCK_TICKS := 180
-const DOOR_OPEN_TICKS := 360
+## The door: he works the latch himself (DOOR_UNLOCK_TICKS), swings it open
+## and goes through on DOOR_OPEN_TICKS (the owner, 11 Nov: "the door can open
+## and close by the wrestlers"). It was the official outside unlocking it,
+## six seconds of standing at the door. A player who lets go of the push
+## this long gives up, and it swings shut again behind him.
+const DOOR_UNLOCK_TICKS := 20
+const DOOR_OPEN_TICKS := 80
 const DOOR_LET_GO_TICKS := 24
 const DOOR_CLOSE_RATE := 1.0 / 40.0
 ## A man climbing after a climber goes up faster than a man trying to get

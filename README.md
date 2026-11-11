@@ -11904,3 +11904,28 @@ the cage, whip and rope suites.
 One earlier note: the "chain-link wire thicker" sentence in 11 Nov (3) did not
 make it into that entry. The wire is half as thick again (`WIRE_WIDTH` 0.24),
 so the cage panels read as the grey mesh in the references.
+
+## 11 Nov (5) — Cage and cell panels to the references; the cage door by hand; the wire cutters
+
+The owner sent reference photos (three of Hell in a Cell, one of a steel cage)
+and said: "Match the amount of cell and cage panels from the reference images.
+On the current cell, it looks like there's too many", "review the design of
+the top of the steel cage", and "the door can open and close by the
+wrestlers".
+
+- **Hell in a Cell:** 4 panels across each wall (was 6) and 3 rows (was 5),
+  and a 4×4 roof. The roof is now one panel and one collision box per bay, so
+  the middle four can dent and give way. That roof play comes next.
+- **Steel Cage:** 4 panels across and 2 rows. Round its top runs a lip of
+  ladder truss 0.32 m deep, a second rail inside the first with rungs
+  between, as the reference has it.
+- **The Steel Cage door:** the wrestler works the latch and swings it open
+  himself, in 1.3 s. It was six seconds of waiting for the official outside.
+  It still swings shut behind a man who lets go, or is hit at it.
+- **Wire cutters:** a new weapon, original bolt cutters with red-gripped
+  handles and steel jaws (`tools/blender/weapons/wire_cutters.py` →
+  `assets/weapons/wire_cutters.glb`). Hell in a Cell's padlocked door is cut
+  open with them; that is wired in the next batch.
+
+Rendered in the arena and compared with the references. Tests: the cage, cell
+and weapon suites pass (78 cases).

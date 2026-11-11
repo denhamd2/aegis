@@ -1908,6 +1908,8 @@ func _physics_process(delta: float) -> void:
 				begin_spear_setup()
 			elif _pushing_into_cage(input):
 				pass
+			elif _pushing_at_cell(input):
+				pass
 			elif _pushing_through_ropes(input):
 				begin_rope_cross()
 			elif (input.get("tip_ladder", false) or input.get("strike", false)) \
@@ -1925,7 +1927,9 @@ func _physics_process(delta: float) -> void:
 		WrestlerFSM.State.LADDER_CLIMB:
 			_tick_ladder_climb(input)
 		WrestlerFSM.State.LADDER_FALL:
-			if _cage_fall:
+			if _roof_fall:
+				_tick_roof_fall(delta)
+			elif _cage_fall:
 				_tick_cage_fall(delta)
 			else:
 				_tick_ladder_fall()
@@ -1936,6 +1940,12 @@ func _physics_process(delta: float) -> void:
 				cage_escape().tick(self, input)
 			else:
 				end_cage_escape(false)
+		WrestlerFSM.State.CELL_CLIMB:
+			var cell_roof := CellRoof.of(self)
+			if cell_roof:
+				cell_roof.tick(self)
+			else:
+				end_cell_route()
 		WrestlerFSM.State.SHUT_IN:
 			if is_instance_valid(_shut_in):
 				_shut_in.tick(self)
@@ -1996,6 +2006,8 @@ func _physics_process(delta: float) -> void:
 	if fsm.current_state == WrestlerFSM.State.ROPE_CROSS \
 			or fsm.current_state == WrestlerFSM.State.CAGE_ESCAPE \
 			or fsm.current_state == WrestlerFSM.State.SHUT_IN \
+			or fsm.current_state == WrestlerFSM.State.CELL_CLIMB \
+			or (fsm.current_state == WrestlerFSM.State.LADDER_FALL and _roof_fall) \
 			or (fsm.current_state == WrestlerFSM.State.LADDER_FALL and _cage_fall):
 		# On his scripted path: no gravity, no collision, no clamp.
 		return
@@ -2110,6 +2122,13 @@ const MAT_LEVEL := 0.0
 ## so it satisfies ARCHITECTURE.md's determinism contract while sitting in
 ## the middle of gameplay positioning, which is where it has to be.
 func keep_inside_the_ring() -> void:
+	if on_roof:
+		var roof := CellRoof.of(self)
+		if roof:
+			if roof.keep_on(self) and fsm.is_in([WrestlerFSM.State.LOCOMOTION,
+					WrestlerFSM.State.RUN]):
+				_begin_teeter()
+			return
 	if outside_ring:
 		keep_on_the_floor()
 		return
@@ -2224,6 +2243,18 @@ func _take_wheel_pick() -> StringName:
 	return pick
 
 func _process_free_movement(delta: float, input: Dictionary) -> void:
+	if _teeter_ticks > 0:
+		_teeter_ticks -= 1
+		_stop_dead()
+		if _teeter_ticks == 0:
+			_restart_state_clip(WrestlerFSM.State.IDLE,
+					clip_for_state(WrestlerFSM.State.IDLE, _is_grapple_attacker))
+			# Off the edge, a step back in from it.
+			var roof := CellRoof.of(self)
+			if roof and on_roof:
+				var back := -roof.edge_out(global_position)
+				face(back)
+		return
 	if _closing_ticks > 0 and fsm.current_state == WrestlerFSM.State.IDLE:
 		_closing_ticks -= 1
 		_stop_dead()
@@ -4893,6 +4924,19 @@ func _resolve_pending_hits() -> void:
 	if fsm.current_state == WrestlerFSM.State.LADDER_CLIMB:
 		_begin_ladder_fall()
 		return
+	# Up the outside of the Cell: knocked off the wall, from that height.
+	if fsm.current_state == WrestlerFSM.State.CELL_CLIMB and CellRoof.of(self) \
+			and CellRoof.of(self).height_on_wall(self) > 0.8:
+		var roof := CellRoof.of(self)
+		roof.abandon(self)
+		var out := roof.door_axis()
+		begin_roof_fall(out * 0.9 + Vector3.UP * 0.4, false)
+		return
+	# On the roof: a hard blow near the edge sends him over it.
+	if on_roof and CellRoof.of(self) and opponent \
+			and CellRoof.of(self).knocked_off(self, tier_of(last_move) if last_move else -1,
+				opponent.global_position, false):
+		return
 	# On the cage: knocked off the wall, or out of reach (CageEscape.on_hit);
 	# at the door the blow stops him and plays out as any other.
 	if fsm.current_state == WrestlerFSM.State.CAGE_ESCAPE and cage_escape() \
@@ -5879,6 +5923,13 @@ func _go_down(tier := -1, move: MoveDef = null) -> void:
 	_cover_eligible = true
 	_land_on_set_piece()
 	knocked_down.emit(self)
+	# On top of the Cell: a centre panel under him dents (and may give way),
+	# or near the edge he goes over it.
+	if on_roof:
+		var roof := CellRoof.of(self)
+		if roof and not roof.landed(self, tier):
+			var from := opponent.global_position if opponent else global_position
+			roof.knocked_off(self, tier, from, true)
 
 ## A man on the mat goes nowhere under his own steam.
 ##
@@ -7290,6 +7341,163 @@ func _update_ladder_climb_ik() -> void:
 		right_hand.origin = right_hand.origin.lerp(r_at, reach)
 		left_hand.origin = left_hand.origin.lerp(l_at, reach)
 	weapon_grip.climb_ladder(_ladder_actor, right_hand, left_hand, right_foot, left_foot)
+
+
+## --- Hell in a Cell: out, up, on and off the roof (CellRoof) ----------------
+var on_roof := false
+## The body gone limp for a long fall (FallRagdoll), built on first use.
+var ragdoll: FallRagdoll
+var _roof_fall := false
+var _roof_fall_into_ring := false
+var _teeter_ticks := 0
+var _cell_push := 0
+
+
+func face(dir: Vector3) -> void:
+	var d := Vector3(dir.x, 0.0, dir.z)
+	if d.length() > 0.01:
+		rotation.y = atan2(-d.x, -d.z)
+
+
+## Pushing at the cell door, its outside wall, or over the roof's front edge:
+## the AI's `cell_route`, or the player holding into it.
+func _pushing_at_cell(input: Dictionary) -> bool:
+	if not MatchRules.mode_of(self) == MatchRules.Mode.HELL_IN_A_CELL:
+		return false
+	var roof := CellRoof.of(self)
+	if roof == null or roof.busy(self):
+		return false
+	if is_ai:
+		return input.get("cell_route", false) and roof.begin(self)
+	var push: Vector2 = input.get("move", Vector2.ZERO)
+	var a := roof.door_axis()
+	var toward := Vector2(a.x, a.z) if not on_roof else Vector2(a.x, a.z)
+	var p := global_position
+	var at_it := roof.in_door_lane_inside(p) or roof.in_door_lane_outside(p) \
+			or roof.at_climbable_wall(p) or (on_roof and roof.at_roof_front_edge(p))
+	var into := push.length() > 0.5 and (push.normalized().dot(toward) > 0.6
+			if (roof.in_door_lane_inside(p) or on_roof) else push.normalized().dot(-toward) > 0.6)
+	if not at_it or not into:
+		_cell_push = 0
+		return false
+	_cell_push += 1
+	if _cell_push < ROPE_PUSH_TICKS:
+		return false
+	_cell_push = 0
+	return roof.begin(self)
+
+
+func begin_cell_route(clip: String) -> void:
+	velocity = Vector3.ZERO
+	_set_state_clip(WrestlerFSM.State.CELL_CLIMB, clip)
+	fsm.transition_to(WrestlerFSM.State.CELL_CLIMB)
+
+
+func cell_route_clip(clip: String) -> void:
+	if fsm.current_state == WrestlerFSM.State.CELL_CLIMB:
+		_restart_state_clip(WrestlerFSM.State.CELL_CLIMB, clip)
+
+
+func end_cell_route() -> void:
+	if fsm.current_state == WrestlerFSM.State.CELL_CLIMB:
+		velocity = Vector3.ZERO
+		fsm.transition_to(WrestlerFSM.State.IDLE)
+
+
+func is_on_cell_route() -> bool:
+	return fsm.current_state == WrestlerFSM.State.CELL_CLIMB
+
+
+## Walked to the roof's edge: arms out, rocking on his heels, stopped there.
+func _begin_teeter() -> void:
+	if _teeter_ticks > 0:
+		return
+	_teeter_ticks = CellRoof.TEETER_TICKS
+	_stop_dead()
+	if fsm.current_state == WrestlerFSM.State.RUN:
+		fsm.transition_to(WrestlerFSM.State.LOCOMOTION)
+	if fsm.current_state == WrestlerFSM.State.LOCOMOTION:
+		fsm.transition_to(WrestlerFSM.State.IDLE)
+	_restart_state_clip(WrestlerFSM.State.IDLE, "strikes/whoa_arms")
+
+
+## Off the roof, the wall, or through a panel: a kinematic fall -- no
+## collision on the way down, landing on what is below: the ring's mat
+## (through the roof), a table set up there (it breaks under him and he goes
+## on to the floor), or the floor, the ramp, the announce desk.
+const ROOF_FALL_MOVE := preload("res://resources/moves/cage_fall.tres")
+var _roof_fall_table_done := false
+
+
+func begin_roof_fall(v: Vector3, into_ring: bool) -> void:
+	var roof := CellRoof.of(self)
+	if roof:
+		roof.abandon(self)
+	on_roof = false
+	_roof_fall = true
+	_roof_fall_into_ring = into_ring
+	_roof_fall_table_done = false
+	_teeter_ticks = 0
+	velocity = v
+	_set_state_clip(WrestlerFSM.State.LADDER_FALL, "strikes/ladder_fall")
+	fsm.transition_to(WrestlerFSM.State.LADDER_FALL)
+	# A long way down: limp. Not for the short drop off the wall low down.
+	if global_position.y - ArenaBuilder.FLOOR_Y > 2.5:
+		if ragdoll == null:
+			ragdoll = FallRagdoll.for_wrestler(self)
+		if ragdoll:
+			ragdoll.go_limp(v)
+	hit_the_cage.emit(self, 2.0)
+
+
+func _tick_roof_fall(delta: float) -> void:
+	velocity.y -= GRAVITY * delta
+	var p := global_position + velocity * delta
+	var ground: float
+	if _roof_fall_into_ring:
+		ground = MAT_LEVEL
+		p.x = clampf(p.x, -RING_KEEP_IN, RING_KEEP_IN)
+		p.z = clampf(p.z, -RING_KEEP_IN, RING_KEEP_IN)
+	else:
+		ground = ArenaBuilder.match_surface_y(p)
+		# Held outside the cell walls and inside the barricade, but for the
+		# desk side, where the desk is.
+		var cell := CageBuilder.of(self)
+		if cell:
+			var lim := cell.spec.half + 0.42
+			if absf(p.x) < lim and absf(p.z) < lim:
+				if absf(p.x) >= absf(p.z):
+					p.x = signf(p.x) * lim
+				else:
+					p.z = signf(p.z) * lim
+	# Through a table set up below him.
+	var stock := WeaponStock.of(self) if get_parent() else null
+	if stock and not _roof_fall_table_done:
+		var t := stock.set_piece_under(p)
+		if t and t.def.id == &"table" and p.y <= t.global_position.y + 0.85:
+			_roof_fall_table_done = true
+			t.shatter(int(Engine.get_physics_frames()), self)
+			velocity *= 0.45
+			combat.apply_damage(ROOF_FALL_MOVE, 0.6)
+	# Onto the announce desk.
+	if stock and not _roof_fall_table_done and stock.desk_under(p) \
+			and p.y <= WeaponStock.desk_top_y() + 0.1 and not stock.desk_broken:
+		_roof_fall_table_done = true
+		_land_on_desk(stock, p)
+		velocity *= 0.4
+	global_position = p
+	if p.y > ground:
+		return
+	global_position.y = ground
+	velocity = Vector3.ZERO
+	_roof_fall = false
+	outside_ring = not _roof_fall_into_ring
+	combat.apply_damage(ROOF_FALL_MOVE,
+			CellRoof.THROUGH_DAMAGE if _roof_fall_into_ring else CellRoof.FALL_DAMAGE)
+	if ragdoll:
+		ragdoll.settle()
+	hit_the_cage.emit(self, 3.0)
+	_go_down(CombatSystem.Tier.FINISHER, ROOF_FALL_MOVE)
 
 
 ## --- The Casket and Ambulance matches (ShutIn) ------------------------------

@@ -42,8 +42,13 @@ class Spec:
 	## a Cell is built of box truss, several times as deep.
 	var frame_scale := 1.0
 
+	## The owner's reference (a cage from below): four panels across each
+	## wall, two rows, and a lip of ladder truss round the top.
 	static func steel_cage() -> Spec:
-		return Spec.new()
+		var s := Spec.new()
+		s.rails = [0.0, 0.5, 1.0]
+		s.bays = 4
+		return s
 
 	## Hell in a Cell (gauntlet/refs/hell_in_a_cell.md): a roofed cell on the
 	## arena floor round the ring and the ringside mats, inside the barricade,
@@ -53,8 +58,12 @@ class Spec:
 		s.half = 5.55
 		s.base_y = ArenaBuilder.FLOOR_Y
 		s.top_y = ArenaBuilder.FLOOR_Y + 6.1
-		s.rails = [0.0, 0.18, 0.36, 0.55, 0.78, 1.0]
-		s.bays = 6
+		# The owner's references (Hell in a Cell from the hard camera, the
+		# roof from the stands): three rows of panels up each wall, four
+		# across, and a four-by-four roof whose middle four are the ones that
+		# give way.
+		s.rails = [0.0, 0.33, 0.66, 1.0]
+		s.bays = 4
 		s.door_axis = Vector3(0.0, 0.0, -1.0)
 		s.door_width = 1.4
 		s.door_height = 2.3
@@ -217,7 +226,45 @@ func _build() -> void:
 	_build_posts(frame)
 	if spec.roof:
 		_build_roof(frame, wire)
+	else:
+		_build_top_lip(frame, wire)
 	_build_collision()
+
+
+## The Steel Cage's top: a flat lip of ladder truss, LIP_WIDTH deep, running
+## in from the top rail all the way round -- a second rail inside the first,
+## rungs across between them, chain link on it -- as the reference's cage
+## has it seen from below.
+const LIP_WIDTH := 0.32
+const LIP_RUNG_EVERY := 0.42
+
+
+func _build_top_lip(frame: Material, wire: Material) -> void:
+	var y := spec.top_y
+	var r := RAIL_SIZE * spec.frame_scale
+	var inner := spec.half - LIP_WIDTH
+	for axis: Vector3 in axes():
+		var lat := lateral_of(axis)
+		# The inner rail.
+		_box(self, axis * inner + Vector3.UP * y, _size_along(lat, inner * 2.0, r), frame)
+		# Rungs from the top rail in to it.
+		var n := int(floor(spec.half * 2.0 / LIP_RUNG_EVERY))
+		for k in range(1, n):
+			var along := -spec.half + spec.half * 2.0 * float(k) / float(n)
+			if absf(along) > inner:
+				continue
+			var at := axis * (spec.half - LIP_WIDTH * 0.5) + lat * along + Vector3.UP * y
+			_box(self, at, axis.abs() * LIP_WIDTH + lat.abs() * r * 0.7 + Vector3.UP * r * 0.7, frame)
+		# The chain link across the lip.
+		var mi := MeshInstance3D.new()
+		var plane := PlaneMesh.new()
+		plane.size = Vector2(1, 1)
+		mi.mesh = plane
+		mi.material_override = wire
+		mi.position = axis * (spec.half - LIP_WIDTH * 0.5) + Vector3.UP * (y - 0.005)
+		mi.scale = axis.abs() * LIP_WIDTH + lat.abs() * inner * 2.0 + Vector3.UP
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		add_child(mi)
 
 
 func _axis_name(axis: Vector3) -> String:
@@ -328,24 +375,69 @@ func _build_roof(frame: Material, wire: Material) -> void:
 		var s := -spec.half + span * float(i) / float(spec.bays)
 		_box(self, Vector3(s, y, 0), Vector3((RAIL_SIZE * spec.frame_scale), (RAIL_SIZE * spec.frame_scale), span), frame)
 		_box(self, Vector3(0, y, s), Vector3(span, (RAIL_SIZE * spec.frame_scale), (RAIL_SIZE * spec.frame_scale)), frame)
-	var mesh := ArrayMesh.new()
-	var st := SurfaceTool.new()
-	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var h := spec.half
-	var corners := [Vector3(-h, y, -h), Vector3(h, y, -h), Vector3(h, y, h), Vector3(-h, y, h)]
-	var uv := func(p: Vector3) -> Vector2: return Vector2(p.x, p.z) / MESH_TILE_M
-	for idx: int in [0, 1, 2, 0, 2, 3]:
-		var p: Vector3 = corners[idx]
-		st.set_normal(Vector3.UP)
-		st.set_uv(uv.call(p))
-		st.add_vertex(p)
-	st.commit(mesh)
-	var mi := MeshInstance3D.new()
-	mi.name = "RoofMesh"
-	mi.mesh = mesh
-	mi.material_override = wire
-	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	add_child(mi)
+	# One chain-link panel a bay, each its own node, so a bay can be dented
+	# and give way under a man (CellRoof): the four in the middle do.
+	var bay := span / float(spec.bays)
+	for i in spec.bays:
+		for j in spec.bays:
+			var centre := bay_centre(i, j)
+			var mesh := ArrayMesh.new()
+			var st := SurfaceTool.new()
+			st.begin(Mesh.PRIMITIVE_TRIANGLES)
+			var b := bay * 0.5
+			var corners := [Vector3(-b, 0, -b), Vector3(b, 0, -b), Vector3(b, 0, b), Vector3(-b, 0, b)]
+			for idx: int in [0, 1, 2, 0, 2, 3]:
+				var p: Vector3 = corners[idx]
+				st.set_normal(Vector3.UP)
+				st.set_uv(Vector2(p.x + centre.x, p.z + centre.z) / MESH_TILE_M)
+				st.add_vertex(p)
+			st.commit(mesh)
+			var mi := MeshInstance3D.new()
+			mi.name = "RoofPanel_%d_%d" % [i, j]
+			mi.mesh = mesh
+			mi.material_override = wire
+			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			mi.position = centre
+			add_child(mi)
+			_roof_panels[Vector2i(i, j)] = mi
+
+
+## The roof's bays: their centre at the top (i along X, j along Z).
+func bay_centre(i: int, j: int) -> Vector3:
+	var bay := spec.half * 2.0 / float(spec.bays)
+	return Vector3(-spec.half + bay * (i + 0.5), spec.top_y, -spec.half + bay * (j + 0.5))
+
+
+func bay_size() -> float:
+	return spec.half * 2.0 / float(spec.bays)
+
+
+## The bay over `p`, or (-1, -1) off the roof.
+func bay_of(p: Vector3) -> Vector2i:
+	var bay := bay_size()
+	var i := int(floor((p.x + spec.half) / bay))
+	var j := int(floor((p.z + spec.half) / bay))
+	if i < 0 or j < 0 or i >= spec.bays or j >= spec.bays:
+		return Vector2i(-1, -1)
+	return Vector2i(i, j)
+
+
+## The four in the middle of the roof (an even count of bays a side).
+func is_centre_bay(b: Vector2i) -> bool:
+	var lo := spec.bays / 2 - 1
+	return b.x in [lo, lo + 1] and b.y in [lo, lo + 1]
+
+
+func roof_panel(b: Vector2i) -> MeshInstance3D:
+	return _roof_panels.get(b) as MeshInstance3D
+
+
+func roof_shape(b: Vector2i) -> CollisionShape3D:
+	return _roof_shapes.get(b) as CollisionShape3D
+
+
+var _roof_panels := {}
+var _roof_shapes := {}
 
 
 ## Thin walls of collision on the cage's faces (and its roof): nothing walks
@@ -366,12 +458,17 @@ func _build_collision() -> void:
 		shape.position = axis * spec.half + Vector3.UP * (spec.base_y + h * 0.5)
 		body.add_child(shape)
 	if spec.roof:
-		var shape := CollisionShape3D.new()
-		var box := BoxShape3D.new()
-		box.size = Vector3(span, 0.06, span)
-		shape.shape = box
-		shape.position = Vector3.UP * spec.top_y
-		body.add_child(shape)
+		# A bay of the roof each, so one can give way (CellRoof).
+		for i in spec.bays:
+			for j in spec.bays:
+				var shape := CollisionShape3D.new()
+				var box := BoxShape3D.new()
+				box.size = Vector3(bay_size(), 0.06, bay_size())
+				shape.shape = box
+				shape.position = bay_centre(i, j)
+				shape.name = "RoofShape_%d_%d" % [i, j]
+				body.add_child(shape)
+				_roof_shapes[Vector2i(i, j)] = shape
 
 
 # --------------------------------------------------------------------------

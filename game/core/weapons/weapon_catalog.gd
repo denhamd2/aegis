@@ -55,7 +55,7 @@ const SWING_PROFILES := {
 	"table": "table_slam", "glass_pane": "table_slam",
 	"shovel": "shovel_flat",
 	"crutch": "crutch_overhead",
-	"ring_bell": "bonk_overhand", "frying_pan": "bonk_overhand",
+	"ring_bell": "bonk_overhand", "frying_pan": "bonk_overhand", "wire_cutters": "bonk_overhand",
 	"championship_belt": "bonk_overhand", "cookie_sheet": "flat_face", "stop_sign": "flat_face",
 	"briefcase": "flat_face",
 	"ladder": "ladder_overhead",
@@ -87,7 +87,7 @@ const BLADES: Array[StringName] = [&"knife", &"sword"]
 ## fold him. Everything else from IMPACT_DROP_AT up -- a bat, a sign, a chair,
 ## a pipe, a table -- puts him down, as it does on a broadcast.
 const ROCKS: Array[StringName] = [&"kendo_stick", &"hockey_stick", &"crutch", &"weight_belt",
-		&"briefcase", &"frying_pan", &"ring_bell", &"championship_belt", &"chain", &"trash_can"]
+		&"briefcase", &"frying_pan", &"wire_cutters", &"ring_bell", &"championship_belt", &"chain", &"trash_can"]
 const IMPACT_DROP_AT := 8.0
 ## Barbed wire, nails and glass: whatever else they do, they leave him
 ## writhing on the mat (the owner, 3 Nov: "selling ... appropriate for the
@@ -178,6 +178,10 @@ const TABLE := [
 		[], {}],
 	["frying_pan", "Frying Pan", WeaponDef.Family.CARRIED, "frying_pan", "FryingPan_Clean", "", "", "",
 		WeaponDef.Swing.CHOP, 9.0, 2.0, 0, 0, false, false, 0.0, "hit_metal", [], {}],
+	# Hell in a Cell's way out: the bolt cutters that snap the chain on the
+	# padlocked door (CellRoof). Swung, they are a short steel bar.
+	["wire_cutters", "Wire Cutters", WeaponDef.Family.CARRIED, "wire_cutters", "WireCutters_Clean", "", "", "",
+		WeaponDef.Swing.CHOP, 7.0, 2.0, 0, 0, false, false, 0.0, "hit_metal", [], {}],
 	["briefcase", "Briefcase", WeaponDef.Family.CARRIED, "briefcase", "Briefcase_Clean", "", "", "",
 		WeaponDef.Swing.OVERHEAD, 8.0, 3.0, 0, 0, true, false, 0.0, "hit_kick", [], {}],
 	["table", "Table", WeaponDef.Family.SET_PIECES, "table", "Table_Folded", "", "Table_Broken", "Table_Up",
@@ -267,6 +271,9 @@ const CARRY := {
 		Vector3(1, 0, 0), Vector3(0, 1, 0), Vector3(0, 0, 1), Vector3(0, 0, -1)],
 	# by the handle at his side, the pan hanging -- not held up at his chest
 	"frying_pan": ["grip_r", Vector3(0.27, 0.96, -0.08),
+		Vector3(0, 1, 0), Vector3(0.1, -1, 0.15), Vector3(0, 0, -1), Vector3(-1, 0, 0)],
+	# by the end of a handle at his side, the jaws down
+	"wire_cutters": ["grip_r", Vector3(0.27, 0.96, -0.08),
 		Vector3(0, 1, 0), Vector3(0.1, -1, 0.15), Vector3(0, 0, -1), Vector3(-1, 0, 0)],
 	"briefcase": ["grip_r", Vector3(0.30, 0.86, -0.04),
 		Vector3(0, 1, 0), Vector3(0, 1, 0), Vector3(0, 0, -1), Vector3(1, 0, 0)],

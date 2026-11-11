@@ -56,6 +56,10 @@ enum State {
 	## Bundled into the casket or the ambulance and held there (ShutIn): on
 	## its scripted path, then lying in it -- or climbing back out.
 	SHUT_IN,
+	## Hell in a Cell: forcing the cell door and walking out (or in) through
+	## it, climbing the outside of the cell, over onto the roof and back down
+	## (CellRoof): a scripted path.
+	CELL_CLIMB,
 }
 
 ## Adjacency list of legal transitions. Anything not listed here is illegal.
@@ -63,20 +67,20 @@ const LEGAL_TRANSITIONS := {
 	# GRAPPLE_HOLD from IDLE/LOCOMOTION/RUN: a paired running attack skips the
 	# tie-up -- the runner connects and both men go straight into the move
 	# (WrestlerController._begin_running_paired()).
-	State.IDLE: [State.LOCOMOTION, State.RUN, State.STRIKE, State.TIE_UP, State.GRAPPLE_HOLD, State.HIT_REACT, State.STUNNED, State.PIN_ATTACKER, State.SUBMISSION_ATTACKER, State.VICTORY, State.TAUNT, State.ROPE_CROSS, State.WEAPON_ACTION, State.LADDER_CLIMB, State.IRISH_WHIP, State.CAGE_ESCAPE],
-	State.LOCOMOTION: [State.IDLE, State.RUN, State.STRIKE, State.TIE_UP, State.GRAPPLE_HOLD, State.HIT_REACT, State.STUNNED, State.PIN_ATTACKER, State.SUBMISSION_ATTACKER, State.VICTORY, State.TAUNT, State.ROPE_CROSS, State.WEAPON_ACTION, State.LADDER_CLIMB, State.IRISH_WHIP, State.CAGE_ESCAPE],
-	State.RUN: [State.LOCOMOTION, State.RUNNING_ATTACK, State.GRAPPLE_HOLD, State.IDLE, State.HIT_REACT, State.STUNNED, State.VICTORY, State.LADDER_CLIMB, State.IRISH_WHIP, State.CAGE_ESCAPE],
-	State.STRIKE: [State.IDLE, State.LOCOMOTION, State.HIT_REACT, State.STUNNED, State.VICTORY],
+	State.IDLE: [State.LOCOMOTION, State.RUN, State.STRIKE, State.TIE_UP, State.GRAPPLE_HOLD, State.HIT_REACT, State.STUNNED, State.PIN_ATTACKER, State.SUBMISSION_ATTACKER, State.VICTORY, State.TAUNT, State.ROPE_CROSS, State.WEAPON_ACTION, State.LADDER_CLIMB, State.IRISH_WHIP, State.CAGE_ESCAPE, State.CELL_CLIMB, State.LADDER_FALL],
+	State.LOCOMOTION: [State.IDLE, State.RUN, State.STRIKE, State.TIE_UP, State.GRAPPLE_HOLD, State.HIT_REACT, State.STUNNED, State.PIN_ATTACKER, State.SUBMISSION_ATTACKER, State.VICTORY, State.TAUNT, State.ROPE_CROSS, State.WEAPON_ACTION, State.LADDER_CLIMB, State.IRISH_WHIP, State.CAGE_ESCAPE, State.CELL_CLIMB, State.LADDER_FALL],
+	State.RUN: [State.LOCOMOTION, State.RUNNING_ATTACK, State.GRAPPLE_HOLD, State.IDLE, State.HIT_REACT, State.STUNNED, State.VICTORY, State.LADDER_CLIMB, State.IRISH_WHIP, State.CAGE_ESCAPE, State.CELL_CLIMB, State.LADDER_FALL],
+	State.STRIKE: [State.IDLE, State.LOCOMOTION, State.HIT_REACT, State.STUNNED, State.VICTORY, State.LADDER_FALL],
 	State.TIE_UP: [State.GRAPPLE_HOLD, State.IDLE, State.HIT_REACT, State.VICTORY],
-	State.GRAPPLE_HOLD: [State.MOVE_EXEC, State.IRISH_WHIP, State.IDLE, State.FINISHER, State.VICTORY],
-	State.MOVE_EXEC: [State.DOWN, State.IDLE, State.HIT_REACT, State.PIN_ATTACKER, State.VICTORY],
-	State.HIT_REACT: [State.IDLE, State.DOWN, State.STUNNED, State.VICTORY],
-	State.DOWN: [State.GETUP, State.GRAPPLE_HOLD, State.PIN_DEFENDER, State.SUBMISSION_DEFENDER, State.VICTORY],
+	State.GRAPPLE_HOLD: [State.MOVE_EXEC, State.IRISH_WHIP, State.IDLE, State.FINISHER, State.VICTORY, State.LADDER_FALL],
+	State.MOVE_EXEC: [State.DOWN, State.IDLE, State.HIT_REACT, State.PIN_ATTACKER, State.VICTORY, State.LADDER_FALL],
+	State.HIT_REACT: [State.IDLE, State.DOWN, State.STUNNED, State.VICTORY, State.LADDER_FALL],
+	State.DOWN: [State.GETUP, State.GRAPPLE_HOLD, State.PIN_DEFENDER, State.SUBMISSION_DEFENDER, State.VICTORY, State.LADDER_FALL],
 	State.GETUP: [State.IDLE, State.HIT_REACT, State.VICTORY],
 	# STUNNED: whipped into a corner, he is trapped against the turnbuckle.
-	State.IRISH_WHIP: [State.RUN, State.HIT_REACT, State.STUNNED, State.VICTORY, State.SHUT_IN],
+	State.IRISH_WHIP: [State.RUN, State.HIT_REACT, State.STUNNED, State.VICTORY, State.SHUT_IN, State.LADDER_FALL],
 	State.RUNNING_ATTACK: [State.IDLE, State.HIT_REACT, State.DOWN, State.VICTORY],
-	State.STUNNED: [State.IDLE, State.HIT_REACT, State.DOWN, State.VICTORY],
+	State.STUNNED: [State.IDLE, State.HIT_REACT, State.DOWN, State.VICTORY, State.LADDER_FALL],
 	State.PIN_ATTACKER: [State.IDLE, State.GETUP, State.FINISHER, State.VICTORY],
 	State.PIN_DEFENDER: [State.DOWN, State.GETUP, State.VICTORY],
 	State.SUBMISSION_ATTACKER: [State.IDLE, State.DOWN, State.VICTORY],
@@ -90,6 +94,7 @@ const LEGAL_TRANSITIONS := {
 	State.LADDER_FALL: [State.DOWN, State.VICTORY],
 	State.CAGE_ESCAPE: [State.IDLE, State.HIT_REACT, State.LADDER_FALL, State.DOWN, State.VICTORY],
 	State.SHUT_IN: [State.IDLE, State.DOWN, State.HIT_REACT, State.VICTORY],
+	State.CELL_CLIMB: [State.IDLE, State.HIT_REACT, State.LADDER_FALL, State.DOWN, State.VICTORY],
 }
 
 signal state_changed(previous: State, current: State)
