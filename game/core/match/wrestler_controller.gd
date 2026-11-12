@@ -3428,7 +3428,7 @@ const ROPE_LOAD_DEPTH := 0.15
 ## first return step over 0.50 s (reference video 02, 183.10 -> 183.60). The
 ## hold lets that whole clip play against the loaded ropes instead of being
 ## cut off at its first deep frame.
-const ROPE_LOAD_HOLD_SECONDS := 0.50
+const ROPE_LOAD_HOLD_SECONDS := 0.55  # whip loop 7: leaves at ~+30, not +26
 ## Longest he can be out in the ropes before being put back regardless -- a
 ## load interrupted by something that holds him still must not strand him
 ## outside the ring with the rope collider switched off.
@@ -3565,10 +3565,10 @@ func _tick_rope_load() -> void:
 ## sideways. Turned here a step a tick, shown as it is.
 const ROPE_TURN_TICKS := 9
 ## The push back out of the ropes: the last WHIP_ROPE_PUSH_TICKS of the hold.
-const WHIP_ROPE_PUSH_TICKS := 5  # sit to +25, leave at +30 (ref push ~3-6 f)
+const WHIP_ROPE_PUSH_TICKS := 6  # sit to ~+27, leave ~+33 -> run by +30ish
 ## The push-off's ease-in exponent: (FREE + DEPTH) x 1.6 / WHIP_ROPE_PUSH_TICKS
 ## leaves the ropes at about 4.8 m/s, the return run's 4.6.
-const ROPE_PUSH_EASE := 1.5  # exit 0.25 m x 1.5 / (5/60 s) = 4.5 m/s
+const ROPE_PUSH_EASE := 1.65  # exit 0.25 m x 1.65 / (6/60 s) = 4.1 m/s
 
 
 ## Returns how far through the turn he is, 0..1 (eased), which is also how

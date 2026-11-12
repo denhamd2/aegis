@@ -2561,8 +2561,10 @@ const TRAJECTORIES := {
 					[1.200, 0.00, 0.00, -0.08]],
 			"rot": [[0.000, 0.0, 90.0, 0.0], [0.367, 0.0, 96.0, 0.0],
 					[0.533, 0.0, 125.0, 0.0], [0.733, 0.0, 180.0, 0.0],
-					[0.900, 0.0, 236.0, 0.0], [1.067, 0.0, 262.0, 0.0],
-					[1.200, 0.0, 270.0, 0.0]],
+					[0.900, 0.0, 236.0, 0.0], [1.067, 0.0, 257.0, 0.0],
+					# Ends already facing the runner's line, so the idle turn has
+					# nothing to snap at the release (loops 5-6: a 7-degree step).
+					[1.200, 0.0, 263.0, 0.0]],
 		},
 		"defender": {
 			# Pulled forward past him on +z, then let go accelerating evenly to
@@ -2578,8 +2580,11 @@ const TRAJECTORIES := {
 					# one-tick jump where the fit's last offsets stopped).
 					# Whip loop 6: an even ramp into the run's 5 m/s (0.083 m a
 					# tick), not 0.11-0.12 then a slow tick (loop 5).
-					[1.050, 0.52, 0.00, 0.10], [1.100, 0.64, 0.00, 0.04],
-					[1.150, 0.88, 0.00, -0.02], [1.200, 1.13, 0.00, -0.06]],
+					# Whip loop 7: a constant 5 m/s exit (0.25 m per 0.05 s) from
+					# 1.05 s, so the cubic has nothing to overshoot (loop 6:
+					# 6.6 m/s at the last ticks, then the run's 5).
+					[1.050, 0.60, 0.00, 0.10], [1.100, 0.85, 0.00, 0.04],
+					[1.150, 1.10, 0.00, -0.02], [1.200, 1.35, 0.00, -0.06]],
 			# Facing along his path: -90 is +x; the arc out on +z turns him
 			# toward -135, the run back onto the axis brings him to -90.
 			"rot": [[0.000, 0.0, -90.0, 0.0], [0.233, 0.0, -100.0, 0.0],
