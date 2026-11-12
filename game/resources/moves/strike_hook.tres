@@ -6,11 +6,11 @@
 script = ExtResource("1")
 resource_name = "High Hook"
 animation_pair_id = &"strike_hook"
-startup_frames = 11
+startup_frames = 9
 active_frames = 4
-recovery_frames = 27
-reversal_window_start = 11
-reversal_window_end = 15
+recovery_frames = 23
+reversal_window_start = 9
+reversal_window_end = 13
 damage_head = 6.0
 strike_hand = 1
 damage_torso = 2.0

@@ -6,11 +6,11 @@
 script = ExtResource("1")
 resource_name = "Clinch Knee"
 animation_pair_id = &"strike_clinch_knee_body"
-startup_frames = 21
+startup_frames = 16
 active_frames = 4
 recovery_frames = 21
-reversal_window_start = 21
-reversal_window_end = 25
+reversal_window_start = 16
+reversal_window_end = 20
 damage_head = 1.0
 damage_torso = 9.0
 damage_arms = 0.0

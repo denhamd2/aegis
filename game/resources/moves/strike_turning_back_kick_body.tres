@@ -5,11 +5,11 @@
 [resource]
 script = ExtResource("1")
 animation_pair_id = &"strike_turning_back_kick_body"
-startup_frames = 24
+startup_frames = 20
 active_frames = 5
 recovery_frames = 27
-reversal_window_start = 24
-reversal_window_end = 28
+reversal_window_start = 20
+reversal_window_end = 24
 damage_head = 1.0
 damage_torso = 8.0
 damage_arms = 0.0

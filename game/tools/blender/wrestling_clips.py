@@ -11540,6 +11540,79 @@ CLIPS["Rebound_Slam_Defender"] = [
     (49, S()),
 ]
 
+# --- parity re-times (12 Nov) --------------------------------------------------
+# The owner, 12 Nov: "score each of ours out of 10 in terms of parity with the
+# reference -- speed, cadence, smooth motion, like for like movements". Each
+# strike below was measured against the AEW Fight Forever tutorial at 60 fps
+# (gauntlet/refs/ff_review/parity). A re-time maps the clip's own frames
+# piecewise-linearly, so the authored poses and their spacing are kept and
+# only the beat each lands on moves; `patch` then adds what the reference has
+# that ours did not, on the clip's ORIGINAL frame numbers.
+
+def _retime(name, anchors, patch=None):
+    """anchors: [(old_frame, new_frame), ...] ascending, covering the clip."""
+    def remap(f):
+        for (a0, b0), (a1, b1) in zip(anchors, anchors[1:]):
+            if a0 <= f <= a1:
+                return b0 + (f - a0) * (b1 - b0) / float(a1 - a0)
+        return f + anchors[-1][1] - anchors[-1][0]
+    out = []
+    for f, pose_ in CLIPS[name]:
+        pose_ = dict(pose_)
+        if patch and f in patch:
+            pose_.update(patch[f])
+        out.append((round(remap(f), 3), pose_))
+    CLIPS[name] = out
+
+
+# Front kick to the body: first movement -> contact in about 21 ticks, not 32
+# (tutorial 63.63 -> 63.95; the recovery, 12 frames, already matched). And the
+# reference SKIPS into it -- both feet off the mat at 63.70-63.77, arms flung
+# up -- where ours stood on the left foot throughout.
+_retime("Strike_Front_Kick_Body", [(0, 0), (16, 10.5), (28, 22.5)], patch={
+    7: dict(pelvis=(-0.05, 0.12, 0.930), foot_l=(-0.20, 0.10, 0.22),
+            hand_l=(-0.34, 0.40, 1.46), hand_r=(0.40, 0.08, 1.38)),
+    10: dict(pelvis=(-0.05, 0.18, 0.900), foot_l=(-0.20, 0.14, 0.12),
+             hand_l=(-0.36, 0.46, 1.36), hand_r=(0.42, 0.06, 1.30)),
+})
+
+# High hook: the tutorial's is a full LUNGE (61.30-61.50) -- the body driven
+# about half a metre into the punch, low, the rear leg straight out behind --
+# where ours was a small step and turn. Timing is the strike recipe's
+# (0.61 -> 0.50 s: contact at tick 9, as the reference).
+_lunge = {
+    6: dict(pelvis=(-0.02, 0.36, 0.760), foot_l=(-0.21, 0.62, 0.104),
+            foot_r=(0.24, -0.52, 0.104), knee_r=(0.25, 1.0, -0.2)),
+    7: dict(pelvis=(-0.02, 0.38, 0.756), foot_l=(-0.21, 0.62, 0.104),
+            foot_r=(0.24, -0.52, 0.104), knee_r=(0.25, 1.0, -0.2)),
+    8: dict(pelvis=(-0.03, 0.34, 0.766), foot_l=(-0.21, 0.60, 0.104),
+            foot_r=(0.24, -0.46, 0.104)),
+    9: dict(pelvis=(-0.03, 0.30, 0.776), foot_l=(-0.21, 0.58, 0.104),
+            foot_r=(0.24, -0.40, 0.120)),
+    11: dict(pelvis=(-0.03, 0.20, 0.792), foot_l=(-0.21, 0.50, 0.104),
+             foot_r=(0.24, -0.20, 0.140)),
+}
+CLIPS["Strike_Hook_Left"] = [(f, dict(k, **_lunge.get(f, {})))
+                             for f, k in CLIPS["Strike_Hook_Left"]]
+
+# Clinch knee: the tutorial's is a JUMPING knee (70.80-71.00), both feet off
+# the mat as it lands, contact 16 ticks after the step in (ours was 21).
+_retime("Strike_Clinch_Knee_Body", [(0, 0), (10.5, 8), (23, 20.5)], patch={
+    8: dict(foot_l=(-0.20, 0.18, 0.20)),
+    8.5: dict(foot_l=(-0.20, 0.20, 0.24)),
+    9.5: dict(foot_l=(-0.20, 0.22, 0.26)),
+    10.5: dict(foot_l=(-0.20, 0.24, 0.24)),
+    12: dict(foot_l=(-0.20, 0.24, 0.14)),
+})
+# Turning back kick to the body: contact 20 ticks in (66.07), not 24.
+_retime("Strike_Turning_Back_Kick_Body", [(0, 0), (12, 10), (28, 26)])
+# Running flying knee: off the run into the knee in 16 ticks (72.80 ->
+# 73.07), not 25; the crash and the lying sell are unchanged.
+_retime("Strike_Running_Flying_Knee", [(0, 0), (13, 8), (34, 29)])
+# Side kick knockdown: chamber to contact in 16 ticks (76.53 -> 76.80), not 26.
+_retime("Strike_Side_Kick_Knockdown", [(0, 0), (13, 8), (32, 27)])
+
+
 def main():
     arm = load_rig()
     clear_actions()

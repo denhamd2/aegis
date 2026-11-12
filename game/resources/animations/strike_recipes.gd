@@ -235,8 +235,10 @@ const RECIPES := {
 	# right hand low. The authored 20-frame clip's contact is at 30%, so
 	# 0.61 s puts it on the 11th tick; the MoveDef's 42 ticks carry the
 	# remaining 0.09 s of recovery.
+	# 0.61 -> 0.50 (12 Nov parity): contact at tick 9 and 36 ticks overall,
+	# the tutorial's 61.30 -> 61.45 -> 61.90.
 	"strike_hook": {"kind": "retime", "source": "Strike_Hook_Left",
-		"seconds": 0.61, "file": AUTHORED},
+		"seconds": 0.50, "file": AUTHORED},
 
 	# The heavy kick: the same posed kick as strike_kick, thrown slower. It
 	# used to retime the mocap roundhouse, which measured head-below-hips on
@@ -261,8 +263,10 @@ const RECIPES := {
 	# data in strike_front_kick_body.tres. The defender folds over it and
 	# stays folded: torso damage dominates, so reaction_for() picks
 	# Hit_React_Torso and sell_for() continues into Sell_Gut.
+	# 0.94 -> 0.75 (12 Nov parity): the clip itself is re-timed to the
+	# tutorial (contact on its frame 10.5 = tick 21), so it plays 1:1.
 	"strike_front_kick_body": {"kind": "retime", "source": "Strike_Front_Kick_Body",
-		"seconds": 0.94, "file": AUTHORED},
+		"seconds": 0.75, "file": AUTHORED},
 	# DiveSpot's other ending, and the possum attack (PossumSpot).
 	"springboard_cutter_attacker": {"kind": "retime", "source": "Springboard_Cutter_Attacker",
 		"seconds": 1.600, "file": AUTHORED},
@@ -311,7 +315,7 @@ const RECIPES := {
 	# = tick 21, so retiming to 0.767 s leaves that contact on tick 21
 	# (strike_clinch_knee_body.tres's startup_frames).
 	"strike_clinch_knee_body": {"kind": "retime", "source": "Strike_Clinch_Knee_Body",
-		"seconds": 0.767, "file": AUTHORED},
+		"seconds": 0.6833, "file": AUTHORED},  # 12 Nov parity: 41 ticks
 	# Cody's (wrestling_clips.py "Cody's strikes"), at their own lengths so
 	# the MoveDefs' startup_frames land on the contact frames.
 	"strike_bionic_elbow": {"kind": "retime", "source": "Strike_Bionic_Elbow",
@@ -802,12 +806,12 @@ const RECIPES := {
 	"ground_pickup": {"kind": "retime", "source": "Pickup_Haul",
 		"seconds": 1.200, "file": AUTHORED},
 	"strike_turning_back_kick_body": {"kind": "retime",
-		"source": "Strike_Turning_Back_Kick_Body", "seconds": 0.9333,
+		"source": "Strike_Turning_Back_Kick_Body", "seconds": 0.8667,  # 12 Nov: 52 ticks
 		"file": AUTHORED},
 	"strike_running_flying_knee": {"kind": "retime",
-		"source": "Strike_Running_Flying_Knee", "seconds": 1.133, "file": AUTHORED},
+		"source": "Strike_Running_Flying_Knee", "seconds": 0.9667, "file": AUTHORED},  # 12 Nov: 58 ticks
 	"strike_side_kick_knockdown": {"kind": "retime",
-		"source": "Strike_Side_Kick_Knockdown", "seconds": 1.0667,
+		"source": "Strike_Side_Kick_Knockdown", "seconds": 0.9,  # 12 Nov: 54 ticks
 		"file": AUTHORED},
 	"strike_turning_back_kick_knockdown": {"kind": "retime",
 		"source": "Strike_Turning_Back_Kick_Knockdown", "seconds": 1.000,

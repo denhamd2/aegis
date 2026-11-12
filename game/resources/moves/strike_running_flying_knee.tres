@@ -5,11 +5,11 @@
 [resource]
 script = ExtResource("1")
 animation_pair_id = &"strike_running_flying_knee"
-startup_frames = 25
+startup_frames = 16
 active_frames = 5
-recovery_frames = 38
-reversal_window_start = 25
-reversal_window_end = 29
+recovery_frames = 37
+reversal_window_start = 16
+reversal_window_end = 20
 damage_head = 4.0
 damage_torso = 14.0
 damage_arms = 0.0
