@@ -11714,8 +11714,11 @@ for _f, _k in CLIPS["Strike_Turning_Back_Kick_Body"]:
     _k = dict(_k)
     _yaw = _k.get("hips", (0, 0, 0))[1]
     if 120.0 <= _yaw <= 230.0:
-        _k["hand_r"] = (-0.62, 0.02, 1.34)
-        _k["hand_l"] = (0.62, -0.02, 1.34)
+        # Out and a little down and forward, not a stiff T: straight out
+        # sideways, the near arm pointed at a side camera, read as a stump and
+        # shadowed his chest (four-angle check, 12 Nov). Facing -y here.
+        _k["hand_r"] = (-0.52, -0.16, 1.12)
+        _k["hand_l"] = (0.52, -0.16, 1.12)
         _k["fist_r"] = 0.5
         _k["fist_l"] = 0.5
     _bk.append((_f, _k))
