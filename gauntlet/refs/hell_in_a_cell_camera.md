@@ -42,7 +42,7 @@ happen during the lowering".
      above the 9.2 m truss, so no entrance shot looks through it. Four chains
      run up to the roof steel.
    - After the two corner introductions, `EntranceDirector._add_cell_lowering`
-     brings it down over 9 s, eased, then holds 1.4 s.
+     brings it down over 30 s (the owner, 12 Nov: "much slower"), eased, then holds 1.4 s.
    - **Shot:** low on the hard camera's side, tilting down with it
      (`cell_lower_shot`).
    - **Lighting (our design):**
