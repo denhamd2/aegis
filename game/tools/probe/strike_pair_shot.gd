@@ -68,7 +68,7 @@ func _ready() -> void:
 			# defender goes over on BUMP_LARIAT_CLIP and is carried back the
 			# way _bump_down() carries him (parity review, 12 Nov).
 			if move.leaves_defender_down:
-				_react = WrestlerController.BUMP_LARIAT_CLIP
+				_react = WrestlerController.knockdown_bump_clip(move)
 				_sell = ""
 				_carry = true
 	DirAccess.make_dir_recursive_absolute(_out)

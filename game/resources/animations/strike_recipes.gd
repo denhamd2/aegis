@@ -113,6 +113,9 @@ const RECIPES := {
 	# Lariated: the arm across his throat folds him over it, his legs swing
 	# up past level and he comes down flat from there.
 	"bump_lariat": {"kind": "retime", "source": "Bump_Lariat", "seconds": 1.2, "file": AUTHORED},
+	# A kick's knockdown: the lariat fall held up longer, flat at ~+36 ticks
+	# (parity loop 4; tutorial 76.90-77.40). 44 frames at 30 fps.
+	"bump_kick": {"kind": "retime", "source": "Bump_Kick", "seconds": 1.4667, "file": AUTHORED},
 
 	# BACK to the rig's own Punch_Jab, and the mocap excerpt that replaced it
 	# is gone. Measured with tools/probe/strike_clip_probe.tscn on the BASE

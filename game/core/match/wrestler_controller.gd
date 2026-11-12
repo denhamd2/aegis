@@ -5049,7 +5049,7 @@ func _resolve_pending_hits() -> void:
 				if WeaponCatalog.cuts(weapon_def):
 					_writhe_in = WRITHE_AFTER
 	if lariat and not combat.is_fired_up():
-		_bump_clip = BUMP_LARIAT_CLIP
+		_bump_clip = knockdown_bump_clip(last_move)
 		_bump_shove = maxf(_bump_shove, LARIAT_SHOVE)
 		_bump_carry = true
 	# A rear chair blow and a guitar crumple forward. A superkick turns its
@@ -5967,6 +5967,17 @@ const BUMP_TICKS := 30
 const BUMP_LARIAT_CLIP := "strikes/bump_lariat"
 const BUMP_FACE_CLIP := "strikes/bump_face"
 const BUMP_SPIN_CLIP := "strikes/bump_spin"
+## A kick's knockdown falls slower than a lariat's: flat at ~+36 ticks.
+const BUMP_KICK_CLIP := "strikes/bump_kick"
+const KICK_BUMP_TICKS := 44
+
+
+## The fall a knockdown strike plays: the lariat's for a running attack, the
+## held-up kick fall for a standing or flying strike (parity loop 4).
+static func knockdown_bump_clip(move: MoveDef) -> String:
+	if move and String(move.animation_pair_id).begins_with("strike_"):
+		return BUMP_KICK_CLIP
+	return BUMP_LARIAT_CLIP
 const LARIAT_BUMP_TICKS := 36
 const LARIAT_SHOVE := 1.6
 
@@ -6024,7 +6035,8 @@ func _bump_down() -> void:
 			and anim_player.has_animation(_bump_clip) else "strikes/bump_back"
 	_bump_clip = ""
 	_set_state_clip(WrestlerFSM.State.HIT_REACT, clip)
-	_start_move(WrestlerFSM.State.HIT_REACT, _timed_stub(LARIAT_BUMP_TICKS if clip in [BUMP_LARIAT_CLIP, BUMP_SPIN_CLIP] else BUMP_TICKS))
+	_start_move(WrestlerFSM.State.HIT_REACT, _timed_stub(KICK_BUMP_TICKS if clip == BUMP_KICK_CLIP
+			else LARIAT_BUMP_TICKS if clip in [BUMP_LARIAT_CLIP, BUMP_SPIN_CLIP] else BUMP_TICKS))
 	_bumping = true
 	if _bump_shove > 1.0 and opponent:
 		# the heaviest weapons carry him back as he goes over

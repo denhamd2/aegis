@@ -2284,11 +2284,11 @@ CLIPS = {
         # deepest (tutorial 1:01.55; it was 20, which read as no snap at all
         # -- parity review loop 1, 12 Nov).
         (2,  R(pelvis=(0.02, -0.06, 0.800), hips=(-2, 6, 0),
-               spine=(4, 18, -6), head=(10, 36, -16),
+               spine=(-2, 18, -12), head=(2, 36, -14),
                hand_r=(0.28, 0.24, 1.06), hand_l=(-0.24, 0.28, 1.10))),
         # Deepest: thrown back off the shot, weight on the back foot.
         (4,  R(pelvis=(0.05, -0.14, 0.806), hips=(4, 10, 0),
-               spine=(10, 22, -9), head=(12, 40, -20),
+               spine=(0, 22, -16), head=(4, 40, -16),
                hand_r=(0.32, 0.12, 1.02), hand_l=(-0.28, 0.16, 1.04),
                fist_r=0.4, fist_l=0.4,
                foot_r=(0.28, -0.36, 0.104), foot_l=(-0.20, 0.16, 0.118))),
@@ -11723,6 +11723,55 @@ for _f, _k in CLIPS["Strike_Turning_Back_Kick_Body"]:
         _k["fist_l"] = 0.5
     _bk.append((_f, _k))
 CLIPS["Strike_Turning_Back_Kick_Body"] = _bk
+
+
+# --- Strike parity loop 4 (12 Nov) ---------------------------------------
+def _patch_keys(name, fn):
+    CLIPS[name] = [(f, fn(f, dict(k))) for f, k in CLIPS[name]]
+
+# Every reaction opens from the GUARD the defender stands in: from READY's
+# open hands, his hands dropped to "catch" the strike on the contact frame
+# (loop 3: front kick, flying knee, side kick).
+for _name in ("Hit_React_Head", "Hit_React_Head_Left", "Hit_React_Torso"):
+    _f0, _k0 = CLIPS[_name][0]
+    CLIPS[_name][0] = (_f0, dict(_k0, **_GUARD))
+
+# Knocked down by a kick: the lariat bump laid him flat in 20 ticks; the
+# tutorial's kicked man is still in the air, legs up, at +16 and flat at about
+# +36 (76.90-77.40, 73.17-73.74). The same fall, re-timed and held up longer.
+_BL = dict(CLIPS["Bump_Lariat"])
+CLIPS["Bump_Kick"] = [
+    (0, dict(_BL[0], **_GUARD)),
+    (3, _BL[2]),
+    (9, _BL[5]),
+    (13, dict(_BL[5], pelvis=(0.0, 0.01, 0.62))),
+    (18, _BL[10]),
+    (22, _BL[14]),
+    (44, _BL[36]),
+]
+
+# Hook: the lunge 0.18 m shorter, so the fist lands on the jaw with the torsos
+# apart instead of the arm wrapping his head (loop 3).
+def _hook_short(f, k):
+    if f in (6, 7, 8, 9, 11, 12.5):
+        px, py, pz = k["pelvis"]
+        k["pelvis"] = (px, max(0.0, py - 0.18), pz)
+        fx, fy, fz = k["foot_l"]
+        k["foot_l"] = (fx, fy - 0.14, fz)
+    return k
+_patch_keys("Strike_Hook_Left", _hook_short)
+
+# Front kick: a skip that reads (support foot 0.30 m up, pelvis up with it)
+# and the sole to the navel, 0.12 m higher (loop 3).
+def _fk(f, k):
+    if abs(f - 4.594) < 0.01:
+        k["foot_l"] = (-0.20, 0.14, 0.30); k["pelvis"] = (-0.05, 0.14, 1.00)
+    elif abs(f - 6.562) < 0.01:
+        k["foot_l"] = (-0.20, 0.18, 0.22); k["pelvis"] = (-0.05, 0.20, 0.96)
+    elif 10.4 < f < 11.4:
+        x, y, z = k["foot_r"]; k["foot_r"] = (x, y, z + 0.12)
+    return k
+_patch_keys("Strike_Front_Kick_Body", _fk)
 
 
 def main():
