@@ -190,6 +190,10 @@ func _ready() -> void:
 				pb.seek(minf(rt - hit_len, pb.get_animation(_sell).length - 0.001), true)
 				pb.advance(0)
 			if OS.get_cmdline_user_args().has("--debug"):
+				var hip_a := a.skeleton.get_bone_global_pose(a.skeleton.find_bone("pelvis")).origin if a.skeleton else Vector3.ZERO
+				var hip_b := b.skeleton.get_bone_global_pose(b.skeleton.find_bone("pelvis")).origin if b.skeleton else Vector3.ZERO
+				print("DBGPOS f%d A=%s B=%s pelvisA=%s pelvisB=%s" % [f, a.global_position, b.global_position,
+						a.skeleton.global_transform * hip_a, b.skeleton.global_transform * hip_b])
 				var sk := a.skeleton
 				var foot := sk.find_bone("foot_r") if sk else -1
 				print("DBG f%d anim=%s pos=%.3f playing=%s foot_r=%s" % [f, pa.current_animation,
