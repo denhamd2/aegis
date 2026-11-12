@@ -166,7 +166,12 @@ func _ready() -> void:
 	# needs its own key and fill or the two men read as silhouettes.
 	var key := DirectionalLight3D.new()
 	scene.add_child(key)
-	key.rotation_degrees = Vector3(-48, -28, 0)
+	# From the camera's side and above, not behind the pair: keyed from behind,
+	# a chest turned to the camera mid-spin fell into the hair's shadow and
+	# read as a black, collapsed torso (the owner: "Kenny is morphing").
+	key.global_position = camera.global_position + Vector3(0.0, 2.5, 0.0) \
+			+ (camera.global_position - focus).cross(Vector3.UP).normalized() * 1.5
+	key.look_at(focus, Vector3.UP)
 	key.light_energy = 3.0
 	key.shadow_enabled = true
 	var fill := OmniLight3D.new()
