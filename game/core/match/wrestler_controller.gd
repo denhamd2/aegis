@@ -5200,6 +5200,14 @@ func _begin_hit_reaction(move: MoveDef) -> void:
 		return
 	velocity = away.normalized() * KNOCKBACK_SPEED * float(SELL_SHOVE.get(_hit_sell, 1.0))
 	_knockback_ticks = KNOCKBACK_TICKS
+	if move and move.shove_m > 0.0:
+		# A push, bled out inside the 20-tick reaction so nothing carries into
+		# the state after it: 18 ticks at 0.9 cover shove_m.
+		var d := 0.9
+		var v := move.shove_m * 60.0 * (1.0 - d) / d / (1.0 - pow(d, 18.0))
+		velocity = away.normalized() * v
+		_knockback_ticks = 18
+		_knockback_decay = d
 
 ## Points the STRIKE state at this strike's own clip before entering it.
 ##

@@ -81,6 +81,10 @@ enum HeadReaction { NORMAL, UPPERCUT }
 ## DOWN instead, for THROWN_DOWN_TICKS, whether or not it knocked him down.
 ## It is not a knockdown -- see WrestlerController._lie_down_after_throw().
 @export var leaves_defender_down: bool = false
+## How far the blow drives a man who stays on his feet, in metres over his
+## reaction (0 = the ordinary 0.13 m stagger). The tutorial's clinch knee opens
+## into a push kick that sends him about a metre back (parity loop 3, 12 Nov).
+@export var shove_m: float = 0.0
 
 ## Face-first moves need a prone sell. Damage alone cannot tell which side of
 ## the body hit the canvas; most head-damage moves still land on the back.

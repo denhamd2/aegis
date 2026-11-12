@@ -29,6 +29,7 @@ var _contact := -1
 ## (0.4) left every kick 0.2 m short of the body (parity loop 2 renders).
 const TORSO_HALF_DEPTH := 0.2
 var _carry := false
+var _shove_m := 0.0
 var _b_start := Vector3.ZERO
 
 
@@ -67,6 +68,8 @@ func _ready() -> void:
 			# A knockdown strike plays the game's bump, not a flinch: the
 			# defender goes over on BUMP_LARIAT_CLIP and is carried back the
 			# way _bump_down() carries him (parity review, 12 Nov).
+			if move.shove_m > 0.0 and not move.leaves_defender_down:
+				_shove_m = move.shove_m
 			if move.leaves_defender_down:
 				_react = WrestlerController.knockdown_bump_clip(move)
 				_sell = ""
@@ -198,6 +201,8 @@ func _ready() -> void:
 			var rt := float(f - maxi(_contact, 0)) / 60.0
 			if _carry:
 				b.global_position = _b_start + Vector3(0.0, 0.0, -_carried(f - _contact))
+			elif _shove_m > 0.0:
+				b.global_position = _b_start + Vector3(0.0, 0.0, -_pushed(f - _contact))
 			if rt < 0.0 and pb.has_animation(StrikeRecipes.clip("idle_ready")):
 				# Before contact he stands as the game stands him: idle_ready.
 				var idle := StrikeRecipes.clip("idle_ready")
@@ -265,3 +270,15 @@ func _carried(n: int) -> float:
 		v *= WrestlerController.KNOCKDOWN_CARRY_DECAY
 		d += v / 60.0
 	return d
+
+
+## Metres a MoveDef.shove_m push has carried him n ticks after contact, as
+## WrestlerController._begin_hit_reaction() bleeds it (18 ticks at 0.9).
+func _pushed(n: int) -> float:
+	var d := 0.9
+	var v := _shove_m * 60.0 * (1.0 - d) / d / (1.0 - pow(d, 18.0))
+	var out := 0.0
+	for i in clampi(n, 0, 18):
+		v *= d
+		out += v / 60.0
+	return out

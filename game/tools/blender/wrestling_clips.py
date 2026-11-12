@@ -11774,6 +11774,30 @@ def _fk(f, k):
 _patch_keys("Strike_Front_Kick_Body", _fk)
 
 
+# Clinch knee: the tutorial's is a JUMPING knee that opens into a push kick
+# (70.80-71.10): both feet off the mat at contact, the knee at the sternum,
+# then the leg straightened into his gut (the push itself is the MoveDef's
+# shove_m). Loops 1-3: grounded, knee at the groin, no push.
+def _ck(f, k):
+    px, py, pz = k["pelvis"]
+    if 6.0 <= f <= 9.8:
+        lift = {6.09: 0.08, 6.48: 0.12, 7.24: 0.16, 8.0: 0.18, 9.74: 0.10}.get(round(f, 2), 0.0)
+        k["pelvis"] = (px, py, pz + lift)
+        fx, fy, fz = k["foot_l"]
+        k["foot_l"] = (fx, fy, fz + lift)
+    r = round(f, 2)
+    if r == 7.24:
+        k["foot_r"] = (0.15, 0.40, 0.72)
+    elif r == 8.0:
+        k["foot_r"] = (0.14, 0.50, 0.80)
+    elif r == 9.74:
+        k["foot_r"] = (0.12, 0.96, 0.92); k["knee_r"] = (0.3, 1.0, 0.4)
+    elif r == 12.06:
+        k["foot_r"] = (0.14, 0.92, 0.84); k["knee_r"] = (0.3, 1.0, 0.4)
+    return k
+_patch_keys("Strike_Clinch_Knee_Body", _ck)
+
+
 def main():
     arm = load_rig()
     clear_actions()
