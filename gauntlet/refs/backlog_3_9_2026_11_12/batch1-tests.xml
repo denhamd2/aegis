@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites id="2026-11-12" name="report_1" tests="26" failures="0" skipped="0" flaky="0" time="0.000">
+	<testsuite id="0" name="test_blood" package="tests" timestamp="2026-11-12T21:39:12" hostname="localhost" tests="13" failures="0" errors="0" skipped="0" flaky="0" time="36.397">
+		<testcase name="test_face_blood_stays_in_narrow_streaks_as_it_builds" classname="test_blood" time="0.003">
+		</testcase>
+		<testcase name="test_every_skin_surface_has_its_reveal_map" classname="test_blood" time="4.507">
+		</testcase>
+		<testcase name="test_the_dangerous_weapons_open_him_up_and_the_soft_ones_do_not" classname="test_blood" time="3.075">
+		</testcase>
+		<testcase name="test_barbed_wire_cuts_deeper_than_a_chair" classname="test_blood" time="4.130">
+		</testcase>
+		<testcase name="test_a_beaten_man_bleeds_more_from_the_same_shot" classname="test_blood" time="3.953">
+		</testcase>
+		<testcase name="test_landing_on_the_tacks_opens_his_back" classname="test_blood" time="2.623">
+		</testcase>
+		<testcase name="test_it_runs_rather_than_pops_and_keeps_running" classname="test_blood" time="6.657">
+		</testcase>
+		<testcase name="test_blood_off_bleeds_nothing" classname="test_blood" time="2.861">
+		</testcase>
+		<testcase name="test_the_canvas_keeps_one_stain_map_however_much_is_spilt" classname="test_blood" time="0.192">
+		</testcase>
+		<testcase name="test_match_ring_canvas_has_a_live_blood_overlay" classname="test_blood" time="0.868">
+		</testcase>
+		<testcase name="test_a_bloodied_man_laid_out_on_the_canvas_stains_it" classname="test_blood" time="4.896">
+		</testcase>
+		<testcase name="test_the_blood_level_defaults_to_five_and_scales_what_is_shown" classname="test_blood" time="2.573">
+		</testcase>
+		<testcase name="test_the_options_screen_steps_the_blood_level" classname="test_blood" time="0.003">
+		</testcase>
+	</testsuite>
+	<testsuite id="1" name="test_skin_look" package="tests" timestamp="2026-11-12T21:39:48" hostname="localhost" tests="7" failures="0" errors="0" skipped="0" flaky="0" time="3.060">
+		<testcase name="test_sweat_starts_damp_builds_and_caps" classname="test_skin_look" time="0.004">
+		</testcase>
+		<testcase name="test_wetness_is_a_clearcoat_film" classname="test_skin_look" time="0.003">
+		</testcase>
+		<testcase name="test_sweat_film_has_spatial_breakup_and_bounded_roughness" classname="test_skin_look" time="0.052">
+		</testcase>
+		<testcase name="test_face_keeps_a_wet_finish_with_softer_highlights_than_the_body" classname="test_skin_look" time="0.003">
+		</testcase>
+		<testcase name="test_pores_leave_the_colour_alone" classname="test_skin_look" time="0.006">
+		</testcase>
+		<testcase name="test_detail_uv_is_added_without_touching_the_mesh" classname="test_skin_look" time="0.003">
+		</testcase>
+		<testcase name="test_roman_and_cody_register_skin_with_pores_and_sweat" classname="test_skin_look" time="2.969">
+		</testcase>
+	</testsuite>
+	<testsuite id="2" name="test_hit_flinch_and_life" package="tests" timestamp="2026-11-12T21:39:51" hostname="localhost" tests="6" failures="0" errors="0" skipped="0" flaky="0" time="0.032">
+		<testcase name="test_a_flinch_peaks_fast_rebounds_once_and_settles" classname="test_hit_flinch_and_life" time="0.003">
+		</testcase>
+		<testcase name="test_a_blow_lands_where_its_damage_does" classname="test_hit_flinch_and_life" time="0.003">
+		</testcase>
+		<testcase name="test_only_the_biggest_blows_stop_the_clips" classname="test_hit_flinch_and_life" time="0.004">
+		</testcase>
+		<testcase name="test_fatigue_runs_from_fresh_to_spent_on_sweats_scale" classname="test_hit_flinch_and_life" time="0.002">
+		</testcase>
+		<testcase name="test_a_bigger_snap_takes_longer_to_turn_out" classname="test_hit_flinch_and_life" time="0.003">
+		</testcase>
+		<testcase name="test_a_fidget_eases_in_and_out_and_starts_and_ends_at_rest" classname="test_hit_flinch_and_life" time="0.002">
+		</testcase>
+	</testsuite>
+</testsuites>
