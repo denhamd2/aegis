@@ -2549,15 +2549,16 @@ const TRAJECTORIES := {
 		# behind the whipper (3:01.90-3:02.50). Ours used to spin the man on
 		# the spot and send him at the rope behind himself: a short run and no
 		# arm extension. The attacker's yaw winds 90 -> 270 with the pass and
-		# steps aside (-z) so the man clears him on +z, ending 0.82 m apart
-		# along +x -- the launch line (_launch_whip_victim aims attacker ->
+		# steps aside (-z) and back so the man clears him on +z, ending 1.0 m
+		# apart along +x -- past GrappleRig's 0.95 m separation, whose ease-
+		# apart otherwise stalled him six ticks before the launch (loop 4b) -- the launch line (_launch_whip_victim aims attacker ->
 		# defender), 3 degrees off the pair axis.
 		"attacker": {
 			"pos": [[0.000, 0.26, 0.00, 0.00], [0.133, 0.25, 0.00, 0.00],
 					[0.233, 0.24, 0.00, -0.01], [0.367, 0.23, 0.00, -0.03],
 					[0.533, 0.21, 0.00, -0.08], [0.733, 0.16, 0.00, -0.16],
-					[0.900, 0.12, 0.00, -0.18], [1.067, 0.12, 0.00, -0.16],
-					[1.200, 0.14, 0.00, -0.10]],
+					[0.900, 0.08, 0.00, -0.18], [1.067, 0.03, 0.00, -0.14],
+					[1.200, 0.00, 0.00, -0.08]],
 			"rot": [[0.000, 0.0, 90.0, 0.0], [0.367, 0.0, 96.0, 0.0],
 					[0.533, 0.0, 125.0, 0.0], [0.733, 0.0, 180.0, 0.0],
 					[0.900, 0.0, 236.0, 0.0], [1.067, 0.0, 262.0, 0.0],
@@ -2572,13 +2573,13 @@ const TRAJECTORIES := {
 					[0.233, -0.22, 0.00, 0.06], [0.367, -0.16, 0.00, 0.14],
 					[0.533, -0.04, 0.00, 0.26], [0.733, 0.16, 0.00, 0.34],
 					[0.900, 0.34, 0.00, 0.26], [1.000, 0.46, 0.00, 0.16],
-					[1.050, 0.50, 0.00, 0.10], [1.100, 0.59, 0.00, 0.04],
-					[1.150, 0.745, 0.00, -0.02],
+					[1.050, 0.52, 0.00, 0.10], [1.100, 0.62, 0.00, 0.04],
+					[1.150, 0.785, 0.00, -0.02],
 					# Close keys to the end: the cubic eases into its last key,
 					# and with one key at 1.20 he slowed to a near stop over the
 					# last four ticks before the launch (loop 4 data, t85-t89).
-					[1.167, 0.809, 0.00, -0.035], [1.183, 0.879, 0.00, -0.047],
-					[1.192, 0.921, 0.00, -0.054], [1.200, 0.96, 0.00, -0.06]],
+					[1.167, 0.849, 0.00, -0.035], [1.183, 0.919, 0.00, -0.047],
+					[1.192, 0.961, 0.00, -0.054], [1.200, 1.00, 0.00, -0.06]],
 			# Facing along his path: -90 is +x; the arc out on +z turns him
 			# toward -135, the run back onto the axis brings him to -90.
 			"rot": [[0.000, 0.0, -90.0, 0.0], [0.233, 0.0, -100.0, 0.0],
