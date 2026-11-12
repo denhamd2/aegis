@@ -160,6 +160,13 @@ func _ready() -> void:
 		focus = (a.global_position + land) * 0.5 + Vector3(0.0, 0.8, 0.0)
 		back = 4.2
 	camera.global_position = focus + across * back + Vector3(0.0, 0.4, 0.0)
+	# --cam-yaw DEG: orbit the camera round the focus (diagnosing a pose from
+	# more than the one side; 12 Nov, the turning back kick's torso).
+	var cy := OS.get_cmdline_user_args().find("--cam-yaw")
+	if cy >= 0 and cy + 1 < OS.get_cmdline_user_args().size():
+		var off := camera.global_position - focus
+		camera.global_position = focus + off.rotated(Vector3.UP,
+				deg_to_rad(float(OS.get_cmdline_user_args()[cy + 1])))
 	camera.look_at(focus, Vector3.UP)
 	camera.fov = 45.0
 	# The arena is lit for the wide broadcast camera; a close review camera
