@@ -11628,6 +11628,20 @@ _retime("Strike_Clinch_Knee_Body", [(0, 0), (10.5, 8), (23, 22.5)], patch={
     10.5: dict(foot_l=(-0.20, 0.24, 0.24)),
     12: dict(foot_l=(-0.20, 0.24, 0.14)),
 })
+# Side kick: the tutorial's chamber is chest-high with the body laid back
+# ~30 degrees over the support leg (76.63-76.80); ours chambered at the belt
+# and kicked upright (parity review loop 1). Patched on the original frames.
+_SK = {f: k for f, k in CLIPS["Strike_Side_Kick_Knockdown"]}
+_sk_patch = {
+    10: dict(foot_r=(0.12, 0.26, 0.94), spine=(8, 10, 0), head=(-10, -48, 0)),
+    12: dict(spine=(20, -4, 0), head=(-16, -48, 0)),
+    13: dict(spine=(24, -10, 0), head=(-18, -48, 0)),
+    13.5: dict(spine=(24, -10, 0), head=(-18, -47, 0)),
+    14: dict(spine=(24, -10, 0), head=(-18, -46, 0)),
+}
+CLIPS["Strike_Side_Kick_Knockdown"] = [(f, dict(k, **_sk_patch.get(f, {})))
+                                       for f, k in CLIPS["Strike_Side_Kick_Knockdown"]]
+
 # Turning back kick to the body: contact 20 ticks in (66.07), not 24.
 _retime("Strike_Turning_Back_Kick_Body", [(0, 0), (12, 10), (28, 20)])
 # Running flying knee: off the run into the knee in 16 ticks (72.80 ->

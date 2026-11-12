@@ -25,6 +25,9 @@ var _at: Array = [0.0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9]
 var _move_id := ""
 var _frames: Array = []
 var _contact := -1
+## The contact point is on his chest, not his capsule: the capsule radius
+## (0.4) left every kick 0.2 m short of the body (parity loop 2 renders).
+const TORSO_HALF_DEPTH := 0.2
 var _carry := false
 var _b_start := Vector3.ZERO
 
@@ -88,7 +91,7 @@ func _ready() -> void:
 	if _move_id != "":
 		var mv: MoveDef = load("res://resources/moves/%s.tres" % _move_id)
 		if mv and mv.contact_radius > 0.0:
-			gap = maxf(0.8, -mv.contact_offset.z + WrestlerController.BODY_RADIUS)
+			gap = maxf(0.8, -mv.contact_offset.z + TORSO_HALF_DEPTH)
 	b.global_position = Vector3(0.0, 0.0, -gap)
 	_b_start = b.global_position
 	a.look_at(b.global_position, Vector3.UP)
