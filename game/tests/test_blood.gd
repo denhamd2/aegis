@@ -11,7 +11,7 @@ const MODELS := ["res://scenes/roman_model.tscn", "res://scenes/cody_model.tscn"
 
 
 ## These measure the blood at full level (10, the blood as it was); the
-## shipped default (4) is pinned on its own below.
+## shipped default (5) is pinned on its own below.
 func before_test() -> void:
 	Blood.set_level(Blood.MAX_LEVEL)
 
@@ -234,12 +234,12 @@ func test_a_bloodied_man_laid_out_on_the_canvas_stains_it() -> void:
 	assert_float(heavy).is_greater(light)
 
 
-## The owner, 2 Nov: "a blood scale setting of 1 to 10 ... 10 is what it
-## currently is ... set it to 4 by default". The level scales what is shown.
-func test_the_blood_level_defaults_to_four_and_scales_what_is_shown() -> void:
-	assert_int(Blood.DEFAULT_LEVEL).is_equal(4)
+## The November quality plan raises the original default by one scale step.
+## The level scales what is shown, and explicit choices keep their meaning.
+func test_the_blood_level_defaults_to_five_and_scales_what_is_shown() -> void:
+	assert_int(Blood.DEFAULT_LEVEL).is_equal(5)
 	Blood.set_level(Blood.DEFAULT_LEVEL)
-	assert_float(Blood.amount()).is_equal_approx(0.4, 0.001)
+	assert_float(Blood.amount()).is_equal_approx(0.5, 0.001)
 	var w := await _wrestler()
 	var b := _blood(w)
 	b.head = 1.0
@@ -247,7 +247,7 @@ func test_the_blood_level_defaults_to_four_and_scales_what_is_shown() -> void:
 	b.shown_head = 1.0
 	b._since = Blood.UPDATE_EVERY
 	b._process(0.0)
-	assert_float(float(b.materials[0].get_shader_parameter("bleed_head"))).is_equal_approx(0.4, 0.001)
+	assert_float(float(b.materials[0].get_shader_parameter("bleed_head"))).is_equal_approx(0.5, 0.001)
 	Blood.set_level(0)
 	assert_bool(Blood.on()).is_false()
 	Blood.set_level(10)

@@ -30,7 +30,8 @@ extends Node
 ##
 ## Settings: a level from OFF through 1-10 (the owner, 2 Nov: "The blood is
 ## too gratuitous. Can you have a blood scale setting of 1 to 10 ... 10 is
-## what it currently is ... set it to 4 by default"). The title screen's
+## what it currently is ... set it to 4 by default"; November quality plan
+## raises the startup default one step to 5). The title screen's
 ## options or `--blood off|1..10`. The cut is worked out the same at every
 ## level; the level scales what is SHOWN -- the reveal on the skin, the drips,
 ## the pools, the spatter -- so 4 is 40 % of the old blood everywhere, and a
@@ -103,7 +104,9 @@ const POOL_FROM := 0.06
 const LYING := 0.42
 const UPDATE_EVERY := 0.05
 
-const DEFAULT_LEVEL := 4
+## November quality plan: one step above the previous default. Explicit
+## menu/command-line choices still replace this startup value unchanged.
+const DEFAULT_LEVEL := 5
 const MAX_LEVEL := 10
 static var enabled := true
 ## 1-10 (0 is off: `enabled` false). 10 is the blood as it was.
