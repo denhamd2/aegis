@@ -541,6 +541,17 @@ func set_house_level(level: float) -> void:
 	set_look(look)
 
 
+## A man is standing in the ring before the bell: the ring keys stay up on
+## him through the next entrance's dark (the owner, 12 Nov: Roman's finger in
+## the ring, "but then the ring goes dark - the light should still be on him").
+var ring_hold := false
+
+
+## Whether `light` is one of the ring's own keys or top fills.
+func is_ring_light(light: Light3D) -> bool:
+	return _ring_lights.has(light)
+
+
 func set_look(p_look: Look) -> void:
 	look = p_look
 	var entrance := look == Look.ENTRANCE
@@ -559,7 +570,8 @@ func set_look(p_look: Look) -> void:
 		env.tonemap_exposure = _base_exposure * (ENTRANCE_EXPOSURE if entrance else MATCH_EXPOSURE)
 	for light in _ring_lights:
 		var base := key_energy if String(light.name).begins_with("Key") else top_energy
-		light.light_energy = base * (ENTRANCE_RING_SHARE if entrance else 1.0) * renderer_gain(light)
+		var share := ENTRANCE_RING_SHARE if entrance and not ring_hold else 1.0
+		light.light_energy = base * share * renderer_gain(light)
 	for light in _stage_wash:
 		light.light_energy = stage_energy * (ENTRANCE_STAGE_SHARE if entrance else 1.0) \
 				* renderer_gain(light)

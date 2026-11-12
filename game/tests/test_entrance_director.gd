@@ -222,7 +222,7 @@ func test_tension_commentary_cue_lands_at_the_faceoff_stare() -> void:
 	var director: EntranceDirector = scene.get_node("EntranceDirector")
 	var found := false
 	for beat: Dictionary in director._beats:
-		if beat.get("shot", "") != "staredown_push":
+		if beat.get("shot", "") != "faceoff_ots_a":
 			continue
 		for event: Array in beat.get("events", []):
 			found = found or event[1] == "faceoff_tension"
@@ -494,11 +494,15 @@ func test_the_ring_is_lit_for_the_match_card_and_the_corner_intros() -> void:
 	var director: EntranceDirector = scene.get_node("EntranceDirector")
 	var rig := scene.get_node("LightRig")
 	var ticks := 0
+	# 12 Nov: the card wide is gone; the establishing wide on the hard camera
+	# (shot "faceoff", ESTABLISH_TICKS) is the shot of the two in their corners.
 	while ticks < 30000 and director._beat < director._beats.size() \
-			and (director._beats[director._beat] as Dictionary).get("shot", "") != "match_card":
+			and not ((director._beats[director._beat] as Dictionary).get("shot", "") == "faceoff"
+					and int((director._beats[director._beat] as Dictionary).get("ticks", 0))
+							== EntranceDirector.ESTABLISH_TICKS):
 		director._physics_process(1.0 / 60.0)
 		ticks += 1
-	assert_str(String((director._beats[director._beat] as Dictionary).get("shot", ""))).is_equal("match_card")
+	assert_str(String((director._beats[director._beat] as Dictionary).get("shot", ""))).is_equal("faceoff")
 	for _i in 30:
 		director._physics_process(1.0 / 60.0)
 	assert_int(rig.look).is_equal(ArenaLighting.Look.MATCH)
@@ -996,15 +1000,16 @@ func test_the_match_starts_from_the_corners_on_the_stare() -> void:
 	var b: WrestlerController = scene.get_node("WrestlerB")
 	var director: EntranceDirector = scene.get_node("EntranceDirector")
 	var beats: Array = director._beats
-	var stare: Dictionary = beats[-1]
-	assert_str(stare.get("shot", "")).is_equal("staredown_push")
-	# 9 Nov: their poses before the stare.
-	var poses: Dictionary = beats[-2]
-	assert_bool(poses.get("pose_wide", false)).is_true()
-	for move: Array in poses["moves"]:
-		assert_str(move[4]).is_equal(EntranceDirector.faceoff_pose_clip(move[0]))
-	var walk_in: Dictionary = beats[-3]
-	assert_str(walk_in.get("shot", "")).is_equal("faceoff_side")
+	# 12 Nov, the owner: the walk to the centre, three broadcast close-ups of
+	# the face-off, the bell -- no poses.
+	assert_str(beats[-1].get("shot", "")).is_equal("faceoff_profile")
+	assert_str(beats[-2].get("shot", "")).is_equal("faceoff_ots_b")
+	assert_str(beats[-3].get("shot", "")).is_equal("faceoff_ots_a")
+	for i in [-1, -2, -3]:
+		for move: Array in beats[i]["moves"]:
+			assert_str(move[4]).is_equal("strikes/face_off")
+	var walk_in: Dictionary = beats[-4]
+	assert_str(walk_in.get("shot", "")).is_equal("walk_in_tv")
 	# Each entrance ends in his corner: no stand in mid-ring first.
 	for man: WrestlerController in [a, b]:
 		assert_float(_flat(director._entrance_mark[man].origin).length()).is_greater(2.0)
@@ -1042,7 +1047,7 @@ func test_the_walks_to_the_corners_and_the_stare_play_clips_made_for_their_speed
 	var scene := _match(true, "roman", "cody")
 	var director: EntranceDirector = scene.get_node("EntranceDirector")
 	var beats: Array = director._beats
-	var walk_in: Dictionary = beats[-3]
+	var walk_in: Dictionary = beats[-4]
 	var to_corners: Dictionary
 	for beat: Dictionary in beats:
 		if beat.get("shot", "") == "faceoff" and beat.get("kind", "") == "pair":
@@ -1066,9 +1071,8 @@ func test_the_walks_to_the_corners_and_the_stare_play_clips_made_for_their_speed
 ## "Ensure Aubrey is out of their way during all that": from the corner
 ## close-ups on she is in the neutral corner, off both men's walk.
 func test_aubrey_waits_in_the_neutral_corner_from_the_close_ups() -> void:
-	assert_bool(RefereeActor.FACEOFF_WAIT_SHOTS.has("corner_intro")).is_true()
-	assert_bool(RefereeActor.FACEOFF_WAIT_SHOTS.has("faceoff_side")).is_true()
-	assert_bool(RefereeActor.FACEOFF_WAIT_SHOTS.has("staredown_push")).is_true()
+	for shot: String in ["faceoff", "walk_in_tv", "faceoff_ots_a", "faceoff_ots_b", "faceoff_profile"]:
+		assert_bool(RefereeActor.FACEOFF_WAIT_SHOTS.has(shot)).is_true()
 	var a := EntranceDirector.faceoff_corner(Vector3(0, 0, -1.5), -1.0)
 	var b := EntranceDirector.faceoff_corner(Vector3(0, 0, 1.5), 1.0)
 	var n := RefereeActor.neutral_corner(a)

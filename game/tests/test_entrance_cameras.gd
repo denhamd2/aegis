@@ -364,14 +364,11 @@ func test_codys_walk_gestures_are_each_seen_once() -> void:
 func test_the_face_off_and_match_intro_use_broadcast_pacing() -> void:
 	assert_float(EntranceDirector.STAREDOWN_CLOSE).is_less(EntranceDirector.FACEOFF_CAM_DISTANCE)
 	assert_float(EntranceDirector.STAREDOWN_FOV).is_less(EntranceDirector.FACEOFF_CAM_FOV)
-	# 9 Nov: their poses, then the stare -- together still 4-6 s to the bell.
-	assert_float(float(EntranceDirector.FACEOFF_POSE_TICKS + EntranceDirector.FACEOFF_STARE_TICKS)
-			/ EntranceDirector.TPS).is_between(4.0, 6.0)
-	# Card, check and corner mediums have distinct short holds before the bell.
-	assert_float(float(EntranceDirector.INTRO_CARD_TICKS) / EntranceDirector.TPS).is_equal(3.0)
-	assert_float(float(EntranceDirector.INTRO_CHECK_TICKS) / EntranceDirector.TPS).is_equal(2.0)
-	assert_float(float(EntranceDirector.INTRO_CLOSE_TICKS) / EntranceDirector.TPS).is_equal(2.5)
-	assert_float(EntranceDirector.INTRO_CLOSE_FOV).is_greater_equal(30.0)
+	# 12 Nov, the owner: "simpler and quicker" -- one establishing wide, and
+	# three face-off close-ups of about a second each before the bell.
+	assert_float(float(EntranceDirector.ESTABLISH_TICKS) / EntranceDirector.TPS).is_between(1.5, 2.5)
+	assert_float(float(EntranceDirector.FACEOFF_CLOSE_TICKS * 3) / EntranceDirector.TPS).is_between(3.0, 4.5)
+	assert_float(EntranceDirector.FACEOFF_OTS_FOV).is_less(30.0)
 
 
 

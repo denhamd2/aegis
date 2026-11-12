@@ -434,10 +434,10 @@ func _chain_input() -> Dictionary:
 					and MatchRules.caged(controller) \
 					and (controller.outside_ring if cell else not controller.outside_ring) \
 					and (cell or _chain_rng().randf() < CAGE_WHIP_SHARE)}
-		if not _opening_grapple_done():
-			var roll := _chain_rng().randi_range(1, 5)
-			_chain_plan = 1 if roll <= CHAIN_LINK_WEIGHTS[0] else (
-					2 if roll <= CHAIN_LINK_WEIGHTS[0] + CHAIN_LINK_WEIGHTS[1] else 3)
+		# The opening lock-up is a lock-up into a grapple, not a chain-wrestling
+		# exchange (the owner, 12 Nov: "They should start with a lockup
+		# grapple, not chain wrestling"): _chain_plan stays 0 for it. The
+		# chain's holds are for later lock-ups (rest holds, CHAIN_LINK_WEIGHTS).
 	if c._chain_links >= _chain_plan:
 		return {"chain": "none"}
 	if c._chain_read != CHAIN_PICK_TICK:

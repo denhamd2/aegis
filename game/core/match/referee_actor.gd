@@ -135,7 +135,8 @@ var _faceoff_wait := false
 ## door's side.
 const CELL_SIGNAL_IN := 2.55
 var _cell_errand := false
-const FACEOFF_WAIT_SHOTS := ["corner_intro", "faceoff_side", "staredown_push"]
+const FACEOFF_WAIT_SHOTS := ["corner_intro", "faceoff_side", "staredown_push", "faceoff",
+		"walk_in_tv", "faceoff_ots_a", "faceoff_ots_b", "faceoff_profile", "cell_lower"]
 var _separating := false
 ## Seconds she has stood between them; she steps clear after SEPARATE_HOLD.
 var _separate_time := 0.0
@@ -199,9 +200,10 @@ func follow(director: EntranceDirector) -> void:
 		elif _cell_errand:
 			_cell_errand = false
 			end_errand()
-		if shot == "faceoff" and mode == Mode.PARK and not _separated:
-			_separated = true
-			_separating = true)
+		# (She no longer walks out between them to separate them on the
+		# establishing wide: she stays in her neutral corner, out of the
+		# shot -- the owner, 12 Nov.)
+		)
 
 
 ## An errand for PropHandoff, during the entrances: she leaves her spot, walks
@@ -281,6 +283,23 @@ func go_live() -> void:
 ## in a corner at `man` -- one of the two corners neither of them took
 ## (EntranceDirector.faceoff_corner puts them diagonally opposite), the same
 ## distance in from the pads.
+## A man standing in the ring before the bell (the first one in), or null.
+func _man_in_ring() -> WrestlerController:
+	for w: WrestlerController in _wrestlers:
+		if w.visible and absf(w.global_position.x) < RingBuilder.APRON_OUT - 0.4 \
+				and absf(w.global_position.z) < RingBuilder.APRON_OUT - 0.4 \
+				and w.global_position.y > -0.3:
+			return w
+	return null
+
+
+## Whose corner sets the neutral one: the man in the ring if one is, else
+## the first man.
+func _corner_man() -> WrestlerController:
+	var m := _man_in_ring()
+	return m if m else _wrestlers[0]
+
+
 static func neutral_corner(man: Vector3) -> Vector3:
 	var taken := signf(man.x) * signf(man.z)
 	if taken == 0.0:
@@ -320,9 +339,12 @@ func _process(delta: float) -> void:
 				if not _go(at, WALK_SPEED, delta, false):
 					return
 				_face(_yaw_towards(_flat(man.global_position) - at), delta)
-			elif _faceoff_wait and _flat(global_position).distance_to(neutral_corner(
-					_wrestlers[0].global_position)) > ARRIVED * 2.0:
-				if not _go(neutral_corner(_wrestlers[0].global_position), WALK_SPEED, delta, false):
+			elif (_faceoff_wait or _man_in_ring() != null) and _flat(global_position).distance_to(
+					neutral_corner(_corner_man().global_position)) > ARRIVED * 2.0:
+				# From the moment the first man is in his corner she waits in
+				# a neutral one, never in front of him (the owner, 12 Nov: "the
+				# ref stands in front of him - she should be out of the way").
+				if not _go(neutral_corner(_corner_man().global_position), WALK_SPEED, delta, false):
 					return
 				_face(_yaw_towards(-global_position), delta)
 			elif not _faceoff_wait and _flat(global_position).distance_to(PARK) > ARRIVED * 2.0 \

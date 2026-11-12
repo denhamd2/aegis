@@ -123,8 +123,8 @@ const FACEOFF_GAP := 0.75
 ## The slow walk out of the corners, on its own clip authored at this speed
 ## (Walk_Staredown): on Entrance_Walk (1.6 m/s) the feet slid back a metre a
 ## second -- the owner's "glitchy walking to their staredown" (2 Nov).
-const FACEOFF_WALK_SPEED := 0.6
-const FACEOFF_WALK_CLIP := "strikes/walk_staredown"
+const FACEOFF_WALK_SPEED := 1.0
+const FACEOFF_WALK_CLIP := "strikes/walk_slow"  # authored at 1.0 m/s (FACEOFF_WALK_SPEED)
 ## From the marks to the corners, on the slow walk authored at this speed
 ## (Walk_Slow) -- not Entrance_Walk at 1.1, which skated half a metre a second.
 ## And the turn in there.
@@ -171,6 +171,12 @@ const FACEOFF_CAM_FOV := 34.0
 ## The entrances have already introduced each wrestler, so these are short
 ## bridges to the face-off rather than another long round of introductions.
 const INTRO_CARD_TICKS := 180
+## The broadcast pre-match (12 Nov): the establishing wide, then each of the
+## three face-off close-ups.
+const ESTABLISH_TICKS := 120
+const FACEOFF_CLOSE_TICKS := 72
+const FACEOFF_OTS_FOV := 24.0
+const FACEOFF_PROFILE_FOV := 32.0
 const INTRO_CHECK_TICKS := 120
 const INTRO_CLOSE_TICKS := 150
 const INTRO_CARD_AT := Vector3(-8.0, 4.4, 3.4)
@@ -1445,22 +1451,25 @@ func _add_faceoff() -> void:
 	var a_in := mid + _flat(ca - mid).normalized() * (FACEOFF_GAP * 0.5)
 	var b_in := mid + _flat(cb - mid).normalized() * (FACEOFF_GAP * 0.5)
 	var walk_in := maxi(1, int(ceil(_flat(ca).distance_to(_flat(a_in)) / FACEOFF_WALK_SPEED * TPS)))
-	_beats.append({"kind": "pair", "ticks": walk_in, "shot": "faceoff_side",
+	# The owner, 12 Nov: "they each go to the corner, they walk up to each
+	# other to do a faceoff, some nice closeups of that, the bell rings, and
+	# they lock up quickly ... Use tv broadcast angles throughout." The walk
+	# on the ring-level hard-camera-side camera (no crane), then the face-off
+	# in three broadcast close-ups -- over each man's shoulder onto the other's
+	# face, and the low profile two-shot -- and the bell. No poses (removed at
+	# the owner's word, 12 Nov).
+	_beats.append({"kind": "pair", "ticks": walk_in, "shot": "walk_in_tv",
 			"events": [[1, "house_down"]], "moves": [
 			[_a, ca, a_in, face_a, FACEOFF_WALK_CLIP],
 			[_b, cb, b_in, face_b, FACEOFF_WALK_CLIP]]})
-	# The owner, 9 Nov: "When they face off, I want each of them to hit their
-	# pose. Then they should start with a grapple." Each man's signature
-	# (faceoff_pose_clip) nose to nose, then a short stare to the bell; the
-	# opening is a grapple (WrestlerAI._opening_grapple_done).
-	_beats.append({"kind": "pair", "ticks": FACEOFF_POSE_TICKS, "shot": "staredown_push",
-			"pose_wide": true, "events": [[1, "faceoff_tension"], [1, "flash_burst"]],
-			"moves": [[_a, a_in, a_in, face_a, faceoff_pose_clip(_a)],
-					[_b, b_in, b_in, face_b, faceoff_pose_clip(_b)]]})
-	_beats.append({"kind": "pair", "ticks": FACEOFF_STARE_TICKS, "shot": "staredown_push",
-			"snap_end": true,
-			"moves": [[_a, a_in, a_in, face_a, "strikes/face_off"],
-					[_b, b_in, b_in, face_b, "strikes/face_off"]]})
+	var stare := [[_a, a_in, a_in, face_a, "strikes/face_off"],
+			[_b, b_in, b_in, face_b, "strikes/face_off"]]
+	_beats.append({"kind": "pair", "ticks": FACEOFF_CLOSE_TICKS, "shot": "faceoff_ots_a",
+			"events": [[1, "faceoff_tension"], [1, "flash_burst"]], "moves": stare})
+	_beats.append({"kind": "pair", "ticks": FACEOFF_CLOSE_TICKS, "shot": "faceoff_ots_b",
+			"moves": stare})
+	_beats.append({"kind": "pair", "ticks": FACEOFF_CLOSE_TICKS, "shot": "faceoff_profile",
+			"snap_end": true, "moves": stare})
 	# The match starts where the stare ends: the bell finds them here.
 	_mark[_a] = Transform3D(_facing_basis(face_a), a_in)
 	_mark[_b] = Transform3D(_facing_basis(face_b), b_in)
@@ -1493,20 +1502,12 @@ static func faceoff_corner(mark: Vector3, x_side: float) -> Vector3:
 func _add_intro(a: Transform3D, b: Transform3D, face_a: Vector3, face_b: Vector3) -> void:
 	var hold := [[_a, a.origin, a.origin, face_a, _wait_clip(_a)],
 			[_b, b.origin, b.origin, face_b, _wait_clip(_b)]]
-	var checked := intro_checked(a.origin, b.origin)
-	_checked = checked
-	var first := _b if checked == _a else _a
-	var last := _a if checked == _a else _b
-	# Both men are in and lit (lights_up, on the walk to the corners in
-	# _add_faceoff): the introductions and the stare-down, not at the bell.
-	_beats.append({"kind": "pair", "ticks": INTRO_CARD_TICKS, "shot": "match_card",
-			"match_card": true, "moves": hold})
-	_beats.append({"kind": "pair", "ticks": INTRO_CHECK_TICKS, "shot": "ref_check",
-			"focus": last, "moves": hold})
-	_beats.append({"kind": "pair", "ticks": INTRO_CLOSE_TICKS, "shot": "corner_intro",
-			"focus": first, "moves": hold})
-	_beats.append({"kind": "pair", "ticks": INTRO_CLOSE_TICKS, "shot": "corner_intro",
-			"focus": last, "moves": hold})
+	_checked = intro_checked(a.origin, b.origin)
+	# One establishing wide on the hard camera: both men in their corners, the
+	# house up. The match card wide, the referee's check and the two crane
+	# close-ups went (the owner, 12 Nov: "I don't like the crane camera shots
+	# ... it looks cheesy", "the sequence goes on for too long").
+	_beats.append({"kind": "pair", "ticks": ESTABLISH_TICKS, "shot": "faceoff", "moves": hold})
 	_add_cell_lowering(hold)
 
 
@@ -1646,6 +1647,14 @@ func _start_beat() -> void:
 	if _lights and _lights.has_method("crowd_sweep"):
 		_lights.crowd_sweep(String(beat.get("shot", "")).begins_with("crowd"))
 	var w: WrestlerController = beat.get("who")
+	# On the mat: from here the ring keys stay up on him (ArenaLighting.
+	# ring_hold) -- after Roman's finger in the ring the pose light went and
+	# the ring fell to the entrance look's 40 %, dark round him (12 Nov).
+	if beat.get("on_mat", false) and _lights and "ring_hold" in _lights \
+			and not _lights.ring_hold:
+		_lights.ring_hold = true
+		if _lights.has_method("set_look"):
+			_lights.set_look(_lights.look)
 	if beat.get("appear", false) and w:
 		# Placed in the same step he is shown, or the frame in between renders
 		# him standing at his in-ring spawn for a sixtieth of a second.
@@ -2851,6 +2860,12 @@ func _event(w: WrestlerController, what: String) -> void:
 			_tron_on = false
 			if _wall:
 				_wall.end_entrance()
+			# His entrance is over and he is in the ring: the ring stays lit
+			# on him whatever the next entrance does to the house.
+			if _lights and "ring_hold" in _lights:
+				_lights.ring_hold = true
+				if _lights.has_method("set_look"):
+					_lights.set_look(_lights.look)
 		"dim_on":
 			_dim_house(true)
 		"blackout_on":
@@ -3401,6 +3416,35 @@ func _frame_shot(beat: Dictionary, delta: float, force_cut := false) -> void:
 			_intro_close(beat, first, delta)
 		"ref_check":
 			_intro_close(beat, first, delta)
+		"walk_in_tv":
+			# The walk to the centre: ring level on the hard camera's side,
+			# square to their line, as far back as holds both -- which closes
+			# in as they come together: the slow push, no crane.
+			var mid_w := (_a.global_position + _b.global_position) * 0.5
+			var line_w := _flat(_b.global_position - _a.global_position).normalized()
+			var side_w := Vector3.UP.cross(line_w).normalized()
+			if side_w.dot(_camera.hard_cam_position - mid_w) < 0.0:
+				side_w = -side_w
+			var back_w := walk_in_distance(_a.global_position, _b.global_position, side_w)
+			_camera.set_entrance_shot(mid_w + side_w * back_w + Vector3.UP * 1.45,
+					mid_w + Vector3.UP * 1.25, FACEOFF_WALK_FOV,
+					first and not _was_shot("walk_in_tv"), delta)
+			_key_on_pair()
+		"faceoff_ots_a":
+			_faceoff_over_shoulder(_a, _b, first, delta)
+		"faceoff_ots_b":
+			_faceoff_over_shoulder(_b, _a, first, delta)
+		"faceoff_profile":
+			# Nose to nose, in profile, from ringside height on the hard
+			# camera's side: the two heads filling the frame.
+			var heads_p := (_head_of(_a) + _head_of(_b)) * 0.5
+			var line_p := _flat(_b.global_position - _a.global_position).normalized()
+			var side_p := Vector3.UP.cross(line_p).normalized()
+			if side_p.dot(_camera.hard_cam_position - heads_p) < 0.0:
+				side_p = -side_p
+			_camera.set_entrance_shot(heads_p + side_p * 2.3 + Vector3.DOWN * 0.12,
+					heads_p + Vector3.DOWN * 0.05, FACEOFF_PROFILE_FOV, first, delta)
+			_key_on_pair()
 		"faceoff_side":
 			# F1, the walk out of the corners to the centre: from the hard
 			# camera's side of the ring at eye height, as far back as holds
@@ -3471,6 +3515,21 @@ func _staredown_push(first: bool, delta: float) -> void:
 			+ Vector3.UP * lerpf(FACEOFF_CAM_HEIGHT, heads.y - mid.y - 0.03, e)
 	_camera.set_entrance_shot(at, heads + Vector3.DOWN * lerpf(0.1, 0.02, e),
 			lerpf(FACEOFF_CAM_FOV, STAREDOWN_FOV, e), first, delta)
+	_key_on_pair()
+
+
+## Over `near`'s shoulder onto `far`'s face: the broadcast reverse shot,
+## long lens, from just behind and to the camera side of the near man's head.
+func _faceoff_over_shoulder(near: WrestlerController, far: WrestlerController,
+		first: bool, delta: float) -> void:
+	var nh := _head_of(near)
+	var fh := _head_of(far)
+	var toward := _flat(fh - nh).normalized()
+	var side := Vector3.UP.cross(toward).normalized()
+	if side.dot(_camera.hard_cam_position - nh) < 0.0:
+		side = -side
+	_camera.set_entrance_shot(nh - toward * 1.05 + side * 0.38 + Vector3.UP * 0.06,
+			fh + Vector3.DOWN * 0.04, FACEOFF_OTS_FOV, first, delta)
 	_key_on_pair()
 
 
@@ -3717,6 +3776,10 @@ func _dim_house(on: bool, rig: float = ROMAN_HOUSE_DIM,
 		if _lights:
 			for child in _lights.get_children():
 				if child is Light3D and not String(child.name).begins_with("Accent"):
+					# The ring keys stay on a man already in the ring.
+					if "ring_hold" in _lights and _lights.ring_hold \
+							and _lights.is_ring_light(child as Light3D):
+						continue
 					_dimmed[child] = (child as Light3D).light_energy
 					var share := rig
 					if house_floor > rig and String(child.name).begins_with("AudienceWash"):
