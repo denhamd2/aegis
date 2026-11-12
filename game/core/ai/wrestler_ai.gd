@@ -710,10 +710,12 @@ func _cell_input(distance: float) -> Dictionary:
 		if roof.at_climbable_wall(p):
 			return {"cell_route": true}
 		return _to_cell_point(roof, _climb_foot(roof, -1.0 if following and _cell_plan != 1 else 1.0), false)
-	# In the ring: out of it toward the door.
+	# In the ring: out of it toward the door -- at a walk, as _through_cell_door
+	# does. Running, he hit the ropes and stood there (flow_probe seed 2,
+	# 12 Nov: 40 s at the top rope, the plan given up).
 	if not controller.outside_ring:
 		var out := _through_ropes_toward(roof.door_axis() * (roof.half() - 0.7))
-		return {"move": out, "rope_cross": controller.can_cross_ropes(), "run": true}
+		return {"move": out, "rope_cross": controller.can_cross_ropes()}
 	# Locked, no cutters in hand: get them.
 	if roof.door_locked and not (controller.has_weapon()
 			and controller.held_weapon.def.id == &"wire_cutters"):
@@ -726,8 +728,48 @@ func _cell_input(distance: float) -> Dictionary:
 		if to.length() <= WeaponStock.PICKUP_REACH * 0.9:
 			return {"weapon": true}
 		return {"move": Vector2(to.normalized().x, to.normalized().z), "run": to.length() > 2.0}
-	return _to_cell_point(roof, roof.door_axis() * (roof.half() - 0.75)
-			+ Vector3.UP * WrestlerController.FLOOR_LEVEL, true)
+	var door := roof.door_axis() * (roof.half() - 0.75) \
+			+ Vector3.UP * WrestlerController.FLOOR_LEVEL
+	# Round the ring, not into it: straight at the door from the far side he
+	# walked into the apron and stood there with the cutters for 40 s
+	# (flow_probe seed 2, 12 Nov).
+	var lane := _round_the_ring(roof, door)
+	if not lane.is_empty():
+		return lane
+	return _to_cell_point(roof, door, true)
+
+
+## Inside the walls on the floor, toward `goal`: via the lane corner that
+## keeps him off the apron when it is between. {} when the way is clear.
+func _round_the_ring(roof: CellRoof, goal: Vector3) -> Dictionary:
+	var p := controller.global_position
+	var lim := RingBuilder.APRON_OUT + 0.15
+	if not _box_between(lim, p, goal):
+		return {}
+	var c := (RingBuilder.APRON_OUT + roof.half()) * 0.5
+	var best := Vector3.ZERO
+	var cost := INF
+	for sx in [-1.0, 1.0]:
+		for sz in [-1.0, 1.0]:
+			var corner := Vector3(sx * c, p.y, sz * c)
+			if _flat(corner - p).length() < 0.5 or _box_between(lim, p, corner):
+				continue
+			var k := _flat(corner - p).length() + _flat(goal - corner).length() \
+					+ (6.0 if _box_between(lim, corner, goal) else 0.0)
+			if k < cost:
+				cost = k
+				best = corner
+	if cost == INF:
+		return {}
+	return _to_cell_point(roof, best, false)
+
+
+static func _box_between(lim: float, a: Vector3, b: Vector3) -> bool:
+	for i in 9:
+		var q := a.lerp(b, (i + 1) / 10.0)
+		if absf(q.x) < lim and absf(q.z) < lim:
+			return true
+	return false
 
 
 ## Up there with him: no ropes, no ring to go back to -- close in and work
