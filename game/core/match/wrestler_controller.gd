@@ -266,7 +266,7 @@ const KNOCKBACK_DECAY := 0.75
 ## him back about a metre as he goes over, not 0.13 m: the tutorial's side kick
 ## and flying knee put the man flat about 1.0-1.2 m back within ~28 frames
 ## (parity review, 12 Nov). 3.75 m/s bled by 0.95 a tick over 36 ticks ~ 1.0 m.
-const KNOCKDOWN_CARRY_SPEED := 3.75  # 36 ticks at 0.95 ~ 1.0 m (loop 2: fell too fast)
+const KNOCKDOWN_CARRY_SPEED := 2.8  # ~0.75 m (loop 5: the side kick's man travelled ~2.3 m with the clip's own drift)
 const KNOCKDOWN_CARRY_TICKS := 36
 const KNOCKDOWN_CARRY_DECAY := 0.95
 var _knockback_decay := KNOCKBACK_DECAY

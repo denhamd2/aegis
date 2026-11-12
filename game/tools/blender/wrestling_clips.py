@@ -293,7 +293,7 @@ HEAD_HURT = dict(
 GUT_HURT = dict(
     # Folded nearer horizontal: the tutorial's body-kicked man is bent almost
     # flat by +15 (parity loop 4; was hips -20, spine -46).
-    READY, pelvis=(0.0, -0.12, 0.720), hips=(-26, 0, 0), spine=(-60, 0, 0),
+    READY, pelvis=(0.0, -0.12, 0.726), hips=(-24, 0, 0), spine=(-52, 0, 0),  # loop 6: 60 over-folded the back kick and clinch sells
     # The torso folds deeply, but the chin stays slightly lifted so the neck
     # follows the chest instead of curling forward and stretching the throat.
     head=(10, 0, 0),
@@ -11838,6 +11838,67 @@ CLIPS["Bump_Kick"].sort(key=lambda k: k[0])
 # (loop 4: 30 f). Contact is unchanged -- strike_recipes.gd scales by the same
 # 0.75 (0.60 s over 24 frames).
 CLIPS["Strike_Hook_Left"].append((24, dict(CLIPS["Strike_Hook_Left"][-1][1])))
+
+
+# Front kick: the knee POINTS UP through the chamber and the kick. Its pole was
+# forward (0.2, 1.0, ...) -- along the kicked leg itself, so the thigh's roll
+# was undefined and the trunks twisted into a flat ribbon at the chamber and
+# contact (the owner, 12 Nov: "check Kenny's arms and legs ... fix any
+# distortions").
+# And the same rule for every parity strike, either leg: a raised foot's knee
+# points UP. A forward pole runs along a leg kicked forward (front kick, knee,
+# flying knee, side kick chamber) and left the thigh's roll undefined -- the
+# flattened-ribbon thighs in the loop-5 frames.
+def _pole_up(f, k):
+    for side, sx in (("r", 0.12), ("l", -0.12)):
+        pole, foot = k.get("knee_" + side), k.get("foot_" + side)
+        if pole is not None and foot is not None and foot[2] > 0.30 and pole[1] > 0.6:
+            k["knee_" + side] = (sx, 0.35, 1.0)
+    return k
+for _name in ("Strike_Front_Kick_Body", "Strike_Clinch_Knee_Body",
+              "Strike_Running_Flying_Knee", "Strike_Side_Kick_Knockdown",
+              "Strike_Turning_Back_Kick_Body", "Strike_Hook_Left"):
+    _patch_keys(_name, _pole_up)
+
+# Turning back kick, loop 6: the twist the owner saw as "morphing" (reviewer:
+# hips spun ~190, chest and head still facing the camera -- ~90 degrees of
+# spine and neck twist, a candy-wrapper torso). Chest within 30 degrees of the
+# hips, head within 30 more; arms out wide (~70 degrees abduction, the
+# tutorial's), not across or tucked.
+def _bk6(f, k):
+    yaw = k.get("hips", (0, 0, 0))[1]
+    if 100.0 <= yaw <= 250.0:
+        sp, hd = k.get("spine", (0, 0, 0)), k.get("head", (0, 0, 0))
+        k["spine"] = (sp[0], max(-30.0, min(30.0, sp[1])), sp[2])
+        k["head"] = (hd[0], max(-30.0, min(30.0, hd[1])), hd[2])
+        k["hand_r"] = (-0.58, 0.0, 1.22)
+        k["hand_l"] = (0.58, 0.0, 1.22)
+    return k
+_patch_keys("Strike_Turning_Back_Kick_Body", _bk6)
+
+# Flying knee, loop 6: 0.25 m lower in the air (the knee to the chin, not the
+# sternum) and landing short of the man, not through him.
+def _fk6(f, k):
+    px, py, pz = k["pelvis"]
+    if 5.0 < f <= 8.5:
+        k["pelvis"] = (px, py, pz - 0.22)
+    if f >= 11:
+        k["pelvis"] = (px, min(py, 0.20), pz)
+    return k
+_patch_keys("Strike_Running_Flying_Knee", _fk6)
+
+# Clinch knee, loop 6: heads clear (root 0.12 m back, torso back 12 degrees
+# through the knee) and the knee 0.12 m higher, to the sternum.
+def _ck6(f, k):
+    if 6.0 <= f <= 12.1:
+        px, py, pz = k["pelvis"]
+        k["pelvis"] = (px, py - 0.12, pz)
+        sp = k.get("spine", (0, 0, 0))
+        k["spine"] = (sp[0] + 12, sp[1], sp[2])
+        if 7.0 < f < 8.5:
+            x, y, z = k["foot_r"]; k["foot_r"] = (x, y, z + 0.12)
+    return k
+_patch_keys("Strike_Clinch_Knee_Body", _ck6)
 
 
 def main():
