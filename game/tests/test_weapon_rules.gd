@@ -242,7 +242,10 @@ func test_the_gun_is_only_there_for_the_finish() -> void:
 	assert_object(stock.loose_near(gun.global_position)).is_equal(gun)
 
 
-func test_letting_go_of_the_button_gets_him_up_empty_handed() -> void:
+## Changed 12 Nov (the owner: once he is reaching under, "don't let it be cut
+## off"): letting go before a pick no longer gets him up empty-handed -- he
+## comes out with the fallback (test_a_rummage_is_not_cut_off).
+func test_letting_go_of_the_button_still_brings_out_a_weapon() -> void:
 	var w := _wrestler(true)
 	w.outside_ring = true
 	w.global_position = Vector3(WrestlerController.DECK_KEEP_OUT + 0.1, WrestlerController.FLOOR_LEVEL, 0.5)
@@ -250,8 +253,8 @@ func test_letting_go_of_the_button_gets_him_up_empty_handed() -> void:
 	w._weapon_input({"weapon": true})
 	for i in WrestlerController.RUMMAGE_RELEASE_TICKS:
 		w._tick_weapon_action({"weapon": false})
-	assert_int(w.fsm.current_state).is_equal(WrestlerFSM.State.IDLE)
-	assert_bool(w.has_weapon()).is_false()
+	assert_int(w.fsm.current_state).is_equal(WrestlerFSM.State.WEAPON_ACTION)
+	assert_str(w._weapon_action).is_equal("retrieve")
 
 
 func test_he_loses_it_when_he_goes_down() -> void:
