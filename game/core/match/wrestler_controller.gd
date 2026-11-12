@@ -3546,9 +3546,9 @@ func _tick_rope_load() -> void:
 ## which the inertializer turned out over a quarter second of sprinting
 ## sideways. Turned here a step a tick, shown as it is.
 const ROPE_TURN_TICKS := 9
-## The push back out of the ropes: the last ROPE_PUSH_TICKS of the hold.
-const ROPE_PUSH_TICKS := 10
-## The push-off's ease-in exponent: (FREE + DEPTH) x 1.6 / ROPE_PUSH_TICKS
+## The push back out of the ropes: the last WHIP_ROPE_PUSH_TICKS of the hold.
+const WHIP_ROPE_PUSH_TICKS := 10
+## The push-off's ease-in exponent: (FREE + DEPTH) x 1.6 / WHIP_ROPE_PUSH_TICKS
 ## leaves the ropes at about 4.8 m/s, the return run's 4.6.
 const ROPE_PUSH_EASE := 1.6
 
@@ -3562,10 +3562,10 @@ func _rope_hold_end_tick(dt: float) -> int:
 
 
 ## How far through the push back out of the ropes he is, 0..1, linear: the
-## last ROPE_PUSH_TICKS of the hold.
+## last WHIP_ROPE_PUSH_TICKS of the hold.
 func _rope_push_progress(dt: float) -> float:
 	var end_tick := _rope_hold_end_tick(dt)
-	return clampf(float(_rope_load_tick - (end_tick - ROPE_PUSH_TICKS)) / float(ROPE_PUSH_TICKS),
+	return clampf(float(_rope_load_tick - (end_tick - WHIP_ROPE_PUSH_TICKS)) / float(WHIP_ROPE_PUSH_TICKS),
 			0.0, 1.0)
 
 
