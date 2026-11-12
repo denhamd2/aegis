@@ -1816,12 +1816,16 @@ const TRAJECTORIES := {
 	# half-turn himself (yaw 90 -> -90), and lands seated with the head behind
 	# his right shoulder, while the victim is driven face-first 0.5 m forward
 	# of where he stood. Roots stay at y = 0.
-	# Fight Forever's Cross Rhodes (wrestling_clips.py): the clinch closes in to
-	# 0.30 m, then the men orbit a half-turn about Cody (t0.30-0.63, theta 180
-	# -> 0 in 45-degree keys so no turn goes the short way round), both
-	# yawing +180 and staying face to face; the man is driven down and out in
-	# front of Cody's seat, landing a body-length off as the Tiger Driver '98's
-	# victim does, clear of Cody's legs.
+	# Cross Rhodes, a rolling cutter (wrestling_clips.py): the clinch closes in
+	# to 0.30 m, then the men orbit a half-turn about Cody (t0.30-0.63, theta
+	# 180 -> 0 in 45-degree keys so no turn goes the short way round), both
+	# yawing +180 and ending face to face. Cody falls back to a seat (0.40 ->
+	# 0.22) with the head under his right arm; facing +X his right is +Z, so
+	# the man is yanked face-first down to land 0.85 m in front and 0.25 m to
+	# that side -- his head at Cody's hip, as the Cody Cutter lands him. (It
+	# used to drive him out a body-length past Cody's feet off a Tiger Driver
+	# flip; the owner, 12 Nov: "is the victim supposed to go vertically up in
+	# the air like that?")
 	"finisher_cross_rhodes": {
 		"length": 1.9,
 		"attacker": {
@@ -1839,15 +1843,15 @@ const TRAJECTORIES := {
 		# the right way round), holds him back to chest to 0.30, and as they
 		# orbit the man is twisted through a whole turn (90 -> 450, a key
 		# each 90 degrees) -- ending chest to chest exactly where the old
-		# clinch ended, so the flip and spike that follow are unchanged.
+		# clinch ended, so the cutter that follows starts face to face.
 		"defender": {
 			"pos": [[0.00, -0.40, 0.00, 0.00], [0.07, -0.25, 0.00, 0.00],
 					[0.14, -0.02, 0.00, 0.00], [0.30, 0.06, 0.00, 0.00],
 					[0.40, 0.188, 0.00, 0.212],
 					[0.47, 0.40, 0.00, 0.30], [0.57, 0.612, 0.00, 0.212],
-					[0.63, 0.70, 0.00, 0.00], [0.70, 0.86, 0.00, 0.00],
-					[0.77, 1.11, 0.00, 0.00], [0.83, 1.54, 0.00, 0.00],
-					[0.93, 1.80, 0.00, 0.00], [1.90, 1.88, 0.00, 0.00]],
+					[0.63, 0.70, 0.00, 0.00], [0.70, 0.74, 0.00, 0.05],
+					[0.77, 0.88, 0.00, 0.15], [0.83, 1.02, 0.00, 0.22],
+					[0.93, 1.07, 0.00, 0.25], [1.90, 1.07, 0.00, 0.25]],
 			"rot": [[0.00, 0.0, -90.0, 0.0], [0.07, 0.0, 0.0, 0.0],
 					[0.14, 0.0, 90.0, 0.0], [0.30, 0.0, 90.0, 0.0],
 					[0.40, 0.0, 180.0, 0.0], [0.47, 0.0, 270.0, 0.0],
