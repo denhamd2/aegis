@@ -209,9 +209,9 @@ func _ready() -> void:
 				# carries him in): 1.2 m back at f0, on his mark at contact-4,
 				# then on through about 0.5 m as he lands (parity loop 4).
 				var arrive := maxi(_contact - 4, 1)
-				var back := 1.2 * (1.0 - clampf(float(f) / float(arrive), 0.0, 1.0))
+				var run_back := 1.2 * (1.0 - clampf(float(f) / float(arrive), 0.0, 1.0))
 				var on := 0.5 * clampf(float(f - arrive) / 26.0, 0.0, 1.0)
-				a.global_position = Vector3(0.0, 0.0, back - on)
+				a.global_position = Vector3(0.0, 0.0, run_back - on)
 			if _carry:
 				b.global_position = _b_start + Vector3(0.0, 0.0, -_carried(f - _contact))
 			elif _shove_m > 0.0:
