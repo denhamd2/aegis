@@ -11703,6 +11703,25 @@ for _name in ("Strike_Turning_Back_Kick_Body", "Strike_Side_Kick_Knockdown",
     CLIPS[_name] = _keys
 
 
+# The turning back kick's spin: arms flung OUT wide at shoulder height, as the
+# tutorial's (65.87-65.97), not folded across the chest. Folded, the left arm
+# drew the collarbone forward and the hair skinned to it (kenny_curls.py,
+# CLAVICLE_SHARE) stretched over his chest -- the owner's "Kenny is morphing",
+# and the reviewer's "forearm held across the chest like a bar". The hands
+# are in the root frame; through the spin (hips 130-230) his right is -x.
+_bk = []
+for _f, _k in CLIPS["Strike_Turning_Back_Kick_Body"]:
+    _k = dict(_k)
+    _yaw = _k.get("hips", (0, 0, 0))[1]
+    if 120.0 <= _yaw <= 230.0:
+        _k["hand_r"] = (-0.62, 0.02, 1.34)
+        _k["hand_l"] = (0.62, -0.02, 1.34)
+        _k["fist_r"] = 0.5
+        _k["fist_l"] = 0.5
+    _bk.append((_f, _k))
+CLIPS["Strike_Turning_Back_Kick_Body"] = _bk
+
+
 def main():
     arm = load_rig()
     clear_actions()
