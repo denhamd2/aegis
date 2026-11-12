@@ -3265,8 +3265,15 @@ func _launch_whip_victim() -> void:
 		_clear_grapple_roles()
 		fsm.transition_to(WrestlerFSM.State.IDLE)
 		return
-	var launch_dir := opponent.global_position - global_position
+	# Along the way the runner faces as the swing lets go of him, not the
+	# line from the whipper to him: the swing-through ends with the two
+	# offset sideways, and that line sent him 11 degrees off his own facing
+	# -- crabbing, then sliding along the ropes (parity loop 4, 12 Nov).
+	var launch_dir := -opponent.global_basis.z
 	launch_dir.y = 0.0
+	if launch_dir.length() < 0.01:
+		launch_dir = opponent.global_position - global_position
+		launch_dir.y = 0.0
 	launch_dir = launch_dir.normalized() if launch_dir.length() > 0.01 else Vector3.FORWARD
 	if _whip_setup_corner:
 		launch_dir = corner_whip_dir(opponent.global_position, launch_dir)
