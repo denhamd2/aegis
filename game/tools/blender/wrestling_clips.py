@@ -11910,9 +11910,48 @@ _patch_keys("Strike_Clinch_Knee_Body", _ck6)
 def _hk6(f, k):
     if f in (4, 6, 7, 8):
         x, y, z = k["foot_r"]
-        k["foot_r"] = (x, y, max(z, 0.155))
+        k["foot_r"] = (x, y, max(z, 0.125))  # loop 7: 0.155 floated the boot
     return k
 _patch_keys("Strike_Hook_Left", _hk6)
+
+
+# --- Strike parity loop 7 (final) -----------------------------------------
+# Front kick: a skip that reads in the air (loops 5-6: "barely off the mat").
+def _fk7(f, k):
+    if abs(f - 4.594) < 0.01:
+        k["foot_l"] = (-0.22, 0.12, 0.40); k["pelvis"] = (-0.05, 0.14, 1.08)
+    elif abs(f - 6.562) < 0.01:
+        k["foot_l"] = (-0.22, 0.18, 0.28); k["pelvis"] = (-0.05, 0.20, 1.02)
+    return k
+_patch_keys("Strike_Front_Kick_Body", _fk7)
+
+# Clinch knee: the jump read as grounded -- lift 0.12 m more around contact.
+def _ck7(f, k):
+    if 6.4 <= f <= 9.8:
+        px, py, pz = k["pelvis"]; k["pelvis"] = (px, py, pz + 0.12)
+        fx, fy, fz = k["foot_l"]; k["foot_l"] = (fx, fy, fz + 0.12)
+    return k
+_patch_keys("Strike_Clinch_Knee_Body", _ck7)
+
+# Flying knee: the knee to the chin (the loop-6 drop went 0.15 m too far) and
+# the heel tucked to the hip so the knee leads, not the shin.
+def _fk7b(f, k):
+    if 5.0 < f <= 8.5:
+        px, py, pz = k["pelvis"]; k["pelvis"] = (px, py, pz + 0.14)
+        x, y, z = k["foot_r"]; k["foot_r"] = (x, y - 0.18, z + 0.10)
+    return k
+_patch_keys("Strike_Running_Flying_Knee", _fk7b)
+
+# Side kick: contact higher (chest) and laid back further (~32 degrees).
+def _sk7(f, k):
+    if 7.9 <= f <= 8.8:
+        x, y, z = k["foot_r"]; k["foot_r"] = (x, y, z + 0.14)
+        sp = k.get("spine", (0, 0, 0)); k["spine"] = (32, sp[1], sp[2])
+    elif 9.4 <= f <= 9.5:
+        # Held extended a key longer before the re-chamber (loop 6).
+        x, y, z = k["foot_r"]; k["foot_r"] = (x, y, 1.20)
+    return k
+_patch_keys("Strike_Side_Kick_Knockdown", _sk7)
 
 
 def main():
