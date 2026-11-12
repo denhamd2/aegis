@@ -11901,6 +11901,17 @@ def _ck6(f, k):
 _patch_keys("Strike_Clinch_Knee_Body", _ck6)
 
 
+# Hook, loop 6: the shortened lunge (loop 4) left the rear toe angled into the
+# canvas at the drive (pose lint: ball_r 4.4 cm below the mat at 20%). Its foot
+# rides 5 cm higher through the drive keys.
+def _hk6(f, k):
+    if f in (4, 6, 7, 8):
+        x, y, z = k["foot_r"]
+        k["foot_r"] = (x, y, max(z, 0.155))
+    return k
+_patch_keys("Strike_Hook_Left", _hk6)
+
+
 def main():
     arm = load_rig()
     clear_actions()
