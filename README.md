@@ -12051,3 +12051,26 @@ The owner: "Re-key the Samoan drop ... to look like the real moves."
   file's digest re-pinned. Rendered side-on through `paired_shot` and checked.
 - Deployed at the owner's request ("commit and deploy the updated samoan
   drop"), with the animation suites still to report.
+
+## 12 Nov (2) — The spear without the stop
+
+The owner: "Running moves and the spear in one continuous motion, with no stop
+before impact."
+
+**Why it stopped.** A running two-man move (Roman's spear, the running
+powerslams) was only triggered once the men were 1.15 m apart. But the spear's
+clip starts them 1.6 m apart. So at the moment of impact the game first slid
+Roman half a metre backwards onto his mark, at a walk, and then played the
+spear. That backward slide was the stop.
+
+- **Caught where the clip starts.** A running paired move is now caught at the
+  distance its clip starts the pair (`GrappleRig.start_gap`), so nothing is
+  backed up.
+- **The run is carried in.** A man running into the move keeps his own speed
+  into its first frame, at an even pace: no walk-in steps, no ease to a stop
+  (`GrappleRig._lead_in`, `RUN_CARRY_MIN_SPEED`). Standing grapples are
+  unchanged.
+- Running strikes already brake into contact (11 Nov).
+
+Tests: the running-attack, spear, corner-spear, grapple placement and paired
+suites pass (61 cases).
