@@ -2013,10 +2013,12 @@ const TRAJECTORIES := {
 	# The Samoan Drop: carried across the shoulders, then off them in front.
 	# The Samoan drop (11 Nov re-key): carried across Roman's shoulders, the
 	# man goes back over with him as Roman falls onto his own back, and lands
-	# across the mat just beyond Roman's head: x -0.85 against Roman's 0.40
-	# (he falls back toward -x; the first pass put the man at +1.65, on Roman's
-	# legs -- the owner, 12 Nov: "it looks like the attacker goes behind the
-	# victim"). From 1.30 s to 1.50 s the clip's body yaw runs 90 -> 0 and the
+	# across the mat just beyond Roman's head: x +1.70 against Roman's 0.40.
+	# Roman faces the man, toward -x, so he falls back toward +x and his head
+	# lands near +1.25. (The owner, 12 Nov: "it looks like the attacker goes
+	# behind the victim" -- that pass had never had its root path baked; the
+	# next put him at -0.85, which is at Roman's feet, and Roman stood up
+	# inside him: samoan_top3, 12 Nov.) From 1.30 s to 1.50 s the clip's body yaw runs 90 -> 0 and the
 	# root turns -90 -> -180 with it, so the world pose holds while the frame
 	# comes round to SELL_AWAY's (turned the other way, he swung round to lie
 	# alongside Roman instead of across him).
@@ -2029,8 +2031,8 @@ const TRAJECTORIES := {
 		"defender": {
 			"pos": [[0.00, -0.40, 0.00, 0.00], [0.27, -0.10, 0.00, 0.00],
 					[0.53, 0.34, 0.00, 0.00], [0.93, 0.34, 0.00, 0.00],
-					[1.07, 0.10, 0.00, 0.00], [1.20, -0.40, 0.00, 0.00],
-					[1.30, -0.85, 0.00, 0.00], [2.00, -0.85, 0.00, 0.00]],
+					[1.07, 0.62, 0.00, 0.00], [1.20, 1.25, 0.00, 0.00],
+					[1.30, 1.70, 0.00, 0.00], [2.00, 1.70, 0.00, 0.00]],
 			"rot": [[0.00, 0.0, -90.0, 0.0], [1.30, 0.0, -90.0, 0.0],
 					[1.40, 0.0, -135.0, 0.0], [1.50, 0.0, -180.0, 0.0],
 					[2.00, 0.0, -180.0, 0.0]],
