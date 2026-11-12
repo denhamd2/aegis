@@ -11674,6 +11674,29 @@ for _name in ("Strike_Hook_Left", "Strike_Front_Kick_Body",
     CLIPS[_name][0] = (_f0, dict(_k0, **_GUARD))
 
 
+# The look over the shoulder is shared down the spine, not taken in the neck:
+# a 70-degree head turn on the chest stretched Kenny's long hair into a dark
+# sheet across his chest and wrung his neck (the owner, 12 Nov: "Kenny is
+# morphing", turning back kick f8-f20). The head turns at most 40 degrees on
+# the chest; half the excess goes to the upper spine.
+HEAD_YAW_MAX = 40.0
+for _name in ("Strike_Turning_Back_Kick_Body", "Strike_Side_Kick_Knockdown",
+              "Strike_Hook_Left", "Strike_Front_Kick_Body",
+              "Strike_Clinch_Knee_Body", "Strike_Running_Flying_Knee"):
+    _keys = []
+    for _f, _k in CLIPS[_name]:
+        _k = dict(_k)
+        _h = _k.get("head")
+        if _h and abs(_h[1]) > HEAD_YAW_MAX:
+            _sign = 1.0 if _h[1] > 0 else -1.0
+            _excess = _h[1] - _sign * HEAD_YAW_MAX
+            _k["head"] = (_h[0], _sign * HEAD_YAW_MAX, _h[2])
+            _sp = _k.get("spine", (0, 0, 0))
+            _k["spine"] = (_sp[0], _sp[1] + _excess * 0.5, _sp[2])
+        _keys.append((_f, _k))
+    CLIPS[_name] = _keys
+
+
 def main():
     arm = load_rig()
     clear_actions()
