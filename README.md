@@ -12074,3 +12074,11 @@ spear. That backward slide was the stop.
 
 Tests: the running-attack, spear, corner-spear, grapple placement and paired
 suites pass (61 cases).
+
+## 12 Nov (3) — The cell comes down slower
+
+The owner: "the cell gets lowered too quickly. I want it to come down much
+slower." The descent is now 30 s (it was 9). Most of the owner's 44.7 s
+lowering track now plays under the descent itself, and the rest under the
+face-off. The strobes walk the truss corners every 0.75 s through it, and the
+camera's tilt down with it is stretched to match.
