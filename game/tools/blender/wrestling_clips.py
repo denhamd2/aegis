@@ -11954,6 +11954,18 @@ def _sk7(f, k):
 _patch_keys("Strike_Side_Kick_Knockdown", _sk7)
 
 
+# Hook, loop 7: the rear foot goes 0.72 m back into the lunge between frames 4
+# and 6; dragged in a straight line its toe dipped 4 cm into the canvas (pose
+# lint @0.2). It steps instead: lifted through the middle of the move.
+_hk = dict(CLIPS["Strike_Hook_Left"])
+_mid5 = dict(_hk[6])
+_p4, _p6 = _hk[4]["pelvis"], _hk[6]["pelvis"]
+_mid5["pelvis"] = tuple((a + b) / 2 for a, b in zip(_p4, _p6))
+_mid5["foot_r"] = (0.24, -0.16, 0.22)
+CLIPS["Strike_Hook_Left"].append((5, _mid5))
+CLIPS["Strike_Hook_Left"].sort(key=lambda k: k[0])
+
+
 def main():
     arm = load_rig()
     clear_actions()

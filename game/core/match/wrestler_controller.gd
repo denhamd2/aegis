@@ -3428,7 +3428,7 @@ const ROPE_LOAD_DEPTH := 0.15
 ## first return step over 0.50 s (reference video 02, 183.10 -> 183.60). The
 ## hold lets that whole clip play against the loaded ropes instead of being
 ## cut off at its first deep frame.
-const ROPE_LOAD_HOLD_SECONDS := 0.55  # whip loop 7: leaves at ~+30, not +26
+const ROPE_LOAD_HOLD_SECONDS := 0.50  # matches Whip_Rope_Absorb (0.55 froze its last frame 3 ticks)
 ## Longest he can be out in the ropes before being put back regardless -- a
 ## load interrupted by something that holds him still must not strand him
 ## outside the ring with the rope collider switched off.
