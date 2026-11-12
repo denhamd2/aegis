@@ -3224,8 +3224,10 @@ const FLEE_PACE := 0.8
 var _flee_ticks := 0
 var _flee_cooldown := 0
 var _flee_sign := 1.0
-## Times he broke away and ran (nhb_weapon_probe).
+## Times he broke away and ran, and times he ran the other man down and
+## hit him from behind (nhb_weapon_probe).
 var flee_starts := 0
+var chase_catches := 0
 
 
 ## Running from the other man right now (the chaser reads it).
@@ -3267,6 +3269,8 @@ func _floor_chase_input(input: Dictionary, to_target: Vector3, distance: float) 
 		# is a running attack, so off the run first).
 		input["move"] = Vector2.ZERO
 		input["strike"] = controller.fsm.current_state != WrestlerFSM.State.RUN
+		if input["strike"]:
+			chase_catches += 1
 		return input
 	# Breaking away: the man getting the worse of it, close, both standing.
 	if _flee_cooldown == 0 and distance < FLEE_FROM and target.fsm.is_in(free) \
