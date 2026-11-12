@@ -41,6 +41,11 @@ class Spec:
 	## The frame's members, as a multiple of the Steel Cage's tubes: Hell in
 	## a Cell is built of box truss, several times as deep.
 	var frame_scale := 1.0
+	## The 2K-style cell (the owner's WWE 2K14 reference, 12 Nov): the roof's
+	## grid and its rim as open box trusses -- four tube chords and zigzag
+	## bracing -- and every post and rail a round tube, not a square bar.
+	var truss_roof := false
+	var round_members := false
 
 	## The owner's reference (a cage from below): four panels across each
 	## wall, two rows, and a lip of ladder truss round the top.
@@ -71,6 +76,8 @@ class Spec:
 		s.door_height = 2.3
 		s.roof = true
 		s.frame_scale = 2.4
+		s.truss_roof = true
+		s.round_members = true
 		return s
 
 	## The spec for a caged match type (MatchRules.Mode).
@@ -541,10 +548,13 @@ func _build_door(wall: Node3D, axis: Vector3, lat: Vector3, frame: Material,
 func _build_roof(frame: Material, wire: Material) -> void:
 	var y := spec.top_y
 	var span := spec.half * 2.0
-	for i in range(0, spec.bays + 1):
-		var s := -spec.half + span * float(i) / float(spec.bays)
-		_box(self, Vector3(s, y, 0), Vector3((RAIL_SIZE * spec.frame_scale), (RAIL_SIZE * spec.frame_scale), span), frame)
-		_box(self, Vector3(0, y, s), Vector3(span, (RAIL_SIZE * spec.frame_scale), (RAIL_SIZE * spec.frame_scale)), frame)
+	if spec.truss_roof:
+		_build_roof_trusses(frame)
+	else:
+		for i in range(0, spec.bays + 1):
+			var s := -spec.half + span * float(i) / float(spec.bays)
+			_box(self, Vector3(s, y, 0), Vector3((RAIL_SIZE * spec.frame_scale), (RAIL_SIZE * spec.frame_scale), span), frame)
+			_box(self, Vector3(0, y, s), Vector3(span, (RAIL_SIZE * spec.frame_scale), (RAIL_SIZE * spec.frame_scale)), frame)
 	# One chain-link panel a bay, each its own node, so a bay can be dented
 	# and give way under a man (CellRoof): the four in the middle do.
 	var bay := span / float(spec.bays)
@@ -570,6 +580,81 @@ func _build_roof(frame: Material, wire: Material) -> void:
 			mi.position = centre
 			add_child(mi)
 			_roof_panels[Vector2i(i, j)] = mi
+
+
+## The truss roof (spec.truss_roof): along every grid line of the roof, the rim
+## included, an open box truss standing on the roof plane -- TRUSS_DEPTH deep,
+## TRUSS_WIDTH wide, four chords and a zigzag of bracing on each face, a
+## TRUSS_PITCH apart. All of it one mesh: hundreds of tubes, one draw call.
+const TRUSS_DEPTH := 0.42
+const TRUSS_WIDTH := 0.30
+const TRUSS_PITCH := 0.42
+const TRUSS_CHORD_R := 0.024
+const TRUSS_LACE_R := 0.012
+const TUBE_SIDES := 8
+
+
+func _build_roof_trusses(frame: Material) -> void:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var span := spec.half * 2.0
+	var y0 := spec.top_y
+	for i in range(0, spec.bays + 1):
+		var s := -spec.half + span * float(i) / float(spec.bays)
+		_truss(st, Vector3(s, y0, -spec.half), Vector3(s, y0, spec.half))
+		_truss(st, Vector3(-spec.half, y0, s), Vector3(spec.half, y0, s))
+	st.generate_normals()
+	var mi := MeshInstance3D.new()
+	mi.name = "RoofTrusses"
+	mi.mesh = st.commit()
+	var steel := (frame as StandardMaterial3D).duplicate() as StandardMaterial3D
+	steel.cull_mode = BaseMaterial3D.CULL_DISABLED
+	mi.material_override = steel
+	add_child(mi)
+
+
+## One box truss from `a` to `b` (level), its foot on the line between them.
+func _truss(st: SurfaceTool, a: Vector3, b: Vector3) -> void:
+	var along := (b - a).normalized()
+	var side := Vector3.UP.cross(along).normalized() * (TRUSS_WIDTH * 0.5)
+	var up := Vector3.UP * TRUSS_DEPTH
+	var chords := [a - side, a + side, a - side + up, a + side + up]
+	for c: Vector3 in chords:
+		_tube(st, c, c + (b - a), TRUSS_CHORD_R)
+	var n := maxi(1, int(round((b - a).length() / TRUSS_PITCH)))
+	var step := (b - a) / float(n)
+	for k in n:
+		var p := a + step * float(k)
+		var q := p + step
+		var flip := k % 2 == 0
+		# The two sides: verticals at each panel point and a diagonal across.
+		for sd: Vector3 in [-side, side]:
+			_tube(st, p + sd, p + sd + up, TRUSS_LACE_R)
+			_tube(st, (p if flip else q) + sd, (q if flip else p) + sd + up, TRUSS_LACE_R)
+		# Top and bottom: a cross member and a diagonal.
+		for h: Vector3 in [Vector3.ZERO, up]:
+			_tube(st, p - side + h, p + side + h, TRUSS_LACE_R)
+			_tube(st, (p if flip else q) - side + h, (q if flip else p) + side + h, TRUSS_LACE_R)
+	for sd: Vector3 in [-side, side]:
+		_tube(st, b + sd, b + sd + up, TRUSS_LACE_R)
+
+
+## A round tube from `a` to `b`, radius `r`, into `st`.
+func _tube(st: SurfaceTool, a: Vector3, b: Vector3, r: float) -> void:
+	var d := b - a
+	if d.length() < 0.001:
+		return
+	var axis := d.normalized()
+	var ref := Vector3.UP if absf(axis.y) < 0.9 else Vector3.RIGHT
+	var u := axis.cross(ref).normalized()
+	var v := axis.cross(u).normalized()
+	for k in TUBE_SIDES:
+		var t0 := TAU * float(k) / float(TUBE_SIDES)
+		var t1 := TAU * float(k + 1) / float(TUBE_SIDES)
+		var o0 := (u * cos(t0) + v * sin(t0)) * r
+		var o1 := (u * cos(t1) + v * sin(t1)) * r
+		for p: Vector3 in [a + o0, b + o0, b + o1, a + o0, b + o1, a + o1]:
+			st.add_vertex(p)
 
 
 ## The roof's bays: their centre at the top (i along X, j along Z).
@@ -688,6 +773,10 @@ func _rail(parent: Node3D, axis: Vector3, lat: Vector3, from: float, to: float, 
 		mat: Material) -> void:
 	if to - from < 0.01:
 		return
+	if spec.round_members:
+		_cylinder(parent, axis * spec.half + lat * from + Vector3.UP * y,
+				axis * spec.half + lat * to + Vector3.UP * y, RAIL_SIZE * spec.frame_scale * 0.42, mat)
+		return
 	var centre := axis * spec.half + lat * ((from + to) * 0.5) + Vector3.UP * y
 	_box(parent, centre, _size_along(lat, to - from, (RAIL_SIZE * spec.frame_scale)), mat)
 
@@ -698,8 +787,32 @@ func _post(parent: Node3D, at: Vector3, size: float, mat: Material) -> void:
 
 func _post_span(parent: Node3D, at: Vector3, from_y: float, to_y: float, size: float,
 		mat: Material) -> void:
+	if spec.round_members:
+		_cylinder(parent, Vector3(at.x, from_y, at.z), Vector3(at.x, to_y, at.z), size * 0.5, mat)
+		return
 	_box(parent, Vector3(at.x, (from_y + to_y) * 0.5, at.z), Vector3(size, to_y - from_y, size),
 			mat)
+
+
+## A round steel tube from `a` to `b` (spec.round_members).
+func _cylinder(parent: Node3D, a: Vector3, b: Vector3, r: float, mat: Material) -> MeshInstance3D:
+	var mi := MeshInstance3D.new()
+	var cyl := CylinderMesh.new()
+	cyl.top_radius = r
+	cyl.bottom_radius = r
+	cyl.height = a.distance_to(b)
+	cyl.radial_segments = 12
+	cyl.rings = 1
+	mi.mesh = cyl
+	mi.material_override = mat
+	parent.add_child(mi)
+	var axis := (b - a).normalized()
+	var basis := Basis.IDENTITY
+	if absf(axis.dot(Vector3.UP)) < 0.999:
+		var x := Vector3.UP.cross(axis).normalized()
+		basis = Basis(x, axis, x.cross(axis))
+	mi.transform = Transform3D(basis, (a + b) * 0.5)
+	return mi
 
 
 func _box(parent: Node3D, centre: Vector3, size: Vector3, mat: Material) -> MeshInstance3D:
