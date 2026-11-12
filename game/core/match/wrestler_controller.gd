@@ -3506,7 +3506,9 @@ func _tick_rope_load() -> void:
 		# him (_turn_off_the_ropes), so this is a step, not the 0.4 m pop in
 		# one tick it was. And at the run's own speed, so the stride out of
 		# the push-off is the run's (9 x 0.85 = 7.65 m/s, then 7.0).
-		global_position = _rope_load_from + _rope_load_along * (_rope_load_tick * dt)
+		# No position reset here: the push-off has already carried him out,
+		# and snapping him to _rope_load_from jumped him 0.15 m in one tick
+		# (parity review loop 3, 12 Nov).
 		velocity = (-_rope_load_out * _rope_load_speed + _rope_load_along) \
 				* IRISH_WHIP_REBOUND_DAMPING
 		velocity = velocity.limit_length(RUN_SPEED if rope_running else WHIP_RETURN_SPEED)
@@ -3759,9 +3761,25 @@ func _process_whip_pass() -> void:
 			or _irish_whip_return_ticks_remaining <= 0:
 		_begin_far_rope_stop()
 		return
-	velocity.x = line.x * WHIP_RETURN_SPEED
-	velocity.z = line.z * WHIP_RETURN_SPEED
-	look_at(global_position + line, Vector3.UP)
+	# Onto the line a few degrees a tick, not in one: the aimed pass is ~17
+	# degrees off the axis he left the ropes on, and taking it in one tick was
+	# a visible snap (parity review loop 3, 12 Nov).
+	var facing := -global_transform.basis.z
+	facing.y = 0.0
+	var dir := line
+	if facing.length() > 0.01:
+		facing = facing.normalized()
+		var turn := facing.signed_angle_to(line, Vector3.UP)
+		var step := deg_to_rad(WHIP_RUN_TURN_DEG_PER_TICK)
+		if absf(turn) > step:
+			dir = facing.rotated(Vector3.UP, signf(turn) * step)
+	velocity.x = dir.x * WHIP_RETURN_SPEED
+	velocity.z = dir.z * WHIP_RETURN_SPEED
+	look_at(global_position + dir, Vector3.UP)
+
+
+## How fast the return run comes round onto its line: 17 degrees in 6 ticks.
+const WHIP_RUN_TURN_DEG_PER_TICK := 3.0
 
 
 ## The far-rope stop: zero the run on the tick he reaches the trigger and
