@@ -26,7 +26,7 @@ func _ready() -> void:
 	DirAccess.make_dir_recursive_absolute(_out)
 	Engine.max_physics_steps_per_frame = 1
 	await get_tree().process_frame
-	for s: String in ["cell", "cage", "ladder", "casket", "ambulance", "roof", "cellcam", "lowering", "fallcam", "doorcam"]:
+	for s: String in ["cell", "cage", "ladder", "casket", "ambulance", "roof", "cellcam", "lowering", "fallcam", "doorcam", "rig"]:
 		if _only.is_empty() or _only.has(s):
 			await call("_" + s)
 	print("GIMMICK_SHOT done")
@@ -366,4 +366,18 @@ func _doorcam() -> void:
 	_cam(scene, sh[0], sh[1], sh[2])
 	await _shoot("doorcam_locked")
 	director.free()
+	await _done(scene)
+
+
+## The ring rig from the floor and from the hard camera's height: for a row of
+## fixtures left at an old height (the backlog: "lower row of lights left
+## behind when the truss was raised").
+func _rig() -> void:
+	var scene: Node = await _scene(MatchRules.Mode.ONE_ON_ONE, true)
+	_cam(scene, Vector3(-11.0, 1.8, 9.0), Vector3(0.0, 8.0, 0.0), 60.0)
+	await _shoot("rig_low")
+	_cam(scene, Vector3(-14.0, 5.5, 12.0), Vector3(0.0, 6.5, -2.0), 55.0)
+	await _shoot("rig_wide")
+	_cam(scene, Vector3(0.0, 2.0, 12.0), Vector3(0.0, 8.5, -6.0), 60.0)
+	await _shoot("rig_front")
 	await _done(scene)
