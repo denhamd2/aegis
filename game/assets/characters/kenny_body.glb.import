@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-path="res://.godot/imported/kenny_body.glb.scn"
+uid="uid://dl5ryoyxu8io4"
+path="res://.godot/imported/kenny_body.glb-9555c6dde3836998fec49db54038b9c0.scn"
 
 [deps]
 
 source_file="res://assets/characters/kenny_body.glb"
-dest_files=["res://.godot/imported/kenny_body.glb.scn"]
+dest_files=["res://.godot/imported/kenny_body.glb-9555c6dde3836998fec49db54038b9c0.scn"]
 
 [params]
 
