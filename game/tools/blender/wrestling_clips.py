@@ -11717,8 +11717,10 @@ for _f, _k in CLIPS["Strike_Turning_Back_Kick_Body"]:
         # Out and a little down and forward, not a stiff T: straight out
         # sideways, the near arm pointed at a side camera, read as a stump and
         # shadowed his chest (four-angle check, 12 Nov). Facing -y here.
-        _k["hand_r"] = (-0.52, -0.16, 1.12)
-        _k["hand_l"] = (0.52, -0.16, 1.12)
+        # Low and close, near the hips (loop 4: even out-and-down, the near
+        # arm still reached across a side camera and shaded the chest).
+        _k["hand_r"] = (-0.34, -0.10, 0.98)
+        _k["hand_l"] = (0.34, -0.10, 0.98)
         _k["fist_r"] = 0.5
         _k["fist_l"] = 0.5
     _bk.append((_f, _k))
