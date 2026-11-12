@@ -12051,3 +12051,70 @@ The owner: "Re-key the Samoan drop ... to look like the real moves."
   file's digest re-pinned. Rendered side-on through `paired_shot` and checked.
 - Deployed at the owner's request ("commit and deploy the updated samoan
   drop"), with the animation suites still to report.
+
+## 12 Nov (2) — The spear without the stop
+
+The owner: "Running moves and the spear in one continuous motion, with no stop
+before impact."
+
+**Why it stopped.** A running two-man move (Roman's spear, the running
+powerslams) was only triggered once the men were 1.15 m apart. But the spear's
+clip starts them 1.6 m apart. So at the moment of impact the game first slid
+Roman half a metre backwards onto his mark, at a walk, and then played the
+spear. That backward slide was the stop.
+
+- **Caught where the clip starts.** A running paired move is now caught at the
+  distance its clip starts the pair (`GrappleRig.start_gap`), so nothing is
+  backed up.
+- **The run is carried in.** A man running into the move keeps his own speed
+  into its first frame, at an even pace: no walk-in steps, no ease to a stop
+  (`GrappleRig._lead_in`, `RUN_CARRY_MIN_SPEED`). Standing grapples are
+  unchanged.
+- Running strikes already brake into contact (11 Nov).
+
+Tests: the running-attack, spear, corner-spear, grapple placement and paired
+suites pass (61 cases).
+
+## 12 Nov (3) — The cell comes down slower
+
+The owner: "the cell gets lowered too quickly. I want it to come down much
+slower." The descent is now 30 s (it was 9). Most of the owner's 44.7 s
+lowering track now plays under the descent itself, and the rest under the
+face-off. The strobes walk the truss corners every 0.75 s through it, and the
+camera's tilt down with it is stretched to match.
+
+## 12 Nov (4) — Rummaging is never cut off; the weapon shown
+
+Backlog: "Rummaging under the ring / on the stage is not interrupted". The
+owner: once he is reaching under, he finishes and comes out with a weapon.
+
+- **Not hit out of it.** While he is reaching under the apron, or into the
+  stage's pile, and pulling it out (`is_digging_for_weapon`), a blow aimed at
+  him does not land. The AI does not swing; it closes in and waits for him to
+  come up.
+- **Not empty-handed.** A player who lets go of the button before choosing
+  still comes out with something: a chair, else the first thing in stock
+  (`RUMMAGE_FALLBACK`).
+- **The weapon shown.** As he comes up with it, the camera cuts from the reach
+  under the apron to a low close-up of him holding it (`Cut.WEAPON_SHOWN`,
+  1.4 s).
+
+Tests: `test_weapon_rules` and `test_weapon_ai` pass. One older test, which
+pinned the empty-handed let-go, was rewritten to the new rule.
+
+## 12 Nov (5) — Hell in a Cell: no stall at the open door
+
+The owner: "commit and deploy the hell and cell fixes". The last one left was a
+stall: in the AI's way through the open door, a man could stop dead in the
+doorway and turn back and forth.
+
+- **The door leaf.** The open door's own collision still stood across the
+  lane. It is now switched off once the door is a third open
+  (`CageBuilder._door_leaf_shape`).
+- **Which side he is on.** In the door lane he only counts as having gone
+  through once he is 0.25 m past the wall line (`CellRoof.DOOR_PASSED`). Right
+  on the line, his side flipped from tick to tick and his route with it.
+
+Measured: `flow_probe --mode 3`, seeds 1–3, all three matches run to a finish
+with nobody held at the door. The roof plan (the AI deciding to climb and then
+giving up before cutting the padlock) is still being traced.
