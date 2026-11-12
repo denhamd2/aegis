@@ -24,14 +24,19 @@ func _ready() -> void:
 	var ref := scene.get_node_or_null("RefereeActor") as Node3D
 	var rang := [false]
 	var bell_tick := [-1]
+	# A lambda captures a local by value: `tick` read inside one is the 0 it
+	# held when the lambda was made, which ended the log at the bell. The
+	# counter lives in an array the lambda shares.
+	var now := [0]
 	var tick := 0
-	director.bell.connect(func(): rang[0] = true; bell_tick[0] = tick)
+	director.bell.connect(func(): rang[0] = true; bell_tick[0] = now[0])
 	var last_beat := -1
 	var logging := false
 	var from_tick := -1
 	while tick < 60 * 600:
 		await get_tree().physics_frame
 		tick += 1
+		now[0] = tick
 		if rang[0] and tick > bell_tick[0] + 360:
 			break
 		if director._beat < director._beats.size() and director._beat != last_beat:
