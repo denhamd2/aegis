@@ -344,3 +344,28 @@ func test_the_match_seeds_the_stage_into_the_stock_the_wrestlers_search() -> voi
 	assert_object(stock.get_parent()).is_same(scene)
 	assert_int(stock.stage_actors.size()).is_equal(WeaponStock.STAGE_LAYOUT.size())
 	assert_object(stock.nearest_stage_weapon(Vector3(0.0, 0.0, -20.0))).is_not_null()
+
+
+## Once he is reaching under, he comes out with something (the owner, 12 Nov:
+## "don't let it be cut off"): the button let go before a pick still ends in
+## a weapon, and he cannot be hit out of it.
+func test_a_rummage_is_not_cut_off() -> void:
+	var w := _wrestler(true)
+	w.outside_ring = true
+	w.global_position = Vector3(WrestlerController.DECK_KEEP_OUT + 0.1, WrestlerController.FLOOR_LEVEL, 0.5)
+	await _ticks(2)
+	assert_bool(w._weapon_input({"weapon": true})).is_true()
+	assert_bool(w.is_digging_for_weapon()).is_true()
+	# Let go of the button before choosing.
+	for i in WrestlerController.RUMMAGE_RELEASE_TICKS + 1:
+		w._tick_weapon_action({})
+	assert_str(w._weapon_action).is_equal("retrieve")
+	assert_bool(w.is_digging_for_weapon()).is_true()
+	# A blow queued on him while he pulls it out: no reaction, still pulling.
+	w._pending_hits.append(load("res://resources/moves/strike_jab.tres"))
+	w._resolve_pending_hits()
+	assert_int(w.fsm.current_state).is_equal(WrestlerFSM.State.WEAPON_ACTION)
+	for i in WrestlerController.WEAPON_ACTION_TICKS["retrieve"]:
+		w._tick_weapon_action({})
+	assert_bool(w.has_weapon()).is_true()
+	assert_str(String(w.held_weapon.def.id)).is_equal("steel_chair")
