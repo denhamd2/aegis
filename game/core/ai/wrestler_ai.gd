@@ -680,7 +680,9 @@ func _cell_input(distance: float) -> Dictionary:
 			and target.fsm.current_state == WrestlerFSM.State.DOWN \
 			and target.knockdown_tier >= CombatSystem.Tier.POWER:
 		var knockdown := Engine.get_physics_frames() - target.fsm.ticks_in_state
-		if knockdown != _cell_rolled_for:
+		# Keyed on the knockdown's start; it can read a tick apart from one
+		# tick to the next (two rolls 0.02 s apart, flow_probe seed 2, 12 Nov).
+		if absi(knockdown - _cell_rolled_for) > 30:
 			_cell_rolled_for = knockdown
 			_cell_rolls += 1
 			var rng := _cell_rng()
@@ -696,6 +698,9 @@ func _cell_input(distance: float) -> Dictionary:
 	if _cell_plan != 1 and not following:
 		return {}
 	_cell_ticks += 1
+	if _cell_ticks % 60 == 0:
+		var cu := _loose_cutters()
+		print("DBGBR ", controller.name, " ct=", _cell_ticks, " outcell=", _outside_cell(roof, p), " climbable=", roof.at_climbable_wall(p), " inring=", not controller.outside_ring, " locked=", roof.door_locked, " wpn=", controller.held_weapon.def.id if controller.has_weapon() else &"", " cutters=", cu.global_position if cu else null, " p=", p, " st=", controller.fsm.current_state)
 	if _cell_ticks > CELL_GIVE_UP:
 		_cell_plan = 0
 		return {}
