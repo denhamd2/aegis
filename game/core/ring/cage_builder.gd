@@ -109,6 +109,7 @@ const RATTLE_HZ := 11.0
 var spec: Spec = Spec.steel_cage()
 var _door_pivot: Node3D
 var _door_open := 0.0
+var _door_leaf_shape: CollisionShape3D
 ## The four walls' visual roots, by the outward axis they face.
 var _walls := {}
 var _rattle := {}
@@ -250,6 +251,11 @@ func has_padlock() -> bool:
 ## Opens the door to `t` (0 shut, 1 wide open).
 func set_door_open(t: float) -> void:
 	_door_open = clampf(t, 0.0, 1.0)
+	# The leaf blocks only shut: swung open it stood out from the wall across
+	# the approach, and two men wedged against it in front of the door for
+	# the last 200 s of a match (flow_probe Hell in a Cell seed 1, 12 Nov).
+	if _door_leaf_shape:
+		_door_leaf_shape.disabled = _door_open > 0.3
 	if _door_pivot:
 		# Hinged on the -lateral jamb, swinging out.
 		var swing := _door_open * DOOR_OPEN_ANGLE
@@ -666,6 +672,8 @@ func _build_door_collision(lat: Vector3) -> void:
 	shape.shape = box
 	shape.position = lat * (inset + leaf_w * 0.5) + Vector3.UP * ((spec.base_y + top) * 0.5)
 	leaf.add_child(shape)
+	_door_leaf_shape = shape
+	shape.disabled = _door_open > 0.3
 
 
 # --------------------------------------------------------------------------

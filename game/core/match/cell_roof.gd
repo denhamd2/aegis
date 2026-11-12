@@ -182,7 +182,7 @@ func _holds_cutters(w: WrestlerController) -> bool:
 ## Which side of the cell's walls each man is on the floor: inside, unless
 ## he went out through the door, down off the roof or over its edge.
 var _outside := {}
-const DOOR_PASSED := 0.45
+const DOOR_PASSED := 0.25
 
 
 func is_outside_cell(w: WrestlerController) -> bool:
