@@ -154,7 +154,14 @@ func _ready() -> void:
 			var rt := float(f - maxi(_contact, 0)) / 60.0
 			if _carry:
 				b.global_position = _b_start + Vector3(0.0, 0.0, -_carried(f - _contact))
-			if rt <= 0.0 or rt <= hit_len or not pb.has_animation(_sell):
+			if rt < 0.0 and pb.has_animation(StrikeRecipes.clip("idle_ready")):
+				# Before contact he stands as the game stands him: idle_ready.
+				var idle := StrikeRecipes.clip("idle_ready")
+				pb.play(idle)
+				pb.pause()
+				pb.seek(fmod(float(f) / 60.0, pb.get_animation(idle).length), true)
+				pb.advance(0)
+			elif rt <= 0.0 or rt <= hit_len or not pb.has_animation(_sell):
 				pb.play(_react)
 				pb.pause()
 				pb.seek(clampf(rt, 0.0, hit_len - 0.001), true)

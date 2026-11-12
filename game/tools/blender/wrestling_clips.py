@@ -2266,12 +2266,15 @@ CLIPS = {
     "Hit_React_Head": [
         (0,  R()),
         # Impact on frame 2: the snap.
+        # The head turns ~35 degrees off the punch at the snap, ~40 at the
+        # deepest (tutorial 1:01.55; it was 20, which read as no snap at all
+        # -- parity review loop 1, 12 Nov).
         (2,  R(pelvis=(0.02, -0.06, 0.800), hips=(-2, 6, 0),
-               spine=(4, 14, -4), head=(20, 20, -12),
+               spine=(6, 18, -6), head=(24, 34, -18),
                hand_r=(0.28, 0.24, 1.06), hand_l=(-0.24, 0.28, 1.10))),
         # Deepest: thrown back off the shot, weight on the back foot.
         (4,  R(pelvis=(0.05, -0.14, 0.806), hips=(4, 10, 0),
-               spine=(12, 20, -8), head=(24, 26, -16),
+               spine=(12, 22, -9), head=(26, 40, -22),
                hand_r=(0.32, 0.12, 1.02), hand_l=(-0.28, 0.16, 1.04),
                fist_r=0.4, fist_l=0.4,
                foot_r=(0.28, -0.36, 0.104), foot_l=(-0.20, 0.16, 0.118))),
