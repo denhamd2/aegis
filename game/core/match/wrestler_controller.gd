@@ -3046,7 +3046,7 @@ const WHIP_PASS_EASE_TICKS := 9
 ## 0.58 m forward of the root on frame 6), so the hands and chest finish the
 ## last of the gap instead of the capsule colliding with the rope and
 ## sliding along it.
-const WHIP_FAR_ROPE_TRIGGER := 0.30
+const WHIP_FAR_ROPE_TRIGGER := 0.60  # room for the 13-tick brake (~0.5 m), loop 4
 ## How far inside RING_KEEP_IN the return line aims.
 ## 0.35 -> 0.15 (12 Nov): with the brake's last ~0.3 m he reaches the ropes,
 ## hands on the top rope, as the tutorial's runner does (3:04.87).
@@ -3420,8 +3420,8 @@ func _whipped_into_screen() -> bool:
 ## aside for the same span (it would snap him back to 2.6).
 ## 0.38 + 0.40 -> 0.20 + 0.30 (12 Nov): at 5 m/s the runner sits half a metre
 ## into the ropes, as the tutorial's does, not 0.78 m.
-const ROPE_LOAD_FREE := 0.20
-const ROPE_LOAD_DEPTH := 0.30
+const ROPE_LOAD_FREE := 0.10  # loop 4: he sank 0.5 m into the ropes; ~0.25 now
+const ROPE_LOAD_DEPTH := 0.15
 ## How long the root is held at full depth before the ropes throw him back.
 ## The half-sine alone reaches full depth at ~0.11 s (9 m/s), but the authored
 ## Whip_Rope_Absorb plays chest contact -> deep compression -> push-off ->
@@ -3565,10 +3565,10 @@ func _tick_rope_load() -> void:
 ## sideways. Turned here a step a tick, shown as it is.
 const ROPE_TURN_TICKS := 9
 ## The push back out of the ropes: the last WHIP_ROPE_PUSH_TICKS of the hold.
-const WHIP_ROPE_PUSH_TICKS := 8  # sit to +22, leave at +30 (parity loop 3: ref push ~3-6 f)
+const WHIP_ROPE_PUSH_TICKS := 5  # sit to +25, leave at +30 (ref push ~3-6 f)
 ## The push-off's ease-in exponent: (FREE + DEPTH) x 1.6 / WHIP_ROPE_PUSH_TICKS
 ## leaves the ropes at about 4.8 m/s, the return run's 4.6.
-const ROPE_PUSH_EASE := 1.3  # exit 0.5 m x 1.3 / (8/60 s) = 4.9 m/s
+const ROPE_PUSH_EASE := 1.5  # exit 0.25 m x 1.5 / (5/60 s) = 4.5 m/s
 
 
 ## Returns how far through the turn he is, 0..1 (eased), which is also how

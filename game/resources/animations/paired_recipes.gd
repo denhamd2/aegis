@@ -2573,17 +2573,15 @@ const TRAJECTORIES := {
 					[0.233, -0.22, 0.00, 0.06], [0.367, -0.16, 0.00, 0.14],
 					[0.533, -0.04, 0.00, 0.26], [0.733, 0.16, 0.00, 0.34],
 					[0.900, 0.34, 0.00, 0.26], [1.000, 0.46, 0.00, 0.16],
-					[1.050, 0.52, 0.00, 0.10], [1.100, 0.62, 0.00, 0.04],
-					[1.150, 0.785, 0.00, -0.02],
-					# Close keys to the end: the cubic eases into its last key,
-					# and with one key at 1.20 he slowed to a near stop over the
-					# last four ticks before the launch (loop 4 data, t85-t89).
-					[1.167, 0.849, 0.00, -0.035], [1.183, 0.919, 0.00, -0.047],
-					[1.192, 0.961, 0.00, -0.054], [1.200, 1.00, 0.00, -0.06]],
+					# Ends 1.10 m out: clear of GrappleRig's 0.95 m ease-apart even
+					# after the fit pulls him back ~0.08 m (loop 4: a stall, then a
+					# one-tick jump where the fit's last offsets stopped).
+					[1.050, 0.53, 0.00, 0.10], [1.100, 0.64, 0.00, 0.04],
+					[1.150, 0.83, 0.00, -0.02], [1.200, 1.10, 0.00, -0.06]],
 			# Facing along his path: -90 is +x; the arc out on +z turns him
 			# toward -135, the run back onto the axis brings him to -90.
 			"rot": [[0.000, 0.0, -90.0, 0.0], [0.233, 0.0, -100.0, 0.0],
-					[0.367, 0.0, -115.0, 0.0], [0.533, 0.0, -112.0, 0.0],
+					[0.367, 0.0, -128.0, 0.0], [0.533, 0.0, -122.0, 0.0],
 					[0.733, 0.0, -98.0, 0.0], [0.900, 0.0, -80.0, 0.0],
 					[1.000, 0.0, -78.0, 0.0], [1.100, 0.0, -84.0, 0.0],
 					[1.200, 0.0, -90.0, 0.0]],
