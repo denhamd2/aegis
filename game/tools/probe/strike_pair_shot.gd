@@ -72,7 +72,15 @@ func _ready() -> void:
 	a.is_ai = false
 	b.is_ai = false
 	a.global_position = Vector3(0.0, 0.0, 0.0)
-	b.global_position = Vector3(0.0, 0.0, -0.9)
+	# At the move's own contact distance (its baked contact point plus the
+	# body radius), not a fixed 0.9 m: at 0.9 the kicks landed knee-deep in
+	# him (parity review, 12 Nov).
+	var gap := 0.9
+	if _move_id != "":
+		var mv: MoveDef = load("res://resources/moves/%s.tres" % _move_id)
+		if mv and mv.contact_radius > 0.0:
+			gap = maxf(0.8, -mv.contact_offset.z + WrestlerController.BODY_RADIUS)
+	b.global_position = Vector3(0.0, 0.0, -gap)
 	a.look_at(b.global_position, Vector3.UP)
 	b.look_at(a.global_position, Vector3.UP)
 	await get_tree().physics_frame
