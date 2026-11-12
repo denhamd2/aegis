@@ -12101,3 +12101,20 @@ owner: once he is reaching under, he finishes and comes out with a weapon.
 
 Tests: `test_weapon_rules` and `test_weapon_ai` pass. One older test, which
 pinned the empty-handed let-go, was rewritten to the new rule.
+
+## 12 Nov (5) — Hell in a Cell: no stall at the open door
+
+The owner: "commit and deploy the hell and cell fixes". The last one left was a
+stall: in the AI's way through the open door, a man could stop dead in the
+doorway and turn back and forth.
+
+- **The door leaf.** The open door's own collision still stood across the
+  lane. It is now switched off once the door is a third open
+  (`CageBuilder._door_leaf_shape`).
+- **Which side he is on.** In the door lane he only counts as having gone
+  through once he is 0.25 m past the wall line (`CellRoof.DOOR_PASSED`). Right
+  on the line, his side flipped from tick to tick and his route with it.
+
+Measured: `flow_probe --mode 3`, seeds 1–3, all three matches run to a finish
+with nobody held at the door. The roof plan (the AI deciding to climb and then
+giving up before cutting the padlock) is still being traced.
