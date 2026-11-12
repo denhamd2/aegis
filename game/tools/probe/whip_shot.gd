@@ -56,8 +56,12 @@ func _run(scenario: String) -> void:
 		w.is_ai = false
 		w.fsm.transition_to(WrestlerFSM.State.IDLE)
 		w.velocity = Vector3.ZERO
-	roman.global_position = Vector3(-0.4, 0, 0.0)
-	cody.global_position = Vector3(0.4, 0, 0.0)
+	# The whip is staged as the tutorial's (3:01.70): the runner with his back
+	# to the near ropes, swung through and sent across the ring. The rope
+	# run keeps the centre start.
+	var off := 1.3 if scenario == "whip" else 0.0
+	roman.global_position = Vector3(-0.4 + off, 0, 0.0)
+	cody.global_position = Vector3(0.4 + off, 0, 0.0)
 	roman.look_at(Vector3(5, 0, 0), Vector3.UP)
 	cody.look_at(Vector3(-5, 0, 0), Vector3.UP)
 	await get_tree().physics_frame

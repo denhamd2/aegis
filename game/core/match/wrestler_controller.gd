@@ -3051,7 +3051,7 @@ const WHIP_FAR_ROPE_TRIGGER := 0.30
 ## 0.35 -> 0.15 (12 Nov): with the brake's last ~0.3 m he reaches the ropes,
 ## hands on the top rope, as the tutorial's runner does (3:04.87).
 const WHIP_FAR_ROPE_INSET := 0.15
-const FAR_ROPE_BRAKE_TICKS := 8.0
+const FAR_ROPE_BRAKE_TICKS := 13.0  # 8 read as a hard plant (parity loop 3)
 
 
 func can_rope_run() -> bool:
@@ -3558,10 +3558,10 @@ func _tick_rope_load() -> void:
 ## sideways. Turned here a step a tick, shown as it is.
 const ROPE_TURN_TICKS := 9
 ## The push back out of the ropes: the last WHIP_ROPE_PUSH_TICKS of the hold.
-const WHIP_ROPE_PUSH_TICKS := 10
+const WHIP_ROPE_PUSH_TICKS := 8  # sit to +22, leave at +30 (parity loop 3: ref push ~3-6 f)
 ## The push-off's ease-in exponent: (FREE + DEPTH) x 1.6 / WHIP_ROPE_PUSH_TICKS
 ## leaves the ropes at about 4.8 m/s, the return run's 4.6.
-const ROPE_PUSH_EASE := 1.6
+const ROPE_PUSH_EASE := 1.3  # exit 0.5 m x 1.3 / (8/60 s) = 4.9 m/s
 
 
 ## Returns how far through the turn he is, 0..1 (eased), which is also how

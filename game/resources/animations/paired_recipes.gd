@@ -2543,41 +2543,44 @@ const TRAJECTORIES := {
 	# and Whip_Run's planted foot; there is no acceleration step at the seam.
 	"whip_setup": {
 		"length": 1.2,
+		# SWING-THROUGH (parity loop 4, 12 Nov). The tutorial's whipper keeps
+		# the wrist, pivots 180 degrees and swings the man round PAST his own
+		# body, letting go at arm's length with him running toward the rope
+		# behind the whipper (3:01.90-3:02.50). Ours used to spin the man on
+		# the spot and send him at the rope behind himself: a short run and no
+		# arm extension. The attacker's yaw winds 90 -> 270 with the pass and
+		# steps aside (-z) so the man clears him on +z, ending 0.82 m apart
+		# along +x -- the launch line (_launch_whip_victim aims attacker ->
+		# defender), 3 degrees off the pair axis.
 		"attacker": {
-			"pos": [[0.000, 0.26, 0.00, 0.00], [0.133, 0.25, 0.00, 0.01],
-					[0.233, 0.24, 0.00, 0.01], [0.367, 0.22, 0.00, 0.02],
-					[0.533, 0.20, 0.00, 0.04], [0.733, 0.10, 0.00, 0.08],
-					[0.900, 0.10, 0.00, 0.12], [1.067, 0.14, 0.00, 0.06],
-					[1.200, 0.20, 0.00, 0.04]],
-			# He turns with the swing (the tutorial, 3:02.40-3:02.60): wound
-			# 20 degrees round as the man goes behind him. No step in after
-			# him -- closing on the runner set off the rig's separation shove.
-			"rot": [[0.000, 0.0, 90.0, 0.0], [0.367, 0.0, 92.0, 0.0],
-					[0.533, 0.0, 78.0, 0.0], [0.733, 0.0, 70.0, 0.0],
-					[0.900, 0.0, 78.0, 0.0], [1.067, 0.0, 92.0, 0.0],
-					[1.200, 0.0, 90.0, 0.0]],
+			"pos": [[0.000, 0.26, 0.00, 0.00], [0.133, 0.25, 0.00, 0.00],
+					[0.233, 0.24, 0.00, -0.01], [0.367, 0.23, 0.00, -0.03],
+					[0.533, 0.21, 0.00, -0.08], [0.733, 0.16, 0.00, -0.16],
+					[0.900, 0.12, 0.00, -0.18], [1.067, 0.12, 0.00, -0.16],
+					[1.200, 0.14, 0.00, -0.10]],
+			"rot": [[0.000, 0.0, 90.0, 0.0], [0.367, 0.0, 96.0, 0.0],
+					[0.533, 0.0, 125.0, 0.0], [0.733, 0.0, 180.0, 0.0],
+					[0.900, 0.0, 236.0, 0.0], [1.067, 0.0, 262.0, 0.0],
+					[1.200, 0.0, 270.0, 0.0]],
 		},
 		"defender": {
-			"pos": [[0.000, -0.26, 0.00, 0.00], [0.133, -0.24, 0.00, 0.01],
-					[0.233, -0.22, 0.00, 0.02], [0.367, -0.17, 0.00, 0.03],
-					[0.533, -0.16, 0.00, 0.01], [0.733, -0.20, 0.00, -0.02],
-					[0.900, -0.24, 0.00, 0.00], [1.000, -0.26, 0.00, 0.02],
-					# The first strides accelerate him evenly from standing to
-					# the 5.0 m/s launch (IRISH_WHIP_LAUNCH_SPEED) over the last
-					# 0.2 s -- 25 m/s^2, d = a t^2 / 2 at each key -- so the
-					# handoff to Whip_Run does not change velocity, and he ends
-					# 0.96 m from the whipper: past the rig's 0.8 m separation,
-					# so GrappleRig._ease_apart() never shoves him. Closer, its
-					# ease-out pushed him at 8-11 m/s and then stalled him three
-					# ticks (parity review, 12 Nov).
-					[1.050, -0.291, 0.00, 0.03], [1.100, -0.385, 0.00, 0.03],
-					[1.150, -0.541, 0.00, 0.04], [1.200, -0.760, 0.00, 0.04]],
-			"rot": [[0.000, 0.0, -90.0, 0.0], [0.267, 0.0, -90.0, 0.0],
-					[0.367, 0.0, -80.0, 0.0], [0.433, 0.0, -18.0, 0.0],
-					[0.467, 0.0, 13.0, 0.0], [0.533, 0.0, 75.0, 0.0],
-					[0.600, 0.0, 90.0, 0.0], [0.733, 0.0, 98.0, 0.0],
-					[0.900, 0.0, 94.0, 0.0], [1.067, 0.0, 92.0, 0.0],
-					[1.150, 0.0, 91.0, 0.0], [1.200, 0.0, 90.0, 0.0]],
+			# Pulled forward past him on +z, then let go accelerating evenly to
+			# the 5.0 m/s launch over the last 0.2 s (25 m/s^2), so the handoff
+			# to Whip_Run does not change velocity and he ends past the rig's
+			# 0.8 m separation (GrappleRig._ease_apart() never shoves him).
+			"pos": [[0.000, -0.26, 0.00, 0.00], [0.133, -0.25, 0.00, 0.02],
+					[0.233, -0.22, 0.00, 0.06], [0.367, -0.16, 0.00, 0.14],
+					[0.533, -0.04, 0.00, 0.26], [0.733, 0.16, 0.00, 0.34],
+					[0.900, 0.34, 0.00, 0.26], [1.000, 0.46, 0.00, 0.16],
+					[1.050, 0.50, 0.00, 0.10], [1.100, 0.59, 0.00, 0.04],
+					[1.150, 0.745, 0.00, -0.02], [1.200, 0.96, 0.00, -0.06]],
+			# Facing along his path: -90 is +x; the arc out on +z turns him
+			# toward -135, the run back onto the axis brings him to -90.
+			"rot": [[0.000, 0.0, -90.0, 0.0], [0.233, 0.0, -100.0, 0.0],
+					[0.367, 0.0, -115.0, 0.0], [0.533, 0.0, -112.0, 0.0],
+					[0.733, 0.0, -98.0, 0.0], [0.900, 0.0, -80.0, 0.0],
+					[1.000, 0.0, -78.0, 0.0], [1.100, 0.0, -84.0, 0.0],
+					[1.200, 0.0, -90.0, 0.0]],
 		},
 	},
 
