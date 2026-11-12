@@ -11594,6 +11594,13 @@ _lunge = {
 }
 CLIPS["Strike_Hook_Left"] = [(f, dict(k, **_lunge.get(f, {})))
                              for f, k in CLIPS["Strike_Hook_Left"]]
+# The rear foot recovers 0.54 m forward between frames 11 and 14 under a low
+# pelvis; dragged straight, its ball went 4.9 cm through the mat (pose lint,
+# 12 Nov). Carry it in a stepping arc instead.
+_mid = dict(dict(CLIPS["Strike_Hook_Left"])[11])
+_mid["foot_r"] = (0.23, 0.07, 0.22)
+CLIPS["Strike_Hook_Left"].append((12.5, _mid))
+CLIPS["Strike_Hook_Left"].sort(key=lambda k: k[0])
 
 # Clinch knee: the tutorial's is a JUMPING knee (70.80-71.00), both feet off
 # the mat as it lands, contact 16 ticks after the step in (ours was 21).

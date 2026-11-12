@@ -20,7 +20,7 @@ const AUTHORED_LENGTHS := {
 	"strike_cross": 0.667,        # strike_cross.tres: 12+4+24 = 40
 	"strike_kick": 0.583,         # strike_kick.tres: 14+5+16 = 35
 	"strike_kick_heavy": 0.950,   # strike_kick_heavy.tres: 11+5+41 = 57
-	"strike_running_flying_knee": 1.133, # strike_running_flying_knee.tres: 25+5+38 = 68
+	"strike_running_flying_knee": 0.967, # strike_running_flying_knee.tres: 16+5+37 = 58 (12 Nov parity)
 	"hit_head": 0.333,            # WrestlerController.HIT_REACT_TICKS = 20
 	"hit_torso": 0.333,           # same state
 	"stunned": 0.750,             # WrestlerController.STUNNED_TICKS = 45
