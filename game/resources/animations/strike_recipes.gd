@@ -241,7 +241,7 @@ const RECIPES := {
 	# 0.61 -> 0.50 (12 Nov parity): contact at tick 9 and 36 ticks overall,
 	# the tutorial's 61.30 -> 61.45 -> 61.90.
 	"strike_hook": {"kind": "retime", "source": "Strike_Hook_Left",
-		"seconds": 0.50, "file": AUTHORED},
+		"seconds": 0.60, "file": AUTHORED},  # loop 5: 36 ticks, the MoveDef 9+4+23 (was 30)
 
 	# The heavy kick: the same posed kick as strike_kick, thrown slower. It
 	# used to retime the mocap roundhouse, which measured head-below-hips on

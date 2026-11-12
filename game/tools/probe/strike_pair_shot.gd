@@ -204,6 +204,14 @@ func _ready() -> void:
 			pa.seek(minf(t, clip_len - 0.001), true)
 			pa.advance(0)
 			var rt := float(f - maxi(_contact, 0)) / 60.0
+			if _move_id.contains("running"):
+				# A running strike arrives off a run (the game's RUN state
+				# carries him in): 1.2 m back at f0, on his mark at contact-4,
+				# then on through about 0.5 m as he lands (parity loop 4).
+				var arrive := maxi(_contact - 4, 1)
+				var back := 1.2 * (1.0 - clampf(float(f) / float(arrive), 0.0, 1.0))
+				var on := 0.5 * clampf(float(f - arrive) / 26.0, 0.0, 1.0)
+				a.global_position = Vector3(0.0, 0.0, back - on)
 			if _carry:
 				b.global_position = _b_start + Vector3(0.0, 0.0, -_carried(f - _contact))
 			elif _shove_m > 0.0:

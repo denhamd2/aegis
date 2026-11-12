@@ -284,14 +284,16 @@ def S(**over):
 # shot he is folded over both hands on his stomach, knees giving.
 HEAD_HURT = dict(
     READY, pelvis=(0.03, -0.12, 0.794), hips=(-4, 8, 0), spine=(-14, 14, -5),
-    head=(14, 24, -8),
+    head=(4, 24, -8),  # was 14: read as a chin-up (parity loop 4)
     hand_l=(-0.10, 0.26, 1.48), elbow_l=(-0.9, -0.2, -0.4), fist_l=0.2,
     hand_r=(0.28, 0.22, 1.04),
     foot_r=(0.28, -0.36, 0.104), foot_l=(-0.20, 0.14, 0.104),
 )
 
 GUT_HURT = dict(
-    READY, pelvis=(0.0, -0.12, 0.734), hips=(-20, 0, 0), spine=(-46, 0, 0),
+    # Folded nearer horizontal: the tutorial's body-kicked man is bent almost
+    # flat by +15 (parity loop 4; was hips -20, spine -46).
+    READY, pelvis=(0.0, -0.12, 0.720), hips=(-26, 0, 0), spine=(-60, 0, 0),
     # The torso folds deeply, but the chin stays slightly lifted so the neck
     # follows the chest instead of curling forward and stretching the throat.
     head=(10, 0, 0),
@@ -2284,11 +2286,11 @@ CLIPS = {
         # deepest (tutorial 1:01.55; it was 20, which read as no snap at all
         # -- parity review loop 1, 12 Nov).
         (2,  R(pelvis=(0.02, -0.06, 0.800), hips=(-2, 6, 0),
-               spine=(-2, 18, -12), head=(2, 36, -14),
+               spine=(-12, 18, -12), head=(-4, 38, -14),
                hand_r=(0.28, 0.24, 1.06), hand_l=(-0.24, 0.28, 1.10))),
         # Deepest: thrown back off the shot, weight on the back foot.
         (4,  R(pelvis=(0.05, -0.14, 0.806), hips=(4, 10, 0),
-               spine=(0, 22, -16), head=(4, 40, -16),
+               spine=(-10, 22, -16), head=(-4, 44, -16),
                hand_r=(0.32, 0.12, 1.02), hand_l=(-0.28, 0.16, 1.04),
                fist_r=0.4, fist_l=0.4,
                foot_r=(0.28, -0.36, 0.104), foot_l=(-0.20, 0.16, 0.118))),
@@ -11820,6 +11822,22 @@ _fk_land = [
 ]
 CLIPS["Strike_Running_Flying_Knee"] = [(f, k) for f, k in CLIPS["Strike_Running_Flying_Knee"]
                                        if f < 11] + _fk_land
+
+
+# Kick knockdown, loop 5: a JACK-KNIFE on the way down -- back about 45-65
+# degrees, hips 0.45-0.6 m up, legs higher than the torso -- not floating flat
+# at rope height (loop 4, side kick +16).
+_bk_fall = dict(CLIPS["Bump_Kick"])
+CLIPS["Bump_Kick"] = [(f, k) for f, k in CLIPS["Bump_Kick"] if f not in (9, 13)] + [
+    (9, dict(_bk_fall[9], hips=(45, 0, 0), pelvis=(0.0, 0.01, 0.62))),
+    (13, dict(_bk_fall[9], hips=(65, 0, 0), pelvis=(0.0, 0.01, 0.46))),
+]
+CLIPS["Bump_Kick"].sort(key=lambda k: k[0])
+
+# Hook: 6 more frames of recovery, a held guard, so it runs the tutorial's 36
+# (loop 4: 30 f). Contact is unchanged -- strike_recipes.gd scales by the same
+# 0.75 (0.60 s over 24 frames).
+CLIPS["Strike_Hook_Left"].append((24, dict(CLIPS["Strike_Hook_Left"][-1][1])))
 
 
 def main():
