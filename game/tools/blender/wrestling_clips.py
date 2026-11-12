@@ -11798,6 +11798,28 @@ def _ck(f, k):
 _patch_keys("Strike_Clinch_Knee_Body", _ck)
 
 
+# Flying knee: he LANDS -- on his feet, crouched, beyond where the man stood,
+# and is rising by +40 (tutorial 73.17-73.74). Ours belly-flopped and lay
+# prone, then popped up when the move handed back to IDLE (loops 1-3). Frames
+# here are the re-timed ones (contact 8).
+_fk_land = [
+    (11, pose(GUARD, pelvis=(0.0, 0.30, 1.10), hips=(10, 0, 0), spine=(-10, 0, 0),
+              foot_r=(0.16, 0.42, 0.70), foot_l=(-0.17, 0.02, 0.56))),
+    (14, pose(GUARD, pelvis=(0.0, 0.40, 0.82), hips=(-12, 0, 0), spine=(-18, 0, 0),
+              foot_r=(0.16, 0.56, 0.104), foot_l=(-0.17, 0.14, 0.26))),
+    (17, pose(GUARD, pelvis=(0.0, 0.45, 0.62), hips=(-26, 0, 0), spine=(-22, 0, 0),
+              foot_r=(0.16, 0.60, 0.104), foot_l=(-0.18, 0.20, 0.104))),
+    (20, pose(GUARD, pelvis=(0.0, 0.45, 0.66), hips=(-22, 0, 0), spine=(-20, 0, 0),
+              foot_r=(0.16, 0.60, 0.104), foot_l=(-0.18, 0.20, 0.104))),
+    (24, pose(GUARD, pelvis=(0.0, 0.43, 0.74), hips=(-12, 0, 0), spine=(-18, 4, 0),
+              foot_r=(0.18, 0.58, 0.104), foot_l=(-0.20, 0.22, 0.104))),
+    (29, pose(GUARD, pelvis=(0.0, 0.40, 0.78), hips=(-8, -8, 0),
+              foot_r=(0.22, 0.52, 0.104), foot_l=(-0.20, 0.30, 0.104))),
+]
+CLIPS["Strike_Running_Flying_Knee"] = [(f, k) for f, k in CLIPS["Strike_Running_Flying_Knee"]
+                                       if f < 11] + _fk_land
+
+
 def main():
     arm = load_rig()
     clear_actions()
