@@ -125,9 +125,24 @@ func _ready() -> void:
 	var camera := Camera3D.new()
 	scene.add_child(camera)
 	camera.current = true
+	# Nobody else in the shot: the referee walked in front of the knockdown
+	# (parity loop 2 renders, 12 Nov).
+	for ref_name in ["MatchReferee", "RefereeActor"]:
+		var ref_node := scene.get_node_or_null(ref_name)
+		if ref_node:
+			ref_node.process_mode = Node.PROCESS_MODE_DISABLED
+			if ref_node is Node3D:
+				(ref_node as Node3D).visible = false
 	var focus := (a.global_position + b.global_position) * 0.5 + Vector3(0.0, 1.0, 0.0)
 	var across := (b.global_position - a.global_position).normalized().cross(Vector3.UP)
-	camera.global_position = focus + across * 3.0 + Vector3(0.0, 0.4, 0.0)
+	var back := 3.0
+	if _carry:
+		# Framed on the whole knockdown: the striker to where the carry lands.
+		var land := b.global_position + (b.global_position - a.global_position).normalized() \
+				* _carried(WrestlerController.KNOCKDOWN_CARRY_TICKS)
+		focus = (a.global_position + land) * 0.5 + Vector3(0.0, 0.8, 0.0)
+		back = 4.2
+	camera.global_position = focus + across * back + Vector3(0.0, 0.4, 0.0)
 	camera.look_at(focus, Vector3.UP)
 	camera.fov = 45.0
 	# The arena is lit for the wide broadcast camera; a close review camera
