@@ -3794,7 +3794,7 @@ func _begin_far_rope_stop() -> void:
 ## moved sideways just enough that the straight line from here clears him by
 ## WHIP_PASS_CLEAR, and the lane steer is switched off (parity review, 12 Nov:
 ## the steered pass bowed 0.76 m and swung the yaw through 50 degrees).
-const WHIP_PASS_CLEAR := 0.55
+const WHIP_PASS_CLEAR := 0.85  # two 0.4 m bodies plus a hand: shoulder to shoulder, not into him
 
 
 func _aim_straight_pass() -> void:
