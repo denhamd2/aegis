@@ -1821,8 +1821,12 @@ const TRAJECTORIES := {
 	# 180 -> 0 in 45-degree keys so no turn goes the short way round), both
 	# yawing +180 and ending face to face. Cody falls back to a seat (0.40 ->
 	# 0.22) with the head under his right arm; facing +X his right is +Z, so
-	# the man is yanked face-first down to land 0.85 m in front and 0.25 m to
-	# that side -- his head at Cody's hip, as the Cody Cutter lands him. (It
+	# the man is yanked face-first down to land 0.85 m in front and 0.40 m to
+	# that side -- his head at Cody's hip and his body alongside Cody's legs,
+	# not on them. The catch is at 0.40 m, not the clinch's 0.30: closer, the
+	# two bent bodies were inside each other and the clearance fit shoved him
+	# half a metre sideways, so he fell head-away from Cody (12 Nov, measured
+	# with paired_shot --bones). (It
 	# used to drive him out a body-length past Cody's feet off a Tiger Driver
 	# flip; the owner, 12 Nov: "is the victim supposed to go vertically up in
 	# the air like that?")
@@ -1849,9 +1853,9 @@ const TRAJECTORIES := {
 					[0.14, -0.02, 0.00, 0.00], [0.30, 0.06, 0.00, 0.00],
 					[0.40, 0.188, 0.00, 0.212],
 					[0.47, 0.40, 0.00, 0.30], [0.57, 0.612, 0.00, 0.212],
-					[0.63, 0.70, 0.00, 0.00], [0.70, 0.74, 0.00, 0.05],
-					[0.77, 0.88, 0.00, 0.15], [0.83, 1.02, 0.00, 0.22],
-					[0.93, 1.07, 0.00, 0.25], [1.90, 1.07, 0.00, 0.25]],
+					[0.63, 0.80, 0.00, 0.00], [0.70, 0.90, 0.00, 0.12],
+					[0.77, 0.98, 0.00, 0.26], [0.83, 1.05, 0.00, 0.37],
+					[0.93, 1.08, 0.00, 0.40], [1.90, 1.08, 0.00, 0.40]],
 			"rot": [[0.00, 0.0, -90.0, 0.0], [0.07, 0.0, 0.0, 0.0],
 					[0.14, 0.0, 90.0, 0.0], [0.30, 0.0, 90.0, 0.0],
 					[0.40, 0.0, 180.0, 0.0], [0.47, 0.0, 270.0, 0.0],
