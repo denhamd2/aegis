@@ -11679,20 +11679,26 @@ for _name in ("Strike_Hook_Left", "Strike_Front_Kick_Body",
 # sheet across his chest and wrung his neck (the owner, 12 Nov: "Kenny is
 # morphing", turning back kick f8-f20). The head turns at most 40 degrees on
 # the chest; half the excess goes to the upper spine.
-HEAD_YAW_MAX = 40.0
+# Kenny's hair is skinned to his upper back as well as his head, so even 40
+# degrees on the spinning back kick dragged the dark undercoat across his
+# shoulder: there the head stays within 25 degrees of the chest and the whole
+# upper body turns instead (all the excess to the spine).
+HEAD_YAW_MAX = {"Strike_Turning_Back_Kick_Body": 25.0}
 for _name in ("Strike_Turning_Back_Kick_Body", "Strike_Side_Kick_Knockdown",
               "Strike_Hook_Left", "Strike_Front_Kick_Body",
               "Strike_Clinch_Knee_Body", "Strike_Running_Flying_Knee"):
+    _cap = HEAD_YAW_MAX.get(_name, 40.0)
+    _share = 1.0 if _name in HEAD_YAW_MAX else 0.5
     _keys = []
     for _f, _k in CLIPS[_name]:
         _k = dict(_k)
         _h = _k.get("head")
-        if _h and abs(_h[1]) > HEAD_YAW_MAX:
+        if _h and abs(_h[1]) > _cap:
             _sign = 1.0 if _h[1] > 0 else -1.0
-            _excess = _h[1] - _sign * HEAD_YAW_MAX
-            _k["head"] = (_h[0], _sign * HEAD_YAW_MAX, _h[2])
+            _excess = _h[1] - _sign * _cap
+            _k["head"] = (_h[0], _sign * _cap, _h[2])
             _sp = _k.get("spine", (0, 0, 0))
-            _k["spine"] = (_sp[0], _sp[1] + _excess * 0.5, _sp[2])
+            _k["spine"] = (_sp[0], _sp[1] + _excess * _share, _sp[2])
         _keys.append((_f, _k))
     CLIPS[_name] = _keys
 
