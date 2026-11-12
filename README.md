@@ -12030,3 +12030,24 @@ Tests: steel cage 20/20, after updating two for the new door collision.
 Deployed at the owner's request ("commit and deploy now so i can play it")
 while the three-seed Hell in a Cell flow probe and the new cell tests were
 still running. Results follow in the next entry.
+
+## 12 Nov (1) — The Samoan drop, re-keyed
+
+The owner: "Re-key the Samoan drop ... to look like the real moves."
+
+- **What it was:** Roman lifted the man into a fireman's carry, crouched, and
+  the man slid off his shoulders in front. That is a different move.
+- **What it is now** (`Samoan_Drop_Attacker` / `_Defender`,
+  `paired_recipes.gd power_samoan_drop`):
+  - The carry is as before: the man across both shoulders, face up.
+  - Roman goes over backwards and sits through it onto his own back, with the
+    man still on his shoulders.
+  - The man is driven back-first into the mat across Roman's line, just beyond
+    his head: the two of them in a T.
+  - Then the rebound, the sell, and Roman's get-up.
+  - The defender's root turns a quarter as his body's yaw comes round, so the
+    settle is the stock `SELL_AWAY` with no snap into the down state.
+- Clips rebuilt (314); the paired and strike libraries re-baked; the authoring
+  file's digest re-pinned. Rendered side-on through `paired_shot` and checked.
+- Deployed at the owner's request ("commit and deploy the updated samoan
+  drop"), with the animation suites still to report.
