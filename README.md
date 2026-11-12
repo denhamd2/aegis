@@ -12118,3 +12118,24 @@ doorway and turn back and forth.
 Measured: `flow_probe --mode 3`, seeds 1–3, all three matches run to a finish
 with nobody held at the door. The roof plan (the AI deciding to climb and then
 giving up before cutting the padlock) is still being traced.
+
+## 12 Nov (6) — The Samoan drop lands where it should
+
+The owner, on the review sheet: "it looks like the attacker goes behind the
+victim ... I dont think thats supposed to be how that move works". Then:
+"commit and deploy the samoan drop once it passes".
+
+- **The move now.** Roman hoists the man across both shoulders, face up, holds
+  him there a beat, then falls straight back onto his own back and takes him
+  down with him. The man lands flat on his back across the mat just beyond
+  Roman's head, the two of them in a T, and Roman gets up beside him.
+- **What was wrong.** The landing spot was on the wrong side. Roman faces the
+  man at the start, so he falls back toward +x; the man was being put at
+  −0.85 m, which is at Roman's feet, so Roman sat up and stood inside him. He
+  now lands at +1.70 m (`paired_recipes.gd`, `power_samoan_drop`). The old
+  clearance fit for the move was cleared with it.
+- **Checked.** Overhead and side renders frame by frame (`paired_shot`), and
+  `test_pair_clearance`: the Samoan drop is clean. That suite still reports
+  three moves this change does not touch (the Cross Rhodes hand gap, and
+  `whip_setup` and `running_grapple_inverted_drop`, which fail the same on
+  main); the Cross Rhodes is being re-keyed next.
