@@ -634,6 +634,8 @@ func _cell_rng() -> RandomNumberGenerator:
 
 
 func _cell_input(distance: float) -> Dictionary:
+	if Engine.get_physics_frames() % 1800 == 0:
+		print("DBGCELLIN ", controller.name, " t=", controller.flow.seconds() if controller.flow else -1.0, " roof=", CellRoof.of(controller) != null, " busy=", CellRoof.of(controller).busy(controller) if CellRoof.of(controller) else false, " plan=", _cell_plan, " rolls=", _cell_rolls)
 	var roof := CellRoof.of(controller)
 	if roof == null or roof.busy(controller):
 		return {}
@@ -685,6 +687,7 @@ func _cell_input(distance: float) -> Dictionary:
 			for i in _cell_rolls:
 				rng.randf()
 			_cell_plan = 1 if rng.randf() < CELL_ROOF_CHANCE else 0
+			print("DBGPLAN ", controller.name, " roll ", _cell_rolls, " plan ", _cell_plan, " t=", controller.flow.seconds())
 	if _cell_plan == 1 and roof.falls > 0:
 		_cell_plan = 0
 	if _roof_done:
