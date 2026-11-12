@@ -496,6 +496,15 @@ static func inside_ropes_shift(xform: Transform3D, move: MoveDef) -> Vector3:
 ##
 ## A move with no trajectory falls back to the authored convention: attacker
 ## on the frame's origin facing -X, defender facing +X.
+## How far apart, on the floor, the move's clip starts the two men: a running
+## paired move is caught from here, so the run carries into it rather than
+## being backed up onto its mark.
+func start_gap(move: MoveDef) -> float:
+	var a := _role_start(move, true).origin
+	var b := _role_start(move, false).origin
+	return Vector2(a.x - b.x, a.z - b.z).length()
+
+
 func _role_start(move: MoveDef, is_attacker: bool) -> Transform3D:
 	var fallback := Transform3D(Basis(Vector3.UP, PI * (0.5 if is_attacker else -0.5)),
 			Vector3.ZERO)
@@ -565,6 +574,8 @@ func _authored_role_start_height(move: MoveDef, is_attacker: bool) -> float:
 ## steps under it. LEAD_IN_TICKS stays the floor, so a short closing is no
 ## slower than it was; LEAD_IN_MAX_TICKS stops a long one reading as a pause.
 const LEAD_IN_TICKS := 10
+## Faster than this (m/s) into a paired move, the attacker is running in.
+const RUN_CARRY_MIN_SPEED := 2.5
 const LEAD_IN_MAX_TICKS := 45
 ## A quick set-up shuffle, not a stroll: faster than MOVE_SPEED's walk.
 const WALK_IN_SPEED := 1.6
@@ -601,8 +612,23 @@ func _lead_in(attacker: Node3D, defender: Node3D) -> void:
 	# Both men arrive together, so the slower of the two sets the pace.
 	lead_in_ticks = maxi(walk_in_ticks(from_attacker, to_attacker),
 			walk_in_ticks(from_defender, to_defender))
+	# A man running in (the spear, a running powerslam): he keeps his pace into
+	# the move's first frame, at constant speed, no walk-in -- never braked to a
+	# walk to be stepped onto his mark (the owner: "running moves and the
+	# spear in one continuous motion, with no stop before impact").
+	var run_speed := 0.0
+	if attacker is CharacterBody3D:
+		var v: Vector3 = (attacker as CharacterBody3D).velocity
+		run_speed = Vector2(v.x, v.z).length()
+	var running := run_speed > RUN_CARRY_MIN_SPEED
+	if running:
+		var d := from_attacker.origin.distance_to(to_attacker.origin)
+		lead_in_ticks = clampi(int(ceil(d / run_speed * Engine.physics_ticks_per_second)),
+				1, LEAD_IN_MAX_TICKS)
 	for pair: Array in [[attacker, from_attacker, to_attacker, true],
 			[defender, from_defender, to_defender, false]]:
+		if running and pair[3]:
+			continue          # his run clip carries on into the move
 		if pair[0].has_method("begin_walk_in"):
 			pair[0].begin_walk_in(pair[1], pair[2], lead_in_ticks, _move, pair[3])
 	for tick in range(1, lead_in_ticks + 1):
@@ -615,7 +641,8 @@ func _lead_in(attacker: Node3D, defender: Node3D) -> void:
 		# slide nobody's feet were part of.)
 		var t := float(tick) / float(lead_in_ticks)
 		var eased := t * t * (3.0 - 2.0 * t)
-		attacker.global_transform = blend_transforms(from_attacker, to_attacker, eased)
+		attacker.global_transform = blend_transforms(from_attacker, to_attacker,
+				t if running else eased)
 		defender.global_transform = blend_transforms(from_defender, to_defender, eased)
 
 ## Shared with WrestlerController._place_cover(), which has the same problem

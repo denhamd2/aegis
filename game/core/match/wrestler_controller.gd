@@ -2856,7 +2856,6 @@ func _maybe_start_running_attack(input: Dictionary) -> void:
 	if not input.get("strike", false) or opponent == null or not _in_range(running_attack_reach()) \
 			or UNHITTABLE_STATES.has(opponent.fsm.current_state):
 		return
-	var close := _in_range(STRIKE_HIT_RANGE)
 	var legal: Array[MoveDef] = []
 	for candidate: MoveDef in [running_attack_move] + running_attack_move_pool:
 		if not _move_weight_legal(candidate):
@@ -2874,10 +2873,16 @@ func _maybe_start_running_attack(input: Dictionary) -> void:
 	var move := _run_in_pick if _run_in_pick and legal.has(_run_in_pick) \
 			else _pick_tier_move(legal[0], legal.slice(1))
 	_run_in_pick = move
-	# The strikes go from the run-in reach; the two-man moves catch him
-	# where they always did, close.
-	if not close and PairedRecipes.RECIPES.has(String(move.animation_pair_id)):
-		return
+	# The strikes go from the run-in reach; the two-man moves catch him where
+	# their clip starts the pair (GrappleRig.start_gap) -- the spear begins
+	# 1.6 m out, and caught at 1.15 he was backed up half a metre onto his mark
+	# before it played: the stop before impact.
+	if PairedRecipes.RECIPES.has(String(move.animation_pair_id)):
+		var catch_at := STRIKE_HIT_RANGE
+		if grapple_rig:
+			catch_at = maxf(catch_at, grapple_rig.start_gap(move) + 0.05)
+		if not _in_range(catch_at):
+			return
 	_run_in_pick = null
 	if _can_run_into_paired(move):
 		_begin_running_paired(move)
@@ -4126,7 +4131,8 @@ func try_running_finisher() -> bool:
 		return false
 	if not PairedRecipes.RECIPES.has(String(finisher_run_move.animation_pair_id)):
 		return false
-	if not _in_range(STRIKE_HIT_RANGE + 0.2):
+	var catch_at := maxf(STRIKE_HIT_RANGE + 0.2, grapple_rig.start_gap(finisher_run_move) + 0.05)
+	if not _in_range(catch_at):
 		return false
 	_begin_running_paired(finisher_run_move)
 	return true
