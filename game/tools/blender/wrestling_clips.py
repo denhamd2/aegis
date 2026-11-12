@@ -2284,11 +2284,11 @@ CLIPS = {
         # deepest (tutorial 1:01.55; it was 20, which read as no snap at all
         # -- parity review loop 1, 12 Nov).
         (2,  R(pelvis=(0.02, -0.06, 0.800), hips=(-2, 6, 0),
-               spine=(6, 18, -6), head=(24, 34, -18),
+               spine=(4, 18, -6), head=(10, 36, -16),
                hand_r=(0.28, 0.24, 1.06), hand_l=(-0.24, 0.28, 1.10))),
         # Deepest: thrown back off the shot, weight on the back foot.
         (4,  R(pelvis=(0.05, -0.14, 0.806), hips=(4, 10, 0),
-               spine=(12, 22, -9), head=(26, 40, -22),
+               spine=(10, 22, -9), head=(12, 40, -20),
                hand_r=(0.32, 0.12, 1.02), hand_l=(-0.28, 0.16, 1.04),
                fist_r=0.4, fist_l=0.4,
                foot_r=(0.28, -0.36, 0.104), foot_l=(-0.20, 0.16, 0.118))),
@@ -11644,6 +11644,16 @@ CLIPS["Strike_Side_Kick_Knockdown"] = [(f, dict(k, **_sk_patch.get(f, {})))
 
 # Turning back kick to the body: contact 20 ticks in (66.07), not 24.
 _retime("Strike_Turning_Back_Kick_Body", [(0, 0), (12, 10), (28, 20)])
+# Flying knee in the air UPRIGHT, the knee driven up to the chin (tutorial
+# 73.00-73.17): ours laid back to 10 degrees above horizontal and read as a
+# dropkick (parity review loops 1-2). Original frame numbers.
+_fk_patch = {
+    11: dict(hips=(22, 0, 0), pelvis=(0.0, 0.14, 1.140), foot_r=(0.16, 0.34, 1.06)),
+    13: dict(hips=(12, 0, 0), pelvis=(0.0, 0.18, 1.360), foot_r=(0.16, 0.30, 1.14)),
+    16: dict(hips=(18, 0, 0), pelvis=(0.0, 0.22, 1.160), foot_r=(0.16, 0.24, 0.98)),
+}
+CLIPS["Strike_Running_Flying_Knee"] = [(f, dict(k, **_fk_patch.get(f, {})))
+                                       for f, k in CLIPS["Strike_Running_Flying_Knee"]]
 # Running flying knee: off the run into the knee in 16 ticks (72.80 ->
 # 73.07), not 25; the crash and the lying sell are unchanged.
 _retime("Strike_Running_Flying_Knee", [(0, 0), (13, 8), (34, 29)])

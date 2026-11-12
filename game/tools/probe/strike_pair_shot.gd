@@ -92,6 +92,14 @@ func _ready() -> void:
 		var mv: MoveDef = load("res://resources/moves/%s.tres" % _move_id)
 		if mv and mv.contact_radius > 0.0:
 			gap = maxf(0.8, -mv.contact_offset.z + TORSO_HALF_DEPTH)
+	# The match opens on the referee's immediate lock-up; left running, his
+	# tie-up pulled the two men 0.2-0.6 m together in the one physics tick
+	# below, so every sheet started half locked up (parity loop 2, 12 Nov).
+	var referee := scene.get_node_or_null("MatchReferee")
+	if referee and "_tying_up" in referee:
+		referee._tying_up = false
+	if referee:
+		referee.process_mode = Node.PROCESS_MODE_DISABLED
 	b.global_position = Vector3(0.0, 0.0, -gap)
 	_b_start = b.global_position
 	a.look_at(b.global_position, Vector3.UP)
@@ -107,6 +115,12 @@ func _ready() -> void:
 			for m in w.skeleton.find_children("", "SkeletonModifier3D", true, false):
 				(m as SkeletonModifier3D).active = false
 		w.set_physics_process(false)
+		w.velocity = Vector3.ZERO
+	# And placed again once nothing can move them.
+	a.global_position = Vector3.ZERO
+	b.global_position = _b_start
+	a.look_at(b.global_position, Vector3.UP)
+	b.look_at(a.global_position, Vector3.UP)
 	var pa := a.anim_player
 	var pb := b.anim_player
 	if not pa.has_animation(_strike):

@@ -265,10 +265,10 @@ const KNOCKBACK_DECAY := 0.75
 ## A knockdown strike (a strike marked leaves_defender_down, no weapon) carries
 ## him back about a metre as he goes over, not 0.13 m: the tutorial's side kick
 ## and flying knee put the man flat about 1.0-1.2 m back within ~28 frames
-## (parity review, 12 Nov). 5.2 m/s bled by 0.93 a tick over 28 ticks ~ 1.0 m.
-const KNOCKDOWN_CARRY_SPEED := 5.2
-const KNOCKDOWN_CARRY_TICKS := 28
-const KNOCKDOWN_CARRY_DECAY := 0.93
+## (parity review, 12 Nov). 3.75 m/s bled by 0.95 a tick over 36 ticks ~ 1.0 m.
+const KNOCKDOWN_CARRY_SPEED := 3.75  # 36 ticks at 0.95 ~ 1.0 m (loop 2: fell too fast)
+const KNOCKDOWN_CARRY_TICKS := 36
+const KNOCKDOWN_CARRY_DECAY := 0.95
 var _knockback_decay := KNOCKBACK_DECAY
 var _bump_carry := false
 const STUNNED_TICKS := 45
