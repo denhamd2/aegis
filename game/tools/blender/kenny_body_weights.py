@@ -67,7 +67,7 @@ def main():
     bpy.ops.object.vertex_group_normalize_all(group_select_mode="ALL", lock_active=False)
     bpy.ops.object.mode_set(mode="OBJECT")
     bpy.ops.export_scene.gltf(filepath=OUT, export_format="GLB", export_skins=True,
-                              export_animations=False, export_morph=True,
+                              export_animations=False, export_morph=True, export_all_influences=True,
                               export_yup=True, export_apply=False)
     print("wrote", OUT)
 
