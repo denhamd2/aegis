@@ -165,6 +165,11 @@ func _ready() -> void:
 	camera.global_position = focus + across * back + Vector3(0.0, 0.4, 0.0)
 	# --cam-yaw DEG: orbit the camera round the focus (diagnosing a pose from
 	# more than the one side; 12 Nov, the turning back kick's torso).
+	# --no-hair: hide the hair meshes (diagnosis: is a defect the hair?).
+	if OS.get_cmdline_user_args().has("--no-hair"):
+		for w: WrestlerController in [a, b]:
+			for mi in w.find_children("Curl*", "MeshInstance3D", true, false):
+				(mi as MeshInstance3D).visible = false
 	var cy := OS.get_cmdline_user_args().find("--cam-yaw")
 	if cy >= 0 and cy + 1 < OS.get_cmdline_user_args().size():
 		var off := camera.global_position - focus
