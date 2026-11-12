@@ -1517,10 +1517,10 @@ func _add_intro(a: Transform3D, b: Transform3D, face_a: Vector3, face_b: Vector3
 ## -- the men in their corners staring up at it -- and give no lighting cue,
 ## so this is ours: the house down, the cell lit by white strobe hits off the
 ## truss as it drops, and one big flash and the crowd's pop as it lands.
-const CELL_LOWER_SECONDS := 9.0
+const CELL_LOWER_SECONDS := 30.0   # the owner, 12 Nov: "much slower" (was 9.0)
 const CELL_LANDED_HOLD := 1.4
 const CELL_STROBE_FIRST := 0.8
-const CELL_STROBE_GAP := 0.55
+const CELL_STROBE_GAP := 0.75
 const CELL_DOOR_TICKS := 170
 const CELL_PADLOCK_AT := 80
 const CELL_HOUSE_DIM := 0.28
