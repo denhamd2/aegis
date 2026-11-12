@@ -310,13 +310,14 @@ const FF_STAGE_DIR := Vector3(0, 0, -1)
 ## Short cuts to the action, each back to the coverage it cut from. None
 ## lands within MIN_SHOT of the last cut (D1: no shot under 0.8 s), and none
 ## pre-empts a finisher or a pin, which have their own shots.
-enum Cut { STRIKE, SLAM, HERO, FIRE_UP, CUTAWAY, WEAPON, TABLE, WEAPON_RETRIEVE, ROOF_FALL, PANEL_FALL }
+enum Cut { STRIKE, SLAM, HERO, FIRE_UP, CUTAWAY, WEAPON, TABLE, WEAPON_RETRIEVE, ROOF_FALL, PANEL_FALL,
+		WEAPON_SHOWN }
 const MIN_SHOT := 0.8
 ## A strike worth a cut: the cross, the uppercut, the elbow, the kicks.
 const BIG_STRIKE_DAMAGE := 9.0
 const CUT_HOLD := {Cut.STRIKE: 0.85, Cut.SLAM: 0.35, Cut.HERO: 1.5, Cut.FIRE_UP: 1.3, Cut.CUTAWAY: 1.6,
 		Cut.WEAPON: 0.9, Cut.TABLE: 1.4, Cut.WEAPON_RETRIEVE: 1.4, Cut.ROOF_FALL: 2.6,
-		Cut.PANEL_FALL: 2.4}
+		Cut.PANEL_FALL: 2.4, Cut.WEAPON_SHOWN: 1.4}
 ## The cell's two set pieces are cut to under every coverage, gameplay's
 ## continuous view included, and over whatever shot is up: the fall is the
 ## match's biggest moment and the default camera cannot see it.
@@ -511,6 +512,7 @@ func _ready() -> void:
 		wc.through_desk.connect(func(_who): add_trauma(TRAUMA_TABLE))
 		wc.smashed_into_screen.connect(func(_who): add_trauma(TRAUMA_TABLE))
 		wc.weapon_retrieval_started.connect(_on_weapon_retrieval_started)
+		wc.weapon_pulled_out.connect(func(who): _try_cut(Cut.WEAPON_SHOWN, who, null))
 	add_to_group(WeaponActor.LISTENERS)
 	add_to_group("match_camera")
 	_bind_cell.call_deferred()
@@ -1703,18 +1705,26 @@ func _try_cut(kind: int, subject: Node3D, other: Node3D, hold_override := -1.0,
 	# hero close-up before returning to the same ringside camera. The Enda sign
 	# insert is also an explicit editorial cutaway requested by MatchAudio.
 	var set_piece := kind in CELL_FALL_CUTS
-	if CameraSettings.gameplay() and kind != Cut.HERO and not enda_exception and not set_piece:
+	# The weapon shown off straight after the retrieve insert: a broadcast
+	# cuts from the reach under the apron to the man up with it.
+	var follows_retrieve := kind == Cut.WEAPON_SHOWN and mode == Mode.EVENT_CUT \
+			and _cut == Cut.WEAPON_RETRIEVE
+	if CameraSettings.gameplay() and kind != Cut.HERO and kind != Cut.WEAPON_SHOWN \
+			and not enda_exception and not set_piece:
 		return false
 	# Fight Forever stays wide through ordinary strikes; the close-ups are the
 	# grapples (_ff_grapple_cut), the signature and special strikes
 	# (_on_move_landed), the taunt, and the set pieces.
 	if CameraSettings.fight_forever() and kind == Cut.CUTAWAY and not enda_exception:
 		return false
-	if mode != Mode.HARD_CAM and mode != Mode.RINGSIDE and not (set_piece and mode == Mode.EVENT_CUT):
+	if mode != Mode.HARD_CAM and mode != Mode.RINGSIDE and not (set_piece and mode == Mode.EVENT_CUT) \
+			and not follows_retrieve:
 		return false
-	if (_held < MIN_SHOT and not set_piece) or (referee != null and referee.is_pin_active()):
+	if (_held < MIN_SHOT and not set_piece and not follows_retrieve) \
+			or (referee != null and referee.is_pin_active()):
 		return false
-	_cut_return = master_mode()
+	if not follows_retrieve:
+		_cut_return = master_mode()
 	_cut_fixed_at = Vector3.INF
 	_cut_ff_impact = -1.0
 	_cut_ff_special = false
@@ -1887,6 +1897,14 @@ func _event_shot(delta: float) -> bool:
 			at = s + facing * 1.1 + side * 2.5 + Vector3.UP * 0.9
 			look = s + Vector3.UP * 0.85
 			lens = 38.0
+			focus = true
+		Cut.WEAPON_SHOWN:
+			# Up with it: low, in front and a little to his side, looking up
+			# at him and the weapon in his hands against the lights.
+			var right_w := Vector3.UP.cross(-facing).normalized()
+			at = s + facing * 2.5 + right_w * 0.6 + Vector3.UP * 0.85
+			look = s + Vector3.UP * 1.3
+			lens = 36.0
 			focus = true
 		Cut.ROOF_FALL:
 			# Off the top of the cell: on the floor a few metres along the

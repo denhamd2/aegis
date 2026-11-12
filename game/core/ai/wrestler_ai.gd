@@ -1428,6 +1428,14 @@ func _poll_input() -> Dictionary:
 		return input
 	if _roll_guard():
 		return {"guard": true}
+	# He is reaching under the apron for a weapon: nothing cuts that off
+	# (WrestlerController.is_digging_for_weapon), so no swing -- close in and
+	# be waiting for him when he comes up with it.
+	if target.is_digging_for_weapon() and not controller.has_weapon():
+		var to_dig := _flat(target.global_position - controller.global_position)
+		if to_dig.length() > 1.6:
+			return {"move": Vector2(to_dig.normalized().x, to_dig.normalized().z)}
+		return {"move": Vector2.ZERO}
 	# The cage: stop him getting out, or get out himself.
 	var caged := _cage_input(distance)
 	if not caged.is_empty():

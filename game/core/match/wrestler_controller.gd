@@ -2854,7 +2854,7 @@ func running_attack_reach() -> float:
 
 func _maybe_start_running_attack(input: Dictionary) -> void:
 	if not input.get("strike", false) or opponent == null or not _in_range(running_attack_reach()) \
-			or UNHITTABLE_STATES.has(opponent.fsm.current_state):
+			or UNHITTABLE_STATES.has(opponent.fsm.current_state) or opponent.is_digging_for_weapon():
 		return
 	var legal: Array[MoveDef] = []
 	for candidate: MoveDef in [running_attack_move] + running_attack_move_pool:
@@ -3843,6 +3843,7 @@ func _process_active_move(input: Dictionary) -> void:
 				opponent._take_ground_hit(self, _active_move, _ground_zone)
 	elif in_active_frames and opponent and _strike_reaches(_active_move) \
 			and not UNHITTABLE_STATES.has(opponent.fsm.current_state) \
+			and not opponent.is_digging_for_weapon() \
 			and not _active_move_hit_applied:
 		_active_move_hit_applied = true
 		# Read and parried: nothing lands, and the counter is on its way.
@@ -4864,7 +4865,8 @@ func _resolve_pending_hits() -> void:
 	_pending_hits.clear()
 	# Falling (off a ladder or a cage wall): nothing more lands until he does.
 	if UNHITTABLE_STATES.has(fsm.current_state) \
-			or fsm.current_state == WrestlerFSM.State.LADDER_FALL:
+			or fsm.current_state == WrestlerFSM.State.LADDER_FALL \
+			or is_digging_for_weapon():
 		_pending_fatal_shot = false
 		_pending_bullet_impact = Vector3.INF
 		return
@@ -6807,6 +6809,29 @@ func is_rummaging() -> bool:
 	return fsm.current_state == WrestlerFSM.State.WEAPON_ACTION and _weapon_action == "rummage"
 
 
+## Reaching under the apron (or into the stage's pile) and pulling it out:
+## nothing cuts it off -- a blow aimed at him there does not land, and the
+## other man does not throw one (the owner, 12 Nov: "once he's reaching under,
+## he should finish and come out with a weapon").
+func is_digging_for_weapon() -> bool:
+	return fsm.current_state == WrestlerFSM.State.WEAPON_ACTION \
+			and _weapon_action in ["rummage", "retrieve"]
+
+
+## What he comes out with when the button came up before a pick: a chair if
+## there is one, else the first thing in stock.
+const RUMMAGE_FALLBACK: Array[StringName] = [&"steel_chair", &"kendo_stick", &"trash_can"]
+
+
+func _rummage_fallback(stock: WeaponStock) -> StringName:
+	if stock == null:
+		return &""
+	for id: StringName in RUMMAGE_FALLBACK:
+		if stock.in_stock(id):
+			return id
+	return &""
+
+
 ## Outside, by an apron side, empty-handed and free: he can reach under.
 func can_rummage() -> bool:
 	if not MatchRules.no_holds_barred(self) or not outside_ring or has_weapon():
@@ -7983,7 +8008,14 @@ func _tick_weapon_action(input: Dictionary) -> void:
 				# can land a tick apart
 				_rummage_released += 1
 				if _rummage_released >= RUMMAGE_RELEASE_TICKS:
+					# Let go before choosing: he still comes out with something
+					# (the owner: once he is reaching under, he finishes and
+					# comes out with a weapon -- not cut off empty-handed).
+					var fallback := _rummage_fallback(stock)
 					fsm.transition_to(WrestlerFSM.State.IDLE)
+					if fallback != &"":
+						_weapon_pick_id = fallback
+						begin_weapon_action("retrieve")
 			else:
 				_rummage_released = 0
 			return
@@ -8028,7 +8060,15 @@ func _tick_weapon_action(input: Dictionary) -> void:
 		"light":
 			_tick_light()
 	if _weapon_action_ticks >= int(WEAPON_ACTION_TICKS[_weapon_action]):
+		var pulled_out := _weapon_action == "retrieve" and has_weapon()
 		fsm.transition_to(WrestlerFSM.State.IDLE)
+		if pulled_out:
+			weapon_pulled_out.emit(self)
+
+
+## Up from under the apron with it in his hands (MatchCamera's close-up of
+## him and what he found).
+signal weapon_pulled_out(wrestler: WrestlerController)
 
 
 ## --- The ladder bridge (the owner, 19 Oct) ----------------------------------
