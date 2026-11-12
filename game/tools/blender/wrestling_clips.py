@@ -11569,7 +11569,7 @@ def _retime(name, anchors, patch=None):
 # (tutorial 63.63 -> 63.95; the recovery, 12 frames, already matched). And the
 # reference SKIPS into it -- both feet off the mat at 63.70-63.77, arms flung
 # up -- where ours stood on the left foot throughout.
-_retime("Strike_Front_Kick_Body", [(0, 0), (16, 10.5), (28, 22.5)], patch={
+_retime("Strike_Front_Kick_Body", [(0, 0), (16, 10.5), (28, 20)], patch={
     7: dict(pelvis=(-0.05, 0.12, 0.930), foot_l=(-0.20, 0.10, 0.22),
             hand_l=(-0.34, 0.40, 1.46), hand_r=(0.40, 0.08, 1.38)),
     10: dict(pelvis=(-0.05, 0.18, 0.900), foot_l=(-0.20, 0.14, 0.12),
@@ -11604,7 +11604,7 @@ CLIPS["Strike_Hook_Left"].sort(key=lambda k: k[0])
 
 # Clinch knee: the tutorial's is a JUMPING knee (70.80-71.00), both feet off
 # the mat as it lands, contact 16 ticks after the step in (ours was 21).
-_retime("Strike_Clinch_Knee_Body", [(0, 0), (10.5, 8), (23, 20.5)], patch={
+_retime("Strike_Clinch_Knee_Body", [(0, 0), (10.5, 8), (23, 22.5)], patch={
     8: dict(foot_l=(-0.20, 0.18, 0.20)),
     8.5: dict(foot_l=(-0.20, 0.20, 0.24)),
     9.5: dict(foot_l=(-0.20, 0.22, 0.26)),
@@ -11612,12 +11612,26 @@ _retime("Strike_Clinch_Knee_Body", [(0, 0), (10.5, 8), (23, 20.5)], patch={
     12: dict(foot_l=(-0.20, 0.24, 0.14)),
 })
 # Turning back kick to the body: contact 20 ticks in (66.07), not 24.
-_retime("Strike_Turning_Back_Kick_Body", [(0, 0), (12, 10), (28, 26)])
+_retime("Strike_Turning_Back_Kick_Body", [(0, 0), (12, 10), (28, 20)])
 # Running flying knee: off the run into the knee in 16 ticks (72.80 ->
 # 73.07), not 25; the crash and the lying sell are unchanged.
 _retime("Strike_Running_Flying_Knee", [(0, 0), (13, 8), (34, 29)])
 # Side kick knockdown: chamber to contact in 16 ticks (76.53 -> 76.80), not 26.
-_retime("Strike_Side_Kick_Knockdown", [(0, 0), (13, 8), (32, 27)])
+_retime("Strike_Side_Kick_Knockdown", [(0, 0), (13, 8), (32, 22)])
+
+
+# Every parity strike opens from a fighter's GUARD, not READY's open hands:
+# READY reaches for the collar, and at strike distance two men in it read as
+# already locked up (parity review loop 1, 12 Nov: "every sheet starts from a
+# lock-up"). The tutorial's strikers stand off with fists at the chin.
+_GUARD = dict(hand_r=(0.20, 0.24, 1.44), hand_l=(-0.16, 0.30, 1.48),
+              elbow_r=(0.6, -0.2, -1.0), elbow_l=(-0.6, -0.2, -1.0),
+              fist_r=0.9, fist_l=0.9, spine=(-10, 6, 0), head=(2, 8, 0))
+for _name in ("Strike_Hook_Left", "Strike_Front_Kick_Body",
+              "Strike_Turning_Back_Kick_Body", "Strike_Clinch_Knee_Body",
+              "Strike_Running_Flying_Knee", "Strike_Side_Kick_Knockdown"):
+    _f0, _k0 = CLIPS[_name][0]
+    CLIPS[_name][0] = (_f0, dict(_k0, **_GUARD))
 
 
 def main():

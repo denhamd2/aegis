@@ -262,6 +262,15 @@ const FLURRY_STUN_AT := 3
 const KNOCKBACK_SPEED := 2.2
 const KNOCKBACK_TICKS := 8
 const KNOCKBACK_DECAY := 0.75
+## A knockdown strike (a strike marked leaves_defender_down, no weapon) carries
+## him back about a metre as he goes over, not 0.13 m: the tutorial's side kick
+## and flying knee put the man flat about 1.0-1.2 m back within ~28 frames
+## (parity review, 12 Nov). 5.2 m/s bled by 0.93 a tick over 28 ticks ~ 1.0 m.
+const KNOCKDOWN_CARRY_SPEED := 5.2
+const KNOCKDOWN_CARRY_TICKS := 28
+const KNOCKDOWN_CARRY_DECAY := 0.93
+var _knockback_decay := KNOCKBACK_DECAY
+var _bump_carry := false
 const STUNNED_TICKS := 45
 ## Irish whip tuning. First-pass values, same caveat as every other tuning
 ## constant in this project: gauntlet/refs/timings.md marks both reversal-
@@ -5017,6 +5026,7 @@ func _resolve_pending_hits() -> void:
 	if lariat and not combat.is_fired_up():
 		_bump_clip = BUMP_LARIAT_CLIP
 		_bump_shove = maxf(_bump_shove, LARIAT_SHOVE)
+		_bump_carry = true
 	# A rear chair blow and a guitar crumple forward. A superkick turns its
 	# victim around before he lands; both use dedicated authored solo falls.
 	var behind := opponent != null and (-global_basis.z).dot(
@@ -5983,6 +5993,7 @@ func _bump_down() -> void:
 		return
 	_stop_dead()
 	_knockback_ticks = 0
+	_knockback_decay = KNOCKBACK_DECAY
 	_sell_clip = ""
 	var clip := _bump_clip if _bump_clip != "" and anim_player != null \
 			and anim_player.has_animation(_bump_clip) else "strikes/bump_back"
@@ -5995,9 +6006,15 @@ func _bump_down() -> void:
 		var away := global_position - opponent.global_position
 		away.y = 0.0
 		if away.length() > 0.001:
-			velocity = away.normalized() * KNOCKBACK_SPEED * (_bump_shove - 1.0) * 1.5
-			_knockback_ticks = KNOCKBACK_TICKS
+			if _bump_carry:
+				velocity = away.normalized() * KNOCKDOWN_CARRY_SPEED
+				_knockback_ticks = KNOCKDOWN_CARRY_TICKS
+				_knockback_decay = KNOCKDOWN_CARRY_DECAY
+			else:
+				velocity = away.normalized() * KNOCKBACK_SPEED * (_bump_shove - 1.0) * 1.5
+				_knockback_ticks = KNOCKBACK_TICKS
 	_bump_shove = 1.0
+	_bump_carry = false
 
 
 ## A handgun hit is lethal: all vitality is permanently lost and the wrestler
@@ -6160,9 +6177,10 @@ func _process_timed_state(input: Dictionary, next_state: WrestlerFSM.State) -> v
 	# 20-tick reaction and carry the man most of a metre.
 	if _knockback_ticks > 0:
 		_knockback_ticks -= 1
-		velocity *= KNOCKBACK_DECAY
+		velocity *= _knockback_decay
 		if _knockback_ticks == 0:
 			velocity = Vector3.ZERO
+			_knockback_decay = KNOCKBACK_DECAY
 	_move_ticks_remaining -= 1
 	if _move_ticks_remaining <= 0 and _bumping:
 		# The bump is over, his shoulders on the mat, head away from the man

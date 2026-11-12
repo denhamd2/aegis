@@ -25,6 +25,8 @@ var _at: Array = [0.0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9]
 var _move_id := ""
 var _frames: Array = []
 var _contact := -1
+var _carry := false
+var _b_start := Vector3.ZERO
 
 
 func _ready() -> void:
@@ -59,6 +61,13 @@ func _ready() -> void:
 			_sell = StrikeRecipes.sell_for(_react)
 			if _contact < 0:
 				_contact = move.startup_frames
+			# A knockdown strike plays the game's bump, not a flinch: the
+			# defender goes over on BUMP_LARIAT_CLIP and is carried back the
+			# way _bump_down() carries him (parity review, 12 Nov).
+			if move.leaves_defender_down:
+				_react = WrestlerController.BUMP_LARIAT_CLIP
+				_sell = ""
+				_carry = true
 	DirAccess.make_dir_recursive_absolute(_out)
 	var scene: Node = (load(MATCH_SCENE) as PackedScene).instantiate()
 	if _wrestlers != "":
@@ -81,6 +90,7 @@ func _ready() -> void:
 		if mv and mv.contact_radius > 0.0:
 			gap = maxf(0.8, -mv.contact_offset.z + WrestlerController.BODY_RADIUS)
 	b.global_position = Vector3(0.0, 0.0, -gap)
+	_b_start = b.global_position
 	a.look_at(b.global_position, Vector3.UP)
 	b.look_at(a.global_position, Vector3.UP)
 	await get_tree().physics_frame
@@ -142,10 +152,12 @@ func _ready() -> void:
 			pa.seek(minf(t, clip_len - 0.001), true)
 			pa.advance(0)
 			var rt := float(f - maxi(_contact, 0)) / 60.0
-			if rt <= 0.0 or rt <= hit_len:
+			if _carry:
+				b.global_position = _b_start + Vector3(0.0, 0.0, -_carried(f - _contact))
+			if rt <= 0.0 or rt <= hit_len or not pb.has_animation(_sell):
 				pb.play(_react)
 				pb.pause()
-				pb.seek(maxf(rt, 0.0), true)
+				pb.seek(clampf(rt, 0.0, hit_len - 0.001), true)
 				pb.advance(0)
 			elif pb.has_animation(_sell):
 				pb.play(_sell)
@@ -188,3 +200,13 @@ func _ready() -> void:
 		image.save_png("%s/%s_%02d.png" % [_out, _strike.get_file(), int(float(_at[i]) * 100.0)])
 		print("STRIKE_PAIR t=%.2f" % t)
 	get_tree().quit()
+
+
+## Metres _process_timed_state() has carried him n ticks into the bump.
+func _carried(n: int) -> float:
+	var v := WrestlerController.KNOCKDOWN_CARRY_SPEED
+	var d := 0.0
+	for i in clampi(n, 0, WrestlerController.KNOCKDOWN_CARRY_TICKS):
+		v *= WrestlerController.KNOCKDOWN_CARRY_DECAY
+		d += v / 60.0
+	return d

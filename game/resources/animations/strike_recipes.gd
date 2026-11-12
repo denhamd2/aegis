@@ -266,7 +266,7 @@ const RECIPES := {
 	# 0.94 -> 0.75 (12 Nov parity): the clip itself is re-timed to the
 	# tutorial (contact on its frame 10.5 = tick 21), so it plays 1:1.
 	"strike_front_kick_body": {"kind": "retime", "source": "Strike_Front_Kick_Body",
-		"seconds": 0.75, "file": AUTHORED},
+		"seconds": 0.6667, "file": AUTHORED},
 	# DiveSpot's other ending, and the possum attack (PossumSpot).
 	"springboard_cutter_attacker": {"kind": "retime", "source": "Springboard_Cutter_Attacker",
 		"seconds": 1.600, "file": AUTHORED},
@@ -315,7 +315,7 @@ const RECIPES := {
 	# = tick 21, so retiming to 0.767 s leaves that contact on tick 21
 	# (strike_clinch_knee_body.tres's startup_frames).
 	"strike_clinch_knee_body": {"kind": "retime", "source": "Strike_Clinch_Knee_Body",
-		"seconds": 0.6833, "file": AUTHORED},  # 12 Nov parity: 41 ticks
+		"seconds": 0.75, "file": AUTHORED},  # 12 Nov parity loop 2: 16+4+25 = 45 ticks
 	# Cody's (wrestling_clips.py "Cody's strikes"), at their own lengths so
 	# the MoveDefs' startup_frames land on the contact frames.
 	"strike_bionic_elbow": {"kind": "retime", "source": "Strike_Bionic_Elbow",
@@ -806,12 +806,12 @@ const RECIPES := {
 	"ground_pickup": {"kind": "retime", "source": "Pickup_Haul",
 		"seconds": 1.200, "file": AUTHORED},
 	"strike_turning_back_kick_body": {"kind": "retime",
-		"source": "Strike_Turning_Back_Kick_Body", "seconds": 0.8667,  # 12 Nov: 52 ticks
+		"source": "Strike_Turning_Back_Kick_Body", "seconds": 0.6667,  # 12 Nov loop 2: 20+5+15 = 40 ticks
 		"file": AUTHORED},
 	"strike_running_flying_knee": {"kind": "retime",
 		"source": "Strike_Running_Flying_Knee", "seconds": 0.9667, "file": AUTHORED},  # 12 Nov: 58 ticks
 	"strike_side_kick_knockdown": {"kind": "retime",
-		"source": "Strike_Side_Kick_Knockdown", "seconds": 0.9,  # 12 Nov: 54 ticks
+		"source": "Strike_Side_Kick_Knockdown", "seconds": 0.7333,  # 12 Nov loop 2: 16+5+23 = 44 ticks
 		"file": AUTHORED},
 	"strike_turning_back_kick_knockdown": {"kind": "retime",
 		"source": "Strike_Turning_Back_Kick_Knockdown", "seconds": 1.000,
