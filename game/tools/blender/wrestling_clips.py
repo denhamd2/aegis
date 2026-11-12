@@ -11869,8 +11869,11 @@ def _bk6(f, k):
     yaw = k.get("hips", (0, 0, 0))[1]
     if 100.0 <= yaw <= 250.0:
         sp, hd = k.get("spine", (0, 0, 0)), k.get("head", (0, 0, 0))
-        k["spine"] = (sp[0], max(-30.0, min(30.0, sp[1])), sp[2])
-        k["head"] = (hd[0], max(-30.0, min(30.0, hd[1])), hd[2])
+        # Loop 7: the head and chest LEAD the spin (spot the man over the
+        # shoulder ahead of the hips), as a spinning back kick is thrown.
+        # Lagging (negative), the chest twisted back toward a side camera.
+        k["spine"] = (sp[0], 18.0, sp[2])
+        k["head"] = (hd[0], 25.0, hd[2])
         k["hand_r"] = (-0.58, 0.0, 1.22)
         k["hand_l"] = (0.58, 0.0, 1.22)
     return k
