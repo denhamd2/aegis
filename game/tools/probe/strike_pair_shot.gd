@@ -7,6 +7,12 @@ extends Node
 ##       --resolution 960x540 tools/probe/strike_pair_shot.tscn -- \
 ##       --strike strikes/strike_cross --react Hit_React_Head --sell Sell_Head \
 ##       --wrestlers kenny,cody --out /tmp/strike_pair
+##
+## Parity review (gauntlet/refs/ff_review/parity): --move strike_front_kick_body
+## takes the clip, the defender's reaction and sell, and the contact frame from
+## the MoveDef (startup_frames), and --frames 0,10,19,23,40 grabs those 60 fps
+## frames of the strike. The defender stands until contact and reacts from it,
+## so the strip lines up beat for beat with the reference's.
 
 const MATCH_SCENE := "res://scenes/match.tscn"
 
@@ -16,6 +22,9 @@ var _sell := "Sell_Head"
 var _wrestlers := ""
 var _out := "/tmp/strike_pair"
 var _at: Array = [0.0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9]
+var _move_id := ""
+var _frames: Array = []
+var _contact := -1
 
 
 func _ready() -> void:
@@ -31,10 +40,25 @@ func _ready() -> void:
 			_wrestlers = args[i + 1]
 		elif args[i] == "--out" and i + 1 < args.size():
 			_out = args[i + 1]
+		elif args[i] == "--move" and i + 1 < args.size():
+			_move_id = args[i + 1]
+		elif args[i] == "--frames" and i + 1 < args.size():
+			for token: String in args[i + 1].split(","):
+				_frames.append(int(token))
+		elif args[i] == "--contact" and i + 1 < args.size():
+			_contact = int(args[i + 1])
 		elif args[i] == "--at" and i + 1 < args.size():
 			_at = []
 			for token: String in args[i + 1].split(","):
 				_at.append(float(token))
+	if _move_id != "":
+		var move: MoveDef = load("res://resources/moves/%s.tres" % _move_id)
+		if move:
+			_strike = StrikeRecipes.clip(_move_id) if StrikeRecipes.clip(_move_id) != "" else _strike
+			_react = StrikeRecipes.reaction_for(move)
+			_sell = StrikeRecipes.sell_for(_react)
+			if _contact < 0:
+				_contact = move.startup_frames
 	DirAccess.make_dir_recursive_absolute(_out)
 	var scene: Node = (load(MATCH_SCENE) as PackedScene).instantiate()
 	if _wrestlers != "":
@@ -54,6 +78,14 @@ func _ready() -> void:
 	await get_tree().physics_frame
 	a.anim_tree.active = false
 	b.anim_tree.active = false
+	# The skeleton modifiers (inertializer, foot lock, body life, flinch) hold
+	# a cached pose between physics ticks; with none running they drew the
+	# same frame for every grab (parity review, 12 Nov). Off for the strip.
+	for w: WrestlerController in [a, b]:
+		if w.skeleton:
+			for m in w.skeleton.find_children("", "SkeletonModifier3D", true, false):
+				(m as SkeletonModifier3D).active = false
+		w.set_physics_process(false)
 	var pa := a.anim_player
 	var pb := b.anim_player
 	if not pa.has_animation(_strike):
@@ -93,6 +125,38 @@ func _ready() -> void:
 	fill.omni_range = 8.0
 	fill.global_position = focus + Vector3(2.0, 2.0, 2.0)
 	RenderingServer.render_loop_enabled = false
+	if not _frames.is_empty():
+		print("STRIKE_PAIR clip=%s react=%s sell=%s contact=%d len=%.3f" % [_strike, _react, _sell, _contact, clip_len])
+		for f: int in _frames:
+			var t := float(f) / 60.0
+			pa.play(_strike)
+			pa.pause()
+			pa.seek(minf(t, clip_len - 0.001), true)
+			pa.advance(0)
+			var rt := float(f - maxi(_contact, 0)) / 60.0
+			if rt <= 0.0 or rt <= hit_len:
+				pb.play(_react)
+				pb.pause()
+				pb.seek(maxf(rt, 0.0), true)
+				pb.advance(0)
+			elif pb.has_animation(_sell):
+				pb.play(_sell)
+				pb.pause()
+				pb.seek(minf(rt - hit_len, pb.get_animation(_sell).length - 0.001), true)
+				pb.advance(0)
+			if OS.get_cmdline_user_args().has("--debug"):
+				var sk := a.skeleton
+				var foot := sk.find_bone("foot_r") if sk else -1
+				print("DBG f%d anim=%s pos=%.3f playing=%s foot_r=%s" % [f, pa.current_animation,
+						pa.current_animation_position, pa.is_playing(),
+						(sk.get_bone_global_pose(foot).origin if foot >= 0 else Vector3.ZERO)])
+				continue
+			RenderingServer.render_loop_enabled = true
+			await RenderingServer.frame_post_draw
+			RenderingServer.render_loop_enabled = false
+			get_viewport().get_texture().get_image().save_png("%s/f%03d.png" % [_out, f])
+		get_tree().quit()
+		return
 	for i in _at.size():
 		var t: float = float(_at[i]) * clip_len
 		pa.play(_strike)

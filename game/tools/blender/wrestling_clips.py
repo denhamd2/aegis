@@ -1528,8 +1528,11 @@ CLIPS = {
     # the arms drive a little wider. Everything else -- contact windows,
     # foot positions, pelvis dip -- is Run_Drive's, so the cycle has the
     # same footfalls and can cross-fade to it at either end.
+    # 12 Nov: at the thrown man's own return speed, 4.6 m/s
+    # (WrestlerController.WHIP_RETURN_SPEED, the tutorial's rope-to-rope
+    # pass), so the planted foot does not skate under the slower root.
     "Return_Run": _gait(
-        frames=20, fps=FPS, speed=7.0,
+        frames=20, fps=FPS, speed=4.6,
         contacts={"r": (0, 3), "l": (10, 3)},
         plant_up=0.104, lift_up=0.26,
         foot_x={"r": 0.15, "l": -0.15},
@@ -11190,8 +11193,12 @@ CLIPS["Strike_Side_Kick_Knockdown"] = [
 # cycle, phase-mirrored -- because Whip_Setup_Defender hands off on the LEFT
 # stride. Whip_Setup_Defender's last key is this frame-0 pose, so the pair
 # hands straight into the run with no pop.
+# 12 Nov, parity with the tutorial: the launch is now the footage's 5 m/s
+# (IRISH_WHIP_LAUNCH_SPEED), so the cycle is generated at 5.0 -- the same
+# five-steps-a-second cadence with the footage's shorter stride, not the 9 m/s
+# 1.80 m bound.
 WHIP_RUN = _gait(
-    frames=12, fps=FPS, speed=9.0,
+    frames=12, fps=FPS, speed=5.0,
     contacts={"l": (0, 2), "r": (6, 2)},
     plant_up=0.104, lift_up=0.26,
     foot_x={"r": 0.15, "l": -0.15},

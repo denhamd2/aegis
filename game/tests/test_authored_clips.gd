@@ -38,7 +38,7 @@ const AUTHORED_LENGTHS := {
 	# check; this line and the recipe's `seconds` must move together.
 	"walk_stalk": 0.533,          # loops; 16 frames at 30fps
 	"run_drive": 0.667,           # loops; matches the rig's Sprint
-	"whip_run": 0.400,            # loops; two 0.20 s steps at 9.0 m/s
+	"whip_run": 0.400,            # loops; two 0.20 s steps at 5.0 m/s
 	"whip_rope_absorb": 0.500,    # contact -> push-off, 15 frames at 30fps
 	"return_run": 0.667,          # loops; the whip return, 20 frames at 30fps
 	"far_rope_stop": 0.800,       # one shot; 24 frames at 30fps

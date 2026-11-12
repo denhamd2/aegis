@@ -269,7 +269,15 @@ const STUNNED_TICKS := 45
 ## footage found), so these aren't cited, just chosen to land somewhere
 ## contested rather than degenerate. Confirm/retune via a live probe and
 ## later reference capture, not by feel.
-const IRISH_WHIP_LAUNCH_SPEED := 9.0
+## 9.0 -> 5.0 (the owner, 12 Nov: "score each of ours ... in terms of parity
+## with the reference"). The AEW Fight Forever tutorial's whipped man covers
+## the ring at about 5 m/s (3:02.47 release to the ropes at 3:03.10, and the
+## return pass rope to rope in about 1.35 s); 9 was chosen before that
+## footage was in hand, and made every whip read at double speed.
+const IRISH_WHIP_LAUNCH_SPEED := 5.0
+## The thrown man's return pass to the far ropes (the tutorial's 3:03.50 ->
+## 3:04.85). A voluntary rope run keeps RUN_SPEED: that is a charge, not this.
+const WHIP_RETURN_SPEED := 4.6
 const IRISH_WHIP_REBOUND_DAMPING := 0.85
 const IRISH_WHIP_RETURN_TICKS := 45 # ~0.75s of autopilot return run
 ## Hard cap on the outbound flight before a rope is hit.
@@ -3476,7 +3484,7 @@ func _tick_rope_load() -> void:
 				+ _rope_load_along * (_rope_load_tick * dt)
 		velocity = (-_rope_load_out * _rope_load_speed + _rope_load_along) \
 				* IRISH_WHIP_REBOUND_DAMPING
-		velocity = velocity.limit_length(RUN_SPEED)
+		velocity = velocity.limit_length(RUN_SPEED if rope_running else WHIP_RETURN_SPEED)
 		_irish_whip_rebounded = true
 		_irish_whip_return_ticks_remaining = IRISH_WHIP_RETURN_TICKS
 		if rope_running and is_instance_valid(_irish_whip_target):
@@ -3496,7 +3504,7 @@ func _tick_rope_load() -> void:
 			_whip_far_set = true
 			var to_far := Vector2(_whip_far_at.x - global_position.x,
 					_whip_far_at.z - global_position.z)
-			var travel := ceili(to_far.length() / RUN_SPEED
+			var travel := ceili(to_far.length() / WHIP_RETURN_SPEED
 					* Engine.physics_ticks_per_second)
 			_irish_whip_return_ticks_remaining = clampi(travel + 8,
 					IRISH_WHIP_RETURN_TICKS, ROPE_RUN_RETURN_MAX)
@@ -3678,8 +3686,8 @@ func _process_whip_pass() -> void:
 				var goal := line * ahead + perp * correction
 				if goal.length() > 0.01:
 					var dir := goal.normalized()
-					velocity.x = dir.x * RUN_SPEED
-					velocity.z = dir.z * RUN_SPEED
+					velocity.x = dir.x * WHIP_RETURN_SPEED
+					velocity.z = dir.z * WHIP_RETURN_SPEED
 					look_at(global_position + dir, Vector3.UP)
 					return
 				_whip_pass_set = false
@@ -3702,8 +3710,8 @@ func _process_whip_pass() -> void:
 			or _irish_whip_return_ticks_remaining <= 0:
 		_begin_far_rope_stop()
 		return
-	velocity.x = line.x * RUN_SPEED
-	velocity.z = line.z * RUN_SPEED
+	velocity.x = line.x * WHIP_RETURN_SPEED
+	velocity.z = line.z * WHIP_RETURN_SPEED
 	look_at(global_position + line, Vector3.UP)
 
 
