@@ -2576,8 +2576,10 @@ const TRAJECTORIES := {
 					# Ends 1.10 m out: clear of GrappleRig's 0.95 m ease-apart even
 					# after the fit pulls him back ~0.08 m (loop 4: a stall, then a
 					# one-tick jump where the fit's last offsets stopped).
-					[1.050, 0.53, 0.00, 0.10], [1.100, 0.64, 0.00, 0.04],
-					[1.150, 0.83, 0.00, -0.02], [1.200, 1.10, 0.00, -0.06]],
+					# Whip loop 6: an even ramp into the run's 5 m/s (0.083 m a
+					# tick), not 0.11-0.12 then a slow tick (loop 5).
+					[1.050, 0.52, 0.00, 0.10], [1.100, 0.64, 0.00, 0.04],
+					[1.150, 0.88, 0.00, -0.02], [1.200, 1.13, 0.00, -0.06]],
 			# Facing along his path: -90 is +x; the arc out on +z turns him
 			# toward -135, the run back onto the axis brings him to -90.
 			"rot": [[0.000, 0.0, -90.0, 0.0], [0.233, 0.0, -100.0, 0.0],

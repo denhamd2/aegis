@@ -59,7 +59,7 @@ func _run(scenario: String) -> void:
 	# The whip is staged as the tutorial's (3:01.70): the runner with his back
 	# to the near ropes, swung through and sent across the ring. The rope
 	# run keeps the centre start.
-	var off := 1.3 if scenario == "whip" else 0.0
+	var off := 1.55 if scenario == "whip" else 0.0  # release -> rope 38 f (loop 5: 34)
 	roman.global_position = Vector3(-0.4 + off, 0, 0.0)
 	cody.global_position = Vector3(0.4 + off, 0, 0.0)
 	roman.look_at(Vector3(5, 0, 0), Vector3.UP)
