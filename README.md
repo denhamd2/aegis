@@ -12082,3 +12082,22 @@ slower." The descent is now 30 s (it was 9). Most of the owner's 44.7 s
 lowering track now plays under the descent itself, and the rest under the
 face-off. The strobes walk the truss corners every 0.75 s through it, and the
 camera's tilt down with it is stretched to match.
+
+## 12 Nov (4) — Rummaging is never cut off; the weapon shown
+
+Backlog: "Rummaging under the ring / on the stage is not interrupted". The
+owner: once he is reaching under, he finishes and comes out with a weapon.
+
+- **Not hit out of it.** While he is reaching under the apron, or into the
+  stage's pile, and pulling it out (`is_digging_for_weapon`), a blow aimed at
+  him does not land. The AI does not swing; it closes in and waits for him to
+  come up.
+- **Not empty-handed.** A player who lets go of the button before choosing
+  still comes out with something: a chair, else the first thing in stock
+  (`RUMMAGE_FALLBACK`).
+- **The weapon shown.** As he comes up with it, the camera cuts from the reach
+  under the apron to a low close-up of him holding it (`Cut.WEAPON_SHOWN`,
+  1.4 s).
+
+Tests: `test_weapon_rules` and `test_weapon_ai` pass. One older test, which
+pinned the empty-handed let-go, was rewritten to the new rule.
