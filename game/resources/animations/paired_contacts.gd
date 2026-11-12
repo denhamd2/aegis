@@ -79,10 +79,7 @@ const MOVES := {
 	"running_corner_knee": "none",
 	"running_fallaway_moonsault_slam": "legs",
 	# The wrist-clutch.
-	# The wrist-clutch, as the header documents it and the clip is keyed (right
-	# arm round the head, left hand on his wrist); mapped as "facelock" it was
-	# measured -- and gripped -- against both hands over his head (12 Nov).
-	"finisher_cross_rhodes": "wrist",
+	"finisher_cross_rhodes": "facelock",
 	# From behind: his hands go round the head from behind (the neck family's
 	# behind side).
 	# Strikes, kicks and dives: nothing to hold.
