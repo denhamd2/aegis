@@ -2547,11 +2547,14 @@ const TRAJECTORIES := {
 			"pos": [[0.000, 0.26, 0.00, 0.00], [0.133, 0.25, 0.00, 0.01],
 					[0.233, 0.24, 0.00, 0.01], [0.367, 0.22, 0.00, 0.02],
 					[0.533, 0.20, 0.00, 0.04], [0.733, 0.10, 0.00, 0.08],
-					[0.900, 0.10, 0.00, 0.12], [1.067, 0.14, 0.00, 0.06],
-					[1.200, 0.20, 0.00, 0.04]],
+					[0.900, 0.10, 0.00, 0.12], [1.067, 0.06, 0.00, 0.06],
+					[1.200, -0.06, 0.00, 0.04]],
+			# He turns with the swing and steps through the throw (the
+			# tutorial, 3:02.40-3:02.60): wound 20 degrees round as the man
+			# goes behind him, then a 0.26 m step toward where he throws him.
 			"rot": [[0.000, 0.0, 90.0, 0.0], [0.367, 0.0, 92.0, 0.0],
-					[0.533, 0.0, 90.0, 0.0], [0.733, 0.0, 86.0, 0.0],
-					[0.900, 0.0, 88.0, 0.0], [1.067, 0.0, 90.0, 0.0],
+					[0.533, 0.0, 78.0, 0.0], [0.733, 0.0, 70.0, 0.0],
+					[0.900, 0.0, 78.0, 0.0], [1.067, 0.0, 92.0, 0.0],
 					[1.200, 0.0, 90.0, 0.0]],
 		},
 		"defender": {
@@ -2559,11 +2562,14 @@ const TRAJECTORIES := {
 					[0.233, -0.22, 0.00, 0.02], [0.367, -0.17, 0.00, 0.03],
 					[0.533, -0.16, 0.00, 0.01], [0.733, -0.20, 0.00, -0.02],
 					[0.900, -0.24, 0.00, 0.00], [1.067, -0.26, 0.00, 0.02],
-					# The first stride leaves at the 9.0 m/s launch speed so
-					# the handoff to Whip_Run (and to the physics launch) does
-					# not change velocity: 0.747 m in 0.083 s, then 0.450 m in
-					# 0.050 s. Both intervals are 9.0 m/s.
-					[1.150, -1.007, 0.00, 0.03], [1.200, -1.457, 0.00, 0.04]],
+					# The first strides accelerate him evenly from standing to
+					# the 5.0 m/s launch (IRISH_WHIP_LAUNCH_SPEED) over the last
+					# 0.133 s -- 37.5 m/s^2, d = a t^2 / 2 at each key -- so the
+					# handoff to Whip_Run does not change velocity. The old
+					# 9 m/s keys overshot to about 11 m/s under the cubic and
+					# then dropped (parity review, 12 Nov).
+					[1.100, -0.281, 0.00, 0.03], [1.133, -0.343, 0.00, 0.03],
+					[1.167, -0.448, 0.00, 0.04], [1.200, -0.593, 0.00, 0.04]],
 			"rot": [[0.000, 0.0, -90.0, 0.0], [0.267, 0.0, -90.0, 0.0],
 					[0.367, 0.0, -80.0, 0.0], [0.433, 0.0, -18.0, 0.0],
 					[0.467, 0.0, 13.0, 0.0], [0.533, 0.0, 75.0, 0.0],

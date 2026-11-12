@@ -61,6 +61,10 @@ def main():
     ap.add_argument("--contact-ours", type=int, required=True)
     ap.add_argument("--title", default="")
     ap.add_argument("--out", required=True)
+    ap.add_argument("--ours-zoom", type=float, default=1.0,
+                    help="crop our frames to their centre 1/zoom first (wide match-camera renders)")
+    ap.add_argument("--ours-y", type=float, default=0.5,
+                    help="vertical centre of that crop, 0 top .. 1 bottom")
     a = ap.parse_args()
 
     ref_t = [float(x) for x in a.ref.split(",")]
@@ -85,7 +89,13 @@ def main():
         path = os.path.join(a.ours, "f%03d.png" % f)
         x, y = i * CELL[0], title_h + CELL[1] + LABEL_H
         if os.path.exists(path):
-            sheet.paste(_fit(Image.open(path).convert("RGB")), (x, y + LABEL_H))
+            im = Image.open(path).convert("RGB")
+            if a.ours_zoom > 1.0:
+                w, h = im.size
+                cw, ch = int(w / a.ours_zoom), int(h / a.ours_zoom)
+                cx, cy = w // 2, int(h * a.ours_y)
+                im = im.crop((cx - cw // 2, max(0, cy - ch // 2), cx + cw // 2, max(0, cy - ch // 2) + ch))
+            sheet.paste(_fit(im), (x, y + LABEL_H))
         draw.text((x + 8, y + 4), "OURS f%d  contact%+d f" % (f, f - a.contact_ours),
                   fill=(120, 200, 255), font=small)
     sheet.save(a.out)

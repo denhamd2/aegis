@@ -2284,7 +2284,11 @@ func _process_free_movement(delta: float, input: Dictionary) -> void:
 		# still a pop. The clip ends on READY, so restarting idle_ready at
 		# the end is the same pose.
 		_far_rope_stop_ticks -= 1
-		_stop_dead()
+		# Braked into the ropes over FAR_ROPE_BRAKE_TICKS, not stopped dead in
+		# one tick from 4.6 m/s (parity review, 12 Nov).
+		velocity.x = move_toward(velocity.x, 0.0, WHIP_RETURN_SPEED / FAR_ROPE_BRAKE_TICKS)
+		velocity.z = move_toward(velocity.z, 0.0, WHIP_RETURN_SPEED / FAR_ROPE_BRAKE_TICKS)
+		_knockback_ticks = 0
 		_wants_tie_up_this_tick = false
 		if _far_rope_stop_ticks == 0:
 			_restart_state_clip(WrestlerFSM.State.IDLE,
@@ -3008,7 +3012,9 @@ const FAR_ROPE_STOP_TICKS := 48
 ## Centre-to-centre lane the pass keeps around the whipper: two 0.4 m
 ## capsules need 0.8 m not to collide; a shoulder-to-shoulder pass reads at
 ## this and still sits inside REBOUND_CATCH_RANGE for a real catch.
-const WHIP_PASS_LANE := 1.00
+## 1.00 -> 0.85 (12 Nov): the tutorial's runner passes close by the whipper's
+## shoulder; at 1.0 the pass bowed nearly a metre round him.
+const WHIP_PASS_LANE := 0.85
 ## Commit to the pass this far out, so the lane change starts as a run and
 ## not a sidestep at the last metre. Inside it the runner steers through a
 ## line offset WHIP_PASS_LANE from the whipper; outside it he runs the
@@ -3031,7 +3037,10 @@ const WHIP_PASS_EASE_TICKS := 9
 ## sliding along it.
 const WHIP_FAR_ROPE_TRIGGER := 0.30
 ## How far inside RING_KEEP_IN the return line aims.
-const WHIP_FAR_ROPE_INSET := 0.35
+## 0.35 -> 0.15 (12 Nov): with the brake's last ~0.3 m he reaches the ropes,
+## hands on the top rope, as the tutorial's runner does (3:04.87).
+const WHIP_FAR_ROPE_INSET := 0.15
+const FAR_ROPE_BRAKE_TICKS := 8.0
 
 
 func can_rope_run() -> bool:
@@ -3469,9 +3478,12 @@ func _tick_rope_load() -> void:
 	var x := rope_load_offset(_rope_load_tick * dt, _rope_load_speed)
 	var push := _turn_off_the_ropes(dt)
 	if x > 0.0:
-		# Pushed back out of them as he turns: at the throw-back he is where
-		# the collider stopped him, so nothing snaps.
-		x -= ROPE_LOAD_DEPTH * push
+		# Pushed back out of them as he turns, the WHOLE way -- free travel and
+		# compression -- to where the collider stopped him, on an ease-in, so
+		# he leaves the ropes moving at about the return run's speed. Only
+		# the compression used to come back: he stood 0.38 m out and the
+		# rebound then moved him 0.46 m in one tick (parity review, 12 Nov).
+		x = maxf(x - (ROPE_LOAD_FREE + ROPE_LOAD_DEPTH) * pow(push, ROPE_PUSH_EASE), 0.0)
 	if x < 0.0:
 		# The hold is over (Whip_Rope_Absorb has reached its first return
 		# step): thrown back, out of the ropes at the rebound's speed, the way
@@ -3480,8 +3492,7 @@ func _tick_rope_load() -> void:
 		# him (_turn_off_the_ropes), so this is a step, not the 0.4 m pop in
 		# one tick it was. And at the run's own speed, so the stride out of
 		# the push-off is the run's (9 x 0.85 = 7.65 m/s, then 7.0).
-		global_position = _rope_load_from + _rope_load_out * ROPE_LOAD_FREE \
-				+ _rope_load_along * (_rope_load_tick * dt)
+		global_position = _rope_load_from + _rope_load_along * (_rope_load_tick * dt)
 		velocity = (-_rope_load_out * _rope_load_speed + _rope_load_along) \
 				* IRISH_WHIP_REBOUND_DAMPING
 		velocity = velocity.limit_length(RUN_SPEED if rope_running else WHIP_RETURN_SPEED)
@@ -3529,6 +3540,9 @@ func _tick_rope_load() -> void:
 ## which the inertializer turned out over a quarter second of sprinting
 ## sideways. Turned here a step a tick, shown as it is.
 const ROPE_TURN_TICKS := 16
+## The push-off's ease-in exponent: (FREE + DEPTH) x 1.6 / 16 ticks leaves the
+## ropes at about 4.7 m/s, the return run's 4.6, so there is no speed step.
+const ROPE_PUSH_EASE := 1.6
 
 
 ## Returns how far through the turn he is, 0..1 (eased), which is also how
@@ -3558,7 +3572,7 @@ func _turn_off_the_ropes(dt: float) -> float:
 	if inertializer:
 		inertializer.skip_next_turn()
 	rotation.y = yaw_in + turn * smoothstep(0.0, 1.0, t)
-	return smoothstep(0.0, 1.0, t)
+	return t
 
 
 ## Hands the rope collider back once he is inside where it stopped him.
@@ -3723,7 +3737,7 @@ func _process_whip_pass() -> void:
 ## into it is the state machine's normal crossfade, and the clip's first
 ## frame is a sprint contact, so there is no snap.
 func _begin_far_rope_stop() -> void:
-	velocity = Vector3.ZERO
+	velocity.y = 0.0
 	_irish_whip_return_ticks_remaining = 0
 	_whip_meet_ticks = -1
 	_whip_far_at = Vector3.ZERO

@@ -94,6 +94,14 @@ func _run(scenario: String) -> void:
 			var vc := get_viewport().get_camera_3d()
 			print("CAM ", vc.get_path() if vc else "none", " ", vc.global_position if vc else "")
 		if tick % _every == 0:
+			# Close on the runner, side-on, so his limbs read in a parity sheet
+			# (the reviewer, 12 Nov: "figures about 80 px tall"). --wide keeps
+			# the old fixed shot of the whole ring.
+			if not OS.get_cmdline_user_args().has("--wide"):
+				var mid := (cody.global_position * 0.7 + roman.global_position * 0.3)
+				camera.fov = 50.0
+				camera.global_position = Vector3(mid.x, 1.45, mid.z + 3.6)
+				camera.look_at(Vector3(mid.x, 0.95, mid.z), Vector3.UP)
 			RenderingServer.render_loop_enabled = true
 			await RenderingServer.frame_post_draw
 			RenderingServer.render_loop_enabled = false
