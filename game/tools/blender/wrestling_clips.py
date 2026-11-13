@@ -11887,6 +11887,11 @@ def _fk6(f, k):
         k["pelvis"] = (px, py, pz - 0.22)
     if f >= 11:
         k["pelvis"] = (px, min(py, 0.20), pz)
+        # The feet come back with the hips (pose lint, loop 7: left forward,
+        # the landing leg over-reached and its toe went 4.7 cm into the mat).
+        for side in ("foot_r", "foot_l"):
+            x, y, z = k[side]
+            k[side] = (x, y - 0.22, max(z, 0.115) if z < 0.3 else z)
     return k
 _patch_keys("Strike_Running_Flying_Knee", _fk6)
 
