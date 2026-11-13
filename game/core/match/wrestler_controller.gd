@@ -2411,6 +2411,8 @@ func _process_free_movement(delta: float, input: Dictionary) -> void:
 ## the result is identical under ReplaySystem playback at any render
 ## framerate (same reasoning as anim_tree's physics callback mode).
 const WHIP_WATCH_TURN_PER_TICK := 0.035  # ~2 deg/tick while a whipped man comes back past
+const TURN_RATE_RAMP_PER_TICK := 0.012
+var _turn_rate := 0.12
 const TURN_RATE_PER_TICK := 0.12 # radians/tick — ~7deg, a 180 in ~26 ticks
 
 ## Grip IK tuning. Bone on the *opponent* the hands reach for while squared
@@ -2459,8 +2461,11 @@ func _turn_toward_opponent() -> void:
 	# ended (loop 8); tracked slowly, he follows the man going by instead.
 	var rate := WHIP_WATCH_TURN_PER_TICK if opponent.is_whip_returning() \
 			and not opponent.rope_running else TURN_RATE_PER_TICK
+	# Out of the slow watch he spun up to full rate in one tick (0 -> 7
+	# degrees, loop 8): the rate climbs back over about eight ticks instead.
+	_turn_rate = minf(rate, _turn_rate + TURN_RATE_RAMP_PER_TICK)
 	var desired := atan2(-to_opponent.x, -to_opponent.z)
-	rotation.y = _step_angle(rotation.y, desired, rate)
+	rotation.y = _step_angle(rotation.y, desired, _turn_rate)
 
 ## Shortest-arc step from `from` toward `to`, capped at `max_step`.
 static func _step_angle(from: float, to: float, max_step: float) -> float:
