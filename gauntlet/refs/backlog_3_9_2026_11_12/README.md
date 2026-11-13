@@ -115,3 +115,7 @@ succeeded, `mac-latest` resolves to that exact commit, and `Aegis.zip` is
 Exact-commit gameplay CI43499679216 was still running at this receipt;
 35/35 focused checks passed locally. Native appearance and performance await
 owner Mac review.
+
+Cell wire sampling follow-up: [evidence](../cell_judge_2026_11_13/wire_filter/README.md).
+Selective motion and MSAA-off door/roof-state review supports shipping with
+notes; overall likeness stays8.0/10. Exact-commit publication pending.

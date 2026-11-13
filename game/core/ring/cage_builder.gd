@@ -397,21 +397,31 @@ func _load_authored_model() -> bool:
 				panel.name = holder.name
 				_roof_panels[Vector2i(i, j)] = panel
 	art.free()
-	var wire_material: StandardMaterial3D
+	var wire_material: Material
 	for child: Node in find_children("*", "MeshInstance3D", true, false):
 		var mi := child as MeshInstance3D
 		for surface in mi.mesh.get_surface_count():
 			var material := mi.get_active_material(surface)
 			if material and material.resource_name == "cage_chainlink":
 				if wire_material == null:
-					wire_material = material.duplicate() as StandardMaterial3D
-					# Cutout wire avoids sorted translucent wall cards and
-					# stochastic alpha noise; coverage AA is used with MSAA.
-					wire_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
-					wire_material.alpha_scissor_threshold = 0.3
-					wire_material.alpha_antialiasing_mode = BaseMaterial3D.ALPHA_ANTIALIASING_ALPHA_TO_COVERAGE
-					wire_material.alpha_antialiasing_edge = 0.35
-					wire_material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+					var authored := material as StandardMaterial3D
+					if spec.roof:
+						# Cell-specific UV repeat/profile from its Blender source.
+						# Preserve subpixel coverage without opaque cutout sheets.
+						var filtered := ShaderMaterial.new()
+						filtered.shader = preload("res://core/materials/cell_wire.gdshader")
+						filtered.set_shader_parameter("albedo_map", authored.albedo_texture)
+						filtered.set_shader_parameter("normal_map", authored.normal_texture)
+						filtered.set_shader_parameter("orm_map", authored.metallic_texture)
+						wire_material = filtered
+					else:
+						var cutout := authored.duplicate() as StandardMaterial3D
+						cutout.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+						cutout.alpha_scissor_threshold = 0.3
+						cutout.alpha_antialiasing_mode = BaseMaterial3D.ALPHA_ANTIALIASING_ALPHA_TO_COVERAGE
+						cutout.alpha_antialiasing_edge = 0.35
+						cutout.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+						wire_material = cutout
 				mi.set_surface_override_material(surface, wire_material)
 				mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	set_meta("blender_visuals", path)

@@ -96,3 +96,9 @@ succeeded and the release contains `Aegis.zip` (1,056,076,110bytes).
 [Download](https://github.com/denhamd2/aegis/releases/tag/mac-latest).
 This publishes all three revisions; native appearance, moving-camera wire
 stability and M1 frame pacing still require review.
+
+## Wire sampling follow-up
+
+[Coverage filtering, selective motion/state review and limitations](wire_filter/README.md).
+The refinement preserves distant wires without an opaque roof sheet; overall
+likeness remains8.0/10. Publication receipt follows validation and export.

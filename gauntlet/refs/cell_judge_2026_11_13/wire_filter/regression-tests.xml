@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites id="2026-11-13" name="report_1" tests="35" failures="0" skipped="0" flaky="0" time="0.000">
+	<testsuite id="0" name="test_steel_cage" package="tests" timestamp="2026-11-13T20:29:27" hostname="localhost" tests="20" failures="0" errors="0" skipped="0" flaky="0" time="44.933">
+		<testcase name="test_the_mode_is_a_cage_that_escaping_wins" classname="test_steel_cage" time="0.024">
+		</testcase>
+		<testcase name="test_cage_escape_state_leads_only_where_listed" classname="test_steel_cage" time="0.004">
+		</testcase>
+		<testcase name="test_the_cage_stands_on_the_apron_edge_with_a_door_and_collision" classname="test_steel_cage" time="0.013">
+		</testcase>
+		<testcase name="test_the_mesh_texture_is_wire_on_clear_and_the_same_every_run" classname="test_steel_cage" time="0.030">
+		</testcase>
+		<testcase name="test_the_door_swings_out_of_the_cage" classname="test_steel_cage" time="0.010">
+		</testcase>
+		<testcase name="test_pushing_into_the_cage_climbs_it_instead_of_crossing_the_ropes" classname="test_steel_cage" time="0.033">
+		</testcase>
+		<testcase name="test_a_climb_goes_up_over_and_down_and_wins_without_a_jump" classname="test_steel_cage" time="10.805">
+		</testcase>
+		<testcase name="test_he_climbs_back_down_when_he_pushes_away" classname="test_steel_cage" time="0.044">
+		</testcase>
+		<testcase name="test_a_man_climbing_after_him_pulls_him_off_into_the_ring" classname="test_steel_cage" time="4.211">
+		</testcase>
+		<testcase name="test_past_the_top_he_cannot_be_stopped" classname="test_steel_cage" time="7.202">
+		</testcase>
+		<testcase name="test_a_blow_on_a_low_climber_knocks_him_off" classname="test_steel_cage" time="1.357">
+		</testcase>
+		<testcase name="test_pulled_off_the_top_he_stays_down_like_off_a_signature" classname="test_steel_cage" time="6.885">
+		</testcase>
+		<testcase name="test_the_door_opens_and_he_walks_out_through_it" classname="test_steel_cage" time="4.107">
+		</testcase>
+		<testcase name="test_a_blow_at_the_door_stops_him_and_the_door_shuts" classname="test_steel_cage" time="1.864">
+		</testcase>
+		<testcase name="test_whipped_into_the_cage_he_hits_the_steel_and_goes_down" classname="test_steel_cage" time="0.365">
+		</testcase>
+		<testcase name="test_only_a_caged_whip_goes_into_the_steel" classname="test_steel_cage" time="0.020">
+		</testcase>
+		<testcase name="test_off_a_signature_he_rallies_and_off_a_finisher_he_does_not" classname="test_steel_cage" time="7.130">
+		</testcase>
+		<testcase name="test_the_ai_goes_for_the_cage_off_a_finisher" classname="test_steel_cage" time="0.222">
+		</testcase>
+		<testcase name="test_the_ai_climbs_after_a_man_getting_out" classname="test_steel_cage" time="0.493">
+		</testcase>
+		<testcase name="test_singles_has_no_cage" classname="test_steel_cage" time="0.030">
+		</testcase>
+	</testsuite>
+	<testsuite id="1" name="test_hell_in_a_cell" package="tests" timestamp="2026-11-13T20:30:11" hostname="localhost" tests="5" failures="0" errors="0" skipped="0" flaky="0" time="12.485">
+		<testcase name="test_the_rules_are_anything_goes_in_a_cage_with_no_escape" classname="test_hell_in_a_cell" time="0.015">
+		</testcase>
+		<testcase name="test_the_cell_stands_on_the_floor_round_ringside_with_a_roof" classname="test_hell_in_a_cell" time="0.004">
+		</testcase>
+		<testcase name="test_the_match_builds_the_cell_but_no_way_out" classname="test_hell_in_a_cell" time="12.340">
+		</testcase>
+		<testcase name="test_whipped_into_the_cell_wall_on_the_floor_he_hits_the_steel" classname="test_hell_in_a_cell" time="0.051">
+		</testcase>
+		<testcase name="test_in_the_ring_a_cell_whip_is_still_the_ropes" classname="test_hell_in_a_cell" time="0.052">
+		</testcase>
+	</testsuite>
+	<testsuite id="2" name="test_cell_roof" package="tests" timestamp="2026-11-13T20:30:24" hostname="localhost" tests="10" failures="0" errors="0" skipped="0" flaky="0" time="91.716">
+		<testcase name="test_the_door_is_padlocked_and_the_cutters_are_under_the_ring" classname="test_cell_roof" time="11.024">
+		</testcase>
+		<testcase name="test_no_way_out_without_the_cutters_then_cut_and_out" classname="test_cell_roof" time="10.768">
+		</testcase>
+		<testcase name="test_up_the_wall_onto_the_roof_and_back_down" classname="test_cell_roof" time="15.614">
+		</testcase>
+		<testcase name="test_spent_and_knocked_down_by_the_edge_he_goes_over_it" classname="test_cell_roof" time="8.429">
+		</testcase>
+		<testcase name="test_the_centre_panel_gives_way_into_the_ring" classname="test_cell_roof" time="7.908">
+		</testcase>
+		<testcase name="test_off_the_roof_edge_onto_the_man_down_below" classname="test_cell_roof" time="7.988">
+		</testcase>
+		<testcase name="test_hung_for_the_entrances_then_lowered_and_padlocked" classname="test_cell_roof" time="8.416">
+		</testcase>
+		<testcase name="test_the_lowering_music_plays_once_and_fades_at_the_bell" classname="test_cell_roof" time="7.277">
+		</testcase>
+		<testcase name="test_a_big_grapple_by_the_wall_drives_him_into_the_steel" classname="test_cell_roof" time="7.213">
+		</testcase>
+		<testcase name="test_through_the_open_door_he_is_on_the_other_side" classname="test_cell_roof" time="7.010">
+		</testcase>
+	</testsuite>
+</testsuites>
