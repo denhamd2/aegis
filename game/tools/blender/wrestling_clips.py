@@ -5259,13 +5259,13 @@ CLIPS["Arm_Hook_Attacker"] = [
           foot_r=(0.26, -0.22, 0.104), foot_l=(-0.22, 0.24, 0.104))),
     (9, P(pelvis=(0.0, 0.02, 0.782), hips=(-6, -15, 0), spine=(-12, -24, 0),
           head=(2, 20, 0),
-          hand_r=(0.56, -0.24, 1.70), hand_l=(-0.25, 0.33, 1.26),
+          hand_r=(0.74, -0.10, 1.50), hand_l=(-0.25, 0.33, 1.26),
           elbow_r=(0.6, -0.6, 0.4), fist_r=1.0, fist_l=0.8, clav_follow=False,
           foot_r=(0.26, -0.22, 0.104), foot_l=(-0.20, 0.34, 0.104))),
     # Cocked high behind the head, chest turned away: the load (tick 22).
     (11, P(pelvis=(0.0, 0.04, 0.780), hips=(-6, -16, 0), spine=(-12, -26, 0),
            head=(2, 22, 0),
-           hand_r=(0.40, -0.22, 1.78), hand_l=(-0.26, 0.34, 1.24),
+           hand_r=(0.72, -0.04, 1.50), hand_l=(-0.26, 0.34, 1.24),
            elbow_r=(0.6, -0.6, 0.4), fist_r=1.0, fist_l=0.8, clav_follow=False,
            foot_r=(0.26, -0.22, 0.104), foot_l=(-0.20, 0.36, 0.104))),
     # Whipping through as he steps in past the man's right side.
@@ -5331,19 +5331,22 @@ _ah_legs = lambda fz, fy: _yawed(S(pelvis=(0.0, 0.0, 0.200), head=(-2, 0, 0),
                                    fist_r=0.1, fist_l=0.1,
                                    foot_r=(-0.14, fy, fz), foot_l=(0.12, fy - 0.02, fz + 0.06),
                                    knee_r=(-0.3, -0.6, 0.8), knee_l=(0.3, -0.6, 0.8)))
-# Loop 5: the hips drop toward the attacker's knee by tick 34 with the knees
-# coming up (not a man still standing 35 degrees back), airborne ~0.6 m at
-# tick 40, back on the mat ~45; the legs stay ~50 degrees up to tick 58 and
-# only come down to ~15 by tick 66, flat at the end.
-_ah_45 = _flip(45, (0.0, -0.20, 0.62))
-_ah_75 = _flip(75, (0.0, -0.32, 0.62))
-_ah_air = _flip(95, (0.0, -0.44, 0.60))
+# Loop 6: heels over head. Already going back on the hook (torso ~20 back,
+# hips 0.1 m down at tick 28); from there the feet whip up over a head-down
+# body -- ~0.4 m above the hips at tick 34, ~1.2 m off the mat at 40-42 as
+# the shoulders touch -- then come down in one slow arc: ~65 degrees at 48,
+# ~45 at 58, flat by 72. He lands in front of the attacker's feet.
+_ah_hit = dict(_ah_fall[0][1], spine=(20, 0, 0), head=(24, 0, 0), pelvis=(0.0, -0.06, 0.80))
+_ah_45 = _flip(70, (0.0, -0.12, 0.66))
+_ah_75 = _flip(115, (0.0, -0.18, 0.58))
+_ah_air = _flip(145, (0.0, -0.22, 0.46))
 CLIPS["Arm_Hook_Defender"] = [
     (0, dict(_AH_STAND)), (13, pose(_AH_STAND, head=(6, 0, 0))),
     (14, _ah_hit), (17, _ah_45), (18.5, _ah_75), (20, _ah_air),
-    (22.5, _ah_legs(0.70, -0.52)),
-    (29, _ah_legs(0.64, -0.56)),
-    (33, _ah_legs(0.30, -0.76)),
+    (21, _ah_legs(1.18, -0.28)),
+    (24, _ah_legs(1.00, -0.40)),
+    (29, _ah_legs(0.66, -0.56)),
+    (33, _ah_legs(0.34, -0.74)),
     (36, _ah_fall[4][1]),
 ]
 
