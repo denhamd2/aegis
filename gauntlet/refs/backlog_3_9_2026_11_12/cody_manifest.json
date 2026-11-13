@@ -1,0 +1,28 @@
+{
+	"adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+	"performance_evidence": false,
+	"pipeline": "forward_plus",
+	"samples": [
+		{
+			"damage": 0.0,
+			"image": "cody_early.png",
+			"seconds": 0.0,
+			"wetness": 0.15
+		},
+		{
+			"damage": 150.0,
+			"image": "cody_middle.png",
+			"seconds": 237.5,
+			"wetness": 0.285
+		},
+		{
+			"damage": 300.0,
+			"image": "cody_late.png",
+			"seconds": 475.0,
+			"wetness": 0.42
+		}
+	],
+	"scope": "isolated_bind_pose_shipping_material_adapters",
+	"skin_materials": 5,
+	"wrestler": "cody"
+}

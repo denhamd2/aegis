@@ -12139,3 +12139,55 @@ victim ... I dont think thats supposed to be how that move works". Then:
   three moves this change does not touch (the Cross Rhodes hand gap, and
   `whip_setup` and `running_grapple_inverted_drop`, which fail the same on
   main); the Cross Rhodes is being re-keyed next.
+
+## 12 Nov (7) — Parity with the reference: the whip and six strikes
+
+The owner: "I want you to work on those 9 improvements. Please have a sub
+agent reviewer review each one after each fix, and score it again ... Your
+goal for each is to get each to 10/10, matching with the reference clips."
+Then two more loops each, twice ("to get it as close as possible to 10/10,
+then deploy all changes"). Every loop was a render of ours stacked on the
+AEW Fight Forever tutorial at 60 fps (`tools/anim/parity_sheet.py`), scored
+by a read-only reviewer on speed, cadence, smoothness, like-for-like and sell.
+
+| Move | Before | After 7 loops |
+| --- | ---: | ---: |
+| Irish whip (throw, run, ropes, return) | 5.0 | **7.4** |
+| High hook | 6.0 | **7.6** |
+| Side kick knockdown | 6.0 | **7.6** |
+| Front kick (body) | 5.0 | **7.4** |
+| Clinch knee (body) | 6.0 | **7.4** |
+| Running flying knee | 6.0 | **6.6** |
+| Turning back kick (body) | 6.5 | **6.4** |
+
+- **The whip** is now the tutorial's swing-through. The whipper keeps the
+  wrist, pivots 180 degrees and slings the man past his own body. The man
+  runs at about 5 m/s, sinks about 0.25 m into the ropes, sits, pushes off
+  and comes back at 4.6 m/s. It ends with an eased stop at the far ropes.
+  Before, the man spun on the spot and ran at 9 m/s.
+- **Strikes:**
+  - Wind-ups and recoveries are cut to the reference's frame counts.
+  - Both men stand in a fists-up guard; the owner's call ("Guard, lock-up
+    reach").
+  - Kicks that knock a man down play their own slower fall and carry him
+    back.
+  - A move can now drive a standing man back (`MoveDef.shove_m`; the clinch
+    knee pushes him 1 m).
+  - Raised legs bend with the knee up. The old forward knee aim twisted the
+    thighs into flat ribbons.
+- **Kenny has his own body** (`kenny_body.glb`, a copy of Cody's). The owner:
+  "I want Kenny to have his own model and not have a dependency on Cody's."
+- **Review tooling:**
+  - `strike_pair_shot` renders both men at the move's real spacing. The
+    referee's opening lock-up had been pulling them together.
+  - It keys the light from the camera side.
+  - Knockdowns, run-ups and pushes play as the game plays them.
+- **Still short of 10:**
+  - **Whip:** one slow tick at the throw-to-run hand-off and one at the ropes.
+  - **Back kick:** the spin starts late.
+  - **Flying knee:** the landing overlaps the falling man.
+  - **Hook:** the sell's hand to the jaw.
+  - **Kenny's hips:** the trouser bulge at the hip on high kicks is a limit
+    of the body's skinning, logged separately.
+- **Not in this deploy:** the Hell in a Cell roof AI and the Cross Rhodes
+  re-key, both still in progress.

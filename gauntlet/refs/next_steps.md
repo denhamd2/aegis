@@ -1,5 +1,14 @@
 # Aegis prioritised backlog
 
+## 12 November execution update
+
+The owner approved priorities **3–9 from the conversational ranking**, delivered
+as five related Mac batches: blood/sweat; weapons/protected poses;
+entrances/moonsault; two-sided ladder routes; ladder/table presentation.
+See the [current batch ledger](backlog_3_9_2026_11_12/README.md) for validation,
+publication and remaining acceptance. New ladder attack variants are deferred.
+The older status rows below are historical where superseded by that ledger.
+
 Updated 7 November 2026 at the owner's request: prioritise **impact versus
 effort**, with dependencies and validation cost included. This is the current
 work order. Original IDs remain stable; they no longer indicate execution order.
