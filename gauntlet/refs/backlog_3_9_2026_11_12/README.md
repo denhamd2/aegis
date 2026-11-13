@@ -125,3 +125,13 @@ CI43502575462 was still running;35/35 affected local checks pass.
 Next cell step: bounded Blender walking-strip profile study; preserve roof
 height/gameplay and retain only a demonstrated close-view improvement.
 Original entrances/moonsault and ladder batches remain open.
+
+## WWE2K ambulance reference batch
+
+Three Blender/judge revisions complete:3.8→6.7→7.2→7.4/10.
+[Evidence, validation and remaining limitations](../ambulance_judge_2026_11_13/README.md).
+Final18,210triangles/10materials/23surfaces;6focused cases pass. Native source
+has assembled doors and portable maps; Godot pivot/interaction contracts remain
+unchanged. Publication pending. After deployment, the owner requests Kenny
+head/face/hair/body likeness review in three rounds and a Cody-independence audit.
+Other original unfinished priorities remain open.

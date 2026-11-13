@@ -1,5 +1,16 @@
 # Aegis prioritised backlog
 
+## Current owner priority: WWE2K ambulance reference match
+
+The latest cell work is deployed atb40f772. Owner requested the ambulance next:
+remodel in Blender using the supplied screenshots, then perform three independent
+judge/revision loops aiming10/10 with honest scores. Preserve doors and match
+interactions; [current evidence/ledger](ambulance_judge_2026_11_13/README.md).
+Ambulance iterations are complete at7.4/10;6focused cases pass, publication
+pending. After its verified deployment, Kenny likeness (head/face/hair/body)
+and an audit of model independence from Cody are the next owner priority,
+using three judge/revision loops. The cell walking-strip study stays deferred.
+
 ## 13 November Blender requirement
 
 Owner requires Blender modeling for the steel cage, Hell in a Cell, ambulance
