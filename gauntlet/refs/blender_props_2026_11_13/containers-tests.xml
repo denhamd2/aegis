@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites id="2026-11-13" name="report_1" tests="6" failures="0" skipped="0" flaky="0" time="0.000">
+	<testsuite id="0" name="test_shut_in" package="tests" timestamp="2026-11-13T14:45:31" hostname="localhost" tests="6" failures="0" errors="0" skipped="0" flaky="0" time="58.832">
+		<testcase name="test_the_rules" classname="test_shut_in" time="0.003">
+		</testcase>
+		<testcase name="test_the_casket_stands_at_ringside_open" classname="test_shut_in" time="11.031">
+		</testcase>
+		<testcase name="test_the_ambulance_is_backed_down_the_ramp" classname="test_shut_in" time="7.977">
+		</testcase>
+		<testcase name="test_shut_in_the_casket_he_loses" classname="test_shut_in" time="12.151">
+		</testcase>
+		<testcase name="test_a_near_miss_he_shoves_the_lid_back_and_climbs_out" classname="test_shut_in" time="15.793">
+		</testcase>
+		<testcase name="test_shut_in_the_ambulance_he_loses" classname="test_shut_in" time="11.837">
+		</testcase>
+	</testsuite>
+</testsuites>
