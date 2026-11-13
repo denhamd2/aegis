@@ -17,11 +17,12 @@ def materials(cell_visuals=False):
     rng = np.random.RandomState(114)
     n = 256
     noise = rng.uniform(-1, 1, (n,n))
-    base = np.ones((n,n,3)) * np.array([.69,.72,.75])
+    base = np.ones((n,n,3)) * np.array([.55,.58,.61] if cell_visuals else [.69,.72,.75])
     base += noise[...,None] * .014
-    orm = np.ones_like(base); orm[...,1] = .38 + noise*.035; orm[...,2] = .45
-    kit.save_rgb(base,TEX/'cage_steel_base.png');kit.save_rgb(orm,TEX/'cage_steel_orm.png')
-    steel=kit.pbr_material('cage_galvanised',TEX/'cage_steel_base.png',TEX/'cage_steel_orm.png',None)
+    orm = np.ones_like(base); orm[...,1] = (.30 if cell_visuals else .38) + noise*(.025 if cell_visuals else .035); orm[...,2] = .80 if cell_visuals else .45
+    prefix='cell_steel' if cell_visuals else 'cage_steel'
+    kit.save_rgb(base,TEX/(prefix+'_base.png'));kit.save_rgb(orm,TEX/(prefix+'_orm.png'))
+    steel=kit.pbr_material('cell_galvanised' if cell_visuals else 'cage_galvanised',TEX/(prefix+'_base.png'),TEX/(prefix+'_orm.png'),None)
     # Round shaded crossed wires, transparent holes; preserve physical repeat.
     from PIL import Image
     yy,xx=np.mgrid[:512,:512]
@@ -33,9 +34,21 @@ def materials(cell_visuals=False):
     w=np.maximum(1-(1-du)/profile,1-(1-dv)/profile)
     alpha=np.clip(w*2.2,0,1)
     crown=.75+.25*np.sin(np.clip(w,0,1)*np.pi*.5)
-    rgba=np.empty((512,512,4)); rgba[...,:3]=np.array([.84,.86,.88])*crown[...,None];rgba[...,3]=alpha
+    rgba=np.empty((512,512,4))
+    rgba[...,:3]=np.array([.50,.53,.56]) if cell_visuals else np.array([.84,.86,.88])*crown[...,None]
+    rgba[...,3]=alpha
     path=TEX/('cell_chainlink.png' if cell_visuals else 'cage_chainlink.png');Image.fromarray((np.clip(rgba,0,1)*255).astype('uint8'),'RGBA').save(path)
-    wire=kit.pbr_material('cage_chainlink',path,None,None,roughness=.38,metallic=.3)
+    normal_path=None;orm_path=None
+    if cell_visuals:
+        # Cylindrical strand response in aligned tangent-space normals; no
+        # extra wire geometry or baked white shading on the strand bodies.
+        height=np.sqrt(np.maximum(0,1-(1-np.clip(w,0,1))**2))
+        normal_path=TEX/'cell_wire_normal.png';orm_path=TEX/'cell_wire_orm.png'
+        kit.save_rgb(kit.normal_from_height(height,3.0),normal_path)
+        packed=np.ones((512,512,3));packed[...,1]=.32+.012*np.cos((xx*16+yy*11)*math.tau/512);packed[...,2]=.65
+        kit.save_rgb(packed,orm_path)
+    wire=kit.pbr_material('cage_chainlink',path,orm_path,normal_path,normal_strength=.7,
+                          roughness=.32 if cell_visuals else .38,metallic=.65 if cell_visuals else .3)
     bs=wire.node_tree.nodes['Principled BSDF'];tex=next(n for n in wire.node_tree.nodes if n.type=='TEX_IMAGE')
     wire.node_tree.links.new(tex.outputs['Alpha'],bs.inputs['Alpha'])
     wire.surface_render_method='DITHERED';wire.use_backface_culling=False
@@ -43,7 +56,11 @@ def materials(cell_visuals=False):
 
 
 def mesh_part(root,part,mat):
-    return kit.add_mesh(root,part,mat,smooth=True,uv_scale=1.,auto_smooth_deg=50)
+    obj=kit.add_mesh(root,part,mat,smooth=True,uv_scale=1.,auto_smooth_deg=50)
+    if mat.name=='cell_galvanised':
+        weighted=obj.modifiers.new('Manufactured face normals','WEIGHTED_NORMAL')
+        weighted.keep_sharp=True;weighted.weight=50
+    return obj
 
 
 def panel(root,name,verts,uv,mat):
@@ -93,20 +110,28 @@ def build(name,half,base,top,rails,door_axis,dw,dh,roof):
             for off in [-.06,.06]:
                 tube(part,[a+direction*(length*k/count)+side*off+Vector((0,y0,0)),
                            a+direction*(length*(k+1)/count)+side*off+Vector((0,y1,0))],.009,6)
-    def upright(part,at,width):
+    def upright(part,at,width,axis):
         at=Vector(at)
         if roof:
-            # Four chords and bracing form a real open box-truss column.
-            r=width*.36
-            for x,z in [(-r,-r),(-r,r),(r,-r),(r,r)]:
-                tube(part,[at+Vector((x,base,z)),at+Vector((x,top,z))],.022,8)
+            # Built-up paired channels and restrained cross ties, matching the
+            # wall references rather than copying roof lattice onto posts.
+            lat=Vector((abs(axis.z),0,abs(axis.x)))
+            normal=Vector((abs(axis.x),0,abs(axis.z)))
+            up=Vector((0,1,0));mid=(base+top)/2
+            gap=width*.42;depth=width*.72;flange=width*.23
+            for side in [-1,1]:
+                part.box(at+lat*(side*gap)+up*mid,
+                         lat*.012+normal*depth+up*h,bevel=.002,bevel_segments=1)
+                for face in [-1,1]:
+                    part.box(at+lat*(side*(gap-flange*.4))+axis*(face*depth*.5)+up*mid,
+                             lat*flange+normal*.012+up*h,bevel=.002,bevel_segments=1)
             count=math.ceil(h/.6)
-            for k in range(count):
-                y0=base+h*k/count;y1=base+h*(k+1)/count
-                for fixed,dim in [(-r,0),(r,0),(-r,2),(r,2)]:
-                    a=[-r,y0,fixed] if dim==0 else [fixed,y0,-r]
-                    b=[r,y1,fixed] if dim==0 else [fixed,y1,r]
-                    tube(part,[at+Vector(a),at+Vector(b)],.01,6)
+            for k in range(1,count):
+                y=base+h*k/count
+                if any(abs(y-(base+f*h))<.12 for f in rails):continue
+                for face in [-1,1]:
+                    part.box(at+axis*(face*depth*.5)+up*y,
+                             lat*(gap*2+.025)+normal*.014+up*.04)
         else:beam(part,at+Vector((0,base,0)),at+Vector((0,top,0)),width)
         box(part,at+Vector((0,base+.02,0)),(width*1.6,.04,width*1.6),.005)
     for label,axis in axes:
@@ -124,7 +149,14 @@ def build(name,half,base,top,rails,door_axis,dw,dh,roof):
             along=-half+span*i/4
             if i in (0,4) and axis.z != 0:continue
             if isdoor and abs(along)<dw/2+.15:continue
-            upright(part,axis*half+lat*along,.10*scale if i in (0,4) else .08*scale)
+            upright(part,axis*half+lat*along,.10*scale if i in (0,4) else .08*scale,axis)
+            if roof:
+                for fraction in rails[1:-1]:
+                    centre=axis*half+lat*along+Vector((0,base+fraction*h,0))
+                    for face in [-1,1]:
+                        size=lat*.26+Vector((abs(axis.x),0,abs(axis.z)))*.014
+                        size.y=.08
+                        part.box(centre+axis*(face*.108),size,bevel=.003,bevel_segments=1)
         def wall_panel(a,b,y0,y1,tag):
             verts=[point(a,y0),point(b,y0),point(b,y1),point(a,y1)]
             panel(root,tag,verts,[(a*2,-y0*2),(b*2,-y0*2),(b*2,-y1*2),(a*2,-y1*2)],wire)
@@ -151,6 +183,14 @@ def build(name,half,base,top,rails,door_axis,dw,dh,roof):
             v=-half+span*i/4
             roof_truss(part,(v,top,-half),(v,top,half))
             roof_truss(part,(-half,top,v),(half,top,v))
+        # Local splice plates and low fasteners punctuate truss crossings;
+        # remain under the existing roof standing clearance (+.03m).
+        for i in range(5):
+            for j in range(5):
+                x=-half+span*i/4;z=-half+span*j/4
+                part.box(Vector((x,top+.018,z)),Vector((.18,.008,.18)),bevel=.002,bevel_segments=1)
+                for dx,dz in [(-.06,-.06),(-.06,.06),(.06,-.06),(.06,.06)]:
+                    tube(part,[(x+dx,top+.022,z+dz),(x+dx,top+.027,z+dz)],.007,6)
         for i in range(4):
             for j in range(4):
                 centre=Vector((-half+bay*(i+.5),top,-half+bay*(j+.5)))
@@ -208,5 +248,5 @@ if __name__=='__main__':
     if not only or only=='steel_cage':
         build('steel_cage',3.26,-.12,4.,[0,.5,1],Vector((-1,0,0)),1.1,2.05,False)
     if not only or only=='hell_in_a_cell':
-        build('hell_in_a_cell',4.7,-1.1,5.,[0,.33,.66,1],Vector((0,0,-1)),1.4,2.3,True)
+        build('hell_in_a_cell',4.7,-1.1,5.,[0,.5,1],Vector((0,0,-1)),1.4,2.3,True)
     if not only or only=='cage_hardware':hardware()

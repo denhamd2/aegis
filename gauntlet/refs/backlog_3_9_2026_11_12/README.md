@@ -100,3 +100,12 @@ verification for this new batch is pending; older entries describe earlier relea
 Original batches3–5 remain open: entrances/moonsault, two-sided ladder routes,
 and ladder/table presentation. Remaining weapon families and further prop
 visual refinement also remain open; the new source pipeline does not close them.
+
+## Cell judge refinement
+
+Initial Blender batch published at `784d9b7`, verified mac-latest and Mac run
+43482869123; Aegis.zip1,055,710,877bytes. Three subsequent cell-only judge loops
+against confirmed silverWWE2K25 references and owner construction photos improve
+5.3→6.4→6.8→8.0/10. [Evidence](../cell_judge_2026_11_13/README.md).
+Final source31,338triangles/2materials;35affected checks pass. New refinement
+batch publication pending. Further fidelity work remains open;10/10 not reached.

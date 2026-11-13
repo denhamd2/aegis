@@ -61,10 +61,10 @@ class Spec:
 		s.base_y = ArenaBuilder.FLOOR_Y
 		s.top_y = ArenaBuilder.FLOOR_Y + 6.1
 		# The owner's references (Hell in a Cell from the hard camera, the
-		# roof from the stands): three rows of panels up each wall, four
-		# across, and a four-by-four roof whose middle four are the ones that
-		# give way.
-		s.rails = [0.0, 0.33, 0.66, 1.0]
+		# roof from the stands): two main wall tiers; the deep roof-truss
+		# band is not another tier. Keep four bays/4x4 roof: the new photos
+		# do not establish a different count reliably.
+		s.rails = [0.0, 0.5, 1.0]
 		s.bays = 4
 		s.door_axis = Vector3(0.0, 0.0, -1.0)
 		s.door_width = 1.4
