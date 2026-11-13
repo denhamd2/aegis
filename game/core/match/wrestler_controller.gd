@@ -1759,6 +1759,8 @@ func play_paired_pose(move: MoveDef, is_attacker: bool) -> bool:
 	return true
 
 func _on_fsm_state_changed(_previous: WrestlerFSM.State, current: WrestlerFSM.State) -> void:
+	if current != WrestlerFSM.State.TAUNT:
+		_authored_pose = false
 	if current != WrestlerFSM.State.RUN:
 		_run_in_pick = null
 	if _run_in_brake > 0.0 and current != WrestlerFSM.State.RUNNING_ATTACK:
@@ -3999,6 +4001,8 @@ func _process_active_move(input: Dictionary) -> void:
 		fsm.transition_to(WrestlerFSM.State.IDLE)
 
 func _apply_move_to_opponent(move: MoveDef) -> void:
+	if opponent.is_presentation_protected() or opponent.is_digging_for_weapon():
+		return
 	if _is_weapon_swing(move) and opponent._defends_weapon(self, move):
 		return
 	if _is_weapon_swing(move):
@@ -4203,6 +4207,15 @@ func _begin_sell(part: String, ticks: int) -> void:
 signal taunted(wrestler: WrestlerController)
 
 var taunts_used := 0
+var _authored_pose := false
+
+
+## Only the authored crowd pose is protected, bounded by its actual duration.
+## The Spear stalking setup remains combat and can still be interrupted.
+func is_presentation_protected() -> bool:
+	return not dead and _authored_pose and not _stalking \
+			and fsm.current_state == WrestlerFSM.State.TAUNT \
+			and _move_ticks_remaining > 0 and fsm.ticks_in_state < taunt_ticks()
 
 
 func taunt_ticks() -> int:
@@ -4272,12 +4285,15 @@ func try_running_finisher() -> bool:
 
 
 func begin_taunt() -> void:
+	if not can_taunt():
+		return
 	var t: Array = TAUNTS.get(entrance_style, TAUNTS[""])
 	taunts_used += 1
 	if combat:
 		combat.taunted()
 	_set_state_clip(WrestlerFSM.State.TAUNT, String(t[0]))
 	_start_move(WrestlerFSM.State.TAUNT, _timed_stub(int(t[1])))
+	_authored_pose = true
 	taunted.emit(self)
 
 
@@ -4998,7 +5014,7 @@ func _resolve_pending_hits() -> void:
 	# Falling (off a ladder or a cage wall): nothing more lands until he does.
 	if UNHITTABLE_STATES.has(fsm.current_state) \
 			or fsm.current_state == WrestlerFSM.State.LADDER_FALL \
-			or is_digging_for_weapon():
+			or is_digging_for_weapon() or is_presentation_protected():
 		_pending_fatal_shot = false
 		_pending_bullet_impact = Vector3.INF
 		return

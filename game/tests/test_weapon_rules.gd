@@ -372,3 +372,38 @@ func test_a_rummage_is_not_cut_off() -> void:
 		w._tick_weapon_action({})
 	assert_bool(w.has_weapon()).is_true()
 	assert_str(String(w.held_weapon.def.id)).is_equal("steel_chair")
+
+
+func test_authored_pose_protection_expires_and_clears_on_state_exit() -> void:
+	var w := _wrestler(false)
+	await _ticks(2)
+	w.begin_taunt()
+	assert_bool(w.is_presentation_protected()).is_true()
+	w.fsm.ticks_in_state = w.taunt_ticks()
+	assert_bool(w.is_presentation_protected()).is_false()
+	w.fsm.ticks_in_state = 0
+	w.fsm.transition_to(WrestlerFSM.State.IDLE)
+	assert_bool(w.is_presentation_protected()).is_false()
+	w.begin_taunt()
+	w.dead = true
+	assert_bool(w.is_presentation_protected()).is_false()
+
+
+func test_a_pose_defers_ai_attacks_and_does_not_award_hit_momentum() -> void:
+	var actor := _wrestler(false)
+	var target := _wrestler(false)
+	await _ticks(2)
+	actor.opponent = target
+	target.opponent = actor
+	target.begin_taunt()
+	var ai := WrestlerAI.new()
+	ai.controller = actor
+	ai.target = target
+	var input := ai._poll_input()
+	assert_bool(input.get("strike", false)).is_false()
+	assert_bool(input.get("grapple", false)).is_false()
+	ai.free()
+	var before := actor.combat.momentum
+	actor._apply_move_to_opponent(load("res://resources/moves/strike_jab.tres"))
+	assert_float(actor.combat.momentum).is_equal(before)
+	assert_bool(target._pending_hits.is_empty()).is_true()
