@@ -50,3 +50,9 @@ walking-strip/joint detail after those changes; don't add arbitrary diagonals.
 Remaining loops2 and3 are pending. Keep the Blender source authoritative and
 retain source/renders/judge feedback per revision. Only final affected regression
 checks and one related Mac deployment are required after the three revisions.
+
+Loop2 source/render: cell-only chain-link repeat64→102.4px (8→5wholeperiods
+per512px tile), physical repeat .0625→.100m. Fivewholeperiods preserve tile
+continuity;96px would not tile exactly within512px. Profile .19→.09, so larger
+openings retain thin wire. Same camera/light, geometry, color and BRDF values.
+37,278 triangles/29 meshes/2materials unchanged. Judge after-score pending.

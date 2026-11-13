@@ -13,7 +13,7 @@ OUT = Path(__file__).resolve().parents[3] / 'game/assets/props'
 TEX = OUT / 'textures'
 
 
-def materials():
+def materials(cell_visuals=False):
     rng = np.random.RandomState(114)
     n = 256
     noise = rng.uniform(-1, 1, (n,n))
@@ -24,14 +24,17 @@ def materials():
     steel=kit.pbr_material('cage_galvanised',TEX/'cage_steel_base.png',TEX/'cage_steel_orm.png',None)
     # Round shaded crossed wires, transparent holes; preserve physical repeat.
     from PIL import Image
-    yy,xx=np.mgrid[:512,:512]; cell=64.
+    yy,xx=np.mgrid[:512,:512]
+    # Five whole periods tile cleanly; a96px period in512px would leave seams.
+    cell=512. / (5 if cell_visuals else 8)
+    profile=.09 if cell_visuals else .19
     du=np.abs(np.mod((xx+yy)/cell,1)-.5)*2
     dv=np.abs(np.mod((xx-yy+2048)/cell,1)-.5)*2
-    w=np.maximum(1-(1-du)/.19,1-(1-dv)/.19)
+    w=np.maximum(1-(1-du)/profile,1-(1-dv)/profile)
     alpha=np.clip(w*2.2,0,1)
     crown=.75+.25*np.sin(np.clip(w,0,1)*np.pi*.5)
     rgba=np.empty((512,512,4)); rgba[...,:3]=np.array([.84,.86,.88])*crown[...,None];rgba[...,3]=alpha
-    path=TEX/'cage_chainlink.png';Image.fromarray((np.clip(rgba,0,1)*255).astype('uint8'),'RGBA').save(path)
+    path=TEX/('cell_chainlink.png' if cell_visuals else 'cage_chainlink.png');Image.fromarray((np.clip(rgba,0,1)*255).astype('uint8'),'RGBA').save(path)
     wire=kit.pbr_material('cage_chainlink',path,None,None,roughness=.38,metallic=.3)
     bs=wire.node_tree.nodes['Principled BSDF'];tex=next(n for n in wire.node_tree.nodes if n.type=='TEX_IMAGE')
     wire.node_tree.links.new(tex.outputs['Alpha'],bs.inputs['Alpha'])
@@ -53,7 +56,7 @@ def panel(root,name,verts,uv,mat):
 
 
 def build(name,half,base,top,rails,door_axis,dw,dh,roof):
-    kit.reset();steel,wire=materials();scale=2.4 if roof else 1.
+    kit.reset();steel,wire=materials(cell_visuals=roof);scale=2.4 if roof else 1.
     axes=[('PX',Vector((1,0,0))),('NX',Vector((-1,0,0))),('PZ',Vector((0,0,1))),('NZ',Vector((0,0,-1)))]
     h=top-base;span=2*half; roots=[]
     def beam(part,a,b,width):
