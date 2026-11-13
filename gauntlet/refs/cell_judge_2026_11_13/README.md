@@ -86,3 +86,13 @@ aliasing/limited woven intersections, and simplified local joints/welds/surface
 variation. Matched close/detail views and motion validation are needed before
 precise further edits or a higher score. Native M1/16GB frame time remains
 unverified. Do not claim completed AAA quality or10/10 likeness.
+
+## Publication receipt
+
+Verified13November2026: `mac-latest` points to
+`ae0cef36edaf3db7e64836e72529a85c78ba3da9`.
+[Mac workflow43499679118](https://github.com/denhamd2/aegis/actions/runs/43499679118)
+succeeded and the release contains `Aegis.zip` (1,056,076,110bytes).
+[Download](https://github.com/denhamd2/aegis/releases/tag/mac-latest).
+This publishes all three revisions; native appearance, moving-camera wire
+stability and M1 frame pacing still require review.

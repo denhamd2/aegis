@@ -27,10 +27,16 @@ are historical, including their stale “working tree”, move-count and CI clai
 
 ## Published and remaining acceptance
 
-Latest Mac app: **`bf053267128f95bdc0420521d3756f1d30b1e530`**, verified against
-`mac-latest`, successful [Mac run 42419291426](https://github.com/denhamd2/aegis/actions/runs/42419291426),
-`Aegis.zip` 982,718,615 bytes. [Download](https://github.com/denhamd2/aegis/releases/tag/mac-latest).
-Documentation receipt `6527b5f` does not change the app.
+Latest Mac app: **`ae0cef36edaf3db7e64836e72529a85c78ba3da9`**, verified
+against `mac-latest`, successful [Mac run 43499679118](https://github.com/denhamd2/aegis/actions/runs/43499679118),
+`Aegis.zip` 1,056,076,110 bytes.
+[Download](https://github.com/denhamd2/aegis/releases/tag/mac-latest).
+This includes the Blender prop sources/runtime integration, grip corrections
+and three cell judge revisions; [current evidence and limitations](cell_judge_2026_11_13/README.md).
+Cell likeness remains **8.0/10**, with motion aliasing, close detail and native
+Mac performance still open. Earlier release rows below retain their own
+validation history; [the current batch ledger](backlog_3_9_2026_11_12/README.md)
+records later work and unfinished priorities3–9.
 
 | ID | Published work | Evidence and remaining limits |
 | --- | --- | --- |

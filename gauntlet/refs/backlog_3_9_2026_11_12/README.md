@@ -95,7 +95,7 @@ modeled in Blender. Native editable sources, exports and runtime integration
 are now implemented; [validation and visual limits](../blender_props_2026_11_13/validation.md).
 This is not completed AAA acceptance or verified WWE2K visual parity.
 The all-weapon grip gate now passes without tolerance changes. Publication
-verification for this new batch is pending; older entries describe earlier releases.
+verification is recorded below; older entries describe earlier releases.
 
 Original batches3–5 remain open: entrances/moonsault, two-sided ladder routes,
 and ladder/table presentation. Remaining weapon families and further prop
@@ -108,4 +108,10 @@ Initial Blender batch published at `784d9b7`, verified mac-latest and Mac run
 against confirmed silverWWE2K25 references and owner construction photos improve
 5.3→6.4→6.8→8.0/10. [Evidence](../cell_judge_2026_11_13/README.md).
 Final source31,338triangles/2materials;35affected checks pass. New refinement
-batch publication pending. Further fidelity work remains open;10/10 not reached.
+batch published at `ae0cef36edaf3db7e64836e72529a85c78ba3da9`:
+[Mac run43499679118](https://github.com/denhamd2/aegis/actions/runs/43499679118)
+succeeded, `mac-latest` resolves to that exact commit, and `Aegis.zip` is
+1,056,076,110bytes. Further fidelity work remains open;10/10 not reached.
+Exact-commit gameplay CI43499679216 was still running at this receipt;
+35/35 focused checks passed locally. Native appearance and performance await
+owner Mac review.
