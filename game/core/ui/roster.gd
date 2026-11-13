@@ -312,6 +312,11 @@ static func entries() -> Array:
 		# and rana counter.
 		"rebound": [M + "ff/v_trigger_1.tres", M + "rebound_slam.tres",
 				M + "rebound_hurricanrana.tres"],
+		# His dive (DiveSpot, once a match, on a man down by the ropes): the
+		# tope suicida to the floor (the owner, 13 Nov: "Kenny should also"),
+		# and back in for the springboard moonsault -- not Cody's Disaster
+		# Kick or Cutter, the spot's other endings.
+		"dive": [M + "dive_tope_suicida.tres", M + "dive_springboard_moonsault.tres"],
 	}
 	return list
 

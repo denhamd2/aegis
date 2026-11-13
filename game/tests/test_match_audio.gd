@@ -187,6 +187,60 @@ func test_excalibur_bed_of_nails_call_replaces_the_generic_warning() -> void:
 	assert_array(audio._commentary_queue).is_equal(["excalibur_bed_of_nails"])
 
 
+func test_excalibur_calls_the_fire_and_thanks_aubrey_once_each() -> void:
+	var audio: MatchAudio = auto_free(MatchAudio.new())
+	add_child(audio)
+	audio._queue_commentary("excalibur_crowd")
+	audio._on_man_ignited(null)
+	# the live call goes ahead of a line already waiting
+	assert_array(audio._commentary_queue).is_equal(["excalibur_on_fire", "excalibur_crowd"])
+	audio._on_man_extinguished(null)
+	assert_array(audio._commentary_queue).is_equal(
+			["excalibur_on_fire", "excalibur_crowd", "excalibur_thank_aubrey"])
+	audio._commentary_queue.clear()
+	audio._on_man_ignited(null)
+	audio._on_man_extinguished(null)
+	assert_array(audio._commentary_queue).is_empty()
+
+
+func test_dives_route_the_tope_and_the_springboard_cutter_calls() -> void:
+	const M := "res://resources/moves/"
+	assert_str(MatchAudio.commentary_event_for_dive("kenny", M + "dive_tope_suicida.tres")) \
+			.is_equal("excalibur_tope_suicida")
+	assert_str(MatchAudio.commentary_event_for_dive("cody", M + "dive_tope_suicida.tres")) \
+			.is_equal("excalibur_tope_suicida")
+	assert_str(MatchAudio.commentary_event_for_dive("cody", M + "dive_springboard_cutter.tres")) \
+			.is_equal("excalibur_cody_cutter")
+	assert_str(MatchAudio.commentary_event_for_dive("cody",
+			M + "dive_springboard_disaster_kick.tres")).is_empty()
+	assert_str(MatchAudio.commentary_event_for_dive("kenny",
+			M + "dive_springboard_moonsault.tres")).is_empty()
+
+
+func test_the_cody_cutter_call_is_codys_alone() -> void:
+	assert_str(MatchAudio.commentary_event_for_cody_cutter("cody", "signature_cody_cutter")) \
+			.is_equal("excalibur_cody_cutter")
+	assert_str(MatchAudio.commentary_event_for_cody_cutter("roman", "signature_cody_cutter")) \
+			.is_empty()
+	assert_str(MatchAudio.commentary_event_for_cody_cutter("cody", "signature_pedigree")) \
+			.is_empty()
+
+
+func test_codys_figure_four_gets_excaliburs_line_in_place_of_tonys() -> void:
+	var fig4 := load("res://resources/moves/submission_figure_four.tres") as MoveDef
+	assert_str(MatchAudio.commentary_event_for_submission("cody", fig4)) \
+			.is_equal("excalibur_cody_figure_four")
+	assert_str(MatchAudio.commentary_event_for_submission("roman", fig4)).is_empty()
+	assert_str(MatchAudio.commentary_event_for_submission("cody", null)).is_empty()
+
+
+func test_kenny_dives_with_the_tope_and_the_moonsault() -> void:
+	var kenny := Roster.by_id("kenny")
+	assert_array(kenny.moveset.get("dive", [])).is_equal([
+			"res://resources/moves/dive_tope_suicida.tres",
+			"res://resources/moves/dive_springboard_moonsault.tres"])
+
+
 func test_tonys_roman_heel_line_only_routes_to_roman_heel_beats() -> void:
 	assert_str(MatchAudio.commentary_event_for_heel_pose("roman")) \
 			.is_equal("tony_roman_heel")

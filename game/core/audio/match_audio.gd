@@ -144,7 +144,27 @@ const COMMENTARY_CLIPS := {
 	"tony_love_this_business": ["res://assets/audio/commentary/tony_love_this_business.ogg"],
 	"tony_what_a_night": ["res://assets/audio/commentary/tony_what_a_night.ogg"],
 	"tony_crowd_up": ["res://assets/audio/commentary/tony_crowd_up.ogg"],
+	# The owner's fire calls (13 Nov): Excalibur as a man goes up (ManFire.
+	# ignited), and relieved once Aubrey has put him out (ManFire.extinguished).
+	"excalibur_on_fire": ["res://assets/audio/commentary/excalibur_on_fire.ogg"],
+	"excalibur_thank_aubrey": ["res://assets/audio/commentary/excalibur_thank_aubrey.ogg"],
+	# On the dives (DiveSpot.on_dive_landed) and the Cody Cutter, standing or
+	# off the springboard (13 Nov).
+	"excalibur_tope_suicida": ["res://assets/audio/commentary/excalibur_tope_suicida.ogg"],
+	"excalibur_cody_cutter": ["res://assets/audio/commentary/excalibur_cody_cutter.ogg"],
+	# Cody going into his Figure Four (13 Nov), in place of Tony's generic
+	# submission call.
+	"excalibur_cody_figure_four": ["res://assets/audio/commentary/excalibur_cody_figure_four.ogg"],
 }
+## The calls on something happening right now: they go to the head of the
+## queue, so the fire call is not still waiting behind a long line when Aubrey
+## has already put him out.
+const COMMENTARY_LIVE_CALLS := ["excalibur_on_fire", "excalibur_tope_suicida",
+		"excalibur_cody_cutter"]
+## The moves Excalibur calls the Cody Cutter on.
+const CODY_CUTTER_MOVES := ["signature_cody_cutter", "dive_springboard_cutter"]
+## What DiveSpot calls when a dive lands (call_group, as the camera's trauma).
+const LISTENERS := "match_audio"
 const COMMENTARY_EVENT_DELAY := 0.18
 const COMMENTARY_VOICE_DB := 0.0
 ## These are live-play calls that naturally fit more than one moment in a
@@ -157,6 +177,7 @@ const COMMENTARY_REPEAT_COOLDOWNS := {
 	"excalibur_strikes": 22.0,
 	"excalibur_body_kicks": 22.0,
 	"excalibur_unbelievable": 60.0,
+	"excalibur_cody_cutter": 45.0,
 }
 const COMMENTARY_REPEAT_MIN_GAP := 12.0
 const CODY_CROWD_CHANT := "res://assets/audio/crowd_cody_chant.ogg"
@@ -301,6 +322,7 @@ func _ready() -> void:
 	sfx.name = "Sfx"
 	add_child(sfx)
 	add_to_group(WeaponActor.LISTENERS)
+	add_to_group(LISTENERS)
 	chants = CrowdChants.new()
 	chants.name = "Chants"
 	add_child(chants)
@@ -348,7 +370,7 @@ func watch(referee: MatchReferee, wrestlers: Array, crowd: CrowdReaction, match_
 	for w: WrestlerController in wrestlers:
 		w.move_landed.connect(_on_move_landed)
 		w.weapon_taken.connect(_on_weapon_taken)
-		w.fsm.state_changed.connect(_on_wrestler_state_changed)
+		w.fsm.state_changed.connect(_on_wrestler_state_changed.bind(w))
 		w.reversed.connect(func(_r, _s, _m): sfx.play("whoosh", -6.0))
 		w.taunted.connect(_on_wrestler_taunted)
 		w.fired_up.connect(_on_wrestler_fired_up)
@@ -371,6 +393,10 @@ func watch(referee: MatchReferee, wrestlers: Array, crowd: CrowdReaction, match_
 			# desk_break: the worktop and panels caving, the monitors going.
 			sfx.play_any("desk_break", 4.0)
 			sfx.play_any("desk_crash", 0.0))
+		var fire := w.find_child("ManFire", false, false) as ManFire
+		if fire:
+			fire.ignited.connect(_on_man_ignited)
+			fire.extinguished.connect(_on_man_extinguished)
 		_cooldown[w] = 0.0
 		_falls[w] = []
 	referee.match_won.connect(_on_match_won)
@@ -676,8 +702,23 @@ static func commentary_event_for_spectacular_spot(move_pop: float, match_time: f
 			and match_time >= UNBELIEVABLE_LATE_MATCH_AFTER else ""
 
 
-func _on_wrestler_state_changed(_previous: int, current: int) -> void:
+## Cody's own hold gets Excalibur's line in place of Tony's generic
+## submission call (the owner, 13 Nov): ten reverent seconds that Tony's
+## "locked in tight" would otherwise talk over.
+static func commentary_event_for_submission(entrance_style: String, move: MoveDef) -> String:
+	if entrance_style == "cody" and move != null \
+			and move.resource_path.get_file().get_basename() == "submission_figure_four":
+		return "excalibur_cody_figure_four"
+	return ""
+
+
+func _on_wrestler_state_changed(_previous: int, current: int,
+		who: WrestlerController = null) -> void:
 	var commentary_event := commentary_event_for_state(current)
+	if commentary_event != "" and who != null:
+		var own := commentary_event_for_submission(who.entrance_style, who.submission_move)
+		if own != "":
+			commentary_event = own
 	if commentary_event != "":
 		_queue_commentary(commentary_event)
 
@@ -739,7 +780,45 @@ func _queue_commentary(event: String) -> void:
 	_commentary_event_last_queued[event] = _commentary_clock
 	if repeat_cooldown > 0.0:
 		_last_repeatable_commentary_at = _commentary_clock
-	_commentary_queue.append(event)
+	if event in COMMENTARY_LIVE_CALLS:
+		_commentary_queue.push_front(event)
+	else:
+		_commentary_queue.append(event)
+
+
+## Excalibur on a man going up, and on Aubrey putting him out. Once a match
+## each: a second "He's on fire!" would sound like a loop.
+func _on_man_ignited(_who: WrestlerController) -> void:
+	_queue_commentary("excalibur_on_fire")
+
+
+func _on_man_extinguished(_who: WrestlerController) -> void:
+	_queue_commentary("excalibur_thank_aubrey")
+
+
+## The call for a landed Cody Cutter, standing or off the springboard.
+static func commentary_event_for_cody_cutter(entrance_style: String, move_id: String) -> String:
+	return "excalibur_cody_cutter" if entrance_style == "cody" \
+			and move_id in CODY_CUTTER_MOVES else ""
+
+
+## Which call a dive landing gets (DiveSpot): the tope suicida, or the
+## springboard Cody Cutter.
+static func commentary_event_for_dive(entrance_style: String, move_path: String) -> String:
+	var move_id := move_path.get_file().get_basename()
+	if move_id == "dive_tope_suicida":
+		return "excalibur_tope_suicida"
+	return commentary_event_for_cody_cutter(entrance_style, move_id)
+
+
+## DiveSpot's contact ticks (it lands its dives itself, not through
+## move_landed).
+func on_dive_landed(attacker: WrestlerController, move_path: String) -> void:
+	if attacker == null:
+		return
+	var event := commentary_event_for_dive(attacker.entrance_style, move_path)
+	if event != "":
+		_queue_commentary(event)
 
 
 ## Loudness of a bump from how fast he was falling, or NAN for no bump.
@@ -814,6 +893,8 @@ func _on_move_landed(attacker, _defender, move: MoveDef) -> void:
 			_queue_commentary(commentary_event)
 			if commentary_event == "tony_roman_heel":
 				_queue_sneaky_heel_easter_egg(attacker.entrance_style)
+		elif commentary_event_for_cody_cutter(attacker.entrance_style, move_id) != "":
+			_queue_commentary(commentary_event_for_cody_cutter(attacker.entrance_style, move_id))
 		elif move_id in ["signature_superman_punch", "finisher_spear"]:
 			commentary_event = commentary_event_for_landed_move(attacker.entrance_style, move_id)
 			if commentary_event != "":
