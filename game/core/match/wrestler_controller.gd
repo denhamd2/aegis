@@ -2465,7 +2465,9 @@ func _turn_toward_opponent() -> void:
 	# degrees, loop 8): the rate climbs back over about eight ticks instead.
 	_turn_rate = minf(rate, _turn_rate + TURN_RATE_RAMP_PER_TICK)
 	var desired := atan2(-to_opponent.x, -to_opponent.z)
-	rotation.y = _step_angle(rotation.y, desired, _turn_rate)
+	# And eases into the facing rather than stopping dead from full rate.
+	var left := absf(wrapf(desired - rotation.y, -PI, PI))
+	rotation.y = _step_angle(rotation.y, desired, minf(_turn_rate, left * 0.35 + 0.004))
 
 ## Shortest-arc step from `from` toward `to`, capped at `max_step`.
 static func _step_angle(from: float, to: float, max_step: float) -> float:
