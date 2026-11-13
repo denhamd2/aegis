@@ -88,6 +88,7 @@ const MOVES := {
 	"running_bicycle_knee": "none",
 	"running_cave_in": "none",
 	"running_claymore": "none",
+	"strike_arm_hook_takedown": "none",
 	"running_clothesline_from_hell": "none",
 	"running_cyclone_kick": "none",
 	"running_gamengiri": "none",

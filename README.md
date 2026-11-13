@@ -12191,3 +12191,27 @@ by a read-only reviewer on speed, cadence, smoothness, like-for-like and sell.
     of the body's skinning, logged separately.
 - **Not in this deploy:** the Hell in a Cell roof AI and the Cross Rhodes
   re-key, both still in progress.
+
+## 13 Nov: parity loops 8–9, the whip's rope beat, and move 7 as the arm-hook takedown
+
+The owner: "I want all the moves to get to 10/10. Run one more loop for each",
+then "run 2 more loops on this move" for move 7. Each loop was scored by a
+reviewer against the AEW Fight Forever controls tutorial.
+
+- **Strikes** (loop 7 → 9): hook 7.6 → 8.0, front kick 7.4 → 7.8, clinch
+  knee 7.4 → 7.8, side kick 7.6 → 7.6, back kick 6.4 → 7.2, flying knee
+  6.6 → 7.0. Fixes include the hook's fist to the jaw, the front kick's
+  hop, the back kick's earlier spin and knee chamber, the clinch's two-hand
+  head lock, and the flying knee landing short of the man it hits.
+- **Whip** 7.4 → 7.5: no one-tick stop as the runner reaches the ropes; the
+  whipper tracks him slowly and eases his turn instead of snapping 126°.
+- **Move 7** 3.5 → 6.4 (four loops): the tutorial's strike knockdown is an
+  arm-hook takedown, not a spinning kick. It is a new two-man move,
+  `strike_arm_hook_takedown`, thrown from the strike button
+  (`WrestlerController._throw_paired_strike`); Kenny's pool swaps the turning
+  back kick knockdown for it.
+- A knockdown's `shove_m` now scales its carry, so a kicked man lands further
+  away.
+
+Not in this deploy: the Hell in a Cell roof AI and the Cross Rhodes re-key
+(both in progress).

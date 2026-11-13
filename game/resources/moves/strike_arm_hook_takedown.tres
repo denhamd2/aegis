@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="MoveDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/move_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+animation_pair_id = &"strike_arm_hook_takedown"
+startup_frames = 28
+active_frames = 5
+recovery_frames = 39
+reversal_window_start = 20
+reversal_window_end = 26
+damage_head = 9.0
+damage_torso = 8.0
+damage_arms = 0.0
+damage_legs = 2.0
+momentum_cost = 0.0
+momentum_gain = 10.0
+weight_class_min = 0
+weight_class_max = 2
+required_opponent_state = -1
+leaves_defender_down = true

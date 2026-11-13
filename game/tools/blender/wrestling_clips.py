@@ -5236,6 +5236,112 @@ CLIPS["CFH_Defender"] = [
     (18, _flip(230, (0.0, 0.0, 0.850))),
 ] + _face_first_then_roll(21, 36)
 
+# Arm-Hook Takedown, 36 frames (1.2 s) -- the tutorial's strike knockdown
+# (parity move 7; scratchpad ffref 1:19.70-1:21.00, measured at 60 fps from
+# the wind-up): the right arm swings out wide and cocks high (ref +8..+22),
+# whips through and hooks round his neck as the attacker steps in (+28 = key
+# 14), and drives him over backward -- shoulders down by +37 (key 18-20). The
+# attacker does NOT go down with him: he follows through bent over the man's
+# legs, both arms flung out, and comes back up by +72 (key 36).
+CLIPS["Arm_Hook_Attacker"] = [
+    (0, pose(GUARD)),
+    # The arm swings out wide to his right, near straight (loop 2: ~90
+    # degrees of abduction by tick 12), weight onto the back foot.
+    (4, P(pelvis=(0.0, 0.0, 0.790), hips=(-6, -8, 0), spine=(-14, -14, 0),
+          head=(4, 10, 0),
+          hand_r=(0.72, 0.04, 1.38), hand_l=(-0.24, 0.30, 1.30),
+          elbow_r=(0.4, -0.6, -0.4), fist_r=1.0, fist_l=0.8, clav_follow=False,
+          foot_r=(0.26, -0.22, 0.104), foot_l=(-0.22, 0.22, 0.104))),
+    (6, P(pelvis=(0.0, 0.0, 0.785), hips=(-6, -12, 0), spine=(-12, -18, 0),
+          head=(2, 14, 0),
+          hand_r=(0.76, -0.02, 1.46), hand_l=(-0.24, 0.32, 1.28),
+          elbow_r=(0.4, -0.6, -0.2), fist_r=1.0, fist_l=0.8, clav_follow=False,
+          foot_r=(0.26, -0.22, 0.104), foot_l=(-0.22, 0.24, 0.104))),
+    # Cocked high behind the head, chest turned away: the load (tick 22).
+    (11, P(pelvis=(0.0, 0.04, 0.780), hips=(-6, -16, 0), spine=(-12, -26, 0),
+           head=(2, 22, 0),
+           hand_r=(0.40, -0.22, 1.78), hand_l=(-0.26, 0.34, 1.24),
+           elbow_r=(0.6, -0.6, 0.4), fist_r=1.0, fist_l=0.8, clav_follow=False,
+           foot_r=(0.26, -0.22, 0.104), foot_l=(-0.20, 0.36, 0.104))),
+    # Whipping through as he steps in past the man's right side.
+    (13, P(pelvis=(0.0, 0.10, 0.790), hips=(-12, 10, 0), spine=(-14, 22, 0),
+           hand_r=(0.52, 0.52, 1.52), hand_l=(-0.30, 0.22, 1.10),
+           fist_r=1.0, fist_l=0.8, clav_follow=False,
+           foot_r=(0.24, -0.10, 0.104), foot_l=(-0.20, 0.40, 0.104))),
+    # The hook: arm near straight across his throat at shoulder height, hips
+    # alongside his (the root has stepped through, see the trajectory).
+    (14, P(pelvis=(0.0, 0.12, 0.780), hips=(-14, 16, 0), spine=(-16, 26, 0),
+           head=(-4, 12, 0),
+           hand_r=(0.50, 0.32, 1.46), hand_l=(-0.32, 0.24, 1.06),
+           elbow_r=(0.6, -0.2, -0.6), fist_r=0.6, fist_l=0.8, clav_follow=False,
+           foot_r=(0.22, 0.14, 0.104), foot_l=(-0.20, 0.34, 0.104))),
+    # Driving him down: the arm and the chest go down together.
+    (17, P(pelvis=(0.0, 0.16, 0.690), hips=(-40, 30, 0), spine=(-46, 36, 0),
+           head=(-8, 12, 0),
+           hand_r=(0.42, 0.62, 0.74), hand_l=(-0.36, 0.30, 0.95),
+           fist_r=0.4, fist_l=0.6,
+           foot_r=(0.20, 0.34, 0.104), foot_l=(-0.20, 0.02, 0.104))),
+    # Follow-through, HELD (loop 2: ticks 40-58): bent ~50 degrees over his
+    # legs, knees deep, both arms flung out wide and back.
+    (20, P(pelvis=(0.0, 0.20, 0.620), hips=(-62, 8, 0), spine=(-52, 8, 0),
+           head=(-12, 0, 0),
+           hand_r=(0.40, 0.66, 0.42), hand_l=(-0.74, 0.06, 1.12),
+           elbow_r=(0.8, -0.3, -0.2), elbow_l=(-0.8, -0.3, -0.2),
+           fist_r=0.3, fist_l=0.3, clav_follow=False,
+           foot_r=(0.22, 0.40, 0.104), foot_l=(-0.22, 0.00, 0.104))),
+    (29, P(pelvis=(0.0, 0.18, 0.630), hips=(-62, 6, 0), spine=(-52, 6, 0),
+           head=(-10, 0, 0),
+           hand_r=(0.40, 0.66, 0.42), hand_l=(-0.70, 0.04, 1.10),
+           elbow_r=(0.8, -0.3, -0.2), elbow_l=(-0.8, -0.3, -0.2),
+           fist_r=0.3, fist_l=0.3, clav_follow=False,
+           foot_r=(0.22, 0.38, 0.104), foot_l=(-0.22, 0.02, 0.104))),
+    # Half-risen (tick 62), knees still bent, then up by contact+44 (72).
+    (31, P(pelvis=(0.0, 0.12, 0.730), hips=(-24, 4, 0), spine=(-26, 4, 0),
+           head=(-6, 0, 0),
+           hand_r=(0.56, 0.16, 1.08), hand_l=(-0.56, 0.14, 1.08),
+           fist_r=0.4, fist_l=0.4,
+           foot_r=(0.22, 0.30, 0.104), foot_l=(-0.22, 0.02, 0.104))),
+    (34, P(pelvis=(0.0, 0.08, 0.760), hips=(-14, 0, 0), spine=(-18, 0, 0),
+           hand_r=(0.44, 0.30, 1.10), hand_l=(-0.44, 0.30, 1.10),
+           fist_r=0.4, fist_l=0.4,
+           foot_r=(0.24, 0.20, 0.104), foot_l=(-0.22, 0.00, 0.104))),
+    (36, P()),
+]
+# Upright and square until the hook, arms low -- not hunched over the
+# attacker's shoulder like a man in a lock-up (loop 1, tick 18).
+_AH_STAND = pose(GUARD, hips=(-2, 0, 0), spine=(-4, 4, 0), head=(2, 4, 0),
+                 hand_r=(0.26, 0.20, 1.12), hand_l=(-0.24, 0.22, 1.12),
+                 fist_r=0.5, fist_l=0.5)
+# Loop 3: he tips over the hooked arm from upright -- within 10 degrees of
+# vertical at the hook (tick 28), ~45 back at +6, horizontal ~tick 39,
+# shoulders down at tick 40 -- and the legs kick clear, up at the attacker's
+# chest height at ticks 40-42, ~30 degrees up at 54, on the mat by ~60.
+_ah_fall = _back_fall(14, 36, pelvis_hit=0.92)   # keys 14, 17, 21, 25, 36
+_ah_hit = dict(_ah_fall[0][1], spine=(8, 0, 0), head=(14, 0, 0), pelvis=(0.0, -0.03, 0.90))
+_ah_tip = dict(_ah_fall[0][1], spine=(26, 0, 0), head=(30, 0, 0), hips=(16, 0, 0),
+               pelvis=(0.0, -0.12, 0.84))
+_ah_legs = lambda fz, fy: _yawed(S(pelvis=(0.0, 0.0, 0.200), head=(-2, 0, 0),
+                                   hand_r=(-0.56, 0.14, 0.10), hand_l=(0.56, 0.14, 0.10),
+                                   elbow_r=(-0.7, 0.3, -0.3), elbow_l=(0.7, 0.3, -0.3),
+                                   fist_r=0.1, fist_l=0.1,
+                                   foot_r=(-0.14, fy, fz), foot_l=(0.12, fy - 0.02, fz + 0.06),
+                                   knee_r=(-0.3, -0.6, 0.8), knee_l=(0.3, -0.6, 0.8)))
+# Loop 4: carried back through the air, not dropped on his head -- ~45
+# degrees back at tick 34, ~75 at 37, flat and airborne at the attacker's
+# knee height at tick 40, back on the mat ~tick 45 with the hips low, the
+# legs ~45 degrees up as he lands, ~30 at tick 54 and down by ~58.
+_ah_45 = dict(_ah_fall[0][1], hips=(30, 0, 0), spine=(18, 0, 0), head=(24, 0, 0),
+              pelvis=(0.0, -0.18, 0.80))
+_ah_75 = _flip(75, (0.0, -0.30, 0.66))
+_ah_air = _flip(95, (0.0, -0.42, 0.52))
+CLIPS["Arm_Hook_Defender"] = [
+    (0, dict(_AH_STAND)), (13, pose(_AH_STAND, head=(6, 0, 0))),
+    (14, _ah_hit), (17, _ah_45), (18.5, _ah_75), (20, _ah_air),
+    (22.5, _ah_legs(0.66, -0.56)),
+    (27, _ah_legs(0.36, -0.76)),
+    (29, _ah_fall[3][1]), (36, _ah_fall[4][1]),
+]
+
 # Spinning Back Elbow, 36 frames. Plants and spins a full turn to his right
 # (the root does the turn); the right elbow swings back into the jaw as his
 # back comes round (video frames 5-7). The victim's head is snapped round and
@@ -11944,6 +12050,225 @@ _mid5["pelvis"] = tuple((a + b) / 2 for a, b in zip(_p4, _p6))
 _mid5["foot_r"] = (0.24, -0.16, 0.22)
 CLIPS["Strike_Hook_Left"].append((5, _mid5))
 CLIPS["Strike_Hook_Left"].sort(key=lambda k: k[0])
+
+
+# --- Strike parity loop 8 (13 Nov, the owner: "one more loop for each") ----
+# Render frames are 60 fps ticks; each clip's key frames are 30 fps, retimed
+# (hook 1.5 ticks a key, the others 2), so reviewer frame fN is key N/1.5 or
+# N/2 below.
+def _hk8(f, k):
+    if 2 <= f <= 4:
+        # f4: the lead upper arm opened ~20 degrees, not folded into the chest.
+        x, y, z = k["hand_l"]; k["hand_l"] = (x - 0.07, y, z)
+        k["elbow_l"] = (-0.9, -0.2, -0.3)
+    if 5 <= f <= 7:
+        # f7-f9: the fist lands on the jaw -- 0.14 m higher, 0.10 m across.
+        k["hand_l"] = (0.12, 0.58, 1.60)
+    if 9 <= f <= 12.5:
+        # f15: the follow-through crosses down to belt height.
+        k["hand_l"] = (0.30, 0.34, 1.04)
+    return k
+_patch_keys("Strike_Hook_Left", _hk8)
+
+# The hook's sell: his near hand to the jaw by +6 and held, head turned off
+# the blow, the other hand low -- HEAD_HURT's hands, so the sell that follows
+# carries on from it instead of the arms flaring wide (loop 7, f15-f35).
+def _hh8(f, k):
+    if f >= 2:
+        k["hand_l"] = (-0.10, 0.26, 1.48); k["elbow_l"] = (-0.9, -0.2, -0.4)
+        k["fist_l"] = 0.2
+        k["hand_r"] = (0.28, 0.22, 1.04)
+    return k
+_patch_keys("Hit_React_Head_Left", _hh8)
+
+def _fk8(f, k):
+    if abs(f - 8.531) < 0.01:
+        # f17: the support foot still in the air (it landed ~3 f early).
+        k["foot_l"] = (-0.22, 0.20, 0.18)
+        px, py, pz = k["pelvis"]; k["pelvis"] = (px, py, pz + 0.06)
+    if 8.0 <= f <= 12.1:
+        # f21: upright through the kick (back-lean 20 -> ~5 degrees), the
+        # raised guard hand down to the chest.
+        hp, sp = k["hips"], k["spine"]
+        k["hips"] = (min(hp[0], 4), hp[1], hp[2])
+        k["spine"] = (min(sp[0], 6), sp[1], sp[2])
+        x, y, z = k["hand_r"]; k["hand_r"] = (x, y, min(z, 1.24))
+    if abs(f - 15.25) < 0.01:
+        # f27-f31: the kicking foot comes down in FRONT of the support foot.
+        k["foot_r"] = (0.20, 0.36, 0.104)
+        px, py, pz = k["pelvis"]; k["pelvis"] = (px, 0.18, pz)
+    if abs(f - 18.417) < 0.01:
+        k["foot_r"] = (0.24, 0.12, 0.104)
+    return k
+_patch_keys("Strike_Front_Kick_Body", _fk8)
+
+_BK8_YAW = {1.667: 45, 3.333: 105, 5.0: 150, 6.667: 176}
+def _bk8(f, k):
+    for kf, yaw in _BK8_YAW.items():
+        if abs(f - kf) < 0.01:
+            # f8: already ~120 degrees round -- the spin starts earlier and
+            # no longer turns 180 in the six frames before the kick.
+            hp = k["hips"]; k["hips"] = (hp[0], yaw, hp[2])
+            if yaw >= 100:
+                sp, hd = k.get("spine", (0, 0, 0)), k.get("head", (0, 0, 0))
+                k["spine"] = (sp[0], 18.0, sp[2]); k["head"] = (hd[0], 25.0, hd[2])
+                k["hand_r"] = (-0.58, 0.0, 1.22); k["hand_l"] = (0.58, 0.0, 1.22)
+    if abs(f - 3.333) < 0.01:
+        # f8: feet apart, the stepping foot lifted -- not knees together.
+        k["foot_r"] = (0.26, -0.04, 0.30); k["knee_r"] = (0.5, 0.4, 0.8)
+    if 9.9 <= f <= 10.7:
+        # f20: the leg driven straight back into the stomach, knee locked,
+        # and the torso laid forward ~30 degrees, head away from him.
+        k["foot_r"] = (-0.10, 0.94, 1.00)
+        k["hips"] = (-10, k["hips"][1], k["hips"][2])
+        sp = k["spine"]; k["spine"] = (-30, sp[1], sp[2])
+    return k
+_patch_keys("Strike_Turning_Back_Kick_Body", _bk8)
+
+def _ck8(f, k):
+    if 4.5 <= f <= 9.8:
+        # f12-f16: both hands on the back of his head, pulling it down
+        # ~10 cm onto the knee -- the near arm no longer hangs at the hip.
+        z = 1.50 if f < 7.9 else 1.40
+        k["hand_r"] = (0.08, 0.72, z); k["hand_l"] = (-0.08, 0.74, z + 0.02)
+        k["elbow_r"] = (0.8, -0.2, -0.4); k["elbow_l"] = (-0.8, -0.2, -0.4)
+    if abs(f - 14.38) < 0.01:
+        # The push leg held out to +15 (f31) ...
+        k["foot_r"] = (0.14, 0.90, 0.80); k["knee_r"] = (0.12, 0.35, 1.0)
+        k["spine"] = (-4, 2, 0)
+    if abs(f - 16.7) < 0.01:
+        # ... and back in by f40.
+        k["foot_r"] = (0.22, 0.26, 0.24); k["knee_r"] = (0.3, 1.0, 0.0)
+    return k
+_patch_keys("Strike_Clinch_Knee_Body", _ck8)
+
+def _fk8b(f, k):
+    if 5.0 < f <= 8.5:
+        # f16: the knee to the chin (+0.15 m) with the chest over it.
+        x, y, z = k["foot_r"]; k["foot_r"] = (x, y, z + 0.15)
+        sp = k["spine"]; k["spine"] = (sp[0] - 20, sp[1], sp[2])
+    if f >= 11:
+        # f22-f56: he lands upright and short of the man -- the 0.5 m short
+        # of him the reference lands, hands down off the guard, instead of
+        # folded over him with an arm thrown up through the defender's legs.
+        px, py, pz = k["pelvis"]; k["pelvis"] = (px, py - 0.30, max(pz, 0.70))
+        for side in ("foot_r", "foot_l"):
+            x, y, z = k[side]; k[side] = (x, y - 0.30, z)
+        hp, sp = k["hips"], k["spine"]
+        k["hips"] = (max(hp[0], -10), hp[1], hp[2])
+        k["spine"] = (max(sp[0], -12), sp[1], sp[2])
+        if f < 24:
+            k["hand_r"] = (0.30, 0.24, 1.06); k["hand_l"] = (-0.28, 0.26, 1.08)
+    return k
+_patch_keys("Strike_Running_Flying_Knee", _fk8b)
+
+def _sk8(f, k):
+    if 6.0 <= f <= 9.5:
+        # f12-f20: chest turned side-on with the hips (~70 degrees), not
+        # counter-twisted back to face the camera.
+        sp = k["spine"]; k["spine"] = (sp[0], 10.0, sp[2])
+    if abs(f - 6.154) < 0.01:
+        # f12: chambered beside the body, heel aimed at him.
+        k["foot_r"] = (0.22, 0.18, 0.96); k["knee_r"] = (0.6, 0.3, 0.8)
+    if 7.3 <= f <= 9.5:
+        # f16-f20: out level and held to about +4 before the re-chamber.
+        k["foot_r"] = (0.08, 1.04, 1.32)
+        if f > 9:
+            sp = k["spine"]; k["spine"] = (28, sp[1], sp[2])
+    return k
+_patch_keys("Strike_Side_Kick_Knockdown", _sk8)
+
+
+# --- Strike parity loop 9 (13 Nov, the owner: "one more loop on the others") -
+def _hk9(f, k):
+    if 2 <= f <= 4:
+        # f4: already the long lunge -- stance ~0.3 m wider.
+        k["foot_r"] = (0.23, 0.34, 0.139); k["foot_l"] = (-0.27, -0.34, 0.104)
+    if 5 <= f <= 7:
+        # f7-f9: loop 8 went the wrong way (onto the top of his head). The
+        # fist at jaw height on a level forearm, elbow out at shoulder height.
+        k["hand_l"] = (0.14, 0.58, 1.44); k["elbow_l"] = (-0.6, 0.0, 0.8)
+    return k
+_patch_keys("Strike_Hook_Left", _hk9)
+
+def _hh9(f, k):
+    # The head held turned off the blow ~20 more frames (through ~+15).
+    if f == 8:
+        k["head"] = (8, -40, 14)
+    elif f == 12:
+        k["head"] = (6, -32, 10)
+    return k
+_patch_keys("Hit_React_Head_Left", _hh9)
+
+def _fk9(f, k):
+    if abs(f - 8.531) < 0.01:
+        # f15-f17: the hop clear of the mat (another 0.1 m).
+        k["foot_l"] = (-0.22, 0.20, 0.28)
+        px, py, pz = k["pelvis"]; k["pelvis"] = (px, py, pz + 0.06)
+    if 10.0 <= f <= 11.7:
+        # f21: ~8 degrees of back-lean at full extension (loop 8 overcorrected
+        # to dead upright).
+        hp, sp = k["hips"], k["spine"]
+        k["hips"] = (6, hp[1], hp[2]); k["spine"] = (10, sp[1], sp[2])
+    if 12.0 <= f <= 13.0:
+        # f27: head level, not tipped back under the hair.
+        hd = k["head"]; k["head"] = (0, hd[1], hd[2])
+    return k
+_patch_keys("Strike_Front_Kick_Body", _fk9)
+
+def _bk9(f, k):
+    if 3.0 <= f <= 5.1:
+        # f6-f10: a hop into the spin (~0.15 m), arms swung back.
+        px, py, pz = k["pelvis"]; k["pelvis"] = (px, py, pz + 0.15)
+        x, y, z = k["foot_l"]; k["foot_l"] = (x, y, z + 0.15)
+    if 6.6 <= f <= 8.4:
+        # f14: the kicking knee up to the chest before the extension.
+        k["foot_r"] = (0.0, 0.30, 0.86); k["knee_r"] = (-0.2, 0.3, 0.9)
+    return k
+_patch_keys("Strike_Turning_Back_Kick_Body", _bk9)
+
+def _ck9(f, k):
+    if 6.4 <= f <= 9.8:
+        # f16: the chest over the knee (~14 degrees forward of loop 8).
+        sp = k["spine"]; k["spine"] = (sp[0] - 14, sp[1], sp[2])
+    if abs(f - 16.7) < 0.01:
+        # The push foot planted in him to ~f33 ...
+        k["foot_r"] = (0.14, 0.88, 0.78); k["knee_r"] = (0.12, 0.35, 1.0)
+    if abs(f - 19.02) < 0.01:
+        # ... and back in by f40.
+        k["foot_r"] = (0.22, 0.26, 0.24); k["knee_r"] = (0.3, 1.0, 0.0)
+    return k
+_patch_keys("Strike_Clinch_Knee_Body", _ck9)
+
+def _fk9b(f, k):
+    if 5.0 < f <= 8.5:
+        # f16: the torso pitched over the knee (hips ~15 more forward).
+        hp = k["hips"]; k["hips"] = (hp[0] - 15, hp[1], hp[2])
+    if f >= 11:
+        # f36: land a further 0.15 m short so his legs clear the attacker,
+        # both hands down at the waist (no arm raised behind the body).
+        px, py, pz = k["pelvis"]; k["pelvis"] = (px, py - 0.15, pz)
+        for side in ("foot_r", "foot_l"):
+            x, y, z = k[side]; k[side] = (x, y - 0.15, z)
+        k["hand_r"] = (0.30, 0.24, 1.06); k["hand_l"] = (-0.28, 0.26, 1.08)
+    return k
+_patch_keys("Strike_Running_Flying_Knee", _fk9b)
+
+def _sk9(f, k):
+    if abs(f - 4.308) < 0.01:
+        # f12: the knee on its way up to the chest earlier.
+        k["foot_r"] = (0.26, 0.00, 0.50); k["knee_r"] = (0.12, 0.35, 1.0)
+    if abs(f - 6.154) < 0.01:
+        k["foot_r"] = (0.22, 0.10, 1.10)
+    if 6.0 <= f <= 11.8:
+        # f12-f22: chest further toward profile.
+        sp = k["spine"]; k["spine"] = (sp[0], 30.0, sp[2])
+    if abs(f - 11.684) < 0.01:
+        # Held out to ~f23 (+6), laid back, before the re-chamber.
+        k["foot_r"] = (0.08, 1.00, 1.28); k["knee_r"] = (0.12, 0.35, 1.0)
+        sp = k["spine"]; k["spine"] = (26, sp[1], sp[2])
+    return k
+_patch_keys("Strike_Side_Kick_Knockdown", _sk9)
 
 
 def main():

@@ -206,6 +206,23 @@ const RECIPES := {
 		],
 		"defender_grips_until": 0.25,
 	},
+	# Strike knockdown (parity move 7) -- see Arm_Hook_Attacker in
+	# tools/blender/wrestling_clips.py. Thrown off the strike button
+	# (WrestlerController._throw_paired_strike); the hook lands at t 0.39.
+	"strike_arm_hook_takedown": {
+		"authored": {"attacker": "Arm_Hook_Attacker", "defender": "Arm_Hook_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Idle", "at": 0.00},
+			{"t": 0.39, "clip": "Punch_Cross", "at": 0.50},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Idle", "at": 0.00},
+			{"t": 0.39, "clip": "Death01", "at": 1.60},
+		],
+		# He never takes hold: gripping back until the hook hunched him over
+		# the attacker's shoulder like a lock-up (loop 2, tick 18).
+		"defender_grips_until": 0.0,
+	},
 	# Running attack -- see CFH_Attacker in tools/blender/wrestling_clips.py.
 	"running_clothesline_from_hell": {
 		"authored": {"attacker": "CFH_Attacker", "defender": "CFH_Defender"},
@@ -1426,6 +1443,17 @@ const TRAJECTORIES := {
 		},
 		"defender": {
 			"pos": [[0.000, -0.40, 0.00, 0.00], [0.300, -0.40, 0.00, 0.00], [0.400, -0.65, 0.00, 0.00], [0.533, -1.00, 0.00, 0.00], [1.200, -1.00, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, -90.00, 0.00], [1.200, 0.00, -90.00, 0.00]],
+		},
+	},
+	"strike_arm_hook_takedown": {
+		"length": 1.2,
+		"attacker": {
+			"pos": [[0.000, 0.55, 0.00, 0.00], [0.250, 0.50, 0.00, 0.00], [0.367, 0.20, 0.00, 0.18], [0.467, -0.30, 0.00, 0.44], [0.700, -0.55, 0.00, 0.46], [1.200, -0.55, 0.00, 0.46]],
+			"rot": [[0.000, 0.00, 90.00, 0.00], [1.200, 0.00, 90.00, 0.00]],
+		},
+		"defender": {
+			"pos": [[0.000, -0.55, 0.00, 0.00], [0.433, -0.55, 0.00, 0.00], [0.567, -0.80, 0.00, 0.00], [0.700, -1.05, 0.00, 0.00], [1.200, -1.10, 0.00, 0.00]],
 			"rot": [[0.000, 0.00, -90.00, 0.00], [1.200, 0.00, -90.00, 0.00]],
 		},
 	},

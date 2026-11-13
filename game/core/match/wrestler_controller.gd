@@ -271,6 +271,7 @@ const KNOCKDOWN_CARRY_TICKS := 36
 const KNOCKDOWN_CARRY_DECAY := 0.95
 var _knockback_decay := KNOCKBACK_DECAY
 var _bump_carry := false
+var _bump_carry_scale := 1.0
 const STUNNED_TICKS := 45
 ## Irish whip tuning. First-pass values, same caveat as every other tuning
 ## constant in this project: gauntlet/refs/timings.md marks both reversal-
@@ -2385,6 +2386,14 @@ func _process_free_movement(delta: float, input: Dictionary) -> void:
 		var strike := _pick_string_strike()
 		if strike == null:
 			return
+		if PairedRecipes.RECIPES.has(String(strike.animation_pair_id)):
+			if _throw_paired_strike(strike):
+				return
+			# Never a one-man swing carrying the takedown's damage: the
+			# plain strike he always has stands in for it.
+			strike = strike_move
+			if PairedRecipes.RECIPES.has(String(strike.animation_pair_id)):
+				return
 		_play_strike_clip(strike)
 		_start_move(WrestlerFSM.State.STRIKE, strike)
 		combat.spend_stamina(CombatSystem.STAMINA_PER_STRIKE_TICK * strike.total_frames())
@@ -2403,6 +2412,9 @@ func _process_free_movement(delta: float, input: Dictionary) -> void:
 ## Turns at a fixed angle per physics tick rather than a wall-clock lerp, so
 ## the result is identical under ReplaySystem playback at any render
 ## framerate (same reasoning as anim_tree's physics callback mode).
+const WHIP_WATCH_TURN_PER_TICK := 0.035  # ~2 deg/tick while a whipped man comes back past
+const TURN_RATE_RAMP_PER_TICK := 0.012
+var _turn_rate := 0.12
 const TURN_RATE_PER_TICK := 0.12 # radians/tick — ~7deg, a 180 in ~26 ticks
 
 ## Grip IK tuning. Bone on the *opponent* the hands reach for while squared
@@ -2444,8 +2456,20 @@ func _turn_toward_opponent() -> void:
 	to_opponent.y = 0.0
 	if to_opponent.length() < 0.01:
 		return
+	# Parity whip loop 8: a man he has just whipped is coming back past him.
+	# The whipper stays near square to the return line rather than spinning
+	# 126 degrees to follow him past (reviewer: "set for the rebound").
+	# Held outright, he then snapped 126 degrees at 7/tick once the return
+	# ended (loop 8); tracked slowly, he follows the man going by instead.
+	var rate := WHIP_WATCH_TURN_PER_TICK if opponent.is_whip_returning() \
+			and not opponent.rope_running else TURN_RATE_PER_TICK
+	# Out of the slow watch he spun up to full rate in one tick (0 -> 7
+	# degrees, loop 8): the rate climbs back over about eight ticks instead.
+	_turn_rate = minf(rate, _turn_rate + TURN_RATE_RAMP_PER_TICK)
 	var desired := atan2(-to_opponent.x, -to_opponent.z)
-	rotation.y = _step_angle(rotation.y, desired, TURN_RATE_PER_TICK)
+	# And eases into the facing rather than stopping dead from full rate.
+	var left := absf(wrapf(desired - rotation.y, -PI, PI))
+	rotation.y = _step_angle(rotation.y, desired, minf(_turn_rate, left * 0.35 + 0.004))
 
 ## Shortest-arc step from `from` toward `to`, capped at `max_step`.
 static func _step_angle(from: float, to: float, max_step: float) -> float:
@@ -2962,6 +2986,22 @@ func _can_run_into_paired(move: MoveDef) -> bool:
 ## _on_grapple_finished(), which applies damage and momentum and puts the
 ## victim down or into a reaction; a running attack is on no rung of the
 ## chain, so tier_of() is -1 and nothing is recorded there.
+## A standing strike that takes both men -- the arm-hook takedown (parity
+## move 7: the tutorial's strike knockdown hooks the neck and drives him over
+## backward, which a one-man clip and a generic bump cannot show). It goes
+## through the same paired path as a running attack, caught from strike reach
+## (the clip opens 1.10 m apart and steps in, so there is no slide onto the
+## mark). Returns whether it started.
+func _throw_paired_strike(move: MoveDef) -> bool:
+	if not _can_run_into_paired(move):
+		return false
+	if not _in_range(maxf(STRIKE_HIT_RANGE, grapple_rig.start_gap(move) + 0.05)):
+		return false
+	_record_move_attempt(move)
+	_begin_running_paired(move)
+	return true
+
+
 func _begin_running_paired(move: MoveDef) -> void:
 	_is_grapple_attacker = true
 	opponent._is_grapple_attacker = false
@@ -3343,7 +3383,7 @@ func _process_irish_whip() -> void:
 		var collider := collision.get_collider()
 		if collider is Node and (collider as Node).is_in_group(RING_ROPE_GROUP):
 			_begin_rope_load(collision.get_normal(), collider as Node)
-			_tick_rope_load()
+			_carry_rope_contact_tick()
 			return
 	# No rope found in time -- see IRISH_WHIP_MAX_TICKS. Hand back to RUN
 	# without a rebound rather than leaving the wrestler in a state with no
@@ -3466,6 +3506,24 @@ func _begin_rope_load(normal: Vector3, rope: Node) -> void:
 	# runs contact -> deep seated compression -> push-off -> first return
 	# step; RUN's run_drive takes over from the last pose.
 	_restart_state_clip(WrestlerFSM.State.IRISH_WHIP, "strikes/whip_rope_absorb")
+
+
+## The tick he reaches the ropes, the collider stopped him part-way: he
+## covered only what lay short of them, and the load moved him from the tick
+## after -- a one-tick stop at 0 m/s between 5 m/s and 5 m/s (parity whip
+## loop 7). The load is measured from where this tick began instead, and he
+## is put where it has him one tick in, so the sprint runs on into the ropes.
+func _carry_rope_contact_tick() -> void:
+	var dt := 1.0 / Engine.physics_ticks_per_second
+	var moved := get_position_delta().dot(_rope_load_out)
+	_rope_load_from -= _rope_load_out * clampf(moved, 0.0, _rope_load_speed * dt)
+	var x := rope_load_offset(dt, _rope_load_speed)
+	var at := _rope_load_from + _rope_load_out * x + _rope_load_along * dt
+	at.y = global_position.y
+	global_position = at
+	# Tick 1 is where he now stands; the load's own tick aims him at tick 2.
+	_rope_load_tick = 1
+	_tick_rope_load()
 
 
 ## Where the load has him `seconds` after it began, as distance out past
@@ -5068,6 +5126,9 @@ func _resolve_pending_hits() -> void:
 		_bump_clip = knockdown_bump_clip(last_move)
 		_bump_shove = maxf(_bump_shove, LARIAT_SHOVE)
 		_bump_carry = true
+		# A knockdown's shove_m adds to the carry (parity loop 8: the flying
+		# knee's man lies ~2 m off in the tutorial, ours at the knee's feet).
+		_bump_carry_scale = 1.0 + (last_move.shove_m if last_move else 0.0)
 	# A rear chair blow and a guitar crumple forward. A superkick turns its
 	# victim around before he lands; both use dedicated authored solo falls.
 	var behind := opponent != null and (-global_basis.z).dot(
@@ -6068,7 +6129,7 @@ func _bump_down() -> void:
 		away.y = 0.0
 		if away.length() > 0.001:
 			if _bump_carry:
-				velocity = away.normalized() * KNOCKDOWN_CARRY_SPEED
+				velocity = away.normalized() * KNOCKDOWN_CARRY_SPEED * _bump_carry_scale
 				_knockback_ticks = KNOCKDOWN_CARRY_TICKS
 				_knockback_decay = KNOCKDOWN_CARRY_DECAY
 			else:
@@ -6076,6 +6137,7 @@ func _bump_down() -> void:
 				_knockback_ticks = KNOCKBACK_TICKS
 	_bump_shove = 1.0
 	_bump_carry = false
+	_bump_carry_scale = 1.0
 
 
 ## A handgun hit is lethal: all vitality is permanently lost and the wrestler
