@@ -93,8 +93,8 @@ const OPENING_SECONDARY_BURST_SIZE := 0.62
 const COMET_RISE := 9.8
 const COMET_PUNCH_RISE := 12.5
 const COMET_FLIGHT := 0.75
-const COMET_TRAIL_AMOUNT := 150
-const COMET_TRAIL_LIFETIME := 0.55
+const COMET_TRAIL_AMOUNT := 450
+const COMET_TRAIL_LIFETIME := 1.4
 ## The WHOA chase: waves on the half beat of his music
 ## (EntranceDirector.CODY_BEAT 0.743 s) -- left to right, right to left, out
 ## from the middle, then again -- all up inside the 2.7 s the stage wide holds.
@@ -420,14 +420,14 @@ func _launch_rocket(from: Vector3, to: Vector3, colours: Array, lit := true,
 	rocket.global_position = from
 	var head := MeshInstance3D.new()
 	var mesh := SphereMesh.new()
-	mesh.radius = 0.16 if comet else 0.105
+	mesh.radius = 0.22 if comet else 0.105
 	mesh.height = mesh.radius * 2.0
 	var material := StandardMaterial3D.new()
 	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	material.albedo_color = Color(1.0, 0.82, 0.4)
 	material.emission_enabled = true
 	material.emission = Color(1.0, 0.72, 0.28)
-	material.emission_energy_multiplier = 8.0 if comet else 5.0
+	material.emission_energy_multiplier = 12.0 if comet else 5.0
 	mesh.material = material
 	head.mesh = mesh
 	rocket.add_child(head)
@@ -448,13 +448,13 @@ func _launch_rocket(from: Vector3, to: Vector3, colours: Array, lit := true,
 	if comet:
 		# A flame tail, white-hot at the head, through orange to red as it
 		# falls away behind: a jet of fire going up, not a line of sparks.
-		process.spread = 4.0
-		process.initial_velocity_max = 1.2
-		process.scale_min = 0.55
-		process.scale_max = 1.1
+		process.spread = 6.0
+		process.initial_velocity_max = 1.6
+		process.scale_min = 0.7
+		process.scale_max = 1.5
 		process.color = Color.WHITE
 		process.color_ramp = _ramp([FIRE_HOT, FIRE_ORANGE, FIRE_RED])
-		trail.draw_pass_1 = ManFire.tongue_pass(Vector2(0.32, 0.9), Color(1.3, 1.15, 1.0))
+		trail.draw_pass_1 = ManFire.tongue_pass(Vector2(0.6, 1.8), Color(1.35, 1.2, 1.0))
 		trail.amount = COMET_TRAIL_AMOUNT
 		trail.lifetime = COMET_TRAIL_LIFETIME
 	trail.fixed_fps = 60
@@ -485,7 +485,7 @@ func _finish_rocket(rocket: Node3D, at: Vector3, colours: Array, lit := true,
 			tween.tween_property(head, "scale", Vector3.ONE * 0.01, 0.22)
 		if lit:
 			_flash(at, 10.0, 14.0, 0.3, colours[1])
-		_smoke(at, Vector3(0.35, 0.3, 0.35), 14, 2.6, 0.8, 1.6, 0.25)
+		_smoke(at, Vector3(0.5, 0.4, 0.5), 22, 2.8, 1.0, 2.0, 0.3)
 		_later(COMET_TRAIL_LIFETIME + 0.3, rocket.queue_free)
 		return
 	# A large aerial chrysanthemum, then a smaller, brighter core inside it:
@@ -646,18 +646,26 @@ func _flame(at: Vector3, height: float, lit := true) -> void:
 	var p := GPUParticles3D.new()
 	var m := ParticleProcessMaterial.new()
 	m.direction = Vector3.UP
-	m.spread = 9.0
+	# A wide, turbulent cone so the burst mushrooms and rolls rather than
+	# reading as a thin straight gerb (the owner: no gerbs, no waterfall).
+	m.spread = 34.0
 	m.initial_velocity_min = height * 2.0
 	m.initial_velocity_max = height * 2.6
-	m.gravity = Vector3(0.0, 2.0, 0.0)          # hot gas rises
-	m.damping_min = height * 1.6
-	m.damping_max = height * 2.2
-	m.scale_min = 0.9
-	m.scale_max = 1.6
+	m.gravity = Vector3(0.0, 1.1, 0.0)          # hot gas rises
+	m.damping_min = height * 1.1
+	m.damping_max = height * 1.5
+	m.turbulence_enabled = true
+	m.turbulence_noise_strength = 1.6
+	m.turbulence_noise_speed = Vector3(2.5, 2.5, 2.5)
+	m.turbulence_noise_scale = 1.2
+	m.turbulence_influence_min = 0.25
+	m.turbulence_influence_max = 1.0
+	m.scale_min = 1.5
+	m.scale_max = 2.6
 	var grow := Curve.new()
-	grow.add_point(Vector2(0.0, 0.35))
-	grow.add_point(Vector2(0.4, 1.0))
-	grow.add_point(Vector2(1.0, 1.3))
+	grow.add_point(Vector2(0.0, 0.4))
+	grow.add_point(Vector2(0.35, 1.0))
+	grow.add_point(Vector2(1.0, 0.55))
 	var grow_tex := CurveTexture.new()
 	grow_tex.curve = grow
 	m.scale_curve = grow_tex
@@ -667,13 +675,13 @@ func _flame(at: Vector3, height: float, lit := true) -> void:
 	# Tongues of flame (ManFire.tongue_pass), the game's one fire sprite, not
 	# round puffs. Just over 1, so the core blooms but the body of the column
 	# stays orange -- at 2.4 the overlapping sprites summed to a white jet.
-	p.draw_pass_1 = ManFire.tongue_pass(Vector2(1.1, 2.6), Color(1.25, 1.1, 1.0))
-	p.amount = 55
+	p.draw_pass_1 = ManFire.tongue_pass(Vector2(2.0, 4.5), Color(1.3, 1.15, 1.0))
+	p.amount = 180
 	p.lifetime = 0.9
 	p.one_shot = true
 	p.explosiveness = 0.55
 	p.fixed_fps = 60
-	p.visibility_aabb = AABB(Vector3(-4, -1, -4), Vector3(8, height + 6.0, 8))
+	p.visibility_aabb = AABB(Vector3(-6, -1, -6), Vector3(12, height + 8.0, 12))
 	add_child(p)
 	p.global_position = at
 	p.emitting = true
@@ -690,23 +698,27 @@ func _burst(at: Vector3, colours: Array = SHELL_GOLD, size := 1.0, lit := true) 
 	m.direction = Vector3.UP
 	m.spread = 180.0
 	# a round starburst that hangs and fades where it opened: little gravity,
-	# heavy drag, a short life -- not stars raining down like a waterfall
+	# lighter drag so the stars travel and trail before they settle, a short
+	# life -- not a static ball and not stars raining down like a waterfall
 	m.gravity = Vector3(0.0, -0.7, 0.0)
-	m.damping_min = 3.0
-	m.damping_max = 4.2
+	m.damping_min = 1.6
+	m.damping_max = 2.6
 	m.initial_velocity_min = 7.5 * size
 	m.initial_velocity_max = 9.5 * size
 	m.scale_min = 0.6
 	m.scale_max = 1.2
 	m.color_ramp = _ramp(colours)
 	p.process_material = m
-	p.draw_pass_1 = _spark_mesh(0.11 * size, 1.2)
-	p.amount = int(260 * size)
-	p.lifetime = 1.2
+	p.draw_pass_1 = _spark_mesh(0.12 * size, 2.0)
+	p.amount = int(600 * size)
+	p.lifetime = 2.2
 	p.one_shot = true
 	p.explosiveness = 1.0
 	p.fixed_fps = 60
-	p.trail_enabled = false
+	# Long vertical streaks (the stretched spark quad) read as the trailing
+	# stars of a chrysanthemum, not a cloud of separate dots. GPU ribbon
+	# trails are a Forward+-only follow-up once this ships and can be
+	# reviewed there.
 	p.visibility_aabb = AABB(Vector3(-12, -12, -12), Vector3(24, 24, 24))
 	add_child(p)
 	p.global_position = at

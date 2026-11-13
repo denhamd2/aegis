@@ -10,7 +10,7 @@ render_mode unshaded, blend_add, depth_draw_never, cull_disabled, shadows_disabl
 
 uniform sampler2D depth_tex : hint_depth_texture, filter_linear;
 uniform vec4 tint : source_color = vec4(1.0);
-uniform float intensity = 0.24;
+uniform float intensity = 1.1;
 uniform float soft_distance = 0.2;
 uniform float speed = 2.2;
 
@@ -63,7 +63,7 @@ void fragment() {
 	float body = 1.0 - smoothstep(half_w * 0.35, half_w, abs(x));
 	// Licks breaking off the top, eaten by the second noise.
 	float top = 1.0 - smoothstep(0.3, 0.95, up + (n2 - 0.5) * 0.7);
-	float heat = body * smoothstep(0.0, 0.1, up) * top * (0.55 + 0.8 * n);
+	float heat = body * smoothstep(0.0, 0.1, up) * top * (0.25 + 0.8 * n);
 	// Never to the card's edge: no rectangle round a tongue.
 	heat *= smoothstep(0.0, 0.14, UV.x) * smoothstep(1.0, 0.86, UV.x) * smoothstep(0.0, 0.08, UV.y);
 	heat = clamp(heat * COLOR.a * 1.25, 0.0, 1.0);
