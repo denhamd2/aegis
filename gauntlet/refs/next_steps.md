@@ -27,12 +27,14 @@ are historical, including their stale “working tree”, move-count and CI clai
 
 ## Published and remaining acceptance
 
-Latest Mac app: **`ae0cef36edaf3db7e64836e72529a85c78ba3da9`**, verified
-against `mac-latest`, successful [Mac run 43499679118](https://github.com/denhamd2/aegis/actions/runs/43499679118),
-`Aegis.zip` 1,056,076,110 bytes.
+Latest Mac app: **`b40f7721948520b5004cbdaca46d46af49ec2d68`**, verified
+against `mac-latest`, successful [Mac run 43502575366](https://github.com/denhamd2/aegis/actions/runs/43502575366),
+`Aegis.zip` 1,056,076,611 bytes.
 [Download](https://github.com/denhamd2/aegis/releases/tag/mac-latest).
 This includes the Blender prop sources/runtime integration, grip corrections
-and three cell judge revisions; [current evidence and limitations](cell_judge_2026_11_13/README.md).
+and three cell judge revisions plus the wire sampling refinement; [current evidence and limitations](cell_judge_2026_11_13/README.md).
+Next: a bounded Blender walking-strip profile study, subject to close-view
+validation; [scope](cell_judge_2026_11_13/wire_filter/README.md).
 Cell likeness remains **8.0/10**, with motion aliasing, close detail and native
 Mac performance still open. Earlier release rows below retain their own
 validation history; [the current batch ledger](backlog_3_9_2026_11_12/README.md)

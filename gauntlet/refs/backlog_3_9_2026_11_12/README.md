@@ -118,4 +118,10 @@ owner Mac review.
 
 Cell wire sampling follow-up: [evidence](../cell_judge_2026_11_13/wire_filter/README.md).
 Selective motion and MSAA-off door/roof-state review supports shipping with
-notes; overall likeness stays8.0/10. Exact-commit publication pending.
+notes; overall likeness stays8.0/10. Published at
+`b40f7721948520b5004cbdaca46d46af49ec2d68`, verified against `mac-latest`;
+Mac run43502575366 succeeded, Aegis.zip1,056,076,611bytes. Exact-commit
+CI43502575462 was still running;35/35 affected local checks pass.
+Next cell step: bounded Blender walking-strip profile study; preserve roof
+height/gameplay and retain only a demonstrated close-view improvement.
+Original entrances/moonsault and ladder batches remain open.

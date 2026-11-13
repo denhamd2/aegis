@@ -101,4 +101,5 @@ stability and M1 frame pacing still require review.
 
 [Coverage filtering, selective motion/state review and limitations](wire_filter/README.md).
 The refinement preserves distant wires without an opaque roof sheet; overall
-likeness remains8.0/10. Publication receipt follows validation and export.
+likeness remains8.0/10. Published at `b40f772`; the follow-up evidence records
+the verified exact-commit Mac release and remaining review limits.

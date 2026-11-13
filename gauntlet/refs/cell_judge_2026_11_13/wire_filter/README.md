@@ -21,7 +21,8 @@ resolved opening remains0. These are sampling checks, not performance evidence.
 ## Validation evidence
 
 **35/35 focused cage/cell/roof cases pass**, zero failures/errors/orphans;
-see [regression report](regression-tests.xml).
+see [regression report](regression-tests.xml). Godot4.6.3 editor import
+completed successfully with no reported errors.
 
 - Production roof/wall/overview images are pixel-identical to the accepted
   prototype's same-camera captures (RGB mean difference0 in all three).
@@ -52,3 +53,32 @@ Native M1/16GB timing, full-arena highlights and exhaustive camera/door/roof
 motion remain unverified. Broad specular veiling is still visible at grazing
 angles and must not hide wrestlers under arena lights. Narrower built-up member
 profiles, woven wire intersections and local fabrication detail remain open.
+
+## Mac review targets
+
+Review a cell match under arena lights: read both wrestlers through overlapping
+walls, move the camera across grazing roof angles, open the door, and break a
+roof panel. Check for a metallic film, shimmer or disappearing strands. Capture
+frame-time spikes on the targetM1/16GB alongside the 16.67ms budget; these cloud
+studies do not establish native frame pacing.
+
+## Next bounded Blender refinement
+
+Specialist recommendation, not yet implemented: replace `roof_truss()`'s flat
+120mm walking strip with a shallow formed profile, retaining width, endpoints
+and +.010m top. Suggested edge lands15mm, centre recess4mm, sheet thickness4mm,
+and short downward folds. The paired-edge read is supported by the2K25 roof
+view; the exact section is inferred and must be judged from a close roof view
+before retention. Preserve +.027m fastener maximum, roof standing height,
+panel origins, node/material counts and gameplay; avoid a triangle increase.
+
+## Publication receipt
+
+Verified13November2026: `mac-latest` resolves to
+`b40f7721948520b5004cbdaca46d46af49ec2d68`.
+[Mac run43502575366](https://github.com/denhamd2/aegis/actions/runs/43502575366)
+succeeded; `Aegis.zip` is1,056,076,611bytes.
+[Download](https://github.com/denhamd2/aegis/releases/tag/mac-latest).
+Exact-commit [CI43502575462](https://github.com/denhamd2/aegis/actions/runs/43502575462)
+was still running at publication; 35/35 local affected cases pass.
+Owner Mac visual review and native performance remain open.
