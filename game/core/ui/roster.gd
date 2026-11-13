@@ -290,7 +290,7 @@ static func entries() -> Array:
 				M + "strike_turning_back_kick_body.tres",
 				M + "strike_clinch_knee_body.tres",
 				M + "strike_side_kick_knockdown.tres",
-				M + "strike_turning_back_kick_knockdown.tres"],
+				M + "strike_arm_hook_takedown.tres"],
 		# The snap dragons: the snap in his grapples, the bridging one with
 		# his power moves.
 		"grapple": [M + "grapple_vertical_suplex.tres", M + "power_bodyslam.tres",

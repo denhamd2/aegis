@@ -69,6 +69,9 @@ const SCOPED_WHIP := 1
 ## The tutorial's rope-catch moves: the catch-and-slam and the rana counter,
 ## both drawn from roster rebound pools.
 const SCOPED_REBOUND := 2
+## Strikes that take both men: the tutorial's arm-hook takedown (parity move
+## 7), thrown off the strike button (WrestlerController._throw_paired_strike).
+const SCOPED_STRIKE := 1
 
 func _paired_move_names() -> Array[String]:
 	var names: Array[String] = []
@@ -112,6 +115,7 @@ func test_the_moveset_covers_everything_architecture_scopes() -> void:
 	var table := 0
 	var whip := 0
 	var rebound := 0
+	var strike := 0
 	var cut: Array[String] = []
 	for name in _paired_move_names():
 		if name.begins_with("grapple_"):
@@ -134,6 +138,8 @@ func test_the_moveset_covers_everything_architecture_scopes() -> void:
 			whip += 1
 		elif name.begins_with("rebound_"):
 			rebound += 1
+		elif name.begins_with("strike_"):
+			strike += 1
 		elif name.begins_with("ff_") and FFMoveLibrary.MOVES.has(name.trim_prefix("ff_")):
 			pass  # the Fight Forever library, which grows move by move
 		else:
@@ -150,6 +156,7 @@ func test_the_moveset_covers_everything_architecture_scopes() -> void:
 	assert_int(table).is_equal(SCOPED_TABLE)
 	assert_int(whip).is_equal(SCOPED_WHIP)
 	assert_int(rebound).is_equal(SCOPED_REBOUND)
+	assert_int(strike).is_equal(SCOPED_STRIKE)
 	# The removed family leaves nothing behind: a reversal clip still in the
 	# library would be an animation no MoveDef names and nothing can play.
 	assert_array(cut).override_failure_message(
@@ -514,7 +521,7 @@ func test_cody_fights_with_his_own_moveset() -> void:
 ## Kenny"): the spinning, side and flying kicks and knees are Kenny's alone.
 func test_movesets_fit_each_style() -> void:
 	var KENNYS := ["strike_turning_back_kick_body.tres",
-			"strike_turning_back_kick_knockdown.tres", "strike_side_kick_knockdown.tres",
+			"strike_arm_hook_takedown.tres", "strike_side_kick_knockdown.tres",
 			"strike_clinch_knee_body.tres", "strike_running_flying_knee.tres",
 			"running_cyclone_kick.tres", "running_spinning_back_elbow.tres"]
 	KENNYS.append("rebound_hurricanrana.tres")
@@ -579,3 +586,35 @@ func test_primary_is_subject_to_weight_legality_and_duplicates_have_no_extra_vot
 		var single := attacker._pick_tier_move(legal, [other])
 		attacker._tier_draws = 0
 		assert_object(attacker._pick_tier_move(legal, [legal, other, other])).is_same(single)
+
+
+## Parity move 7 (scorecard 12 Nov): the strike knockdown is a takedown both
+## men perform, so a standing strike with a paired recipe goes through
+## GrappleRig -- and without a rig it never falls back to a one-man swing that
+## carries the takedown's damage.
+func test_a_paired_strike_takes_both_men_or_none() -> void:
+	var scene: Node = auto_free(load("res://scenes/match.tscn").instantiate())
+	add_child(scene)
+	var a: WrestlerController = scene.get_node("WrestlerA")
+	var b: WrestlerController = scene.get_node("WrestlerB")
+	var move: MoveDef = load("%s/strike_arm_hook_takedown.tres" % MOVES_DIR)
+	assert_bool(PairedRecipes.RECIPES.has(String(move.animation_pair_id))).is_true()
+	a.fsm.current_state = WrestlerFSM.State.IDLE
+	b.fsm.current_state = WrestlerFSM.State.IDLE
+	a.global_position = Vector3(0.5, a.global_position.y, 0)
+	b.global_position = Vector3(-0.5, a.global_position.y, 0)
+	# Out of reach: nothing starts.
+	b.global_position.x = -3.0
+	assert_bool(a._throw_paired_strike(move)).is_false()
+	# In strike reach: both men go into the paired move.
+	b.global_position.x = -0.5
+	assert_bool(a._throw_paired_strike(move)).is_true()
+	assert_int(a.fsm.current_state).is_equal(WrestlerFSM.State.GRAPPLE_HOLD)
+	assert_int(b.fsm.current_state).is_equal(WrestlerFSM.State.GRAPPLE_HOLD)
+	assert_bool(move.leaves_defender_down).is_true()
+	# Kenny throws it; it replaced the turning back kick knockdown.
+	var files: Array = []
+	for path: String in Roster.by_id("kenny").moveset["strike"]:
+		files.append(path.get_file())
+	assert_bool(files.has("strike_arm_hook_takedown.tres")).is_true()
+	assert_bool(files.has("strike_turning_back_kick_knockdown.tres")).is_false()

@@ -5236,6 +5236,62 @@ CLIPS["CFH_Defender"] = [
     (18, _flip(230, (0.0, 0.0, 0.850))),
 ] + _face_first_then_roll(21, 36)
 
+# Arm-Hook Takedown, 36 frames (1.2 s) -- the tutorial's strike knockdown
+# (parity move 7; scratchpad ffref 1:19.70-1:21.00, measured at 60 fps from
+# the wind-up): the right arm swings out wide and cocks high (ref +8..+22),
+# whips through and hooks round his neck as the attacker steps in (+28 = key
+# 14), and drives him over backward -- shoulders down by +37 (key 18-20). The
+# attacker does NOT go down with him: he follows through bent over the man's
+# legs, both arms flung out, and comes back up by +72 (key 36).
+CLIPS["Arm_Hook_Attacker"] = [
+    (0, pose(GUARD)),
+    # The arm swings out to his right, weight shifting onto the back foot.
+    (4, P(pelvis=(0.0, 0.0, 0.790), hips=(-6, -8, 0), spine=(-14, -14, 0),
+          head=(4, 10, 0),
+          hand_r=(0.62, 0.06, 1.22), hand_l=(-0.24, 0.30, 1.30),
+          elbow_r=(0.4, -0.6, -0.4), fist_r=1.0, fist_l=0.8, clav_follow=False,
+          foot_r=(0.26, -0.22, 0.104), foot_l=(-0.22, 0.22, 0.104))),
+    # Cocked high and back, chest turned away: the load.
+    (9, P(pelvis=(0.0, 0.04, 0.780), hips=(-6, -14, 0), spine=(-12, -24, 0),
+          head=(2, 20, 0),
+          hand_r=(0.56, -0.16, 1.56), hand_l=(-0.26, 0.34, 1.24),
+          elbow_r=(0.6, -0.6, 0.2), fist_r=1.0, fist_l=0.8, clav_follow=False,
+          foot_r=(0.26, -0.22, 0.104), foot_l=(-0.20, 0.32, 0.104))),
+    # Whipping through, hips first, stepping in.
+    (12, P(pelvis=(0.0, 0.10, 0.790), hips=(-14, 10, 0), spine=(-16, 22, 0),
+           hand_r=(0.32, 0.68, 1.46), hand_l=(-0.30, 0.22, 1.10),
+           fist_r=1.0, fist_l=0.8, clav_follow=False,
+           foot_r=(0.24, -0.06, 0.104), foot_l=(-0.20, 0.34, 0.104))),
+    # The hook: forearm across his neck, chest turned right into him.
+    (14, P(pelvis=(0.0, 0.14, 0.780), hips=(-16, 18, 0), spine=(-20, 32, 0),
+           head=(-4, 12, 0),
+           hand_r=(-0.12, 0.66, 1.40), hand_l=(-0.32, 0.24, 1.06),
+           elbow_r=(0.6, 0.2, -0.6), fist_r=0.6, fist_l=0.8, clav_follow=False,
+           foot_r=(0.22, 0.14, 0.104), foot_l=(-0.20, 0.30, 0.104))),
+    # Driving him down: the arm and the chest go down together.
+    (17, P(pelvis=(0.0, 0.16, 0.710), hips=(-26, 20, 0), spine=(-34, 26, 0),
+           head=(-6, 10, 0),
+           hand_r=(-0.10, 0.78, 0.80), hand_l=(-0.36, 0.30, 0.95),
+           fist_r=0.4, fist_l=0.6,
+           foot_r=(0.20, 0.34, 0.104), foot_l=(-0.20, 0.02, 0.104))),
+    # Follow-through: bent over his legs, both arms flung out.
+    (21, P(pelvis=(0.0, 0.18, 0.720), hips=(-34, 10, 0), spine=(-40, 10, 0),
+           head=(-10, 0, 0),
+           hand_r=(0.62, 0.50, 1.00), hand_l=(-0.62, 0.40, 1.02),
+           elbow_r=(0.8, -0.3, -0.2), elbow_l=(-0.8, -0.3, -0.2),
+           fist_r=0.3, fist_l=0.3,
+           foot_r=(0.22, 0.38, 0.104), foot_l=(-0.20, 0.00, 0.104))),
+    # Coming back up off him.
+    (27, P(pelvis=(0.0, 0.08, 0.780), hips=(-20, 0, 0), spine=(-26, 0, 0),
+           hand_r=(0.50, 0.36, 1.10), hand_l=(-0.50, 0.34, 1.10),
+           fist_r=0.4, fist_l=0.4,
+           foot_r=(0.24, 0.20, 0.104), foot_l=(-0.22, 0.00, 0.104))),
+    (36, P()),
+]
+CLIPS["Arm_Hook_Defender"] = [
+    (0, pose(GUARD)), (11, pose(GUARD, head=(6, 0, 0))),
+] + _back_fall(13, 36, pelvis_hit=0.92)
+
 # Spinning Back Elbow, 36 frames. Plants and spins a full turn to his right
 # (the root does the turn); the right elbow swings back into the jaw as his
 # back comes round (video frames 5-7). The victim's head is snapped round and

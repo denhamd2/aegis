@@ -2383,6 +2383,14 @@ func _process_free_movement(delta: float, input: Dictionary) -> void:
 		var strike := _pick_string_strike()
 		if strike == null:
 			return
+		if PairedRecipes.RECIPES.has(String(strike.animation_pair_id)):
+			if _throw_paired_strike(strike):
+				return
+			# Never a one-man swing carrying the takedown's damage: the
+			# plain strike he always has stands in for it.
+			strike = strike_move
+			if PairedRecipes.RECIPES.has(String(strike.animation_pair_id)):
+				return
 		_play_strike_clip(strike)
 		_start_move(WrestlerFSM.State.STRIKE, strike)
 		combat.spend_stamina(CombatSystem.STAMINA_PER_STRIKE_TICK * strike.total_frames())
@@ -2960,6 +2968,22 @@ func _can_run_into_paired(move: MoveDef) -> bool:
 ## _on_grapple_finished(), which applies damage and momentum and puts the
 ## victim down or into a reaction; a running attack is on no rung of the
 ## chain, so tier_of() is -1 and nothing is recorded there.
+## A standing strike that takes both men -- the arm-hook takedown (parity
+## move 7: the tutorial's strike knockdown hooks the neck and drives him over
+## backward, which a one-man clip and a generic bump cannot show). It goes
+## through the same paired path as a running attack, caught from strike reach
+## (the clip opens 1.10 m apart and steps in, so there is no slide onto the
+## mark). Returns whether it started.
+func _throw_paired_strike(move: MoveDef) -> bool:
+	if not _can_run_into_paired(move):
+		return false
+	if not _in_range(maxf(STRIKE_HIT_RANGE, grapple_rig.start_gap(move) + 0.05)):
+		return false
+	_record_move_attempt(move)
+	_begin_running_paired(move)
+	return true
+
+
 func _begin_running_paired(move: MoveDef) -> void:
 	_is_grapple_attacker = true
 	opponent._is_grapple_attacker = false
