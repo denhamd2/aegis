@@ -12197,6 +12197,98 @@ def _sk8(f, k):
 _patch_keys("Strike_Side_Kick_Knockdown", _sk8)
 
 
+# --- Strike parity loop 9 (13 Nov, the owner: "one more loop on the others") -
+def _hk9(f, k):
+    if 2 <= f <= 4:
+        # f4: already the long lunge -- stance ~0.3 m wider.
+        k["foot_r"] = (0.23, 0.34, 0.139); k["foot_l"] = (-0.27, -0.34, 0.104)
+    if 5 <= f <= 7:
+        # f7-f9: loop 8 went the wrong way (onto the top of his head). The
+        # fist at jaw height on a level forearm, elbow out at shoulder height.
+        k["hand_l"] = (0.14, 0.58, 1.44); k["elbow_l"] = (-0.6, 0.0, 0.8)
+    return k
+_patch_keys("Strike_Hook_Left", _hk9)
+
+def _hh9(f, k):
+    # The head held turned off the blow ~20 more frames (through ~+15).
+    if f == 8:
+        k["head"] = (8, -40, 14)
+    elif f == 12:
+        k["head"] = (6, -32, 10)
+    return k
+_patch_keys("Hit_React_Head_Left", _hh9)
+
+def _fk9(f, k):
+    if abs(f - 8.531) < 0.01:
+        # f15-f17: the hop clear of the mat (another 0.1 m).
+        k["foot_l"] = (-0.22, 0.20, 0.28)
+        px, py, pz = k["pelvis"]; k["pelvis"] = (px, py, pz + 0.06)
+    if 10.0 <= f <= 11.7:
+        # f21: ~8 degrees of back-lean at full extension (loop 8 overcorrected
+        # to dead upright).
+        hp, sp = k["hips"], k["spine"]
+        k["hips"] = (6, hp[1], hp[2]); k["spine"] = (10, sp[1], sp[2])
+    if 12.0 <= f <= 13.0:
+        # f27: head level, not tipped back under the hair.
+        hd = k["head"]; k["head"] = (0, hd[1], hd[2])
+    return k
+_patch_keys("Strike_Front_Kick_Body", _fk9)
+
+def _bk9(f, k):
+    if 3.0 <= f <= 5.1:
+        # f6-f10: a hop into the spin (~0.15 m), arms swung back.
+        px, py, pz = k["pelvis"]; k["pelvis"] = (px, py, pz + 0.15)
+        x, y, z = k["foot_l"]; k["foot_l"] = (x, y, z + 0.15)
+    if 6.6 <= f <= 8.4:
+        # f14: the kicking knee up to the chest before the extension.
+        k["foot_r"] = (0.0, 0.30, 0.86); k["knee_r"] = (-0.2, 0.3, 0.9)
+    return k
+_patch_keys("Strike_Turning_Back_Kick_Body", _bk9)
+
+def _ck9(f, k):
+    if 6.4 <= f <= 9.8:
+        # f16: the chest over the knee (~14 degrees forward of loop 8).
+        sp = k["spine"]; k["spine"] = (sp[0] - 14, sp[1], sp[2])
+    if abs(f - 16.7) < 0.01:
+        # The push foot planted in him to ~f33 ...
+        k["foot_r"] = (0.14, 0.88, 0.78); k["knee_r"] = (0.12, 0.35, 1.0)
+    if abs(f - 19.02) < 0.01:
+        # ... and back in by f40.
+        k["foot_r"] = (0.22, 0.26, 0.24); k["knee_r"] = (0.3, 1.0, 0.0)
+    return k
+_patch_keys("Strike_Clinch_Knee_Body", _ck9)
+
+def _fk9b(f, k):
+    if 5.0 < f <= 8.5:
+        # f16: the torso pitched over the knee (hips ~15 more forward).
+        hp = k["hips"]; k["hips"] = (hp[0] - 15, hp[1], hp[2])
+    if f >= 11:
+        # f36: land a further 0.15 m short so his legs clear the attacker,
+        # both hands down at the waist (no arm raised behind the body).
+        px, py, pz = k["pelvis"]; k["pelvis"] = (px, py - 0.15, pz)
+        for side in ("foot_r", "foot_l"):
+            x, y, z = k[side]; k[side] = (x, y - 0.15, z)
+        k["hand_r"] = (0.30, 0.24, 1.06); k["hand_l"] = (-0.28, 0.26, 1.08)
+    return k
+_patch_keys("Strike_Running_Flying_Knee", _fk9b)
+
+def _sk9(f, k):
+    if abs(f - 4.308) < 0.01:
+        # f12: the knee on its way up to the chest earlier.
+        k["foot_r"] = (0.26, 0.00, 0.50); k["knee_r"] = (0.12, 0.35, 1.0)
+    if abs(f - 6.154) < 0.01:
+        k["foot_r"] = (0.22, 0.10, 1.10)
+    if 6.0 <= f <= 11.8:
+        # f12-f22: chest further toward profile.
+        sp = k["spine"]; k["spine"] = (sp[0], 30.0, sp[2])
+    if abs(f - 11.684) < 0.01:
+        # Held out to ~f23 (+6), laid back, before the re-chamber.
+        k["foot_r"] = (0.08, 1.00, 1.28); k["knee_r"] = (0.12, 0.35, 1.0)
+        sp = k["spine"]; k["spine"] = (26, sp[1], sp[2])
+    return k
+_patch_keys("Strike_Side_Kick_Knockdown", _sk9)
+
+
 def main():
     arm = load_rig()
     clear_actions()
