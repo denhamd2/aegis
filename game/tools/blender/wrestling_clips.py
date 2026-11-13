@@ -5245,52 +5245,83 @@ CLIPS["CFH_Defender"] = [
 # legs, both arms flung out, and comes back up by +72 (key 36).
 CLIPS["Arm_Hook_Attacker"] = [
     (0, pose(GUARD)),
-    # The arm swings out to his right, weight shifting onto the back foot.
+    # The arm swings out wide to his right, near straight (loop 2: ~90
+    # degrees of abduction by tick 12), weight onto the back foot.
     (4, P(pelvis=(0.0, 0.0, 0.790), hips=(-6, -8, 0), spine=(-14, -14, 0),
           head=(4, 10, 0),
-          hand_r=(0.62, 0.06, 1.22), hand_l=(-0.24, 0.30, 1.30),
+          hand_r=(0.72, 0.04, 1.38), hand_l=(-0.24, 0.30, 1.30),
           elbow_r=(0.4, -0.6, -0.4), fist_r=1.0, fist_l=0.8, clav_follow=False,
           foot_r=(0.26, -0.22, 0.104), foot_l=(-0.22, 0.22, 0.104))),
-    # Cocked high and back, chest turned away: the load.
-    (9, P(pelvis=(0.0, 0.04, 0.780), hips=(-6, -14, 0), spine=(-12, -24, 0),
-          head=(2, 20, 0),
-          hand_r=(0.56, -0.16, 1.56), hand_l=(-0.26, 0.34, 1.24),
-          elbow_r=(0.6, -0.6, 0.2), fist_r=1.0, fist_l=0.8, clav_follow=False,
-          foot_r=(0.26, -0.22, 0.104), foot_l=(-0.20, 0.32, 0.104))),
-    # Whipping through, hips first, stepping in.
-    (12, P(pelvis=(0.0, 0.10, 0.790), hips=(-14, 10, 0), spine=(-16, 22, 0),
-           hand_r=(0.32, 0.68, 1.46), hand_l=(-0.30, 0.22, 1.10),
+    (6, P(pelvis=(0.0, 0.0, 0.785), hips=(-6, -12, 0), spine=(-12, -18, 0),
+          head=(2, 14, 0),
+          hand_r=(0.76, -0.02, 1.46), hand_l=(-0.24, 0.32, 1.28),
+          elbow_r=(0.4, -0.6, -0.2), fist_r=1.0, fist_l=0.8, clav_follow=False,
+          foot_r=(0.26, -0.22, 0.104), foot_l=(-0.22, 0.24, 0.104))),
+    # Cocked high behind the head, chest turned away: the load (tick 22).
+    (11, P(pelvis=(0.0, 0.04, 0.780), hips=(-6, -16, 0), spine=(-12, -26, 0),
+           head=(2, 22, 0),
+           hand_r=(0.40, -0.22, 1.78), hand_l=(-0.26, 0.34, 1.24),
+           elbow_r=(0.6, -0.6, 0.4), fist_r=1.0, fist_l=0.8, clav_follow=False,
+           foot_r=(0.26, -0.22, 0.104), foot_l=(-0.20, 0.36, 0.104))),
+    # Whipping through as he steps in past the man's right side.
+    (13, P(pelvis=(0.0, 0.10, 0.790), hips=(-12, 10, 0), spine=(-14, 22, 0),
+           hand_r=(0.52, 0.52, 1.52), hand_l=(-0.30, 0.22, 1.10),
            fist_r=1.0, fist_l=0.8, clav_follow=False,
-           foot_r=(0.24, -0.06, 0.104), foot_l=(-0.20, 0.34, 0.104))),
-    # The hook: forearm across his neck, chest turned right into him.
-    (14, P(pelvis=(0.0, 0.14, 0.780), hips=(-16, 18, 0), spine=(-20, 32, 0),
+           foot_r=(0.24, -0.10, 0.104), foot_l=(-0.20, 0.40, 0.104))),
+    # The hook: arm near straight across his throat at shoulder height, hips
+    # alongside his (the root has stepped through, see the trajectory).
+    (14, P(pelvis=(0.0, 0.12, 0.780), hips=(-14, 16, 0), spine=(-16, 26, 0),
            head=(-4, 12, 0),
-           hand_r=(-0.12, 0.66, 1.40), hand_l=(-0.32, 0.24, 1.06),
-           elbow_r=(0.6, 0.2, -0.6), fist_r=0.6, fist_l=0.8, clav_follow=False,
-           foot_r=(0.22, 0.14, 0.104), foot_l=(-0.20, 0.30, 0.104))),
+           hand_r=(0.44, 0.58, 1.46), hand_l=(-0.32, 0.24, 1.06),
+           elbow_r=(0.6, -0.2, -0.6), fist_r=0.6, fist_l=0.8, clav_follow=False,
+           foot_r=(0.22, 0.14, 0.104), foot_l=(-0.20, 0.34, 0.104))),
     # Driving him down: the arm and the chest go down together.
-    (17, P(pelvis=(0.0, 0.16, 0.710), hips=(-26, 20, 0), spine=(-34, 26, 0),
+    (17, P(pelvis=(0.0, 0.16, 0.700), hips=(-28, 16, 0), spine=(-34, 20, 0),
            head=(-6, 10, 0),
-           hand_r=(-0.10, 0.78, 0.80), hand_l=(-0.36, 0.30, 0.95),
+           hand_r=(0.40, 0.70, 0.86), hand_l=(-0.36, 0.30, 0.95),
            fist_r=0.4, fist_l=0.6,
            foot_r=(0.20, 0.34, 0.104), foot_l=(-0.20, 0.02, 0.104))),
-    # Follow-through: bent over his legs, both arms flung out.
-    (21, P(pelvis=(0.0, 0.18, 0.720), hips=(-34, 10, 0), spine=(-40, 10, 0),
-           head=(-10, 0, 0),
-           hand_r=(0.62, 0.50, 1.00), hand_l=(-0.62, 0.40, 1.02),
+    # Follow-through, HELD (loop 2: ticks 40-58): bent ~50 degrees over his
+    # legs, knees deep, both arms flung out wide and back.
+    (20, P(pelvis=(0.0, 0.18, 0.680), hips=(-40, 8, 0), spine=(-46, 8, 0),
+           head=(-12, 0, 0),
+           hand_r=(0.74, 0.10, 1.10), hand_l=(-0.74, 0.06, 1.12),
            elbow_r=(0.8, -0.3, -0.2), elbow_l=(-0.8, -0.3, -0.2),
-           fist_r=0.3, fist_l=0.3,
-           foot_r=(0.22, 0.38, 0.104), foot_l=(-0.20, 0.00, 0.104))),
-    # Coming back up off him.
-    (27, P(pelvis=(0.0, 0.08, 0.780), hips=(-20, 0, 0), spine=(-26, 0, 0),
-           hand_r=(0.50, 0.36, 1.10), hand_l=(-0.50, 0.34, 1.10),
+           fist_r=0.3, fist_l=0.3, clav_follow=False,
+           foot_r=(0.22, 0.40, 0.104), foot_l=(-0.22, 0.00, 0.104))),
+    (29, P(pelvis=(0.0, 0.16, 0.690), hips=(-38, 6, 0), spine=(-44, 6, 0),
+           head=(-10, 0, 0),
+           hand_r=(0.70, 0.06, 1.08), hand_l=(-0.70, 0.04, 1.10),
+           elbow_r=(0.8, -0.3, -0.2), elbow_l=(-0.8, -0.3, -0.2),
+           fist_r=0.3, fist_l=0.3, clav_follow=False,
+           foot_r=(0.22, 0.38, 0.104), foot_l=(-0.22, 0.02, 0.104))),
+    # Up by contact+44 (tick 72).
+    (33, P(pelvis=(0.0, 0.08, 0.760), hips=(-18, 0, 0), spine=(-22, 0, 0),
+           hand_r=(0.44, 0.30, 1.10), hand_l=(-0.44, 0.30, 1.10),
            fist_r=0.4, fist_l=0.4,
            foot_r=(0.24, 0.20, 0.104), foot_l=(-0.22, 0.00, 0.104))),
     (36, P()),
 ]
+# Upright and square until the hook, arms low -- not hunched over the
+# attacker's shoulder like a man in a lock-up (loop 1, tick 18).
+_AH_STAND = pose(GUARD, hips=(-2, 0, 0), spine=(-4, 4, 0), head=(2, 4, 0),
+                 hand_r=(0.26, 0.20, 1.12), hand_l=(-0.24, 0.22, 1.12),
+                 fist_r=0.5, fist_l=0.5)
+# Back-first, shoulders down at contact+9 (key 18.5), the legs kicking up
+# 45-60 degrees as the back lands and dropping by contact+30 (loop 2).
+_ah_fall = _back_fall(13, 36, pelvis_hit=0.92)
+_ah_fall = [({13: 13.5, 16: 16, 20: 18.5, 24: 22}.get(f, f), k) for f, k in _ah_fall]
+_ah_bump = dict(_ah_fall[2][1])
+_ah_legs_up = _yawed(S(pelvis=(0.0, 0.0, 0.200), head=(-2, 0, 0),
+                       hand_r=(-0.56, 0.14, 0.10), hand_l=(0.56, 0.14, 0.10),
+                       elbow_r=(-0.7, 0.3, -0.3), elbow_l=(0.7, 0.3, -0.3),
+                       fist_r=0.1, fist_l=0.1,
+                       foot_r=(-0.14, -0.52, 0.78), foot_l=(0.12, -0.54, 0.84),
+                       knee_r=(-0.3, -0.6, 0.8), knee_l=(0.3, -0.6, 0.8)))
 CLIPS["Arm_Hook_Defender"] = [
-    (0, pose(GUARD)), (11, pose(GUARD, head=(6, 0, 0))),
-] + _back_fall(13, 36, pelvis_hit=0.92)
+    (0, dict(_AH_STAND)), (12, pose(_AH_STAND, head=(6, 0, 0))),
+] + _ah_fall[:2] + [(18.5, _ah_legs_up), (24, _ah_legs_up)] + [
+    (29, _ah_fall[3][1]), (36, _ah_fall[4][1])]
 
 # Spinning Back Elbow, 36 frames. Plants and spins a full turn to his right
 # (the root does the turn); the right elbow swings back into the jaw as his
