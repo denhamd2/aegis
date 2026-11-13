@@ -2167,6 +2167,37 @@ tracks/3/loop_wrap = true
 tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 1.4, 1, 0, -0.7071068, 0, 0.7071068)
 
 [sub_resource type="Animation" id="Animation_qc7nb"]
+length = 1.2
+tracks/0/type = "position_3d"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("../WrestlerA")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = PackedFloat32Array(0, 1, 0.55, 0, 0, 0.3, 1, 0.5, 0, 0, 0.467, 1, 0.3, 0, 0, 0.7, 1, 0.28, 0, 0, 1.2, 1, 0.3, 0, 0)
+tracks/1/type = "rotation_3d"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("../WrestlerA")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = PackedFloat32Array(0, 1, 0, 0.7071068, 0, 0.7071068, 1.2, 1, 0, 0.7071068, 0, 0.7071068)
+tracks/2/type = "position_3d"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("../WrestlerB")
+tracks/2/interp = 2
+tracks/2/loop_wrap = true
+tracks/2/keys = PackedFloat32Array(0, 1, -0.55, 0, 0, 0.433, 1, -0.55, 0, 0, 0.567, 1, -0.8, 0, 0, 0.7, 1, -1.05, 0, 0, 1.2, 1, -1.1, 0, 0)
+tracks/3/type = "rotation_3d"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("../WrestlerB")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 1.2, 1, 0, -0.7071068, 0, 0.7071068)
+
+[sub_resource type="Animation" id="Animation_w7f42"]
 length = 1.8
 tracks/0/type = "position_3d"
 tracks/0/imported = false
@@ -2197,7 +2228,7 @@ tracks/3/interp = 1
 tracks/3/loop_wrap = true
 tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 1.8, 1, 0, -0.7071068, 0, 0.7071068)
 
-[sub_resource type="Animation" id="Animation_w7f42"]
+[sub_resource type="Animation" id="Animation_i61al"]
 length = 1.2
 tracks/0/type = "position_3d"
 tracks/0/imported = false
@@ -2300,6 +2331,7 @@ _data = {
 &"signature_neckbreaker": SubResource("Animation_fb2kp"),
 &"signature_pedigree": SubResource("Animation_325ff"),
 &"signature_superman_punch": SubResource("Animation_vnp8m"),
-&"table_lay": SubResource("Animation_qc7nb"),
-&"whip_setup": SubResource("Animation_w7f42")
+&"strike_arm_hook_takedown": SubResource("Animation_qc7nb"),
+&"table_lay": SubResource("Animation_w7f42"),
+&"whip_setup": SubResource("Animation_i61al")
 }

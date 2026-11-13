@@ -271,6 +271,7 @@ const KNOCKDOWN_CARRY_TICKS := 36
 const KNOCKDOWN_CARRY_DECAY := 0.95
 var _knockback_decay := KNOCKBACK_DECAY
 var _bump_carry := false
+var _bump_carry_scale := 1.0
 const STUNNED_TICKS := 45
 ## Irish whip tuning. First-pass values, same caveat as every other tuning
 ## constant in this project: gauntlet/refs/timings.md marks both reversal-
@@ -2450,6 +2451,11 @@ func _turn_toward_opponent() -> void:
 	to_opponent.y = 0.0
 	if to_opponent.length() < 0.01:
 		return
+	# Parity whip loop 8: a man he has just whipped is coming back past him.
+	# The whipper holds square to the return line rather than spinning
+	# 126 degrees to follow him past (reviewer: "set for the rebound").
+	if opponent.is_whip_returning() and not opponent.rope_running:
+		return
 	var desired := atan2(-to_opponent.x, -to_opponent.z)
 	rotation.y = _step_angle(rotation.y, desired, TURN_RATE_PER_TICK)
 
@@ -3365,7 +3371,7 @@ func _process_irish_whip() -> void:
 		var collider := collision.get_collider()
 		if collider is Node and (collider as Node).is_in_group(RING_ROPE_GROUP):
 			_begin_rope_load(collision.get_normal(), collider as Node)
-			_tick_rope_load()
+			_carry_rope_contact_tick()
 			return
 	# No rope found in time -- see IRISH_WHIP_MAX_TICKS. Hand back to RUN
 	# without a rebound rather than leaving the wrestler in a state with no
@@ -3488,6 +3494,24 @@ func _begin_rope_load(normal: Vector3, rope: Node) -> void:
 	# runs contact -> deep seated compression -> push-off -> first return
 	# step; RUN's run_drive takes over from the last pose.
 	_restart_state_clip(WrestlerFSM.State.IRISH_WHIP, "strikes/whip_rope_absorb")
+
+
+## The tick he reaches the ropes, the collider stopped him part-way: he
+## covered only what lay short of them, and the load moved him from the tick
+## after -- a one-tick stop at 0 m/s between 5 m/s and 5 m/s (parity whip
+## loop 7). The load is measured from where this tick began instead, and he
+## is put where it has him one tick in, so the sprint runs on into the ropes.
+func _carry_rope_contact_tick() -> void:
+	var dt := 1.0 / Engine.physics_ticks_per_second
+	var moved := get_position_delta().dot(_rope_load_out)
+	_rope_load_from -= _rope_load_out * clampf(moved, 0.0, _rope_load_speed * dt)
+	var x := rope_load_offset(dt, _rope_load_speed)
+	var at := _rope_load_from + _rope_load_out * x + _rope_load_along * dt
+	at.y = global_position.y
+	global_position = at
+	# Tick 1 is where he now stands; the load's own tick aims him at tick 2.
+	_rope_load_tick = 1
+	_tick_rope_load()
 
 
 ## Where the load has him `seconds` after it began, as distance out past
@@ -5076,6 +5100,9 @@ func _resolve_pending_hits() -> void:
 		_bump_clip = knockdown_bump_clip(last_move)
 		_bump_shove = maxf(_bump_shove, LARIAT_SHOVE)
 		_bump_carry = true
+		# A knockdown's shove_m adds to the carry (parity loop 8: the flying
+		# knee's man lies ~2 m off in the tutorial, ours at the knee's feet).
+		_bump_carry_scale = 1.0 + (last_move.shove_m if last_move else 0.0)
 	# A rear chair blow and a guitar crumple forward. A superkick turns its
 	# victim around before he lands; both use dedicated authored solo falls.
 	var behind := opponent != null and (-global_basis.z).dot(
@@ -6076,7 +6103,7 @@ func _bump_down() -> void:
 		away.y = 0.0
 		if away.length() > 0.001:
 			if _bump_carry:
-				velocity = away.normalized() * KNOCKDOWN_CARRY_SPEED
+				velocity = away.normalized() * KNOCKDOWN_CARRY_SPEED * _bump_carry_scale
 				_knockback_ticks = KNOCKDOWN_CARRY_TICKS
 				_knockback_decay = KNOCKDOWN_CARRY_DECAY
 			else:
@@ -6084,6 +6111,7 @@ func _bump_down() -> void:
 				_knockback_ticks = KNOCKBACK_TICKS
 	_bump_shove = 1.0
 	_bump_carry = false
+	_bump_carry_scale = 1.0
 
 
 ## A handgun hit is lethal: all vitality is permanently lost and the wrestler

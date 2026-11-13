@@ -12027,6 +12027,133 @@ CLIPS["Strike_Hook_Left"].append((5, _mid5))
 CLIPS["Strike_Hook_Left"].sort(key=lambda k: k[0])
 
 
+# --- Strike parity loop 8 (13 Nov, the owner: "one more loop for each") ----
+# Render frames are 60 fps ticks; each clip's key frames are 30 fps, retimed
+# (hook 1.5 ticks a key, the others 2), so reviewer frame fN is key N/1.5 or
+# N/2 below.
+def _hk8(f, k):
+    if 2 <= f <= 4:
+        # f4: the lead upper arm opened ~20 degrees, not folded into the chest.
+        x, y, z = k["hand_l"]; k["hand_l"] = (x - 0.07, y, z)
+        k["elbow_l"] = (-0.9, -0.2, -0.3)
+    if 5 <= f <= 7:
+        # f7-f9: the fist lands on the jaw -- 0.14 m higher, 0.10 m across.
+        k["hand_l"] = (0.12, 0.58, 1.60)
+    if 9 <= f <= 12.5:
+        # f15: the follow-through crosses down to belt height.
+        k["hand_l"] = (0.30, 0.34, 1.04)
+    return k
+_patch_keys("Strike_Hook_Left", _hk8)
+
+# The hook's sell: his near hand to the jaw by +6 and held, head turned off
+# the blow, the other hand low -- HEAD_HURT's hands, so the sell that follows
+# carries on from it instead of the arms flaring wide (loop 7, f15-f35).
+def _hh8(f, k):
+    if f >= 2:
+        k["hand_l"] = (-0.10, 0.26, 1.48); k["elbow_l"] = (-0.9, -0.2, -0.4)
+        k["fist_l"] = 0.2
+        k["hand_r"] = (0.28, 0.22, 1.04)
+    return k
+_patch_keys("Hit_React_Head_Left", _hh8)
+
+def _fk8(f, k):
+    if abs(f - 8.531) < 0.01:
+        # f17: the support foot still in the air (it landed ~3 f early).
+        k["foot_l"] = (-0.22, 0.20, 0.18)
+        px, py, pz = k["pelvis"]; k["pelvis"] = (px, py, pz + 0.06)
+    if 8.0 <= f <= 12.1:
+        # f21: upright through the kick (back-lean 20 -> ~5 degrees), the
+        # raised guard hand down to the chest.
+        hp, sp = k["hips"], k["spine"]
+        k["hips"] = (min(hp[0], 4), hp[1], hp[2])
+        k["spine"] = (min(sp[0], 6), sp[1], sp[2])
+        x, y, z = k["hand_r"]; k["hand_r"] = (x, y, min(z, 1.24))
+    if abs(f - 15.25) < 0.01:
+        # f27-f31: the kicking foot comes down in FRONT of the support foot.
+        k["foot_r"] = (0.20, 0.36, 0.104)
+        px, py, pz = k["pelvis"]; k["pelvis"] = (px, 0.18, pz)
+    if abs(f - 18.417) < 0.01:
+        k["foot_r"] = (0.24, 0.12, 0.104)
+    return k
+_patch_keys("Strike_Front_Kick_Body", _fk8)
+
+_BK8_YAW = {1.667: 45, 3.333: 105, 5.0: 150, 6.667: 176}
+def _bk8(f, k):
+    for kf, yaw in _BK8_YAW.items():
+        if abs(f - kf) < 0.01:
+            # f8: already ~120 degrees round -- the spin starts earlier and
+            # no longer turns 180 in the six frames before the kick.
+            hp = k["hips"]; k["hips"] = (hp[0], yaw, hp[2])
+            if yaw >= 100:
+                sp, hd = k.get("spine", (0, 0, 0)), k.get("head", (0, 0, 0))
+                k["spine"] = (sp[0], 18.0, sp[2]); k["head"] = (hd[0], 25.0, hd[2])
+                k["hand_r"] = (-0.58, 0.0, 1.22); k["hand_l"] = (0.58, 0.0, 1.22)
+    if abs(f - 3.333) < 0.01:
+        # f8: feet apart, the stepping foot lifted -- not knees together.
+        k["foot_r"] = (0.26, -0.04, 0.30); k["knee_r"] = (0.5, 0.4, 0.8)
+    if 9.9 <= f <= 10.7:
+        # f20: the leg driven straight back into the stomach, knee locked,
+        # and the torso laid forward ~30 degrees, head away from him.
+        k["foot_r"] = (-0.10, 0.94, 1.00)
+        k["hips"] = (-10, k["hips"][1], k["hips"][2])
+        sp = k["spine"]; k["spine"] = (-30, sp[1], sp[2])
+    return k
+_patch_keys("Strike_Turning_Back_Kick_Body", _bk8)
+
+def _ck8(f, k):
+    if 4.5 <= f <= 9.8:
+        # f12-f16: both hands on the back of his head, pulling it down
+        # ~10 cm onto the knee -- the near arm no longer hangs at the hip.
+        z = 1.50 if f < 7.9 else 1.40
+        k["hand_r"] = (0.08, 0.72, z); k["hand_l"] = (-0.08, 0.74, z + 0.02)
+        k["elbow_r"] = (0.8, -0.2, -0.4); k["elbow_l"] = (-0.8, -0.2, -0.4)
+    if abs(f - 14.38) < 0.01:
+        # The push leg held out to +15 (f31) ...
+        k["foot_r"] = (0.14, 0.90, 0.80); k["knee_r"] = (0.12, 0.35, 1.0)
+        k["spine"] = (-4, 2, 0)
+    if abs(f - 16.7) < 0.01:
+        # ... and back in by f40.
+        k["foot_r"] = (0.22, 0.26, 0.24); k["knee_r"] = (0.3, 1.0, 0.0)
+    return k
+_patch_keys("Strike_Clinch_Knee_Body", _ck8)
+
+def _fk8b(f, k):
+    if 5.0 < f <= 8.5:
+        # f16: the knee to the chin (+0.15 m) with the chest over it.
+        x, y, z = k["foot_r"]; k["foot_r"] = (x, y, z + 0.15)
+        sp = k["spine"]; k["spine"] = (sp[0] - 20, sp[1], sp[2])
+    if f >= 11:
+        # f22-f56: he lands upright and short of the man -- the 0.5 m short
+        # of him the reference lands, hands down off the guard, instead of
+        # folded over him with an arm thrown up through the defender's legs.
+        px, py, pz = k["pelvis"]; k["pelvis"] = (px, py - 0.30, max(pz, 0.70))
+        for side in ("foot_r", "foot_l"):
+            x, y, z = k[side]; k[side] = (x, y - 0.30, z)
+        hp, sp = k["hips"], k["spine"]
+        k["hips"] = (max(hp[0], -10), hp[1], hp[2])
+        k["spine"] = (max(sp[0], -12), sp[1], sp[2])
+        if f < 24:
+            k["hand_r"] = (0.30, 0.24, 1.06); k["hand_l"] = (-0.28, 0.26, 1.08)
+    return k
+_patch_keys("Strike_Running_Flying_Knee", _fk8b)
+
+def _sk8(f, k):
+    if 6.0 <= f <= 9.5:
+        # f12-f20: chest turned side-on with the hips (~70 degrees), not
+        # counter-twisted back to face the camera.
+        sp = k["spine"]; k["spine"] = (sp[0], 10.0, sp[2])
+    if abs(f - 6.154) < 0.01:
+        # f12: chambered beside the body, heel aimed at him.
+        k["foot_r"] = (0.22, 0.18, 0.96); k["knee_r"] = (0.6, 0.3, 0.8)
+    if 7.3 <= f <= 9.5:
+        # f16-f20: out level and held to about +4 before the re-chamber.
+        k["foot_r"] = (0.08, 1.04, 1.32)
+        if f > 9:
+            sp = k["spine"]; k["spine"] = (28, sp[1], sp[2])
+    return k
+_patch_keys("Strike_Side_Kick_Knockdown", _sk8)
+
+
 def main():
     arm = load_rig()
     clear_actions()

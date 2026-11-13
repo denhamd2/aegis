@@ -22,4 +22,4 @@ momentum_gain = 8.0
 weight_class_min = 0
 weight_class_max = 2
 required_opponent_state = -1
-shove_m = 1.0
+shove_m = 0.5
