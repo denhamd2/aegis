@@ -14,6 +14,8 @@ extends Node
 ## spread out along X so the states sit side by side.
 ## --yaw DEG turns it about Y first. --lift M raises the weapon M metres (a hand-held one reads better at hip
 ## height than lying on the floor); default 0.
+## --view front|three_quarter|side|top limits a bounded review to one view.
+## --settle N (minimum8) and --capture-resolution WIDTHxHEIGHT bound render cost.
 ## Writes <out>/<name>_front.png, _three_quarter.png, _side.png, _top.png,
 ## _close.png, and prints each node's bounds and triangle count.
 
@@ -25,9 +27,12 @@ var _node := ""
 var _lift := 0.0
 ## --yaw DEG turns every shown state about Y (to see a sign's face, say).
 var _yaw := 0.0
+var _view := ""
+var _settle := 24
 
 
 func _ready() -> void:
+	preload("res://tools/probe/capture_window.gd").configure(get_window())
 	var args := OS.get_cmdline_user_args()
 	for i in args.size():
 		match args[i]:
@@ -39,8 +44,16 @@ func _ready() -> void:
 				_node = args[i + 1]
 			"--lift":
 				_lift = float(args[i + 1])
+			"--view":
+				_view = args[i + 1]
+			"--settle":
+				_settle = maxi(8, int(args[i + 1]))
 			"--yaw":
 				_yaw = deg_to_rad(float(args[i + 1]))
+	if _view not in ["", "front", "three_quarter", "side", "top"]:
+		push_error("weapon_shot: unknown --view " + _view)
+		get_tree().quit(2)
+		return
 	DirAccess.make_dir_recursive_absolute(_out)
 	var packed := load(_glb) as PackedScene
 	if packed == null:
@@ -87,10 +100,15 @@ func _ready() -> void:
 		"top": Vector3(0.0, 1.0, 0.001),
 	}
 	for view: String in views:
+		if not _view.is_empty() and view != _view:
+			continue
 		var dir: Vector3 = (views[view] as Vector3).normalized()
 		cam.global_position = centre + dir * reach * 2.1
 		cam.look_at(centre, Vector3.UP)
 		await _grab("%s/%s_%s.png" % [_out, _label(), view])
+	if not _view.is_empty():
+		get_tree().quit()
+		return
 	# Close on the striking end, or the middle when there is none.
 	var strike := weapon.find_child("strike", true, false) as Node3D
 	var at := strike.global_position if strike else centre
@@ -107,7 +125,7 @@ func _label() -> String:
 
 func _grab(path: String) -> void:
 	# The settle the capture harness uses: TAA and SSIL need frames to converge.
-	for i in 24:
+	for i in _settle:
 		await RenderingServer.frame_post_draw
 	get_viewport().get_texture().get_image().save_png(path)
 	print("WROTE %s" % path)

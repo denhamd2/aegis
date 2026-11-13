@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites id="2026-11-13" name="report_1" tests="1" failures="1" skipped="0" flaky="0" time="0.000">
+	<testsuite id="0" name="test_weapon_grip_contact" package="tests" timestamp="2026-11-13T07:52:36" hostname="localhost" tests="1" failures="1" errors="0" skipped="0" flaky="0" time="46.279">
+		<testcase name="test_every_hand_is_on_its_grip" classname="test_weapon_grip_contact" time="46.272">
+			<failure message="FAILED: res://tests/test_weapon_grip_contact.gd:105" type="FAILURE">
+<![CDATA[
+8 weapons with a hand off its grip:
+steel_chair          carry r   0.0 l   0.0  swing r   1.7 l   0.7 cm
+barbed_wire_chair    carry r   0.0 l   0.0  swing r   1.6 l   0.9 cm
+baseball_bat         carry r   0.0 l   0.0  swing r   0.9 l   2.0 cm
+barbed_wire_bat      carry r   0.0 l   0.0  swing r   0.0 l   1.8 cm
+kendo_stick          carry r   0.0 l   8.5  swing r   0.0 l   8.6 cm  <--
+sledgehammer         carry r   0.0 l   0.0  swing r   0.0 l   0.0 cm
+lead_pipe            carry r   0.0 l   0.0  swing r   0.0 l   0.0 cm
+board_with_nails     carry r   0.0 l   0.1  swing r   0.0 l   2.0 cm
+shovel               carry r   0.0 l   4.7  swing r   0.0 l   4.8 cm  <--
+hockey_stick         carry r   0.0 l   4.9  swing r   0.0 l   5.0 cm  <--
+crutch               carry r   0.0 l   0.4  swing r   0.0 l   0.5 cm
+stop_sign            carry r   0.0 l   1.5  swing r   0.0 l   1.5 cm
+guitar               carry r   0.0 l   0.0  swing r   0.0 l   0.0 cm
+knife                carry r   0.0 l   0.0  swing r   1.0 l   0.0 cm
+sword                carry r   0.0 l   3.7  swing r   0.0 l   3.7 cm  <--
+inflatable_banana    carry r   0.0 l   0.3  swing r   1.7 l   2.0 cm
+trash_can            carry r   0.0 l   0.0  swing r   0.0 l   0.0 cm
+steel_steps          carry r   0.0 l   0.0  swing r   1.7 l   2.0 cm
+ring_bell            carry r   0.0 l   0.0  swing r   0.0 l   0.0 cm
+championship_belt    carry r   0.0 l   0.0  swing r   0.2 l   0.0 cm
+cookie_sheet         carry r   0.0 l   0.0  swing r   0.0 l   0.0 cm
+frying_pan           carry r   0.0 l   0.0  swing r   0.0 l   0.0 cm
+wire_cutters         carry r   0.0 l   0.0  swing r   0.0 l   0.0 cm
+briefcase            carry r   0.0 l   0.0  swing r   0.0 l   2.0 cm
+table                carry r   0.0 l   6.3  swing r   0.3 l   6.4 cm  <--
+glass_pane           carry r   0.0 l   6.1  swing r   1.8 l   6.1 cm  <--
+ladder               carry r   0.0 l   0.0  swing r   6.4 l   1.8 cm  <--
+thumbtacks           carry r   0.0 l   0.0  swing r   0.0 l   0.0 cm
+bed_of_nails         carry r   0.0 l   5.3  swing r   0.0 l   0.0 cm  <--
+light_tubes          carry r   0.0 l   0.0  swing r   0.0 l   2.0 cm
+barbed_wire_board    carry r   0.0 l   0.0  swing r   1.8 l   2.0 cm
+fire_extinguisher    carry r   0.0 l   0.0  swing r   0.0 l   2.0 cm
+fire_torch           carry r   0.0 l   0.0  swing r   0.3 l   0.0 cm
+handgun              carry r   0.0 l   0.0  swing r   0.0 l   0.0 cm
+rpg                  carry r   0.0 l   0.0  swing r   0.0 l   0.0 cm
+chain                carry r   0.0 l   0.0  swing r   0.0 l   0.0 cm
+weight_belt          carry r   0.0 l   0.0  swing r   0.6 l   0.0 cm
+brass_knuckles       carry r   0.0 l   0.0  swing r   0.0 l   0.0 cm
+	at 'test_every_hand_is_on_its_grip' in res://tests/test_weapon_grip_contact.gd:105
+	at '_misses' in res://tests/test_weapon_grip_contact.gd:83
+	at '_ticks' in res://tests/test_weapon_grip_contact.gd:27
+]]>
+			</failure>
+		</testcase>
+	</testsuite>
+</testsuites>

@@ -1,0 +1,71 @@
+{
+  "steel_chair": {
+    "before": {
+      "materials": 3,
+      "meshes": 12,
+      "state_triangles": {
+        "SteelChair_Folded": 6514,
+        "SteelChair_Open": 6290,
+        "SteelChair_Bent": 6786
+      }
+    },
+    "after": {
+      "materials": 3,
+      "meshes": 12,
+      "state_triangles": {
+        "SteelChair_Folded": 6978,
+        "SteelChair_Open": 6754,
+        "SteelChair_Bent": 7250
+      }
+    },
+    "marker_and_root_transforms_unchanged": true,
+    "before_bytes": 1372728,
+    "after_bytes": 1391800
+  },
+  "table": {
+    "before": {
+      "materials": 3,
+      "meshes": 17,
+      "state_triangles": {
+        "Table_Up": 2688,
+        "Table_Folded": 2248,
+        "Table_Broken": 5160
+      }
+    },
+    "after": {
+      "materials": 3,
+      "meshes": 17,
+      "state_triangles": {
+        "Table_Up": 2768,
+        "Table_Folded": 2328,
+        "Table_Broken": 5240
+      }
+    },
+    "marker_and_root_transforms_unchanged": true,
+    "before_bytes": 1932016,
+    "after_bytes": 1934176
+  },
+  "ladder": {
+    "before": {
+      "materials": 3,
+      "meshes": 12,
+      "state_triangles": {
+        "Ladder_Open": 8208,
+        "Ladder_Closed": 7672,
+        "Ladder_Laid_Out": 7672
+      }
+    },
+    "after": {
+      "materials": 3,
+      "meshes": 12,
+      "state_triangles": {
+        "Ladder_Open": 8648,
+        "Ladder_Closed": 8112,
+        "Ladder_Laid_Out": 8112
+      }
+    },
+    "marker_and_root_transforms_unchanged": true,
+    "before_bytes": 2779824,
+    "after_bytes": 2370816
+  }
+}

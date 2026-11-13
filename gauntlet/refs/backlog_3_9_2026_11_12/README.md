@@ -10,7 +10,7 @@ external paid services. Existing ladder moves first; new variants remain deferre
 | Batch | Original IDs | Scope | Status |
 | --- | --- | --- | --- |
 | 1 | 19–20 | Blood default and sweat assessment | Published at `207e8dc` |
-| 2 | 9–10, 18 | Weapon interaction lifecycle and bounded presentation protection | In progress |
+| 2 | 9–10, 18 | Weapon interaction lifecycle and bounded presentation protection | Published at `cbcecdb` |
 | 3 | 11–12, 15 | Entrances and Cody moonsault setup | Pending |
 | 4 | 16 | Two-sided ladder routes and occupancy | Pending |
 | 5 | 17, X3 | Ladder/table coverage and existing ladder move corrections | Pending; new attack variants excluded |
@@ -71,3 +71,19 @@ Concurrent `a89ca90` strike/Kenny work arrived before publication and was
 integrated without conflicts. Import passed and all **53 focused cases passed
 again on the merged source** ([report](batch2-merged-tests.xml)). The earlier
 1310-case report predates that integration; it is not exact-merged-commit proof.
+
+13 November: owner explicitly permits GPT image generation for texture rendering
+when useful. Existing procedural texture work remains valid; generation is
+optional and must be validated after UV/material integration. Delivery preference
+confirmed: frequently used weapons, then casket/ambulance. Original unfinished
+entrance, moonsault, ladder-route and camera batches remain in scope.
+
+Batch2 publication verified: `mac-latest` commit
+`cbcecdb41fb187b9dab9a5a2bb3f38758dabfc49`, Mac run43388050947,
+`Aegis.zip`1,053,356,953bytes. This includes the concurrent strike/Kenny source.
+
+First frequent-weapon art slice: chair, table, ladder source and regenerated
+assets, [comparison and checks](../weapon_realism_2026_11_13/validation.md).
+Subtle hardware/material refinement, not finished AAA acceptance. Casket,
+ambulance and remaining weapon families stay open. Grip failures on eight paths
+reproduce with original assets and remain a separate corrective follow-up.
