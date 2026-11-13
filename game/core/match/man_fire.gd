@@ -234,23 +234,25 @@ static func flicker(m: ParticleProcessMaterial) -> void:
 ## His flames over his body: a box over his chest of softer tongues than the
 ## stock flame, so they sit on him rather than piling into one white ball.
 static func _as_tongues(p: GPUParticles3D) -> void:
-	# 46 piled into one white column under the arena's glow (9 Nov).
-	p.amount = 16
+	# 46 piled into one white column under the arena's glow (9 Nov); 16 read
+	# as no fire at all on the render. More, bigger tongues that flicker and
+	# carry a full-hot core (the dim core read as a muddy brown stain, not fire).
+	p.amount = 70
 	var m := p.process_material as ParticleProcessMaterial
 	m.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
-	m.emission_box_extents = Vector3(0.22, 0.45, 0.16)
-	m.scale_min = 0.45
-	m.scale_max = 0.85
+	m.emission_box_extents = Vector3(0.32, 0.6, 0.26)
+	m.scale_min = 0.8
+	m.scale_max = 1.5
 	m.angle_min = -12.0
 	m.angle_max = 12.0
 	var grad := Gradient.new()
 	grad.offsets = PackedFloat32Array([0.0, 0.3, 0.75, 1.0])
-	grad.colors = PackedColorArray([Color(FIRE_HOT, 0.6), Color(FIRE_ORANGE, 0.55),
-			Color(FIRE_RED, 0.3), Color(FIRE_RED, 0.0)])
+	grad.colors = PackedColorArray([Color(FIRE_HOT, 1.0), Color(FIRE_ORANGE, 0.85),
+			Color(FIRE_RED, 0.6), Color(FIRE_RED, 0.0)])
 	var ramp := GradientTexture1D.new()
 	ramp.gradient = grad
 	m.color_ramp = ramp
-	p.draw_pass_1 = tongue_pass(Vector2(0.24, 0.6))
+	p.draw_pass_1 = tongue_pass(Vector2(0.5, 1.2), Color(1.4, 1.3, 1.1))
 
 
 static func _flame_particles() -> GPUParticles3D:

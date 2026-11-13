@@ -12215,3 +12215,19 @@ reviewer against the AEW Fight Forever controls tutorial.
 
 Not in this deploy: the Hell in a Cell roof AI and the Cross Rhodes re-key
 (both in progress).
+
+## 13 Nov (2): move 7, the arm-hook takedown, loops 5–6 (6.4 → 7.0)
+
+The owner: "run 2 more loops on move 7, we need to get it closer to 10/10",
+then "commit and deploy move 7 now". Scored by the parity reviewer against
+the tutorial (79.70–81.00 s): 6.4 → 6.8 → 7.0.
+
+- Kenny stays on his feet after the hook, bent at the hips over the man's
+  legs, instead of folding into a near-kneel and snapping up.
+- The defender is already going back on the hook and goes heels over head,
+  feet whipping up over a head-down body, and lands in front of Kenny's feet;
+  his legs come down in one slow arc.
+- The wind-up swing comes in flat at shoulder height.
+
+Still short of 10 (reviewer): the defender drops about 4 frames late, and his
+legs come over through Kenny rather than past his side.
