@@ -20,7 +20,7 @@ const AUTHORED_LENGTHS := {
 	"strike_cross": 0.667,        # strike_cross.tres: 12+4+24 = 40
 	"strike_kick": 0.583,         # strike_kick.tres: 14+5+16 = 35
 	"strike_kick_heavy": 0.950,   # strike_kick_heavy.tres: 11+5+41 = 57
-	"strike_running_flying_knee": 1.133, # strike_running_flying_knee.tres: 25+5+38 = 68
+	"strike_running_flying_knee": 0.967, # strike_running_flying_knee.tres: 16+5+37 = 58 (12 Nov parity)
 	"hit_head": 0.333,            # WrestlerController.HIT_REACT_TICKS = 20
 	"hit_torso": 0.333,           # same state
 	"stunned": 0.750,             # WrestlerController.STUNNED_TICKS = 45
@@ -38,7 +38,7 @@ const AUTHORED_LENGTHS := {
 	# check; this line and the recipe's `seconds` must move together.
 	"walk_stalk": 0.533,          # loops; 16 frames at 30fps
 	"run_drive": 0.667,           # loops; matches the rig's Sprint
-	"whip_run": 0.400,            # loops; two 0.20 s steps at 9.0 m/s
+	"whip_run": 0.400,            # loops; two 0.20 s steps at 5.0 m/s
 	"whip_rope_absorb": 0.500,    # contact -> push-off, 15 frames at 30fps
 	"return_run": 0.667,          # loops; the whip return, 20 frames at 30fps
 	"far_rope_stop": 0.800,       # one shot; 24 frames at 30fps

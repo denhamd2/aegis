@@ -56,8 +56,12 @@ func _run(scenario: String) -> void:
 		w.is_ai = false
 		w.fsm.transition_to(WrestlerFSM.State.IDLE)
 		w.velocity = Vector3.ZERO
-	roman.global_position = Vector3(-0.4, 0, 0.0)
-	cody.global_position = Vector3(0.4, 0, 0.0)
+	# The whip is staged as the tutorial's (3:01.70): the runner with his back
+	# to the near ropes, swung through and sent across the ring. The rope
+	# run keeps the centre start.
+	var off := 1.75 if scenario == "whip" else 0.0  # release -> rope ~38 f (loop 7: swing ends 0.22 m further out)
+	roman.global_position = Vector3(-0.4 + off, 0, 0.0)
+	cody.global_position = Vector3(0.4 + off, 0, 0.0)
 	roman.look_at(Vector3(5, 0, 0), Vector3.UP)
 	cody.look_at(Vector3(-5, 0, 0), Vector3.UP)
 	await get_tree().physics_frame
@@ -94,6 +98,14 @@ func _run(scenario: String) -> void:
 			var vc := get_viewport().get_camera_3d()
 			print("CAM ", vc.get_path() if vc else "none", " ", vc.global_position if vc else "")
 		if tick % _every == 0:
+			# Close on the runner, side-on, so his limbs read in a parity sheet
+			# (the reviewer, 12 Nov: "figures about 80 px tall"). --wide keeps
+			# the old fixed shot of the whole ring.
+			if not OS.get_cmdline_user_args().has("--wide"):
+				var mid := (cody.global_position * 0.7 + roman.global_position * 0.3)
+				camera.fov = 50.0
+				camera.global_position = Vector3(mid.x, 1.45, mid.z + 3.6)
+				camera.look_at(Vector3(mid.x, 0.95, mid.z), Vector3.UP)
 			RenderingServer.render_loop_enabled = true
 			await RenderingServer.frame_post_draw
 			RenderingServer.render_loop_enabled = false

@@ -174,7 +174,12 @@ func _bake(move_id: String, spec: Dictionary) -> Animation:
 
 		var rot_track := anim.add_track(Animation.TYPE_ROTATION_3D)
 		anim.track_set_path(rot_track, path)
-		anim.track_set_interpolation_type(rot_track, Animation.INTERPOLATION_CUBIC)
+		# LINEAR (slerp), not cubic: the cubic ignores the uneven key spacing,
+		# and a quick turn followed by a long hold overshot by hundreds of
+		# degrees -- the Cross Rhodes victim spun a whole turn on the mat after
+		# a constant-yaw hold, the Cody Cutter's Cody ended 100 degrees off his
+		# seat (12 Nov, sampled with rotation_track_interpolate).
+		anim.track_set_interpolation_type(rot_track, Animation.INTERPOLATION_LINEAR)
 		previous = -1.0
 		var first := Quaternion.IDENTITY
 		var last := Quaternion.IDENTITY
@@ -191,6 +196,13 @@ func _bake(move_id: String, spec: Dictionary) -> Animation:
 				return null
 			previous = t
 			var q := _euler_key(key)
+			# q and -q are the same turn, but the cubic interpolation reads
+			# the sign: a key on the other hemisphere from the one before it
+			# sends the curve the long way round. Holding 90 after a twist to
+			# 450 spun the Cross Rhodes victim a whole turn on the mat, and
+			# the Cody Cutter's Cody 100 degrees off his seat (12 Nov).
+			if i > 0 and q.dot(last) < 0.0:
+				q = -q
 			if i == 0:
 				first = q
 			last = q

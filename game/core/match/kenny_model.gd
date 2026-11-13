@@ -1,6 +1,9 @@
 class_name KennyModel
 extends CodyModel
-## Kenny Omega, built on Cody's model.
+## Kenny Omega, built on his own copy of Cody's model (assets/characters/
+## kenny_body.glb, 12 Nov: "I want Kenny to have his own model and not have a
+## dependency on Cody's"). The script still extends CodyModel to share its
+## loading code; the mesh, rig and weights it loads are Kenny's own file.
 ##
 ## The owner, 27 Oct: "Kenny's body isn't good. I'm thinking it would make
 ## sense to use Cody's body for Kenny and adjust it to Kenny, e.g. skin shade,

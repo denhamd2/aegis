@@ -2531,33 +2531,55 @@ const TRAJECTORIES := {
 	# and Whip_Run's planted foot; there is no acceleration step at the seam.
 	"whip_setup": {
 		"length": 1.2,
+		# SWING-THROUGH (parity loop 4, 12 Nov). The tutorial's whipper keeps
+		# the wrist, pivots 180 degrees and swings the man round PAST his own
+		# body, letting go at arm's length with him running toward the rope
+		# behind the whipper (3:01.90-3:02.50). Ours used to spin the man on
+		# the spot and send him at the rope behind himself: a short run and no
+		# arm extension. The attacker's yaw winds 90 -> 270 with the pass and
+		# steps aside (-z) and back so the man clears him on +z, ending 1.0 m
+		# apart along +x -- past GrappleRig's 0.95 m separation, whose ease-
+		# apart otherwise stalled him six ticks before the launch (loop 4b) -- the launch line (_launch_whip_victim aims attacker ->
+		# defender), 3 degrees off the pair axis.
 		"attacker": {
-			"pos": [[0.000, 0.26, 0.00, 0.00], [0.133, 0.25, 0.00, 0.01],
-					[0.233, 0.24, 0.00, 0.01], [0.367, 0.22, 0.00, 0.02],
-					[0.533, 0.20, 0.00, 0.04], [0.733, 0.10, 0.00, 0.08],
-					[0.900, 0.10, 0.00, 0.12], [1.067, 0.14, 0.00, 0.06],
-					[1.200, 0.20, 0.00, 0.04]],
-			"rot": [[0.000, 0.0, 90.0, 0.0], [0.367, 0.0, 92.0, 0.0],
-					[0.533, 0.0, 90.0, 0.0], [0.733, 0.0, 86.0, 0.0],
-					[0.900, 0.0, 88.0, 0.0], [1.067, 0.0, 90.0, 0.0],
-					[1.200, 0.0, 90.0, 0.0]],
+			"pos": [[0.000, 0.26, 0.00, 0.00], [0.133, 0.25, 0.00, 0.00],
+					[0.233, 0.24, 0.00, -0.01], [0.367, 0.23, 0.00, -0.03],
+					[0.533, 0.21, 0.00, -0.08], [0.733, 0.16, 0.00, -0.16],
+					[0.900, 0.08, 0.00, -0.18], [1.067, 0.03, 0.00, -0.14],
+					[1.200, 0.00, 0.00, -0.08]],
+			"rot": [[0.000, 0.0, 90.0, 0.0], [0.367, 0.0, 96.0, 0.0],
+					[0.533, 0.0, 125.0, 0.0], [0.733, 0.0, 180.0, 0.0],
+					[0.900, 0.0, 236.0, 0.0], [1.067, 0.0, 257.0, 0.0],
+					# Ends already facing the runner's line, so the idle turn has
+					# nothing to snap at the release (loops 5-6: a 7-degree step).
+					[1.200, 0.0, 263.0, 0.0]],
 		},
 		"defender": {
-			"pos": [[0.000, -0.26, 0.00, 0.00], [0.133, -0.24, 0.00, 0.01],
-					[0.233, -0.22, 0.00, 0.02], [0.367, -0.17, 0.00, 0.03],
-					[0.533, -0.16, 0.00, 0.01], [0.733, -0.20, 0.00, -0.02],
-					[0.900, -0.24, 0.00, 0.00], [1.067, -0.26, 0.00, 0.02],
-					# The first stride leaves at the 9.0 m/s launch speed so
-					# the handoff to Whip_Run (and to the physics launch) does
-					# not change velocity: 0.747 m in 0.083 s, then 0.450 m in
-					# 0.050 s. Both intervals are 9.0 m/s.
-					[1.150, -1.007, 0.00, 0.03], [1.200, -1.457, 0.00, 0.04]],
-			"rot": [[0.000, 0.0, -90.0, 0.0], [0.267, 0.0, -90.0, 0.0],
-					[0.367, 0.0, -80.0, 0.0], [0.433, 0.0, -18.0, 0.0],
-					[0.467, 0.0, 13.0, 0.0], [0.533, 0.0, 75.0, 0.0],
-					[0.600, 0.0, 90.0, 0.0], [0.733, 0.0, 98.0, 0.0],
-					[0.900, 0.0, 94.0, 0.0], [1.067, 0.0, 92.0, 0.0],
-					[1.150, 0.0, 91.0, 0.0], [1.200, 0.0, 90.0, 0.0]],
+			# Pulled forward past him on +z, then let go accelerating evenly to
+			# the 5.0 m/s launch over the last 0.2 s (25 m/s^2), so the handoff
+			# to Whip_Run does not change velocity and he ends past the rig's
+			# 0.8 m separation (GrappleRig._ease_apart() never shoves him).
+			"pos": [[0.000, -0.26, 0.00, 0.00], [0.133, -0.25, 0.00, 0.02],
+					[0.233, -0.22, 0.00, 0.06], [0.367, -0.16, 0.00, 0.14],
+					[0.533, -0.04, 0.00, 0.26], [0.733, 0.16, 0.00, 0.34],
+					[0.900, 0.34, 0.00, 0.26], [1.000, 0.46, 0.00, 0.16],
+					# Ends 1.10 m out: clear of GrappleRig's 0.95 m ease-apart even
+					# after the fit pulls him back ~0.08 m (loop 4: a stall, then a
+					# one-tick jump where the fit's last offsets stopped).
+					# Whip loop 6: an even ramp into the run's 5 m/s (0.083 m a
+					# tick), not 0.11-0.12 then a slow tick (loop 5).
+					# Whip loop 7: a constant 5 m/s exit (0.25 m per 0.05 s) from
+					# 1.05 s, so the cubic has nothing to overshoot (loop 6:
+					# 6.6 m/s at the last ticks, then the run's 5).
+					[1.050, 0.60, 0.00, 0.10], [1.100, 0.85, 0.00, 0.04],
+					[1.150, 1.10, 0.00, -0.02], [1.200, 1.35, 0.00, -0.06]],
+			# Facing along his path: -90 is +x; the arc out on +z turns him
+			# toward -135, the run back onto the axis brings him to -90.
+			"rot": [[0.000, 0.0, -90.0, 0.0], [0.233, 0.0, -100.0, 0.0],
+					[0.367, 0.0, -128.0, 0.0], [0.533, 0.0, -122.0, 0.0],
+					[0.733, 0.0, -98.0, 0.0], [0.900, 0.0, -80.0, 0.0],
+					[1.000, 0.0, -78.0, 0.0], [1.100, 0.0, -84.0, 0.0],
+					[1.200, 0.0, -90.0, 0.0]],
 		},
 	},
 

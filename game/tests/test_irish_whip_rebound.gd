@@ -167,7 +167,10 @@ func test_an_uncatch_return_passes_the_whipper_and_stops_at_the_far_ropes() -> v
 	# capsules would hold at 0.8 anyway, so anything under 0.6 means the
 	# pass lane did not commit.
 	assert_float(closest).is_greater(0.6)
-	assert_float(runner.global_position.x).is_less(-1.5)
+	# The swing-through (parity loop 4, the tutorial's whip) sends him PAST
+	# the whipper at the -x ropes, so the far ropes he returns to are the
+	# +x side he started on.
+	assert_float(runner.global_position.x).is_greater(1.5)
 	assert_int(runner.fsm.current_state).is_equal(WrestlerFSM.State.IDLE)
 	var idle_sm := runner.anim_tree.tree_root as AnimationNodeStateMachine
 	var idle_node := idle_sm.get_node("IDLE") as AnimationNodeAnimation
@@ -194,9 +197,10 @@ func test_whipped_into_a_corner_he_is_trapped_against_the_turnbuckle() -> void:
 	assert_bool(trapped).is_true()
 	await get_tree().physics_frame
 	await get_tree().physics_frame
+	# Swung through past Roman: the corner beyond the whipper, not behind Cody.
 	var at := Vector2(cody.global_position.x, cody.global_position.z)
-	assert_float(at.distance_to(Vector2(WrestlerController.CORNER_SPOT,
-			WrestlerController.CORNER_SPOT))).is_less(0.35)
+	assert_float(at.distance_to(Vector2(-WrestlerController.CORNER_SPOT,
+			-WrestlerController.CORNER_SPOT))).is_less(0.35)
 
 
 func test_the_corner_whip_goes_to_the_buckle_most_in_line() -> void:

@@ -226,6 +226,14 @@ in place and recorded here. The legs, by contrast, fit to +2.0% and +1.2%.
 ... use Cody's body for Kenny." Kenny is now `cody_rhodes.glb` re-skinned (next
 section); this file stays as the original supplied asset.
 
+## kenny_body.glb
+
+Kenny's own body: a byte-for-byte copy of `cody_rhodes.glb` (same supplied
+file, same provenance caveats as above -- author and licence unknown), taken
+12 Nov so Kenny no longer loads Cody's file. The owner: "I want Kenny to have
+his own model and not have a dependency on Cody's." Changes to Kenny's body
+(skin weights, shape) are made to this file only; Cody is unaffected.
+
 ## Kenny Omega on Cody's model (`kenny_head.png`, `kenny_body_*.png`, `kenny_gear_*.png`, `kenny_face_projected.png`, `kenny_curls.glb`, `kenny_curl_cards.png`)
 
 `KennyModel` is `cody_rhodes.glb` (above, same provenance caveats) with these

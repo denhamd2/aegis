@@ -227,6 +227,10 @@ func _ready() -> void:
 		image.save_png("%s/%s_%02d.png" % [_out, shot, int(_at[grabbed] * 100)])
 		print("  t=%.2f  defender y=%.2f  attacker y=%.2f"
 				% [fraction, defender.global_position.y, attacker.global_position.y])
+		if OS.get_cmdline_user_args().has("--bones"):
+			for w: WrestlerController in [attacker, defender]:
+				print("    %s root %s yaw %.0f  %s" % [w.name, _v3(w.global_position),
+						rad_to_deg(w.global_rotation.y), _bones(w)])
 		grabbed += 1
 	get_tree().quit()
 
@@ -280,3 +284,28 @@ void fragment() {
 	blue.albedo_color = Color(0.32, 0.5, 0.95)
 	for mesh in defender.find_children("*", "MeshInstance3D", true, false):
 		(mesh as MeshInstance3D).material_override = blue
+
+
+## --bones: world positions of the head and pelvis (the Cross Rhodes landing,
+## 12 Nov: which way round is he lying, and is he on the mat).
+static func _bones(w: WrestlerController) -> String:
+	var sk := w.skeleton
+	if sk == null:
+		return "-"
+	var out := ""
+	var low := INF
+	var low_name := ""
+	for i in sk.get_bone_count():
+		var name := sk.get_bone_name(i).to_lower()
+		var at := sk.global_transform * sk.get_bone_global_pose(i).origin
+		if at.y < low:
+			low = at.y
+			low_name = name
+		if name == "head" or name == "pelvis":
+			out += "%s %s  " % [name, _v3(at)]
+	return out + "lowest %.3f (%s)" % [low, low_name]
+
+
+static func _v3(p: Vector3) -> String:
+	return "(%.2f,%.2f,%.2f)" % [p.x, p.y, p.z]
+

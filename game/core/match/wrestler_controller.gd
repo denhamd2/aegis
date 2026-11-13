@@ -262,6 +262,15 @@ const FLURRY_STUN_AT := 3
 const KNOCKBACK_SPEED := 2.2
 const KNOCKBACK_TICKS := 8
 const KNOCKBACK_DECAY := 0.75
+## A knockdown strike (a strike marked leaves_defender_down, no weapon) carries
+## him back about a metre as he goes over, not 0.13 m: the tutorial's side kick
+## and flying knee put the man flat about 1.0-1.2 m back within ~28 frames
+## (parity review, 12 Nov). 3.75 m/s bled by 0.95 a tick over 36 ticks ~ 1.0 m.
+const KNOCKDOWN_CARRY_SPEED := 2.8  # ~0.75 m (loop 5: the side kick's man travelled ~2.3 m with the clip's own drift)
+const KNOCKDOWN_CARRY_TICKS := 36
+const KNOCKDOWN_CARRY_DECAY := 0.95
+var _knockback_decay := KNOCKBACK_DECAY
+var _bump_carry := false
 const STUNNED_TICKS := 45
 ## Irish whip tuning. First-pass values, same caveat as every other tuning
 ## constant in this project: gauntlet/refs/timings.md marks both reversal-
@@ -269,7 +278,15 @@ const STUNNED_TICKS := 45
 ## footage found), so these aren't cited, just chosen to land somewhere
 ## contested rather than degenerate. Confirm/retune via a live probe and
 ## later reference capture, not by feel.
-const IRISH_WHIP_LAUNCH_SPEED := 9.0
+## 9.0 -> 5.0 (the owner, 12 Nov: "score each of ours ... in terms of parity
+## with the reference"). The AEW Fight Forever tutorial's whipped man covers
+## the ring at about 5 m/s (3:02.47 release to the ropes at 3:03.10, and the
+## return pass rope to rope in about 1.35 s); 9 was chosen before that
+## footage was in hand, and made every whip read at double speed.
+const IRISH_WHIP_LAUNCH_SPEED := 5.0
+## The thrown man's return pass to the far ropes (the tutorial's 3:03.50 ->
+## 3:04.85). A voluntary rope run keeps RUN_SPEED: that is a charge, not this.
+const WHIP_RETURN_SPEED := 4.6
 const IRISH_WHIP_REBOUND_DAMPING := 0.85
 const IRISH_WHIP_RETURN_TICKS := 45 # ~0.75s of autopilot return run
 ## Hard cap on the outbound flight before a rope is hit.
@@ -2276,7 +2293,13 @@ func _process_free_movement(delta: float, input: Dictionary) -> void:
 		# still a pop. The clip ends on READY, so restarting idle_ready at
 		# the end is the same pose.
 		_far_rope_stop_ticks -= 1
-		_stop_dead()
+		# Braked into the ropes over FAR_ROPE_BRAKE_TICKS, not stopped dead in
+		# one tick from 4.6 m/s (parity review, 12 Nov).
+		velocity.x = move_toward(velocity.x, 0.0, WHIP_RETURN_SPEED / FAR_ROPE_BRAKE_TICKS)
+		velocity.z = move_toward(velocity.z, 0.0, WHIP_RETURN_SPEED / FAR_ROPE_BRAKE_TICKS)
+		if _far_rope_face != Vector3.ZERO:
+			rotation.y = lerp_angle(rotation.y, atan2(-_far_rope_face.x, -_far_rope_face.z), 0.3)
+		_knockback_ticks = 0
 		_wants_tie_up_this_tick = false
 		if _far_rope_stop_ticks == 0:
 			_restart_state_clip(WrestlerFSM.State.IDLE,
@@ -3000,7 +3023,9 @@ const FAR_ROPE_STOP_TICKS := 48
 ## Centre-to-centre lane the pass keeps around the whipper: two 0.4 m
 ## capsules need 0.8 m not to collide; a shoulder-to-shoulder pass reads at
 ## this and still sits inside REBOUND_CATCH_RANGE for a real catch.
-const WHIP_PASS_LANE := 1.00
+## 1.00 -> 0.85 (12 Nov): the tutorial's runner passes close by the whipper's
+## shoulder; at 1.0 the pass bowed nearly a metre round him.
+const WHIP_PASS_LANE := 0.85
 ## Commit to the pass this far out, so the lane change starts as a run and
 ## not a sidestep at the last metre. Inside it the runner steers through a
 ## line offset WHIP_PASS_LANE from the whipper; outside it he runs the
@@ -3021,9 +3046,12 @@ const WHIP_PASS_EASE_TICKS := 9
 ## 0.58 m forward of the root on frame 6), so the hands and chest finish the
 ## last of the gap instead of the capsule colliding with the rope and
 ## sliding along it.
-const WHIP_FAR_ROPE_TRIGGER := 0.30
+const WHIP_FAR_ROPE_TRIGGER := 0.60  # room for the 13-tick brake (~0.5 m), loop 4
 ## How far inside RING_KEEP_IN the return line aims.
-const WHIP_FAR_ROPE_INSET := 0.35
+## 0.35 -> 0.15 (12 Nov): with the brake's last ~0.3 m he reaches the ropes,
+## hands on the top rope, as the tutorial's runner does (3:04.87).
+const WHIP_FAR_ROPE_INSET := 0.15
+const FAR_ROPE_BRAKE_TICKS := 13.0  # 8 read as a hard plant (parity loop 3)
 
 
 func can_rope_run() -> bool:
@@ -3237,8 +3265,15 @@ func _launch_whip_victim() -> void:
 		_clear_grapple_roles()
 		fsm.transition_to(WrestlerFSM.State.IDLE)
 		return
-	var launch_dir := opponent.global_position - global_position
+	# Along the way the runner faces as the swing lets go of him, not the
+	# line from the whipper to him: the swing-through ends with the two
+	# offset sideways, and that line sent him 11 degrees off his own facing
+	# -- crabbing, then sliding along the ropes (parity loop 4, 12 Nov).
+	var launch_dir := -opponent.global_basis.z
 	launch_dir.y = 0.0
+	if launch_dir.length() < 0.01:
+		launch_dir = opponent.global_position - global_position
+		launch_dir.y = 0.0
 	launch_dir = launch_dir.normalized() if launch_dir.length() > 0.01 else Vector3.FORWARD
 	if _whip_setup_corner:
 		launch_dir = corner_whip_dir(opponent.global_position, launch_dir)
@@ -3383,15 +3418,17 @@ func _whipped_into_screen() -> bool:
 ## is in is excepted from his collision for the load and until he is back
 ## inside the point where it stopped him, and keep_inside_the_ring() stands
 ## aside for the same span (it would snap him back to 2.6).
-const ROPE_LOAD_FREE := 0.38
-const ROPE_LOAD_DEPTH := 0.40
+## 0.38 + 0.40 -> 0.20 + 0.30 (12 Nov): at 5 m/s the runner sits half a metre
+## into the ropes, as the tutorial's does, not 0.78 m.
+const ROPE_LOAD_FREE := 0.10  # loop 4: he sank 0.5 m into the ropes; ~0.25 now
+const ROPE_LOAD_DEPTH := 0.15
 ## How long the root is held at full depth before the ropes throw him back.
 ## The half-sine alone reaches full depth at ~0.11 s (9 m/s), but the authored
 ## Whip_Rope_Absorb plays chest contact -> deep compression -> push-off ->
 ## first return step over 0.50 s (reference video 02, 183.10 -> 183.60). The
 ## hold lets that whole clip play against the loaded ropes instead of being
 ## cut off at its first deep frame.
-const ROPE_LOAD_HOLD_SECONDS := 0.50
+const ROPE_LOAD_HOLD_SECONDS := 0.50  # matches Whip_Rope_Absorb (0.55 froze its last frame 3 ticks)
 ## Longest he can be out in the ropes before being put back regardless -- a
 ## load interrupted by something that holds him still must not strand him
 ## outside the ring with the rope collider switched off.
@@ -3459,11 +3496,15 @@ func _tick_rope_load() -> void:
 	var dt := 1.0 / Engine.physics_ticks_per_second
 	_rope_load_tick += 1
 	var x := rope_load_offset(_rope_load_tick * dt, _rope_load_speed)
-	var push := _turn_off_the_ropes(dt)
+	_turn_off_the_ropes(dt)
+	var push := _rope_push_progress(dt)
 	if x > 0.0:
-		# Pushed back out of them as he turns: at the throw-back he is where
-		# the collider stopped him, so nothing snaps.
-		x -= ROPE_LOAD_DEPTH * push
+		# Pushed back out of them as he turns, the WHOLE way -- free travel and
+		# compression -- to where the collider stopped him, on an ease-in, so
+		# he leaves the ropes moving at about the return run's speed. Only
+		# the compression used to come back: he stood 0.38 m out and the
+		# rebound then moved him 0.46 m in one tick (parity review, 12 Nov).
+		x = maxf(x - (ROPE_LOAD_FREE + ROPE_LOAD_DEPTH) * pow(push, ROPE_PUSH_EASE), 0.0)
 	if x < 0.0:
 		# The hold is over (Whip_Rope_Absorb has reached its first return
 		# step): thrown back, out of the ropes at the rebound's speed, the way
@@ -3472,11 +3513,12 @@ func _tick_rope_load() -> void:
 		# him (_turn_off_the_ropes), so this is a step, not the 0.4 m pop in
 		# one tick it was. And at the run's own speed, so the stride out of
 		# the push-off is the run's (9 x 0.85 = 7.65 m/s, then 7.0).
-		global_position = _rope_load_from + _rope_load_out * ROPE_LOAD_FREE \
-				+ _rope_load_along * (_rope_load_tick * dt)
+		# No position reset here: the push-off has already carried him out,
+		# and snapping him to _rope_load_from jumped him 0.15 m in one tick
+		# (parity review loop 3, 12 Nov).
 		velocity = (-_rope_load_out * _rope_load_speed + _rope_load_along) \
 				* IRISH_WHIP_REBOUND_DAMPING
-		velocity = velocity.limit_length(RUN_SPEED)
+		velocity = velocity.limit_length(RUN_SPEED if rope_running else WHIP_RETURN_SPEED)
 		_irish_whip_rebounded = true
 		_irish_whip_return_ticks_remaining = IRISH_WHIP_RETURN_TICKS
 		if rope_running and is_instance_valid(_irish_whip_target):
@@ -3494,9 +3536,10 @@ func _tick_rope_load() -> void:
 			# change under him while a catch can still start.
 			_whip_far_at = _far_rope_from_here(velocity)
 			_whip_far_set = true
+			_aim_straight_pass()
 			var to_far := Vector2(_whip_far_at.x - global_position.x,
 					_whip_far_at.z - global_position.z)
-			var travel := ceili(to_far.length() / RUN_SPEED
+			var travel := ceili(to_far.length() / WHIP_RETURN_SPEED
 					* Engine.physics_ticks_per_second)
 			_irish_whip_return_ticks_remaining = clampi(travel + 8,
 					IRISH_WHIP_RETURN_TICKS, ROPE_RUN_RETURN_MAX)
@@ -3520,16 +3563,39 @@ func _tick_rope_load() -> void:
 ## run's look_at used to spin him 180 degrees on the spot on its first tick,
 ## which the inertializer turned out over a quarter second of sprinting
 ## sideways. Turned here a step a tick, shown as it is.
-const ROPE_TURN_TICKS := 16
+const ROPE_TURN_TICKS := 9
+## The push back out of the ropes: the last WHIP_ROPE_PUSH_TICKS of the hold.
+const WHIP_ROPE_PUSH_TICKS := 6  # sit to ~+27, leave ~+33 -> run by +30ish
+## The push-off's ease-in exponent: (FREE + DEPTH) x 1.6 / WHIP_ROPE_PUSH_TICKS
+## leaves the ropes at about 4.8 m/s, the return run's 4.6.
+const ROPE_PUSH_EASE := 1.65  # exit 0.25 m x 1.65 / (6/60 s) = 4.1 m/s
 
 
 ## Returns how far through the turn he is, 0..1 (eased), which is also how
 ## far the ropes have pushed him back out of their full depth.
-func _turn_off_the_ropes(dt: float) -> float:
+func _rope_hold_end_tick(dt: float) -> int:
 	var hold := maxf(ROPE_LOAD_HOLD_SECONDS,
 			ROPE_LOAD_FREE / _rope_load_speed + PI * ROPE_LOAD_DEPTH / (2.0 * _rope_load_speed))
-	var end_tick := ceili(hold / dt)
-	var from_tick := end_tick - ROPE_TURN_TICKS
+	return ceili(hold / dt)
+
+
+## How far through the push back out of the ropes he is, 0..1, linear: the
+## last WHIP_ROPE_PUSH_TICKS of the hold.
+func _rope_push_progress(dt: float) -> float:
+	var end_tick := _rope_hold_end_tick(dt)
+	return clampf(float(_rope_load_tick - (end_tick - WHIP_ROPE_PUSH_TICKS)) / float(WHIP_ROPE_PUSH_TICKS),
+			0.0, 1.0)
+
+
+## He turns round as he reaches the ropes -- over the FIRST ROPE_TURN_TICKS of
+## the load -- and sits back into them back-first, as the tutorial's runner
+## does (3:03.10 at the ropes facing them, turned by 3:03.25, seated against
+## them 3:03.30-3:03.55; the parity review, 12 Nov). Whip_Rope_Absorb is
+## authored back-to-the-ropes; turning at the END had him facing them while
+## it sat him back, and pirouette off them on the way out.
+func _turn_off_the_ropes(dt: float) -> float:
+	var end_tick := ROPE_TURN_TICKS
+	var from_tick := 0
 	if _rope_load_tick <= from_tick:
 		return 0.0
 	if _rope_load_tick > end_tick + 1:
@@ -3550,7 +3616,7 @@ func _turn_off_the_ropes(dt: float) -> float:
 	if inertializer:
 		inertializer.skip_next_turn()
 	rotation.y = yaw_in + turn * smoothstep(0.0, 1.0, t)
-	return smoothstep(0.0, 1.0, t)
+	return t
 
 
 ## Hands the rope collider back once he is inside where it stopped him.
@@ -3678,8 +3744,8 @@ func _process_whip_pass() -> void:
 				var goal := line * ahead + perp * correction
 				if goal.length() > 0.01:
 					var dir := goal.normalized()
-					velocity.x = dir.x * RUN_SPEED
-					velocity.z = dir.z * RUN_SPEED
+					velocity.x = dir.x * WHIP_RETURN_SPEED
+					velocity.z = dir.z * WHIP_RETURN_SPEED
 					look_at(global_position + dir, Vector3.UP)
 					return
 				_whip_pass_set = false
@@ -3702,9 +3768,25 @@ func _process_whip_pass() -> void:
 			or _irish_whip_return_ticks_remaining <= 0:
 		_begin_far_rope_stop()
 		return
-	velocity.x = line.x * RUN_SPEED
-	velocity.z = line.z * RUN_SPEED
-	look_at(global_position + line, Vector3.UP)
+	# Onto the line a few degrees a tick, not in one: the aimed pass is ~17
+	# degrees off the axis he left the ropes on, and taking it in one tick was
+	# a visible snap (parity review loop 3, 12 Nov).
+	var facing := -global_transform.basis.z
+	facing.y = 0.0
+	var dir := line
+	if facing.length() > 0.01:
+		facing = facing.normalized()
+		var turn := facing.signed_angle_to(line, Vector3.UP)
+		var step := deg_to_rad(WHIP_RUN_TURN_DEG_PER_TICK)
+		if absf(turn) > step:
+			dir = facing.rotated(Vector3.UP, signf(turn) * step)
+	velocity.x = dir.x * WHIP_RETURN_SPEED
+	velocity.z = dir.z * WHIP_RETURN_SPEED
+	look_at(global_position + dir, Vector3.UP)
+
+
+## How fast the return run comes round onto its line: 17 degrees in 6 ticks.
+const WHIP_RUN_TURN_DEG_PER_TICK := 3.0
 
 
 ## The far-rope stop: zero the run on the tick he reaches the trigger and
@@ -3714,8 +3796,20 @@ func _process_whip_pass() -> void:
 ## input off for its length so the absorb is not cut off mid-way. The blend
 ## into it is the state machine's normal crossfade, and the clip's first
 ## frame is a sprint contact, so there is no snap.
+## The rope he stops against, as the axis-aligned direction he was running:
+## he squares up to it through the brake (parity review, 12 Nov: he stopped
+## 20 degrees off square, with daylight between him and the rope).
+var _far_rope_face := Vector3.ZERO
+
+
 func _begin_far_rope_stop() -> void:
-	velocity = Vector3.ZERO
+	velocity.y = 0.0
+	var run := Vector3(velocity.x, 0.0, velocity.z)
+	if run.length() > 0.1:
+		_far_rope_face = Vector3(signf(run.x), 0.0, 0.0) if absf(run.x) >= absf(run.z) \
+				else Vector3(0.0, 0.0, signf(run.z))
+	else:
+		_far_rope_face = Vector3.ZERO
 	_irish_whip_return_ticks_remaining = 0
 	_whip_meet_ticks = -1
 	_whip_far_at = Vector3.ZERO
@@ -3727,6 +3821,44 @@ func _begin_far_rope_stop() -> void:
 	_far_rope_stop_ticks = FAR_ROPE_STOP_TICKS
 	_set_state_clip(WrestlerFSM.State.IDLE, FAR_ROPE_STOP_CLIP)
 	fsm.transition_to(WrestlerFSM.State.IDLE)
+
+
+## The tutorial's return (3:03.56-3:04.85) is a straight run that passes close
+## by the whipper's shoulder, not a lane change round him: the far point is
+## moved sideways just enough that the straight line from here clears him by
+## WHIP_PASS_CLEAR, and the lane steer is switched off (parity review, 12 Nov:
+## the steered pass bowed 0.76 m and swung the yaw through 50 degrees).
+const WHIP_PASS_CLEAR := 0.85  # two 0.4 m bodies plus a hand: shoulder to shoulder, not into him
+
+
+func _aim_straight_pass() -> void:
+	if not _irish_whip_target or not is_instance_valid(_irish_whip_target):
+		return
+	var here := Vector3(global_position.x, 0.0, global_position.z)
+	var far := Vector3(_whip_far_at.x, 0.0, _whip_far_at.z)
+	var him := Vector3(_irish_whip_target.global_position.x, 0.0,
+			_irish_whip_target.global_position.z)
+	var route := far - here
+	if route.length() < 0.5:
+		return
+	var dir := route.normalized()
+	var reach := (him - here).dot(dir)
+	if reach <= 0.3 or reach >= route.length():
+		_whip_pass_done = true
+		return
+	var perp := Vector3(-dir.z, 0.0, dir.x)
+	var side := (here - him).dot(perp)
+	side = 1.0 if side >= 0.0 else -1.0
+	# Lateral offset at the far point that puts the line WHIP_PASS_CLEAR off
+	# him where it passes him: similar triangles from here.
+	var at_him := (him - here).dot(perp) + side * WHIP_PASS_CLEAR
+	var shift := perp * at_him * route.length() / reach
+	var edge := RING_KEEP_IN - WHIP_FAR_ROPE_INSET
+	var aimed := far + shift
+	aimed.x = clampf(aimed.x, -edge, edge)
+	aimed.z = clampf(aimed.z, -edge, edge)
+	_whip_far_at = Vector3(aimed.x, _whip_far_at.y, aimed.z)
+	_whip_pass_done = true
 
 
 ## The point on the far rope this rebound is heading for. `dir` is the
@@ -4917,8 +5049,9 @@ func _resolve_pending_hits() -> void:
 				if WeaponCatalog.cuts(weapon_def):
 					_writhe_in = WRITHE_AFTER
 	if lariat and not combat.is_fired_up():
-		_bump_clip = BUMP_LARIAT_CLIP
+		_bump_clip = knockdown_bump_clip(last_move)
 		_bump_shove = maxf(_bump_shove, LARIAT_SHOVE)
+		_bump_carry = true
 	# A rear chair blow and a guitar crumple forward. A superkick turns its
 	# victim around before he lands; both use dedicated authored solo falls.
 	var behind := opponent != null and (-global_basis.z).dot(
@@ -5067,6 +5200,14 @@ func _begin_hit_reaction(move: MoveDef) -> void:
 		return
 	velocity = away.normalized() * KNOCKBACK_SPEED * float(SELL_SHOVE.get(_hit_sell, 1.0))
 	_knockback_ticks = KNOCKBACK_TICKS
+	if move and move.shove_m > 0.0:
+		# A push, bled out inside the 20-tick reaction so nothing carries into
+		# the state after it: 18 ticks at 0.9 cover shove_m.
+		var d := 0.9
+		var v := move.shove_m * 60.0 * (1.0 - d) / d / (1.0 - pow(d, 18.0))
+		velocity = away.normalized() * v
+		_knockback_ticks = 18
+		_knockback_decay = d
 
 ## Points the STRIKE state at this strike's own clip before entering it.
 ##
@@ -5834,6 +5975,17 @@ const BUMP_TICKS := 30
 const BUMP_LARIAT_CLIP := "strikes/bump_lariat"
 const BUMP_FACE_CLIP := "strikes/bump_face"
 const BUMP_SPIN_CLIP := "strikes/bump_spin"
+## A kick's knockdown falls slower than a lariat's: flat at ~+36 ticks.
+const BUMP_KICK_CLIP := "strikes/bump_kick"
+const KICK_BUMP_TICKS := 44
+
+
+## The fall a knockdown strike plays: the lariat's for a running attack, the
+## held-up kick fall for a standing or flying strike (parity loop 4).
+static func knockdown_bump_clip(move: MoveDef) -> String:
+	if move and String(move.animation_pair_id).begins_with("strike_"):
+		return BUMP_KICK_CLIP
+	return BUMP_LARIAT_CLIP
 const LARIAT_BUMP_TICKS := 36
 const LARIAT_SHOVE := 1.6
 
@@ -5885,21 +6037,29 @@ func _bump_down() -> void:
 		return
 	_stop_dead()
 	_knockback_ticks = 0
+	_knockback_decay = KNOCKBACK_DECAY
 	_sell_clip = ""
 	var clip := _bump_clip if _bump_clip != "" and anim_player != null \
 			and anim_player.has_animation(_bump_clip) else "strikes/bump_back"
 	_bump_clip = ""
 	_set_state_clip(WrestlerFSM.State.HIT_REACT, clip)
-	_start_move(WrestlerFSM.State.HIT_REACT, _timed_stub(LARIAT_BUMP_TICKS if clip in [BUMP_LARIAT_CLIP, BUMP_SPIN_CLIP] else BUMP_TICKS))
+	_start_move(WrestlerFSM.State.HIT_REACT, _timed_stub(KICK_BUMP_TICKS if clip == BUMP_KICK_CLIP
+			else LARIAT_BUMP_TICKS if clip in [BUMP_LARIAT_CLIP, BUMP_SPIN_CLIP] else BUMP_TICKS))
 	_bumping = true
 	if _bump_shove > 1.0 and opponent:
 		# the heaviest weapons carry him back as he goes over
 		var away := global_position - opponent.global_position
 		away.y = 0.0
 		if away.length() > 0.001:
-			velocity = away.normalized() * KNOCKBACK_SPEED * (_bump_shove - 1.0) * 1.5
-			_knockback_ticks = KNOCKBACK_TICKS
+			if _bump_carry:
+				velocity = away.normalized() * KNOCKDOWN_CARRY_SPEED
+				_knockback_ticks = KNOCKDOWN_CARRY_TICKS
+				_knockback_decay = KNOCKDOWN_CARRY_DECAY
+			else:
+				velocity = away.normalized() * KNOCKBACK_SPEED * (_bump_shove - 1.0) * 1.5
+				_knockback_ticks = KNOCKBACK_TICKS
 	_bump_shove = 1.0
+	_bump_carry = false
 
 
 ## A handgun hit is lethal: all vitality is permanently lost and the wrestler
@@ -6062,9 +6222,10 @@ func _process_timed_state(input: Dictionary, next_state: WrestlerFSM.State) -> v
 	# 20-tick reaction and carry the man most of a metre.
 	if _knockback_ticks > 0:
 		_knockback_ticks -= 1
-		velocity *= KNOCKBACK_DECAY
+		velocity *= _knockback_decay
 		if _knockback_ticks == 0:
 			velocity = Vector3.ZERO
+			_knockback_decay = KNOCKBACK_DECAY
 	_move_ticks_remaining -= 1
 	if _move_ticks_remaining <= 0 and _bumping:
 		# The bump is over, his shoulders on the mat, head away from the man
