@@ -62,6 +62,34 @@ def build(name,half,base,top,rails,door_axis,dw,dh,roof):
         if sum(abs(c)>1e-5 for c in v)==1:
             box(part,(a+b)/2,tuple(abs(c)+width for c in v),min(.005,width*.12))
         else:tube(part,[a,b],width*.5,6)
+    def roof_truss(part,a,b):
+        a,b=Vector(a),Vector(b);direction=(b-a).normalized()
+        side=Vector((0,1,0)).cross(direction);length=(b-a).length
+        # Open triangular web under the walking plane, not a solid square bar.
+        for off in [-.08,.08]:
+            for y in [-.025,-.30]:
+                tube(part,[a+side*off+Vector((0,y,0)),b+side*off+Vector((0,y,0))],.022,8)
+        count=math.ceil(length/.45)
+        for k in range(count):
+            for off in [-.08,.08]:
+                y0,y1=(-.045,-.28) if k%2==0 else (-.28,-.045)
+                tube(part,[a+direction*(length*k/count)+side*off+Vector((0,y0,0)),
+                           a+direction*(length*(k+1)/count)+side*off+Vector((0,y1,0))],.010,6)
+        size=Vector((abs(direction.x)*length+abs(side.x)*.12,.012,
+                     abs(direction.z)*length+abs(side.z)*.12))
+        box(part,(a+b)/2+Vector((0,.004,0)),size,.002)
+    def wall_rail(part,a,b):
+        a,b=Vector(a),Vector(b);direction=(b-a).normalized()
+        side=Vector((0,1,0)).cross(direction);length=(b-a).length
+        for off in [-.06,.06]:
+            for y in [-.04,.04]:
+                tube(part,[a+side*off+Vector((0,y,0)),b+side*off+Vector((0,y,0))],.018,8)
+        count=math.ceil(length/.6)
+        for k in range(count):
+            y0,y1=(-.04,.04) if k%2==0 else (.04,-.04)
+            for off in [-.06,.06]:
+                tube(part,[a+direction*(length*k/count)+side*off+Vector((0,y0,0)),
+                           a+direction*(length*(k+1)/count)+side*off+Vector((0,y1,0))],.009,6)
     def upright(part,at,width):
         at=Vector(at)
         if roof:
@@ -83,9 +111,12 @@ def build(name,half,base,top,rails,door_axis,dw,dh,roof):
         lat=Vector((abs(axis.z),0,abs(axis.x)));isdoor=tuple(axis)==tuple(door_axis)
         def point(along,y):return axis*half+lat*along+Vector((0,y,0))
         for f in rails:
+            if roof and f == 1:continue # Roof truss supplies the perimeter.
             y=base+f*h
             spans=[(-half,-dw/2),(dw/2,half)] if isdoor and y<base+dh-.01 else [(-half,half)]
-            for a,b in spans:beam(part,point(a,y),point(b,y),.065*scale)
+            for a,b in spans:
+                if roof:wall_rail(part,point(a,y),point(b,y))
+                else:beam(part,point(a,y),point(b,y),.065*scale)
         for i in range(5):
             along=-half+span*i/4
             if i in (0,4) and axis.z != 0:continue
@@ -115,8 +146,8 @@ def build(name,half,base,top,rails,door_axis,dw,dh,roof):
         bay=span/4
         for i in range(5):
             v=-half+span*i/4
-            beam(part,(v,top,-half),(v,top,half),.156)
-            beam(part,(-half,top,v),(half,top,v),.156)
+            roof_truss(part,(v,top,-half),(v,top,half))
+            roof_truss(part,(-half,top,v),(half,top,v))
         for i in range(4):
             for j in range(4):
                 centre=Vector((-half+bay*(i+.5),top,-half+bay*(j+.5)))
@@ -170,7 +201,9 @@ def hardware():
 
 if __name__=='__main__':
     TEX.mkdir(parents=True,exist_ok=True)
-    build('steel_cage',3.26,-.12,4.,[0,.5,1],Vector((-1,0,0)),1.1,2.05,False)
-    build('hell_in_a_cell',4.7,-1.1,5.,[0,.33,.66,1],Vector((0,0,-1)),1.4,2.3,True)
-
-    hardware()
+    only=sys.argv[sys.argv.index('--only')+1] if '--only' in sys.argv else ''
+    if not only or only=='steel_cage':
+        build('steel_cage',3.26,-.12,4.,[0,.5,1],Vector((-1,0,0)),1.1,2.05,False)
+    if not only or only=='hell_in_a_cell':
+        build('hell_in_a_cell',4.7,-1.1,5.,[0,.33,.66,1],Vector((0,0,-1)),1.4,2.3,True)
+    if not only or only=='cage_hardware':hardware()
