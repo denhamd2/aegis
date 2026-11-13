@@ -79,7 +79,9 @@ def paint_textures(weapon_id: str, paint_rgb: tuple, chip_amount: float) -> tupl
     metal = chips * 1.0
     orm = np.stack([np.ones_like(rough), np.clip(rough, 0, 1), metal], -1)
     height = -chips * 0.6 - scuff * 0.15 + grime * 0.05
-    nrm = kit.normal_from_height(height, 6.0)
+    # Enamel is a thin coating, not hammered cast iron: keep chips recessed
+    # but suppress full-panel normal noise at close broadcast distance.
+    nrm = kit.normal_from_height(height, 2.5 if weapon_id == "steel_chair" else 6.0)
     d = kit.TEX_DIR
     kit.save_rgb(np.clip(base, 0, 0.85), d / f"{weapon_id}_paint_base.png")
     kit.save_rgb(orm, d / f"{weapon_id}_paint_orm.png")
@@ -164,6 +166,10 @@ def _feet(part: kit.WeaponPart, feet: list[tuple[Vector, Vector]]) -> None:
 
 
 def _rivet(part: kit.WeaponPart, at: Vector, axis: Vector) -> None:
+    # Stamped pivot washer under the pin head; stays within the existing
+    # tube envelope and shares the frame material/draw call.
+    if part.name.startswith("SteelChair_"):
+        part.tube([at - axis * 0.002, at + axis * 0.001], 0.009, 10, caps=True)
     part.tube([at - axis * 0.004, at + axis * 0.004], 0.0055, 8, caps=True)
 
 
@@ -343,10 +349,12 @@ def wrap_wire(root, prefix: str, wire_mat, folded: bool, rng) -> None:
     kit.add_mesh(root, part, wire_mat, smooth=True, uv_scale=4.0, auto_smooth_deg=180.0)
 
 
-def main() -> None:
+def main(only: str = "") -> None:
     report = []
     for weapon_id, roots in (("steel_chair", ("SteelChair_Folded", "SteelChair_Open", "SteelChair_Bent")),
                              ("barbed_wire_chair", ("BarbedWireChair_Folded", "BarbedWireChair_Open"))):
+        if only and weapon_id != only:
+            continue
         kit.reset()
         # charcoal enamel on the arena chair, a lighter grey on the wire one
         base, orm, nrm = paint_textures(weapon_id, (0.15, 0.155, 0.16) if weapon_id == "steel_chair"

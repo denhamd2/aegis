@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites id="2026-11-13" name="report_1" tests="32" failures="1" skipped="0" flaky="0" time="0.000">
+	<testsuite id="0" name="test_weapon_catalog" package="tests" timestamp="2026-11-13T07:49:31" hostname="localhost" tests="16" failures="0" errors="0" skipped="0" flaky="0" time="7.751">
+		<testcase name="test_there_are_37_weapons_in_six_families" classname="test_weapon_catalog" time="0.004">
+		</testcase>
+		<testcase name="test_every_weapon_loads_with_its_states_and_grips" classname="test_weapon_catalog" time="2.133">
+		</testcase>
+		<testcase name="test_every_weapon_is_inside_its_triangle_budget" classname="test_weapon_catalog" time="2.381">
+		</testcase>
+		<testcase name="test_every_swing_has_a_move_with_reach" classname="test_weapon_catalog" time="0.008">
+		</testcase>
+		<testcase name="test_hockey_stick_uses_its_slapshot_profile" classname="test_weapon_catalog" time="0.005">
+		</testcase>
+		<testcase name="test_kendo_stick_uses_its_overhead_chop_and_stays_at_head_height" classname="test_weapon_catalog" time="0.086">
+		</testcase>
+		<testcase name="test_chairs_use_their_high_overhead_swing_and_stay_at_head_height" classname="test_weapon_catalog" time="0.122">
+		</testcase>
+		<testcase name="test_trash_can_uses_the_centered_two_hand_slam" classname="test_weapon_catalog" time="0.007">
+		</testcase>
+		<testcase name="test_shovel_uses_its_centered_flat_blade_swing" classname="test_weapon_catalog" time="0.039">
+		</testcase>
+		<testcase name="test_a_thrown_weapon_lands_and_comes_to_rest_on_the_floor" classname="test_weapon_catalog" time="0.050">
+		</testcase>
+		<testcase name="test_a_throw_is_the_same_every_time" classname="test_weapon_catalog" time="0.081">
+		</testcase>
+		<testcase name="test_wear_dents_then_a_breakable_one_breaks" classname="test_weapon_catalog" time="0.262">
+		</testcase>
+		<testcase name="test_every_swing_and_weapon_action_has_its_clip" classname="test_weapon_catalog" time="0.007">
+		</testcase>
+		<testcase name="test_every_swing_path_leaves_and_returns_to_the_carry_and_lands_in_front" classname="test_weapon_catalog" time="2.502">
+		</testcase>
+		<testcase name="test_every_weapon_has_a_sound_and_its_moves_name_it" classname="test_weapon_catalog" time="0.010">
+		</testcase>
+		<testcase name="test_most_weapon_impacts_knock_a_wrestler_down" classname="test_weapon_catalog" time="0.004">
+		</testcase>
+	</testsuite>
+	<testsuite id="1" name="test_weapon_grip_contact" package="tests" timestamp="2026-11-13T07:49:39" hostname="localhost" tests="1" failures="1" errors="0" skipped="0" flaky="0" time="46.844">
+		<testcase name="test_every_hand_is_on_its_grip" classname="test_weapon_grip_contact" time="46.838">
+			<failure message="FAILED: res://tests/test_weapon_grip_contact.gd:105" type="FAILURE">
+<![CDATA[
+8 weapons with a hand off its grip:
+steel_chair          carry r   0.0 l   0.0  swing r   1.5 l   1.1 cm
+barbed_wire_chair    carry r   0.0 l   0.0  swing r   1.7 l   0.9 cm
+baseball_bat         carry r   0.0 l   0.0  swing r   0.9 l   1.9 cm
+barbed_wire_bat      carry r   0.0 l   0.0  swing r   0.0 l   1.8 cm
+kendo_stick          carry r   0.0 l   8.5  swing r   0.0 l   8.6 cm  <--
+sledgehammer         carry r   0.0 l   0.0  swing r   0.0 l   0.0 cm
+lead_pipe            carry r   0.0 l   0.0  swing r   0.0 l   0.0 cm
+board_with_nails     carry r   0.0 l   0.2  swing r   0.0 l   1.9 cm
+shovel               carry r   0.0 l   4.7  swing r   0.0 l   4.8 cm  <--
+hockey_stick         carry r   0.0 l   4.5  swing r   0.0 l   4.6 cm  <--
+crutch               carry r   0.0 l   0.1  swing r   0.0 l   0.2 cm
+stop_sign            carry r   0.0 l   2.1  swing r   0.0 l   2.1 cm
+guitar               carry r   0.0 l   0.0  swing r   0.0 l   0.0 cm
+knife                carry r   0.0 l   0.0  swing r   0.3 l   0.0 cm
+sword                carry r   0.0 l   3.8  swing r   0.0 l   3.8 cm  <--
+inflatable_banana    carry r   0.0 l   0.5  swing r   1.9 l   1.9 cm
+trash_can            carry r   0.0 l   0.0  swing r   0.0 l   0.0 cm
+steel_steps          carry r   0.0 l   0.0  swing r   1.7 l   2.0 cm
+ring_bell            carry r   0.0 l   0.0  swing r   0.0 l   0.0 cm
+championship_belt    carry r   0.0 l   0.0  swing r   0.0 l   0.0 cm
+cookie_sheet         carry r   0.0 l   0.0  swing r   0.0 l   0.0 cm
+frying_pan           carry r   0.0 l   0.0  swing r   0.0 l   0.0 cm
+wire_cutters         carry r   0.0 l   0.0  swing r   0.0 l   0.0 cm
+briefcase            carry r   0.0 l   0.0  swing r   0.0 l   2.0 cm
+table                carry r   0.0 l   6.3  swing r   0.0 l   6.3 cm  <--
+glass_pane           carry r   0.0 l   6.1  swing r   1.8 l   6.1 cm  <--
+ladder               carry r   0.0 l   0.0  swing r   6.4 l   1.8 cm  <--
+thumbtacks           carry r   0.0 l   0.0  swing r   0.0 l   0.0 cm
+bed_of_nails         carry r   0.0 l   5.3  swing r   0.0 l   0.0 cm  <--
+light_tubes          carry r   0.0 l   0.0  swing r   0.0 l   1.9 cm
+barbed_wire_board    carry r   0.0 l   0.0  swing r   2.0 l   2.0 cm
+fire_extinguisher    carry r   0.0 l   0.0  swing r   0.0 l   2.0 cm
+fire_torch           carry r   0.0 l   0.0  swing r   0.4 l   0.0 cm
+handgun              carry r   0.0 l   0.0  swing r   0.0 l   0.0 cm
+rpg                  carry r   0.0 l   0.0  swing r   0.0 l   0.0 cm
+chain                carry r   0.0 l   0.0  swing r   0.0 l   0.0 cm
+weight_belt          carry r   0.0 l   0.0  swing r   1.0 l   0.0 cm
+brass_knuckles       carry r   0.0 l   0.0  swing r   0.0 l   0.0 cm
+	at 'test_every_hand_is_on_its_grip' in res://tests/test_weapon_grip_contact.gd:105
+	at '_misses' in res://tests/test_weapon_grip_contact.gd:83
+	at '_ticks' in res://tests/test_weapon_grip_contact.gd:27
+]]>
+			</failure>
+		</testcase>
+	</testsuite>
+	<testsuite id="2" name="test_weapon_set_pieces" package="tests" timestamp="2026-11-13T07:50:26" hostname="localhost" tests="9" failures="0" errors="0" skipped="0" flaky="0" time="8.886">
+		<testcase name="test_put_down_on_a_table_he_goes_through_it" classname="test_weapon_set_pieces" time="0.806">
+		</testcase>
+		<testcase name="test_the_table_breaks_the_same_way_every_time" classname="test_weapon_set_pieces" time="1.626">
+		</testcase>
+		<testcase name="test_a_table_out_of_reach_stays_up" classname="test_weapon_set_pieces" time="0.811">
+		</testcase>
+		<testcase name="test_a_ringside_table_keeps_its_full_footprint_inside_the_barricade" classname="test_weapon_set_pieces" time="0.097">
+		</testcase>
+		<testcase name="test_not_in_a_singles_match" classname="test_weapon_set_pieces" time="0.755">
+		</testcase>
+		<testcase name="test_on_the_tacks_they_stay_and_some_stick_in_his_back" classname="test_weapon_set_pieces" time="0.811">
+		</testcase>
+		<testcase name="test_a_barbed_wire_board_hurts_him_and_stays_set_up" classname="test_weapon_set_pieces" time="0.809">
+		</testcase>
+		<testcase name="test_a_laid_out_ladder_is_a_paired_slam_landing_surface" classname="test_weapon_set_pieces" time="0.820">
+		</testcase>
+		<testcase name="test_a_chair_on_the_floor_hurts_less_than_a_table" classname="test_weapon_set_pieces" time="2.313">
+		</testcase>
+	</testsuite>
+	<testsuite id="3" name="test_ladder_climb" package="tests" timestamp="2026-11-13T07:50:35" hostname="localhost" tests="6" failures="0" errors="0" skipped="0" flaky="0" time="1.433">
+		<testcase name="test_climbing_moves_up_and_returns_to_idle_at_the_base" classname="test_ladder_climb" time="0.065">
+		</testcase>
+		<testcase name="test_a_hit_tips_the_ladder_and_the_climber_falls_to_down" classname="test_ladder_climb" time="0.298">
+		</testcase>
+		<testcase name="test_a_carried_ladder_can_be_set_upright" classname="test_ladder_climb" time="0.106">
+		</testcase>
+		<testcase name="test_a_ladder_can_be_set_up_outside_and_folded_to_slide_under_the_ropes" classname="test_ladder_climb" time="0.912">
+		</testcase>
+		<testcase name="test_ladder_climb_states_have_authored_animation_clips" classname="test_ladder_climb" time="0.017">
+		</testcase>
+		<testcase name="test_top_of_ladder_aerial_has_paired_move_pose_and_landing_sell" classname="test_ladder_climb" time="0.003">
+		</testcase>
+	</testsuite>
+</testsuites>

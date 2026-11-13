@@ -54,9 +54,9 @@ def wood_textures(weapon_id: str) -> tuple:
     # fine, near-straight grain: ~3 mm lines over the 1.8 m the map covers
     grain = 0.5 + 0.5 * np.sin(2 * math.pi * (yy * 170.0 + warp * 1.6 + fine * 0.25))
     grain = grain ** 3.0 * (0.6 + 0.4 * kit.fbm(rng, n, 12, 2))
-    light = np.array([0.66, 0.53, 0.38])
-    dark = np.array([0.47, 0.34, 0.22])
-    lam = light[None, None] * (1 - grain[..., None] * 0.45) + dark[None, None] * grain[..., None] * 0.45
+    light = np.array([0.60, 0.46, 0.31])
+    dark = np.array([0.42, 0.29, 0.18])
+    lam = light[None, None] * (1 - grain[..., None] * 0.65) + dark[None, None] * grain[..., None] * 0.65
     lam *= 0.93 + 0.12 * fine[..., None]
     flecks = kit.fbm(rng, n, 160, 2)
     board = np.array([0.55, 0.44, 0.30])[None, None] * (0.75 + 0.5 * flecks[..., None])
@@ -69,7 +69,8 @@ def wood_textures(weapon_id: str) -> tuple:
     base = base * (1 - scuff[..., None] * 0.25) + scuff[..., None] * 0.08
     dirt = np.clip((kit.fbm(rng, n, 7, 3) - 0.55) * 3.0, 0, 1)
     base *= 1 - dirt[..., None] * 0.25
-    rough = 0.48 + 0.25 * worn + 0.15 * scuff + 0.1 * dirt
+    # Satin laminate keeps its grain readable under a hard broadcast key.
+    rough = 0.60 + 0.18 * worn + 0.12 * scuff + 0.08 * dirt
     orm = np.stack([np.ones_like(rough), np.clip(rough, 0, 1), np.zeros_like(rough)], -1)
     nrm = kit.normal_from_height(grain * 0.15 - worn * 0.4 + flecks * worn * 0.4 - scuff * 0.2, 3.0)
     d = kit.TEX_DIR
@@ -165,6 +166,12 @@ def u_leg(part: kit.WeaponPart, hinge_x: float, foot_x: float, foot_y: float, to
     mid = Vector((hinge_x, top_y, 0)).lerp(Vector((foot_x, foot_y, 0)), 0.35)
     part.tube([mid + Vector((0, 0, -LEG_HALF)), mid + Vector((0, 0, LEG_HALF))], TUBE * 0.8, 10)
     part.tube([Vector((hinge_x, top_y, -LEG_HALF - 0.02)), Vector((hinge_x, top_y, LEG_HALF + 0.02))], TUBE * 0.9, 10)
+    # Hinge sleeves wrap the folding axle under the top. Open ends avoid
+    # bevel tessellation on hidden caps; share the leg surface/material.
+    for side in (-1, 1):
+        at = Vector((hinge_x, top_y, side * LEG_HALF))
+        part.tube([at - Vector((0, 0, 0.014)), at + Vector((0, 0, 0.014))],
+                  TUBE * 1.3, 10, caps=False)
     if brace_to is not None:
         part.tube([mid, brace_to], TUBE * 0.7, 8)
 
@@ -294,6 +301,12 @@ def ladder_half(part, steps, rail_mat_part, foot_part, angle: float, back: bool,
             steps.oriented_box(c, Vector((1, 0, 0)), Vector((0, 0, 1)), Vector((hw * 2, 0.022, 0.085)), bevel=0.004)
             for r in (-0.025, 0.0, 0.025):
                 steps.box(c + Vector((0, 0.012, r)), Vector((hw * 2 - 0.02, 0.004, 0.006)))
+            # Swaged rivet heads secure each step into the extrusion.
+            # Their shallow profile remains inside the rail's outer bounds.
+            if k == n - 1:
+                for side in (-1, 1):
+                    pin = at(s_, side * hw) + Vector((0, 0, -0.015))
+                    rail_mat_part.tube([pin, pin + Vector((0, 0, -0.003))], 0.007, 8, caps=True)
             rungs.append(c + Vector((0, 0.011, 0)))
         elif k % 3 == 0:
             rail_mat_part.tube([at(s_, -hw), at(s_, hw)], 0.012, 10)
@@ -643,13 +656,30 @@ def plywood_textures(name: str) -> tuple:
     return kit.wood_textures(name, (0.74, 0.60, 0.42), (0.60, 0.45, 0.28), 30, 0.0, along_rows=False)
 
 
-def build_more(report: list) -> None:
+def ladder_metal_textures(name: str, color: tuple, wear: float, rough: float) -> tuple:
+    """Extruded aluminium: fine longitudinal brushing, not isotropic dents.
+    Retain existing 512px maps, packing and material count.
+    """
+    paths = kit.metal_textures(name, color, wear, rough)
+    from PIL import Image
+    rng = np.random.RandomState(kit.seed_of(name + "_brushed"))
+    n = 512
+    lines = rng.uniform(-1.0, 1.0, (n, 1))
+    lines = np.repeat(lines, n, axis=1)
+    orm = np.asarray(Image.open(paths[1]).convert("RGB"), np.float32) / 255.0
+    orm[..., 1] = np.clip(orm[..., 1] + lines * 0.035, 0.25, 0.68)
+    kit.save_rgb(orm, paths[1])
+    kit.save_rgb(kit.normal_from_height(lines * 0.035, 1.2), paths[2])
+    return paths
+
+
+def build_more(report: list, only_ladder: bool = False) -> None:
     sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
     from chairs import wire_textures
     kit.reset()
     wid = "ladder"
-    alu = kit.pbr_material(wid + "_alu", *kit.metal_textures(wid, (0.70, 0.70, 0.68), 0.08, 0.35), 0.5)
-    steps = kit.pbr_material(wid + "_steps", *kit.metal_textures(wid + "_steps", (0.60, 0.60, 0.58), 0.15, 0.45), 0.6)
+    alu = kit.pbr_material(wid + "_alu", *ladder_metal_textures(wid, (0.70, 0.70, 0.68), 0.08, 0.35), 0.5)
+    steps = kit.pbr_material(wid + "_steps", *ladder_metal_textures(wid + "_steps", (0.60, 0.60, 0.58), 0.15, 0.45), 0.6)
     cap = kit.pbr_material(wid + "_cap", *kit.polymer_textures(wid + "_cap", (0.65, 0.50, 0.04)), 0.5)
     for state, open_ in (("Open", True), ("Closed", False)):
         root = kit.state_root("Ladder_" + state)
@@ -668,6 +698,8 @@ def build_more(report: list) -> None:
     root.location.z = 0.10
     report.append("ladder laid out: %d triangles" % kit.triangles_under(root))
     kit.export(wid)
+    if only_ladder:
+        return
 
     kit.reset()
     wid = "thumbtacks"
@@ -730,9 +762,9 @@ def build_more(report: list) -> None:
     kit.export(wid)
 
 
-def main() -> None:
+def main(frequent_only: bool = False) -> None:
     report = []
-    build_more(report)
+    build_more(report, only_ladder=frequent_only)
     kit.reset()
     weapon_id = "table"
     wood = kit.pbr_material(weapon_id + "_wood", *wood_textures(weapon_id), 0.7)

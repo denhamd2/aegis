@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites id="2026-11-12" name="report_1" tests="53" failures="0" skipped="0" flaky="0" time="0.000">
+	<testsuite id="0" name="test_weapon_rules" package="tests" timestamp="2026-11-12T21:52:13" hostname="localhost" tests="20" failures="0" errors="0" skipped="0" flaky="0" time="9.443">
+		<testcase name="test_the_stick_angle_picks_a_family" classname="test_weapon_rules" time="0.004">
+		</testcase>
+		<testcase name="test_pushed_out_the_family_holds_and_the_angle_picks_a_weapon" classname="test_weapon_rules" time="0.005">
+		</testcase>
+		<testcase name="test_every_weapon_can_be_reached_on_the_wheel" classname="test_weapon_rules" time="0.003">
+		</testcase>
+		<testcase name="test_only_outside_by_an_apron_and_only_in_no_holds_barred" classname="test_weapon_rules" time="0.025">
+		</testcase>
+		<testcase name="test_he_pulls_out_what_he_picks" classname="test_weapon_rules" time="0.102">
+		</testcase>
+		<testcase name="test_apron_retrieval_spots_are_reserved_between_the_two_men" classname="test_weapon_rules" time="0.045">
+		</testcase>
+		<testcase name="test_the_apron_claim_clears_when_the_retrieve_completes" classname="test_weapon_rules" time="0.025">
+		</testcase>
+		<testcase name="test_a_ringside_weapon_can_be_slid_under_the_bottom_rope" classname="test_weapon_rules" time="2.772">
+		</testcase>
+		<testcase name="test_no_holds_barred_lays_out_the_dangerous_weapons_on_the_stage" classname="test_weapon_rules" time="0.600">
+		</testcase>
+		<testcase name="test_no_holds_barred_lays_dangerous_weapons_under_the_apron" classname="test_weapon_rules" time="0.256">
+		</testcase>
+		<testcase name="test_the_gun_is_only_there_for_the_finish" classname="test_weapon_rules" time="0.352">
+		</testcase>
+		<testcase name="test_letting_go_of_the_button_still_brings_out_a_weapon" classname="test_weapon_rules" time="0.026">
+		</testcase>
+		<testcase name="test_he_loses_it_when_he_goes_down" classname="test_weapon_rules" time="0.085">
+		</testcase>
+		<testcase name="test_a_used_weapon_on_the_floor_can_be_reused_by_the_other_wrestler" classname="test_weapon_rules" time="0.870">
+		</testcase>
+		<testcase name="test_weapons_expire_after_a_match_lifetime_on_the_floor_or_in_hand" classname="test_weapon_rules" time="0.094">
+		</testcase>
+		<testcase name="test_a_thrown_weapon_flies_at_him_and_lands" classname="test_weapon_rules" time="0.109">
+		</testcase>
+		<testcase name="test_the_match_seeds_the_stage_into_the_stock_the_wrestlers_search" classname="test_weapon_rules" time="3.929">
+		</testcase>
+		<testcase name="test_a_rummage_is_not_cut_off" classname="test_weapon_rules" time="0.025">
+		</testcase>
+		<testcase name="test_authored_pose_protection_expires_and_clears_on_state_exit" classname="test_weapon_rules" time="0.020">
+		</testcase>
+		<testcase name="test_a_pose_defers_ai_attacks_and_does_not_award_hit_momentum" classname="test_weapon_rules" time="0.030">
+		</testcase>
+	</testsuite>
+	<testsuite id="1" name="test_weapon_ai" package="tests" timestamp="2026-11-12T21:52:22" hostname="localhost" tests="21" failures="0" errors="0" skipped="0" flaky="0" time="1.225">
+		<testcase name="test_he_favours_his_own_weapons" classname="test_weapon_ai" time="0.134">
+		</testcase>
+		<testcase name="test_the_same_seed_picks_the_same" classname="test_weapon_ai" time="0.026">
+		</testcase>
+		<testcase name="test_rocket_gun_and_bed_of_nails_are_regular_ai_picks" classname="test_weapon_ai" time="0.042">
+		</testcase>
+		<testcase name="test_the_launcher_is_open_from_the_bell_and_the_gun_from_the_finish" classname="test_weapon_ai" time="0.073">
+		</testcase>
+		<testcase name="test_tables_stay_a_pick_but_the_wild_weapons_lead" classname="test_weapon_ai" time="0.070">
+		</testcase>
+		<testcase name="test_never_in_a_singles_match" classname="test_weapon_ai" time="0.020">
+		</testcase>
+		<testcase name="test_in_no_holds_barred_he_goes_out_for_one" classname="test_weapon_ai" time="0.033">
+		</testcase>
+		<testcase name="test_outside_weapon_approach_routes_around_the_ring" classname="test_weapon_ai" time="0.021">
+		</testcase>
+		<testcase name="test_both_outside_ai_close_the_gap_instead_of_walking_into_the_ring" classname="test_weapon_ai" time="0.020">
+		</testcase>
+		<testcase name="test_outside_route_waypoint_clears_the_entrance_steps" classname="test_weapon_ai" time="0.017">
+		</testcase>
+		<testcase name="test_same_side_ringside_ai_moves_directly_towards_opponent" classname="test_weapon_ai" time="0.016">
+		</testcase>
+		<testcase name="test_an_outside_ai_chooses_a_loose_stage_weapon_and_heads_up_the_ramp" classname="test_weapon_ai" time="0.072">
+		</testcase>
+		<testcase name="test_under_the_ring_he_hands_the_wheel_a_weapon_in_stock" classname="test_weapon_ai" time="0.023">
+		</testcase>
+		<testcase name="test_with_a_table_at_his_back_he_locks_up_for_the_suplex" classname="test_weapon_ai" time="0.100">
+		</testcase>
+		<testcase name="test_up_beside_the_table_he_powerbombs_him_through_it" classname="test_weapon_ai" time="0.088">
+		</testcase>
+		<testcase name="test_out_by_the_announce_desk_he_puts_him_through_it" classname="test_weapon_ai" time="0.042">
+		</testcase>
+		<testcase name="test_a_man_without_a_powerbomb_of_his_own_uses_the_plain_one" classname="test_weapon_ai" time="0.019">
+		</testcase>
+		<testcase name="test_tacks_and_barbed_wire_board_are_paired_ai_spots_too" classname="test_weapon_ai" time="0.149">
+		</testcase>
+		<testcase name="test_a_laid_out_ladder_selects_the_ladder_slam_pair" classname="test_weapon_ai" time="0.089">
+		</testcase>
+		<testcase name="test_a_weapon_fetched_outside_is_often_taken_back_into_the_ring" classname="test_weapon_ai" time="0.071">
+		</testcase>
+		<testcase name="test_both_out_too_long_he_takes_the_fight_back_in" classname="test_weapon_ai" time="0.022">
+		</testcase>
+	</testsuite>
+	<testsuite id="2" name="test_selling" package="tests" timestamp="2026-11-12T21:52:24" hostname="localhost" tests="12" failures="0" errors="0" skipped="0" flaky="0" time="0.214">
+		<testcase name="test_a_jab_is_a_flinch_and_a_big_boot_is_not" classname="test_selling" time="0.004">
+		</testcase>
+		<testcase name="test_the_same_hit_sells_bigger_on_a_beaten_man" classname="test_selling" time="0.003">
+		</testcase>
+		<testcase name="test_a_chair_shot_staggers_a_fresh_man_and_floors_a_beaten_one" classname="test_selling" time="0.003">
+		</testcase>
+		<testcase name="test_the_steps_put_anyone_down" classname="test_selling" time="0.003">
+		</testcase>
+		<testcase name="test_every_tier_has_a_reaction_clip" classname="test_selling" time="0.003">
+		</testcase>
+		<testcase name="test_remaining_knockdown_classes_pick_their_authored_falls" classname="test_selling" time="0.004">
+		</testcase>
+		<testcase name="test_limb_damage_changes_the_drawn_walk_and_arm_only_after_threshold" classname="test_selling" time="0.026">
+		</testcase>
+		<testcase name="test_hurt_wrestler_keeps_selling_during_taunt_without_taking_its_hand_grip" classname="test_selling" time="0.024">
+		</testcase>
+		<testcase name="test_hurt_wrestler_sells_while_opponent_taunts" classname="test_selling" time="0.032">
+		</testcase>
+		<testcase name="test_a_beaten_man_lies_there_longer" classname="test_selling" time="0.025">
+		</testcase>
+		<testcase name="test_down_sell_follows_the_move_and_the_down_state_plays_it" classname="test_selling" time="0.025">
+		</testcase>
+		<testcase name="test_finisher_and_sledgehammer_leave_him_out_cold" classname="test_selling" time="0.025">
+		</testcase>
+	</testsuite>
+</testsuites>
