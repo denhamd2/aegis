@@ -1,0 +1,7 @@
+{
+	"adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+	"blender_model": "res://assets/props/hell_in_a_cell.glb",
+	"native_performance": false,
+	"renderer": "forward_plus",
+	"triangles": 20550
+}

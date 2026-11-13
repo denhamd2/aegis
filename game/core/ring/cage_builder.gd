@@ -1,7 +1,7 @@
 class_name CageBuilder
 extends Node3D
-## The steel cage, modelled in code the way the ring's posts, ropes and
-## turnbuckles are (RingBuilder): a dark steel frame -- posts, rails, the door's
+## Standard cage/cell visuals are authored in Blender and imported as GLB.
+## Runtime owns collision, queries and moving parts. The steel frame -- posts, rails, the door's
 ## jambs -- with chain-link mesh panels between, a door that swings outward,
 ## and thin collision walls. One builder for every caged match: the Steel Cage
 ## stands on the apron edge around the ring (Spec.steel_cage()); Hell in a
@@ -199,49 +199,18 @@ func set_padlock(on: bool) -> void:
 		return
 	if _padlock or _door_pivot == null:
 		return
-	var steel := StandardMaterial3D.new()
-	steel.albedo_color = Color(0.55, 0.56, 0.58)
-	steel.metallic = 0.8
-	steel.roughness = 0.35
-	var brass := StandardMaterial3D.new()
-	brass.albedo_color = Color(0.78, 0.6, 0.28)
-	brass.metallic = 0.9
-	brass.roughness = 0.3
 	_padlock = Node3D.new()
 	_padlock.name = "Padlock"
 	add_child(_padlock)
 	var axis := spec.door_axis
 	var lat := lateral_of(axis)
-	var latch := axis * (spec.half + 0.06) + lat * (spec.door_width * 0.5) \
+	_padlock.position = axis * (spec.half + 0.06) + lat * (spec.door_width * 0.5) \
 			+ Vector3.UP * (spec.base_y + 1.05)
-	# The chain: links wound round the door's edge and the jamb.
-	for k in 9:
-		var a := TAU * float(k) / 9.0
-		var link := MeshInstance3D.new()
-		var torus := TorusMesh.new()
-		torus.inner_radius = 0.012
-		torus.outer_radius = 0.026
-		link.mesh = torus
-		link.material_override = steel
-		link.position = latch + lat * (cos(a) * 0.09) + Vector3.UP * (sin(a) * 0.11)
-		link.rotation = Vector3(PI * 0.5 * float(k % 2), a, 0.0)
-		_padlock.add_child(link)
-	var body := MeshInstance3D.new()
-	var bm := BoxMesh.new()
-	bm.size = Vector3(0.07, 0.08, 0.035)
-	body.mesh = bm
-	body.material_override = brass
-	body.position = latch + Vector3.DOWN * 0.15 + axis * 0.02
-	_padlock.add_child(body)
-	var shackle := MeshInstance3D.new()
-	var ring := TorusMesh.new()
-	ring.inner_radius = 0.022
-	ring.outer_radius = 0.03
-	shackle.mesh = ring
-	shackle.material_override = steel
-	shackle.position = latch + Vector3.DOWN * 0.1 + axis * 0.02
-	shackle.rotation = Vector3(PI * 0.5, 0.0, 0.0)
-	_padlock.add_child(shackle)
+	_padlock.basis = Basis(Vector3.UP.cross(axis), Vector3.UP, axis)
+	var art: Node3D = (load("res://assets/props/cage_hardware.glb") as PackedScene).instantiate()
+	add_child(art)
+	art.get_node("PadlockVisual").reparent(_padlock, false)
+	art.free()
 
 
 func has_padlock() -> bool:
@@ -296,7 +265,7 @@ func set_lift(h: float) -> void:
 		c.visible = lift > 0.0005
 		if c.visible:
 			var length := CHAIN_TOP_Y - (spec.top_y + lift)
-			(c.mesh as CylinderMesh).height = maxf(length, 0.01)
+			c.scale.y = maxf(length, 0.01)
 			c.position.y = spec.top_y + length * 0.5
 
 
@@ -339,21 +308,15 @@ func land_now() -> void:
 
 
 func _build_chains() -> void:
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(0.32, 0.33, 0.35)
-	mat.metallic = 0.7
-	mat.roughness = 0.4
+	var art: Node3D = (load("res://assets/props/cage_hardware.glb") as PackedScene).instantiate()
+	var template := art.get_node("HoistCable").get_child(0) as MeshInstance3D
+	var cable_mesh := template.mesh
+	art.free()
 	for sx in [-1.0, 1.0]:
 		for sz in [-1.0, 1.0]:
 			var mi := MeshInstance3D.new()
 			mi.name = "HoistChain"
-			var m := CylinderMesh.new()
-			m.top_radius = CHAIN_RADIUS
-			m.bottom_radius = CHAIN_RADIUS
-			m.radial_segments = 8
-			m.rings = 1
-			mi.mesh = m
-			mi.material_override = mat
+			mi.mesh = cable_mesh
 			mi.position = Vector3(sx * spec.half, spec.top_y, sz * spec.half)
 			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			add_child(mi)
@@ -385,6 +348,9 @@ func _process(delta: float) -> void:
 # The model
 
 func _build() -> void:
+	if _load_authored_model():
+		_build_collision()
+		return
 	var frame := _frame_material()
 	var wire := _mesh_material()
 	for axis: Vector3 in axes():
@@ -399,6 +365,57 @@ func _build() -> void:
 	else:
 		_build_top_lip(frame, wire)
 	_build_collision()
+
+
+## The shipping specs use native Blender models with the same moving parts.
+## Preserve the legacy custom-Spec path for callers with different dimensions.
+func _load_authored_model() -> bool:
+	var standard := Spec.hell_in_a_cell() if spec.roof else Spec.steel_cage()
+	if spec.bays != standard.bays or spec.rails != standard.rails \
+			or spec.door_axis != standard.door_axis:
+		return false
+	for field: String in ["half", "base_y", "top_y", "door_width", "door_height", "frame_scale"]:
+		if not is_equal_approx(float(spec.get(field)), float(standard.get(field))):
+			return false
+	var path := "res://assets/props/hell_in_a_cell.glb" if spec.roof \
+			else "res://assets/props/steel_cage.glb"
+	var art: Node3D = (load(path) as PackedScene).instantiate()
+	add_child(art)
+	for axis: Vector3 in axes():
+		var wall := art.get_node("Wall_" + _axis_name(axis)) as Node3D
+		wall.reparent(self, false)
+		_walls[axis] = wall
+	_door_pivot = find_child("DoorPivot", true, false) as Node3D
+	var top := art.get_node("RoofFrame" if spec.roof else "TopLip") as Node3D
+	top.reparent(self, false)
+	if spec.roof:
+		for i in spec.bays:
+			for j in spec.bays:
+				var holder := art.get_node("RoofPanel_%d_%d" % [i, j]) as Node3D
+				var panel := holder.get_child(0) as MeshInstance3D
+				panel.reparent(self, true)
+				panel.name = holder.name
+				_roof_panels[Vector2i(i, j)] = panel
+	art.free()
+	var wire_material: StandardMaterial3D
+	for child: Node in find_children("*", "MeshInstance3D", true, false):
+		var mi := child as MeshInstance3D
+		for surface in mi.mesh.get_surface_count():
+			var material := mi.get_active_material(surface)
+			if material and material.resource_name == "cage_chainlink":
+				if wire_material == null:
+					wire_material = material.duplicate() as StandardMaterial3D
+					# Cutout wire avoids sorted translucent wall cards and
+					# stochastic alpha noise; coverage AA is used with MSAA.
+					wire_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+					wire_material.alpha_scissor_threshold = 0.3
+					wire_material.alpha_antialiasing_mode = BaseMaterial3D.ALPHA_ANTIALIASING_ALPHA_TO_COVERAGE
+					wire_material.alpha_antialiasing_edge = 0.35
+					wire_material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+				mi.set_surface_override_material(surface, wire_material)
+				mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	set_meta("blender_visuals", path)
+	return true
 
 
 ## The Steel Cage's top: a flat lip of ladder truss, LIP_WIDTH deep, running

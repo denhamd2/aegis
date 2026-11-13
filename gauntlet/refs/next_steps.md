@@ -1,5 +1,14 @@
 # Aegis prioritised backlog
 
+## 13 November Blender requirement
+
+Owner requires Blender modeling for the steel cage, Hell in a Cell, ambulance
+and casket. Their native sources and exports are implemented; see the
+[authoring evidence and remaining visual acceptance](blender_props_2026_11_13/validation.md).
+**AAA quality and WWE2K visual parity are not complete.** Continue reference-led
+visual refinement and Mac review; retain unfinished priorities3–9 and weapon
+families in the current batch ledger.
+
 ## 12 November execution update
 
 The owner approved priorities **3–9 from the conversational ranking**, delivered

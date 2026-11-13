@@ -87,3 +87,16 @@ assets, [comparison and checks](../weapon_realism_2026_11_13/validation.md).
 Subtle hardware/material refinement, not finished AAA acceptance. Casket,
 ambulance and remaining weapon families stay open. Grip failures on eight paths
 reproduce with original assets and remain a separate corrective follow-up.
+
+## Blender requirement and current batch
+
+Owner13November: steel cage, Hell in a Cell, ambulance and casket must all be
+modeled in Blender. Native editable sources, exports and runtime integration
+are now implemented; [validation and visual limits](../blender_props_2026_11_13/validation.md).
+This is not completed AAA acceptance or verified WWE2K visual parity.
+The all-weapon grip gate now passes without tolerance changes. Publication
+verification for this new batch is pending; older entries describe earlier releases.
+
+Original batches3–5 remain open: entrances/moonsault, two-sided ladder routes,
+and ladder/table presentation. Remaining weapon families and further prop
+visual refinement also remain open; the new source pipeline does not close them.
