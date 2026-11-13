@@ -66,3 +66,8 @@ Full regression: **1310 cases / 157 suites**, 3 failures, 2 errors, 5 orphans
 ([report](batch2-full.xml)), matching released-main failure categories:
 prop handoff overlap, paired clearance, realism lighting cue and fire material
 lookup. These are not labelled green; no assertion was relaxed.
+
+Concurrent `a89ca90` strike/Kenny work arrived before publication and was
+integrated without conflicts. Import passed and all **53 focused cases passed
+again on the merged source** ([report](batch2-merged-tests.xml)). The earlier
+1310-case report predates that integration; it is not exact-merged-commit proof.
