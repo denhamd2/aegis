@@ -5272,7 +5272,7 @@ CLIPS["Arm_Hook_Attacker"] = [
     # alongside his (the root has stepped through, see the trajectory).
     (14, P(pelvis=(0.0, 0.12, 0.780), hips=(-14, 16, 0), spine=(-16, 26, 0),
            head=(-4, 12, 0),
-           hand_r=(0.44, 0.58, 1.46), hand_l=(-0.32, 0.24, 1.06),
+           hand_r=(0.50, 0.32, 1.46), hand_l=(-0.32, 0.24, 1.06),
            elbow_r=(0.6, -0.2, -0.6), fist_r=0.6, fist_l=0.8, clav_follow=False,
            foot_r=(0.22, 0.14, 0.104), foot_l=(-0.20, 0.34, 0.104))),
     # Driving him down: the arm and the chest go down together.
@@ -5295,8 +5295,13 @@ CLIPS["Arm_Hook_Attacker"] = [
            elbow_r=(0.8, -0.3, -0.2), elbow_l=(-0.8, -0.3, -0.2),
            fist_r=0.3, fist_l=0.3, clav_follow=False,
            foot_r=(0.22, 0.38, 0.104), foot_l=(-0.22, 0.02, 0.104))),
-    # Up by contact+44 (tick 72).
-    (33, P(pelvis=(0.0, 0.08, 0.760), hips=(-18, 0, 0), spine=(-22, 0, 0),
+    # Half-risen (tick 62), knees still bent, then up by contact+44 (72).
+    (31, P(pelvis=(0.0, 0.12, 0.730), hips=(-24, 4, 0), spine=(-26, 4, 0),
+           head=(-6, 0, 0),
+           hand_r=(0.56, 0.16, 1.08), hand_l=(-0.56, 0.14, 1.08),
+           fist_r=0.4, fist_l=0.4,
+           foot_r=(0.22, 0.30, 0.104), foot_l=(-0.22, 0.02, 0.104))),
+    (34, P(pelvis=(0.0, 0.08, 0.760), hips=(-14, 0, 0), spine=(-18, 0, 0),
            hand_r=(0.44, 0.30, 1.10), hand_l=(-0.44, 0.30, 1.10),
            fist_r=0.4, fist_l=0.4,
            foot_r=(0.24, 0.20, 0.104), foot_l=(-0.22, 0.00, 0.104))),
@@ -5307,21 +5312,28 @@ CLIPS["Arm_Hook_Attacker"] = [
 _AH_STAND = pose(GUARD, hips=(-2, 0, 0), spine=(-4, 4, 0), head=(2, 4, 0),
                  hand_r=(0.26, 0.20, 1.12), hand_l=(-0.24, 0.22, 1.12),
                  fist_r=0.5, fist_l=0.5)
-# Back-first, shoulders down at contact+9 (key 18.5), the legs kicking up
-# 45-60 degrees as the back lands and dropping by contact+30 (loop 2).
-_ah_fall = _back_fall(13, 36, pelvis_hit=0.92)
-_ah_fall = [({13: 13.5, 16: 16, 20: 18.5, 24: 22}.get(f, f), k) for f, k in _ah_fall]
-_ah_bump = dict(_ah_fall[2][1])
-_ah_legs_up = _yawed(S(pelvis=(0.0, 0.0, 0.200), head=(-2, 0, 0),
-                       hand_r=(-0.56, 0.14, 0.10), hand_l=(0.56, 0.14, 0.10),
-                       elbow_r=(-0.7, 0.3, -0.3), elbow_l=(0.7, 0.3, -0.3),
-                       fist_r=0.1, fist_l=0.1,
-                       foot_r=(-0.14, -0.52, 0.78), foot_l=(0.12, -0.54, 0.84),
-                       knee_r=(-0.3, -0.6, 0.8), knee_l=(0.3, -0.6, 0.8)))
+# Loop 3: he tips over the hooked arm from upright -- within 10 degrees of
+# vertical at the hook (tick 28), ~45 back at +6, horizontal ~tick 39,
+# shoulders down at tick 40 -- and the legs kick clear, up at the attacker's
+# chest height at ticks 40-42, ~30 degrees up at 54, on the mat by ~60.
+_ah_fall = _back_fall(14, 36, pelvis_hit=0.92)   # keys 14, 17, 21, 25, 36
+_ah_hit = dict(_ah_fall[0][1], spine=(8, 0, 0), head=(14, 0, 0), pelvis=(0.0, -0.03, 0.90))
+_ah_tip = dict(_ah_fall[0][1], spine=(26, 0, 0), head=(30, 0, 0), hips=(16, 0, 0),
+               pelvis=(0.0, -0.12, 0.84))
+_ah_legs = lambda fz, fy: _yawed(S(pelvis=(0.0, 0.0, 0.200), head=(-2, 0, 0),
+                                   hand_r=(-0.56, 0.14, 0.10), hand_l=(0.56, 0.14, 0.10),
+                                   elbow_r=(-0.7, 0.3, -0.3), elbow_l=(0.7, 0.3, -0.3),
+                                   fist_r=0.1, fist_l=0.1,
+                                   foot_r=(-0.14, fy, fz), foot_l=(0.12, fy - 0.02, fz + 0.06),
+                                   knee_r=(-0.3, -0.6, 0.8), knee_l=(0.3, -0.6, 0.8)))
 CLIPS["Arm_Hook_Defender"] = [
-    (0, dict(_AH_STAND)), (12, pose(_AH_STAND, head=(6, 0, 0))),
-] + _ah_fall[:2] + [(18.5, _ah_legs_up), (24, _ah_legs_up)] + [
-    (29, _ah_fall[3][1]), (36, _ah_fall[4][1])]
+    (0, dict(_AH_STAND)), (13, pose(_AH_STAND, head=(6, 0, 0))),
+    (14, _ah_hit), (17, _ah_tip),
+    (18.5, _ah_fall[1][1]),
+    (20, _ah_legs(1.10, -0.30)), (21, _ah_legs(1.12, -0.28)),
+    (27, _ah_legs(0.50, -0.62)),
+    (30, _ah_fall[3][1]), (36, _ah_fall[4][1]),
+]
 
 # Spinning Back Elbow, 36 frames. Plants and spins a full turn to his right
 # (the root does the turn); the right elbow swings back into the jaw as his
