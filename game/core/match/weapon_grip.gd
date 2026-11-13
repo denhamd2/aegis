@@ -226,18 +226,24 @@ func _process_modification() -> void:
 		# toward the solved palms while preserving its orientation and strike
 		# arc. Averaging both hands keeps long two-handed props centred instead
 		# of fixing one wrist by pulling the other off its grip.
-		for correction in (10 if on_path else 1):
+		# Once a two-hand carry has settled, seat the whole prop too.
+		# Previously only authored swing paths received this correction;
+		# wide props stayed beyond the left arm's reach throughout a carry.
+		var seat_carry := _carry >= 0.999 and left_weight >= 0.999
+		for correction in (10 if on_path else (6 if seat_carry else 1)):
 			_hand_to(sk, ["upperarm_r", "lowerarm_r", "hand_r"],
 					to_sk * weapon.global_marker("grip_r"), fwd, hand_weight)
 			if left_weight > 0.0:
 				_hand_to(sk, ["upperarm_l", "lowerarm_l", "hand_l"],
 						to_sk * weapon.global_marker("grip_l"), fwd, left_weight)
-			if not on_path:
+			if not on_path and not seat_carry:
 				break
 			var correction_world := sk.global_transform * _palm(sk, "r") \
 					- weapon.global_marker("grip_r").origin
 			var hands := 1.0
-			if left_weight > 0.0 and weapon.has_marker("grip_l"):
+			# A travelling left hand is not a seated contact yet. Its
+			# intentional gap must not drag the prop out of the right fist.
+			if left_weight >= 0.999 and weapon.has_marker("grip_l"):
 				correction_world += sk.global_transform * _palm(sk, "l") \
 						- weapon.global_marker("grip_l").origin
 				hands += 1.0
