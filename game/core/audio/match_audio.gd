@@ -176,6 +176,8 @@ const COMMENTARY_CLIPS := {
 	# "I'm so sick of this guy." -- Tony's snark at a heel lording it over a
 	# man he has already put down.
 	"tony_sick_of_this_guy": ["res://assets/audio/commentary/tony_sick_of_this_guy.ogg"],
+	# "That's despicable! Just despicable!" -- Tony on a brutal weapon landing.
+	"tony_despicable": ["res://assets/audio/commentary/tony_despicable.ogg"],
 }
 ## The calls on something happening right now: they go to the head of the
 ## queue, so the fire call is not still waiting behind a long line when Aubrey
@@ -184,6 +186,13 @@ const COMMENTARY_LIVE_CALLS := ["excalibur_on_fire", "excalibur_tope_suicida",
 		"excalibur_cody_cutter"]
 ## The moves Excalibur calls the Cody Cutter on.
 const CODY_CUTTER_MOVES := ["signature_cody_cutter", "dive_springboard_cutter"]
+## Weapons whose use Tony finds beyond the pale -- wire, nails, blades, glass,
+## fire, a sledgehammer. A blow with one draws "That's despicable!"
+const DESPICABLE_WEAPONS := [
+	&"barbed_wire_bat", &"barbed_wire_board", &"barbed_wire_chair", &"bed_of_nails",
+	&"board_with_nails", &"glass_pane", &"knife", &"light_tubes", &"sledgehammer",
+	&"sword", &"thumbtacks",
+]
 ## What DiveSpot calls when a dive lands (call_group, as the camera's trauma).
 const LISTENERS := "match_audio"
 const COMMENTARY_EVENT_DELAY := 0.18
@@ -206,6 +215,7 @@ const COMMENTARY_REPEAT_COOLDOWNS := {
 	"tony_blood_intensity": 60.0,
 	"tony_watch_out_behind": 30.0,
 	"tony_sick_of_this_guy": 45.0,
+	"tony_despicable": 45.0,
 }
 const COMMENTARY_REPEAT_MIN_GAP := 12.0
 const CODY_CROWD_CHANT := "res://assets/audio/crowd_cody_chant.ogg"
@@ -773,6 +783,12 @@ static func commentary_event_for_submission(entrance_style: String, move: MoveDe
 	return ""
 
 
+## A blow with one of the DESPICABLE_WEAPONS.
+static func _weapon_is_despicable(move: MoveDef) -> bool:
+	var weapon := WeaponCatalog.of_move(move)
+	return weapon != null and weapon.id in DESPICABLE_WEAPONS
+
+
 ## A move landing on a man from behind (a blindside): the attacker stands
 ## behind the defender's facing. Narration only -- it writes no match state.
 static func _move_lands_from_behind(attacker: WrestlerController,
@@ -969,6 +985,10 @@ func _on_move_landed(attacker, defender, move: MoveDef) -> void:
 			_queue_commentary(commentary_event)
 			if commentary_event == "tony_roman_heel":
 				_queue_sneaky_heel_easter_egg(attacker.entrance_style)
+		elif _weapon_is_despicable(move):
+			# A blow with wire, nails, a blade, glass, light tubes or a
+			# sledgehammer: Tony's outrage, "That's despicable!"
+			_queue_commentary("tony_despicable")
 		elif commentary_event_for_cody_cutter(attacker.entrance_style, move_id) != "":
 			_queue_commentary(commentary_event_for_cody_cutter(attacker.entrance_style, move_id))
 		elif move_id in ["signature_superman_punch", "finisher_spear"]:

@@ -108,6 +108,20 @@ func test_tonys_gunshot_call_follows_the_handgun_flash_once() -> void:
 	assert_str(MatchAudio.commentary_event_for_weapon_ready(&"inflatable_banana")).is_empty()
 
 
+func test_brutal_weapons_are_despicable() -> void:
+	assert_bool(MatchAudio._weapon_is_despicable(
+		WeaponCatalog.swing_move(WeaponCatalog.by_id(&"barbed_wire_chair")))).is_true()
+	assert_bool(MatchAudio._weapon_is_despicable(
+		WeaponCatalog.swing_move(WeaponCatalog.by_id(&"light_tubes")))).is_true()
+	assert_bool(MatchAudio._weapon_is_despicable(
+		WeaponCatalog.swing_move(WeaponCatalog.by_id(&"thumbtacks")))).is_true()
+	# A hard but legal weapon (a chair, a kendo stick) is not "despicable".
+	assert_bool(MatchAudio._weapon_is_despicable(
+		WeaponCatalog.swing_move(WeaponCatalog.by_id(&"trash_can")))).is_false()
+	assert_bool(MatchAudio._weapon_is_despicable(
+		WeaponCatalog.swing_move(WeaponCatalog.by_id(&"kendo_stick")))).is_false()
+
+
 func test_gunshot_and_rocket_effects_use_the_louder_signature_mix() -> void:
 	var audio: MatchAudio = auto_free(MatchAudio.new())
 	add_child(audio)
