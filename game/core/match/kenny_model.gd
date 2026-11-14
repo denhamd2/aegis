@@ -1,37 +1,13 @@
 class_name KennyModel
-extends CodyModel
-## Kenny Omega, built on his own copy of Cody's model (assets/characters/
-## kenny_body.glb, 12 Nov: "I want Kenny to have his own model and not have a
-## dependency on Cody's"). The script still extends CodyModel to share its
-## loading code; the mesh, rig and weights it loads are Kenny's own file.
-##
-## The owner, 27 Oct: "Kenny's body isn't good. I'm thinking it would make
-## sense to use Cody's body for Kenny and adjust it to Kenny, e.g. skin shade,
-## no Cody tattoos" -- and of the face, "much closer to the reference in terms
-## of detail and texture". Cody's is the project's best-finished body: rigged
-## on the base rig's own 65 bones, gated against every clip, with 2048 skin
-## atlases carrying real pores. Its tights and tall boots are Kenny's
-## silhouette too, so his gear is a repaint, not new geometry.
-##
-## So this is CodyModel with Kenny's look swapped in at load (the hooks
-## CodyModel exposes for it): the same mesh, rig, animations, helpers and
-## adapter. What differs:
-##
-## * SKIN. Every skin atlas is Kenny's (tools/assets/build_kenny_textures.py):
-##   retinted to his pinker, fairer tone, Cody's three tattoos gone, and on
-##   the head his own face -- the owner's sheet's front head shot projected
-##   onto these UVs (tools/blender/kenny_face_projection.py) over Cody's pore
-##   detail, with his ginger-blond beard.
-## * GEAR. White-and-gold tights, black-and-gold kneepads and boots, his
-##   wrist tape: Cody's gear atlases repainted by the same script.
-## * BUILD. Leaner than Cody's (BodyBulk.KENNY).
-## * EYES. Cody's eyeballs with a paler grey-blue iris (the sheet's eye
-##   close-up; kenny_eye_*.png from tools/assets/build_eyes.py).
-## * HAIR. His shoulder-length dirty-blond curls (tools/blender/kenny_curls.py)
-##   in place of Cody's short groom.
+extends RiggedWrestlerModel
+## Kenny-owned appearance on the common animation/rig adapter.
+## Historical donor provenance: this character began with a copy of the supplied
+## body template; current source and regeneration assets are Kenny-owned.
 
 const CHAR := "res://assets/characters/"
-## Cody's skin material -> Kenny's atlas.
+const HEAD_MATERIAL := "xmaterial_c3d4d9e78b44a79"
+const EYE_MATERIAL := "xmaterial_7d08cd4d239faf3"
+## Source skin roles -> Kenny-owned atlases.
 const SKIN_TEXTURES := {
 	"xmaterial_c3d4d9e78b44a79": CHAR + "kenny_head.png",
 	"xmaterial_495900de7002683": CHAR + "kenny_body_abdomen.png",
@@ -39,7 +15,7 @@ const SKIN_TEXTURES := {
 	"xmaterial_90b2b911eb46cd8": CHAR + "kenny_body_arm_l.png",
 	"xmaterial_5a329cd32db96c3": CHAR + "kenny_body_chest.png",
 }
-## Cody's gear material -> Kenny's atlas.
+## Source gear roles -> Kenny-owned atlases.
 const GEAR_TEXTURES := {
 	"xmaterial_e531cd813705b95": CHAR + "kenny_gear_tights.png",
 	"xmaterial_c7ae1bc9f4b14": CHAR + "kenny_gear_belt.png",
@@ -90,10 +66,10 @@ func _skin_texture(material_name: String) -> Texture2D:
 	return load(path) if path != "" and ResourceLoader.exists(path) else null
 
 
-## Cody's head toward Kenny's (KennyFaceShape): hooded eyes under a level
-## brow, fuller cheeks, a broader bridge.
+## The independent source contains the authored face; applying the legacy
+## rest-space field here would deform that sculpt a second time.
 func _shape_face() -> void:
-	KennyFaceShape.apply(self)
+	pass
 
 
 func _skin_tint() -> Color:
@@ -247,3 +223,17 @@ func _curl_material(cap: bool) -> StandardMaterial3D:
 		mat.alpha_antialiasing_mode = BaseMaterial3D.ALPHA_ANTIALIASING_ALPHA_TO_COVERAGE_AND_TO_ONE
 		mat.alpha_antialiasing_edge = mat.alpha_scissor_threshold
 	return mat
+
+func _skin_profile() -> Dictionary:
+	return {"materials": SKIN_TEXTURES.keys(), "head_material": HEAD_MATERIAL,
+		"head_roughness": CHAR + "kenny_skin_head_roughness.png",
+		"body_roughness": CHAR + "skin_body_roughness.png",
+		"head_wet": CHAR + "kenny_skin_head_wet.png",
+		"specular": .3, "pore_tiles": 48.0, "head_pore_tiles": 16.0, "pore_mix": .14}
+
+func _eye_profile() -> Dictionary:
+	return {"prefix": "kenny", "tone": KENNY_EYE_TONE, "material": EYE_MATERIAL,
+		"parallax": 4.0, "coat": .3, "coat_roughness": .3, "specular": .25, "roughness": .3}
+
+func expression_profile() -> Dictionary:
+	return FaceExpression.make_profile([HEAD_MATERIAL, "head_shared_inside_mouth_iw9"], 1.639, -.012)

@@ -1,6 +1,6 @@
 # Aegis prioritised backlog
 
-## Current owner priority: WWE2K ambulance reference match
+## Current owner priority: Kenny likeness and independent identity
 
 The latest cell work is deployed atb40f772. Owner requested the ambulance next:
 remodel in Blender using the supplied screenshots, then perform three independent
@@ -9,7 +9,13 @@ interactions; [current evidence/ledger](ambulance_judge_2026_11_13/README.md).
 Ambulance iterations are complete at7.4/10;6focused cases pass, exact
 `fa5c06d` Mac publication verified. After its verified deployment, Kenny likeness (head/face/hair/body)
 and an audit of model independence from Cody are the next owner priority,
-using three judge/revision loops. The cell walking-strip study stays deferred.
+using three judge/revision loops. [Current Kenny evidence](kenny_judge_2026_11_14/README.md):
+all three revisions complete, **4.1 → 4.0 → 4.5 → 4.6/10**. Kenny now owns an editable
+Blender source and independent identity profiles/maps/builds; shared neutral
+rig/animation code remains. All 78 focused cases pass, isolated rebuild succeeds,
+and 74 Cody assets are unchanged. Mac publication is pending. Facial likeness,
+ribbon-like curls and skin detail remain open; no 10/10 or AAA acceptance.
+The cell walking-strip study stays deferred.
 
 ## 13 November Blender requirement
 
@@ -44,7 +50,11 @@ against `mac-latest`, successful [Mac run 43511629112](https://github.com/denham
 [Download](https://github.com/denhamd2/aegis/releases/tag/mac-latest).
 This includes the Blender prop sources/runtime integration, grip corrections
 three cell judge revisions plus wire sampling, and the three-round ambulance remodel; [current evidence and limitations](cell_judge_2026_11_13/README.md).
-Next: Kenny likeness in three rounds plus full Cody-independence audit/fixes.
+Kenny’s three-round likeness/identity batch is validated and awaiting Mac
+publication; visual acceptance remains open at 4.6/10. After publication, the
+next unfinished implementation batch is entrances and Cody’s moonsault setup
+(original IDs 11–12, 15), followed by two-sided ladder routes and ladder/table
+coverage. Owner review may reprioritise the documented likeness gaps.
 The bounded cell walking-strip study remains deferred.
 Cell likeness remains **8.0/10**, with motion aliasing, close detail and native
 Mac performance still open. Earlier release rows below retain their own

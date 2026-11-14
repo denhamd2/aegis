@@ -1,0 +1,50 @@
+{
+  "scope": "superseded Godot GLB image extractions only; no active embedded image name or code/scene/import reference",
+  "removed": [
+    {
+      "path": "game/assets/characters/kenny_body_ximage_bbfc59e63cc5933.png",
+      "bytes": 305077
+    },
+    {
+      "path": "game/assets/characters/kenny_body_ximage_359c096926a07e8.png",
+      "bytes": 4572393
+    },
+    {
+      "path": "game/assets/characters/kenny_body_ximage_e0ec4a43013e474.png",
+      "bytes": 2452988
+    },
+    {
+      "path": "game/assets/characters/kenny_body_ximage_d527779c45f15f2.png",
+      "bytes": 4532767
+    },
+    {
+      "path": "game/assets/characters/kenny_body_ximage_d17c32323759dea.png",
+      "bytes": 9414923
+    },
+    {
+      "path": "game/assets/characters/kenny_body_ximage_af3f303435d7457.png",
+      "bytes": 5987036
+    },
+    {
+      "path": "game/assets/characters/kenny_body_ximage_58026c06ca3627e.png",
+      "bytes": 6530844
+    },
+    {
+      "path": "game/assets/characters/kenny_body_ximage_f862503283dc0b8.png",
+      "bytes": 2597858
+    },
+    {
+      "path": "game/assets/characters/kenny_body_ximage_17fd86ae5b406aa.png",
+      "bytes": 3951118
+    },
+    {
+      "path": "game/assets/characters/kenny_body_ximage_21688014c37dd0a.png",
+      "bytes": 5002855
+    },
+    {
+      "path": "game/assets/characters/kenny_body_ximage_6cfff33ee2d8a2c.png",
+      "bytes": 19701538
+    }
+  ],
+  "bytes": 65049397
+}

@@ -1,0 +1,48 @@
+{
+  "authority": "tools/blender/characters/Kenny.blend",
+  "round": 3,
+  "comparison": "Current native Body against frozen owned Seed_Body; no donor file input.",
+  "historical_provenance": "Supplied Cody rig/mesh copied to kenny_body.glb on 12 Nov 2026; donor-derived, not an original scan/sculpt.",
+  "body_vertices": 40448,
+  "face": {
+    "vertices": 20566,
+    "changed_vertices": 6766,
+    "maximum_delta_m": 0.005127496131766775,
+    "rms_delta_m": 0.0006003625510115028
+  },
+  "protected_neck_below_y_m": 1.575,
+  "protected_neck": {
+    "vertices": 727,
+    "changed_vertices": 102,
+    "maximum_delta_m": 1.335733797987307e-07,
+    "rms_delta_m": 4.4742675173020334e-08
+  },
+  "eye_geometry": {
+    "vertices": 315,
+    "changed_vertices": 0,
+    "maximum_delta_m": 0.0,
+    "rms_delta_m": 0.0
+  },
+  "bones": 67,
+  "bone_bind_max_delta": 0.0,
+  "bone_parent_identity": true,
+  "body_weight_identity": true,
+  "exported_face_baked": true,
+  "runtime_bulk_baked": false,
+  "canonical_seed_maps_packed": true,
+  "material_keys": [
+    "xmaterial_e531cd813705b95",
+    "xmaterial_495900de7002683",
+    "xmaterial_90b39911eb484a2",
+    "xmaterial_90b2b911eb46cd8",
+    "xmaterial_c7ae1bc9f4b14",
+    "xmaterial_5a329cd32db96c3",
+    "xmaterial_c3d4d9e78b44a79",
+    "xmaterial_6d1e7e57b971093",
+    "xmaterial_6d205e57b97438d",
+    "xmaterial_f003af958238385",
+    "head_shared_inside_mouth_iw9",
+    "xmaterial_7d08cd4d239faf3"
+  ],
+  "export_sha256": "84c7c2f401e231faeabc347d9918774e53029dd8dcdb461305d77d8121d3f051"
+}

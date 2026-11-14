@@ -138,3 +138,22 @@ Full CI matches the pre-ambulance baseline's4failures/2errors; no added failing
 cases. After deployment, the owner requests Kenny
 head/face/hair/body likeness review in three rounds and a Cody-independence audit.
 Other original unfinished priorities remain open.
+
+## Kenny: three-round likeness and identity separation, 14 November
+
+After the verified ambulance release, the owner requested Kenny head/face/hair/
+body review and full separation from Cody identity assets. Three fixed-camera
+independent review rounds are complete: **4.1 → 4.0 → 4.5 → 4.6/10**. Final
+verdict: ship with notes for owner review; likeness acceptance remains open.
+Facial identity, stiff ribbon-like curls and skin detail remain visible gaps.
+
+Editable Kenny.blend, packed maps/guides and the normal rebuild pipeline are
+Kenny-owned. Cody/Kenny now use a neutral shared rig adapter with separate
+identity profiles. Face bakes apply once; live bulk/tint remain. All 74 Cody
+asset fingerprints are unchanged; both load orders and instance mutation are
+covered. **78 focused cases pass**, zero failures/errors/orphans. Isolated cold
+regeneration succeeds without Cody files; one tangent component has 0.0001
+roundoff, all 17 PNG maps match exactly. [Evidence](../kenny_judge_2026_11_14/README.md).
+
+Mac publication pending. Original batches 3–5 and remaining weapon families
+stay open; native M1 performance and full-arena visual acceptance are unverified.

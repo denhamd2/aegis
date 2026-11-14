@@ -1,0 +1,15 @@
+{
+  "scope": "fresh fixture containing only Kenny.blend and kenny_character.py; no Cody or game-generated character inputs present at start",
+  "outputs": {
+    "kenny_body.glb": {
+      "active_sha256": "acfa1352baefefd6339a346b4fadfe4f112e0666c0a192497c2fabca7a953018",
+      "isolated_sha256": "258b64f341db99c305e31c43393d69ef2bfbe68c2cffae8013f9e81e6ca99c41",
+      "equal": false
+    },
+    "kenny_curls.glb": {
+      "active_sha256": "04b7658d0d94abe4037ea9c83e51bc5052ffbd603ea9f99f055dfaa0abd3329e",
+      "isolated_sha256": "9136b25c097eb6cec604cf94b276746085b6e29b4ce15983adf6261d7c127248",
+      "equal": false
+    }
+  }
+}

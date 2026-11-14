@@ -1,11 +1,6 @@
 extends GdUnitTestSuite
-## Guards KennyModel: Kenny Omega built on Cody's model.
-##
-## The owner, 27 Oct: "use Cody's body for Kenny and adjust it to Kenny, eg,
-## skin shade, no Cody tattoos". So KennyModel is CodyModel -- the same mesh,
-## rig, animations and adapter -- with Kenny's skin, face, eyes, gear and hair
-## swapped in at load. These tests pin both halves: that he still IS Cody's
-## working rig, and that none of Cody shows through.
+## Kenny owns his identity assets and shares only the neutral rig/animation adapter.
+## Preserve deformation, skin, eye and hair coverage while checking isolation.
 
 const MODEL := "res://scenes/kenny_model.tscn"
 const BASE_RIG := "res://assets/characters/wrestler_base.glb"
@@ -30,18 +25,31 @@ func _surfaces(model: Node, materials: Array) -> Array[BaseMaterial3D]:
 	return out
 
 
-## Built on Cody's model, not a mesh of his own: the scene instances Cody's
-## .glb and the script is a CodyModel.
-func test_is_built_on_codys_model() -> void:
-	var model := _model()
-	assert_bool(model is CodyModel).is_true()
+func test_owns_its_model_and_uses_a_neutral_adapter() -> void:
+	var model: Node = _model()
+	assert_bool(model is RiggedWrestlerModel).is_true()
+	assert_bool(model is CodyModel).is_false()
 	var scene := load(MODEL) as PackedScene
 	var paths: Array[String] = []
 	for i in scene.get_state().get_node_count():
 		var inst := scene.get_state().get_node_instance(i)
-		if inst:
-			paths.append(inst.resource_path)
-	assert_array(paths).contains([CHAR + "cody_rhodes.glb"])
+		if inst: paths.append(inst.resource_path)
+	assert_array(paths).contains([CHAR + "kenny_body.glb"])
+	for path in paths:
+		assert_bool("cody" in path.to_lower()).is_false()
+
+
+func test_owns_its_head_finish_maps_without_donor_fallback() -> void:
+	var model := _model()
+	var profile := model._skin_profile()
+	for slot in ["head_roughness", "head_wet"]:
+		assert_bool(ResourceLoader.exists(profile[slot])).is_true()
+		assert_str(profile[slot]).starts_with(CHAR + "kenny_")
+	for material in _surfaces(model, [KennyModel.HEAD_MATERIAL]):
+		assert_object(material.roughness_texture).is_not_null()
+		assert_object(material.clearcoat_texture).is_not_null()
+		assert_str(material.roughness_texture.resource_path).is_equal(profile["head_roughness"])
+		assert_str(material.clearcoat_texture.resource_path).is_equal(profile["head_wet"])
 
 
 ## The animation tracks resolve against the base rig's bone names: if any is
@@ -144,7 +152,7 @@ func test_gear_is_kennys() -> void:
 ## another), no brighter than the white beside it, and not under 0.6 of it.
 func test_eyes_are_kennys() -> void:
 	var model := _model()
-	var eyes := _surfaces(model, [CodyModel.EYE_MATERIAL])
+	var eyes := _surfaces(model, [KennyModel.EYE_MATERIAL])
 	assert_int(eyes.size()).is_greater(0)
 	for mat in eyes:
 		if mat:
@@ -242,59 +250,32 @@ func test_the_hairline_recedes_at_the_temples() -> void:
 	assert_float(lowest).is_greater(1.79)
 
 
-## His head is photo-fitted from the owner's sheet (tools/assets/
-## build_kenny_head.py, baked to KennyFaceShape.SHAPE; judge loop 3): his
-## mouth and nose narrower than Cody's, the eyeballs and the neck where
-## Cody's are. And the hand moves on top: the upper lids come down over the
-## eyes -- hooded, the sheet's squint -- and nothing below his jaw moves, so
-## the neck seam and the body hold.
-func test_his_head_is_fitted_and_the_neck_is_not() -> void:
-	var shape := load(KennyFaceShape.SHAPE) as KennyHeadShapeData
-	assert_object(shape).is_not_null()
-	assert_int(shape.rest.size()).is_greater(10000)
-	assert_int(shape.offset.size()).is_equal(shape.rest.size())
-	assert_int(shape.normal_offset.size()).is_equal(shape.rest.size())
-	# The body bulk moves the neck on its own, differently for Kenny and Cody,
-	# so at the neck it is the bake that is checked: held at its seam.
-	var neck := 0.0
-	for i in shape.rest.size():
-		if shape.rest[i].y < 1.575:
-			neck = maxf(neck, shape.offset[i].length())
-	assert_float(neck).is_less(0.0001)
-
-	var kenny_model := _model()
-	var cody_model := auto_free(load("res://scenes/cody_model.tscn").instantiate()) as Node
-	add_child(cody_model)
-	var kenny := _vertices(kenny_model, KennyFaceShape.SKIN_MATERIAL)
-	var cody := _vertices(cody_model, KennyFaceShape.SKIN_MATERIAL)
-	assert_int(kenny.size()).is_equal(cody.size())
-	# The eyeballs are Cody's: the fit is held off them.
-	assert_bool(_vertices(kenny_model, CodyModel.EYE_MATERIAL) \
-			== _vertices(cody_model, CodyModel.EYE_MATERIAL)).is_true()
-	# His mouth and nose narrower: round each corner of Cody's mouth (3.6 mm
-	# in, in the fit) and each wing of his nose (2.1 mm), the skin comes in.
-	assert_float(_inward(kenny, cody, [Vector3(-0.022, 1.6424, -0.0049), Vector3(0.0285, 1.6424, -0.0055)])) \
-			.is_less(-0.002)
-	assert_float(_inward(kenny, cody, [Vector3(-0.0168, 1.6729, -0.0003), Vector3(0.0226, 1.673, 0.0021)])) \
-			.is_less(-0.001)
-	var lid := 0.0
-	var lids := 0
-	for i in kenny.size():
-		var c: Vector3 = cody[i]
-		var x := absf(c.x - KennyFaceShape.MIDLINE_X)
-		if x > 0.025 and x < 0.039 and c.y > 1.721 and c.y < 1.726 and c.z > -0.02:
-			lid += (kenny[i].y - c.y)
-			lids += 1
-	assert_int(lids).is_greater(4)
-	# Every move is clear of the neck (the body bulk moves the neck on its own,
-	# differently for Kenny and Cody, so the table is what is checked). Clear
-	# of the seam the bake holds (1.575) by a centimetre: 8 Nov, his jaw and
-	# chin -- the broad lower face the sheet has -- sit at 1.59-1.62, which the
-	# old bound (1.62, the cheeks' foot) put out of reach.
-	for row: Array in KennyFaceShape.TABLE:
-		assert_float((row[0] as Vector3).y - (row[1] as Vector3).y).is_greater(1.585)
-	# 2.8 mm at the lid's centre, less across the band.
-	assert_float(lid / lids).is_less(-0.001)
+## The owned native sculpt must change the face while protecting the neck, eyes
+## and binds. Compare runtime setup against Kenny's own export, not donor indices.
+func test_authored_face_is_applied_once_and_preserves_protected_neck_and_eyes() -> void:
+	var audit: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(
+			"res://tests/fixtures/kenny_identity_source.json"))
+	assert_str(FileAccess.get_sha256(CHAR + "kenny_body.glb")).is_equal(audit["export_sha256"])
+	assert_int(int(audit["face"]["changed_vertices"])).is_greater(100)
+	assert_float(audit["face"]["maximum_delta_m"]).is_greater(.001)
+	assert_float(audit["protected_neck"]["maximum_delta_m"]).is_less(.0001)
+	assert_float(audit["eye_geometry"]["maximum_delta_m"]).is_less(.0001)
+	assert_float(audit["bone_bind_max_delta"]).is_less(.000001)
+	assert_bool(audit["bone_parent_identity"]).is_true()
+	assert_bool(audit["body_weight_identity"]).is_true()
+	var model := _model()
+	var owned := auto_free(load(CHAR + "kenny_body.glb").instantiate()) as Node3D
+	add_child(owned)
+	var eye_rest := _vertices(owned, KennyModel.EYE_MATERIAL)
+	assert_int(eye_rest.size()).is_greater(100)
+	BodyBulk.mend_flipped_seams(owned)
+	BodyBulk.apply(owned, owned.find_child("Skeleton3D", true, false), BodyBulk.KENNY)
+	var expected := _vertices(owned, KennyModel.HEAD_MATERIAL)
+	var actual := _vertices(model, KennyModel.HEAD_MATERIAL)
+	assert_int(expected.size()).is_greater(10000)
+	assert_int(actual.size()).is_equal(expected.size())
+	assert_int(hash(actual)).override_failure_message("authored face was deformed again at load").is_equal(hash(expected))
+	assert_bool(_vertices(model, KennyModel.EYE_MATERIAL) == eye_rest).is_true()
 
 
 func _vertices(model: Node, material: String) -> PackedVector3Array:
@@ -306,20 +287,6 @@ func _vertices(model: Node, material: String) -> PackedVector3Array:
 			if source and source.resource_name == material:
 				return mi.mesh.surface_get_arrays(s)[Mesh.ARRAY_VERTEX]
 	return PackedVector3Array()
-
-
-## How far, on average, the skin within 3 mm of `points` (Cody's) sits nearer
-## the centre line on Kenny than on Cody (m; negative is in). 0 if it finds
-## too few vertices to say.
-func _inward(kenny: PackedVector3Array, cody: PackedVector3Array, points: Array) -> float:
-	var sum := 0.0
-	var n := 0
-	for i in cody.size():
-		for p: Vector3 in points:
-			if cody[i].distance_to(p) < 0.003:
-				sum += absf(kenny[i].x - KennyFaceShape.MIDLINE_X) - absf(cody[i].x - KennyFaceShape.MIDLINE_X)
-				n += 1
-	return sum / n if n > 4 else 0.0
 
 
 func _hair(model: Node, hair_name: String) -> MeshInstance3D:
@@ -383,3 +350,48 @@ func test_the_hair_sits_close_to_his_head() -> void:
 	var width := xs[int(xs.size() * 0.98)] - xs[int(xs.size() * 0.02)]
 	assert_float(width).is_less(0.27)
 	assert_float(lowest).is_greater(1.40)
+
+
+func _appearance_fingerprint(model: Node3D) -> Dictionary:
+	var result := {}
+	for mi: MeshInstance3D in model.find_children("*", "MeshInstance3D", true, false):
+		if mi.mesh == null: continue
+		var surfaces := []
+		for surface in mi.mesh.get_surface_count():
+			var arrays := mi.mesh.surface_get_arrays(surface)
+			var material := mi.get_active_material(surface) as BaseMaterial3D
+			var look := []
+			if material:
+				look = [material.albedo_color, material.roughness, material.metallic_specular,
+					material.clearcoat, material.clearcoat_roughness,
+					material.albedo_texture.resource_path if material.albedo_texture else ""]
+			surfaces.append([hash(arrays[Mesh.ARRAY_VERTEX]), hash(arrays[Mesh.ARRAY_NORMAL]), look])
+		result[String(model.get_path_to(mi))] = [surfaces, mi.skin.get_bind_count() if mi.skin else 0]
+	return result
+
+
+func test_kenny_mutation_cannot_change_cody_or_another_kenny_in_either_load_order() -> void:
+	var canonical_cody := {}
+	for kenny_first in [false, true]:
+		var first: KennyModel
+		if kenny_first: first = _model()
+		var cody := auto_free(load("res://scenes/cody_model.tscn").instantiate()) as Node3D
+		add_child(cody)
+		var before := _appearance_fingerprint(cody)
+		if canonical_cody.is_empty(): canonical_cody = before
+		else: assert_dict(before).is_equal(canonical_cody)
+		if not kenny_first: first = _model()
+		assert_dict(_appearance_fingerprint(cody)).is_equal(before)
+		var second := _model()
+		var second_before := _appearance_fingerprint(second)
+		var materials := _surfaces(first, [KennyModel.HEAD_MATERIAL])
+		assert_int(materials.size()).is_greater(0)
+		for material in materials:
+			material.albedo_color = Color(.2, .3, .8)
+			SkinLook.set_wetness(material, 1.0)
+		var expression := auto_free(FaceExpression.new()) as FaceExpression
+		expression.install(first)
+		assert_int(expression.meshes.size()).is_greater(0)
+		for mesh in expression.meshes: mesh.set_blend_shape_value(0, .75)
+		assert_dict(_appearance_fingerprint(cody)).is_equal(before)
+		assert_dict(_appearance_fingerprint(second)).is_equal(second_before)

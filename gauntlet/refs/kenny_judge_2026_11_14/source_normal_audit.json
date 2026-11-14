@@ -1,0 +1,27 @@
+{
+  "xmaterial_c3d4d9e78b44a79": {
+    "duplicate_groups": 222,
+    "divergent_over_20_degrees": 0,
+    "divergent_over_45_degrees": 0,
+    "minimum_dot": 0.9832211421091993
+  },
+  "xmaterial_5a329cd32db96c3": {
+    "duplicate_groups": 17,
+    "divergent_over_20_degrees": 0,
+    "divergent_over_45_degrees": 0,
+    "minimum_dot": 0.9999550838183162
+  },
+  "xmaterial_90b39911eb484a2": {
+    "duplicate_groups": 258,
+    "divergent_over_20_degrees": 0,
+    "divergent_over_45_degrees": 0,
+    "minimum_dot": 0.9999703021602508
+  },
+  "xmaterial_90b2b911eb46cd8": {
+    "duplicate_groups": 257,
+    "divergent_over_20_degrees": 0,
+    "divergent_over_45_degrees": 0,
+    "minimum_dot": 0.9999242414468859
+  },
+  "has_authored_split_normals": true
+}

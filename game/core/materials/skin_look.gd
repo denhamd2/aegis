@@ -56,12 +56,12 @@ const DETAIL_MIX := 0.3
 ## The detail albedo is a white pixel at DETAIL_MIX alpha, in MULTIPLY: white
 ## times the albedo is the albedo, so the colour is untouched and the alpha is
 ## there only to set how much pore normal is mixed in.
-static func add_pores(material: BaseMaterial3D, tiles: float) -> void:
+static func add_pores(material: BaseMaterial3D, tiles: float, mix_strength := DETAIL_MIX) -> void:
 	var tex := load(DETAIL_NORMAL) as Texture2D
 	if tex == null:
 		return
 	var img := Image.create(1, 1, false, Image.FORMAT_RGBA8)
-	img.set_pixel(0, 0, Color(1, 1, 1, DETAIL_MIX))
+	img.set_pixel(0, 0, Color(1, 1, 1, clampf(mix_strength, 0.0, 1.0)))
 	material.detail_enabled = true
 	material.detail_blend_mode = BaseMaterial3D.BLEND_MODE_MUL
 	material.detail_uv_layer = BaseMaterial3D.DETAIL_UV_2
