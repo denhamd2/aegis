@@ -176,8 +176,12 @@ const COMMENTARY_CLIPS := {
 	# "I'm so sick of this guy." -- Tony's snark at a heel lording it over a
 	# man he has already put down.
 	"tony_sick_of_this_guy": ["res://assets/audio/commentary/tony_sick_of_this_guy.ogg"],
-	# "That's despicable! Just despicable!" -- Tony on a brutal weapon landing.
-	"tony_despicable": ["res://assets/audio/commentary/tony_despicable.ogg"],
+	# Tony's outrage on a brutal weapon landing: "That's despicable! Just
+	# despicable!" or "Have you no decency?" -- picked at random.
+	"tony_despicable": [
+		"res://assets/audio/commentary/tony_despicable.ogg",
+		"res://assets/audio/commentary/tony_have_you_no_decency.ogg",
+	],
 }
 ## The calls on something happening right now: they go to the head of the
 ## queue, so the fire call is not still waiting behind a long line when Aubrey
