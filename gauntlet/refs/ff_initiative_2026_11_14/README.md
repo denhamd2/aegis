@@ -71,6 +71,22 @@ bodies. The normal authored-animation path is unchanged.
 placement and existing reversal-window/reversal tests. Released-code negative
 control fails the same regression. Reports are adjacent. This is a timing/logic
 fix, not a claim that any animation is now visually corrected or AAA.
-**24 additional replay/catalog cases pass**, including actual scene recording/playback;43 total distinct focused cases pass. This is not a full-suite green claim. No commit/push/release of this new
-initiative batch has been performed; publication follows the repository's
-separate approval rule. Native M1 frame pacing remains unverified.
+**24 additional replay/catalog cases pass**, including actual scene recording/playback;43 total distinct focused cases pass. This is not a full-suite green claim. Owner approved publication. Commit `9c1976b56ed30830bc01c4ff93424d4beb78a74d`
+is pushed and Mac run43615191048 succeeded; exact mac-latest commit and uploaded
+Aegis.zip1,026,426,701 bytes verified. See mac_publication.json. Native M1 frame pacing remains unverified.
+
+## Next independently reproduced defects
+
+Role retargeting:12 headless cases (both slots,yaw0/.85,lift1/1.12/1.5)
+show slotA correct but slotB applies lift and defender pitch filtering to the
+wrong roles. At lift1.12: attacker/defender position errors.024/.120m; angular
+errors.30/.80rad. Use the existing authored-role argument after path rewriting.
+Separate probes reproduce shared animation-library contamination between rigs
+and surviving bodies left suspended after rig teardown. Fix these in bounded
+steps with isolation/cancellation regressions, not a new paired architecture.
+
+Fresh source contact audit: Cross Rhodes facelock median.094m/p90.146m,
+16in-reach/222out. Inverted drop body overlap.090m at1.25s, attacker pelvis-spine
+against defender left calf-foot; correct the catch/load, not the later apex.
+OWA source beat40 at30Hz exports tick80=1.333s; recipe2.2s andMoveDef agree.
+Local raw reference footage is missing; remeasure reference before any retime.
