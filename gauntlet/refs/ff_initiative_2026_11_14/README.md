@@ -109,5 +109,7 @@ height in both slot orders, including actual target-path resolution.
 clock, placement and real scene replay. Released-code negative control fails all
 three new regressions (38 assertion failures). Read-only architectural review
 found no blocker. Reports are adjacent. Owner approved commit, push and Mac publication;
-exact release verification is pending.
+Mac run43617037154 published `0ef511baaa0954ac3c63aae998d0795feb07836d`;
+exact mac-latest tag and uploaded Aegis.zip (1,026,426,645 bytes) verified.
+See mac_role_publication.json. Native M1 frame pacing remains unverified.
 Teardown ownership restoration remains a separate unresolved defect.

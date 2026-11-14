@@ -5,7 +5,7 @@
 Timing fallback batch `9c1976b` is deployed to Mac; exact release and ZIP verified.
 Next approved batch fixes swapped authored-role transforms and isolates
 AnimationPlayer libraries between matches/replays. All23 focused cases pass;
-Mac publication verification is pending. Teardown suspension and source contact
+Mac release `0ef511b` and uploaded ZIP are verified. Teardown suspension and source contact
 corrections remain open. [Evidence and roadmap](ff_initiative_2026_11_14/README.md).
 
 ## Current owner priority: Fight Forever gameplay initiative
