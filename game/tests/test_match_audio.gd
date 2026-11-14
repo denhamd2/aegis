@@ -373,7 +373,7 @@ func test_tonys_submission_call_routes_only_from_a_submission_attack() -> void:
 	assert_array(MatchAudio.commentary_events_for_kickout(2, false)).is_equal([
 		"excalibur_two_count", "tony_love_this_business"])
 	assert_array(MatchAudio.commentary_events_for_kickout(2, false, true)).is_equal([
-		"excalibur_unbelievable", "tony_love_this_business"])
+		"excalibur_unbelievable", "tony_dramatic_kickout"])
 	assert_array(MatchAudio.commentary_events_for_kickout(1, false)).is_empty()
 	assert_array(MatchAudio.commentary_events_for_kickout(2, true)).is_empty()
 	assert_str(MatchAudio.commentary_event_for_spectacular_spot(0.9, 239.0)).is_empty()

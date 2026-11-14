@@ -161,6 +161,16 @@ const COMMENTARY_CLIPS := {
 	"tony_american_nightmare_blood": ["res://assets/audio/commentary/tony_american_nightmare_blood.ogg"],
 	# "Look at the carnage!" -- Tony's awed call as the ring fills with chaos.
 	"tony_carnage": ["res://assets/audio/commentary/tony_carnage.ogg"],
+	# "Excalibur, I don't even know what to say to that." -- Tony, caught off
+	# guard and searching for words, after an unbelievable spot.
+	"tony_speechless": ["res://assets/audio/commentary/tony_speechless.ogg"],
+	# "No! No! He kicked out! How did he kick out of that?" -- Tony's
+	# disbelief at a dramatic late kick-out at two.
+	"tony_dramatic_kickout": ["res://assets/audio/commentary/tony_dramatic_kickout.ogg"],
+	# "Look at the blood! Look at the intensity!" -- Tony as a man bleeds.
+	"tony_blood_intensity": ["res://assets/audio/commentary/tony_blood_intensity.ogg"],
+	# "Watch out! Behind you!" -- Tony on a blindside hit from behind.
+	"tony_watch_out_behind": ["res://assets/audio/commentary/tony_watch_out_behind.ogg"],
 }
 ## The calls on something happening right now: they go to the head of the
 ## queue, so the fire call is not still waiting behind a long line when Aubrey
@@ -186,6 +196,10 @@ const COMMENTARY_REPEAT_COOLDOWNS := {
 	"excalibur_cody_cutter": 45.0,
 	"tony_american_nightmare_blood": 45.0,
 	"tony_carnage": 45.0,
+	"tony_speechless": 60.0,
+	"tony_dramatic_kickout": 60.0,
+	"tony_blood_intensity": 60.0,
+	"tony_watch_out_behind": 30.0,
 }
 const COMMENTARY_REPEAT_MIN_GAP := 12.0
 const CODY_CROWD_CHANT := "res://assets/audio/crowd_cody_chant.ogg"
@@ -205,6 +219,9 @@ const UNBELIEVABLE_LATE_MATCH_AFTER := 240.0
 const UNBELIEVABLE_SPECTACULAR_POP := 0.8
 const CHAOS_COMMENTARY_THRESHOLD := 3.0
 const CHAOS_COMMENTARY_DECAY_PER_SECOND := 0.2
+## The shown blood level at which Tony calls "Look at the blood!" -- once per
+## wrestler per match, so it lands as a moment rather than a running tally.
+const BLOOD_CALL_AT := 0.55
 
 var sfx: SfxPool
 var _bed: AudioStreamPlayer
@@ -317,6 +334,8 @@ var _enda_easter_egg_used := false
 var _sneaky_heel_easter_egg_selected := false
 var _sneaky_heel_easter_egg_used := false
 var _chaos_activity := 0.0
+## Wrestlers already called out for a bloody match ("Look at the blood!").
+var _blood_called := {}
 var _enda_easter_egg_waiting := false
 var _enda_cutaway_hold := 0.0
 var _enda_down_candidate: WrestlerController
@@ -700,7 +719,9 @@ static func commentary_events_for_kickout(count: int, match_over: bool,
 		late_match := false) -> Array[String]:
 	if count >= 2 and not match_over:
 		if late_match:
-			return ["excalibur_unbelievable", "tony_love_this_business"]
+			# Late in the match, a kick-out at two is a "how did he kick out
+			# of that?" moment: Excalibur's Unbelievable plus Tony's disbelief.
+			return ["excalibur_unbelievable", "tony_dramatic_kickout"]
 		return ["excalibur_two_count", "tony_love_this_business"]
 	return []
 
@@ -733,6 +754,21 @@ static func commentary_event_for_submission(entrance_style: String, move: MoveDe
 			and move.resource_path.get_file().get_basename() == "submission_figure_four":
 		return "excalibur_cody_figure_four"
 	return ""
+
+
+## A move landing on a man from behind (a blindside): the attacker stands
+## behind the defender's facing. Narration only -- it writes no match state.
+static func _move_lands_from_behind(attacker: WrestlerController,
+		defender: WrestlerController) -> bool:
+	var to_attacker := attacker.global_position - defender.global_position
+	to_attacker.y = 0.0
+	if to_attacker.length() < 0.3:
+		return false
+	var forward := -defender.global_transform.basis.z
+	forward.y = 0.0
+	if forward.length() < 0.01:
+		return false
+	return forward.normalized().dot(to_attacker.normalized()) < -0.35
 
 
 func _on_wrestler_state_changed(_previous: int, current: int,
@@ -897,7 +933,7 @@ func _heat(who: Variant, amount: float) -> void:
 		cheer = minf(cheer + amount, 1.0)
 
 
-func _on_move_landed(attacker, _defender, move: MoveDef) -> void:
+func _on_move_landed(attacker, defender, move: MoveDef) -> void:
 	_heat(attacker, 0.12 + 0.5 * CrowdReaction.move_pop(move))
 	var sound := hit_sound(move)
 	var hit_db := hit_level(sound, hit_volume(move))
@@ -926,6 +962,9 @@ func _on_move_landed(attacker, _defender, move: MoveDef) -> void:
 			commentary_event = commentary_event_for_spectacular_spot(pop, chants.match_time())
 			if commentary_event != "":
 				_queue_commentary(commentary_event)
+				# Tony, caught off guard and searching for words, to Excalibur
+				# after an unbelievable spot (Excalibur's reaction leads).
+				_queue_commentary("tony_speechless")
 			else:
 				commentary_event = commentary_event_for_landed_strike(move)
 				if commentary_event != "":
@@ -934,6 +973,9 @@ func _on_move_landed(attacker, _defender, move: MoveDef) -> void:
 					commentary_event = commentary_event_for_landed_move(attacker.entrance_style, move_id)
 					if commentary_event != "":
 						_queue_commentary(commentary_event)
+		# A move landed on a man from behind: "Watch out! Behind you!"
+		if defender is WrestlerController and _move_lands_from_behind(attacker, defender):
+			_queue_commentary("tony_watch_out_behind")
 
 
 ## A weapon going off or breaking (WeaponActor.LISTENERS).
@@ -1002,6 +1044,21 @@ func _on_set_piece_landed(who: WrestlerController, weapon: WeaponActor, broke: b
 	if not broke and weapon != null:
 		sfx.play_any(weapon.def.sound, hit_level(weapon.def.sound, -3.0))
 	_register_chaos_activity(2.0 if broke else 0.5)
+
+
+## "Look at the blood! Look at the intensity!" -- Tony's call once a man's
+## blood has come up. Fires once per wrestler per match, so a gusher is a
+## broadcast moment, not a running tally.
+func _hear_blood(w: WrestlerController) -> void:
+	if _over or _blood_called.has(w):
+		return
+	var blood := w.find_child("Blood", false, false) as Blood
+	if blood == null:
+		return
+	if maxf(blood.shown_head, blood.shown_back) < BLOOD_CALL_AT:
+		return
+	_blood_called[w] = true
+	_queue_commentary("tony_blood_intensity")
 
 
 func _register_chaos_activity(amount: float) -> void:
@@ -1172,6 +1229,7 @@ func _process(delta: float) -> void:
 	for w: WrestlerController in _wrestlers:
 		if is_instance_valid(w):
 			_hear_bumps(w, delta)
+			_hear_blood(w)
 	_try_enda_easter_egg(delta)
 
 
