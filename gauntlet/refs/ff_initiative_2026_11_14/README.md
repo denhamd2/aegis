@@ -86,7 +86,28 @@ and surviving bodies left suspended after rig teardown. Fix these in bounded
 steps with isolation/cancellation regressions, not a new paired architecture.
 
 Fresh source contact audit: Cross Rhodes facelock median.094m/p90.146m,
-16in-reach/222out. Inverted drop body overlap.090m at1.25s, attacker pelvis-spine
-against defender left calf-foot; correct the catch/load, not the later apex.
+16in-reach/222out. Inverted drop body overlap .090m, attacker pelvis-spine against defender
+left calf-foot. The probe label 1.25 is elapsed ticks divided by move duration,
+not seconds: entry time is included. The earlier catch/load attribution was
+incorrect. Actual animation-player instrumentation places it at 1.983333s, source frame
+59.5 (165 elapsed ticks minus45 entry ticks), immediately after impact. The
+corrected specialist slice is landing/release frames58–63; catch/load stays
+unchanged. No animation correction is accepted yet.
 OWA source beat40 at30Hz exports tick80=1.333s; recipe2.2s andMoveDef agree.
 Local raw reference footage is missing; remeasure reference before any retime.
+
+
+## Next batch in validation: authored roles and library isolation
+
+Runtime lift and defender yaw filtering now follow the authored role even when
+the physical wrestler slots are swapped. Each AnimationPlayer gets its own
+library container, while immutable source clips remain shared, preventing one
+match/replay from replacing another rig's clip entries. Regressions exercise
+12 role/height/yaw combinations, concurrent rigs/restoration and ladder entry
+height in both slot orders, including actual target-path resolution.
+**23 focused cases pass**, zero errors/failures/orphans: role retargeting, fallback
+clock, placement and real scene replay. Released-code negative control fails all
+three new regressions (38 assertion failures). Read-only architectural review
+found no blocker. Reports are adjacent. Owner approved commit, push and Mac publication;
+exact release verification is pending.
+Teardown ownership restoration remains a separate unresolved defect.

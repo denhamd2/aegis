@@ -43,12 +43,13 @@ var _active: bool = false
 ## wrestler tracks' NodePaths rewritten to the real attacker/defender nodes,
 ## so the authored motion always maps lifter-track -> attacker and
 ## thrown-track -> defender, whichever physical node that is this call. The
-## original clip is restored into the shared AnimationLibrary afterward
+## original clip is restored into this rig's private AnimationLibrary afterward
 ## (never mutated in place -- it's one Resource instance shared by every
 ## match/replay, same hazard MoveDef's own shared-Resource doc comment
 ## already flags elsewhere in this codebase).
 var _retargeted_anim_name: StringName
 var _original_anim: Animation
+var _private_library: AnimationLibrary
 ## Frame the current move plays in — see _compute_pair_transform().
 var _pair_transform: Transform3D = Transform3D()
 
@@ -175,7 +176,7 @@ func _play_role_poses(attacker: Node3D, defender: Node3D, move: MoveDef) -> void
 			body.play_paired_pose(move, pair[1])
 
 func _play_retargeted(anim_name: StringName, attacker: Node3D, defender: Node3D) -> void:
-	var library := animation_player.get_animation_library("")
+	var library := _local_animation_library()
 	var source := library.get_animation(anim_name)
 	var root := animation_player.get_node(animation_player.root_node)
 	var retargeted := source.duplicate() as Animation
@@ -195,6 +196,21 @@ func _play_retargeted(anim_name: StringName, attacker: Node3D, defender: Node3D)
 	library.remove_animation(anim_name)
 	library.add_animation(anim_name, retargeted)
 	animation_player.play(anim_name)
+
+
+## Keep immutable source clips shared, but never replace entries in another
+## rig's library while baking this pair's world-space keys.
+func _local_animation_library() -> AnimationLibrary:
+	var source := animation_player.get_animation_library("")
+	if source == _private_library:
+		return source
+	var local := AnimationLibrary.new()
+	for name in source.get_animation_list():
+		local.add_animation(name, source.get_animation(name))
+	animation_player.remove_animation_library("")
+	animation_player.add_animation_library("", local)
+	_private_library = local
+	return local
 
 ## Rewrite one wrestler track's keys from the authored origin frame into
 ## _pair_transform.
@@ -219,7 +235,7 @@ func _transform_track_into_pair_frame(anim: Animation, track: int,
 		# so across Roman's knee Kenny lay 11 cm low and Roman's head went
 		# 15 cm into his back (PairClearance, backbreaker). Height only: on the
 		# mat (y 0) nothing moves, and the line between the two is unchanged.
-		var lift := _lift_scale if String(anim.track_get_path(track)).ends_with("WrestlerB") else 1.0
+		var lift := 1.0 if is_attacker_role else _lift_scale
 		for k in anim.track_get_key_count(track):
 			var pos: Vector3 = anim.track_get_key_value(track, k)
 			pos.y *= lift
@@ -228,8 +244,7 @@ func _transform_track_into_pair_frame(anim: Animation, track: int,
 			anim.track_set_key_value(track, k, _pair_transform * pos)
 	elif track_type == Animation.TYPE_ROTATION_3D:
 		var yaw := Quaternion(_pair_transform.basis.orthonormalized())
-		var is_defender_root := String(anim.track_get_path(track)).ends_with(
-				"WrestlerB")
+		var is_defender_root := not is_attacker_role
 		for k in anim.track_get_key_count(track):
 			var rot: Quaternion = anim.track_get_key_value(track, k)
 			anim.track_set_key_value(track, k,
@@ -257,11 +272,11 @@ func _transform_track_into_pair_frame(anim: Animation, track: int,
 static func defender_root_yaw(rot: Quaternion) -> Quaternion:
 	return Quaternion(Vector3.UP, Basis(rot).get_euler().y)
 
-## A match torn down mid-move must put the shared clip back.
+## A match torn down mid-move must restore its private playback clip.
 ##
 ## _play_retargeted() swaps a copy of the move, baked into this pair's frame,
-## into the AnimationLibrary -- and that library is paired_moves.tres, one
-## resource shared by every match in the process. Restoring only on
+## into its private library. Previously that container was paired_moves.tres,
+## shared by every match in the process. Restoring only on
 ## grapple_finished left the baked copy behind whenever a match was freed
 ## mid-move, and the NEXT match played its moves from the first one's pair
 ## frame. test_replay_roundtrip caught it once running attacks began moves
