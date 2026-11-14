@@ -171,6 +171,11 @@ const COMMENTARY_CLIPS := {
 	"tony_blood_intensity": ["res://assets/audio/commentary/tony_blood_intensity.ogg"],
 	# "Watch out! Behind you!" -- Tony on a blindside hit from behind.
 	"tony_watch_out_behind": ["res://assets/audio/commentary/tony_watch_out_behind.ogg"],
+	# "He got him! He got him! One, two, three!" -- the pinfall-win call.
+	"tony_pinfall_win": ["res://assets/audio/commentary/tony_pinfall_win.ogg"],
+	# "I'm so sick of this guy." -- Tony's snark at a heel lording it over a
+	# man he has already put down.
+	"tony_sick_of_this_guy": ["res://assets/audio/commentary/tony_sick_of_this_guy.ogg"],
 }
 ## The calls on something happening right now: they go to the head of the
 ## queue, so the fire call is not still waiting behind a long line when Aubrey
@@ -200,6 +205,7 @@ const COMMENTARY_REPEAT_COOLDOWNS := {
 	"tony_dramatic_kickout": 60.0,
 	"tony_blood_intensity": 60.0,
 	"tony_watch_out_behind": 30.0,
+	"tony_sick_of_this_guy": 45.0,
 }
 const COMMENTARY_REPEAT_MIN_GAP := 12.0
 const CODY_CROWD_CHANT := "res://assets/audio/crowd_cody_chant.ogg"
@@ -674,8 +680,19 @@ func _on_wrestler_taunted(who: WrestlerController) -> void:
 	sfx.play_any("crowd_pop", CROWD_REACTION_GAIN_DB + -9.0)
 	var event := commentary_event_for_heel_pose(who.entrance_style)
 	if event != "":
-		_queue_commentary(event)
+		# A heel lording it over a man he has already put down: Tony's snarky
+		# "I'm so sick of this guy." Otherwise the usual heel call.
+		_queue_commentary("tony_sick_of_this_guy" if _anyone_down_but(who) else event)
 		_queue_sneaky_heel_easter_egg(who.entrance_style)
+
+
+## Whether anyone other than `who` is down on the mat.
+func _anyone_down_but(who: WrestlerController) -> bool:
+	for other: WrestlerController in _wrestlers:
+		if other != who and is_instance_valid(other) \
+				and other.fsm.current_state == WrestlerFSM.State.DOWN:
+			return true
+	return false
 
 
 func _queue_sneaky_heel_easter_egg(entrance_style: String) -> void:
@@ -1082,6 +1099,10 @@ func _on_match_won(winner: Variant, method: String) -> void:
 		chants.count(3, sfx)
 	sfx.play("bell_end", -1.0, MATCH_BELL_PITCH_SCALE)
 	sfx.play("crowd_finish", CROWD_REACTION_GAIN_DB)
+	# "He got him! He got him! One, two, three!" -- the pinfall-win call, ahead
+	# of Excalibur's finish so the count is heard as the hand comes down.
+	if method == "pinfall":
+		_queue_commentary("tony_pinfall_win")
 	_queue_commentary("excalibur_finish")
 	_queue_commentary("excalibur_coolest_job")
 	var w := winner as WrestlerController

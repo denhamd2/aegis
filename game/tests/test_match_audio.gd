@@ -394,6 +394,14 @@ func test_excalibur_comeback_and_finish_calls_have_match_events() -> void:
 		"excalibur_finish", "excalibur_coolest_job"])
 
 
+func test_pinfall_win_hears_tonys_three_count() -> void:
+	var audio: MatchAudio = auto_free(MatchAudio.new())
+	add_child(audio)
+	audio._on_match_won(null, "pinfall")
+	assert_array(audio._commentary_queue).is_equal([
+		"tony_pinfall_win", "excalibur_finish", "excalibur_coolest_job"])
+
+
 func test_cody_return_call_only_queues_on_his_entrance_cue() -> void:
 	var audio: MatchAudio = auto_free(MatchAudio.new())
 	add_child(audio)
