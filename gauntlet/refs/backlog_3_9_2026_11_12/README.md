@@ -132,6 +132,9 @@ Three Blender/judge revisions complete:3.8→6.7→7.2→7.4/10.
 [Evidence, validation and remaining limitations](../ambulance_judge_2026_11_13/README.md).
 Final18,210triangles/10materials/23surfaces;6focused cases pass. Native source
 has assembled doors and portable maps; Godot pivot/interaction contracts remain
-unchanged. Publication pending. After deployment, the owner requests Kenny
+unchanged. Published at `fa5c06d54cf068a387b56884a10390016e7044d8`,
+verified against `mac-latest`; Mac43511629112 succeeded, ZIP1,056,141,834bytes.
+Full CI matches the pre-ambulance baseline's4failures/2errors; no added failing
+cases. After deployment, the owner requests Kenny
 head/face/hair/body likeness review in three rounds and a Cody-independence audit.
 Other original unfinished priorities remain open.

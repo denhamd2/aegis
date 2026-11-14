@@ -6,8 +6,8 @@ The latest cell work is deployed atb40f772. Owner requested the ambulance next:
 remodel in Blender using the supplied screenshots, then perform three independent
 judge/revision loops aiming10/10 with honest scores. Preserve doors and match
 interactions; [current evidence/ledger](ambulance_judge_2026_11_13/README.md).
-Ambulance iterations are complete at7.4/10;6focused cases pass, publication
-pending. After its verified deployment, Kenny likeness (head/face/hair/body)
+Ambulance iterations are complete at7.4/10;6focused cases pass, exact
+`fa5c06d` Mac publication verified. After its verified deployment, Kenny likeness (head/face/hair/body)
 and an audit of model independence from Cody are the next owner priority,
 using three judge/revision loops. The cell walking-strip study stays deferred.
 
@@ -38,14 +38,14 @@ are historical, including their stale “working tree”, move-count and CI clai
 
 ## Published and remaining acceptance
 
-Latest Mac app: **`b40f7721948520b5004cbdaca46d46af49ec2d68`**, verified
-against `mac-latest`, successful [Mac run 43502575366](https://github.com/denhamd2/aegis/actions/runs/43502575366),
-`Aegis.zip` 1,056,076,611 bytes.
+Latest Mac app: **`fa5c06d54cf068a387b56884a10390016e7044d8`**, verified
+against `mac-latest`, successful [Mac run 43511629112](https://github.com/denhamd2/aegis/actions/runs/43511629112),
+`Aegis.zip` 1,056,141,834 bytes.
 [Download](https://github.com/denhamd2/aegis/releases/tag/mac-latest).
 This includes the Blender prop sources/runtime integration, grip corrections
-and three cell judge revisions plus the wire sampling refinement; [current evidence and limitations](cell_judge_2026_11_13/README.md).
-Next: a bounded Blender walking-strip profile study, subject to close-view
-validation; [scope](cell_judge_2026_11_13/wire_filter/README.md).
+three cell judge revisions plus wire sampling, and the three-round ambulance remodel; [current evidence and limitations](cell_judge_2026_11_13/README.md).
+Next: Kenny likeness in three rounds plus full Cody-independence audit/fixes.
+The bounded cell walking-strip study remains deferred.
 Cell likeness remains **8.0/10**, with motion aliasing, close detail and native
 Mac performance still open. Earlier release rows below retain their own
 validation history; [the current batch ledger](backlog_3_9_2026_11_12/README.md)

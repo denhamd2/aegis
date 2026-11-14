@@ -109,7 +109,19 @@ frame time. No fourth cosmetic loop was performed or claimed.
 - Godot import, Python compilation and five-view Forward+ captures pass. Casket
   source/export hashes remain unchanged. No gameplay timing or animation changed.
 
-Publication pending exact-commit Mac workflow/tag/ZIP verification.
+Published at `fa5c06d54cf068a387b56884a10390016e7044d8`.
+[Mac workflow43511629112](https://github.com/denhamd2/aegis/actions/runs/43511629112)
+succeeded; `mac-latest` resolves to that exact commit and `Aegis.zip` is
+1,056,141,834bytes. [Download](https://github.com/denhamd2/aegis/releases/tag/mac-latest).
+
+Exact-commit [CI43511629150](https://github.com/denhamd2/aegis/actions/runs/43511629150)
+has1316cases,4failures,2errors,5orphans. The pre-ambulance
+[CI43502575462](https://github.com/denhamd2/aegis/actions/runs/43502575462) has
+the identical totals and failing cases: stale Kenny/Cody model assertion,
+prop-handoff body separation, paired-move clearance, realism event dictionary,
+and carnage fire-material access (two cases include runtime errors). No new
+failing case is introduced by this ambulance batch. These baseline issues remain
+open; the stale model assertion belongs to the next Kenny independence work.
 
 ## Next owner request
 
