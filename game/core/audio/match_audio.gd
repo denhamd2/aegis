@@ -119,7 +119,8 @@ const COMMENTARY_CLIPS := {
 	"excalibur_kenny_resume": ["res://assets/audio/commentary/excalibur_kenny_resume.ogg"],
 	"excalibur_cody_career": ["res://assets/audio/commentary/excalibur_cody_career.ogg"],
 	"roman_record": ["res://assets/audio/commentary/tony_roman_record.ogg"],
-	"roman_spear": ["res://assets/audio/commentary/tony_roman_spear.ogg"],
+	"roman_spear": ["res://assets/audio/commentary/tony_roman_spear.ogg",
+			"res://assets/audio/commentary/tony_otc_spear.ogg"],
 	"excalibur_superman_punch": ["res://assets/audio/commentary/excalibur_superman_punch.ogg"],
 	"excalibur_strikes": ["res://assets/audio/commentary/excalibur_strikes.ogg"],
 	"excalibur_body_kicks": ["res://assets/audio/commentary/excalibur_body_kicks.ogg"],
@@ -155,6 +156,11 @@ const COMMENTARY_CLIPS := {
 	# Cody going into his Figure Four (13 Nov), in place of Tony's generic
 	# submission call.
 	"excalibur_cody_figure_four": ["res://assets/audio/commentary/excalibur_cody_figure_four.ogg"],
+	# The owner-supplied Tony line (worried and reserved): "The American
+	# Nightmare is bleeding profusely, refusing to stay down."
+	"tony_american_nightmare_blood": ["res://assets/audio/commentary/tony_american_nightmare_blood.ogg"],
+	# "Look at the carnage!" -- Tony's awed call as the ring fills with chaos.
+	"tony_carnage": ["res://assets/audio/commentary/tony_carnage.ogg"],
 }
 ## The calls on something happening right now: they go to the head of the
 ## queue, so the fire call is not still waiting behind a long line when Aubrey
@@ -178,6 +184,8 @@ const COMMENTARY_REPEAT_COOLDOWNS := {
 	"excalibur_body_kicks": 22.0,
 	"excalibur_unbelievable": 60.0,
 	"excalibur_cody_cutter": 45.0,
+	"tony_american_nightmare_blood": 45.0,
+	"tony_carnage": 45.0,
 }
 const COMMENTARY_REPEAT_MIN_GAP := 12.0
 const CODY_CROWD_CHANT := "res://assets/audio/crowd_cody_chant.ogg"
@@ -697,6 +705,21 @@ static func commentary_events_for_kickout(count: int, match_over: bool,
 	return []
 
 
+## "The American Nightmare is bleeding profusely, refusing to stay down" --
+## the owner-supplied worried and reserved Tony line, for a bloodied Cody
+## kicking out at two. Only on a bleeding Cody, not on any kickout.
+static func commentary_event_for_cody_kickout(defender: WrestlerController,
+		count: int) -> String:
+	if count < 2 or defender == null:
+		return ""
+	if Persona.of(defender.display_name) != Persona.Kind.FACE:
+		return ""
+	var blood := defender.find_child("Blood", false, false)
+	if blood == null or blood.head <= 0.5:
+		return ""
+	return "tony_american_nightmare_blood"
+
+
 static func commentary_event_for_spectacular_spot(move_pop: float, match_time: float) -> String:
 	return "excalibur_unbelievable" if move_pop >= UNBELIEVABLE_SPECTACULAR_POP \
 			and match_time >= UNBELIEVABLE_LATE_MATCH_AFTER else ""
@@ -985,7 +1008,9 @@ func _register_chaos_activity(amount: float) -> void:
 	_chaos_activity = minf(_chaos_activity + amount, CHAOS_COMMENTARY_THRESHOLD * 2.0)
 	if _chaos_activity < CHAOS_COMMENTARY_THRESHOLD:
 		return
-	_queue_commentary("excalibur_restore_order")
+	# Chaos: Excalibur calls for order restored, or Tony's awed "Look at the
+	# carnage!" -- alternating between the two broadcast reactions.
+	_queue_commentary("tony_carnage" if _commentary_rng.randi_range(0, 1) == 0 else "excalibur_restore_order")
 	_chaos_activity = 0.0
 
 
@@ -1270,6 +1295,11 @@ func _hear_the_count() -> void:
 				_queue_commentary(event)
 			else:
 				_queue_commentary(event)
+		# A bleeding Cody who will not stay down: the worried and reserved Tony
+		# line, only when the man kicking out at two is a bleeding Cody.
+		var cody_event := commentary_event_for_cody_kickout(_referee._pin_defender, _count_heard)
+		if cody_event != "":
+			_queue_commentary(cody_event)
 	_was_pinning = pinning
 
 
