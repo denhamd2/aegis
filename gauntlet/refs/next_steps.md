@@ -1,6 +1,6 @@
 # Aegis prioritised backlog
 
-## Current owner priority: Kenny likeness and independent identity
+## Current status: Kenny batch published; visual acceptance remains open
 
 The latest cell work is deployed atb40f772. Owner requested the ambulance next:
 remodel in Blender using the supplied screenshots, then perform three independent
@@ -13,7 +13,7 @@ using three judge/revision loops. [Current Kenny evidence](kenny_judge_2026_11_1
 all three revisions complete, **4.1 → 4.0 → 4.5 → 4.6/10**. Kenny now owns an editable
 Blender source and independent identity profiles/maps/builds; shared neutral
 rig/animation code remains. All 78 focused cases pass, isolated rebuild succeeds,
-and 74 Cody assets are unchanged. Mac publication is pending. Facial likeness,
+and 74 Cody assets are unchanged. Exact `253603d` Mac publication is verified. Facial likeness,
 ribbon-like curls and skin detail remain open; no 10/10 or AAA acceptance.
 The cell walking-strip study stays deferred.
 
@@ -44,14 +44,16 @@ are historical, including their stale “working tree”, move-count and CI clai
 
 ## Published and remaining acceptance
 
-Latest Mac app: **`fa5c06d54cf068a387b56884a10390016e7044d8`**, verified
-against `mac-latest`, successful [Mac run 43511629112](https://github.com/denhamd2/aegis/actions/runs/43511629112),
-`Aegis.zip` 1,056,141,834 bytes.
+Latest Mac app: **`253603dfc86b6531549d17cad7b0db3478f3caf0`**, verified
+against `mac-latest`, successful [Mac run 43575822777](https://github.com/denhamd2/aegis/actions/runs/43575822777),
+`Aegis.zip` 1,026,426,469 bytes.
 [Download](https://github.com/denhamd2/aegis/releases/tag/mac-latest).
 This includes the Blender prop sources/runtime integration, grip corrections
-three cell judge revisions plus wire sampling, and the three-round ambulance remodel; [current evidence and limitations](cell_judge_2026_11_13/README.md).
-Kenny’s three-round likeness/identity batch is validated and awaiting Mac
-publication; visual acceptance remains open at 4.6/10. After publication, the
+three cell judge revisions plus wire sampling, the three-round ambulance remodel,
+and Kenny’s three-round likeness/identity batch; [current evidence and limitations](cell_judge_2026_11_13/README.md).
+Kenny’s three-round likeness/identity batch is published with 78 focused tests
+passing; visual acceptance remains open at 4.6/10. Python CI passed, while the
+exact-commit broader gameplay suite was still running at publication. The
 next unfinished implementation batch is entrances and Cody’s moonsault setup
 (original IDs 11–12, 15), followed by two-sided ladder routes and ladder/table
 coverage. Owner review may reprioritise the documented likeness gaps.

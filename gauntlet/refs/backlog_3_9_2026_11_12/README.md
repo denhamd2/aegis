@@ -155,5 +155,9 @@ covered. **78 focused cases pass**, zero failures/errors/orphans. Isolated cold
 regeneration succeeds without Cody files; one tangent component has 0.0001
 roundoff, all 17 PNG maps match exactly. [Evidence](../kenny_judge_2026_11_14/README.md).
 
-Mac publication pending. Original batches 3–5 and remaining weapon families
+Mac publication verified: `253603dfc86b6531549d17cad7b0db3478f3caf0`,
+[Mac run 43575822777](https://github.com/denhamd2/aegis/actions/runs/43575822777)
+succeeded; exact `mac-latest` tag and uploaded ZIP 1,026,426,469 bytes checked.
+Python CI passed; broader exact-commit gameplay CI was still running.
+Original batches 3–5 and remaining weapon families
 stay open; native M1 performance and full-arena visual acceptance are unverified.

@@ -123,5 +123,15 @@ and fire material lookup. Exact new CI results must be recorded separately.
 
 ## Delivery
 
-Commit/push and exact Mac publication verification are pending. Native M1/16 GB
-60 fps, full-arena appearance and final owner acceptance remain unverified.
+Published **`253603dfc86b6531549d17cad7b0db3478f3caf0`**, successful
+[Mac run 43575822777](https://github.com/denhamd2/aegis/actions/runs/43575822777).
+Verified `mac-latest` points at that exact commit; `Aegis.zip` is uploaded,
+**1,026,426,469 bytes**, SHA256
+`d3c7cc9db4ff372d9cdfcad00d0f19dcecde6d9526ad844a51ec884b4c67730c`.
+[Download](https://github.com/denhamd2/aegis/releases/tag/mac-latest);
+[machine-readable receipt](mac_publication.json).
+
+Exact-commit [CI 43575822747](https://github.com/denhamd2/aegis/actions/runs/43575822747):
+Python checks passed; broader gameplay suite was still running at publication
+verification. It is not claimed green. Native M1/16 GB 60 fps, full-arena
+appearance and final owner acceptance remain unverified.
