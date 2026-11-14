@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites id="2026-11-14" name="report_1" tests="1" failures="3" skipped="0" flaky="0" time="0.000">
+	<testsuite id="0" name="test_grapple_fallback_clock" package="tests" timestamp="2026-11-14T16:17:04" hostname="localhost" tests="1" failures="3" errors="0" skipped="0" flaky="0" time="1.125">
+		<testcase name="test_fallback_finishes_on_the_same_simulation_frame_under_slow_motion" classname="test_grapple_fallback_clock" time="1.117">
+			<failure message="FAILED: res://tests/test_grapple_fallback_clock.gd:33" type="FAILURE">
+<![CDATA[
+Expecting:
+ 30
+ but was
+ 29
+	at 'test_fallback_finishes_on_the_same_simulation_frame_under_slow_motion' in res://tests/test_grapple_fallback_clock.gd:33
+]]>
+			</failure>
+			<failure message="FAILED: res://tests/test_grapple_fallback_clock.gd:33" type="FAILURE">
+<![CDATA[
+Expecting:
+ 30
+ but was
+ 36
+	at 'test_fallback_finishes_on_the_same_simulation_frame_under_slow_motion' in res://tests/test_grapple_fallback_clock.gd:33
+]]>
+			</failure>
+			<failure message="FAILED: res://tests/test_grapple_fallback_clock.gd:41" type="FAILURE">
+<![CDATA[
+Expecting:
+ 36
+ but was
+ 29
+	at 'test_fallback_finishes_on_the_same_simulation_frame_under_slow_motion' in res://tests/test_grapple_fallback_clock.gd:41
+]]>
+			</failure>
+		</testcase>
+	</testsuite>
+</testsuites>

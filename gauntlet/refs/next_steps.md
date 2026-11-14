@@ -1,5 +1,12 @@
 # Aegis prioritised backlog
 
+## Current owner priority: Fight Forever gameplay initiative
+
+Owner14November prioritises synchronisation/grappling and existing animation
+quality, followed by reversals, AI, referee, library and broadcast work.
+[Current audit, roadmap and implemented timing batch](ff_initiative_2026_11_14/README.md).
+The existing Kenny work and unfinished backlog remain preserved.
+
 ## Current status: Kenny batch published; visual acceptance remains open
 
 The latest cell work is deployed atb40f772. Owner requested the ambulance next:

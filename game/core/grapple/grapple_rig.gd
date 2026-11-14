@@ -138,8 +138,19 @@ func begin(attacker: Node3D, defender: Node3D, move: MoveDef) -> void:
 		# Grey-box fallback (Phase 2/3 gap): no paired animation library yet,
 		# so resolve on the move's own frame count instead of an anim signal.
 		var ticks_to_wait := move.total_frames() if move else 1
-		await Engine.get_main_loop().create_timer(ticks_to_wait / float(Engine.physics_ticks_per_second)).timeout
-		_on_animation_finished(&"")
+		if await _wait_fallback_frames(ticks_to_wait):
+			_on_animation_finished(&"")
+
+
+## MoveDef durations are simulation frames, including when no root clip exists.
+## An idle timer can expire between physics ticks and changes its frame count
+## under time scaling; both roles must remain owned for the same fixed ticks.
+func _wait_fallback_frames(frames: int) -> bool:
+	for _tick in maxi(1, frames):
+		await get_tree().physics_frame
+		if not _active:
+			return false
+	return true
 
 ## Starts each wrestler's half of the move's authored bone-level performance.
 ##
