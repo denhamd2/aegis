@@ -108,6 +108,20 @@ func test_tonys_gunshot_call_follows_the_handgun_flash_once() -> void:
 	assert_str(MatchAudio.commentary_event_for_weapon_ready(&"inflatable_banana")).is_empty()
 
 
+func test_brutal_weapons_are_despicable() -> void:
+	assert_bool(MatchAudio._weapon_is_despicable(
+		WeaponCatalog.swing_move(WeaponCatalog.by_id(&"barbed_wire_chair")))).is_true()
+	assert_bool(MatchAudio._weapon_is_despicable(
+		WeaponCatalog.swing_move(WeaponCatalog.by_id(&"light_tubes")))).is_true()
+	assert_bool(MatchAudio._weapon_is_despicable(
+		WeaponCatalog.swing_move(WeaponCatalog.by_id(&"thumbtacks")))).is_true()
+	# A hard but legal weapon (a chair, a kendo stick) is not "despicable".
+	assert_bool(MatchAudio._weapon_is_despicable(
+		WeaponCatalog.swing_move(WeaponCatalog.by_id(&"trash_can")))).is_false()
+	assert_bool(MatchAudio._weapon_is_despicable(
+		WeaponCatalog.swing_move(WeaponCatalog.by_id(&"kendo_stick")))).is_false()
+
+
 func test_gunshot_and_rocket_effects_use_the_louder_signature_mix() -> void:
 	var audio: MatchAudio = auto_free(MatchAudio.new())
 	add_child(audio)
@@ -373,7 +387,7 @@ func test_tonys_submission_call_routes_only_from_a_submission_attack() -> void:
 	assert_array(MatchAudio.commentary_events_for_kickout(2, false)).is_equal([
 		"excalibur_two_count", "tony_love_this_business"])
 	assert_array(MatchAudio.commentary_events_for_kickout(2, false, true)).is_equal([
-		"excalibur_unbelievable", "tony_love_this_business"])
+		"excalibur_unbelievable", "tony_dramatic_kickout"])
 	assert_array(MatchAudio.commentary_events_for_kickout(1, false)).is_empty()
 	assert_array(MatchAudio.commentary_events_for_kickout(2, true)).is_empty()
 	assert_str(MatchAudio.commentary_event_for_spectacular_spot(0.9, 239.0)).is_empty()
@@ -392,6 +406,14 @@ func test_excalibur_comeback_and_finish_calls_have_match_events() -> void:
 	assert_array(audio._commentary_queue).is_equal([
 		"excalibur_comeback", "tony_momentum_shift",
 		"excalibur_finish", "excalibur_coolest_job"])
+
+
+func test_pinfall_win_hears_tonys_three_count() -> void:
+	var audio: MatchAudio = auto_free(MatchAudio.new())
+	add_child(audio)
+	audio._on_match_won(null, "pinfall")
+	assert_array(audio._commentary_queue).is_equal([
+		"tony_pinfall_win", "excalibur_finish", "excalibur_coolest_job"])
 
 
 func test_cody_return_call_only_queues_on_his_entrance_cue() -> void:
