@@ -1,16 +1,18 @@
 # Aegis prioritised backlog
 
-## Camera shake follow-up: validated, publication in progress
+## Latest deployed: camera impact-shake repair
 
 Owner moved backlog8 ahead of landing fit.45 focused cases pass. One scheduled
 cue now covers all camera modes, avoiding shot-delayed/repeated pulses and the
 second notification at paired completion. OFF cancels old/new cues; LOW/HIGH
 retain their strength and continuous animation. Running-drop shake uses authored
 impact59 rather than catch37. [Evidence](camera_shake_2026_11_15/README.md).
-Native shake feel awaits owner Mac review; source animation/landing fit is unchanged.
+Mac run43761306666 succeeded; exact commitfb01d89 and uploaded
+Aegis.zip1,033,207,483bytes verified. Latest Kenny work8cb7576 is preserved.
+Native shake feel awaits owner Mac review; landing fit remains queued.
 After verified delivery, resume landing fit unless the owner changes priorities.
 
-## Latest deployed: authored running-drop wrap and boot arc
+## Previous deployed: authored running-drop wrap and boot arc
 
 Owner requested committing and deploying all current changes. Candidate4 replaces
 bilateral waist forcing with an authored right-forearm sweep/free left arm,
@@ -165,7 +167,7 @@ all smaller improvements.
 | ---: | --- | --- | --- | --- | --- |
 | 1 | 7 | Faster validation and Mac-only delivery — **implemented in this batch; publication check pending** | Very high enabling impact | M | Reduces the cost of every later batch. Profile setup separately; use safe fixtures and affected-subsystem selection, retain full regressions for broad changes, audit Web dependencies before retiring publishing. Preserve Mac builds/shared code. |
 | 2 | 13a | Punch corrections: first active move-family batch — **source re-keyed and pose-audited in this batch; regeneration and focused tests pending on Mac** | Very high | M per batch; L overall | Seen throughout every match. Start with the most visible joint/contact failures against available Fight Forever footage; review both bodies, contacts and recovery. Jab, cross, gut punch, Bionic Elbow and dropdown uppercut now meet the phase, contact-height, gaze, reach and mat-clearance criteria; the Bionic Elbow is elbow-led at head height with the measurement tool extended to measure the elbow. See [validation](punch_corrections_2026_11_08/validation.md). |
-| 3 | 8 | Existing impact shake — **follow-up validated; publishing** | High | S–M | Strong broadcast payoff for limited scope. Trigger only at actual impact, respect settings, stay brief, and never pause animation. |
+| 3 | 8 | Existing impact shake — **follow-up published in `fb01d89`** | High | S–M | Strong broadcast payoff for limited scope. Trigger only at actual impact, respect settings, stay brief, and never pause animation. |
 | 4 | 9–10 | Weapon retrieval and extinguisher pickup/effect lifecycle — **implemented in this batch; tests and renders pending on Mac** | High in weapon matches | S–M each | Related prop-interaction batch: distinct reserved apron locations with cleanup; remove pickup cloud and keep spray confined to the authored action. Apron claims are 1.1 m apart, released on completion/interruption/cancellation, with a `APRON TAKEN · STEP ALONG` HUD cue and a visible AI step to a free lane; the extinguisher's Cloud root is hidden, foam leaves the muzzle, the horn aims with a controlled tank-down roll, the prop appears in her hand at the grab and is carried back before being put away. See [validation](weapons_2026_11_08/validation.md). |
 | 5 | 19–20 | Blood default and bounded sweat assessment/tuning | Medium | S + S–M | Cheap surface/settings batch before larger reauthoring. Raise blood one capped step while preserving saved choices/OFF. Compare early/mid/late sweat first; tune modestly only if justified and avoid uniformly glossy skin. Do not hold the blood fix for an open-ended material overhaul. |
 | 6 | 14 | Cross Rhodes attacker/defender correction | High | M–L | Cody's finish is a prominent identity moment. Reauthor hold, rotation, descent, impact and release together against the existing reference. |

@@ -2,8 +2,8 @@
 
 Owner reprioritized camera shake on15November. This repairs the existing
 system; it does not introduce a second shake system or change move/gameplay
-clocks. Standing instruction: "Commit and deploy any changes." Publication
-verification is pending.
+clocks. Standing instruction: "Commit and deploy any changes." Mac publication atfb01d89 is verified: run43761306666 succeeded, exact
+mac-latest tag and uploaded ZIP confirmed. See mac_publication.json.
 
 ## Result
 
@@ -58,7 +58,7 @@ do not receive an impact pulse merely for existing/finishing. Reference/source
 basis is gauntlet/refs/ff_initiative_2026_11_14/README.md, with the authored
 running-drop beat documented in that initiative's batch3 review.
 
-Next: verify the exact Mac tag and ZIP, then resume the remaining backlog in
+Next: resume the remaining backlog in
 owner priority order. Landing-fit diagnosis remains queued; no landing changes
 are included here.
 
