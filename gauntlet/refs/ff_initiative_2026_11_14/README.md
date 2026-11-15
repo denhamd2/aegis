@@ -125,3 +125,12 @@ suite has one failing test/two beard-to-ear assertions. Full317clip source is
 regenerated; no solver experiment is included. Exact Mac releasef681d07 and
 uploaded ZIP verified; run43695558573 succeeded. See batch2/mac_publication.json.
 [Current scope, tests and limitations](batch2/README.md).
+
+## Latest delivery: running-drop fitting and grip release
+
+Owner-approved batch5e4a165 is deployed: Mac run43698792321 succeeded; exact
+mac-latest tag and uploaded ZIP verified.33distinct focused checks pass. The
+extra vertical fitting offset is released by impact and grip IK fades before
+it. Full authored impact/wrap quality remains open. Next is source-arm
+reauthoring of the right upper-body wrap/left free arm and correct defender
+descent/mat contact. [Evidence/receipt](../grapple_release_2026_11_15/README.md).

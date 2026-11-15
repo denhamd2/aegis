@@ -1,4 +1,4 @@
-# Running-drop fitting and grip release — ready for publication review
+# Running-drop fitting and grip release — deployed for Mac review
 
 Implemented in GrappleRig and the existing paired recipe; no animation source,
 MoveDef damage/timing, body-root ownership or public controls change. Scope is
@@ -56,8 +56,9 @@ for contact judgement. Opposite-order turnover/impact/recovery were also viewed.
 [Measurements](measurements.json), [unique validation count](validation_summary.json),
 [focused run](focused_32.xml), [actual-clock suite](height_clock_7.xml).
 Capture/test shutdown resource/material warnings remain recorded. No whole-suite
-all-green, AAA/10/10, completed-move or native M1 performance claim. Owner approved commit, push and Mac publication for this batch. Exact release
-verification is pending.
+all-green, AAA/10/10, completed-move or native M1 performance claim. Owner approved publication. Mac run43698792321 succeeded; mac-latest points
+exactly to5e4a1655b718e3b03bbea8a16316ac62af157715 and Aegis.zip is uploaded
+(1,032,804,643bytes). [Verified publication receipt](mac_publication.json).
 
 Next: reference-led source reauthoring of right forearm upper wrap/left free arm,
 then contact binding measured against that choreography. Do not force both

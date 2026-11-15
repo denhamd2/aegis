@@ -1,10 +1,11 @@
 # Aegis prioritised backlog
 
-## Next prepared batch: release fitting and grip timing
+## Latest deployed batch: release fitting and grip timing
 
 Owner approved publication of the implemented runtime running-drop release fix: cosmeticY smoothly returns to zero before impact; grip fades at55 and
 is off by58.33distinct focused checks pass, both real pairing maxima preserved.
-[Current evidence](grapple_release_2026_11_15/README.md). No new Mac release yet.
+[Current evidence](grapple_release_2026_11_15/README.md). Exact Mac release
+5e4a165 and uploaded ZIP verified; run43698792321 succeeded.
 Next source task is the asymmetric right upper-body wrap/left free arm; original
 authored impact height, teardown lifetime and full move acceptance remain open.
 
