@@ -50,6 +50,10 @@ var _active: bool = false
 var _retargeted_anim_name: StringName
 var _original_anim: Animation
 var _private_library: AnimationLibrary
+## Cosmetic release envelope, sampled from the existing paired player.
+var _separation_height_weight := 1.0
+var _separation_height_origin := Vector2.ZERO
+var _separation_height_captured := false
 ## Frame the current move plays in — see _compute_pair_transform().
 var _pair_transform: Transform3D = Transform3D()
 
@@ -91,6 +95,9 @@ func begin(attacker: Node3D, defender: Node3D, move: MoveDef) -> void:
 	_attacker = attacker
 	_defender = defender
 	_move = move
+	_separation_height_weight = 1.0
+	_separation_height_origin = Vector2.ZERO
+	_separation_height_captured = false
 	_attacker_body = attacker as CharacterBody3D
 	_defender_body = defender as CharacterBody3D
 
@@ -760,6 +767,12 @@ func _separate_models() -> void:
 	var d := _defender as WrestlerController
 	if a == null or d == null or a.skeleton == null or d.skeleton == null:
 		return
+	_update_separation_height()
+	if _separation_height_weight < 1.0:
+		for body: WrestlerController in [a, d]:
+			body.paired_separation = _constrain_separation(body.paired_separation,
+					ATTACKER_MAX if body == a else SEPARATION_MAX, body == a)
+			body.apply_model_offset()
 	var pushed := false
 	for _pass in SEPARATION_PASSES:
 		var push := PairClearance.push(a, d)
@@ -770,17 +783,55 @@ func _separate_models() -> void:
 		# attacker the other way: when the defender is wrapped round him (the
 		# tilt-a-whirls, Cross Rhodes), pushing only the defender just presses
 		# him into the far side and the pushes cancel.
-		d.paired_separation = (d.paired_separation + push * DEFENDER_SHARE) \
-				.limit_length(SEPARATION_MAX)
-		a.paired_separation = (a.paired_separation - push * (1.0 - DEFENDER_SHARE)) \
-				.limit_length(ATTACKER_MAX)
+		d.paired_separation = _constrain_separation(
+				d.paired_separation + push * DEFENDER_SHARE, SEPARATION_MAX)
+		a.paired_separation = _constrain_separation(
+				a.paired_separation - push * (1.0 - DEFENDER_SHARE), ATTACKER_MAX, true)
 		d.apply_model_offset()
 		a.apply_model_offset()
 	if not pushed:
 		for w: WrestlerController in [a, d]:
-			w.paired_separation *= SEPARATION_SETTLE
+			w.paired_separation = _constrain_separation(w.paired_separation * SEPARATION_SETTLE,
+					ATTACKER_MAX if w == a else SEPARATION_MAX, w == a)
 			w.apply_model_offset()
 	_pull_into_reach(a, d)
+
+
+## A move may release vertical fitting without changing its authored body or
+## gameplay roots. Keep the envelope after playback finishes, through ease-out.
+func _update_separation_height() -> void:
+	if not _move or not _original_anim or not animation_player:
+		return
+	var recipe: Dictionary = PairedRecipes.RECIPES.get(String(_move.animation_pair_id), {})
+	if not recipe.has("separation_height_release"):
+		return
+	var window: Vector2 = recipe["separation_height_release"]
+	var length := animation_player.current_animation_length
+	if length <= 0.0:
+		return
+	var phase := animation_player.current_animation_position / length
+	# Recipe Vector2 endpoints are serialized as float32.
+	if phase <= window.x + 0.000001:
+		return
+	if not _separation_height_captured:
+		var a := _attacker as WrestlerController
+		var d := _defender as WrestlerController
+		if not a or not d:
+			return
+		_separation_height_origin = Vector2(a.paired_separation.y, d.paired_separation.y)
+		_separation_height_captured = true
+	_separation_height_weight = minf(_separation_height_weight,
+			1.0 - smoothstep(window.x, window.y, phase))
+
+
+func _constrain_separation(offset: Vector3, maximum: float, attacker := false) -> Vector3:
+	if not _separation_height_captured:
+		return offset.limit_length(maximum)
+	var origin_y := _separation_height_origin.x if attacker else _separation_height_origin.y
+	var release_y := clampf(origin_y * _separation_height_weight, -maximum, maximum)
+	var planar_limit := sqrt(maxf(maximum * maximum - release_y * release_y, 0.0))
+	var planar := Vector3(offset.x, 0.0, offset.z).limit_length(planar_limit)
+	return Vector3(planar.x, release_y, planar.z)
 
 
 # --- Contact (Phase 2) --------------------------------------------------------
@@ -829,8 +880,8 @@ func _pull_into_reach(a: WrestlerController, d: WrestlerController) -> void:
 	if short <= 0.0 or short > PULL_RADIUS:
 		return
 	var before := d.paired_separation
-	d.paired_separation = (d.paired_separation - to_target.normalized() * short * PULL_GAIN) \
-			.limit_length(SEPARATION_MAX)
+	d.paired_separation = _constrain_separation(
+			d.paired_separation - to_target.normalized() * short * PULL_GAIN, SEPARATION_MAX)
 	d.apply_model_offset()
 	# Pulled in; now make sure that did not put him inside the attacker. If the
 	# separation cannot clear what the pull caused -- his head drawn into the
@@ -842,10 +893,10 @@ func _pull_into_reach(a: WrestlerController, d: WrestlerController) -> void:
 		if push.length() <= 0.0005:
 			clear = true
 			break
-		d.paired_separation = (d.paired_separation + push).limit_length(SEPARATION_MAX)
+		d.paired_separation = _constrain_separation(d.paired_separation + push, SEPARATION_MAX)
 		d.apply_model_offset()
 	if not clear and PairClearance.push(a, d).length() > 0.0005:
-		d.paired_separation = before
+		d.paired_separation = _constrain_separation(before, SEPARATION_MAX)
 		d.apply_model_offset()
 
 func _suspend(body: CharacterBody3D) -> void:

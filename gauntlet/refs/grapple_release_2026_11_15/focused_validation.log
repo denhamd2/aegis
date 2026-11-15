@@ -1,0 +1,152 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+[2J[H[38;2;233;150;122m
+--------------------------------------------------------------------------------------------------
+GdUnit4 Comandline Tool
+--------------------------------------------------------------------------------------------------[0m
+[38;2;0;191;255mDisabled fail fast![0m
+[38;2;0;191;255mSet write reports to /workspace/aegis/game/tmp/aegis-height-release-verified[0m
+[38;2;218;165;32m
+Headless mode is ignored by option '--ignoreHeadlessMode'"
+
+Please note that tests that use UI interaction do not work correctly in headless mode.
+Godot 'InputEvents' are not transported by the Godot engine in headless mode and therefore
+have no effect in the test!
+[0m
+[38;2;100;149;237mInstalling GdUnit4 session system hooks.[0m
+[38;2;100;149;237mSession hook 'GdUnitHtmlTestReporter' installed.[0m
+[38;2;100;149;237mSession hook 'GdUnitXMLTestReporter' installed.[0m
+[38;2;0;206;209mRun Test Suite: [0m[38;2;250;235;215mres://tests/test_grapple_height_release.gd[0m
+  [38;2;250;235;215mres://tests/test_grapple_height_release.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_early_carry_is_unchanged_then_offsets_release_on_authored_beats[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_height_release.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_early_carry_is_unchanged_then_offsets_release_on_authored_beats[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_height_release.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_height_release_stays_closed_after_root_playback_is_restored[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_height_release.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_height_release_stays_closed_after_root_playback_is_restored[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_height_release.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_other_moves_keep_the_existing_three_dimensional_fitting[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_height_release.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_other_moves_keep_the_existing_three_dimensional_fitting[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_height_release.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_no_contact_settle_keeps_the_prescribed_release_height[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_height_release.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_no_contact_settle_keeps_the_prescribed_release_height[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_height_release.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_configured_release_windows_are_ordered_inside_the_clip[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_height_release.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_configured_release_windows_are_ordered_inside_the_clip[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_height_release.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_grip_fade_finishes_before_the_authored_impact[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_height_release.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_grip_fade_finishes_before_the_authored_impact[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3ms[0m
+[38;2;128;128;128m[0m
+[38;2;30;144;255mStatistics:[0m[38;2;128;128;128m 6 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 32ms[0m
+[38;2;128;128;128m[0m
+[38;2;128;128;128m[0m
+[38;2;0;206;209mRun Test Suite: [0m[38;2;250;235;215mres://tests/test_grapple_role_retargeting.gd[0m
+  [38;2;250;235;215mres://tests/test_grapple_role_retargeting.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_authored_roles_survive_slot_swap_height_and_rotated_frames[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_role_retargeting.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_authored_roles_survive_slot_swap_height_and_rotated_frames[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 5ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_role_retargeting.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_overlapping_rigs_cannot_retarget_each_others_source_or_restore_it_wrongly[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_role_retargeting.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_overlapping_rigs_cannot_retarget_each_others_source_or_restore_it_wrongly[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_role_retargeting.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_ladder_entry_height_belongs_to_the_attacker_in_either_slot[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_role_retargeting.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_ladder_entry_height_belongs_to_the_attacker_in_either_slot[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3ms[0m
+[38;2;128;128;128m[0m
+[38;2;30;144;255mStatistics:[0m[38;2;128;128;128m 3 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 21ms[0m
+[38;2;128;128;128m[0m
+[38;2;128;128;128m[0m
+[38;2;0;206;209mRun Test Suite: [0m[38;2;250;235;215mres://tests/test_grapple_fallback_clock.gd[0m
+  [38;2;250;235;215mres://tests/test_grapple_fallback_clock.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_fallback_finishes_on_the_same_simulation_frame_under_slow_motion[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_fallback_clock.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_fallback_finishes_on_the_same_simulation_frame_under_slow_motion[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 992ms[0m
+[38;2;128;128;128m[0m
+[38;2;30;144;255mStatistics:[0m[38;2;128;128;128m 1 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 998ms[0m
+[38;2;128;128;128m[0m
+[38;2;128;128;128m[0m
+[38;2;0;206;209mRun Test Suite: [0m[38;2;250;235;215mres://tests/test_grapple_rig_placement.gd[0m
+  [38;2;250;235;215mres://tests/test_grapple_rig_placement.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_pair_frame_sits_at_the_midpoint_not_the_origin[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_rig_placement.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_pair_frame_sits_at_the_midpoint_not_the_origin[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 4ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_rig_placement.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_pair_frame_faces_the_attacker_toward_the_defender[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_rig_placement.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_pair_frame_faces_the_attacker_toward_the_defender[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 7ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_rig_placement.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_pair_frame_is_clamped_inside_the_ring[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_rig_placement.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_pair_frame_is_clamped_inside_the_ring[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_rig_placement.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_a_travelling_move_is_kept_inside_the_ropes[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_rig_placement.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_a_travelling_move_is_kept_inside_the_ropes[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 7ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_rig_placement.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_a_move_that_stays_put_is_not_shifted[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_rig_placement.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_a_move_that_stays_put_is_not_shifted[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_rig_placement.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_pair_frame_takes_height_from_the_anchor[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_rig_placement.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_pair_frame_takes_height_from_the_anchor[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_rig_placement.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_coincident_pair_falls_back_to_attacker_facing[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_rig_placement.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_coincident_pair_falls_back_to_attacker_facing[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_rig_placement.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_align_puts_the_two_wrestlers_back_to_back_at_the_frame[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_rig_placement.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_align_puts_the_two_wrestlers_back_to_back_at_the_frame[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_rig_placement.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_defender_root_keeps_its_authored_yaw[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_rig_placement.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_defender_root_keeps_its_authored_yaw[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_rig_placement.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_two_roots_face_each_other_through_a_paired_move[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_rig_placement.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_two_roots_face_each_other_through_a_paired_move[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 15ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_rig_placement.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_each_role_starts_on_its_trajectorys_first_key[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_rig_placement.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_each_role_starts_on_its_trajectorys_first_key[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 17ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_rig_placement.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_ladder_aerial_root_track_preserves_the_climbers_actual_height[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_rig_placement.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_ladder_aerial_root_track_preserves_the_climbers_actual_height[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3ms[0m
+[38;2;128;128;128m[0m
+[38;2;30;144;255mStatistics:[0m[38;2;128;128;128m 12 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 104ms[0m
+[38;2;128;128;128m[0m
+[38;2;128;128;128m[0m
+[38;2;0;206;209mRun Test Suite: [0m[38;2;250;235;215mres://tests/test_replay_roundtrip.gd[0m
+  [38;2;250;235;215mres://tests/test_replay_roundtrip.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_recording_without_advancing_keeps_only_one_tick[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_replay_roundtrip.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_recording_without_advancing_keeps_only_one_tick[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_replay_roundtrip.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_advancing_the_tick_records_one_frame_per_tick[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_replay_roundtrip.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_advancing_the_tick_records_one_frame_per_tick[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_replay_roundtrip.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_playback_returns_each_tick_its_own_recorded_input[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_replay_roundtrip.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_playback_returns_each_tick_its_own_recorded_input[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_replay_roundtrip.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_a_recorded_match_spans_its_whole_run[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_replay_roundtrip.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_a_recorded_match_spans_its_whole_run[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 4s 562ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_replay_roundtrip.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_replaying_a_recorded_match_reproduces_it[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_replay_roundtrip.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_replaying_a_recorded_match_reproduces_it[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 5s 78ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_replay_roundtrip.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_pin_seed_ignores_how_long_the_process_has_been_running[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_replay_roundtrip.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_pin_seed_ignores_how_long_the_process_has_been_running[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 46ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_replay_roundtrip.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_pin_seed_moves_with_the_match_tick[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_replay_roundtrip.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_pin_seed_moves_with_the_match_tick[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3ms[0m
+[38;2;128;128;128m[0m
+[38;2;30;144;255mStatistics:[0m[38;2;128;128;128m 7 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 9s 724ms[0m
+[38;2;128;128;128m[0m
+[38;2;128;128;128m[0m
+[38;2;0;206;209mRun Test Suite: [0m[38;2;250;235;215mres://tests/test_pair_clearance.gd[0m
+  [38;2;250;235;215mres://tests/test_pair_clearance.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_no_paired_move_puts_one_body_through_the_other_and_hands_hold[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_pair_clearance.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_no_paired_move_puts_one_body_through_the_other_and_hands_hold[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3s 566ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_pair_clearance.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_segment_distance_is_the_gap_between_centre_lines[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_pair_clearance.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_segment_distance_is_the_gap_between_centre_lines[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_pair_clearance.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_each_mans_finisher_and_signature_are_clean_on_the_other[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_pair_clearance.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_each_mans_finisher_and_signature_are_clean_on_the_other[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 35s 289ms[0m
+[38;2;128;128;128m[0m
+[38;2;30;144;255mStatistics:[0m[38;2;128;128;128m 3 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 38s 876ms[0m
+[38;2;128;128;128m[0m
+[38;2;128;128;128m[0m
+[38;2;30;144;255mOverall Summary:[0m[38;2;255;255;255m 32 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |[0m
+[38;2;233;150;122mExecuted test suites: (6/6)[0m
+[38;2;233;150;122mExecuted test cases : (32/32)[0m
+[38;2;233;150;122mTotal execution time: 49s 755ms[0m
+[38;2;255;255;255m [0m[38;2;100;149;237mOpen XML Report at: file:///workspace/aegis/game/tmp/aegis-height-release-verified/report_1/results.xml[0m
+[38;2;100;149;237mOpen HTML Report at: file:///workspace/aegis/game/tmp/aegis-height-release-verified/report_1/index.html[0m
+[38;2;233;150;122mExit code: 0[0m
+Run dispose test resources
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 4 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+ERROR: Pages in use exist at exit in PagedAllocator: N7Variant5Pools12BucketMediumE
+   at: ~PagedAllocator (./core/templates/paged_allocator.h:169)

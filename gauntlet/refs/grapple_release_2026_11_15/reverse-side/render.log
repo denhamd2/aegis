@@ -1,0 +1,22 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Vulkan 1.4.305 - Forward+ - Using Device #0: Unknown - llvmpipe (LLVM 19.1.7, 256 bits)
+
+PAIRED_SHOT running_grapple_inverted_drop
+CAPTURE_CLOCK running_grapple_inverted_drop_83.png requested_tick 110 paired_seconds 1.833333
+  t=0.83  defender y=0.00  attacker y=0.00
+    WrestlerA root (1.22,0.00,-1.44) yaw -103  lowest 0.020 (h_toe_l_stub)
+    WrestlerB root (1.79,0.00,-1.58) yaw 77  pelvis (1.88,1.24,-1.37)  head (2.32,0.75,-1.28)  lowest 0.218 (root)
+CAPTURE_CLOCK running_grapple_inverted_drop_89.png requested_tick 118 paired_seconds 1.966667
+  t=0.89  defender y=0.00  attacker y=0.00
+    WrestlerA root (1.16,0.00,-1.46) yaw -103  lowest 0.029 (h_toe_l_stub)
+    WrestlerB root (1.92,0.00,-1.62) yaw 77  pelvis (1.98,0.59,-1.47)  head (2.56,0.28,-1.34)  lowest 0.000 (root)
+CAPTURE_CLOCK running_grapple_inverted_drop_95.png requested_tick 126 paired_seconds 2.100000
+  t=0.95  defender y=0.00  attacker y=0.00
+    WrestlerA root (0.93,0.00,-1.54) yaw -103  lowest 0.028 (j_toe_l_stub)
+    WrestlerB root (1.97,0.00,-1.64) yaw 77  pelvis (2.03,0.25,-1.53)  head (2.68,0.28,-1.38)  lowest 0.000 (root)
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 2 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+ERROR: Pages in use exist at exit in PagedAllocator: N7Variant5Pools12BucketMediumE
+   at: ~PagedAllocator (./core/templates/paged_allocator.h:169)

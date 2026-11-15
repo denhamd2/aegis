@@ -1,0 +1,10 @@
+{
+  "unique_cases": 33,
+  "passed": 33,
+  "original_reports": [
+    "focused_32.xml",
+    "height_clock_7.xml"
+  ],
+  "negative_control": "settle_negative_control.xml: expected two assertion failures in no-push settlement, zero errors",
+  "native_m1_verified": false
+}

@@ -1,0 +1,1117 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:223)
+ERROR: AnimationPlayer has no current animation.
+   at: get_current_animation_position (scene/animation/animation_player.cpp:718)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/anim/pair_clearance.gd:231)
+GRIP running_grapple_inverted_drop        waist  median 0.015  p90 0.045  (51 in reach, 247 out)
+PAIR running_grapple_inverted_drop        worst 0.000 m   @0.00   body-body 0.031   arm 0.061   moved A 0.045 D 0.359
+PAIR_BODY_CLOCK running_grapple_inverted_drop A pelvis-spine_03 x B thigh_l-calf_l clip_seconds 1.650000 authored_30fps_frame 49.500
+PAIR_BODY_POINTS running_grapple_inverted_drop {"attacker":{"Head":"(-0.011784, 1.486275, -1.774117)","calf_l":"(-0.179876, 0.508147, -1.948683)","calf_r":"(0.162592, 0.48818, -1.720925)","foot_l":"(-0.228307, 0.090377, -1.93221)","foot_r":"(0.219153, 0.118274, -1.528262)","hand_l":"(-0.1361, 1.180714, -2.141457)","hand_r":"(0.132762, 1.200889, -2.159621)","lowerarm_l":"(-0.282326, 1.188452, -1.917967)","lowerarm_r":"(0.267257, 1.201247, -1.928753)","pelvis":"(-0.011786, 0.846824, -1.750208)","spine_03":"(-0.011786, 1.236996, -1.786527)","thigh_l":"(-0.099006, 0.862297, -1.800563)","thigh_r":"(0.075434, 0.862297, -1.800563)","upperarm_l":"(-0.201719, 1.35347, -1.721483)","upperarm_r":"(0.179793, 1.352095, -1.723986)"},"defender":{"Head":"(-0.015947, 1.765227, -2.630137)","calf_l":"(0.151033, 1.155644, -1.799504)","calf_r":"(-0.205512, 1.243973, -1.793419)","foot_l":"(0.16955, 0.72311, -1.673286)","foot_r":"(-0.21745, 0.79336, -1.780573)","hand_l":"(0.15966, 1.657632, -2.042704)","hand_r":"(-0.189941, 1.759929, -2.039031)","lowerarm_l":"(0.181743, 1.645386, -2.327861)","lowerarm_r":"(-0.215283, 1.699535, -2.317711)","pelvis":"(-0.015355, 1.204988, -2.235664)","spine_03":"(-0.015516, 1.563234, -2.454744)","thigh_l":"(0.078095, 1.250596, -2.202415)","thigh_r":"(-0.108805, 1.250596, -2.202415)","upperarm_l":"(0.197914, 1.678338, -2.613675)","upperarm_r":"(-0.236126, 1.685201, -2.60476)"}}
+PAIR_DONE 1 moves; over 0.05 m: 0
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 2 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+ERROR: Pages in use exist at exit in PagedAllocator: N7Variant5Pools12BucketMediumE
+   at: ~PagedAllocator (./core/templates/paged_allocator.h:169)
