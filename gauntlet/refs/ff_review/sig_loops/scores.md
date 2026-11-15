@@ -55,3 +55,26 @@ runner (no reviewer agent available in this session).
 Loop-3 fixes for loop 4: the V-Trigger and Running V-Trigger 1 knees land at
 the chest, not the face -- about 0.12 m higher, thigh more upright; Kenny's
 shin overlaps the man at V-Trigger contact (start the leap 5 cm further out).
+
+## Kenny, loop 3: independent reviewer (coordinator, 15 Nov)
+
+These replace the loop runner's loop-2/3 self-scores as the score of record.
+
+| loop | move | Overall (independent) |
+|---|---|---|
+| 3 | kenny_v_trigger | 4.0 |
+| 3 | kenny_snap_dragon_2 | 5.0 |
+| 3 | kenny_snap_dragon_3 | 4.6 |
+| 3 | kenny_running_v_trigger_3 | 3.8 |
+| 3 | kenny_running_v_trigger_1 | 4.4 |
+| 3 | kenny_owa | 4.6 |
+| 3 | kenny_pb_v_trigger | 4.2 |
+
+Smooth and Cadence were mostly 4. The reviewer's fixes are folded into loop 5
+(loop 4 was already baked when they arrived).
+
+## Kenny, loop 4 (15 Nov)
+
+Changed: the V-Trigger and Running V-Trigger 1 knees land about 0.1 m higher
+with the thigh more upright; the V-Trigger leap starts 5 cm further out.
+Independent scores: pending (sheets in l4/).
