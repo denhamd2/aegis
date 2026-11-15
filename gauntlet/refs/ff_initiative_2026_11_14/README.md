@@ -122,5 +122,6 @@ Kenny's pending art/source work. Source3 is integrated as a bounded left-leg
 correction, not a completed move or solver repair. Mannequin overlap .090→.031m;
 real pairings unchanged.49focused gameplay/animation cases pass. Kenny21case
 suite has one failing test/two beard-to-ear assertions. Full317clip source is
-regenerated; no solver experiment is included. Publication verification pending.
+regenerated; no solver experiment is included. Exact Mac releasef681d07 and
+uploaded ZIP verified; run43695558573 succeeded. See batch2/mac_publication.json.
 [Current scope, tests and limitations](batch2/README.md).

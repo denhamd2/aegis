@@ -1,5 +1,9 @@
 # Owner-approved all-changes Mac review build —15 November2026
 
+**Deployed and verified:** `mac-latest` points exactly to
+`f681d07caf2165df10aa4b9e22ad1632eee3c66b`; Mac run43695558573 succeeded and
+Aegis.zip is uploaded (1,032,804,653bytes). [Delivery receipt](mac_publication.json).
+
 Owner explicitly requested committing and deploying all current changes. This
 includes the bounded running-drop source correction, validation tools and the
 previously paused Kenny R7V3/R8 art/native-source work. Publication verification
@@ -42,3 +46,13 @@ views do not establish arena presentation. No AAA/10/10 or M1 performance claim.
 [Kenny report](tooling/kenny_release_validation.xml). Shutdown material/resource
 warnings remain in capture/test logs; editor sandbox socket warnings are also
 recorded. The full CI baseline has known unrelated failures.
+
+## Publication merge and audio check
+
+Changes committed as9866d64; newer main contained five commentary commits.
+They merged cleanly into release commitf681d07caf2165df10aa4b9e22ad1632eee3c66b.
+The separate post-merge audio suite ran53cases: two failing cases/three
+assertions concerning Tony carnage versus Excalibur restore-order cue selection.
+Those imported-main behaviors are preserved for owner review, not silently
+changed to make tests green. [Audio report](tooling/merged_audio_validation.xml).
+No gameplay/animation test failure is hidden by that separate result.

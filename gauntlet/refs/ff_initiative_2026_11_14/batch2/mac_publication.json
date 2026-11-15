@@ -1,0 +1,25 @@
+{
+  "commit": "f681d07caf2165df10aa4b9e22ad1632eee3c66b",
+  "mac_run": 43695558573,
+  "status": "success",
+  "release": "https://github.com/denhamd2/aegis/releases/tag/mac-latest",
+  "tag_object": {
+    "sha": "f681d07caf2165df10aa4b9e22ad1632eee3c66b",
+    "type": "commit",
+    "url": "https://api.github.com/repos/denhamd2/aegis/git/commits/f681d07caf2165df10aa4b9e22ad1632eee3c66b"
+  },
+  "asset": {
+    "name": "Aegis.zip",
+    "size": 1032804653,
+    "state": "uploaded",
+    "digest": "sha256:158133cc71dc05f9c32ef589057925f938205a37275ce02bd6a0adc4e2f4f2ec",
+    "url": "https://github.com/denhamd2/aegis/releases/download/mac-latest/Aegis.zip"
+  },
+  "all_current_project_changes_included": true,
+  "gameplay_animation_cases_passed": 49,
+  "kenny_known_failing_cases": 1,
+  "kenny_assertion_failures": 2,
+  "merged_audio_known_failing_cases": 2,
+  "merged_audio_assertion_failures": 3,
+  "native_m1_performance_verified": false
+}

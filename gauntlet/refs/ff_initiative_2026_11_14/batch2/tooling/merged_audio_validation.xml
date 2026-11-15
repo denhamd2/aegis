@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites id="2026-11-15" name="report_1" tests="53" failures="3" skipped="0" flaky="0" time="0.000">
+	<testsuite id="0" name="test_match_audio" package="tests" timestamp="2026-11-15T08:40:33" hostname="localhost" tests="53" failures="3" errors="0" skipped="0" flaky="0" time="1.334">
+		<testcase name="test_every_sound_it_plays_is_built" classname="test_match_audio" time="0.049">
+		</testcase>
+		<testcase name="test_cody_crowd_chant_is_only_enabled_for_a_cody_match" classname="test_match_audio" time="0.003">
+		</testcase>
+		<testcase name="test_opening_and_finish_bells_ring_at_their_recorded_pitch_and_are_short" classname="test_match_audio" time="0.017">
+		</testcase>
+		<testcase name="test_enda_sign_gag_is_scheduled_for_every_match" classname="test_match_audio" time="0.011">
+		</testcase>
+		<testcase name="test_sneaky_heel_gag_is_seeded_and_appears_about_once_in_three_matches" classname="test_match_audio" time="0.012">
+		</testcase>
+		<testcase name="test_sneaky_heel_gag_follows_roman_taunt_once_per_match" classname="test_match_audio" time="0.018">
+		</testcase>
+		<testcase name="test_tonys_gunshot_call_follows_the_handgun_flash_once" classname="test_match_audio" time="0.167">
+			<failure message="FAILED: res://tests/test_match_audio.gd:97" type="FAILURE">
+<![CDATA[
+Expecting:
+ '[excalibur_restore_order]'
+ but was
+ '[excalibur_restore_order, tony_carnage]'
+
+Differences found:
+Index	Current	Expected	1	tony_carnage	<N/A>	
+	at 'test_tonys_gunshot_call_follows_the_handgun_flash_once' in res://tests/test_match_audio.gd:97
+]]>
+			</failure>
+		</testcase>
+		<testcase name="test_brutal_weapons_are_despicable" classname="test_match_audio" time="0.005">
+		</testcase>
+		<testcase name="test_gunshot_and_rocket_effects_use_the_louder_signature_mix" classname="test_match_audio" time="0.196">
+		</testcase>
+		<testcase name="test_entrance_pyro_is_lifted_six_db_over_its_previous_mix" classname="test_match_audio" time="0.019">
+		</testcase>
+		<testcase name="test_nonbreaking_set_piece_landing_plays_its_impact_sound" classname="test_match_audio" time="0.027">
+		</testcase>
+		<testcase name="test_tonys_danger_warning_queues_on_dangerous_weapon_pickup_once" classname="test_match_audio" time="0.111">
+		</testcase>
+		<testcase name="test_tonys_barbed_wire_chair_call_replaces_the_generic_warning" classname="test_match_audio" time="0.056">
+		</testcase>
+		<testcase name="test_excalibur_bed_of_nails_call_replaces_the_generic_warning" classname="test_match_audio" time="0.086">
+		</testcase>
+		<testcase name="test_excalibur_calls_the_fire_and_thanks_aubrey_once_each" classname="test_match_audio" time="0.018">
+		</testcase>
+		<testcase name="test_dives_route_the_tope_and_the_springboard_cutter_calls" classname="test_match_audio" time="0.003">
+		</testcase>
+		<testcase name="test_the_cody_cutter_call_is_codys_alone" classname="test_match_audio" time="0.002">
+		</testcase>
+		<testcase name="test_codys_figure_four_gets_excaliburs_line_in_place_of_tonys" classname="test_match_audio" time="0.003">
+		</testcase>
+		<testcase name="test_kenny_dives_with_the_tope_and_the_moonsault" classname="test_match_audio" time="0.003">
+		</testcase>
+		<testcase name="test_tonys_roman_heel_line_only_routes_to_roman_heel_beats" classname="test_match_audio" time="0.004">
+		</testcase>
+		<testcase name="test_commentary_event_never_repeats_within_match" classname="test_match_audio" time="0.017">
+		</testcase>
+		<testcase name="test_move_calls_and_unbelievable_repeat_only_after_cooldowns" classname="test_match_audio" time="0.016">
+		</testcase>
+		<testcase name="test_repeatable_commentary_cooldowns_are_long_enough_to_avoid_loops" classname="test_match_audio" time="0.003">
+		</testcase>
+		<testcase name="test_excalibur_restore_order_only_fires_after_chaos_and_never_repeats" classname="test_match_audio" time="0.016">
+			<failure message="FAILED: res://tests/test_match_audio.gd:321" type="FAILURE">
+<![CDATA[
+Expecting:
+ '[excalibur_restore_order]'
+ but was
+ '[           tony_carnage]'
+
+Differences found:
+Index	Current	Expected	0	tony_carnage	excalibur_restore_order	
+	at 'test_excalibur_restore_order_only_fires_after_chaos_and_never_repeats' in res://tests/test_match_audio.gd:321
+]]>
+			</failure>
+			<failure message="FAILED: res://tests/test_match_audio.gd:326" type="FAILURE">
+<![CDATA[
+Expecting:
+ must be empty but was
+ '["tony_carnage"]'
+	at 'test_excalibur_restore_order_only_fires_after_chaos_and_never_repeats' in res://tests/test_match_audio.gd:326
+]]>
+			</failure>
+		</testcase>
+		<testcase name="test_excalibur_signs_off_after_post_match_package_finishes" classname="test_match_audio" time="0.016">
+		</testcase>
+		<testcase name="test_excalibur_opening_and_crowd_lines_are_queued_on_their_beats" classname="test_match_audio" time="0.049">
+		</testcase>
+		<testcase name="test_dynamite_theme_plays_under_the_opening_and_fades_at_first_entrance" classname="test_match_audio" time="0.017">
+		</testcase>
+		<testcase name="test_tonys_tension_call_routes_from_the_faceoff_cue" classname="test_match_audio" time="0.016">
+		</testcase>
+		<testcase name="test_tonys_submission_call_routes_only_from_a_submission_attack" classname="test_match_audio" time="0.018">
+		</testcase>
+		<testcase name="test_excalibur_comeback_and_finish_calls_have_match_events" classname="test_match_audio" time="0.023">
+		</testcase>
+		<testcase name="test_pinfall_win_hears_tonys_three_count" classname="test_match_audio" time="0.018">
+		</testcase>
+		<testcase name="test_cody_return_call_only_queues_on_his_entrance_cue" classname="test_match_audio" time="0.017">
+		</testcase>
+		<testcase name="test_tony_answers_only_kennys_call" classname="test_match_audio" time="0.017">
+		</testcase>
+		<testcase name="test_kennys_lines_are_dropped_when_the_next_entrance_starts" classname="test_match_audio" time="0.016">
+		</testcase>
+		<testcase name="test_roman_landed_moves_route_the_history_or_spear_call" classname="test_match_audio" time="0.002">
+		</testcase>
+		<testcase name="test_excalibur_strike_call_only_routes_to_hard_punches" classname="test_match_audio" time="0.004">
+		</testcase>
+		<testcase name="test_strikes_sound_on_landing_and_slams_do_not" classname="test_match_audio" time="0.004">
+		</testcase>
+		<testcase name="test_harder_strikes_are_louder" classname="test_match_audio" time="0.002">
+		</testcase>
+		<testcase name="test_a_bump_needs_a_real_fall_and_is_louder_the_harder_he_lands" classname="test_match_audio" time="0.003">
+		</testcase>
+		<testcase name="test_picking_a_sound_leaves_the_global_rng_alone" classname="test_match_audio" time="0.010">
+		</testcase>
+		<testcase name="test_two_pools_pick_the_same_sounds" classname="test_match_audio" time="0.011">
+		</testcase>
+		<testcase name="test_the_crowd_beds_are_out_of_step" classname="test_match_audio" time="0.003">
+		</testcase>
+		<testcase name="test_the_house_is_for_cody_and_against_roman" classname="test_match_audio" time="0.003">
+		</testcase>
+		<testcase name="test_the_room_warms_over_the_match" classname="test_match_audio" time="0.003">
+		</testcase>
+		<testcase name="test_the_beds_rise_with_the_intensity_and_the_new_ones_most" classname="test_match_audio" time="0.002">
+		</testcase>
+		<testcase name="test_heat_is_off_when_cold_and_dies_away" classname="test_match_audio" time="0.002">
+		</testcase>
+		<testcase name="test_the_heel_is_booed_and_the_face_cheered" classname="test_match_audio" time="0.015">
+		</testcase>
+		<testcase name="test_winner_theme_starts_at_the_chorus_not_the_top" classname="test_match_audio" time="0.030">
+		</testcase>
+		<testcase name="test_weapons_sound_like_what_they_are" classname="test_match_audio" time="0.003">
+		</testcase>
+		<testcase name="test_steel_and_glass_are_lifted_three_db_and_no_further" classname="test_match_audio" time="0.016">
+		</testcase>
+		<testcase name="test_every_new_take_has_a_length" classname="test_match_audio" time="0.026">
+		</testcase>
+		<testcase name="test_the_entrance_music_sits_over_the_crowd" classname="test_match_audio" time="0.016">
+		</testcase>
+		<testcase name="test_the_break_sounds_are_there_for_the_table_the_glass_and_the_desk" classname="test_match_audio" time="0.007">
+		</testcase>
+	</testsuite>
+</testsuites>

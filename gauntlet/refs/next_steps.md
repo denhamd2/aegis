@@ -4,11 +4,13 @@
 
 Owner requested committing and deploying all current changes, including Kenny's
 R7/R8 art/source, the bounded running-drop left-leg correction and validation
-tools. Publication verification is pending. Last exact Mac release is0ef511b.
+tools. Mac run43695558573 succeeded; exact mac-latest commitf681d07 and
+uploaded Aegis.zip are verified. See the current evidence receipt.
 The leg slice improves mannequin overlap .090→.031m without changing real-pair
 maxima. No solver experiment is included. Full move acceptance, correct load
 hand roles, runtime lift, Kenny beard coverage and the new groom's overall
-likeness remain open; no10/10/AAA claim. [Current evidence](ff_initiative_2026_11_14/batch2/README.md).
+likeness remain open; the merged commentary cue-selection tests also have two
+failing cases. No10/10/AAA claim. [Current evidence](ff_initiative_2026_11_14/batch2/README.md).
 
 ## Current grapple delivery
 

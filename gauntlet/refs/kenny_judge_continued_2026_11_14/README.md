@@ -69,3 +69,7 @@ historical. No new overall likeness score has been established;4.6/10 is the
 last complete scored baseline, not a score for this new groom. Current character
 checks still fail both beard-to-ear assertions in one test case; the head/groom
 visual and material limitations remain open. Native M1 performance is unverified.
+
+All-changes Mac deployment verified atf681d07; run43695558573 succeeded and
+Aegis.zip is uploaded. The new Kenny work is now published for owner review;
+this does not supply a new likeness score or resolve beard coverage.
