@@ -12231,3 +12231,41 @@ the tutorial (79.70–81.00 s): 6.4 → 6.8 → 7.0.
 
 Still short of 10 (reviewer): the defender drops about 4 frames late, and his
 legs come over through Kenny rather than past his side.
+
+## 15 Nov: Kenny signature/finisher loops 2–3
+
+The owner: "Automatically commit and deploy after each loop's improvement
+changes", then "yes, push Kenny loops to main". Kenny's seven Fight Forever
+moves are judged against the AEW Fight Forever finishers compilation, using
+the loop kit in `gauntlet/refs/ff_review/sig_loops/`.
+
+Independent reviewer, loop 1 → loop 3:
+
+| Move | L1 | L3 |
+|---|---|---|
+| Snap Dragon 2 | 3.2 | 5.0 |
+| Snap Dragon 3 | 3.0 | 4.6 |
+| One-Winged Angel | 4.2 | 4.6 |
+| Running V-Trigger 1 | 3.0 | 4.4 |
+| Powerbomb/V-Trigger | 2.4 | 4.2 |
+| V-Trigger | 3.4 | 4.0 |
+| Running V-Trigger 3 | 2.2 | 3.8 |
+
+Loop 2 had only the animator's own score, so it is not in the table.
+
+What changed:
+- The three V-Triggers are three different moves, not one shared clip.
+- The Snap Dragons hold the full nelson about 90 frames.
+- The One-Winged Angel is lengthened to about 243 frames to impact.
+- The Powerbomb/V-Trigger is about 312 frames, with the sit-up and the knee.
+- Every move is retimed to the reference's contact frame.
+- `paired_shot` gained a run-in for running moves.
+
+Still short of 10 (reviewer):
+- The V-Trigger knee never leaves the ground.
+- The One-Winged Angel has no sit-out.
+- The Snap Dragon release goes vertical rather than in a back arc.
+- Running V-Trigger 3 has no corner.
+- The Powerbomb/V-Trigger has no visible run-in knee.
+
+Loops 4–5 continue on `ccr-5f96c954-z0l7gs`.
