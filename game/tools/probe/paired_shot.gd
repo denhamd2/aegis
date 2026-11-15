@@ -36,6 +36,14 @@ extends Node
 ## --corner: the defender trapped in the near-right corner (CORNER_SPOT), the
 ## attacker a run-in's length out in front -- for the corner moves, which are
 ## only ever thrown at a man in the buckle.
+## --run-in M: a running move as the game plays it -- the attacker starts M
+## metres from the defender and runs in (RUN state) to the clip's first mark,
+## over --run-ticks N physics ticks (default: at 6 m/s), then the move starts
+## with his run carried into it. The defender holds the clip's first pose
+## through the run (kneeling in the corner, doubled over).
+## --ticks a,b,c: capture at these 60 fps ticks on the shot's timeline (tick 0
+## is the run's first tick with --run-in, else the clip's first frame), named
+## <move>_<tick>.png -- true frame numbers, where --at names by percentage.
 
 const MATCH_SCENE := "res://scenes/match.tscn"
 const MOVES_DIR := "res://resources/moves"
@@ -58,6 +66,9 @@ var _weapon_id := ""
 ## him (the suplex's).
 var _weapon_ahead := -WrestlerAI.SUPLEX_DROP
 var _corner := false
+var _run_in := 0.0
+var _run_ticks := 0
+var _ticks: Array = []
 
 
 func _ready() -> void:
@@ -81,6 +92,14 @@ func _ready() -> void:
 			_top = true
 		elif args[i] == "--corner":
 			_corner = true
+		elif args[i] == "--run-in" and i + 1 < args.size():
+			_run_in = float(args[i + 1])
+		elif args[i] == "--run-ticks" and i + 1 < args.size():
+			_run_ticks = int(args[i + 1])
+		elif args[i] == "--ticks" and i + 1 < args.size():
+			_ticks = []
+			for token: String in args[i + 1].split(","):
+				_ticks.append(int(token))
 		elif args[i] == "--dist" and i + 1 < args.size():
 			_dist = float(args[i + 1])
 		elif args[i] == "--wrestlers" and i + 1 < args.size():
@@ -166,6 +185,71 @@ func _ready() -> void:
 		await RenderingServer.frame_post_draw
 		get_viewport().get_texture().get_image().save_png("%s/%s_pre.png" % [_out, shot])
 	var rig: Node = scene.get_node("GrappleRig")
+	var total := int(move.total_frames())
+	# --run-in: where the rig will put each man (the pair frame it computes
+	# from where they stand now), and the run up to the attacker's mark.
+	var plan_a := attacker.global_transform
+	var plan_d := defender.global_transform
+	var mark_a := plan_a
+	var mark_d := plan_d
+	var run_from := plan_a
+	var run := 0
+	var run_dir := Vector3.ZERO
+	var run_speed := 0.0
+	if _run_in > 0.0:
+		rig.set("_move", move)
+		var pair_xform: Transform3D = rig.call("_compute_pair_transform", attacker, defender)
+		rig.set("_move", null)
+		var start_a: Transform3D = rig.call("_role_start", move, true)
+		var start_d: Transform3D = rig.call("_role_start", move, false)
+		mark_a = pair_xform * start_a
+		mark_d = pair_xform * start_d
+		run_dir = mark_a.origin - mark_d.origin
+		run_dir.y = 0.0
+		var gap := run_dir.length()
+		run_dir = run_dir / gap if gap > 0.001 else attacker.global_transform.basis.z
+		if _run_in > gap + 0.05:
+			run_from = Transform3D(mark_a.basis, mark_d.origin + run_dir * _run_in)
+			run = _run_ticks if _run_ticks > 0 else int(ceil((_run_in - gap) / 6.0 * 60.0))
+			run_speed = (_run_in - gap) / float(run) * 60.0
+	# The capture schedule: [clip tick (negative: during the run), file name].
+	var targets: Array = []
+	if not _ticks.is_empty():
+		for t in _ticks:
+			targets.append([int(t) - run, "%s_%03d.png" % [shot, int(t)], int(t)])
+	else:
+		for f in _at:
+			targets.append([int(round(float(f) * total)), "%s_%02d.png" % [shot, int(float(f) * 100)], f])
+	var grabbed := 0
+	var captures: Array[Dictionary] = []
+	var camera: Camera3D = null
+	Engine.max_physics_steps_per_frame = 1
+	if run > 0:
+		camera = _make_camera(scene, run_from.origin, mark_d.origin, false)
+		attacker.set_physics_process(false)
+		defender.set_physics_process(false)
+		defender.global_transform = mark_d
+		attacker.global_transform = run_from
+		attacker.fsm.transition_to(WrestlerFSM.State.RUN)
+		if defender.has_method("begin_walk_in"):
+			defender.begin_walk_in(mark_d, mark_d, run, move, false)
+		RenderingServer.render_loop_enabled = false
+		for tick in run:
+			await get_tree().physics_frame
+			camera.current = true
+			var k := float(tick + 1) / float(run)
+			attacker.global_transform = Transform3D(mark_a.basis, run_from.origin.lerp(mark_a.origin, k))
+			while grabbed < targets.size() and int(targets[grabbed][0]) <= tick + 1 - run:
+				await _grab(targets[grabbed], tick + 1, 0, -1.0, captures, attacker, defender)
+				grabbed += 1
+		# Back where the pair frame was planned from (unrendered): the rig
+		# carries both onto their marks again in a tick or two, his run
+		# carried in at its own speed.
+		attacker.global_transform = plan_a
+		defender.global_transform = plan_d
+		attacker.set_physics_process(true)
+		defender.set_physics_process(true)
+		(attacker as CharacterBody3D).velocity = -run_dir * maxf(run_speed, 3.0)
 	# As a match starts one (WrestlerController._begin_running_paired): roles
 	# set and both in GRAPPLE_HOLD, or the grip IK -- the hands -- never runs.
 	if not OS.get_cmdline_user_args().has("--no-grip"):
@@ -178,30 +262,9 @@ func _ready() -> void:
 	rig.begin(attacker, defender, move)
 	print("PAIRED_SHOT %s" % _move_id)
 
-	var camera := Camera3D.new()
-	scene.add_child(camera)
-	camera.current = not (_match_cam and match_camera)
-	var focus := attacker.global_position + Vector3(0.0, 0.9, 0.0)
-	camera.global_position = focus + Vector3(3.2, 1.4, 3.2)
-	if _side:
-		var mid := (attacker.global_position + defender.global_position) * 0.5
-		var across := (defender.global_position - attacker.global_position) \
-				.normalized().cross(Vector3.UP)
-		across = across.rotated(Vector3.UP, deg_to_rad(_orbit))
-		focus = mid + Vector3(0.0, 0.8, 0.0)
-		camera.global_position = focus + across * _dist + Vector3(0.0, 0.3, 0.0)
-		camera.fov = 45.0
-	if _top:
-		var mid := (attacker.global_position + defender.global_position) * 0.5
-		focus = mid
-		camera.global_position = mid + Vector3(0.0, _dist + 2.0, 0.001)
-		camera.fov = 45.0
-	camera.look_at(focus, Vector3.UP)
-	if _lit:
-		var fill := DirectionalLight3D.new()
-		scene.add_child(fill)
-		fill.light_energy = 2.0
-		fill.global_transform = camera.global_transform
+	if camera == null:
+		camera = _make_camera(scene, attacker.global_position, defender.global_position,
+				_match_cam and match_camera != null)
 
 	# Step the physics forward and grab at each fraction of the move. The
 	# lowest bone is printed with every frame because "does it still read as
@@ -211,45 +274,35 @@ func _ready() -> void:
 	# walks both men onto their marks (GrappleRig._lead_in), and for a running
 	# move that starts 1.4 m out that walk-in is over half a second -- every
 	# frame of the Casualty of War's first sheet was labelled 0.57 s early.
-	var total := int(move.total_frames())
-	var lead := int(rig.get("lead_in_ticks"))
-	var grabbed := 0
-	var captures: Array[Dictionary] = []
-	var last: float = _at.max() if not _at.is_empty() else 1.0
 	# One physics tick per frame, and nothing drawn but the grabs. Under the
 	# software rasteriser a frame takes longer than a tick, so the engine ran
 	# up to eight catch-up ticks while each grab was drawn, and every frame
 	# showed the move 0.1-0.2 s later than its label (the Casualty of War's
 	# lariat came out at "0.14 s" instead of 0.30). Drawing every tick
 	# (--fixed-fps) fixes that too, but takes a quarter of an hour.
-	Engine.max_physics_steps_per_frame = 1
+	var last_tick := total
+	for target in targets:
+		last_tick = maxi(last_tick, int(target[0]))
 	RenderingServer.render_loop_enabled = false
-	for frame in lead + int(total * maxf(last, 1.0)) + 4:
+	var frame := 0
+	while frame < 2000 + last_tick:
 		await get_tree().physics_frame
 		# MatchCamera takes `current` back when it cuts; hold the probe's.
 		if not _match_cam:
 			camera.current = true
-		var fraction := float(frame - lead) / float(total)
-		if grabbed >= _at.size() or frame - lead < maxi(0, int(round(float(_at[grabbed]) * total)) - 1):
+		var lead := int(rig.get("lead_in_ticks"))
+		frame += 1
+		if frame - 1 >= lead + last_tick + 4:
+			break
+		if grabbed >= targets.size():
+			break
+		if frame - 1 - lead < maxi(0, int(targets[grabbed][0]) - 1):
 			continue
-		RenderingServer.render_loop_enabled = true
-		await RenderingServer.frame_post_draw
-		RenderingServer.render_loop_enabled = false
-		var image := get_viewport().get_texture().get_image()
-		var filename := "%s_%02d.png" % [shot, int(_at[grabbed] * 100)]
-		image.save_png(_out.path_join(filename))
-		var paired_seconds: float = rig.animation_player.current_animation_position 				if rig.animation_player.is_playing() else -1.0
-		captures.append({"file": filename, "requested_fraction": _at[grabbed],
-				"requested_tick": int(round(float(_at[grabbed]) * total)),
-				"paired_seconds": paired_seconds, "elapsed_tick": frame, "lead_in_ticks": lead})
-		print("CAPTURE_CLOCK %s requested_tick %d paired_seconds %.6f" % [filename,
-				int(round(float(_at[grabbed]) * total)), paired_seconds])
+		var paired_seconds: float = rig.animation_player.current_animation_position \
+				if rig.animation_player.is_playing() else -1.0
+		await _grab(targets[grabbed], frame - 1, lead, paired_seconds, captures, attacker, defender)
 		print("  t=%.2f  defender y=%.2f  attacker y=%.2f"
-				% [fraction, defender.global_position.y, attacker.global_position.y])
-		if OS.get_cmdline_user_args().has("--bones"):
-			for w: WrestlerController in [attacker, defender]:
-				print("    %s root %s yaw %.0f  %s" % [w.name, _v3(w.global_position),
-						rad_to_deg(w.global_rotation.y), _bones(w)])
+				% [float(frame - 1 - lead) / float(total), defender.global_position.y, attacker.global_position.y])
 		grabbed += 1
 	var manifest := FileAccess.open(_out.path_join("capture_manifest.json"), FileAccess.WRITE)
 	if manifest:
@@ -257,6 +310,57 @@ func _ready() -> void:
 				"renderer": RenderingServer.get_current_rendering_method(),
 				"bare": _bare, "match_camera": _match_cam, "captures": captures}, "\t"))
 	get_tree().quit()
+
+
+## The probe's own camera: square to the line between `a` and `d` (--side),
+## straight down (--top), or the default three-quarter view on the attacker.
+func _make_camera(scene: Node, a: Vector3, d: Vector3, defer_to_match: bool) -> Camera3D:
+	var camera := Camera3D.new()
+	scene.add_child(camera)
+	camera.current = not defer_to_match
+	var focus := a + Vector3(0.0, 0.9, 0.0)
+	camera.global_position = focus + Vector3(3.2, 1.4, 3.2)
+	if _side:
+		var mid := (a + d) * 0.5
+		var across := (d - a).normalized().cross(Vector3.UP)
+		across = across.rotated(Vector3.UP, deg_to_rad(_orbit))
+		focus = mid + Vector3(0.0, 0.8, 0.0)
+		camera.global_position = focus + across * _dist + Vector3(0.0, 0.3, 0.0)
+		camera.fov = 45.0
+	if _top:
+		var mid := (a + d) * 0.5
+		focus = mid
+		camera.global_position = mid + Vector3(0.0, _dist + 2.0, 0.001)
+		camera.fov = 45.0
+	camera.look_at(focus, Vector3.UP)
+	if _lit:
+		var fill := DirectionalLight3D.new()
+		scene.add_child(fill)
+		fill.light_energy = 2.0
+		fill.global_transform = camera.global_transform
+	return camera
+
+
+## Draws one frame and saves it as target[1]; `tick` is the physics tick it
+## was drawn on, counted from the clip's start after `lead` walk-in ticks.
+func _grab(target: Array, tick: int, lead: int, paired_seconds: float,
+		captures: Array[Dictionary], attacker: WrestlerController,
+		defender: WrestlerController) -> void:
+	RenderingServer.render_loop_enabled = true
+	await RenderingServer.frame_post_draw
+	RenderingServer.render_loop_enabled = false
+	var image := get_viewport().get_texture().get_image()
+	var filename: String = target[1]
+	image.save_png(_out.path_join(filename))
+	captures.append({"file": filename, "requested": target[2],
+			"requested_tick": int(target[0]), "paired_seconds": paired_seconds,
+			"elapsed_tick": tick, "lead_in_ticks": lead})
+	print("CAPTURE_CLOCK %s requested_tick %d paired_seconds %.6f" % [filename,
+			int(target[0]), paired_seconds])
+	if OS.get_cmdline_user_args().has("--bones"):
+		for w: WrestlerController in [attacker, defender]:
+			print("    %s root %s yaw %.0f  %s" % [w.name, _v3(w.global_position),
+					rad_to_deg(w.global_rotation.y), _bones(w)])
 
 
 ## Everything but the two men, gone; a plain gridded floor and studio light.

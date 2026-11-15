@@ -170,8 +170,8 @@ func test_kenny_batch_two_is_built_and_his() -> void:
 	var total := func(m: MoveDef) -> float:
 		return m.damage_head + m.damage_torso + m.damage_arms + m.damage_legs
 	assert_float(total.call(combo)).is_greater_equal(total.call(knee))
-	# Frame data is the clip's: the knee lands 2.37 s in.
-	assert_int(combo.startup_frames).is_equal(142)
+	# Frame data is the clip's: the knee lands 4.9 s in (sig_loops, 15 Nov).
+	assert_int(combo.startup_frames).is_equal(294)
 	assert_int(FFMoveLibrary.progress().x).is_greater_equal(27)
 
 

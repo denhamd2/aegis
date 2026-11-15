@@ -10706,157 +10706,217 @@ CLIPS["FF_Casualty_Of_War_Defender"] = [
 ] + _back_fall(9, 36, pelvis_hit=0.95)
 
 
-# --- Fight Forever library, Kenny batch 1: the V-Triggers.
+# --- Fight Forever library, Kenny Omega (signature/finisher parity loops,
+# gauntlet/refs/ff_review/sig_loops/). Re-keyed 15 Nov against the AEW Fight
+# Forever finishers compilation, Kenny's segment (10:14-11:13): every beat
+# below is timed off it, in 60 fps frames of the video (keys here are at 30).
 #
 # Kenny Omega's knee, which Fight Forever lists three ways
-# (tools/moves/build_ff_library.py): Running V-Trigger 1 (a special), Running
-# V-Trigger 3 (a signature) and the standing V-Trigger 1 (a special). Built on
-# the Knee Lift's run and plant (Knee_Lift_Attacker), with what makes it his:
-# the knee driven up into the face rather than the jaw from below, and both
-# arms flung back behind him for the drive, where Roman's knee lift throws
-# them up. 36 frames each, the knee home on frame 9.
+# (tools/moves/build_ff_library.py), is three different moves:
+#   V-Trigger 1 (615.0 s): his own run-in, about 36 frames from three metres
+#     out, and a leaping knee into the face of a man standing; the man reels
+#     back holding his face and STAYS ON HIS FEET.
+#   Running V-Trigger 3 (631.35 s): a sprint across the ring into a man
+#     kneeling in the corner, the knee into his bowed head; he slumps back
+#     into the buckle.
+#   Running V-Trigger 1 (658.65 s): off the ropes, the leaping knee at 1.6 m,
+#     right arm thrown up; the man doubles over and stays standing.
+# The two running ones arrive off the game's run (GrappleRig carries his RUN
+# into the clip's first frame; paired_shot --run-in shows it), so their clips
+# open on the last strides.
 
-# Running V-Trigger 1: into the face of a man standing, who goes straight
-# over backward; Kenny lands and stays over him.
+
+def _tw(p, **adds):
+    """`p` with each named tuple nudged by the given amounts -- the small
+    shifts that keep a held beat alive instead of a statue."""
+    out = dict(p)
+    for k, d in adds.items():
+        v = out.get(k) or tuple(0.0 for _ in d)
+        out[k] = tuple(a + b for a, b in zip(v, d))
+    return out
+
+
+# The plant before the leap: the right knee already driving (chambered) so
+# the leg reaches the strike in two beats.
+_VT_PLANT = P(pelvis=(0.0, 0.10, 0.740), hips=(-20, 0, 0), spine=(-20, 0, 0),
+              hand_r=(0.26, 0.20, 0.90), hand_l=(-0.24, 0.24, 0.92),
+              foot_r=(0.16, 0.10, 0.50), foot_l=(-0.14, 0.12, 0.104),
+              knee_r=(0.2, 1.0, 0.3))
+
+
+def _vt_air(z, foot_r, knee_r, foot_l, hand_r, hand_l, hips=(10, 0, 0),
+            spine=(8, 0, 0), head=(-4, 0, 0)):
+    """Both feet off the mat, the right thigh driven up: the knee sits about
+    0.27 m over the pelvis with the shin folded under it."""
+    return dict(pelvis=(0.0, 0.08, z), hips=hips, spine=spine, head=head,
+                hand_r=hand_r, hand_l=hand_l, fist_r=0.8, fist_l=0.8,
+                foot_r=foot_r, foot_l=foot_l,
+                knee_r=knee_r, knee_l=(-0.2, 1.0, 0.0))
+
+
+_VT_LAND = P(pelvis=(0.0, 0.06, 0.740), hips=(-10, 0, 0), spine=(-12, 0, 0),
+             hand_r=(0.30, 0.04, 1.08), hand_l=(-0.30, 0.04, 1.06),
+             foot_r=(0.20, 0.10, 0.104), foot_l=(-0.18, -0.10, 0.104))
+
+# V-Trigger 1, 54 frames / 1.8 s: the run 0-19, the plant, the knee home on
+# 24 (48 video frames from the run's start, as at 615.0-615.8), the man
+# reeling back with both hands to his face, still standing at the end.
+CLIPS["FF_V_Trigger_1_Attacker"] = [
+    (0, pose(RUN_A)), (4, pose(RUN_B)), (8, pose(RUN_A)), (12, pose(RUN_B)),
+    (16, pose(RUN_A)),
+    (19, dict(_VT_PLANT)),
+    # Off the mat, the arms swinging back for the drive.
+    (21, _vt_air(1.040, foot_r=(0.18, 0.24, 0.86), knee_r=(0.2, 0.8, 0.6),
+                 foot_l=(-0.14, -0.10, 0.44),
+                 hand_r=(0.34, -0.18, 1.12), hand_l=(-0.34, -0.18, 1.10),
+                 hips=(0, 0, 0), spine=(0, 0, 0))),
+    # The knee into his face at 1.55 m, both arms flung back.
+    (24, _vt_air(1.300, foot_r=(0.18, 0.26, 1.20), knee_r=(0.15, 0.55, 0.85),
+                 foot_l=(-0.14, -0.12, 0.70),
+                 hand_r=(0.36, -0.34, 1.36), hand_l=(-0.36, -0.34, 1.34))),
+    (26, _vt_air(1.200, foot_r=(0.18, 0.22, 0.98), knee_r=(0.2, 0.7, 0.7),
+                 foot_l=(-0.14, -0.08, 0.58),
+                 hand_r=(0.34, -0.26, 1.30), hand_l=(-0.34, -0.26, 1.28))),
+    (29, dict(_VT_LAND)),
+    (34, pose(STAND, pelvis=(0.0, 0.04, 0.820), spine=(-12, 0, 0))),
+    (44, pose(STAND, head=(4, 0, 0))),
+    (54, P()),
+]
+# Hands to the face, bent over them, the weight on the back foot.
+_VT_FACE = pose(HEAD_HURT, spine=(-22, 6, 0), head=(-6, 10, 0),
+                hand_r=(0.08, 0.24, 1.42), hand_l=(-0.08, 0.24, 1.44),
+                elbow_r=(0.9, -0.2, -0.4), elbow_l=(-0.9, -0.2, -0.4),
+                fist_r=0.2, fist_l=0.2)
+CLIPS["FF_V_Trigger_1_Defender"] = [
+    (0, pose(STAND, hand_r=(0.26, 0.20, 1.00), hand_l=(-0.24, 0.12, 1.00))),
+    (10, pose(STAND, head=(4, 4, 0), hand_r=(0.26, 0.22, 1.02), hand_l=(-0.24, 0.14, 1.00))),
+    # Squaring up to the man running at him.
+    (19, pose(STAND, spine=(-6, 0, 0), head=(6, 0, 0),
+              hand_r=(0.26, 0.24, 1.06), hand_l=(-0.24, 0.20, 1.04))),
+    (24, pose(STAND, spine=(-8, 0, 0), head=(6, 0, 0),
+              hand_r=(0.26, 0.24, 1.06), hand_l=(-0.24, 0.20, 1.04))),
+    # The head snapped back, the arms thrown up and out.
+    (26, pose(STAND, pelvis=(0.0, -0.06, 0.840), hips=(6, 0, 0), spine=(18, 0, 0),
+              head=(30, 0, 0),
+              hand_r=(0.40, 0.10, 1.20), hand_l=(-0.38, 0.08, 1.18),
+              fist_r=0.2, fist_l=0.2)),
+    # Reeling back a step.
+    (30, pose(STAND, pelvis=(0.0, -0.10, 0.820), hips=(8, 0, 0), spine=(12, 0, 0),
+              head=(18, 4, 0),
+              hand_r=(0.30, 0.16, 1.30), hand_l=(-0.28, 0.16, 1.32),
+              foot_l=(-0.20, 0.02, 0.20), fist_r=0.2, fist_l=0.2)),
+    (35, dict(_VT_FACE)),
+    (42, _tw(_VT_FACE, spine=(-4, 4, 0), head=(-4, 6, 0), pelvis=(0.0, 0.0, -0.02))),
+    (48, _tw(_VT_FACE, spine=(2, -2, 0), head=(4, -4, 0))),
+    (54, dict(HEAD_HURT)),
+]
+
+# Running V-Trigger 1, 36 frames / 1.2 s: off the ropes (the run is the
+# game's), the last two strides, the plant, and the leaping knee home on 11
+# with the right arm thrown up; the man doubles over it and stays on his feet.
 CLIPS["FF_Running_V_Trigger_1_Attacker"] = [
     (0, pose(RUN_A)), (4, pose(RUN_B)),
-    (7, P(pelvis=(0.0, 0.10, 0.740), hips=(-20, 0, 0), spine=(-20, 0, 0),
-          hand_r=(0.26, 0.20, 0.90), hand_l=(-0.24, 0.24, 0.92),
-          foot_r=(0.16, 0.10, 0.50), foot_l=(-0.14, 0.12, 0.104),
-          knee_r=(0.2, 1.0, 0.3))),
-    # Off the floor, the knee up into his face, the arms flung back. The
-    # thigh is driven UP, the shin hanging under it: keyed with the foot level
-    # with the hip (first cut), the leg folded flat and the knee met him at the
-    # belt, which is where a knee sits when the thigh is level.
-    (9, dict(pelvis=(0.0, 0.10, 1.200), hips=(10, 0, 0), spine=(8, 0, 0),
-             head=(-4, 0, 0),
-             hand_r=(0.36, -0.34, 1.26), hand_l=(-0.36, -0.34, 1.26),
-             fist_r=0.8, fist_l=0.8,
-             foot_r=(0.18, 0.24, 1.04), foot_l=(-0.14, -0.10, 0.56),
-             knee_r=(0.2, 0.7, 0.7), knee_l=(-0.2, 1.0, 0.0))),
-    (12, P(pelvis=(0.0, 0.06, 0.800), hips=(-10, 0, 0), spine=(-10, 0, 0),
-           hand_r=(0.30, 0.00, 1.10), hand_l=(-0.30, 0.00, 1.08),
-           foot_r=(0.20, 0.10, 0.104), foot_l=(-0.18, -0.10, 0.104))),
-    (20, pose(STAND)),
+    (7, dict(_VT_PLANT)),
+    (9, _vt_air(1.100, foot_r=(0.18, 0.24, 0.92), knee_r=(0.2, 0.8, 0.6),
+                foot_l=(-0.14, -0.10, 0.50),
+                hand_r=(0.30, 0.04, 1.50), hand_l=(-0.34, -0.20, 1.12),
+                hips=(0, 0, 0), spine=(0, 0, 0))),
+    # The knee at 1.6 m, the right arm up over his head, the left back.
+    (11, _vt_air(1.360, foot_r=(0.18, 0.26, 1.26), knee_r=(0.15, 0.55, 0.85),
+                 foot_l=(-0.14, -0.12, 0.76),
+                 hand_r=(0.26, 0.00, 1.96), hand_l=(-0.36, -0.34, 1.36))),
+    (13, _vt_air(1.240, foot_r=(0.18, 0.22, 1.02), knee_r=(0.2, 0.7, 0.7),
+                 foot_l=(-0.14, -0.08, 0.62),
+                 hand_r=(0.28, 0.02, 1.84), hand_l=(-0.34, -0.26, 1.28))),
+    (16, dict(_VT_LAND)),
+    (22, pose(STAND, pelvis=(0.0, 0.04, 0.820), spine=(-12, 0, 0))),
+    (30, pose(STAND, head=(4, 0, 0))),
     (36, P()),
 ]
+# Doubled over, both hands to his face.
+_RV1_FOLD = pose(GUT_HURT, spine=(-46, 0, 0), head=(4, 0, 0),
+                 hand_r=(0.12, 0.58, 1.02), hand_l=(-0.12, 0.58, 1.04),
+                 elbow_r=(0.8, -0.2, -0.6), elbow_l=(-0.8, -0.2, -0.6))
 CLIPS["FF_Running_V_Trigger_1_Defender"] = [
     (0, pose(STAND, hand_r=(0.26, 0.10, 1.00), hand_l=(-0.24, 0.12, 1.00))),
-    # Groggy, leaning into it: his face comes down to meet the knee, and is
-    # still there when it lands (frame 9) -- he goes over from the next. With
-    # the fall starting on the contact frame he was upright already, and the
-    # knee took him in the chest.
-    (7, pose(STAND, spine=(-18, 0, 0), head=(12, 0, 0),
-             hand_r=(0.28, 0.08, 1.00), hand_l=(-0.26, 0.10, 1.00))),
-    (9, pose(STAND, pelvis=(0.0, 0.04, 0.840), spine=(-24, 0, 0), head=(14, 0, 0),
-             hand_r=(0.28, 0.10, 0.98), hand_l=(-0.26, 0.12, 0.98))),
-] + _back_fall(10, 36, pelvis_hit=1.00)
+    (7, pose(STAND, spine=(-8, 0, 0), head=(6, 0, 0),
+             hand_r=(0.26, 0.14, 1.02), hand_l=(-0.24, 0.16, 1.02))),
+    (11, pose(STAND, spine=(-10, 0, 0), head=(6, 0, 0),
+              hand_r=(0.26, 0.16, 1.02), hand_l=(-0.24, 0.18, 1.02))),
+    # The head snapped back, then he folds over it.
+    (13, pose(STAND, pelvis=(0.0, -0.06, 0.840), hips=(6, 0, 0), spine=(14, 0, 0),
+              head=(26, 0, 0),
+              hand_r=(0.36, 0.10, 1.16), hand_l=(-0.34, 0.08, 1.14),
+              fist_r=0.2, fist_l=0.2)),
+    (17, _blend_pose(pose(STAND, spine=(4, 0, 0), head=(10, 0, 0)), _RV1_FOLD, 0.6)),
+    (21, dict(_RV1_FOLD)),
+    (28, _tw(_RV1_FOLD, spine=(4, 4, 0), head=(4, 6, 0))),
+    (36, dict(GUT_HURT)),
+]
 
-# Running V-Trigger 3: the same knee into a man doubled over in front of him
-# (GUT_HURT), lower; his head is snapped up by it and he goes over backward.
+# Running V-Trigger 3, 36 frames / 1.2 s: the man on both knees in the corner,
+# slumped forward, head bowed (631.0); the last strides of the sprint, a
+# short hop, and the knee into his bowed head on 9; he slumps back into the
+# buckle, sitting on his heels, chin on his chest.
+_RV3_KNEEL = dict(pelvis=(0.0, -0.04, 0.600), hips=(-10, 0, 0), spine=(-26, 0, 0),
+                  head=(-16, 0, 0),
+                  hand_r=(0.20, 0.24, 0.42), hand_l=(-0.20, 0.24, 0.42),
+                  elbow_r=(0.6, -0.4, -0.6), elbow_l=(-0.6, -0.4, -0.6),
+                  fist_r=0.2, fist_l=0.2,
+                  foot_r=(0.18, -0.46, 0.09), foot_l=(-0.18, -0.46, 0.09),
+                  knee_r=(0.2, 1.0, -0.3), knee_l=(-0.2, 1.0, -0.3))
+_RV3_SLUMP = dict(_RV3_KNEEL, pelvis=(0.0, -0.14, 0.440), hips=(18, 0, 0),
+                  spine=(8, 0, 0), head=(-34, 6, 0),
+                  hand_r=(0.32, -0.04, 0.10), hand_l=(-0.32, -0.04, 0.10))
 CLIPS["FF_Running_V_Trigger_3_Attacker"] = [
     (0, pose(RUN_A)), (4, pose(RUN_B)),
-    # The plant upright, not crouched into it: leaning in, his head met the
-    # bent man's a frame before the knee did.
-    (7, P(pelvis=(0.0, 0.06, 0.760), hips=(-8, 0, 0), spine=(-6, 0, 0),
+    (7, P(pelvis=(0.0, 0.08, 0.760), hips=(-12, 0, 0), spine=(-12, 0, 0),
           hand_r=(0.26, 0.20, 0.90), hand_l=(-0.24, 0.24, 0.92),
-          foot_r=(0.16, 0.10, 0.50), foot_l=(-0.14, 0.12, 0.104),
+          foot_r=(0.16, 0.10, 0.42), foot_l=(-0.14, 0.12, 0.104),
           knee_r=(0.2, 1.0, 0.3))),
-    # Leaning back from him so the heads clear, the knee up under his face.
-    (9, dict(pelvis=(0.0, 0.08, 0.980), hips=(10, 0, 0), spine=(8, 0, 0),
-             head=(-2, 0, 0),
-             hand_r=(0.36, -0.32, 1.06), hand_l=(-0.36, -0.32, 1.06),
-             fist_r=0.8, fist_l=0.8,
-             foot_r=(0.18, 0.24, 0.80), foot_l=(-0.14, -0.10, 0.36),
-             knee_r=(0.2, 0.8, 0.5), knee_l=(-0.2, 1.0, 0.0))),
-    (12, P(pelvis=(0.0, 0.06, 0.800), hips=(-10, 0, 0), spine=(-10, 0, 0),
-           hand_r=(0.30, 0.00, 1.10), hand_l=(-0.30, 0.00, 1.08),
-           foot_r=(0.20, 0.10, 0.104), foot_l=(-0.18, -0.10, 0.104))),
-    (20, pose(STAND)),
+    # The knee down into his bowed head at 1.05 m, leaning over it.
+    (9, _vt_air(0.940, foot_r=(0.18, 0.22, 0.74), knee_r=(0.15, 0.6, 0.8),
+                foot_l=(-0.14, -0.14, 0.36),
+                hand_r=(0.36, -0.30, 1.10), hand_l=(-0.36, -0.30, 1.08),
+                hips=(2, 0, 0), spine=(-6, 0, 0), head=(-8, 0, 0))),
+    (11, _vt_air(0.880, foot_r=(0.18, 0.18, 0.60), knee_r=(0.2, 0.8, 0.6),
+                 foot_l=(-0.14, -0.10, 0.24),
+                 hand_r=(0.34, -0.20, 1.08), hand_l=(-0.34, -0.20, 1.06),
+                 hips=(-2, 0, 0), spine=(-8, 0, 0))),
+    (14, dict(_VT_LAND)),
+    (20, pose(STAND, pelvis=(0.0, 0.04, 0.820), spine=(-12, 0, 0))),
+    (28, pose(STAND, head=(-6, 0, 0))),
     (36, P()),
 ]
 CLIPS["FF_Running_V_Trigger_3_Defender"] = [
-    (0, dict(GUT_HURT)),
-    (7, pose(GUT_HURT, spine=(-48, 0, 0), head=(12, 0, 0))),
-    # Still doubled over as the knee comes up into his face.
-    (9, pose(GUT_HURT, spine=(-46, 0, 0), head=(16, 0, 0))),
-] + _back_fall(10, 36, pelvis_hit=0.90)
-
-# V-Trigger 1, standing: his left hand takes the man's right wrist and yanks
-# him in, onto the knee coming up into his face; the man goes over backward.
-CLIPS["FF_V_Trigger_1_Attacker"] = [
-    (0, P()),
-    # The wrist: his left hand out to the man's right hand.
-    (4, P(pelvis=(0.0, 0.04, 0.840), spine=(-8, 0, 0),
-          hand_l=(-0.20, 0.52, 1.02), hand_r=(0.30, 0.10, 1.20),
-          fist_l=0.9, fist_r=0.8)),
-    # The yank: the arm drawn back, the right knee chambered.
-    (7, P(pelvis=(0.0, 0.00, 0.820), hips=(-6, 0, 0), spine=(-10, 0, 0),
-          hand_l=(-0.26, 0.20, 1.02), hand_r=(0.34, -0.20, 1.14),
-          fist_l=0.9, fist_r=0.8,
-          foot_r=(0.16, 0.06, 0.46), foot_l=(-0.16, -0.02, 0.104),
-          knee_r=(0.2, 1.0, 0.3))),
-    # The knee into his face, still holding the wrist.
-    (9, dict(pelvis=(0.0, 0.04, 1.080), hips=(8, 0, 0), spine=(4, 0, 0),
-             head=(-2, 0, 0),
-             hand_l=(-0.28, 0.06, 1.10), hand_r=(0.36, -0.30, 1.14),
-             fist_l=0.9, fist_r=0.8,
-             foot_r=(0.16, 0.24, 0.92), foot_l=(-0.14, -0.08, 0.40),
-             knee_r=(0.2, 0.7, 0.7), knee_l=(-0.2, 1.0, 0.0))),
-    # Let go as he goes; down onto both feet.
-    (12, P(pelvis=(0.0, 0.04, 0.800), hips=(-8, 0, 0), spine=(-8, 0, 0),
-           hand_l=(-0.30, 0.10, 1.08), hand_r=(0.30, 0.00, 1.10),
-           foot_r=(0.20, 0.08, 0.104), foot_l=(-0.18, -0.06, 0.104))),
-    (20, pose(STAND)),
-    (36, P()),
+    (0, dict(_RV3_KNEEL)),
+    (5, _tw(_RV3_KNEEL, spine=(-3, 0, 0), head=(4, 0, 0))),
+    (9, _tw(_RV3_KNEEL, spine=(-4, 0, 0), head=(2, 0, 0))),
+    # Head snapped up and back, then down into the buckle.
+    (11, dict(_RV3_KNEEL, pelvis=(0.0, -0.08, 0.590), hips=(0, 0, 0), spine=(4, 0, 0),
+              head=(26, 0, 0),
+              hand_r=(0.30, 0.10, 0.50), hand_l=(-0.30, 0.10, 0.50))),
+    (15, _blend_pose(_RV3_KNEEL, _RV3_SLUMP, 0.8)),
+    (19, dict(_RV3_SLUMP)),
+    (27, _tw(_RV3_SLUMP, head=(4, -6, 0), spine=(-2, 0, 0))),
+    (36, dict(_RV3_SLUMP)),
 ]
-CLIPS["FF_V_Trigger_1_Defender"] = [
-    (0, pose(STAND, hand_r=(0.26, 0.20, 1.00), hand_l=(-0.24, 0.12, 1.00))),
-    # The wrist taken, the arm drawn out.
-    (4, pose(STAND, hand_r=(0.22, 0.40, 1.02), hand_l=(-0.24, 0.12, 1.00))),
-    # Yanked in, bent forward over his own arm -- and still there when the
-    # knee lands (frame 9); over backward from the next.
-    (7, P(pelvis=(0.0, 0.10, 0.820), hips=(-14, 0, 0), spine=(-22, 0, 0),
-          head=(12, 0, 0),
-          hand_r=(0.20, 0.62, 1.00), hand_l=(-0.26, 0.20, 0.96),
-          fist_r=0.3, fist_l=0.3,
-          foot_r=(0.18, 0.14, 0.104), foot_l=(-0.18, -0.12, 0.104))),
-    (9, P(pelvis=(0.0, 0.12, 0.810), hips=(-16, 0, 0), spine=(-26, 0, 0),
-          head=(14, 0, 0),
-          hand_r=(0.20, 0.60, 1.00), hand_l=(-0.26, 0.20, 0.94),
-          fist_r=0.3, fist_l=0.3,
-          foot_r=(0.18, 0.14, 0.104), foot_l=(-0.18, -0.12, 0.104))),
-] + _back_fall(10, 36, pelvis_hit=0.95)
 
 
-# --- Fight Forever library, Kenny batch 2: the snap dragons and the combo.
+# --- Kenny: the Snap Dragon suplexes.
 #
-# Snap Dragon Suplex 2 and 3 (Kenny's signatures in Fight Forever,
-# tools/moves/build_ff_library.py). Nothing in this game is thrown from
-# behind -- every paired move starts out of the lock-up, face to face -- so
-# both go behind first, as the Inverted DDT does: the chain waistlock's
-# go-behind round the man's left side (Chain_Waistlock_Attacker 6-10, the
-# same root path). From behind he takes a full nelson -- both arms up under
-# the man's armpits, the hands locked behind his neck, his own head beside
-# the man's, to the man's left (paired_recipes.gd sets him 0.18 m over) --
-# and falls back with him: the man rides over on Kenny's chest, his legs
-# whipped up and over, and is driven down on the back of his neck and
-# shoulders beyond Kenny's head. He goes on over onto his front and rolls
-# onto his back.
-#
-# What the 2 and the 3 are in Fight Forever could not be found; the two are
-# built as the two ways Kenny throws it. 2 is the snap: he lets go at the top
-# and is back up first, turning round to the man. 3 holds on: he goes up into
-# a bridge as the man lands and keeps him spiked on his neck a beat.
+# Snap Dragon Suplex 2 (619.8 s) and 3 (625.8 s) are one move from two
+# cameras: out of the tie-up Kenny goes behind (the chain waistlock's
+# go-behind round the man's left side, Chain_Waistlock_Attacker 6-10), locks
+# a FULL NELSON -- both arms up under the man's armpits, the hands behind his
+# neck -- and HOLDS it (about 90 frames in 2, 60 in 3) while the man fights
+# it; then the snap, 18 frames: Kenny drops back under him, the man goes
+# over Kenny's head and lands on his upper back and neck beyond him, and
+# rolls over. No bridge: Kenny goes down to the mat with him (622.4) and is
+# up first.
 #
 # The man's turn is one direction, backward, pitch rising 0 -> 268 in steps
-# of at most 55 degrees in his body's frame (_body), the vertical suplex's
-# turn the other way round; +268 is face down (the moonsault's landing,
-# _MS_PRONE), which _face_first_then_roll takes from there.
-
-# Behind him, chest to his back: both forearms up under his armpits, the
-# hands locked behind his neck (0.28 m in front of Kenny's root, 0.18 m to
-# his right), cheek turned off to his left, beside the man's head.
+# of at most 55 degrees in his body's frame (_body).
 _NELSON_ELBOWS = dict(elbow_r=(0.7, 0.6, -0.3), elbow_l=(0.2, 0.8, -0.5))
 _NELSON_ATK = dict(pelvis=(0.0, -0.02, 0.820), hips=(-6, 0, 0), spine=(-8, 0, 0),
                    head=(4, -30, 0),
@@ -10864,22 +10924,17 @@ _NELSON_ATK = dict(pelvis=(0.0, -0.02, 0.820), hips=(-6, 0, 0), spine=(-8, 0, 0)
                    fist_r=0.5, fist_l=0.5,
                    foot_r=(0.24, -0.16, 0.104), foot_l=(-0.22, 0.06, 0.104),
                    **_NELSON_ELBOWS)
-# In it: both arms forced up, elbows out above the shoulders, chin driven
-# down onto his chest.
 _NELSON_DEF = dict(pelvis=(0.0, 0.02, 0.830), hips=(-8, 0, 0), spine=(-10, 0, 0),
                    head=(-26, 0, 0),
                    hand_r=(0.30, 0.06, 1.62), hand_l=(-0.30, 0.06, 1.62),
                    elbow_r=(0.9, 0.0, 0.3), elbow_l=(-0.9, 0.0, 0.3),
                    fist_r=0.4, fist_l=0.4,
                    foot_r=(0.24, -0.04, 0.104), foot_l=(-0.22, 0.10, 0.104))
-# His limbs going over, in his body's frame: the arms still up in the nelson,
-# the legs long and together, whipped over.
 _SNAP_LIMBS = dict(hand_r=(0.30, 0.06, 0.79), hand_l=(-0.30, 0.06, 0.79),
                    elbow_r=(0.9, 0.0, 0.3), elbow_l=(-0.9, 0.0, 0.3),
                    fist_r=0.4, fist_l=0.4,
                    foot_r=(0.12, 0.10, -0.80), foot_l=(-0.12, 0.08, -0.80),
                    knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0), free_feet=True)
-# Let go of: the arms thrown out as his neck and shoulders hit.
 _SNAP_LANDED = dict(_SNAP_LIMBS,
                     hand_r=(0.46, 0.20, 0.40), hand_l=(-0.46, 0.20, 0.40),
                     elbow_r=(0.8, 0.3, -0.3), elbow_l=(-0.8, 0.3, -0.3))
@@ -10891,153 +10946,270 @@ def _snap(pitch, z, limbs=_SNAP_LIMBS, spine=(-4, 0, 0), head=(-20, 0, 0)):
     return dict(_body((pitch, 0, 0), (0.0, 0.0, z), **limbs), spine=spine, head=head)
 
 
-def _snap_dragon_atk():
-    """The go-behind, the nelson and the fall back, to his shoulders landing
-    (frame 26). The root carries him back 0.26 m as he sits through it
-    (paired_recipes.gd), feet sliding out in front."""
-    return [
-        (0,  dict(_LOCK_ATK)),
-        (6,  _key("Chain_Waistlock_Attacker", 6)),
-        (10, _key("Chain_Waistlock_Attacker", 10)),
-        (14, dict(_NELSON_ATK)),
+# Cranking the nelson: his head forced down, Kenny's chest up and back.
+_NELSON_CRANK_ATK = (
+    dict(spine=(4, 0, 0), head=(0, 4, 0), pelvis=(0.0, -0.01, -0.02),
+         hand_r=(0.0, -0.02, -0.03), hand_l=(0.0, -0.02, -0.03)),
+    dict(spine=(-3, 2, 0), hips=(0, 3, 0), pelvis=(0.01, 0.0, 0.01),
+         foot_l=(0.0, 0.03, 0.0)),
+)
+# Fighting it: shoulders working, a foot shuffling, the head pushed down.
+_NELSON_FIGHT_DEF = (
+    dict(spine=(-4, 6, 0), head=(-6, 0, 0), hand_r=(0.04, 0.0, -0.04),
+         hand_l=(-0.02, 0.0, 0.03), pelvis=(0.0, 0.0, -0.02)),
+    dict(spine=(2, -6, 0), head=(4, 0, 0), hand_r=(-0.02, 0.0, 0.03),
+         hand_l=(0.04, 0.0, -0.04), foot_r=(0.0, 0.04, 0.0)),
+)
+
+
+def _snap_dragon(lock, sit, end):
+    """Both halves. The tie-up to `lock`, the go-behind to `lock`+18, the
+    nelson held to `sit`, the snap: the man's neck and shoulders hit on
+    `sit`+9. Kenny is up and standing at `end`."""
+    nel = lock + 18
+    atk = [(0, dict(_LOCK_ATK)),
+           (lock // 2, _tw(_LOCK_ATK, pelvis=(0.0, 0.02, -0.02), spine=(-3, 3, 0))),
+           (lock, dict(_LOCK_ATK)),
+           (lock + 8, _key("Chain_Waistlock_Attacker", 6)),
+           (lock + 13, _key("Chain_Waistlock_Attacker", 10)),
+           (nel, dict(_NELSON_ATK))]
+    dfn = [(0, dict(_LOCK_DEF)),
+           (lock // 2, _tw(_LOCK_DEF, pelvis=(0.0, -0.02, -0.02), spine=(-3, -3, 0))),
+           (lock, dict(_LOCK_DEF)),
+           (lock + 8, P(pelvis=(0.0, 0.0, 0.840), spine=(-6, -10, 0), head=(0, -24, 0),
+                        hand_r=(0.24, 0.30, 1.10), hand_l=(-0.22, 0.32, 1.10),
+                        fist_r=0.4, fist_l=0.4)),
+           (nel, dict(_NELSON_DEF))]
+    # The hold: a crank every five or six frames.
+    beats = max(1, (sit - 3 - nel) // 6)
+    for i in range(1, beats + 1):
+        f = nel + round(i * (sit - 3 - nel) / (beats + 1))
+        atk.append((f, _tw(_NELSON_ATK, **_NELSON_CRANK_ATK[i % 2])))
+        dfn.append((f, _tw(_NELSON_DEF, **_NELSON_FIGHT_DEF[i % 2])))
+    atk.append((sit - 3, dict(_NELSON_ATK)))
+    dfn.append((sit - 3, dict(_NELSON_DEF)))
+    hit = sit + 9
+    atk += [
         # Sits in under him, the hands still locked.
-        (17, dict(_NELSON_ATK, pelvis=(0.0, -0.04, 0.700), hips=(-2, 0, 0),
-                  spine=(-4, 0, 0),
-                  hand_r=(0.22, 0.19, 1.35), hand_l=(0.14, 0.19, 1.35),
-                  foot_r=(0.24, -0.14, 0.104), foot_l=(-0.22, 0.08, 0.104),
-                  knee_r=(0.3, 1.0, 0.2), knee_l=(-0.3, 1.0, 0.2))),
-        # The pop: up and back, arching, the man's neck taken back over his
-        # chest.
-        (20, dict(_NELSON_ATK, pelvis=(0.0, -0.06, 0.840), hips=(28, 0, 0),
-                  spine=(16, 0, 0), head=(10, -30, 0),
-                  hand_r=(0.22, -0.26, 1.45), hand_l=(0.14, -0.26, 1.45),
-                  foot_r=(0.22, 0.06, 0.104), foot_l=(-0.20, 0.16, 0.104))),
-        # Falling back under him, the man on his chest.
-        (23, dict(_NELSON_ATK, pelvis=(0.0, -0.06, 0.500), hips=(60, 0, 0),
-                  spine=(12, 0, 0), head=(0, -30, 0),
-                  hand_r=(0.22, -0.46, 0.81), hand_l=(0.14, -0.46, 0.81),
-                  foot_r=(0.20, 0.36, 0.104), foot_l=(-0.18, 0.40, 0.104),
-                  knee_r=(0.2, 0.6, 0.8), knee_l=(-0.2, 0.6, 0.8), free_feet=True)),
-    ]
-
-
-CLIPS["FF_Snap_Dragon_Suplex_2_Attacker"] = _snap_dragon_atk() + [
-    # Shoulders down, the man over his head: letting go.
-    (26, pose(ATK_BACK, pelvis=(0.0, -0.02, 0.240), hips=(78, 0, 0), spine=(6, 0, 0),
-              head=(-4, -30, 0),
-              hand_r=(0.20, -0.70, 0.60), hand_l=(0.02, -0.62, 0.55),
-              elbow_r=(0.7, 0.0, 0.7), elbow_l=(-0.7, 0.0, 0.7),
-              fist_r=0.3, fist_l=0.3)),
-    (28, pose(ATK_BACK, hand_r=(0.20, -0.60, 0.40), hand_l=(-0.20, -0.60, 0.40))),
-] + _get_up(31, 46, lying=True) + [
-    # Up first, and round to him (the root turns, paired_recipes.gd).
-    (54, P()),
-]
-
-
-def _snap_dragon_def():
-    """Looks after him, the nelson, and over (frames 0-26); the man's neck
-    and shoulders hit on frame 28."""
-    return [
-        (0,  dict(_LOCK_DEF)),
-        (6,  P(pelvis=(0.0, 0.0, 0.840), spine=(-6, -10, 0), head=(0, -24, 0),
-               hand_r=(0.24, 0.30, 1.10), hand_l=(-0.22, 0.32, 1.10),
-               fist_r=0.4, fist_l=0.4)),
-        (14, dict(_NELSON_DEF)),
+        (sit, dict(_NELSON_ATK, pelvis=(0.0, -0.04, 0.700), hips=(-2, 0, 0),
+                   spine=(-4, 0, 0),
+                   hand_r=(0.22, 0.19, 1.35), hand_l=(0.14, 0.19, 1.35),
+                   foot_r=(0.24, -0.14, 0.104), foot_l=(-0.22, 0.08, 0.104),
+                   knee_r=(0.3, 1.0, 0.2), knee_l=(-0.3, 1.0, 0.2))),
+        # The pop: up and back, the man's neck taken back over his chest.
+        (sit + 3, dict(_NELSON_ATK, pelvis=(0.0, -0.06, 0.840), hips=(28, 0, 0),
+                       spine=(16, 0, 0), head=(10, -30, 0),
+                       hand_r=(0.22, -0.26, 1.45), hand_l=(0.14, -0.26, 1.45),
+                       foot_r=(0.22, 0.06, 0.104), foot_l=(-0.20, 0.16, 0.104))),
+        # Falling back under him, the man going over his head.
+        (sit + 5, dict(_NELSON_ATK, pelvis=(0.0, -0.06, 0.500), hips=(60, 0, 0),
+                       spine=(12, 0, 0), head=(0, -30, 0),
+                       hand_r=(0.22, -0.46, 0.81), hand_l=(0.14, -0.46, 0.81),
+                       foot_r=(0.20, 0.36, 0.104), foot_l=(-0.18, 0.40, 0.104),
+                       knee_r=(0.2, 0.6, 0.8), knee_l=(-0.2, 0.6, 0.8), free_feet=True)),
+        # Shoulders down, letting go.
+        (sit + 7, pose(ATK_BACK, pelvis=(0.0, -0.02, 0.240), hips=(78, 0, 0), spine=(6, 0, 0),
+                       head=(-4, -30, 0),
+                       hand_r=(0.20, -0.70, 0.60), hand_l=(0.02, -0.62, 0.55),
+                       elbow_r=(0.7, 0.0, 0.7), elbow_l=(-0.7, 0.0, 0.7),
+                       fist_r=0.3, fist_l=0.3)),
+        (hit, pose(ATK_BACK, hand_r=(0.20, -0.60, 0.40), hand_l=(-0.20, -0.60, 0.40))),
+    ] + _get_up(hit + 2, end - 5, lying=True) + [(end, P())]
+    dfn += [
         # Hauled back onto Kenny and down, up on his toes.
-        (17, dict(_NELSON_DEF, pelvis=(0.0, 0.0, 0.760), hips=(15, 0, 0),
-                  spine=(-6, 0, 0),
-                  ankle_r=(20, 0, 0), ankle_l=(20, 0, 0),
-                  foot_r=(0.24, 0.10, 0.124), foot_l=(-0.22, 0.20, 0.124),
-                  knee_r=(0.3, 1.0, 0.2), knee_l=(-0.3, 1.0, 0.2))),
+        (sit, dict(_NELSON_DEF, pelvis=(0.0, 0.0, 0.760), hips=(15, 0, 0),
+                   spine=(-6, 0, 0),
+                   ankle_r=(20, 0, 0), ankle_l=(20, 0, 0),
+                   foot_r=(0.24, 0.10, 0.124), foot_l=(-0.22, 0.20, 0.124),
+                   knee_r=(0.3, 1.0, 0.2), knee_l=(-0.3, 1.0, 0.2))),
         # Off his feet and over.
-        (20, _snap(70, 1.250)),
-        (23, _snap(125, 1.220)),
-        (26, _snap(175, 1.220)),
-    ]
+        (sit + 3, _snap(70, 1.250)),
+        (sit + 5, _snap(125, 1.220)),
+        (sit + 7, _snap(175, 1.220)),
+        # The back of his neck and shoulders into the mat beyond Kenny's head.
+        (hit, _snap(215, 0.690, _SNAP_LANDED, head=(-24, 0, 0))),
+        (hit + 2, _snap(250, 0.370, _SNAP_LANDED, head=(-24, 0, 0))),
+    ] + _face_first_then_roll(hit + 3, end)
+    return atk, dfn
 
 
-CLIPS["FF_Snap_Dragon_Suplex_2_Defender"] = _snap_dragon_def() + [
-    # The back of his neck and shoulders into the mat beyond Kenny's head.
-    (28, _snap(215, 0.690, _SNAP_LANDED, head=(-24, 0, 0))),
-    (30, _snap(250, 0.370, _SNAP_LANDED, head=(-24, 0, 0))),
-] + _face_first_then_roll(31, 54)
+(CLIPS["FF_Snap_Dragon_Suplex_2_Attacker"],
+ CLIPS["FF_Snap_Dragon_Suplex_2_Defender"]) = _snap_dragon(10, 66, 92)
+(CLIPS["FF_Snap_Dragon_Suplex_3_Attacker"],
+ CLIPS["FF_Snap_Dragon_Suplex_3_Defender"]) = _snap_dragon(6, 54, 80)
 
-# The bridge: his feet and shoulders on the mat, hips up, head back, and the
-# man held folded on his neck beyond Kenny's head.
-_SD_BRIDGE = dict(ATK_BACK, pelvis=(0.0, 0.04, 0.380), hips=(70, 0, 0),
-                  spine=(22, 0, 0), head=(16, -30, 0),
-                  hand_r=(0.20, -0.86, 0.26), hand_l=(0.08, -0.84, 0.26),
-                  elbow_r=(0.7, 0.0, 0.7), elbow_l=(-0.7, 0.0, 0.7),
-                  fist_r=0.5, fist_l=0.5,
-                  foot_r=(0.16, 0.44, 0.104), foot_l=(-0.16, 0.44, 0.104),
-                  knee_r=(0.2, 0.3, 1.0), knee_l=(-0.2, 0.3, 1.0))
 
-CLIPS["FF_Snap_Dragon_Suplex_3_Attacker"] = _snap_dragon_atk() + [
-    # Up into the bridge as the man comes down, still holding on.
-    (26, dict(_SD_BRIDGE, pelvis=(0.0, 0.02, 0.320), hips=(72, 0, 0),
-              hand_r=(0.20, -0.74, 0.56), hand_l=(0.08, -0.70, 0.54))),
-    (28, dict(_SD_BRIDGE)),
-    (33, dict(_SD_BRIDGE, pelvis=(0.0, 0.04, 0.400))),
-    (36, dict(_SD_BRIDGE)),
-    # Lets go and drops out of it.
-    (39, pose(ATK_BACK, hand_r=(0.30, -0.50, 0.30), hand_l=(-0.30, -0.50, 0.30))),
-] + _get_up(42, 58, lying=True) + [(60, P())]
+# --- Kenny: the One-Winged Angel (636.8 s), 147 frames / 4.9 s. The tie-up
+# (0-24), the duck under and the fireman's carry up onto his shoulders
+# (24-54, about 60 video frames), then the carry: he holds the man up and
+# turns half round with him, stepping (54-109, about 110 video frames), takes
+# the head with his left hand and swings him over in front, upside down, and
+# sits out, driving him onto the back of his neck as his own seat lands
+# (121: 243 video frames after the tie-up, as at 640.85). The swing and the
+# sit-out are the old 40-frame clip's keys 28-66, moved to 109-147; the
+# man's root turns with Kenny's (paired_recipes.gd ff_one_winged_angel), so
+# the carry's body keys hold.
+#
+# Fireman Carry Bomb 2 (Roman's) borrows the 40-frame version's keys, so it
+# is read out before this replaces it.
+_OWA_V1_ATK = dict(CLIPS["FF_One_Winged_Angel_Attacker"])
+_OWA_V1_DEF = dict(CLIPS["FF_One_Winged_Angel_Defender"])
+_SAM_ATK = dict(CLIPS["Samoan_Drop_Attacker"])
+_SAM_DEF = dict(CLIPS["Samoan_Drop_Defender"])
 
-CLIPS["FF_Snap_Dragon_Suplex_3_Defender"] = _snap_dragon_def() + [
-    (28, _snap(215, 0.690)),
-    # Held there, folded on his neck.
-    (32, _snap(220, 0.660)),
-    (36, _snap(222, 0.650, _SNAP_LANDED, head=(-24, 0, 0))),
-    # Let go: over onto his front.
-    (38, _snap(252, 0.360, _SNAP_LANDED, head=(-24, 0, 0))),
-] + _face_first_then_roll(39, 60)
 
-# Powerbomb/V-Trigger Combo (Kenny's signature in Fight Forever), 94 frames /
-# 3.1 s. A combo, in the library's terms, is a sequence of moves; which two
-# this one strings together could not be found, so it is the two Kenny
-# strings together in the ring. Powerbomb 1, unchanged (frames 0-44: the
-# lift, the beat, the man thrown down on his back in front, feet toward
-# Kenny); Kenny straightens up and slaps his right knee while the man gets up
-# off his back, doubled over; then the run in and the V-Trigger up into his
-# face (frame 71): Running V-Trigger 3 from the plant on, both halves, at its
-# own spacing. The man went over backward from there; Kenny lands and steps
-# back off his boots. Got up to one knee instead (the first cut), the man
-# came up crouched with his head at Kenny's height, and the knee took him in
-# the stomach.
+def _carried(sag=0.0, spine=0.0, head=0.0, hands=0.0):
+    """The man across Kenny's shoulders, face up (Samoan_Drop_Defender 16),
+    sagging a little at the waist and arms."""
+    return _body((88, 90, 0), (0.0, 0.00, 1.440 + sag), **dict(_SAM_LIMBS,
+                 spine=(-10 + spine, 0, 0), head=(-12 + head, 0, 0),
+                 hand_r=(0.34, 0.02, -0.16 + hands), hand_l=(-0.34, 0.02, -0.16 - hands)))
+
+
+def _owa_step(right, up=0.08, spine=0.0):
+    """A step of the turn under the load: one boot off the mat."""
+    p = dict(_SAM_HOLD, spine=(-20 + spine, 0, 0))
+    if right:
+        p["foot_r"] = (0.34, -0.10, 0.104 + up)
+    else:
+        p["foot_l"] = (-0.32, 0.12, 0.104 + up)
+    return p
+
+
+CLIPS["FF_One_Winged_Angel_Attacker"] = [
+    (0, dict(_SAM_ATK[0])),
+    (8, _tw(_SAM_ATK[0], pelvis=(0.0, 0.02, -0.02), spine=(-3, 3, 0))),
+    (16, _tw(_SAM_ATK[0], pelvis=(0.0, -0.01, 0.0), spine=(2, -3, 0))),
+    (24, dict(_SAM_ATK[0])),
+    (34, dict(_SAM_ATK[8])),
+    (44, _blend_pose(_SAM_ATK[8], _SAM_HOLD, 0.55)),
+    (54, dict(_SAM_HOLD)),
+] + [(54 + 7 * i, _owa_step(i % 2 == 1, spine=(2 if i % 2 else -2)))
+     for i in range(1, 7)] + [
+    (101, dict(_SAM_HOLD, spine=(-18, 0, 0), head=(11, 0, 0))),
+    (109, dict(_OWA_V1_ATK[28])),
+] + [(f + 81, dict(_OWA_V1_ATK[f])) for f in (32, 36, 40, 42, 48, 50, 54)] \
+  + [(f + 81, dict(spec)) for f, spec in _get_up(57, 66, seated=True)]
+
+CLIPS["FF_One_Winged_Angel_Defender"] = [
+    (0, dict(_SAM_DEF[0])),
+    (8, _tw(_SAM_DEF[0], pelvis=(0.0, -0.02, -0.02), spine=(-3, -3, 0))),
+    (16, _tw(_SAM_DEF[0], pelvis=(0.0, 0.01, 0.0), spine=(2, 3, 0))),
+    (24, dict(_SAM_DEF[0])),
+    (34, dict(_SAM_DEF[8])),
+    (42, dict(_SAM_DEF[12])),
+    (54, _carried()),
+] + [(54 + 7 * i, _carried(sag=(-0.02 if i % 2 else 0.01), spine=(4 if i % 2 else -2),
+                           head=(-4 if i % 2 else 3), hands=(0.05 if i % 2 else -0.04)))
+     for i in range(1, 7)] + [
+    (101, _carried(sag=0.005, spine=2, head=-2)),
+    (109, dict(_OWA_V1_DEF[28])),
+] + [(f + 81, dict(_OWA_V1_DEF[f])) for f in (32, 35, 38, 40, 43, 46, 48, 52, 66)]
+
+
+# --- Kenny: the Powerbomb/V-Trigger Combo (644.8 s), 156 frames / 5.2 s.
+# The tie-up (0-16); the man bent over, his head between Kenny's thighs, and
+# held there (22-54); the slow hoist onto the shoulders (54-80, about 180
+# video frames from the start); held at the top (80-90); thrown down in
+# front, the bomb on 99 (198 video frames, 648.1). The man sits up off his
+# back, dazed (116-136); Kenny backs off two metres, slaps his knee, and runs
+# in with the V-Trigger to the seated man's head on 147 (294 video frames,
+# 649.7); he goes flat. The lift and the bomb are Powerbomb 1's keys
+# (Wardlow's, unchanged; copied and retimed here).
+_PB1_ATK = dict(CLIPS["FF_Powerbomb_1_Attacker"])
+_PB1_DEF = dict(CLIPS["FF_Powerbomb_1_Defender"])
+_PBL_ATK = dict(_PB_LIFT_ATK)
+_PBL_DEF = dict(_PB_LIFT_DEF)
+# Sat up, legs out long and apart, leaning on his hands, dazed.
+_PBV_SEATED = dict(SIT_UP, hips=(34, 0, 0), spine=(-34, 0, 0), head=(-12, 6, 0),
+                   hand_r=(0.32, -0.06, 0.08), hand_l=(-0.32, -0.06, 0.08),
+                   foot_r=(0.34, 0.78, 0.104), foot_l=(-0.34, 0.76, 0.104),
+                   knee_r=(0.3, 0.2, 1.0), knee_l=(-0.3, 0.2, 1.0))
 CLIPS["FF_Powerbomb_V_Trigger_Combo_Attacker"] = [
-    k for k in CLIPS["FF_Powerbomb_1_Attacker"] if k[0] <= 44] + [
-    (51, P(pelvis=(0.0, 0.06, 0.800), hips=(-12, 0, 0), spine=(-14, 0, 0))),
+    (0, dict(_PBL_ATK[0])),
+    (8, _tw(_PBL_ATK[0], pelvis=(0.0, 0.02, -0.02), spine=(-3, 3, 0))),
+    (16, dict(_PBL_ATK[0])),
+    (22, dict(_PBL_ATK[6])),
+    (28, dict(_PBL_ATK[12])),
+    (38, _tw(_PBL_ATK[12], spine=(-3, 0, 0), pelvis=(0.0, 0.0, -0.02))),
+    (46, _tw(_PBL_ATK[12], spine=(3, 2, 0), pelvis=(0.0, 0.0, 0.01))),
+    (54, dict(_PBL_ATK[12])),
+    # The hoist, slow, the knees doing the work.
+    (62, dict(_PBL_ATK[16])),
+    (71, _blend_pose(_PBL_ATK[16], _PBL_ATK[20], 0.55)),
+    (80, dict(_PBL_ATK[20])),
+    (85, _tw(_PBL_ATK[20], spine=(2, 0, 0))),
+    (90, dict(_PBL_ATK[30])),
+    (94, dict(_PB1_ATK[33])),
+    (99, dict(_PB1_ATK[37])),
+    (106, dict(_PB1_ATK[44])),
+    (112, dict(_PB1_ATK[51])),
+    # Backing off him, two steps back.
+    (116, P(foot_r=(0.23, -0.42, 0.20), spine=(-6, 0, 0))),
+    (120, P(foot_r=(0.23, -0.30, 0.104), foot_l=(-0.19, -0.04, 0.20), spine=(-6, 0, 0))),
+    (124, P(spine=(-8, 0, 0))),
     # The knee slap: the V-Trigger is coming.
-    (56, P(pelvis=(0.0, 0.04, 0.780), hips=(-16, 0, 0), spine=(-18, 0, 0),
-           head=(10, 0, 0),
-           hand_r=(0.20, 0.24, 0.58), hand_l=(-0.24, 0.30, 0.96),
-           fist_r=0.2, fist_l=0.6)),
-    (59, P(pelvis=(0.0, 0.04, 0.800), hips=(-10, 0, 0), spine=(-12, 0, 0),
-           head=(8, 0, 0),
-           hand_r=(0.26, 0.24, 0.84), hand_l=(-0.24, 0.30, 0.96),
-           fist_r=0.6, fist_l=0.6)),
-    # The run, the right hand swung 4 cm wider than RUN_A/B's: coming out of
-    # the knee slap's lean it passed through his side (PoseLint).
-    (62, pose(RUN_A, hand_r=(0.28, 0.10, 1.00))), (66, pose(RUN_B, hand_r=(0.30, 0.30, 1.04))),
-] + [(62 + f, spec) for f, spec in CLIPS["FF_Running_V_Trigger_3_Attacker"]
-     if 7 <= f <= 12] + [
-    (82, pose(STAND)),
-    (94, P()),
+    (127, P(pelvis=(0.0, 0.04, 0.780), hips=(-16, 0, 0), spine=(-18, 0, 0),
+            head=(10, 0, 0),
+            hand_r=(0.20, 0.24, 0.58), hand_l=(-0.24, 0.30, 0.96),
+            fist_r=0.2, fist_l=0.6)),
+    (130, P(pelvis=(0.0, 0.04, 0.800), hips=(-10, 0, 0), spine=(-12, 0, 0),
+            head=(8, 0, 0),
+            hand_r=(0.26, 0.24, 0.84), hand_l=(-0.24, 0.30, 0.96),
+            fist_r=0.6, fist_l=0.6)),
+    (133, pose(RUN_A, hand_r=(0.28, 0.10, 1.00))), (137, pose(RUN_B, hand_r=(0.30, 0.30, 1.04))),
+    (141, pose(RUN_A, hand_r=(0.28, 0.10, 1.00))),
+    (144, P(pelvis=(0.0, 0.08, 0.760), hips=(-14, 0, 0), spine=(-14, 0, 0),
+            hand_r=(0.26, 0.20, 0.90), hand_l=(-0.24, 0.24, 0.92),
+            foot_r=(0.16, 0.06, 0.40), foot_l=(-0.12, 0.12, 0.104),
+            knee_r=(0.2, 1.0, 0.3))),
+    # The knee into the seated man's head, about 0.85 m up, arms flung back.
+    (147, P(pelvis=(0.0, 0.06, 0.800), hips=(-4, 0, 0), spine=(-10, 0, 0),
+            head=(-8, 0, 0),
+            hand_r=(0.36, -0.30, 1.10), hand_l=(-0.36, -0.30, 1.08),
+            fist_r=0.8, fist_l=0.8,
+            foot_r=(0.18, 0.12, 0.52), foot_l=(-0.10, -0.04, 0.104),
+            knee_r=(0.15, 0.8, 0.5))),
+    (151, dict(_VT_LAND)),
+    (156, P()),
 ]
-CLIPS["FF_Powerbomb_V_Trigger_Combo_Defender"] = _PB_LIFT_DEF + [
-    k for k in _back_fall(30, 46, skip_hit=True, fall_z=1.00)] + [
-    # Up off his back, groggy, and doubled over on his feet. Sat up over
-    # seven frames: in four, out of the still bump, every joint moved at once
-    # (a snap, test_clip_cadence).
-    (48, dict(SUPINE_AWAY, head=(-30, 0, 0))),
-    (55, pose(SIT_UP, head=(-20, 0, 0))),
-    (59, pose(GATHER)),
-    (63, pose(CROUCH)),
-    (66, dict(GUT_HURT)),
-] + [(62 + f, spec) for f, spec in CLIPS["FF_Running_V_Trigger_3_Defender"]
-     if 7 <= f <= 9] + _back_fall(72, 94, pelvis_hit=0.90)
-
+CLIPS["FF_Powerbomb_V_Trigger_Combo_Defender"] = [
+    (0, dict(_PBL_DEF[0])),
+    (8, _tw(_PBL_DEF[0], pelvis=(0.0, -0.02, -0.02), spine=(-3, -3, 0))),
+    (16, dict(_PBL_DEF[0])),
+    (22, dict(_PBL_DEF[6])),
+    (28, dict(_PBL_DEF[12])),
+    (38, _tw(_PBL_DEF[12], spine=(2, 4, 0))),
+    (46, _tw(_PBL_DEF[12], spine=(-2, -4, 0))),
+    (54, dict(_PBL_DEF[12])),
+    (62, _blend_pose(_PBL_DEF[12], _PBL_DEF[20], 0.3)),
+    (71, _blend_pose(_PBL_DEF[12], _PBL_DEF[20], 0.7)),
+    (80, dict(_PBL_DEF[20])),
+    (85, _blend_pose(_PBL_DEF[20], _PBL_DEF[30], 0.5)),
+    (90, dict(_PBL_DEF[30])),
+    (92, dict(_PB1_DEF[32])),
+    (95, dict(_PB1_DEF[34])),
+    (96, dict(_PB1_DEF[35])),
+    (98, dict(_PB1_DEF[36])),
+    (99, dict(_PB1_DEF[37])),
+    (101, dict(_PB1_DEF[39])),
+    (106, dict(_PB1_DEF[44])),
+    (111, dict(_PB1_DEF[49])),
+    (116, dict(SUPINE_AWAY, pelvis=(0.0, 0.0, 0.190))),
+    # Up off his back, groggy, and sat there.
+    (122, dict(SUPINE_AWAY, head=(-30, 0, 0))),
+    (130, pose(SIT_UP, head=(-20, 0, 0))),
+    (136, dict(_PBV_SEATED)),
+    (142, _tw(_PBV_SEATED, head=(4, -8, 0), spine=(-2, 0, 0))),
+    (147, _tw(_PBV_SEATED, head=(6, 0, 0))),
+    # The head snapped back, and flat.
+    (149, dict(_PBV_SEATED, hips=(48, 0, 0), spine=(-10, 0, 0), head=(30, 0, 0),
+               hand_r=(0.40, 0.02, 0.30), hand_l=(-0.40, 0.02, 0.30))),
+    (152, dict(_PBV_SEATED, pelvis=(0.0, 0.0, 0.190), hips=(74, 0, 0), spine=(0, 0, 0),
+               head=(10, 0, 0),
+               hand_r=(0.50, -0.10, 0.14), hand_l=(-0.50, -0.10, 0.14))),
+    (156, dict(SUPINE_AWAY)),
+]
 
 
 # --- parallel strike batch (video reference) ---
