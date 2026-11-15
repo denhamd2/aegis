@@ -13,6 +13,7 @@ import bpy
 import bmesh
 import numpy as np
 from mathutils import Vector, kdtree
+from mathutils.bvhtree import BVHTree
 from PIL import Image, ImageDraw, ImageFilter
 
 ROOT=pathlib.Path(__file__).resolve().parents[3]
@@ -32,6 +33,13 @@ EYE='xmaterial_7d08cd4d239faf3'
 HEAD='xmaterial_c3d4d9e78b44a79'
 MOUTH='head_shared_inside_mouth_iw9'
 HAIR=['CurlCap','CurlSlick','CurlRinglets','CurlUndercoat']
+AUDIT_OVERRIDE=None
+
+def evidence_dir(round_no=None):
+    if AUDIT_OVERRIDE is not None:return pathlib.Path(AUDIT_OVERRIDE)
+    number=int(round_no or bpy.context.scene.get('kenny_round',1))
+    if number>=4:return ROOT/'gauntlet/refs/kenny_judge_continued_2026_11_14'/('round'+str(number))
+    return ROOT/'gauntlet/refs/kenny_judge_2026_11_14'
 
 def sha(path):return hashlib.sha256(path.read_bytes()).hexdigest()
 def text(name,value):
@@ -118,6 +126,27 @@ def field_numpy(points,normals,loop_vertex,rows,mid=.004,mask=None):
     normals/=np.maximum(np.linalg.norm(normals,axis=1)[:,None],1e-12)
     return points,normals
 
+def brow_return(points,normals,loop_vertex,mask):
+    # Measured R4 local profile at x~.034: its lower y1.730 ledge remained
+    # forward after the high ridge was retracted. Control that actual return,
+    # preserving the upper-lid margin at y1.7235 and the unchanged eyeballs.
+    ys=np.array([1.7245,1.730,1.738,1.746,1.762])
+    dz=np.array([0,-.0045,-.0035,-.0022,0])
+    def delta(p):
+        y=p[:,1];value=np.zeros(len(p))
+        for k in range(len(ys)-1):
+            use=(y>=ys[k])&(y<ys[k+1]);t=smooth((y[use]-ys[k])/(ys[k+1]-ys[k]))
+            value[use]=dz[k]+(dz[k+1]-dz[k])*t
+        x=np.abs(p[:,0]-.004);lateral=smooth((x-.004)/.017)*(1-smooth((x-.055)/.018))
+        front=smooth((p[:,2]+.045)/.015)
+        out=np.zeros_like(p);out[:,2]=value*lateral*front*mask;return out
+    d=delta(points);jac=np.broadcast_to(np.eye(3),(len(points),3,3)).copy();step=1e-5
+    for axis in range(3):
+        off=np.zeros(3);off[axis]=step;jac[:,:,axis]+=(delta(points+off)-delta(points-off))/(2*step)
+    points+=d;normals=np.einsum('lji,lj->li',np.linalg.inv(jac)[loop_vertex],normals)
+    normals/=np.maximum(np.linalg.norm(normals,axis=1)[:,None],1e-12)
+    return points,normals
+
 def region_weight(points,regions):
     weight=np.zeros(len(points))
     for c,r,strength in regions:
@@ -127,7 +156,7 @@ def region_weight(points,regions):
             weight=np.maximum(weight,strength*t*t*(3-2*t))
     return weight
 
-def owned_baseline(body):
+def owned_baseline(body,round_no=2):
     """Restore all frozen Kenny fit/sculpt/relax/normal stages, not just position fields."""
     snap=data('KennyRawSeed');mesh=body.data;mw=np.array(body.matrix_world);rot=np.array([[1,0,0],[0,0,1],[0,-1,0]])
     raw=unpack_array(snap['positions']);positions=(raw@mw[:3,:3].T+mw[:3,3])@rot.T
@@ -146,7 +175,12 @@ def owned_baseline(body):
     chosen=np.flatnonzero(found>=0);positions[chosen]+=offset[found[chosen]]
     affected=found[loop_v]>=0;normals[affected]+=noffset[found[loop_v[affected]]]
     normals/=np.maximum(np.linalg.norm(normals,axis=1)[:,None],1e-12)
-    positions,normals=field_numpy(positions,normals,loop_v,data('KennyCapturedFace')['field'],mask=head_mask)
+    historical_fields=data('KennyCapturedFace')['field']
+    if round_no>=4 and round_no<6:
+        # Canonical neutral upper face: remove the old 5 mm accumulated lid
+        # closure and compensating ridge/forehead bumps before authoring it.
+        historical_fields=[r for r in historical_fields if r[0][1]<1.705]
+    positions,normals=field_numpy(positions,normals,loop_v,historical_fields,mask=head_mask)
     # Same welded, synchronised neighbour relaxation used by the historical
     # Kenny face. UV islands share group positions and recomputed smooth normals.
     keys=np.round(positions[head_ids]*50000).astype(np.int64)
@@ -326,6 +360,14 @@ def art_body(round_no):
     previous=body.data;body.data=seed.data.copy()
     if previous.users==0:bpy.data.meshes.remove(previous)
     body.data.name='KennyBodyMesh';mw=body.matrix_world;inv=mw.inverted()
+    if round_no>=7:
+        source_directory=str(pathlib.Path(__file__).resolve().parent)
+        if source_directory not in sys.path:sys.path.insert(0,source_directory)
+        import kenny_reference_fit
+        report=kenny_reference_fit.fit(sys.modules[__name__],body,round_no)
+        body['kenny_face_baked']=True
+        text('KennyAuthoredSculpt',{'round':round_no,'method':'Canonical measured RAW head fit, clay gate first.','runtime_bulk_baked':False})
+        return
     # Bounded first sculpt: orbital transition and straighter bridge, not a
     # global head scale. Eyes, mouth interior, neck and bones stay anchored.
     fields=[([.030,1.737,-.002],[.043,.022,.035],[0,.0015,-.0040],True),
@@ -340,11 +382,23 @@ def art_body(round_no):
                    ([.031,1.708,-.010],[.016,.005,.018],[0,-.0006,-.0008],True),
                    ([.046,1.663,-.020],[.025,.025,.034],[.0010,0,.0010],True),
                    ([.027,1.612,-.007],[.024,.015,.027],[.0008,0,.0008],True)]
+    if round_no>=4 and round_no<6:
+        # One reference-led upper-face target replaces the historical stack.
+        # The brow return stops above the eyeball pole; the lid margins move
+        # gently down/forward on the unchanged eye sphere, not into it.
+        fields=[([.030,1.741,-.005],[.047,.016,.039],[0,-.0010,-.0080],True),
+                ([.032,1.7235,-.012],[.017,.006,.016],[0,-.0012,.0006],True),
+                ([.032,1.7085,-.015],[.015,.005,.014],[0,.0006,.0003],True),
+                ([.009,1.704,.014],[.018,.033,.025],[0,0,.0040],True),
+                ([.010,1.674,.037],[.018,.016,.023],[0,-.0010,.0005],True),
+                ([.027,1.608,-.005],[.030,.025,.034],[.0035,.0010,.0015],True),
+                ([.050,1.660,-.025],[.027,.026,.036],[.0015,0,.0015],True)]
     idx={i for i,m in enumerate(body.data.materials) if m.name==HEAD}
     ids={v for f in body.data.polygons if f.material_index in idx for v in f.vertices}
     if round_no>=2:
-        positions,normals,loop_v,mask,world,rot=owned_baseline(body)
+        positions,normals,loop_v,mask,world,rot=owned_baseline(body,3 if round_no>=6 else round_no)
         positions,normals=field_numpy(positions,normals,loop_v,fields,mask=mask)
+        if round_no==5:positions,normals=brow_return(positions,normals,loop_v,mask)
         set_game_geometry(body,positions,normals,world,rot)
     else:
         for i in ids:
@@ -352,6 +406,56 @@ def art_body(round_no):
         clear_normals(body)
     body['kenny_face_baked']=True
     text('KennyAuthoredSculpt',{'round':round_no,'fields':fields,'runtime_bulk_baked':False})
+
+def neutral_brow_map(image,round_no):
+    """Replace the broad painted arches with fine, lower, almost level brows."""
+    a=np.array(image);h,w=a.shape[:2];yy,xx=np.mgrid[:h,:w]
+    source_y=np.clip(np.rint((.245+(yy/h-.30)*.35)*h).astype(int),0,h-1)
+    clone=a[source_y,xx].copy();mask=Image.new('L',(w,h),0);draw=ImageDraw.Draw(mask)
+    for x0,x1 in [(.302,.477),(.523,.698)]:draw.rounded_rectangle((int(x0*w),int(.272*h),int(x1*w),int(.331*h)),radius=12,fill=255)
+    m=np.array(mask.filter(ImageFilter.GaussianBlur(5)),dtype=float)/255
+    out=a.astype(float)*(1-m[:,:,None])+clone.astype(float)*m[:,:,None]
+    base=Image.fromarray(np.uint8(np.clip(out,0,255)),'RGBA');layer=Image.new('RGBA',(w,h),(0,0,0,0));d=ImageDraw.Draw(layer)
+    rng=np.random.default_rng(140411)
+    if round_no>=5:
+        body=bpy.data.objects['Body'];mesh=body.data;mw=body.matrix_world
+        polygons=[p for p in mesh.polygons if mesh.materials[p.material_index].name==HEAD]
+        points=[mw@v.co for v in mesh.vertices];bvh=BVHTree.FromPolygons(points,[list(p.vertices) for p in polygons],all_triangles=True)
+        uv=mesh.uv_layers.active.data;registered=[]
+        def project(x,y):
+            hit,normal,index,distance=bvh.ray_cast(Vector((x,-.30,y)),Vector((0,1,0)),.5)
+            if hit is None:return None
+            p=polygons[index];a,b,c=(points[i] for i in p.vertices);v0=b-a;v1=c-a;v2=hit-a
+            den=v0.dot(v0)*v1.dot(v1)-v0.dot(v1)**2
+            if abs(den)<1e-16:return None
+            vb=(v1.dot(v1)*v2.dot(v0)-v0.dot(v1)*v2.dot(v1))/den
+            vc=(v0.dot(v0)*v2.dot(v1)-v0.dot(v1)*v2.dot(v0))/den;va=1-vb-vc
+            u=uv[p.loop_start].uv*va+uv[p.loop_start+1].uv*vb+uv[p.loop_start+2].uv*vc
+            return (float(u.x*w),float((1-u.y)*h))
+        for side in [-1,1]:
+            line=[]
+            for t in np.linspace(0,1,65):
+                x=.004+side*(.012+.056*t)
+                y=(1.7275+.0007*math.sin(math.pi*t)+.0004*t) if round_no>=6 else 1.735+.0016*math.sin(math.pi*t)-.0008*t
+                q=project(x,y)
+                if q:line.append(q)
+            if len(line)>2:d.line(line,fill=(74,56,42,48),width=4)
+            for _ in range(230):
+                t=float(rng.uniform(0,1));x=.004+side*(.012+.056*t)
+                y=((1.7275+.0007*math.sin(math.pi*t)+.0004*t) if round_no>=6 else 1.735+.0016*math.sin(math.pi*t)-.0008*t)+float(rng.normal(0,.00024))
+                a=project(x,y);b=project(x+side*float(rng.uniform(.00015,.0010)),y+float(rng.uniform(.0011,.0023)))
+                if a and b:d.line([a,b],fill=(59,45,34,int(rng.integers(100,185))),width=1 if rng.random()<.75 else 2)
+            registered.append({'side':side,'path_px':line})
+        text('KennyRegisteredBrows',{'round':round_no,'world_y':1.7275 if round_no>=6 else 1.735,'method':'Skin raycast + triangle barycentric UV, not a horizontal atlas guess.','paths':registered})
+        return Image.alpha_composite(base,layer)
+    for side in [-1,1]:
+        for _ in range(165):
+            t=float(rng.uniform(0,1));u=.314+.148*t;v=.311+.002*t-.0035*math.sin(math.pi*t)
+            x=(u if side==-1 else 1-u)*w;y=v*h+float(rng.normal(0,3))
+            dx=(float(rng.uniform(-5,1)) if side==-1 else float(rng.uniform(-1,5)))
+            dy=-float(rng.uniform(7,15));alpha=int(rng.integers(90,185))
+            d.line([(x,y),(x+dx*.45,y+dy*.5),(x+dx,y+dy)],fill=(67,51,40,alpha),width=1 if rng.random()<.8 else 2)
+    return Image.alpha_composite(base,layer)
 
 def art_maps(round_no):
     outputs={}
@@ -378,6 +482,17 @@ def art_maps(round_no):
                 dark=np.clip((.66-lum)/.30,0,1)
                 rgb[:,:,:3]+=beard[:,:,None]*dark[:,:,None]*np.array([9,11,12])
             src=Image.fromarray(np.uint8(np.clip(rgb,0,255)),'RGBA')
+            if round_no>=4 and round_no<6:
+                # The seed's opaque beard reads as a full beard. Blend a share
+                # of nearby own skin into it to keep short stubble contrast.
+                a=np.array(src,dtype=float);clean=np.mean(a[int(.41*src.height):int(.45*src.height),:,:3],axis=0)
+                blend=beard*.23;a[:,:,:3]=a[:,:,:3]*(1-blend[:,:,None])+clean[None,:,:]*blend[:,:,None]
+                src=neutral_brow_map(Image.fromarray(np.uint8(np.clip(a,0,255)),'RGBA'),round_no)
+            elif round_no>=6:
+                # Actual front draft rejected the new projected brow tracks.
+                # Keep the validated R3 pigment rather than publish a misplaced
+                # cosmetic change. A new landmark fit is separate future work.
+                text('KennyRegisteredBrows',{'round':round_no,'fallback':'Validated R3 pigment retained after actual runtime draft rejected projected forehead tracks.','improvement_claim':False})
         elif name in ['kenny_body_chest.png','kenny_body_arm_l.png','kenny_body_arm_r.png']:
             changed=True
             src=Image.blend(src,src.filter(ImageFilter.GaussianBlur(1.7 if round_no>=3 else 1.4)),.42 if round_no>=3 else .27)
@@ -410,7 +525,7 @@ def art_maps(round_no):
                 t=k/80;av=int(235*min(1,t/.035)*min(1,(1-t)/.10))
                 da.line(pts[k:k+2],fill=av,width=width);dr.line(pts[k:k+2],fill=(tone,)*3,width=width)
     alpha=alpha.filter(ImageFilter.GaussianBlur(.25))
-    if round_no>=2:
+    if (round_no>=2 and round_no<4) or round_no>=6:
         # Retain a coherent curved clump core after minification, with fine
         # interrupted edges. Sparse individual strand alpha alone vanished at
         # the renderer's effective alpha-to-coverage threshold.
@@ -419,7 +534,22 @@ def art_maps(round_no):
         taper=smooth(v/.035)*(1-smooth((v-.88)/.12))
         fibre=.90+.10*np.sin(xx*.61+np.sin(yy*.027)*2.2)
         core=envelope*taper*fibre*.78
+        if round_no>=6:
+            # Recover R3's minification-safe primary mass with fine internal
+            # breaks; broad root coverage takes priority over isolated alpha.
+            gaps=(np.sin(xx*math.pi*.70+np.sin(yy*.018))>.88)
+            core*=np.where(gaps,.62,1)
         arr=np.maximum(np.asarray(alpha)/255,core)
+        alpha=Image.fromarray(np.uint8(np.clip(arr*255,0,255)),'L')
+    elif round_no>=4:
+        # Several separated fibre bundles replace the single opaque 90px band.
+        yy,xx=np.mgrid[:size,:size];u=(xx%cw)/(cw-1);v=1-yy/(size-1);bundle=np.zeros_like(u,dtype=float)
+        for k,centre in enumerate([.15,.32,.50,.69,.86]):
+            wave=.010*np.sin(v*math.pi*(2.0+k*.15)+k*1.7)
+            fibre=np.exp(-((u-centre-wave)/(.030 if k%2 else .035))**4)
+            bundle=np.maximum(bundle,fibre*.96)
+        taper=smooth(v/.025)*(1-smooth((v-.90)/.10))
+        arr=np.maximum(np.array(alpha)/255,bundle*taper)
         alpha=Image.fromarray(np.uint8(np.clip(arr*255,0,255)),'L')
     out=rgb.convert('RGBA');out.putalpha(alpha);store_map('kenny_curl_cards.png',out)
     outputs['kenny_curl_cards.png']='Map::kenny_curl_cards.png';text('KennyOutputMaps',outputs)
@@ -430,6 +560,8 @@ def hair_weights(p):
     neck=float(smooth((1.60-p.z)/.08));spine=float(smooth((1.50-p.z)/.10))
     return [('Head',1-neck),('neck_01',neck*(1-spine)),('spine_03',neck*spine)]
 def make_hair(name,guides,arm,round_no):
+    if round_no>=6:return make_curled_hair(name,guides,arm,round_no)
+    if round_no>=4:return make_grouped_hair(name,guides,arm,round_no)
     if round_no>=3:return make_curled_hair(name,guides,arm)
     rng=np.random.default_rng(140114+HAIR.index(name));verts=[];faces=[];uvs=[];colors=[]
     for gi,guide in enumerate(guides):
@@ -500,14 +632,24 @@ def hair_mesh(name,verts,faces,uvs,colors,arm):
                 groups[bone].add([i],w,'REPLACE')
     return obj
 
-def make_curled_hair(name,guides,arm):
+def make_curled_hair(name,guides,arm,round_no=3):
     """Root-anchored loose three-dimensional curls, not crimped donor ribbons."""
     rng=np.random.default_rng(140317+HAIR.index(name));verts=[];faces=[];uvs=[];colors=[]
     # Main card roots have sway alpha zero. Legacy flyaways start at .6 and
     # were incorrectly expanded into long bright horizontal R1/R2 whiskers.
     primary=[g for g in guides if g[0][0]<.12 and len(g)>3]
-    limit={'CurlRinglets':220,'CurlSlick':220,'CurlUndercoat':24}[name]
+    limit={'CurlRinglets':220,'CurlSlick':216 if round_no>=6 else 220,'CurlUndercoat':24}[name]
     if len(primary)>limit:primary=[primary[i] for i in np.linspace(0,len(primary)-1,limit,dtype=int)]
+    cap_bvh=None;head_bvh=None
+    if round_no>=6 and name=='CurlSlick':
+        cap=bpy.data.objects['Seed_CurlCap'];cap_bvh=BVHTree.FromPolygons([cap.matrix_world@v.co for v in cap.data.vertices],[list(p.vertices) for p in cap.data.polygons],all_triangles=True)
+        body=bpy.data.objects['Body'];head_bvh=BVHTree.FromPolygons([body.matrix_world@v.co for v in body.data.vertices],
+            [list(p.vertices) for p in body.data.polygons if body.data.materials[p.material_index].name==HEAD],all_triangles=True)
+    def close_to(p,bvh,offset):
+        q,n,index,distance=bvh.find_nearest(Vector(p))
+        if q is None:return p
+        if n.dot(q-Vector((.004,.095,1.70)))<0:n=-n
+        return np.array(q+n*offset)
     def append_path(path,radius,column,tip,profile=3,wisp=False):
         start=len(verts);n=len(path);root=np.array(linear((65,49,36)))
         for k,point in enumerate(path):
@@ -553,6 +695,7 @@ def make_curled_hair(name,guides,arm):
             p+=side*amp*(math.sin(angle)-math.sin(phase))
             p+=out*amp*.65*(math.cos(angle)-math.cos(phase))
             if crown:p+=out*.007*math.sin(math.pi*t)
+            if round_no>=6 and crown:p=close_to(p,cap_bvh,.003+.003*math.sin(math.pi*t))
             p[0]=np.clip(p[0],-.123,.123);p[1]=min(p[1],.274);p[2]=max(1.445,p[2]);path.append(p)
         path=np.array(path);bright=rng.random()<.38;tone=float(rng.uniform(.86,1.08))
         tip=np.array(linear((201,181,145) if bright else (147,121,93)))*tone
@@ -566,6 +709,115 @@ def make_curled_hair(name,guides,arm):
         if name=='CurlRinglets' and gi%20==0:
             wisp=path[len(path)//3:].copy();wisp[:,0]+=.002*math.sin(phase)
             append_path(wisp,.00065,int(rng.integers(0,8)),tip*1.04,2,True)
+    if round_no>=6 and name=='CurlSlick':
+        roots=np.array([g[0][1] for g in primary]);near=np.argsort(np.linalg.norm(roots-np.array([-.040,.025,1.815]),axis=1))[:3]
+        for j,index in enumerate(near):
+            ctrl=np.array([roots[index],[-.062+(j-1)*.002,.018,1.818],[-.095+(j-1)*.002,.010,1.780],[-.084+(j-1)*.002,.008,1.748]])
+            for f in range(2):
+                path=[]
+                for t in np.linspace(0,1,22):
+                    p=(1-t)**3*ctrl[0]+3*(1-t)**2*t*ctrl[1]+3*(1-t)*t*t*ctrl[2]+t**3*ctrl[3]
+                    p+=np.array([.0015*math.sin(t*math.pi*2+j+f),0,0])*math.sin(math.pi*t)
+                    path.append(close_to(p,head_bvh,.0035))
+                append_path(np.array(path),.0015,int(rng.integers(0,8)),linear((173,149,115)),2)
+    return hair_mesh(name,verts,faces,uvs,colors,arm)
+
+def make_grouped_hair(name,guides,arm,round_no):
+    """Fine separated bundles on grouped curls with continuous transport frames."""
+    rng=np.random.default_rng(140421+HAIR.index(name));verts=[];faces=[];uvs=[];colors=[]
+    candidates=[g for g in guides if g[0][0]<.12 and len(g)>3]
+    roots=np.array([g[0][1] for g in candidates]);selected=[]
+    limit={'CurlSlick':28,'CurlRinglets':140 if round_no>=5 else 160,'CurlUndercoat':16}[name]
+    cap_bvh=None;head_bvh=None
+    if name=='CurlSlick' and round_no>=5:
+        cap=bpy.data.objects['Seed_CurlCap'];cap_bvh=BVHTree.FromPolygons([cap.matrix_world@v.co for v in cap.data.vertices],[list(p.vertices) for p in cap.data.polygons],all_triangles=True)
+        body=bpy.data.objects['Body'];head_bvh=BVHTree.FromPolygons([body.matrix_world@v.co for v in body.data.vertices],
+            [list(p.vertices) for p in body.data.polygons if body.data.materials[p.material_index].name==HEAD],all_triangles=True)
+    def on_surface(p,bvh,height):
+        q,n,index,distance=bvh.find_nearest(Vector(p))
+        if q is None:return p
+        outward=q-Vector((.004,.095,1.70))
+        if n.dot(outward)<0:n=-n
+        return np.array(q+n*height)
+    if name=='CurlSlick':
+        selected=[int(np.argmin(np.linalg.norm(roots-np.array([-.020,.035,1.815]),axis=1)))]
+        while len(selected)<min(limit,len(candidates)):
+            distance=np.min(np.linalg.norm(roots[:,None,:]-roots[selected][None,:,:],axis=2),axis=1)
+            distance[selected]=-1;selected.append(int(np.argmax(distance)))
+    else:selected=list(np.linspace(0,len(candidates)-1,min(limit,len(candidates)),dtype=int))
+
+    def ribbon(path,half,column,tip,phase):
+        n=len(path);start=len(verts);last=None
+        for k,p0 in enumerate(path):
+            t=k/(n-1);p=Vector(p0);tan=Vector(path[min(k+1,n-1)]-path[max(k-1,0)]).normalized()
+            if last is None:last=Vector((p.x-.004,p.y-.095,max(.03,p.z-1.72))).normalized()
+            out=last-tan*last.dot(tan)
+            if out.length<.01:out=tan.cross(Vector((1,0,0)))
+            out.normalize();last=out;across=tan.cross(out).normalized()
+            roll=.18*math.sin(t*math.pi*1.3+phase);across=(across*math.cos(roll)+out*math.sin(roll)).normalized()
+            width=half*(.78+.22*math.sin(math.pi*t))*(1-.72*float(smooth((t-.72)/.28)))
+            mix=float(smooth((t-.26)/.66));root=np.array(linear((62,47,35)));color=root+(np.array(tip)-root)*mix
+            for side in [-1,1]:
+                q=p+across*width*side;q.x=np.clip(q.x,-.128,.128);q.z=max(1.435,q.z)
+                verts.append(tuple(q));uvs.append(((column+.5+.45*side)/8,1-t));colors.append(list(np.clip(color,0,1))+[t])
+            if k:
+                a=start+(k-1)*2;faces.append((a,a+1,a+3,a+2))
+
+    def bundle(controls,kind,fibres,steps,phase,amp,turns,tip):
+        tt=np.linspace(0,1,steps);path=[];axis=Vector((controls[0,0]-.004,controls[0,1]-.095,.02)).normalized()
+        side=np.array([axis.y,-axis.x,0]);out=np.array(axis)
+        if kind=='crown':out=np.array([axis.x*.25,axis.y*.25,.94]);out/=np.linalg.norm(out)
+        for t in tt:
+            p=(1-t)**3*controls[0]+3*(1-t)**2*t*controls[1]+3*(1-t)*t*t*controls[2]+t**3*controls[3]
+            angle=phase+math.tau*turns*(t+.055*math.sin(math.pi*t));ease=float(smooth(t/.12))
+            p+=side*amp*(math.sin(angle)-math.sin(phase))*ease
+            p+=out*amp*.65*(math.cos(angle)-math.cos(phase))*ease
+            if round_no>=5 and kind=='crown':p=on_surface(p,cap_bvh,.0025+.0035*math.sin(math.pi*t))
+            if round_no>=5 and kind=='forelock':p=on_surface(p,head_bvh,.003+.002*math.sin(math.pi*t))
+            p[0]=np.clip(p[0],-.123,.123);p[1]=min(p[1],.273);p[2]=max(1.445,p[2]);path.append(p)
+        path=np.array(path)
+        for f in range(fibres):
+            angle=phase+f*math.tau/fibres;offset=side*math.sin(angle)+out*math.cos(angle)
+            perturb=np.sin(tt*math.pi)[:,None]*offset[None,:]*float(rng.uniform(.0007,.0020))
+            fibre_path=path+perturb
+            if round_no>=5 and kind=='crown':
+                fibre_path=np.array([on_surface(p,cap_bvh,.0025+.0035*math.sin(math.pi*t)) for p,t in zip(fibre_path,tt)])
+            ribbon(fibre_path,float(rng.uniform(.0009,.0017)),int(rng.integers(0,8)),np.array(tip)*float(rng.uniform(.90,1.06)),phase+f)
+
+    for gi,index in enumerate(selected):
+        raw=np.array([r[1] for r in candidates[index]]);arc=np.r_[0,np.cumsum(np.linalg.norm(np.diff(raw,axis=0),axis=1))];arc/=max(arc[-1],1e-8)
+        ctrl=np.array([[np.interp(t,arc,raw[:,a]) for a in range(3)] for t in [0,.33,.67,1]])
+        for p in ctrl[1:]:p[0]=np.clip(p[0],-.117,.117);p[1]=min(p[1],.265)
+        crown=name=='CurlSlick';kind='crown' if crown else 'falling'
+        if crown:
+            side=-1 if ctrl[0,0]<-.015 else 1
+            ctrl[1]=ctrl[0]+np.array([side*.018,.025,.013]);ctrl[2]=(ctrl[1]+ctrl[3])*.5+np.array([0,.006,.008])
+        if name=='CurlUndercoat':ctrl[1:,2]=np.maximum(ctrl[1:,2],1.53)
+        bright=rng.random()<.33;tip=linear((188,169,137) if bright else (141,116,90))
+        if name=='CurlUndercoat':tip=linear((86,66,48))
+        bundle(ctrl,kind,6 if crown else (3 if name=='CurlRinglets' else 2),22 if crown else (30 if name=='CurlRinglets' else 19),
+               float(rng.uniform(0,math.tau)),float(rng.uniform(.007,.013)),float(rng.uniform(.45,1.55) if crown else rng.uniform(.8,2.65)),tip)
+    if name=='CurlSlick':
+        if round_no>=5:
+            # A distinct near-scalp coverage layer, spread between hero groups.
+            # It follows the owned growth paths and has its own dark-root tone.
+            for j,index in enumerate(np.linspace(0,len(candidates)-1,95,dtype=int)):
+                raw=np.array([r[1] for r in candidates[index]]);arc=np.r_[0,np.cumsum(np.linalg.norm(np.diff(raw,axis=0),axis=1))];arc/=max(arc[-1],1e-8)
+                path=[]
+                for t in np.linspace(0,1,14):
+                    p=np.array([np.interp(t,arc,raw[:,a]) for a in range(3)])
+                    path.append(on_surface(p,cap_bvh,.0015+.0010*math.sin(math.pi*t)))
+                ribbon(np.array(path),float(rng.uniform(.0018,.0028)),int(rng.integers(0,8)),linear((97,75,53)),j*.77)
+        # The reference's asymmetric loose forelock is a deliberate guide group,
+        # not a second even comb row around the hairline.
+        near=sorted(range(len(candidates)),key=lambda i:np.linalg.norm(roots[i]-np.array([-.040,.025,1.815])))[:5]
+        for j,index in enumerate(near):
+            root=roots[index];shift=(j-2)*.0025
+            ctrl=np.array([root,[-.067+shift,-.009,1.839],[-.103+shift,-.022,1.787],[-.078+shift,-.017,1.743]])
+            if round_no>=5:ctrl=np.array([root,[-.062+shift,.018,1.818],[-.095+shift,.010,1.780],[-.084+shift,.008,1.748]])
+            bundle(ctrl,'forelock',3,22,1.3+j*.8,.0055,.85+j*.07,linear((178,153,119)))
+        text('KennyGroomRound'+str(round_no),{'crown_groups':selected,'forelock_root_indices':near,
+             'design':'Grouped dark-root fibres, internal strand gaps, continuous transport frames and asymmetric forelock.'})
     return hair_mesh(name,verts,faces,uvs,colors,arm)
 
 def restore_cap(round_no):
@@ -579,12 +831,21 @@ def restore_cap(round_no):
         remove=[f for f in bm.faces if (obj.matrix_world@f.calc_center_median()).z<1.595 and (obj.matrix_world@f.calc_center_median()).y>.14]
         bmesh.ops.delete(bm,geom=remove,context='FACES')
         bmesh.ops.delete(bm,geom=[v for v in bm.verts if not v.link_faces],context='VERTS');bm.to_mesh(obj.data);bm.free();obj.data.update()
+    if round_no>=5:
+        attr=obj.data.color_attributes.active_color;base=np.array(linear((66,50,36)))
+        for i,item in enumerate(attr.data):
+            vi=i if attr.domain=='POINT' else obj.data.loops[i].vertex_index;p=obj.data.vertices[vi].co
+            variation=1+.045*math.sin(p.x*63+p.y*21+p.z*37)
+            item.color=list(base*variation)+[1]
 
 def hair_material(obj):
     mat=bpy.data.materials.get('Kenny_'+obj.name) or bpy.data.materials.new('Kenny_'+obj.name);mat.use_nodes=True
     nt=mat.node_tree;nt.nodes.clear();out=nt.nodes.new('ShaderNodeOutputMaterial');bsdf=nt.nodes.new('ShaderNodeBsdfPrincipled')
-    tex=nt.nodes.new('ShaderNodeTexImage');tex.image=bpy.data.images['Map::kenny_curl_cards.png']
     vc=nt.nodes.new('ShaderNodeVertexColor');vc.layer_name=obj.data.color_attributes.active_color.name
+    if obj.name=='CurlCap' and int(bpy.context.scene.get('kenny_round',0))>=5:
+        nt.links.new(vc.outputs['Color'],bsdf.inputs['Base Color']);bsdf.inputs['Roughness'].default_value=.85;bsdf.inputs['Specular IOR Level'].default_value=.04
+        nt.links.new(bsdf.outputs[0],out.inputs[0]);obj.data.materials.clear();obj.data.materials.append(mat);return
+    tex=nt.nodes.new('ShaderNodeTexImage');tex.image=bpy.data.images['Map::kenny_curl_cards.png']
     mul=nt.nodes.new('ShaderNodeMixRGB');mul.blend_type='MULTIPLY';mul.inputs[0].default_value=1
     nt.links.new(tex.outputs['Color'],mul.inputs[1]);nt.links.new(vc.outputs['Color'],mul.inputs[2]);nt.links.new(mul.outputs[0],bsdf.inputs['Base Color'])
     if obj.name!='CurlCap':nt.links.new(tex.outputs['Alpha'],bsdf.inputs['Alpha'])
@@ -598,7 +859,7 @@ def audit():
     assert len(body.data.vertices)==bind['body_vertices'];assert not body.data.shape_keys
     meshes=[body]+[bpy.data.objects[n] for n in HAIR]
     counts={o.name:sum(len(f.vertices)-2 for f in o.data.polygons) for o in meshes}
-    assert sum(counts.values())<=113000,counts
+    assert sum(counts.values())<=112714,counts
     for o in meshes:
         assert all(v.groups for v in o.data.vertices),o.name
     hair_points=np.array([game(o.matrix_world@v.co)[:] for o in meshes if o.name in ['CurlSlick','CurlRinglets'] for v in o.data.vertices])
@@ -661,19 +922,44 @@ def export():
 
 def build(round_no):
     bpy.ops.wm.open_mainfile(filepath=str(NATIVE));round_no=round_no or int(bpy.context.scene.get('kenny_round',1))
-    art_body(round_no);art_maps(round_no)
+    art_body(round_no)
+    # R7 is a geometry-only clay stage. Existing packed R6 pigment and groom
+    # remain unchanged until the neutral head's shape passes the visual gate.
+    if round_no<7:art_maps(round_no)
+    elif bpy.data.texts.get('KennySurfaceSource'):
+        # The optional photo-authoring recipe creates this packed owned map.
+        # Normal regeneration never reopens the reference photo or game output.
+        outputs=data('KennyOutputMaps');outputs['kenny_head.png']=data('KennySurfaceSource')['packed_head_map'];text('KennyOutputMaps',outputs)
+    bpy.context.scene['kenny_round']=round_no
     arm=next(o for o in bpy.data.objects if o.type=='ARMATURE')
-    for name,guides in data('KennyGuideSeed').items():make_hair(name,guides,arm,round_no)
-    restore_cap(round_no)
+    if round_no<=7:
+        # R7 is the canonical head + retained R6 groom. Reconstruct that owned
+        # comparison explicitly even after the editable R8 groom was authored.
+        for name,guides in data('KennyGuideSeed').items():make_hair(name,guides,arm,min(round_no,6))
+        restore_cap(round_no)
+        if round_no==7:
+            outputs=data('KennyOutputMaps');outputs['kenny_curl_cards.png']='Map::kenny_curl_cards.png';text('KennyOutputMaps',outputs)
+    elif round_no>=8:
+        source_directory=str(pathlib.Path(__file__).resolve().parent)
+        if source_directory not in sys.path:sys.path.insert(0,source_directory)
+        import kenny_hero_groom
+        restore_cap(round_no);kenny_hero_groom.build(sys.modules[__name__])
     for mat in bpy.data.objects['Body'].data.materials:
         name=SKIN.get(mat.name,GEAR.get(mat.name,'kenny_eye_color.png' if mat.name==EYE else ''))
         if name:material_image(mat,bpy.data.images[data('KennyOutputMaps')[name]])
     for name in HAIR:hair_material(bpy.data.objects[name])
+    if round_no>=8:
+        for name in ['CurlSlick','CurlRinglets','CurlUndercoat']:
+            for node in bpy.data.objects[name].data.materials[0].node_tree.nodes:
+                if node.type=='TEX_IMAGE':node.image=bpy.data.images[data('KennyHeroGroom')['atlas']]
     bpy.context.scene['kenny_round']=round_no;bpy.context.scene['kenny_face_baked']=True
-    audit();identity_audit(ROOT/'gauntlet/refs/kenny_judge_2026_11_14/source_identity_audit.json')
-    normal_audit(ROOT/'gauntlet/refs/kenny_judge_2026_11_14/source_normal_audit.json')
+    audit();identity_audit(evidence_dir(round_no)/'source_identity_audit.json')
+    normal_audit(evidence_dir(round_no)/'source_normal_audit.json')
     bpy.context.preferences.filepaths.save_version=0;bpy.ops.wm.save_as_mainfile(filepath=str(NATIVE),compress=True)
     export();audit()
+    outputs=[CHAR/'kenny_body.glb',CHAR/'kenny_curls.glb']+[CHAR/n for n in data('KennyOutputMaps')]
+    text_report={'round':round_no,'expected_game_outputs':{str(p.relative_to(ROOT)):sha(p) for p in outputs}}
+    (evidence_dir(round_no)/'source_rebuild_fingerprints.json').write_text(json.dumps(text_report,indent=2)+'\n')
 
 def review(out_dir):
     # Native preview only; game captures remain the acceptance evidence. Apply
@@ -696,16 +982,34 @@ def review(out_dir):
         cam.rotation_euler=(target-cam.location).to_track_quat('-Z','Y').to_euler();scene.render.filepath=str(out_dir/('kenny_'+label+'.png'));bpy.ops.render.render(write_still=True)
 
 def main():
-    p=argparse.ArgumentParser();p.add_argument('action',choices=['bootstrap','capture-parity','validate-parity','build','audit','identity-audit','export','review']);p.add_argument('--round',type=int);p.add_argument('--out',default='/tmp/kenny-owned-review');p.add_argument('--owned-baseline',default='/tmp/kenny-owned-baseline.glb')
+    global AUDIT_OVERRIDE
+    p=argparse.ArgumentParser();p.add_argument('action',choices=['bootstrap','capture-parity','validate-parity','build','groom-author','surface-author','surface-boundary','audit','identity-audit','export','review']);p.add_argument('--round',type=int);p.add_argument('--out',default='/tmp/kenny-owned-review');p.add_argument('--owned-baseline',default='/tmp/kenny-owned-baseline.glb');p.add_argument('--audit-out')
     a=p.parse_args(sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else [])
+    AUDIT_OVERRIDE=a.audit_out
     if a.action=='bootstrap':bootstrap()
     elif a.action=='capture-parity':capture_parity(a.owned_baseline)
     elif a.action=='validate-parity':
         bpy.ops.wm.open_mainfile(filepath=str(NATIVE));art_body(2)
         normal_audit('/tmp/kenny-parity-normal-audit.json');identity_audit('/tmp/kenny-parity-identity-audit.json')
     elif a.action=='build':build(a.round)
+    elif a.action=='groom-author':
+        bpy.ops.wm.open_mainfile(filepath=str(NATIVE))
+        source_directory=str(pathlib.Path(__file__).resolve().parent)
+        if source_directory not in sys.path:sys.path.insert(0,source_directory)
+        import kenny_hero_groom
+        kenny_hero_groom.author(sys.modules[__name__])
+        bpy.context.preferences.filepaths.save_version=0;bpy.ops.wm.save_as_mainfile(filepath=str(NATIVE),compress=True)
+        build(a.round or 8)
+    elif a.action in ['surface-author','surface-boundary']:
+        bpy.ops.wm.open_mainfile(filepath=str(NATIVE))
+        source_directory=str(pathlib.Path(__file__).resolve().parent)
+        if source_directory not in sys.path:sys.path.insert(0,source_directory)
+        import kenny_reference_surface
+        (kenny_reference_surface.author if a.action=='surface-author' else kenny_reference_surface.boundaries)(sys.modules[__name__])
+        bpy.context.preferences.filepaths.save_version=0;bpy.ops.wm.save_as_mainfile(filepath=str(NATIVE),compress=True)
+        build(a.round or 7)
     elif a.action=='review':review(a.out)
-    elif a.action=='identity-audit':bpy.ops.wm.open_mainfile(filepath=str(NATIVE));identity_audit(ROOT/'gauntlet/refs/kenny_judge_2026_11_14/source_identity_audit.json')
+    elif a.action=='identity-audit':bpy.ops.wm.open_mainfile(filepath=str(NATIVE));identity_audit(evidence_dir()/'source_identity_audit.json')
     elif a.action=='export':bpy.ops.wm.open_mainfile(filepath=str(NATIVE));audit();export()
     else:bpy.ops.wm.open_mainfile(filepath=str(NATIVE));audit()
 if __name__=='__main__':main()

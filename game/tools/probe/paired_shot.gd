@@ -10,7 +10,7 @@ extends Node
 ## trajectory and stops reading as the move.
 ##
 ## Usage:
-##   xvfb-run -a godot4 --path game --rendering-driver opengl3 \
+##   xvfb-run -a godot4 --path game --rendering-method forward_plus --rendering-driver vulkan \
 ##       --resolution 1280x720 tools/probe/paired_shot.tscn -- \
 ##       --move signature_backbreaker --out /tmp/paired
 ##
@@ -98,6 +98,16 @@ func _ready() -> void:
 	var shot := _move_id.get_file()
 
 	var scene: Node = load(MATCH_SCENE).instantiate()
+	if _bare:
+		# Omit cosmetic builders before _ready creates crowds/lights. Hiding
+		# them after entering the tree still pays the full arena GPU cost.
+		for name in ["Arena", "LightRig", "RingReflections"]:
+			var cosmetic := scene.get_node_or_null(NodePath(name))
+			if cosmetic:
+				cosmetic.free()
+		var world := scene.get_node_or_null("WorldEnvironment") as WorldEnvironment
+		if world:
+			world.environment = Environment.new()
 	if _wrestlers != "":
 		var pair := Roster.pair_from_spec(_wrestlers)
 		if pair.size() == 2:
@@ -141,6 +151,9 @@ func _ready() -> void:
 		spot_weapon.set_up_at(attacker.global_position - attacker.global_basis.z * _weapon_ahead,
 				attacker.rotation.y)
 
+	if _bare:
+		_strip(scene, attacker, defender, spot_weapon)
+
 	# Settled under the match camera before the hold, not during it: two men
 	# left in GRAPPLE_HOLD for 90 ticks pick a move of their own.
 	var match_camera: MatchCamera = scene.get_node_or_null("MatchCamera")
@@ -165,8 +178,6 @@ func _ready() -> void:
 	rig.begin(attacker, defender, move)
 	print("PAIRED_SHOT %s" % _move_id)
 
-	if _bare:
-		_strip(scene, attacker, defender, spot_weapon)
 	var camera := Camera3D.new()
 	scene.add_child(camera)
 	camera.current = not (_match_cam and match_camera)
@@ -203,6 +214,7 @@ func _ready() -> void:
 	var total := int(move.total_frames())
 	var lead := int(rig.get("lead_in_ticks"))
 	var grabbed := 0
+	var captures: Array[Dictionary] = []
 	var last: float = _at.max() if not _at.is_empty() else 1.0
 	# One physics tick per frame, and nothing drawn but the grabs. Under the
 	# software rasteriser a frame takes longer than a tick, so the engine ran
@@ -218,13 +230,20 @@ func _ready() -> void:
 		if not _match_cam:
 			camera.current = true
 		var fraction := float(frame - lead) / float(total)
-		if grabbed >= _at.size() or fraction < _at[grabbed]:
+		if grabbed >= _at.size() or frame - lead < maxi(0, int(round(float(_at[grabbed]) * total)) - 1):
 			continue
 		RenderingServer.render_loop_enabled = true
 		await RenderingServer.frame_post_draw
 		RenderingServer.render_loop_enabled = false
 		var image := get_viewport().get_texture().get_image()
-		image.save_png("%s/%s_%02d.png" % [_out, shot, int(_at[grabbed] * 100)])
+		var filename := "%s_%02d.png" % [shot, int(_at[grabbed] * 100)]
+		image.save_png(_out.path_join(filename))
+		var paired_seconds: float = rig.animation_player.current_animation_position 				if rig.animation_player.is_playing() else -1.0
+		captures.append({"file": filename, "requested_fraction": _at[grabbed],
+				"requested_tick": int(round(float(_at[grabbed]) * total)),
+				"paired_seconds": paired_seconds, "elapsed_tick": frame, "lead_in_ticks": lead})
+		print("CAPTURE_CLOCK %s requested_tick %d paired_seconds %.6f" % [filename,
+				int(round(float(_at[grabbed]) * total)), paired_seconds])
 		print("  t=%.2f  defender y=%.2f  attacker y=%.2f"
 				% [fraction, defender.global_position.y, attacker.global_position.y])
 		if OS.get_cmdline_user_args().has("--bones"):
@@ -232,6 +251,11 @@ func _ready() -> void:
 				print("    %s root %s yaw %.0f  %s" % [w.name, _v3(w.global_position),
 						rad_to_deg(w.global_rotation.y), _bones(w)])
 		grabbed += 1
+	var manifest := FileAccess.open(_out.path_join("capture_manifest.json"), FileAccess.WRITE)
+	if manifest:
+		manifest.store_string(JSON.stringify({"move": _move_id,
+				"renderer": RenderingServer.get_current_rendering_method(),
+				"bare": _bare, "match_camera": _match_cam, "captures": captures}, "\t"))
 	get_tree().quit()
 
 

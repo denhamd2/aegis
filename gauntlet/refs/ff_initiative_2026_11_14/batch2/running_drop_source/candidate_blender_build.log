@@ -1,0 +1,12 @@
+Extensions: writing cache failed ([Errno 30] Read-only file system: '/home/agent/.config/blender/4.3/extensions').
+16:43:31 | INFO: Data are loaded, start creating Blender stuff
+16:43:31 | INFO: Blender create Mesh node Mannequin
+16:43:31 | INFO: glTF import finished in 0.66s
+ERROR Draco mesh compression is not available because library could not be found at /usr/bin/4.3/python/lib/python3.13/site-packages/libextern_draco.so
+16:43:31 | INFO: Starting glTF 2.0 export
+16:43:32 | INFO: Finished glTF 2.0 export in 0.4314248561859131 s
+
+wrote /tmp/aegis-running-drop-candidate.glb (2 clips)
+Blender 4.3.2
+
+Blender quit

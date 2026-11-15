@@ -1,0 +1,47 @@
+{
+  "stage": "Scoped candidate exported; gameplay/visual acceptance pending exact preceding release verification and integration",
+  "changed_source_clips": [
+    "Run_Grapple_Attacker",
+    "Run_Grapple_Defender"
+  ],
+  "changed_source_key_frames": {
+    "Run_Grapple_Attacker": [
+      59
+    ],
+    "Run_Grapple_Defender": [
+      58,
+      59,
+      63
+    ]
+  },
+  "all_other_clip_recipe_hashes_identical": true,
+  "recipe_total": 317,
+  "candidate_path": "/tmp/aegis-running-drop-candidate.glb",
+  "candidate_sha256": "55e06564110005021234611081b5a65827130da6936003adbce09678a61b6544",
+  "candidate_bytes": 307400,
+  "clips": [
+    {
+      "name": "Run_Grapple_Attacker",
+      "last_sample_seconds": 2.200000047683716,
+      "samples": 133,
+      "sample_step_min_seconds": 0.016666650772094727,
+      "sample_step_max_seconds": 0.016666889190673828
+    },
+    {
+      "name": "Run_Grapple_Defender",
+      "last_sample_seconds": 2.200000047683716,
+      "samples": 133,
+      "sample_step_min_seconds": 0.016666650772094727,
+      "sample_step_max_seconds": 0.016666889190673828
+    }
+  ],
+  "timing_preserved": {
+    "catch_tick": 74,
+    "impact_tick": 118,
+    "total_ticks": 132
+  },
+  "unchanged_catch_load_carry_keys_through_authored_frame": 55,
+  "unchanged_final_authored_frame": 66,
+  "independent_second_export_byte_identical": true,
+  "second_export_sha256": "55e06564110005021234611081b5a65827130da6936003adbce09678a61b6544"
+}

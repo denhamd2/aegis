@@ -75,9 +75,14 @@ static func segment_distance(p1: Vector3, q1: Vector3, p2: Vector3, q2: Vector3)
 static func depth(a: WrestlerController, b: WrestlerController) -> Dictionary:
 	var pa := _points(a)
 	var pb := _points(b)
+	return _depth_points(pa, pb)
+
+
+static func _depth_points(pa: Dictionary, pb: Dictionary) -> Dictionary:
 	var body := 0.0
 	var arm := 0.0
 	var where := ""
+	var body_where := ""
 	var worst := 0.0
 	for sa in SEGMENTS:
 		if not (pa.has(sa[0]) and pa.has(sa[1])):
@@ -93,12 +98,14 @@ static func depth(a: WrestlerController, b: WrestlerController) -> Dictionary:
 			if is_arm:
 				arm = maxf(arm, d)
 			else:
+				if d > body:
+					body_where = "A %s-%s x B %s-%s" % [sa[0], sa[1], sb[0], sb[1]]
 				body = maxf(body, d)
 			var over := d - (ARM_LIMIT if is_arm else BODY_LIMIT)
 			if over > worst:
 				worst = over
 				where = "A %s-%s x B %s-%s" % [sa[0], sa[1], sb[0], sb[1]]
-	return {"body": body, "arm": arm, "where": where, "over": worst}
+	return {"body": body, "arm": arm, "where": where, "body_where": body_where, "over": worst}
 
 
 ## Contact, not overlap: how much of each capsule pair's overlap PairSeparation
@@ -146,8 +153,15 @@ static func push(a: WrestlerController, b: WrestlerController) -> Vector3:
 ## Runs `move_id` through the real GrappleRig in a fresh match scene under
 ## `host`, and returns its worst overlap: {"move", "body", "arm", "worst",
 ## "where", "at"}. "worst" is the largest excess over the matching limit.
-static func measure(host: Node, move_id: String, roster := PackedStringArray()) -> Dictionary:
+static func measure(host: Node, move_id: String, roster := PackedStringArray(),
+		collect_trace := false) -> Dictionary:
 	var scene: Node = (load("res://scenes/match.tscn") as PackedScene).instantiate()
+	# Collision/pose checks need the real actors, rig and ring, not cosmetic
+	# crowd/light builders. Omit them before _ready performs their setup.
+	for name in ["Arena", "LightRig", "RingReflections"]:
+		var cosmetic := scene.get_node_or_null(NodePath(name))
+		if cosmetic:
+			cosmetic.free()
 	# The real wrestlers at their real sizes, when asked (["roman", "cody"]):
 	# the clips were authored on the mannequin, and the separation has to
 	# hold for the men who actually wrestle.
@@ -190,6 +204,7 @@ static func measure(host: Node, move_id: String, roster := PackedStringArray()) 
 	# own update.
 	var drawn_hands := [Vector3.ZERO, Vector3.ZERO]
 	var drawn_shoulders := [Vector3.ZERO, Vector3.ZERO]
+	var drawn_poses := [{}, {}]
 	var ask := attacker.skeleton
 	# One physics tick per render frame while measuring. The drawn hands are
 	# read off the skeleton's own update, which runs on the render loop; when a
@@ -204,11 +219,23 @@ static func measure(host: Node, move_id: String, roster := PackedStringArray()) 
 	var shoulder_ids := [ask.find_bone(attacker._skeleton_bone_name("upperarm_l")),
 			ask.find_bone(attacker._skeleton_bone_name("upperarm_r"))]
 	var on_update := func() -> void:
+		if collect_trace:
+			drawn_poses[0] = {"points": _points(attacker),
+					"seconds": rig.animation_player.current_animation_position,
+					"physics_tick": Engine.get_physics_frames()}
 		for side in 2:
 			drawn_hands[side] = ask.global_transform * ask.get_bone_global_pose(hand_ids[side]).origin
 			drawn_shoulders[side] = ask.global_transform * ask.get_bone_global_pose(shoulder_ids[side]).origin
 	ask.skeleton_updated.connect(on_update)
+	var on_defender_update := func() -> void:
+		drawn_poses[1] = {"points": _points(defender),
+				"seconds": rig.animation_player.current_animation_position,
+				"physics_tick": Engine.get_physics_frames()}
+	if collect_trace:
+		defender.skeleton.skeleton_updated.connect(on_defender_update)
 	var tick := 0
+	if collect_trace:
+		r["trace"] = []
 	# Only this move: out of GRAPPLE_HOLD the hold can start a second one
 	# straight away, which is not what is being measured.
 	var done := [false]
@@ -217,6 +244,22 @@ static func measure(host: Node, move_id: String, roster := PackedStringArray()) 
 		await host.get_tree().physics_frame
 		tick += 1
 		var d := depth(attacker, defender)
+		var trace_sample: Dictionary = {}
+		if collect_trace and rig.animation_player and rig.animation_player.is_playing():
+			trace_sample = {
+				"seconds": rig.animation_player.current_animation_position,
+				"root_attacker": attacker.global_transform,
+				"root_defender": defender.global_transform,
+				"separation_attacker": attacker.paired_separation,
+				"separation_defender": defender.paired_separation,
+				"body": d["body"], "arm": d["arm"], "body_where": d["body_where"],
+				"attacker": _points(attacker), "defender": _points(defender),
+				"drawn": drawn_poses.duplicate(true),
+				"drawn_depth": _depth_points(drawn_poses[0].get("points", {}),
+						drawn_poses[1].get("points", {})),
+				"grip_blend": attacker._grip_blend, "grip_samples": [],
+			}
+			(r["trace"] as Array).append(trace_sample)
 		r["moved_attacker"] = maxf(r["moved_attacker"], attacker.paired_separation.length())
 		# The attacker's hands against where PairedContacts says they hold.
 		r["grip_blend"] = maxf(r["grip_blend"], attacker._grip_blend)
@@ -231,18 +274,38 @@ static func measure(host: Node, move_id: String, roster := PackedStringArray()) 
 					# Only where he can reach it: while he is still running in
 					# or the man is flying away, a hand stops short by design.
 					var reach := (drawn_shoulders[side] as Vector3).distance_to(t[side])
+					if not trace_sample.is_empty():
+						(trace_sample["grip_samples"] as Array).append({"side": side,
+								"target": t[side], "hand": drawn_hands[side],
+								"shoulder": drawn_shoulders[side], "reach_distance": reach,
+								"in_reach": reach <= attacker._arm_reach * 0.95,
+								"error_m": (drawn_hands[side] as Vector3).distance_to(t[side])})
 					if reach <= attacker._arm_reach * 0.95:
 						(r["grip"] as Array).append((drawn_hands[side] as Vector3).distance_to(t[side]))
 					else:
 						r["out_of_reach"] = int(r.get("out_of_reach", 0)) + 1
 		r["moved_defender"] = maxf(r["moved_defender"], defender.paired_separation.length())
+		if d["body"] > r["body"]:
+			r["body_where"] = d["body_where"]
+			r["body_clip_seconds"] = rig.animation_player.current_animation_position 					if rig.animation_player and rig.animation_player.is_playing() else -1.0
+			r["body_role_points"] = {"attacker": _points(attacker), "defender": _points(defender)}
 		r["body"] = maxf(r["body"], d["body"])
 		r["arm"] = maxf(r["arm"], d["arm"])
 		if d["over"] > r["worst"]:
 			r["worst"] = d["over"]
 			r["where"] = d["where"]
 			r["at"] = float(tick) / total
+			# `at` is historical elapsed ticks / move ticks, including entry;
+			# it is neither seconds nor the paired animation's own phase.
+			r["worst_elapsed_tick"] = tick
+			r["lead_in_ticks"] = rig.lead_in_ticks
+			r["worst_clip_seconds"] = rig.animation_player.current_animation_position \
+					if rig.animation_player and rig.animation_player.is_playing() else -1.0
+			r["worst_role_points"] = {"attacker": _points(attacker), "defender": _points(defender)}
 	Engine.max_physics_steps_per_frame = steps
+	ask.skeleton_updated.disconnect(on_update)
+	if collect_trace:
+		defender.skeleton.skeleton_updated.disconnect(on_defender_update)
 	scene.queue_free()
 	await host.get_tree().process_frame
 	return r

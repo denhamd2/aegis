@@ -21,12 +21,15 @@ const MOVES_DIR := "res://resources/moves"
 
 var _only: Array[String] = []
 var _roster := PackedStringArray()
+var _trace_out := ""
 
 
 func _ready() -> void:
 	var args := OS.get_cmdline_user_args()
 	for i in args.size():
-		if args[i] == "--wrestlers" and i + 1 < args.size():
+		if args[i] == "--trace-out" and i + 1 < args.size():
+			_trace_out = args[i + 1]
+		elif args[i] == "--wrestlers" and i + 1 < args.size():
 			_roster = args[i + 1].split(",")
 		elif args[i] == "--moves" and i + 1 < args.size():
 			for token in args[i + 1].split(","):
@@ -35,8 +38,17 @@ func _ready() -> void:
 	for move_id in PairClearance.paired_move_ids():
 		if not _only.is_empty() and not _only.has(move_id):
 			continue
-		var r: Dictionary = await PairClearance.measure(self, move_id, _roster)
+		var r: Dictionary = await PairClearance.measure(self, move_id, _roster, not _trace_out.is_empty())
 		results.append(r)
+		if not _trace_out.is_empty():
+			DirAccess.make_dir_recursive_absolute(_trace_out)
+			var file := FileAccess.open(_trace_out.path_join(move_id.replace("/", "_") + ".json"), FileAccess.WRITE)
+			if file:
+				file.store_string(JSON.stringify(r, "\t"))
+			else:
+				push_error("Cannot write trace: %s" % _trace_out)
+				get_tree().quit(1)
+				return
 		var g: Array = r["grip"]
 		g.sort()
 		if not g.is_empty():
@@ -47,6 +59,14 @@ func _ready() -> void:
 			print("GRIP %-36s none   grip blend peak %.2f" % [move_id, r["grip_blend"]])
 		print("PAIR %-36s worst %.3f m  %s @%.2f   body-body %.3f   arm %.3f   moved A %.3f D %.3f" % [move_id,
 				r["worst"], r["where"], r["at"], r["body"], r["arm"], r["moved_attacker"], r["moved_defender"]])
+		if r.has("body_clip_seconds"):
+			print("PAIR_BODY_CLOCK %s %s clip_seconds %.6f authored_30fps_frame %.3f" % [move_id,
+					r["body_where"], r["body_clip_seconds"], float(r["body_clip_seconds"]) * 30.0])
+			print("PAIR_BODY_POINTS %s %s" % [move_id, JSON.stringify(r.get("body_role_points", {}))])
+		if r.has("worst_clip_seconds"):
+			print("PAIR_CLOCK %s elapsed_tick %d lead_in_ticks %d clip_seconds %.6f authored_30fps_frame %.3f" % [move_id,
+					r["worst_elapsed_tick"], r["lead_in_ticks"], r["worst_clip_seconds"], float(r["worst_clip_seconds"]) * 30.0])
+			print("PAIR_POINTS %s %s" % [move_id, JSON.stringify(r.get("worst_role_points", {}))])
 	results.sort_custom(func(x, y): return x["worst"] > y["worst"])
 	print("PAIR_DONE %d moves; over %.2f m: %d" % [results.size(), PairClearance.BODY_LIMIT,
 			results.filter(func(r): return r["body"] > PairClearance.BODY_LIMIT).size()])

@@ -1,0 +1,14 @@
+{
+  "outputs": [
+    {
+      "path": "/tmp/aegis-running-drop-stable1.tres",
+      "sha256": "18282b3a34f67d0cf5c77fdcfd099a8140d3a25ef7fb1cee1b277b5cf1b2676a"
+    },
+    {
+      "path": "/tmp/aegis-running-drop-stable2.tres",
+      "sha256": "18282b3a34f67d0cf5c77fdcfd099a8140d3a25ef7fb1cee1b277b5cf1b2676a"
+    }
+  ],
+  "byte_identical": true,
+  "candidate": "first candidate; rejected for real Cody-to-Roman regression"
+}

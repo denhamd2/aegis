@@ -1,0 +1,13 @@
+PAINTED_BROW_UV_TO_GAME: pixelnearestnotbarycentric
+UV 0.33 0.3101 nearestUV [0.33081, 0.30786] distanceUV 0.00233 gameP [-0.05346, 1.73211, -0.02731]
+UV 0.355 0.3089 nearestUV [0.35278, 0.31104] distanceUV 0.00309 gameP [-0.0475, 1.72533, -0.01605]
+UV 0.38 0.3084 nearestUV [0.38086, 0.30786] distanceUV 0.00104 gameP [-0.03617, 1.72095, -0.00857]
+UV 0.405 0.309 nearestUV [0.40479, 0.3103] distanceUV 0.00136 gameP [-0.02476, 1.7193, -0.00733]
+UV 0.43 0.3104 nearestUV [0.4314, 0.30933] distanceUV 0.00174 gameP [-0.01774, 1.71987, -0.00575]
+UV 0.45 0.312 nearestUV [0.45068, 0.31323] distanceUV 0.00145 gameP [-0.0125, 1.72035, -0.00313]
+LOWER_RIDGE_UV_RANGE
+uvquantiles [[0.52881, 0.27563], [0.58301, 0.28784], [0.62695, 0.2998]] count 492
+Blender 4.3.2
+Read blend: "/workspace/aegis/tools/blender/characters/Kenny.blend"
+
+Blender quit

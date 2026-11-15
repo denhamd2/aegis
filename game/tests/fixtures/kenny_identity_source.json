@@ -1,21 +1,21 @@
 {
   "authority": "tools/blender/characters/Kenny.blend",
-  "round": 3,
+  "round": 7,
   "comparison": "Current native Body against frozen owned Seed_Body; no donor file input.",
   "historical_provenance": "Supplied Cody rig/mesh copied to kenny_body.glb on 12 Nov 2026; donor-derived, not an original scan/sculpt.",
   "body_vertices": 40448,
   "face": {
     "vertices": 20566,
-    "changed_vertices": 6766,
-    "maximum_delta_m": 0.005127496131766775,
-    "rms_delta_m": 0.0006003625510115028
+    "changed_vertices": 19808,
+    "maximum_delta_m": 0.01721529571136686,
+    "rms_delta_m": 0.004085904009673319
   },
   "protected_neck_below_y_m": 1.575,
   "protected_neck": {
     "vertices": 727,
-    "changed_vertices": 102,
-    "maximum_delta_m": 1.335733797987307e-07,
-    "rms_delta_m": 4.4742675173020334e-08
+    "changed_vertices": 0,
+    "maximum_delta_m": 0.0,
+    "rms_delta_m": 0.0
   },
   "eye_geometry": {
     "vertices": 315,
@@ -44,5 +44,5 @@
     "head_shared_inside_mouth_iw9",
     "xmaterial_7d08cd4d239faf3"
   ],
-  "export_sha256": "84c7c2f401e231faeabc347d9918774e53029dd8dcdb461305d77d8121d3f051"
+  "export_sha256": "2b6abcdd0ee5e4cc2430864f3e4603a6ece457c81e545c43071f9b125964c3f2"
 }

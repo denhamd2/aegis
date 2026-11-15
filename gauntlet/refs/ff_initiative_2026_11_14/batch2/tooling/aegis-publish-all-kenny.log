@@ -1,0 +1,99 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+[2J[H[38;2;233;150;122m
+--------------------------------------------------------------------------------------------------
+GdUnit4 Comandline Tool
+--------------------------------------------------------------------------------------------------[0m
+[38;2;0;191;255mDisabled fail fast![0m
+[38;2;0;191;255mSet write reports to /workspace/aegis/game/tmp/aegis-publish-all-kenny[0m
+[38;2;218;165;32m
+Headless mode is ignored by option '--ignoreHeadlessMode'"
+
+Please note that tests that use UI interaction do not work correctly in headless mode.
+Godot 'InputEvents' are not transported by the Godot engine in headless mode and therefore
+have no effect in the test!
+[0m
+[38;2;100;149;237mInstalling GdUnit4 session system hooks.[0m
+[38;2;100;149;237mSession hook 'GdUnitHtmlTestReporter' installed.[0m
+[38;2;100;149;237mSession hook 'GdUnitXMLTestReporter' installed.[0m
+[38;2;0;206;209mRun Test Suite: [0m[38;2;250;235;215mres://tests/test_kenny_model.gd[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_owns_its_model_and_uses_a_neutral_adapter[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_owns_its_model_and_uses_a_neutral_adapter[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 875ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_owns_its_head_finish_maps_without_donor_fallback[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_owns_its_head_finish_maps_without_donor_fallback[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 805ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_skeleton_is_the_base_rigs_bones[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_skeleton_is_the_base_rigs_bones[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 821ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_is_rigged_on_a_single_skeleton[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_is_rigged_on_a_single_skeleton[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 816ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_meshes_are_skinned[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_meshes_are_skinned[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 815ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_animations_are_installed[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_animations_are_installed[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 852ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_does_not_use_universal_attire[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_does_not_use_universal_attire[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 851ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_skin_is_kennys[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_skin_is_kennys[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 828ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_codys_tattoos_are_gone[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_codys_tattoos_are_gone[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 92ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_gear_is_kennys[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_gear_is_kennys[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 888ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_eyes_are_kennys[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_eyes_are_kennys[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 840ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_beard_runs_along_the_jaw_to_the_ear[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_beard_runs_along_the_jaw_to_the_ear[0m[38;2;178;34;34m[1m FAILED[0m[38;2;100;149;237m 977ms[0m
+  [38;2;0;206;209m[1m[4mReport:[0m
+  [38;2;128;128;128mno beard on the right jaw by the ear: 0.49 against cheek 0.48[0m[38;2;173;216;230m	at 'test_the_beard_runs_along_the_jaw_to_the_ear' in res://tests/test_kenny_model.gd:232[0m  [38;2;128;128;128mno beard on the left jaw by the ear: 0.48 against cheek 0.48[0m[38;2;173;216;230m	at 'test_the_beard_runs_along_the_jaw_to_the_ear' in res://tests/test_kenny_model.gd:232[0m[38;2;128;128;128m[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_hairline_recedes_at_the_temples[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_hairline_recedes_at_the_temples[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 1s 41ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_authored_face_is_applied_once_and_preserves_protected_neck_and_eyes[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_authored_face_is_applied_once_and_preserves_protected_neck_and_eyes[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 1s 105ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_wears_kennys_curls_not_codys_groom[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_wears_kennys_curls_not_codys_groom[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 977ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_slick_covers_the_crown[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_slick_covers_the_crown[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 897ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_hair_cap_is_matte_roots[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_hair_cap_is_matte_roots[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 971ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_hair_sits_close_to_his_head[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_hair_sits_close_to_his_head[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 860ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_kenny_mutation_cannot_change_cody_or_another_kenny_in_either_load_order[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_kenny_mutation_cannot_change_cody_or_another_kenny_in_either_load_order[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3s 771ms[0m
+[38;2;128;128;128m[0m
+[38;2;30;144;255mStatistics:[0m[38;2;128;128;128m 19 test cases | 0 errors | 2 failures | 0 flaky | 0 skipped | 0 orphans |[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 19s 148ms[0m
+[38;2;128;128;128m[0m
+[38;2;128;128;128m[0m
+[38;2;0;206;209mRun Test Suite: [0m[38;2;250;235;215mres://tests/test_kenny_hair_sway.gd[0m
+  [38;2;250;235;215mres://tests/test_kenny_hair_sway.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_lengths_swing_against_his_motion_and_settle[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_hair_sway.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_lengths_swing_against_his_motion_and_settle[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 5ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_hair_sway.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_his_lengths_wear_the_swaying_card_shader[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_hair_sway.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_his_lengths_wear_the_swaying_card_shader[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 981ms[0m
+[38;2;128;128;128m[0m
+[38;2;30;144;255mStatistics:[0m[38;2;128;128;128m 2 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 1s 1ms[0m
+[38;2;128;128;128m[0m
+[38;2;128;128;128m[0m
+[38;2;30;144;255mOverall Summary:[0m[38;2;255;255;255m 21 test cases | 0 errors | 2 failures | 0 flaky | 0 skipped | 0 orphans |[0m
+[38;2;233;150;122mExecuted test suites: (2/2)[0m
+[38;2;233;150;122mExecuted test cases : (21/21)[0m
+[38;2;233;150;122mTotal execution time: 20s 149ms[0m
+[38;2;255;255;255m [0m[38;2;100;149;237mOpen XML Report at: file:///workspace/aegis/game/tmp/aegis-publish-all-kenny/report_1/results.xml[0m
+[38;2;100;149;237mOpen HTML Report at: file:///workspace/aegis/game/tmp/aegis-publish-all-kenny/report_1/index.html[0m
+[38;2;178;34;34mExit code: 100[0m
+Run dispose test resources

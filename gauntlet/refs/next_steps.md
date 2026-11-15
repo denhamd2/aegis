@@ -1,5 +1,15 @@
 # Aegis prioritised backlog
 
+## 15 November: owner-approved all-changes Mac review build
+
+Owner requested committing and deploying all current changes, including Kenny's
+R7/R8 art/source, the bounded running-drop left-leg correction and validation
+tools. Publication verification is pending. Last exact Mac release is0ef511b.
+The leg slice improves mannequin overlap .090→.031m without changing real-pair
+maxima. No solver experiment is included. Full move acceptance, correct load
+hand roles, runtime lift, Kenny beard coverage and the new groom's overall
+likeness remain open; no10/10/AAA claim. [Current evidence](ff_initiative_2026_11_14/batch2/README.md).
+
 ## Current grapple delivery
 
 Timing fallback batch `9c1976b` is deployed to Mac; exact release and ZIP verified.
@@ -10,12 +20,12 @@ corrections remain open. [Evidence and roadmap](ff_initiative_2026_11_14/README.
 
 ## Current owner priority: Fight Forever gameplay initiative
 
-Owner14November prioritises synchronisation/grappling and existing animation
-quality, followed by reversals, AI, referee, library and broadcast work.
-[Current audit, roadmap and implemented timing batch](ff_initiative_2026_11_14/README.md).
-The existing Kenny work and unfinished backlog remain preserved.
+Owner14November: prioritise synchronisation/grappling and existing animation
+quality, then reversals, AI, referee, library and broadcast improvements.
+[Current audit, roadmap and first implemented timing fix](ff_initiative_2026_11_14/README.md).
+Preserve all pending Kenny assets/likeness work and prior backlog scope.
 
-## Current status: Kenny batch published; visual acceptance remains open
+## Preserved Kenny likeness work
 
 The latest cell work is deployed atb40f772. Owner requested the ambulance next:
 remodel in Blender using the supplied screenshots, then perform three independent
@@ -30,6 +40,12 @@ Blender source and independent identity profiles/maps/builds; shared neutral
 rig/animation code remains. All 78 focused cases pass, isolated rebuild succeeds,
 and 74 Cody assets are unchanged. Exact `253603d` Mac publication is verified. Facial likeness,
 ribbon-like curls and skin detail remain open; no 10/10 or AAA acceptance.
+Owner then requested further Kenny loops: three further rounds scored 4.1 → 3.9 → 4.6, recovering but not beating the
+published likeness. They remain uncommitted/unpublished; 78 focused checks pass
+on R6. Owner confirmed the four references and reiterated 10/10. R7 now changes
+method to a measured neutral head fit in clay and an authored curl groom, with
+landmark/silhouette approval before surface detail.
+[Continuation evidence](kenny_judge_continued_2026_11_14/README.md).
 The cell walking-strip study stays deferred.
 
 ## 13 November Blender requirement

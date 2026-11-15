@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites id="2026-11-15" name="report_1" tests="21" failures="2" skipped="0" flaky="0" time="0.000">
+	<testsuite id="0" name="test_kenny_model" package="tests" timestamp="2026-11-15T08:30:43" hostname="localhost" tests="19" failures="2" errors="0" skipped="0" flaky="0" time="19.148">
+		<testcase name="test_owns_its_model_and_uses_a_neutral_adapter" classname="test_kenny_model" time="0.875">
+		</testcase>
+		<testcase name="test_owns_its_head_finish_maps_without_donor_fallback" classname="test_kenny_model" time="0.805">
+		</testcase>
+		<testcase name="test_skeleton_is_the_base_rigs_bones" classname="test_kenny_model" time="0.821">
+		</testcase>
+		<testcase name="test_is_rigged_on_a_single_skeleton" classname="test_kenny_model" time="0.816">
+		</testcase>
+		<testcase name="test_meshes_are_skinned" classname="test_kenny_model" time="0.815">
+		</testcase>
+		<testcase name="test_animations_are_installed" classname="test_kenny_model" time="0.852">
+		</testcase>
+		<testcase name="test_does_not_use_universal_attire" classname="test_kenny_model" time="0.851">
+		</testcase>
+		<testcase name="test_skin_is_kennys" classname="test_kenny_model" time="0.828">
+		</testcase>
+		<testcase name="test_codys_tattoos_are_gone" classname="test_kenny_model" time="0.092">
+		</testcase>
+		<testcase name="test_gear_is_kennys" classname="test_kenny_model" time="0.888">
+		</testcase>
+		<testcase name="test_eyes_are_kennys" classname="test_kenny_model" time="0.840">
+		</testcase>
+		<testcase name="test_the_beard_runs_along_the_jaw_to_the_ear" classname="test_kenny_model" time="0.977">
+			<failure message="FAILED: res://tests/test_kenny_model.gd:232" type="FAILURE">
+<![CDATA[
+no beard on the right jaw by the ear: 0.49 against cheek 0.48
+	at 'test_the_beard_runs_along_the_jaw_to_the_ear' in res://tests/test_kenny_model.gd:232
+]]>
+			</failure>
+			<failure message="FAILED: res://tests/test_kenny_model.gd:232" type="FAILURE">
+<![CDATA[
+no beard on the left jaw by the ear: 0.48 against cheek 0.48
+	at 'test_the_beard_runs_along_the_jaw_to_the_ear' in res://tests/test_kenny_model.gd:232
+]]>
+			</failure>
+		</testcase>
+		<testcase name="test_the_hairline_recedes_at_the_temples" classname="test_kenny_model" time="1.041">
+		</testcase>
+		<testcase name="test_authored_face_is_applied_once_and_preserves_protected_neck_and_eyes" classname="test_kenny_model" time="1.105">
+		</testcase>
+		<testcase name="test_wears_kennys_curls_not_codys_groom" classname="test_kenny_model" time="0.977">
+		</testcase>
+		<testcase name="test_slick_covers_the_crown" classname="test_kenny_model" time="0.897">
+		</testcase>
+		<testcase name="test_the_hair_cap_is_matte_roots" classname="test_kenny_model" time="0.971">
+		</testcase>
+		<testcase name="test_the_hair_sits_close_to_his_head" classname="test_kenny_model" time="0.860">
+		</testcase>
+		<testcase name="test_kenny_mutation_cannot_change_cody_or_another_kenny_in_either_load_order" classname="test_kenny_model" time="3.771">
+		</testcase>
+	</testsuite>
+	<testsuite id="1" name="test_kenny_hair_sway" package="tests" timestamp="2026-11-15T08:31:02" hostname="localhost" tests="2" failures="0" errors="0" skipped="0" flaky="0" time="1.001">
+		<testcase name="test_the_lengths_swing_against_his_motion_and_settle" classname="test_kenny_hair_sway" time="0.005">
+		</testcase>
+		<testcase name="test_his_lengths_wear_the_swaying_card_shader" classname="test_kenny_hair_sway" time="0.981">
+		</testcase>
+	</testsuite>
+</testsuites>

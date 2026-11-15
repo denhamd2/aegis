@@ -113,3 +113,14 @@ Mac run43617037154 published `0ef511baaa0954ac3c63aae998d0795feb07836d`;
 exact mac-latest tag and uploaded Aegis.zip (1,026,426,645 bytes) verified.
 See mac_role_publication.json. Native M1 frame pacing remains unverified.
 Teardown ownership restoration remains a separate unresolved defect.
+
+
+## Owner-directed all-changes publication,15 November2026
+
+Owner approved committing/pushing/deploying all current changes, including
+Kenny's pending art/source work. Source3 is integrated as a bounded left-leg
+correction, not a completed move or solver repair. Mannequin overlap .090→.031m;
+real pairings unchanged.49focused gameplay/animation cases pass. Kenny21case
+suite has one failing test/two beard-to-ear assertions. Full317clip source is
+regenerated; no solver experiment is included. Publication verification pending.
+[Current scope, tests and limitations](batch2/README.md).

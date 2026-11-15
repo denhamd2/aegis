@@ -1,0 +1,24 @@
+{
+	"bare": true,
+	"captures": [
+		{
+			"elapsed_tick": 118,
+			"file": "running_grapple_inverted_drop_56.png",
+			"lead_in_ticks": 45,
+			"paired_seconds": 1.23333333333333,
+			"requested_fraction": 0.56060606,
+			"requested_tick": 74
+		},
+		{
+			"elapsed_tick": 162,
+			"file": "running_grapple_inverted_drop_89.png",
+			"lead_in_ticks": 45,
+			"paired_seconds": 1.96666666666666,
+			"requested_fraction": 0.89393939,
+			"requested_tick": 118
+		}
+	],
+	"match_camera": false,
+	"move": "running_grapple_inverted_drop",
+	"renderer": "forward_plus"
+}

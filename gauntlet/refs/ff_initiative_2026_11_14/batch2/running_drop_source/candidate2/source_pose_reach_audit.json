@@ -1,0 +1,95 @@
+{
+  "scope": "Source key poses only; no gameplay or visual acceptance claim",
+  "rows": [
+    {
+      "clip": "Run_Grapple_Attacker",
+      "authored_frame": 59,
+      "feet": {
+        "l": {
+          "ankle_target_error_m": 4.194220288109055e-07,
+          "hip_to_ankle_m": 0.7660244293912988,
+          "knee_bend_degrees": 45.245968430767846,
+          "ankle_height_m": 0.10400039702653885
+        },
+        "r": {
+          "ankle_target_error_m": 3.504149918647065e-07,
+          "hip_to_ankle_m": 0.8051072340750668,
+          "knee_bend_degrees": 28.03708825086727,
+          "ankle_height_m": 0.10400030016899109
+        }
+      }
+    },
+    {
+      "clip": "Run_Grapple_Attacker",
+      "authored_frame": 63,
+      "feet": {
+        "l": {
+          "ankle_target_error_m": 3.2313538256587746e-07,
+          "hip_to_ankle_m": 0.7715706885619044,
+          "knee_bend_degrees": 43.2086459447581,
+          "ankle_height_m": 0.10400029271841049
+        },
+        "r": {
+          "ankle_target_error_m": 0.0038265748073518725,
+          "hip_to_ankle_m": 0.8256406361184336,
+          "knee_bend_degrees": 11.47105181526996,
+          "ankle_height_m": 0.10751271992921829
+        }
+      }
+    },
+    {
+      "clip": "Run_Grapple_Defender",
+      "authored_frame": 58,
+      "feet": {
+        "l": {
+          "ankle_target_error_m": 2.7028258364226004e-07,
+          "hip_to_ankle_m": 0.7361656871134004,
+          "knee_bend_degrees": 54.99697871630981,
+          "ankle_height_m": 1.0628423690795898
+        },
+        "r": {
+          "ankle_target_error_m": 0.010413441754011616,
+          "hip_to_ankle_m": 0.8256404708311782,
+          "knee_bend_degrees": 11.471079136026646,
+          "ankle_height_m": 1.3808550834655762
+        }
+      }
+    },
+    {
+      "clip": "Run_Grapple_Defender",
+      "authored_frame": 59,
+      "feet": {
+        "l": {
+          "ankle_target_error_m": 2.1490760299348766e-07,
+          "hip_to_ankle_m": 0.7361661406513008,
+          "knee_bend_degrees": 54.99689675403978,
+          "ankle_height_m": 0.7480365633964539
+        },
+        "r": {
+          "ankle_target_error_m": 0.010413417734523322,
+          "hip_to_ankle_m": 0.8256408577703889,
+          "knee_bend_degrees": 11.47105181526996,
+          "ankle_height_m": 1.0772480964660645
+        }
+      }
+    },
+    {
+      "clip": "Run_Grapple_Defender",
+      "authored_frame": 63,
+      "feet": {
+        "l": {
+          "ankle_target_error_m": 8.462232866585662e-08,
+          "hip_to_ankle_m": 0.7631793598636036,
+          "knee_bend_degrees": 46.25812050349367,
+          "ankle_height_m": 0.1199999451637268
+        },
+        "r": {
+          "ankle_target_error_m": 2.2302015940987714e-07,
+          "hip_to_ankle_m": 0.4528087190921206,
+          "knee_bend_degrees": 113.96515053823727,
+          "ankle_height_m": 0.34000006318092346
+        }
+      }
+    }
+  ]
+}

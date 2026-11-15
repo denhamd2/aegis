@@ -6202,6 +6202,12 @@ _RG_INV_LIMBS = dict(spine=(-6, 0, 0), head=(-10, 0, 0),
                      foot_r=(0.12, 0.04, -0.82), foot_l=(-0.12, 0.02, -0.82),
                      knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0),
                      free_feet=True)
+# The released knee AND ankle move outside the lifter's leg corridor. The
+# guarded path below is checked in world space on both bodies; a foot-only
+# change may leave the shin crossing the other wrestler's knee.
+_RG_RELEASE_LIMBS = dict(_RG_INV_LIMBS,
+                        foot_l=(-0.30, 0.04, -0.765),
+                        knee_l=(-0.65, 0.70, 0.25))
 # The runner's strides are the engine's own sprint cycle (Run_Drive, 20
 # frames / 0.667 s for two strides at 7 m/s), sampled onto this clip rather
 # than the older four-pose run table. The root path accelerates 3.45 m into
@@ -6328,6 +6334,25 @@ CLIPS["Run_Grapple_Defender"] = [
                    knee_r=(-0.2, 0.5, 0.8), knee_l=(0.2, 0.2, 1.0)))),
     (66, dict(SUPINE_AWAY)),
 ]
+
+# Preserve the original paired performance as the authoring boundary. The
+# release is a local LEFT LEG correction; added guard poses must not respline
+# the torso, other leg or the already-working catch/load/carry.
+_RUN_GRAPPLE_DEFENDER_BASELINE = [(f, dict(p)) for f, p in CLIPS["Run_Grapple_Defender"]]
+_RG_GUARDS = {
+    58: _body((135, 0, 0), (0.0, 0.02, 0.780), **_RG_RELEASE_LIMBS),
+    59: _body((125, 0, 0), (0.0, 0.02, 0.580), **_RG_RELEASE_LIMBS),
+    61: _body((110, 0, 0), (0.0, 0.01, 0.400), **dict(_RG_RELEASE_LIMBS,
+              foot_l=(-0.31, 0.0, -0.76), knee_l=(-0.65, 0.65, 0.25))),
+    63: dict(dict(_RUN_GRAPPLE_DEFENDER_BASELINE)[63],
+             foot_l=(-0.32, 0.72, 0.14), knee_l=(-0.65, -0.15, 0.80)),
+    64: dict(dict(_RUN_GRAPPLE_DEFENDER_BASELINE)[63], pelvis=(0.0, 0.0, 0.210),
+             foot_l=(-0.30, 0.78, 0.11), knee_l=(-0.65, -0.10, 0.80)),
+}
+CLIPS["Run_Grapple_Defender"] = sorted(
+    [(f, _RG_GUARDS.get(f, p)) for f, p in _RUN_GRAPPLE_DEFENDER_BASELINE]
+    + [(f, p) for f, p in _RG_GUARDS.items() if f not in dict(_RUN_GRAPPLE_DEFENDER_BASELINE)]
+)
 
 # --- Cody Rhodes's moveset (gauntlet/refs/cody_moveset.md) -----------------
 #
@@ -8037,6 +8062,43 @@ def author(poser, arm, name, frames):
 ## twice as often. A clip's length in seconds, and every time in it, is
 ## unchanged.
 EXPORT_FPS = 60
+
+
+def _curve_snapshot(action):
+    return {(fc.data_path, fc.array_index): [
+        (tuple(k.co), tuple(k.handle_left), tuple(k.handle_right),
+         k.interpolation, k.handle_left_type, k.handle_right_type)
+        for k in fc.keyframe_points] for fc in action.fcurves}
+
+
+def _guard_running_release_curves(action, baseline):
+    """Keep this original performance except the guarded left-leg window.
+
+    AUTO_CLAMPED's handle at55 depends on the altered58 key, so matching pose55
+    alone does not preserve the preceding motion. Copy its exact scalar
+    handles, and keep all non-leg curves completely original.
+    """
+    affected = {'pose.bones["%s"].rotation_quaternion' % bone
+                for bone in ("thigh_l", "calf_l", "foot_l")}
+    for fc in action.fcurves:
+        original = baseline[(fc.data_path, fc.array_index)]
+        if fc.data_path not in affected:
+            fc.keyframe_points.clear();fc.keyframe_points.add(len(original))
+            for key, saved in zip(fc.keyframe_points, original):
+                co, left, right, interp, hl, hr = saved
+                key.co=co;key.interpolation=interp
+                key.handle_left_type=hl;key.handle_right_type=hr
+                key.handle_left=left;key.handle_right=right
+        else:
+            by_time={round(float(k.co.x),6):k for k in fc.keyframe_points}
+            for co,left,right,interp,_,_ in original:
+                if co[0] <=55 or co[0]>=66:
+                    key=by_time.get(round(co[0],6))
+                    if key is None:key=fc.keyframe_points.insert(co[0],co[1])
+                    key.co=co;key.interpolation=interp
+                    key.handle_left_type=key.handle_right_type='FREE'
+                    key.handle_left=left;key.handle_right=right
+        fc.update()
 
 
 def retime_for_export():
@@ -12288,7 +12350,14 @@ def main():
     for name in names:
         if name not in CLIPS:
             raise ValueError("unknown clip: " + name)
-        author(poser, arm, name, CLIPS[name])
+        if name == "Run_Grapple_Defender":
+            original = author(poser, arm, name, _RUN_GRAPPLE_DEFENDER_BASELINE)
+            baseline = _curve_snapshot(original)
+            bpy.data.actions.remove(original)
+            action = author(poser, arm, name, CLIPS[name])
+            _guard_running_release_curves(action, baseline)
+        else:
+            author(poser, arm, name, CLIPS[name])
     # Every action must survive the export. ACTIONS mode walks the actions
     # that could be assigned to the armature, so the armature must KEEP its
     # animation_data -- clearing it (tried first) exported an armature with

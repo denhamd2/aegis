@@ -1,0 +1,11 @@
+{
+  "comparison": "R8 macro groom vs accepted R7V3 source outputs",
+  "changed_outputs": [
+    "game/assets/characters/kenny_curls.glb",
+    "game/assets/characters/kenny_curl_cards.png"
+  ],
+  "head_png_identical": true,
+  "body_glb_identical": true,
+  "head_png_sha256": "df57655b44ff40f313cfc93edc13bd9c343ff8b53768def0b725a4bca86c3c81",
+  "body_glb_sha256": "2b6abcdd0ee5e4cc2430864f3e4603a6ece457c81e545c43071f9b125964c3f2"
+}

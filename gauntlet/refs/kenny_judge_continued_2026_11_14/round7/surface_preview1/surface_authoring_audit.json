@@ -1,0 +1,29 @@
+{
+  "geometry_basis": "Actual accepted Body positions and its existing per-loop UVs; no guessed brow atlas line",
+  "photo_source": "gauntlet/refs/characters/kenny_3view.jpg",
+  "photograph_used_only_for_optional_authoring": true,
+  "cold_regeneration": "Packed SurfaceMap::kenny_head.png restored directly; photo not read",
+  "projection": "Corrected front iris registration plus independent profile registration; facing-angle blend on lateral tissue",
+  "partial_delighting": {
+    "gaussian_radius_source_px": 15,
+    "luminance_exponent": 0.55,
+    "gain_limits": [
+      0.72,
+      1.65
+    ]
+  },
+  "live_tint_compensation": "Inverse chroma in linear light, normalized to identical per-pixel luminance; runtime tint remains live",
+  "eye_colour": "Separate brown eye geometry/maps unchanged. Visible photographic eyeballs excluded from skin source.",
+  "source_photo_detail_limit": "Portrait face about250px wide; this does not create scan/pore fidelity.",
+  "map_dimensions": [
+    2048,
+    2048
+  ],
+  "head_triangles_rasterized": 33236,
+  "covered_texels_over_half": 600363,
+  "maximum_projection_coverage": 1.0,
+  "geometry_changes": false,
+  "groom_changes": false,
+  "new_materials": 0,
+  "reference_sha256": "34c7ce119a6fe4a7cfcc24d96324e4823db14c3c09b70b0fa310a19d315965da"
+}

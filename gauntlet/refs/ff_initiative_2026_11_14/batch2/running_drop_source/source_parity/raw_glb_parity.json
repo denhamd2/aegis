@@ -1,0 +1,2068 @@
+[
+  {
+    "a": "/workspace/aegis/game/assets/animations/wrestling_clips.glb",
+    "b": "/tmp/aegis-running-drop-candidate2.glb",
+    "clip": "Run_Grapple_Attacker",
+    "tracks_a": 195,
+    "tracks_b": 195,
+    "changed_tracks": [
+      {
+        "track": "hand_l/translation",
+        "maximum_distance": 1.8706374760313338e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "hand_r/scale",
+        "maximum_distance": 1.9768624781590916e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "hand_r/translation",
+        "maximum_distance": 1.4973254280903348e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "index_01_l/rotation",
+        "maximum_component_delta": 1.7881393432617188e-07,
+        "max_angle_degrees": 0.03956468030810356,
+        "at_seconds": 0.46666666865348816
+      },
+      {
+        "track": "index_01_l/scale",
+        "maximum_distance": 1.3328003944934608e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "index_01_l/translation",
+        "maximum_distance": 1.8908370691406162e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "index_01_r/rotation",
+        "maximum_component_delta": 1.7881393432617188e-07,
+        "max_angle_degrees": 0.05595290660858154,
+        "at_seconds": 0.8500000238418579
+      },
+      {
+        "track": "index_01_r/scale",
+        "maximum_distance": 1.7881393432617188e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "index_01_r/translation",
+        "maximum_distance": 2.600910136152379e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "index_02_l/rotation",
+        "maximum_component_delta": 2.086162567138672e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.699999988079071
+      },
+      {
+        "track": "index_02_l/scale",
+        "maximum_distance": 1.1920928955078125e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "index_02_l/translation",
+        "maximum_distance": 2.1214677303760254e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "index_02_r/rotation",
+        "maximum_component_delta": 1.7881393432617188e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.9333333373069763
+      },
+      {
+        "track": "index_02_r/scale",
+        "maximum_distance": 1.6858739115832577e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "index_02_r/translation",
+        "maximum_distance": 1.240006497482682e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "index_03_l/rotation",
+        "maximum_component_delta": 1.1920928955078125e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.03333333507180214
+      },
+      {
+        "track": "index_03_l/translation",
+        "maximum_distance": 3.123313661035354e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "index_03_r/rotation",
+        "maximum_component_delta": 1.4901161193847656e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.18333333730697632
+      },
+      {
+        "track": "index_03_r/translation",
+        "maximum_distance": 2.2649197717328207e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "index_04_leaf_l/scale",
+        "maximum_distance": 2.4575624024691933e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "index_04_leaf_l/translation",
+        "maximum_distance": 2.4915203766795457e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "index_04_leaf_r/scale",
+        "maximum_distance": 2.4575624024691933e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "index_04_leaf_r/translation",
+        "maximum_distance": 1.6695388183052273e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "lowerarm_l/rotation",
+        "maximum_component_delta": 2.980232238769531e-07,
+        "max_angle_degrees": 0.03956468030810356,
+        "at_seconds": 0.6833333373069763
+      },
+      {
+        "track": "lowerarm_l/scale",
+        "maximum_distance": 2.795705711378105e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "lowerarm_l/translation",
+        "maximum_distance": 2.1523267434986337e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "lowerarm_r/rotation",
+        "maximum_component_delta": 4.172325134277344e-07,
+        "max_angle_degrees": 0.03956468030810356,
+        "at_seconds": 0.6833333373069763
+      },
+      {
+        "track": "lowerarm_r/scale",
+        "maximum_distance": 3.8628223819614504e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "lowerarm_r/translation",
+        "maximum_distance": 2.770408400465385e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "middle_01_l/rotation",
+        "maximum_component_delta": 1.7881393432617188e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.9166666865348816
+      },
+      {
+        "track": "middle_01_l/scale",
+        "maximum_distance": 1.884864389012364e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "middle_01_l/translation",
+        "maximum_distance": 1.7712827116156404e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "middle_01_r/rotation",
+        "maximum_component_delta": 2.384185791015625e-07,
+        "max_angle_degrees": 0.03956468030810356,
+        "at_seconds": 0.23333333432674408
+      },
+      {
+        "track": "middle_01_r/scale",
+        "maximum_distance": 3.039252476355614e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "middle_01_r/translation",
+        "maximum_distance": 2.969093770843756e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "middle_02_l/rotation",
+        "maximum_component_delta": 1.4901161193847656e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.11666666716337204
+      },
+      {
+        "track": "middle_02_l/scale",
+        "maximum_distance": 2.980232238769531e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "middle_02_l/translation",
+        "maximum_distance": 1.876599782235644e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "middle_02_r/rotation",
+        "maximum_component_delta": 1.4901161193847656e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.36666667461395264
+      },
+      {
+        "track": "middle_02_r/scale",
+        "maximum_distance": 1.7881393432617188e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "middle_02_r/translation",
+        "maximum_distance": 1.5321907653742528e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "middle_03_l/rotation",
+        "maximum_component_delta": 1.4901161193847656e-07,
+        "max_angle_degrees": 0.03956468030810356,
+        "at_seconds": 1.5499999523162842
+      },
+      {
+        "track": "middle_03_l/scale",
+        "maximum_distance": 1.884864389012364e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "middle_03_l/translation",
+        "maximum_distance": 1.0017929952255145e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "middle_03_r/rotation",
+        "maximum_component_delta": 1.1920928955078125e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.01666666753590107
+      },
+      {
+        "track": "middle_03_r/scale",
+        "maximum_distance": 1.3328003944934608e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "middle_03_r/translation",
+        "maximum_distance": 2.0889993379569205e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "middle_04_leaf_l/translation",
+        "maximum_distance": 1.1653260401089938e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "middle_04_leaf_r/scale",
+        "maximum_distance": 2.230201658903752e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "pinky_01_l/rotation",
+        "maximum_component_delta": 1.7881393432617188e-07,
+        "max_angle_degrees": 0.05595290660858154,
+        "at_seconds": 0.06666667014360428
+      },
+      {
+        "track": "pinky_01_l/scale",
+        "maximum_distance": 1.1920928955078125e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "pinky_01_r/rotation",
+        "maximum_component_delta": 1.1920928955078125e-07,
+        "max_angle_degrees": 0.05595290660858154,
+        "at_seconds": 0.0833333358168602
+      },
+      {
+        "track": "pinky_01_r/scale",
+        "maximum_distance": 2.980232238769531e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "pinky_01_r/translation",
+        "maximum_distance": 2.3868037146712595e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "pinky_02_l/rotation",
+        "maximum_component_delta": 1.1920928955078125e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.0833333358168602
+      },
+      {
+        "track": "pinky_02_l/scale",
+        "maximum_distance": 2.230201658903752e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "pinky_02_l/translation",
+        "maximum_distance": 2.4740722892602207e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "pinky_02_r/rotation",
+        "maximum_component_delta": 1.1920928955078125e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.21666666865348816
+      },
+      {
+        "track": "pinky_02_r/scale",
+        "maximum_distance": 1.3328003944934608e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "pinky_03_l/rotation",
+        "maximum_component_delta": 1.1920928955078125e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.4166666567325592
+      },
+      {
+        "track": "pinky_03_l/scale",
+        "maximum_distance": 1.6858739115832577e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "pinky_03_l/translation",
+        "maximum_distance": 1.5040686207612453e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "pinky_03_r/rotation",
+        "maximum_component_delta": 1.7881393432617188e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.03333333507180214
+      },
+      {
+        "track": "pinky_03_r/scale",
+        "maximum_distance": 2.1490760104825313e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "pinky_03_r/translation",
+        "maximum_distance": 1.2390528070227447e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "pinky_04_leaf_l/scale",
+        "maximum_distance": 3.6256091107134125e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "pinky_04_leaf_l/translation",
+        "maximum_distance": 1.528796786942621e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "pinky_04_leaf_r/scale",
+        "maximum_distance": 1.3328003944934608e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "pinky_04_leaf_r/translation",
+        "maximum_distance": 2.0877867257240723e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "ring_01_l/rotation",
+        "maximum_component_delta": 1.7881393432617188e-07,
+        "max_angle_degrees": 0.03956468030810356,
+        "at_seconds": 0.21666666865348816
+      },
+      {
+        "track": "ring_01_l/scale",
+        "maximum_distance": 1.7881393432617188e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "ring_01_l/translation",
+        "maximum_distance": 1.2883258193596703e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "ring_01_r/rotation",
+        "maximum_component_delta": 1.341104507446289e-07,
+        "max_angle_degrees": 0.03956468030810356,
+        "at_seconds": 1.0333333015441895
+      },
+      {
+        "track": "ring_01_r/scale",
+        "maximum_distance": 1.7881393432617188e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "ring_01_r/translation",
+        "maximum_distance": 2.5342927756355493e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "ring_02_l/rotation",
+        "maximum_component_delta": 2.086162567138672e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.15000000596046448
+      },
+      {
+        "track": "ring_02_l/scale",
+        "maximum_distance": 1.7881393432617188e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "ring_02_l/translation",
+        "maximum_distance": 1.1811641797976336e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "ring_02_r/rotation",
+        "maximum_component_delta": 1.4901161193847656e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 1.6166666746139526
+      },
+      {
+        "track": "ring_02_r/scale",
+        "maximum_distance": 1.1920928955078125e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "ring_02_r/translation",
+        "maximum_distance": 1.0469637601318027e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "ring_03_l/rotation",
+        "maximum_component_delta": 1.1920928955078125e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.6166666746139526
+      },
+      {
+        "track": "ring_03_l/scale",
+        "maximum_distance": 1.884864389012364e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "ring_03_l/translation",
+        "maximum_distance": 2.1648436643317837e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "ring_03_r/rotation",
+        "maximum_component_delta": 1.1920928955078125e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.36666667461395264
+      },
+      {
+        "track": "ring_03_r/scale",
+        "maximum_distance": 2.0647654253025394e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "ring_03_r/translation",
+        "maximum_distance": 1.3850507230017683e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "ring_04_leaf_l/scale",
+        "maximum_distance": 1.3328003944934608e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "ring_04_leaf_l/translation",
+        "maximum_distance": 2.1754242141014402e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "ring_04_leaf_r/scale",
+        "maximum_distance": 1.6858739115832577e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "ring_04_leaf_r/translation",
+        "maximum_distance": 2.05032989697429e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "thumb_01_l/rotation",
+        "maximum_component_delta": 1.1920928955078125e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 1.8666666746139526
+      },
+      {
+        "track": "thumb_01_l/scale",
+        "maximum_distance": 2.528810796320613e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "thumb_01_r/rotation",
+        "maximum_component_delta": 1.2665987014770508e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.05000000074505806
+      },
+      {
+        "track": "thumb_01_r/scale",
+        "maximum_distance": 3.475518042250769e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "thumb_01_r/translation",
+        "maximum_distance": 2.908888916408614e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "thumb_02_l/scale",
+        "maximum_distance": 1.1920928955078125e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "thumb_02_l/translation",
+        "maximum_distance": 1.7700878629511863e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "thumb_02_r/scale",
+        "maximum_distance": 1.1920928955078125e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "thumb_02_r/translation",
+        "maximum_distance": 1.7173316280150175e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "thumb_03_l/scale",
+        "maximum_distance": 1.3328003944934608e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "thumb_03_l/translation",
+        "maximum_distance": 1.5094185812358774e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "thumb_03_r/translation",
+        "maximum_distance": 1.8900472298355453e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "thumb_04_leaf_l/scale",
+        "maximum_distance": 1.3328003944934608e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "thumb_04_leaf_l/translation",
+        "maximum_distance": 1.2539493354779552e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "thumb_04_leaf_r/scale",
+        "maximum_distance": 2.4575624024691933e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "thumb_04_leaf_r/translation",
+        "maximum_distance": 2.868323178972787e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "upperarm_l/rotation",
+        "maximum_component_delta": 2.980232238769531e-07,
+        "max_angle_degrees": 0.05595290660858154,
+        "at_seconds": 1.5833333730697632
+      },
+      {
+        "track": "upperarm_l/scale",
+        "maximum_distance": 2.731428025981586e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "upperarm_l/translation",
+        "maximum_distance": 1.1545395040002404e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "upperarm_r/rotation",
+        "maximum_component_delta": 3.203749656677246e-07,
+        "max_angle_degrees": 0.03956468030810356,
+        "at_seconds": 2.116666555404663
+      },
+      {
+        "track": "upperarm_r/scale",
+        "maximum_distance": 2.6656007889869215e-07,
+        "at_seconds": 0.0
+      }
+    ]
+  },
+  {
+    "a": "/tmp/aegis-running-drop-candidate2.glb",
+    "b": "/tmp/aegis-running-drop-baseline-attacker.glb",
+    "clip": "Run_Grapple_Attacker",
+    "tracks_a": 195,
+    "tracks_b": 195,
+    "changed_tracks": [
+      {
+        "track": "Head/translation",
+        "maximum_distance": 1.4361950206875918e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "ball_l/scale",
+        "maximum_distance": 1.3328003944934608e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "ball_leaf_r/scale",
+        "maximum_distance": 1.3328003944934608e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "ball_r/scale",
+        "maximum_distance": 3.2098083124765253e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "calf_l/rotation",
+        "maximum_component_delta": 2.384185791015625e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.8999999761581421
+      },
+      {
+        "track": "calf_l/scale",
+        "maximum_distance": 3.2098083124765253e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "calf_r/rotation",
+        "maximum_component_delta": 2.384185791015625e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.5333333611488342
+      },
+      {
+        "track": "calf_r/scale",
+        "maximum_distance": 2.6656007889869215e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "clavicle_l/rotation",
+        "maximum_component_delta": 1.1920928955078125e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.01666666753590107
+      },
+      {
+        "track": "clavicle_l/translation",
+        "maximum_distance": 1.2141532579335035e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "clavicle_r/rotation",
+        "maximum_component_delta": 1.1920928955078125e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.4833333194255829
+      },
+      {
+        "track": "clavicle_r/scale",
+        "maximum_distance": 1.9768624781590916e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "clavicle_r/translation",
+        "maximum_distance": 2.3914506641631306e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "foot_l/rotation",
+        "maximum_component_delta": 1.7881393432617188e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.05000000074505806
+      },
+      {
+        "track": "foot_l/scale",
+        "maximum_distance": 4.214684850012418e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "foot_r/rotation",
+        "maximum_component_delta": 1.7881393432617188e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.21666666865348816
+      },
+      {
+        "track": "foot_r/scale",
+        "maximum_distance": 1.0392425338068279e-06,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "hand_l/scale",
+        "maximum_distance": 1.7881393432617188e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "hand_r/translation",
+        "maximum_distance": 1.7044914102370967e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "index_01_l/rotation",
+        "maximum_component_delta": 1.1920928955078125e-07,
+        "max_angle_degrees": 0.03956468030810356,
+        "at_seconds": 0.28333333134651184
+      },
+      {
+        "track": "index_01_l/scale",
+        "maximum_distance": 2.1490760104825313e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "index_01_l/translation",
+        "maximum_distance": 1.145185990480968e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "index_01_r/rotation",
+        "maximum_component_delta": 1.1920928955078125e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.8999999761581421
+      },
+      {
+        "track": "index_01_r/scale",
+        "maximum_distance": 1.4600097131278744e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "index_02_l/rotation",
+        "maximum_component_delta": 1.1920928955078125e-07,
+        "max_angle_degrees": 0.03956468030810356,
+        "at_seconds": 0.01666666753590107
+      },
+      {
+        "track": "index_02_l/scale",
+        "maximum_distance": 1.9768624781590916e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "index_02_l/translation",
+        "maximum_distance": 1.4680668414257525e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "index_02_r/rotation",
+        "maximum_component_delta": 1.7881393432617188e-07,
+        "max_angle_degrees": 0.03956468030810356,
+        "at_seconds": 0.15000000596046448
+      },
+      {
+        "track": "index_02_r/scale",
+        "maximum_distance": 1.3328003944934608e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "index_02_r/translation",
+        "maximum_distance": 1.059581506979157e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "index_03_l/rotation",
+        "maximum_component_delta": 1.4901161193847656e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.11666666716337204
+      },
+      {
+        "track": "index_03_l/scale",
+        "maximum_distance": 1.884864389012364e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "index_03_l/translation",
+        "maximum_distance": 3.7165372646086325e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "index_03_r/rotation",
+        "maximum_component_delta": 1.7881393432617188e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.28333333134651184
+      },
+      {
+        "track": "index_03_r/scale",
+        "maximum_distance": 1.884864389012364e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "index_03_r/translation",
+        "maximum_distance": 1.3254916098048852e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "index_04_leaf_l/scale",
+        "maximum_distance": 1.6858739115832577e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "index_04_leaf_l/translation",
+        "maximum_distance": 4.194882023966784e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "index_04_leaf_r/scale",
+        "maximum_distance": 1.3328003944934608e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "lowerarm_l/rotation",
+        "maximum_component_delta": 1.7881393432617188e-07,
+        "max_angle_degrees": 0.03956468030810356,
+        "at_seconds": 0.06666667014360428
+      },
+      {
+        "track": "lowerarm_l/scale",
+        "maximum_distance": 3.424026147058612e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "lowerarm_l/translation",
+        "maximum_distance": 1.6980430928015267e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "lowerarm_r/rotation",
+        "maximum_component_delta": 2.682209014892578e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.6833333373069763
+      },
+      {
+        "track": "lowerarm_r/scale",
+        "maximum_distance": 3.039252476355614e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "lowerarm_r/translation",
+        "maximum_distance": 1.7799878548885317e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "middle_01_l/rotation",
+        "maximum_component_delta": 1.1920928955078125e-07,
+        "max_angle_degrees": 0.05595290660858154,
+        "at_seconds": 0.4166666567325592
+      },
+      {
+        "track": "middle_01_l/scale",
+        "maximum_distance": 1.3328003944934608e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "middle_01_r/rotation",
+        "maximum_component_delta": 1.1920928955078125e-07,
+        "max_angle_degrees": 0.05595290660858154,
+        "at_seconds": 0.5833333134651184
+      },
+      {
+        "track": "middle_01_r/scale",
+        "maximum_distance": 1.4600097131278744e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "middle_01_r/translation",
+        "maximum_distance": 1.9379567106625473e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "middle_02_l/rotation",
+        "maximum_component_delta": 1.1920928955078125e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.11666666716337204
+      },
+      {
+        "track": "middle_02_l/scale",
+        "maximum_distance": 1.6858739115832577e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "middle_02_l/translation",
+        "maximum_distance": 1.1825462564729605e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "middle_02_r/rotation",
+        "maximum_component_delta": 1.4901161193847656e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.36666667461395264
+      },
+      {
+        "track": "middle_02_r/scale",
+        "maximum_distance": 1.7881393432617188e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "middle_02_r/translation",
+        "maximum_distance": 2.582362697012286e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "middle_03_l/rotation",
+        "maximum_component_delta": 1.1920928955078125e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.28333333134651184
+      },
+      {
+        "track": "middle_03_l/scale",
+        "maximum_distance": 2.731428025981586e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "middle_03_l/translation",
+        "maximum_distance": 1.101485906929156e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "middle_03_r/rotation",
+        "maximum_component_delta": 1.1920928955078125e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.01666666753590107
+      },
+      {
+        "track": "middle_03_r/scale",
+        "maximum_distance": 1.3328003944934608e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "middle_03_r/translation",
+        "maximum_distance": 2.4978891133287107e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "middle_04_leaf_l/scale",
+        "maximum_distance": 1.884864389012364e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "middle_04_leaf_r/scale",
+        "maximum_distance": 1.0323827126512697e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "middle_04_leaf_r/translation",
+        "maximum_distance": 2.0047460225214309e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "neck_01/translation",
+        "maximum_distance": 2.387625670507987e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "pinky_01_l/rotation",
+        "maximum_component_delta": 1.4901161193847656e-07,
+        "max_angle_degrees": 0.03956468030810356,
+        "at_seconds": 0.46666666865348816
+      },
+      {
+        "track": "pinky_01_l/scale",
+        "maximum_distance": 1.6858739115832577e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "pinky_01_l/translation",
+        "maximum_distance": 1.208855309187129e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "pinky_01_r/rotation",
+        "maximum_component_delta": 1.1920928955078125e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.4000000059604645
+      },
+      {
+        "track": "pinky_01_r/scale",
+        "maximum_distance": 1.6858739115832577e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "pinky_01_r/translation",
+        "maximum_distance": 1.8925794620372471e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "pinky_02_l/rotation",
+        "maximum_component_delta": 1.7881393432617188e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.15000000596046448
+      },
+      {
+        "track": "pinky_02_l/translation",
+        "maximum_distance": 1.6002570646378445e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "pinky_02_r/rotation",
+        "maximum_component_delta": 1.1920928955078125e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.21666666865348816
+      },
+      {
+        "track": "pinky_02_r/scale",
+        "maximum_distance": 1.1920928955078125e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "pinky_02_r/translation",
+        "maximum_distance": 1.2922977532525692e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "pinky_03_l/rotation",
+        "maximum_component_delta": 1.7881393432617188e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.11666666716337204
+      },
+      {
+        "track": "pinky_03_l/scale",
+        "maximum_distance": 2.795705711378105e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "pinky_03_l/translation",
+        "maximum_distance": 1.5528806329712097e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "pinky_03_r/rotation",
+        "maximum_component_delta": 1.7881393432617188e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.03333333507180214
+      },
+      {
+        "track": "pinky_03_r/scale",
+        "maximum_distance": 1.3328003944934608e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "pinky_03_r/translation",
+        "maximum_distance": 2.3577071317504306e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "pinky_04_leaf_l/scale",
+        "maximum_distance": 1.7881393432617188e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "pinky_04_leaf_l/translation",
+        "maximum_distance": 4.472831278690137e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "pinky_04_leaf_r/scale",
+        "maximum_distance": 3.2098083124765253e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "pinky_04_leaf_r/translation",
+        "maximum_distance": 1.6559742732624727e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "ring_01_l/rotation",
+        "maximum_component_delta": 1.1920928955078125e-07,
+        "max_angle_degrees": 0.03956468030810356,
+        "at_seconds": 0.28333333134651184
+      },
+      {
+        "track": "ring_01_l/scale",
+        "maximum_distance": 1.6858739115832577e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "ring_01_l/translation",
+        "maximum_distance": 1.5278232012860826e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "ring_01_r/rotation",
+        "maximum_component_delta": 1.4901161193847656e-07,
+        "max_angle_degrees": 0.03956468030810356,
+        "at_seconds": 0.46666666865348816
+      },
+      {
+        "track": "ring_01_r/scale",
+        "maximum_distance": 1.3328003944934608e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "ring_02_l/rotation",
+        "maximum_component_delta": 2.086162567138672e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.15000000596046448
+      },
+      {
+        "track": "ring_02_l/scale",
+        "maximum_distance": 1.1920928955078125e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "ring_02_l/translation",
+        "maximum_distance": 1.324573446481736e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "ring_02_r/rotation",
+        "maximum_component_delta": 2.086162567138672e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.699999988079071
+      },
+      {
+        "track": "ring_02_r/scale",
+        "maximum_distance": 1.1920928955078125e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "ring_02_r/translation",
+        "maximum_distance": 2.4541654397580714e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "ring_03_l/rotation",
+        "maximum_component_delta": 1.1920928955078125e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.0833333358168602
+      },
+      {
+        "track": "ring_03_l/translation",
+        "maximum_distance": 1.722757758670923e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "ring_03_r/rotation",
+        "maximum_component_delta": 1.1920928955078125e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.36666667461395264
+      },
+      {
+        "track": "ring_03_r/scale",
+        "maximum_distance": 1.7881393432617188e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "ring_03_r/translation",
+        "maximum_distance": 2.3947006866364973e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "ring_04_leaf_l/scale",
+        "maximum_distance": 1.1920928955078125e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "ring_04_leaf_r/scale",
+        "maximum_distance": 1.1920928955078125e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "ring_04_leaf_r/translation",
+        "maximum_distance": 1.652618664138572e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "spine_01/scale",
+        "maximum_distance": 1.4600097131278744e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "spine_02/scale",
+        "maximum_distance": 1.7881393432617188e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "spine_02/translation",
+        "maximum_distance": 1.2101935453756596e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "spine_03/scale",
+        "maximum_distance": 1.4600097131278744e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "spine_03/translation",
+        "maximum_distance": 2.3854275355006394e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "thigh_l/rotation",
+        "maximum_component_delta": 1.7881393432617188e-07,
+        "max_angle_degrees": 0.05595290660858154,
+        "at_seconds": 1.399999976158142
+      },
+      {
+        "track": "thigh_l/scale",
+        "maximum_distance": 5.092622927804769e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "thigh_r/rotation",
+        "maximum_component_delta": 1.1920928955078125e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.38333332538604736
+      },
+      {
+        "track": "thigh_r/scale",
+        "maximum_distance": 1.1920928955078125e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "thumb_01_l/scale",
+        "maximum_distance": 3.039252476355614e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "thumb_01_l/translation",
+        "maximum_distance": 1.1239330888201948e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "thumb_01_r/rotation",
+        "maximum_component_delta": 1.1175870895385742e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.949999988079071
+      },
+      {
+        "track": "thumb_01_r/scale",
+        "maximum_distance": 1.7881393432617188e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "thumb_01_r/translation",
+        "maximum_distance": 1.4161004457946547e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "thumb_02_l/scale",
+        "maximum_distance": 2.230201658903752e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "thumb_02_l/translation",
+        "maximum_distance": 1.4136873005554662e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "thumb_02_r/scale",
+        "maximum_distance": 1.6858739115832577e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "thumb_02_r/translation",
+        "maximum_distance": 1.49195713561312e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "thumb_03_l/scale",
+        "maximum_distance": 1.3328003944934608e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "thumb_03_l/translation",
+        "maximum_distance": 1.7343992908536165e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "thumb_03_r/scale",
+        "maximum_distance": 1.884864389012364e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "thumb_04_leaf_l/rotation",
+        "maximum_component_delta": 1.1920928955078125e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "thumb_04_leaf_l/scale",
+        "maximum_distance": 1.6858739115832577e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "thumb_04_leaf_r/scale",
+        "maximum_distance": 1.6858739115832577e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "thumb_04_leaf_r/translation",
+        "maximum_distance": 2.0502638164998643e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "upperarm_l/rotation",
+        "maximum_component_delta": 1.7881393432617188e-07,
+        "max_angle_degrees": 0.03956468030810356,
+        "at_seconds": 0.6166666746139526
+      },
+      {
+        "track": "upperarm_l/scale",
+        "maximum_distance": 4.951133405484143e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "upperarm_r/rotation",
+        "maximum_component_delta": 2.086162567138672e-07,
+        "max_angle_degrees": 0.05595290660858154,
+        "at_seconds": 0.3499999940395355
+      },
+      {
+        "track": "upperarm_r/scale",
+        "maximum_distance": 3.5762786865234375e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "upperarm_r/translation",
+        "maximum_distance": 1.2737007182295201e-07,
+        "at_seconds": 2.200000047683716
+      }
+    ]
+  },
+  {
+    "a": "/workspace/aegis/game/assets/animations/wrestling_clips.glb",
+    "b": "/tmp/aegis-running-drop-baseline-attacker.glb",
+    "clip": "Run_Grapple_Attacker",
+    "tracks_a": 195,
+    "tracks_b": 195,
+    "changed_tracks": [
+      {
+        "track": "Head/translation",
+        "maximum_distance": 1.4361950206875918e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "ball_l/scale",
+        "maximum_distance": 1.3328003944934608e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "ball_leaf_r/scale",
+        "maximum_distance": 1.3328003944934608e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "ball_r/scale",
+        "maximum_distance": 3.2098083124765253e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "calf_l/rotation",
+        "maximum_component_delta": 2.384185791015625e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.8999999761581421
+      },
+      {
+        "track": "calf_l/scale",
+        "maximum_distance": 3.2098083124765253e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "calf_r/rotation",
+        "maximum_component_delta": 2.384185791015625e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.5333333611488342
+      },
+      {
+        "track": "calf_r/scale",
+        "maximum_distance": 2.6656007889869215e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "clavicle_l/rotation",
+        "maximum_component_delta": 1.1920928955078125e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.01666666753590107
+      },
+      {
+        "track": "clavicle_l/translation",
+        "maximum_distance": 1.2141532579335035e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "clavicle_r/rotation",
+        "maximum_component_delta": 1.1920928955078125e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.4833333194255829
+      },
+      {
+        "track": "clavicle_r/scale",
+        "maximum_distance": 1.9768624781590916e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "clavicle_r/translation",
+        "maximum_distance": 2.3914506641631306e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "foot_l/rotation",
+        "maximum_component_delta": 1.7881393432617188e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.05000000074505806
+      },
+      {
+        "track": "foot_l/scale",
+        "maximum_distance": 4.214684850012418e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "foot_r/rotation",
+        "maximum_component_delta": 1.7881393432617188e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.21666666865348816
+      },
+      {
+        "track": "foot_r/scale",
+        "maximum_distance": 1.0392425338068279e-06,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "hand_l/scale",
+        "maximum_distance": 1.4600097131278744e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "hand_l/translation",
+        "maximum_distance": 2.1777009351353627e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "hand_r/scale",
+        "maximum_distance": 1.7881393432617188e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "hand_r/translation",
+        "maximum_distance": 1.9131100259528466e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "index_01_l/rotation",
+        "maximum_component_delta": 1.4901161193847656e-07,
+        "max_angle_degrees": 0.03956468030810356,
+        "at_seconds": 0.6166666746139526
+      },
+      {
+        "track": "index_01_l/translation",
+        "maximum_distance": 1.259594455405022e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "index_01_r/rotation",
+        "maximum_component_delta": 1.7881393432617188e-07,
+        "max_angle_degrees": 0.05595290660858154,
+        "at_seconds": 0.8500000238418579
+      },
+      {
+        "track": "index_01_r/translation",
+        "maximum_distance": 2.2573395597191848e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "index_02_l/rotation",
+        "maximum_component_delta": 2.086162567138672e-07,
+        "max_angle_degrees": 0.03956468030810356,
+        "at_seconds": 0.699999988079071
+      },
+      {
+        "track": "index_02_l/scale",
+        "maximum_distance": 2.230201658903752e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "index_02_l/translation",
+        "maximum_distance": 1.4282478844052093e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "index_02_r/rotation",
+        "maximum_component_delta": 2.086162567138672e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.15000000596046448
+      },
+      {
+        "track": "index_02_r/scale",
+        "maximum_distance": 1.3328003944934608e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "index_03_l/rotation",
+        "maximum_component_delta": 1.4901161193847656e-07,
+        "max_angle_degrees": 0.03956468030810356,
+        "at_seconds": 0.11666666716337204
+      },
+      {
+        "track": "index_03_l/scale",
+        "maximum_distance": 1.9768624781590916e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "index_03_r/rotation",
+        "maximum_component_delta": 1.4901161193847656e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.11666666716337204
+      },
+      {
+        "track": "index_03_r/scale",
+        "maximum_distance": 2.1490760104825313e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "index_03_r/translation",
+        "maximum_distance": 2.292864991204624e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "index_04_leaf_l/scale",
+        "maximum_distance": 3.998401041371835e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "index_04_leaf_l/translation",
+        "maximum_distance": 1.7572737931459415e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "index_04_leaf_r/scale",
+        "maximum_distance": 1.7881393432617188e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "index_04_leaf_r/translation",
+        "maximum_distance": 1.721827516121266e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "lowerarm_l/rotation",
+        "maximum_component_delta": 4.172325134277344e-07,
+        "max_angle_degrees": 0.03956468030810356,
+        "at_seconds": 0.6833333373069763
+      },
+      {
+        "track": "lowerarm_l/scale",
+        "maximum_distance": 3.8628223819614504e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "lowerarm_l/translation",
+        "maximum_distance": 2.2141101396755403e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "lowerarm_r/rotation",
+        "maximum_component_delta": 2.682209014892578e-07,
+        "max_angle_degrees": 0.03956468030810356,
+        "at_seconds": 0.38333332538604736
+      },
+      {
+        "track": "lowerarm_r/scale",
+        "maximum_distance": 3.998401041371835e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "lowerarm_r/translation",
+        "maximum_distance": 1.228355159810235e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "middle_01_l/rotation",
+        "maximum_component_delta": 2.384185791015625e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.4166666567325592
+      },
+      {
+        "track": "middle_01_l/scale",
+        "maximum_distance": 2.4575624024691933e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "middle_01_l/translation",
+        "maximum_distance": 1.2825313433495467e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "middle_01_r/rotation",
+        "maximum_component_delta": 2.980232238769531e-07,
+        "max_angle_degrees": 0.03956468030810356,
+        "at_seconds": 2.183333396911621
+      },
+      {
+        "track": "middle_01_r/scale",
+        "maximum_distance": 2.528810796320613e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "middle_01_r/translation",
+        "maximum_distance": 1.7938116059212916e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "middle_02_l/rotation",
+        "maximum_component_delta": 1.1920928955078125e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 1.6333333253860474
+      },
+      {
+        "track": "middle_02_l/scale",
+        "maximum_distance": 1.3328003944934608e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "middle_02_l/translation",
+        "maximum_distance": 1.0301171471382986e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "middle_02_r/rotation",
+        "maximum_component_delta": 1.1920928955078125e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.11666666716337204
+      },
+      {
+        "track": "middle_02_r/scale",
+        "maximum_distance": 1.1920928955078125e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "middle_02_r/translation",
+        "maximum_distance": 1.773000377625067e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "middle_03_l/rotation",
+        "maximum_component_delta": 1.4901161193847656e-07,
+        "max_angle_degrees": 0.03956468030810356,
+        "at_seconds": 1.5499999523162842
+      },
+      {
+        "track": "middle_03_l/scale",
+        "maximum_distance": 3.039252476355614e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "middle_03_l/translation",
+        "maximum_distance": 1.380582119736573e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "middle_03_r/rotation",
+        "maximum_component_delta": 1.1920928955078125e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.15000000596046448
+      },
+      {
+        "track": "middle_03_r/scale",
+        "maximum_distance": 1.3328003944934608e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "middle_03_r/translation",
+        "maximum_distance": 1.5493151295231655e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "middle_04_leaf_l/scale",
+        "maximum_distance": 1.6858739115832577e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "middle_04_leaf_l/translation",
+        "maximum_distance": 1.2511739555520762e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "middle_04_leaf_r/scale",
+        "maximum_distance": 2.230201658903752e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "middle_04_leaf_r/translation",
+        "maximum_distance": 1.9210867208130367e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "neck_01/translation",
+        "maximum_distance": 2.387625670507987e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "pinky_01_l/rotation",
+        "maximum_component_delta": 1.7881393432617188e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.06666667014360428
+      },
+      {
+        "track": "pinky_01_l/scale",
+        "maximum_distance": 1.6858739115832577e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "pinky_01_l/translation",
+        "maximum_distance": 1.0905624492352217e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "pinky_01_r/rotation",
+        "maximum_component_delta": 1.1920928955078125e-07,
+        "max_angle_degrees": 0.03956468030810356,
+        "at_seconds": 0.0833333358168602
+      },
+      {
+        "track": "pinky_01_r/scale",
+        "maximum_distance": 3.6256091107134125e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "pinky_01_r/translation",
+        "maximum_distance": 2.252491810850188e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "pinky_02_l/rotation",
+        "maximum_component_delta": 1.7881393432617188e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.15000000596046448
+      },
+      {
+        "track": "pinky_02_l/scale",
+        "maximum_distance": 2.1490760104825313e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "pinky_02_l/translation",
+        "maximum_distance": 1.5237519335187244e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "pinky_02_r/rotation",
+        "maximum_component_delta": 1.1920928955078125e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.8500000238418579
+      },
+      {
+        "track": "pinky_02_r/scale",
+        "maximum_distance": 1.7881393432617188e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "pinky_02_r/translation",
+        "maximum_distance": 1.5900177174899e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "pinky_03_l/rotation",
+        "maximum_component_delta": 1.7881393432617188e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.11666666716337204
+      },
+      {
+        "track": "pinky_03_l/scale",
+        "maximum_distance": 2.795705711378105e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "pinky_03_l/translation",
+        "maximum_distance": 1.5616478776792064e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "pinky_03_r/rotation",
+        "maximum_component_delta": 1.1920928955078125e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.6499999761581421
+      },
+      {
+        "track": "pinky_03_r/scale",
+        "maximum_distance": 2.230201658903752e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "pinky_03_r/translation",
+        "maximum_distance": 2.436820807361073e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "pinky_04_leaf_l/scale",
+        "maximum_distance": 3.816559512870299e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "pinky_04_leaf_l/translation",
+        "maximum_distance": 4.231111461194814e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "pinky_04_leaf_r/scale",
+        "maximum_distance": 2.4575624024691933e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "pinky_04_leaf_r/translation",
+        "maximum_distance": 1.2419525319273816e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "ring_01_l/rotation",
+        "maximum_component_delta": 2.384185791015625e-07,
+        "max_angle_degrees": 0.03956468030810356,
+        "at_seconds": 0.28333333134651184
+      },
+      {
+        "track": "ring_01_l/scale",
+        "maximum_distance": 2.1490760104825313e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "ring_01_r/rotation",
+        "maximum_component_delta": 1.7881393432617188e-07,
+        "max_angle_degrees": 0.03956468030810356,
+        "at_seconds": 0.46666666865348816
+      },
+      {
+        "track": "ring_01_r/scale",
+        "maximum_distance": 1.4600097131278744e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "ring_01_r/translation",
+        "maximum_distance": 2.0941301670518442e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "ring_02_l/rotation",
+        "maximum_component_delta": 1.1920928955078125e-07,
+        "max_angle_degrees": 0.03956468030810356,
+        "at_seconds": 0.03333333507180214
+      },
+      {
+        "track": "ring_02_l/scale",
+        "maximum_distance": 2.1490760104825313e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "ring_02_l/translation",
+        "maximum_distance": 2.3259511294781987e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "ring_02_r/rotation",
+        "maximum_component_delta": 1.1920928955078125e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.15000000596046448
+      },
+      {
+        "track": "ring_02_r/scale",
+        "maximum_distance": 1.3328003944934608e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "ring_02_r/translation",
+        "maximum_distance": 1.8507445531668054e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "ring_03_l/rotation",
+        "maximum_component_delta": 1.7881393432617188e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 1.5499999523162842
+      },
+      {
+        "track": "ring_03_l/scale",
+        "maximum_distance": 1.884864389012364e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "ring_03_l/translation",
+        "maximum_distance": 1.4047972740627301e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "ring_03_r/translation",
+        "maximum_distance": 1.640043763018184e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "ring_04_leaf_l/scale",
+        "maximum_distance": 1.6858739115832577e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "ring_04_leaf_l/translation",
+        "maximum_distance": 2.407932697678916e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "ring_04_leaf_r/scale",
+        "maximum_distance": 2.384185791015625e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "spine_01/scale",
+        "maximum_distance": 1.4600097131278744e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "spine_02/scale",
+        "maximum_distance": 1.7881393432617188e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "spine_02/translation",
+        "maximum_distance": 1.2101935453756596e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "spine_03/scale",
+        "maximum_distance": 1.4600097131278744e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "spine_03/translation",
+        "maximum_distance": 2.3854275355006394e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "thigh_l/rotation",
+        "maximum_component_delta": 1.7881393432617188e-07,
+        "max_angle_degrees": 0.05595290660858154,
+        "at_seconds": 1.399999976158142
+      },
+      {
+        "track": "thigh_l/scale",
+        "maximum_distance": 5.092622927804769e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "thigh_r/rotation",
+        "maximum_component_delta": 1.1920928955078125e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.38333332538604736
+      },
+      {
+        "track": "thigh_r/scale",
+        "maximum_distance": 1.1920928955078125e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "thumb_01_l/rotation",
+        "maximum_component_delta": 1.1920928955078125e-07,
+        "max_angle_degrees": 0.0,
+        "at_seconds": 0.23333333432674408
+      },
+      {
+        "track": "thumb_01_l/scale",
+        "maximum_distance": 3.816559512870299e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "thumb_01_r/scale",
+        "maximum_distance": 3.039252476355614e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "thumb_01_r/translation",
+        "maximum_distance": 2.41806930034727e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "thumb_02_l/scale",
+        "maximum_distance": 2.230201658903752e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "thumb_02_l/translation",
+        "maximum_distance": 1.5620322812992526e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "thumb_02_r/scale",
+        "maximum_distance": 1.6858739115832577e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "thumb_02_r/translation",
+        "maximum_distance": 1.7118824757744733e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "thumb_03_l/scale",
+        "maximum_distance": 1.3328003944934608e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "thumb_03_l/translation",
+        "maximum_distance": 1.468075652155676e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "thumb_03_r/scale",
+        "maximum_distance": 1.884864389012364e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "thumb_03_r/translation",
+        "maximum_distance": 2.400289531578892e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "thumb_04_leaf_l/scale",
+        "maximum_distance": 2.731428025981586e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "thumb_04_leaf_l/translation",
+        "maximum_distance": 1.9559686847969715e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "thumb_04_leaf_r/scale",
+        "maximum_distance": 2.980232238769531e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "thumb_04_leaf_r/translation",
+        "maximum_distance": 1.6786989931460994e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "upperarm_l/rotation",
+        "maximum_component_delta": 2.980232238769531e-07,
+        "max_angle_degrees": 0.05595290660858154,
+        "at_seconds": 1.5833333730697632
+      },
+      {
+        "track": "upperarm_l/scale",
+        "maximum_distance": 7.539457556049456e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "upperarm_l/translation",
+        "maximum_distance": 1.0367423186607994e-07,
+        "at_seconds": 0.0
+      },
+      {
+        "track": "upperarm_r/rotation",
+        "maximum_component_delta": 2.905726432800293e-07,
+        "max_angle_degrees": 0.05595290660858154,
+        "at_seconds": 2.0833332538604736
+      },
+      {
+        "track": "upperarm_r/scale",
+        "maximum_distance": 3.424026147058612e-07,
+        "at_seconds": 2.200000047683716
+      },
+      {
+        "track": "upperarm_r/translation",
+        "maximum_distance": 1.3257533737487393e-07,
+        "at_seconds": 2.200000047683716
+      }
+    ]
+  }
+]

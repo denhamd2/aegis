@@ -192,6 +192,12 @@ func _card_material(sway_amount: float, undercoat := false) -> ShaderMaterial:
 	var mat := ShaderMaterial.new()
 	mat.shader = HAIR_CARD
 	mat.set_shader_parameter("albedo_tex", load(CURL_CARDS))
+	# Softer strand response keeps blond bundles from reading as bright plastic
+	# ribbons. Kenny owns these settings; the shared shader defaults stay usable.
+	mat.set_shader_parameter("rough_bright", .55)
+	mat.set_shader_parameter("specular", .10)
+	mat.set_shader_parameter("anisotropy_ratio", .45)
+	mat.set_shader_parameter("backlight", .14)
 	if undercoat:
 		# The undercoat is the dark between the curls: matte (review 7).
 		mat.set_shader_parameter("specular", 0.04)
@@ -203,15 +209,17 @@ func _card_material(sway_amount: float, undercoat := false) -> ShaderMaterial:
 
 func _curl_material(cap: bool) -> StandardMaterial3D:
 	var mat := StandardMaterial3D.new()
-	mat.albedo_texture = load(CURL_CARDS)
 	mat.vertex_color_use_as_albedo = true
 	if cap:
+		# The cap's scalp UVs do not match the eight long-strand atlas strips.
+		# Its owned vertex colours provide dark roots beneath the alpha cards.
 		# The shadowed roots under the hair: matte. With HairLook's stretched
 		# highlight the overhead key drew a pale band across his hairline that
 		# read as a painted helmet (kenny pass 4).
 		mat.metallic_specular = CAP_SPECULAR
 		mat.roughness = CAP_ROUGHNESS
 	else:
+		mat.albedo_texture = load(CURL_CARDS)
 		mat.metallic_specular = 0.12
 		mat.roughness = CURL_ROUGHNESS
 		HairLook.apply(mat)

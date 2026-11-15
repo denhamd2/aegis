@@ -1,0 +1,72 @@
+{
+  "status": "diagnostic experiments; no source or solver variant accepted",
+  "published_runtime_and_poses_restored": true,
+  "cases": [
+    {
+      "case": "baseline-cody-roman",
+      "raw_body_m": 0.0515413993597031,
+      "raw_arm_m": 0.147384622097015,
+      "drawn_arm_peak_load_44_to_48_m": 0.114779018759727,
+      "hold_37_to_59_samples": 86,
+      "hold_reachable_samples": 22,
+      "hold_unconditional_median_m": 0.04992065764963625,
+      "drawn_actor_physics_ticks_match": true,
+      "drawn_actor_clip_clocks_match": true
+    },
+    {
+      "case": "planar-cody-roman",
+      "raw_body_m": 0.0315214359760285,
+      "raw_arm_m": 0.163630441958085,
+      "drawn_arm_peak_load_44_to_48_m": 0.106787891238928,
+      "hold_37_to_59_samples": 86,
+      "hold_reachable_samples": 19,
+      "hold_unconditional_median_m": 0.2197014316916465,
+      "drawn_actor_physics_ticks_match": true,
+      "drawn_actor_clip_clocks_match": true
+    },
+    {
+      "case": "planar-mannequin",
+      "raw_body_m": 0.0162189418077469,
+      "raw_arm_m": 0.0405085998773575,
+      "drawn_arm_peak_load_44_to_48_m": 0.0378926777839661,
+      "hold_37_to_59_samples": 86,
+      "hold_reachable_samples": 35,
+      "hold_unconditional_median_m": 0.0857927203178406,
+      "drawn_actor_physics_ticks_match": true,
+      "drawn_actor_clip_clocks_match": true
+    },
+    {
+      "case": "planar-roman-cody",
+      "raw_body_m": 0.087434421479702,
+      "raw_arm_m": 0.0871663968171924,
+      "drawn_arm_peak_load_44_to_48_m": 0.0449863839149475,
+      "hold_37_to_59_samples": 86,
+      "hold_reachable_samples": 1,
+      "hold_unconditional_median_m": 0.1567867547273635,
+      "drawn_actor_physics_ticks_match": true,
+      "drawn_actor_clip_clocks_match": true
+    },
+    {
+      "case": "planar-source3-cody-roman",
+      "raw_body_m": 0.0315212869644165,
+      "raw_arm_m": 0.163626384884119,
+      "drawn_arm_peak_load_44_to_48_m": 0.106796217262745,
+      "hold_37_to_59_samples": 86,
+      "hold_reachable_samples": 19,
+      "hold_unconditional_median_m": 0.2197018191218375,
+      "drawn_actor_physics_ticks_match": true,
+      "drawn_actor_clip_clocks_match": true
+    },
+    {
+      "case": "source3-cody-roman",
+      "raw_body_m": 0.0515393280982971,
+      "raw_arm_m": 0.147385866343975,
+      "drawn_arm_peak_load_44_to_48_m": 0.114787557125092,
+      "hold_37_to_59_samples": 86,
+      "hold_reachable_samples": 24,
+      "hold_unconditional_median_m": 0.04807116650044915,
+      "drawn_actor_physics_ticks_match": true,
+      "drawn_actor_clip_clocks_match": true
+    }
+  ]
+}

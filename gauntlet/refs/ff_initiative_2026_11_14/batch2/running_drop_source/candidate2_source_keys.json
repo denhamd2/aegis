@@ -1,0 +1,2129 @@
+{
+  "source_path": "game/tools/blender/wrestling_clips.py",
+  "source_sha256": "8aa0245922b4588cc9efc7cf3e44210dd5992ec2a1aa72d5b9c6c928dfc2aefe",
+  "all_clip_recipe_sha256": {
+    "Idle_Ready": "ce1a69d34bccd0a2d891c2fa28800b3f4a83598a20ce3d0481cda44177601e28",
+    "Walk_Stalk": "7825e9272e55481f1520077ec6367027d047ac0ac1901a1df03f78d8e1ea5c90",
+    "Run_Drive": "c208232a7f68f38c771d6b0b2307a542456d926036ab980e267e4ca675628336",
+    "Run_Jog": "190c563fb7a5547701567de18d3214f323831d772e1564ef989b34959887b1f1",
+    "Whip_Rope_Absorb": "bea16d5907a231a16e9d01e6a374b40bbce1c79efc8c64b8c7d5b82ea7e376aa",
+    "Return_Run": "9cf14c6cf30de2f2a4ba444c1681e4e50577c1aba08d0527b5801002a057a954",
+    "Tie_Up_Collar": "86fae983c11743686e2c48b375ddde7bef5bcfa985937bf24f4f27bce2fb32c4",
+    "Strike_Jab": "c7f52fc26fb73001898e4aaf042fc5117ac63baf4c216287e7954d545c02bacf",
+    "Strike_Forearm": "b890bfd6135662a1d381fa9b4b1ff795b8b6a6d6d1b2a0b33f2c9f62796f8665",
+    "Strike_Bionic_Elbow": "bdaf80ec6944305fd8230ad47919354760bb09ebe4a83a5f1c9c938a3db83404",
+    "Strike_Dropdown_Uppercut": "8347e07b9d3aa0bb45bb64f734525d02a57f7505a19d3525cb7bbc129a6c0349",
+    "Strike_Kick": "7ede0444140d5a86762a6fb8fd225dac1de0f98c759b33333d71954dfce5faa2",
+    "Strike_Kick_Heavy": "a3e4676d7496eed616ef8753706ed0ff66110cd0392731201ae5e18f978a648f",
+    "Strike_Front_Kick_Body": "eefa155f6946aabde3f24485f3f1d229f408f37d24fbc8af38ba1206aa76c74c",
+    "Strike_Gut_Punch": "d29980375e2c23659f67779373dd7fe42fbdc03c68d859f2df24b6dd20e53db2",
+    "Strike_Clinch_Knee_Body": "c5ebbf9bb37df200ea209d0cae21f1ea58d7b6d15aa836e396ba5ff28982da68",
+    "Hit_React_Head": "fc6da48573c7f6309f17323d9b53b533dcb27e1ae07a0553b8c38afe40453c72",
+    "Hit_React_Torso": "8444d097809c28a633c7cd4a1cd493e8539d5fc47d202fea6c5e98b4844d7fcf",
+    "Hit_Heavy_Head": "85003f7f8ef7bf999eb2acb24a4170c4aea0dd7a0b4361bfb0f370b5d7673362",
+    "Hit_Heavy_Gut": "e5df5483231a88d4747318971eec3e9f15747367ba66cb2890e85a600128f41b",
+    "Hit_Knee": "c9cab1c608765266d8eeae234724ffa6a4a30b7fe13e327dbdd2f81943f76c2d",
+    "Sell_Head": "5e032c078f32772e1d9c4d96e7c7c72252444dee25ae774a1fd7db95b42d1f52",
+    "Sell_Gut": "bb3ff35d81bfa137a4f6a16e52eabd81a9a2c5e035453b2fa12b2a16aabe9a57",
+    "Ground_Stomp": "eed2504edea3a8c9690a17d231fe56c7ca4fa7366e87dcd9f9e5517d303df71f",
+    "Ground_Fist": "3314a65449726bb0d1c3b6f9f1f4eb32691711fd2f0c0558f441ea0f06dcd93e",
+    "Parry_Counter": "ce455280ba1660be48b33c7ec8837397978854aac92d9355db853581042298c7",
+    "Corner_Slump": "e8ce1f4a3b498e3e56b2c070b5591126fa8915a11cbe35d86419b04efc8ac163",
+    "Corner_Hit": "6473f2edb4ccee7fff9f3f7441e15d644fc250438c59301b43a6f0f7822d276f",
+    "Stunned_Sway": "001fd0e760f932a9509e4970974fbb4afbd0285c0ef2298b54056ccc040a64bc",
+    "Down_Supine": "6978a1c8959202fe0c2f85d0763d20ba52e0980336b215b263e3681e2c8ebb25",
+    "Getup_Rise": "49c01832db557f739e55d515cd6bba3e267448323d2de104bf37736336436b0c",
+    "Pin_Cover": "6573f796e3a0c564f3f8e3212b7e66de1d31f3b4993a006d54e82c96dd124a66",
+    "Entrance_Walk": "c32b5a2088bb10d2c8d001f12f27702ddab77aa9b2f6f92d42e24bf767da814a",
+    "Climb_Steps": "16a36f112f57757da25f24c1d78b4891132242f05c2b1ea9b6f6f74bbd6960cb",
+    "Rope_Step_Through": "7135a4e8066f2abe1715a2af18b4546718b35e07153e6fb71a2e11f5cc3a7fe3",
+    "Rope_Step_Through_Apron": "02413de9a7c5e6db6af83d8da0ac4f0ba422787c6b72417f34ad23ca8a90d3fd",
+    "Apron_Step": "3adda3242123e8376b5a3475dede87a6e0c692ddb3b72c1f9fc23e0f163f0d4b",
+    "Walk_Slow": "89af2e1af22646dc111d4e6bd9c2b607c1c3943021f6db78000f6dbeb4f01fa0",
+    "Walk_Staredown": "4667988bfc933e31ec44fec165a06f8c7f81f47aa351529c0b3fd218726fa856",
+    "Walk_Slow_Look": "5633f4a62e676aaf85257095d008a50173f37825d735849b01c2ef0cf0b8ae61",
+    "Roman_Stand": "fb5af9ded68439a01d59742e1fa75136b4bbb360b1214b8eb82ea7002a0e1914",
+    "Title_Unbuckle": "48e1081b4717227323dffd2d4ebd20cfcf6bf27f03aa8770e7a2c3cd1d6417fc",
+    "Title_Raise": "60c0d1232b5d837661be86814591f0635dbbca98da8a7d7d52886faaa0ac7a42",
+    "Finger_Raise": "c826c4dd484038cfcdca22e8d343f4536061433ac68a196c29323b5d70ac2704",
+    "Ula_Fala_Off": "1f10bc705c9bbb84065b562460fce52dce476dd203e5e24c2042aa7365313e1d",
+    "Finger_Hold": "5eec3dee7feba441cbff383812cb382a17e62b5d9dc2a9432f52ea6c62b962f9",
+    "Head_Bow": "06f44457d8eb681e8607bd39058f5182cdd3c6538d4c5555d1f951ed59f1598f",
+    "Hands_Hips": "f1afbcaedf8902912119761bba928d622907c223c58e844446a1aa7d5d3051fa",
+    "Cody_Stand": "a4ecebcc3b7f0d56a4c354333ba871c31099ced74ac0776ef4820ca4eca8aa73",
+    "Whoa_Arms": "ad08e7aff6ca39c83f359ae5a2b8404cc062c20326f88672cb516e2548a2c0f0",
+    "Fists_Up": "033cec1f39592d83b331eb80af19643236ef4eb93974cb75d0454f3fe4cdf57b",
+    "Whoa_Crouch": "eacc31e71c52eb43e66358022c88542a75a03bb2340411f477db19a8578b3d81",
+    "Air_Punch": "89a09c57a2a392dea44c171e72b7c911fbdc14a10f658180798030955ca7d1a8",
+    "Point_Crowd": "ee05b40abaa23567369f53ad2cef8b25a2de47f145218c105290ef087c2fef21",
+    "Coat_Off": "1cbb841501d0adb5207ab6cd7b5edd0b06017086dec5573463fa89cd08c7e5e1",
+    "Fists_Down": "254b372660b21b6866859b164af91935807af8b5e3a63040d28e67d5c1cdc206",
+    "Kneel": "082f3b8667c809c55d6327980c7db0d7da4858a26e0fda173f709e10f96076c6",
+    "Whoa_Low": "c46095751e5f2af459e1d645104928571ba579a21f5d527d526ff3c6262f1e94",
+    "Walk_Crowd": "191b44895c542e89b1f9e550dd3bcc79ae5c91d51ba1a8946ea4dfb1a6ab480c",
+    "Walk_Crowd_Shout_L": "39ca717d5a510bbb4b684fd3970de5c11da295660ad6d9982dcf10c0ea3f0a93",
+    "Walk_Crowd_Shout_R": "ae6ef31317424c7208f2dea91003f995d8733683b6b1c37c03c1e63243c5d780",
+    "Walk_Crowd_Point": "f87150551389c857ba507a664b3aa58397b1836f6e4e4f1fa3961b7b06506b48",
+    "Walk_Crowd_Fist": "4d9ae4b2f523dbe834e414c13533e63dcbb99d5ec8c938770bdad15cca8e656c",
+    "Corner_Climb": "0c45d95352608c9ed6e53e553f5d165a400e4004c0df7718e8f9fb9c5e606cd6",
+    "Corner_Pose": "b6b30a1de5e5d6b18d60d9e6ed237552d0452a89aec9c310c6cf6d6dd1d0f3b3",
+    "Corner_Down": "559d2bd62dc4acb0c73c5eede58684f5873c54146fc23b15114c2a0753ee274d",
+    "Kenny_Stand": "0784c0d50c34cd38d0a9205b3950469db2c94e8e7503151fe9a5bfe20e5c13b3",
+    "Kenny_Walk": "32be41aff88f978ec556c2c84a4c1542c8dfa1b157aaa06adf43c2ce1ed953a0",
+    "Kenny_Walk_Slap_L": "167e41edca925e843ced085794aacece0bc8c2bd1c13b4d40bf93a41556dff11",
+    "Kenny_Walk_Slap_R": "b0559f76bfc16752b2795eb801dc72f65a67d96428633d2b8336ca23b5db41bf",
+    "Kenny_Stage_Pose": "c032f1b6a2030c1744f467e9bb8ac946414478a2a344a2eb2843071486696762",
+    "Kenny_Corner_Wings": "a21d1daaf55918f381a5930d3adcf06265cc030fb70022c3e55f2820fc781481",
+    "Win_Celebrate": "9266813064b01b4c9557911a7920ee379b05eb172ef4004112895932df78165d",
+    "Running_Clothesline": "cb873cb2d5ce903167e8f922336ced754ed71607d221f9e93f350929cf97895d",
+    "Irish_Whip_Throw": "8ea943e4220b05ab77f290d41c902f7cb28ebabd6d344545ddbbf6b81b74933b",
+    "Far_Rope_Stop": "4700998e1b9bfb815a8258a723dde46e69097b8e37a3e33cdbc0373614337ba2",
+    "Grapple_Hold_Neutral": "524212d8f436a9a26122c60a54dea6423f32421980ec8966971bc7e6448f7989",
+    "Grapple_Hold_Attacker": "b073f779ac796c72592728914938707d3de10489879f147ae8285f7adbd8215a",
+    "Grapple_Hold_Defender": "3fb10ab8fc42e653b6b8ad5d09a2616225887fe8bc4a497dee113be7cb2355fe",
+    "Move_Exec_Impact": "5ac6f3828c592f985828b4491f8dcf0c1b96cb41e45a4847f33041462be4e86b",
+    "Finisher_Drive": "8429497da2580c1f96b634a1b15aa5a968500ad399757aa30be41572f2e8f3ad",
+    "Submission_Work": "f1880490ed52c752f2505d8a6d64d43916dce084359b8e9cf5af082855002323",
+    "Clinch_Knee_Attacker": "082cd7c82775fd24d9acff0a5741e4383f7f575884d03a2db3143a1ba5d50f8d",
+    "Clinch_Knee_Defender": "09a3048c6d43b26b838445e864654cca6af3bae89cfdb660b0ed58502a2cb528",
+    "Neckbreaker_Attacker": "1759ec6aca5a868946d79c8a20916985c9eb023ac342ea718f110e1c2244ac0a",
+    "Neckbreaker_Defender": "11be1901111c96bbb36da814021abf3ff78caccb0bb36c898366879d79cb7bfa",
+    "Bodyslam_Attacker": "6d3cf69e8b97ff972e8c828da8cd305d9042ce2dbc2775a2127c9ab756c46d1e",
+    "Bodyslam_Defender": "4ef7a28ce4db6ac96a87c4b2a1712490aed171e41d16d89178128aae3bea8bbe",
+    "Hit_React_Head_Left": "df465e8b33e2ff2264bbba514f4e4fc2d1842aa0dcce1d3bad5a4ef3332052b3",
+    "Strike_Hook_Left": "d54ceaa1989d5293940b5c0ef76a563f8fdd172abcfa7ed4304648ba31aeb473",
+    "Hit_Heavy_Head_Left": "24b5b0acae0c6334c946f0fa24d887c8e80223278bb8534a37cf001291385d36",
+    "Sell_Head_Left": "21127453d8a7d2d30ea9447b9f66b69f46d9b0084e4cb31237a9458f5f46358a",
+    "Hit_Uppercut": "366c4de6f818332e8dd006894fdab239a1e9e286a4173c53090cf6384751edc8",
+    "Hit_Heavy_Uppercut": "3413417ad18aac1fbf1e81f9b6545c193dfd4a1114b993c1125031c05e537b1d",
+    "Backbreaker_Attacker": "9207a777a82c2ee9f46ddbd927ae20ddfedb80f88a35881b4e01c24b73df99cf",
+    "Backbreaker_Defender": "5f2236eafba6361b8d55b5bdbc0ec65ad50a3259e3938925d7ffa3d821c9ff43",
+    "Table_Lay_Attacker": "16ff4255ab51f1520bfa02f438923e6b1a60b7cbc4f63a950d7f21a3929e445a",
+    "Table_Lay_Defender": "312b313ceb1299d47a09445626ca029e90fe16102145e14f9be01b187b70cd34",
+    "Spear_Attacker": "b6bae4655a3b62670bede9be02295326eeb58579e5894323275b2e29f76fcd82",
+    "Spear_Defender": "ac612c7e2cc936b8acff39b7db816a26ca3a04354373c3567f362c0ef70f26ba",
+    "Superman_Punch_Attacker": "de983a14f0bdd73b40299aca0df4ac0ea9f6ad4b34ba3d391a7794eecbd64186",
+    "Superman_Punch_Defender": "b1a34e8f440447dcd50c800c5681a042b3c847169f086750ce07f7412f5a24c5",
+    "Cody_Cutter_Attacker": "4cc40a7d8f7bc1446deba01a79cd4df43e29827c92fa90fe6cfe39cc5353477b",
+    "Cody_Cutter_Defender": "4636a00784920caf26695d3a1817655d92de7acb7cdb03b6ce4ee3978e6464cb",
+    "Knee_Lift_Attacker": "51e178bcf7ff3b3ccb15c77fcfaca045f851da2ce81a8cc246e558b1bddf8100",
+    "Knee_Lift_Defender": "8c5370ec7dbb6bdbd3d23210ee624cf42e260736210ff9d68521a54e0ff5e6ef",
+    "Bump_Back": "3a7192f36b92f75132ed01e006492b8c5e3bbda304ec3d3380540846adc5f273",
+    "Bump_Spin": "d65f07ecf84cd515c83802068760e889025db20dcd38307881da61ab47ce741d",
+    "Bump_Lariat": "a4a74e522a2ace285d366185e9b59a2151680da81ef1f8e55e57cdcb89edbcd4",
+    "Down_Writhe": "2406ebb2682a04398cc4877ad3fe1f57e167b36b81641620ab3819b94b6c2890",
+    "Down_Back": "a8d4aebb25f7d113624fa600c8fc1a812a84d29c5d06250f4d5882353f994b19",
+    "Down_Neck": "99ced6d081f5a1f164f295d926cc27264ad5a63e3c35baeb924674422591a413",
+    "Down_Knee": "7c9ec26a2165a1d437c0371bdc90c83a4bb95ed5eefb7bf3375a4f36213e6651",
+    "Down_Out": "eeb3c41b5a7dedfa1b0313c04d7e09ca5debc89dd0a6d0683529ed265cb939c7",
+    "Down_Face_First": "1d0e3d36eecd082f95b8c9d16bbfa4042496eb55a43ec1035a43d71c8c9b67d0",
+    "CFH_Attacker": "23bd5cebae89566a9e592f2cc90b8e0cc60ac7b094e505730488e86155683ae4",
+    "CFH_Defender": "a78ee776bac4ce697366d0b1fa0d121c66b15090f235f4fcf308fa9f9628c61d",
+    "Arm_Hook_Attacker": "84032630761ab8212475035a1aea4ace90fa7fe6da5ea17ed848e931e7e60e70",
+    "Arm_Hook_Defender": "bf4dfae16b37a7d0c711dfcfaff5238b8f3198c5804cc9351b0d1ce2e97cb0e4",
+    "Back_Elbow_Attacker": "20ade0a50d230b0481b2c0b223a99a7ce560088c5e6423755a0187e141b6ebf2",
+    "Back_Elbow_Defender": "cb7b1c8341e691b6507f5c208eb1c5677ab12b48325fcb338f3a44557a4d5cee",
+    "SL_Dropkick_Attacker": "6bd79f3eb3a121c41daec2e74f3fd67c415922dc0501b5789484b65f300ca43f",
+    "SL_Dropkick_Defender": "0b85013cae3a9d7b0c5c632ec257573f532ca3dc21bff3121d5b1757adce7773",
+    "Tilt_DDT_Attacker": "78964698c5db0ef9f9f071cb67ecb5c6fe511515e5f068311f105a9a05a5cc02",
+    "Tilt_DDT_Defender": "aac584fb7efb97cfa973ff44b0f6deab2ab72eabec1354daf09ad3b12286140b",
+    "Bump_Face": "ab9fe2b534929beacc7c13ec73f5f5b1bdf97f110c7db6342f8546a77a28b65c",
+    "Bicycle_Knee_Attacker": "977de5020a505e9ab780a776a9870e4caba853dda80320610f08b3a7e9b55c7f",
+    "Bicycle_Knee_Defender": "001a21907babefccb8dbaa57eb41b31afcc93fa50bc8b7646e06568eec2aec07",
+    "Cave_In_Attacker": "ae5bd05a24dbac42624cdeea0caed867fafd726ee1f0dc9a4839289dc7a5d174",
+    "Cave_In_Defender": "9930a23cfcdb7f492bf05c4744bc4c467a61b114fa4a169779d29078bd101a28",
+    "Claymore_Attacker": "f7a5c20bf72185666d247108b9fa3fdb2c8e25397c6f8e7eccb6036e1461b9b1",
+    "Claymore_Defender": "efbf7520afae020cc58da86ed252049fa9a1973daf7fbd134b550297929ace6a",
+    "Cyclone_Kick_Attacker": "24862fd8c8fecf12981a15aa1434c326ea8f3fae3106e55037baa318a49114d7",
+    "Cyclone_Kick_Defender": "86c870384bf659b811f79d3b3548c47efc19b3cd6862a4b09ba67dc985813516",
+    "Dragon_Twist_Attacker": "4aaff530c322ddd93863043d0d61e2983afc7579ba96df938a41580c136e5f74",
+    "Dragon_Twist_Defender": "96d68a001d97124893388f10bd5f5868305e88621e8b2b11aed5a583d11779b1",
+    "Fallaway_Attacker": "07448ab64d66a9eab2d48f8ff54ad15ffb7d1f3ee7b4e48c33fbab51fe693368",
+    "Fallaway_Defender": "3e09ef975f7ad3a885896185b94234419c715c09183958182d1b099f9bf5c34c",
+    "Liger_Bomb_Attacker": "bdbd05bedf99afcb7612fd3b9ae71682b164fb3ae9838462d39500756c0ab426",
+    "Liger_Bomb_Defender": "26a5bf830841820f72c73f7199468aec25882a2b31f5a5150fc9746c14404cec",
+    "Hoedown_Attacker": "8b75aa9499ca1dc596cad23aea2c61b82458ab54c57e73f11e24b445809f6e34",
+    "Hoedown_Defender": "c7bde53eca956d4cb8616f87b460064e702aa1f4aa5f1864e6d90539a3de1ce2",
+    "Cravate_Attacker": "c25026a87545f40d6dbede60517e943963a5eb1907c3febf810293dcf096dc46",
+    "Cravate_Defender": "bbf1183f652c297cf2e4dfd3ab2ee482ee9f6d9a972f6b1f33c39442b13f1a69",
+    "Last_Shot_Attacker": "cc69285021015c9d96ead665a7da318e7ebf85d00805b96a77f541f5c4c204f6",
+    "Last_Shot_Defender": "d8fa244ecfca7fd93364c5033e12dda2829d5db55b845f51fa377a7f7c9fa696",
+    "Mushroom_Stomp_Attacker": "0b81fbb7e62472502a44b115ba268593e0afc4da8496d6acc1bc9b4c175679f1",
+    "Mushroom_Stomp_Defender": "519e101fab5d25dda5ff768217de84db0c32c8cddee0a8e023f380a0902c9c98",
+    "Leg_Lariat_Attacker": "4ab87e4adb535f29ee0958992a615c380c5cddada9191c75a04075deb7b79387",
+    "Leg_Lariat_Defender": "ac1b167f9f7c3066f20b7eaa62050f2d0e3697b40e9a4f5eccc640b8c028aa7a",
+    "Play_Of_Day_Attacker": "869b780ad75dc14326aad720636d98424abcb48caa5178f95fcdbc2ec6ddf43e",
+    "Play_Of_Day_Defender": "bf65e910282a30c35d0157ed2530892110a4b472c5114732394c0f4681c4d42e",
+    "Swing_Neck_Attacker": "7d6017a51eddc99e2f1904a334aca4afb8df2088f022000c862afab402756ec4",
+    "Swing_Neck_Defender": "b9585bb83188876b2ee3e891cfca24f6b3a2197d63175f78b881d65fdd685e1c",
+    "Codebreaker_Attacker": "9402835442b9912a9f30e4f9a9773fe7fcc4c3fb01666c499d4aad3eae834aab",
+    "Codebreaker_Defender": "9228d5eccbb66ab94150b819cecbabad225aab72334dc878d941610846a0dae5",
+    "Thunder_Flatliner_Attacker": "45248b1785ee0059c2fccba14cc2540be5da2cb3cf9d00c1161091ddb02959fc",
+    "Thunder_Flatliner_Defender": "8f9d8990009c6a0611ae41dafc791a0d63b4ef62be7b32e35f036312f757f5d9",
+    "Gamengiri_Attacker": "d78029a4a3c3cfdb7e7a0b6a5bd6b166198c82826b574f1ef79f77a4cd6fd74b",
+    "Gamengiri_Defender": "b723337f3f7ab6e13891c418f65de0e619f0c47c1fbdd5953d64b65c5f1813c8",
+    "Run_Spear_Attacker": "c377982884bbd1c58818952972d1c418f598b9e25130465e129853d6fe6a73b3",
+    "Run_Spear_Defender": "e164124dadc309bcffbf98aedc7ad3c3dac947d68e2b3e81dbff191b2927d0fc",
+    "Stundog_Attacker": "2b215eaeb344a0ad05f42eb9108a2237583daa43bb8d70acd6c1b81848fb51a3",
+    "Stundog_Defender": "620aa9b803695e8122e07cd0e062f35294587471777dd77c60364445d8fc538c",
+    "Backstabber_Attacker": "2a262c68b6a22c509ea12938b4e9afb9d4f75f90770f716fcaca59f1879aad3d",
+    "Backstabber_Defender": "f988c3abbff9054f4460003807a39bac20bc38dd42a6a88c52b50fbf390f8547",
+    "Run_Grapple_Attacker": "0d368da61ed65bbdd9f97f4c92151eae38ab47847cc5e6dfa029ceb1f3c8b742",
+    "Run_Grapple_Defender": "097d4dc74cd6dbb02e810b69ce4a177fce33786ec3066e2be2db796387936633",
+    "Powerslam_Attacker": "9c6f85708a86832c9e6447b3ee47d23e435f9e51c66a3a8751ba709e0b008797",
+    "Powerslam_Defender": "cc2745aaba923892bfc4f97884b6809aa3d51216686119bcc49b19a77a139b3a",
+    "Disaster_Kick_Attacker": "dd743fe1f1b7dae979eb167eac2c9b48f47d2b7c4f4debb465a1a66464a7fded",
+    "Disaster_Kick_Defender": "8a574db73e6b85511f7403d54dd00e0d4aec098a899e00ff8a97b429174898a2",
+    "Vertical_Suplex_Attacker": "16f0142590bc00f3907d8b938eab753667c612a250af144922f7be2c2fde1946",
+    "Vertical_Suplex_Defender": "5fca1004c378a101e510dcc935919e794a04a170afa083f2e8eb47cfd7d4fda5",
+    "Alabama_Slam_Attacker": "bed832a762f32c8c453e4c63ae3d0890b149643fbdbc064e78423ff449df9ae2",
+    "Alabama_Slam_Defender": "0c3d62aff0b4f62e99e225188387657d2f89b2fe4bafbd6c75a159dae4a2be73",
+    "Samoan_Drop_Attacker": "6e6765317827ed4b559439719f747162c59b383e26cf72cc93130fd745f810c0",
+    "Samoan_Drop_Defender": "97a319cf1de23c3e5becd633aa9d4df61e074977c8236fb6f7774cafcd60c5bb",
+    "Pedigree_Attacker": "ff3d0a6ed435a0191727941d3637c664dd37671f093294085d2981a08d5f28e8",
+    "Pedigree_Defender": "ed781ebc0b581f5e152616f6757a23aee0d867d4fcbed4cdb33f76ea80b115d3",
+    "Guillotine_Attacker": "e1c9ce9c3b7505b9e34e2ddcf9604e7bd571f425e67214db947d88b1defb07d5",
+    "Guillotine_Defender": "e5e9b4ab26144df88c8d74d2820599f6ab199c05ec0b91d0f7133f2f940b0bbe",
+    "DriveBy_Attacker": "28e24cb18e3cbb6466f7d88a23415137bdb0c9880cba712e3b2593a5d6814b88",
+    "DriveBy_Defender": "0b85013cae3a9d7b0c5c632ec257573f532ca3dc21bff3121d5b1757adce7773",
+    "Figure_Four_Attacker": "5be2a8dddc90b71c9a09dec9f38669466c960e2e8adaf7f4ca2f0c0d5aeddd9d",
+    "Figure_Four_Defender": "3d6c50330e03f034346bf3ad9f120d6a0631e77b491ed24a7a7250b274fb7cfb",
+    "Roll_Out_Ropes": "0010e4aabaf185681a2c06d2e50f396444e52047d96cef501fc7cc41f76a4995",
+    "Tope_Attacker": "1409844a65af7e4f04a2bc87d7ae6fe5c23a07679b8c4bbb6e1bc33fd7bb7ea7",
+    "Tope_Defender": "07ae618fd55e08ee070393978ccd9224fe6f01d69d1935f59946b0599b561da6",
+    "Roll_In": "20d08b312d13ce3d564c8f4eec4d40b6460ff3737d7541fcca34dbcaa1b7bc1f",
+    "Apron_Climb": "87f2cba08d2db74165d67d7a85338f7e4062bfd3bcbf3c0333dd065f2aa0e6de",
+    "Ring_Exit": "e251c76aa518507d5795b26bbf87767103cb43ed8568600b4ef8ba9abf1f53c9",
+    "Springboard_DK_Attacker": "f1dbdaf6206b943edbb5dfc037935ea9dc837263d35f5a2057a18ae4a8438e77",
+    "Face_Off": "ccb7cec8265e0a5f13281e876282e8016e5e792cb9caa88cef9064f8c311d8d9",
+    "Ref_Walk": "dfbd7892ea90f084d95fad718dda8cf46d1e83af050afffa58b3f64f4c768a6e",
+    "Ref_Jog": "54c9506aeb628e14586145b423a0c77c6b8ccf742ae75aacf181ad8605498831",
+    "Ref_Shuffle_R": "6409b267a5174a88ced36a07add11a0c9d4df5d8d8186c17c956e55a23c72681",
+    "Ref_Shuffle_L": "51556bbae711d4e768ca96281aa303a9d3d907858c35e3a114d909a7b1fd0815",
+    "Ref_Stand": "a1c6ba9ae8408c59609d35bac6498111f70ac36426b1af3d2c4d589d2626bd25",
+    "Ref_Watch": "4266bfdb62babde25f3101a389eb67bc95dc8639bd60fffdfb392d13d4f8978c",
+    "Ref_Count_Down": "16600f5ec15f5ba22ed5032314c93f9ee918f18ac470fcbd75550112fb17f949",
+    "Ref_Slap": "961b771ad5bf7ba18571ec242294a29a37bd0ebcda1af82fb0f6f0ac088d164a",
+    "Ref_Count_Up": "38c4234dbd393d13a89ff6d36e263e41f36cad192561d02b2038d0aba913b898",
+    "Ref_Call_Bell": "58677f3a970bba5b958891cdb7c65ee0fb96abdc13f76e3b3e2718079b59e609",
+    "Ref_Raise_Hand": "f9a7e9632968c8679b9e81a59bb2209cd498e9508921aca45fe6a162c50e407e",
+    "Win_Arm_Raised": "6fe9f7bf5a34f8b4504f795a1e9418c05e80f72f776e79495410d64482dccb7e",
+    "Prop_Hand_Out_R": "d32f5e4bcfb3e202742059b926992e96f01c375131401f387864372be8cdb5f1",
+    "Prop_Hand_Out_L": "a854884c2162140c9343a677b8717f786bd38131bf76d9ddec51aedcbb991ae9",
+    "Ref_Reach": "cf770aa234e1191f87b3b72f550612444ee5df086e08360ade6a845676fa3181",
+    "Ref_Hand_Over": "3031dfcba25e7dc76607bbe38811525ccbf545e08720cd39be13eeca102d1947",
+    "Timekeeper_Take": "d32d8e7a26dc4d524f060f4726a1f0d7f31208f54fbf17aa9ebb96e0cdee1bf8",
+    "Ref_Place": "a1c64f1e6e0c4b79bd7cf22be4dbb6cf84b146d759103f3d22b356aa34329591",
+    "Rope_Rebound": "c26bd6011bb77eaa843c5b25788a83888de4df8e775e7f388635386de53995f4",
+    "Chain_Headlock_Attacker": "d617cba0551080cc6fece113ac387d212e1120746d4ac991ad7ef50beca67d1d",
+    "Chain_Headlock_Defender": "225e9913cfc3dd6200a556afc5acadd412f5b1f5f060a0a25633c9eb4b426ff7",
+    "Chain_Wristlock_Attacker": "97454d15bc60eefd70e5d93f54f6b5e5712e496bbc224e9c13cfa45956a4f20a",
+    "Chain_Wristlock_Defender": "32e792a6689bdec8345877b109917debbc44e83f6f307b1d3c6d3ab8685cd286",
+    "Chain_Waistlock_Attacker": "90a6186d8a69e921f6265f010e7ded46be7928e5ff1c54ff371a573dc9bee5d4",
+    "Chain_Waistlock_Defender": "d9d9775ffd1cf5887fbb6290e6352db7c3e758e6f9f33062fa67c27d4e10ebec",
+    "Superman_Spear_Attacker": "e143e9606de8fcfe6daba4b8faa184c3cb64f4fa0c8c232c2cb2a0371bbd3abc",
+    "Superman_Spear_Defender": "aeb9df957ee5c8dc6cef3e682dfa09fa4888c1b9e6354c4e7cbc997984987ea3",
+    "Strike_Corner_Clothesline": "1fafce71754a3554255f6be418ac438bd0dd3b7e2e8271860383d345277919e1",
+    "Strike_Chop": "57d4dec6f414c8023c67074213fd6803f4063597388b99410637a0639ffdd7f8",
+    "Strike_Turning_Back_Kick_Knockdown": "1707b3075ef3d0dac836c32488858e79b6d1d4bcc251ac450f93ffaadb0a5a00",
+    "Spear_Setup": "24650eb1591f38c0b129d3295e0b4a1ddb4397a9d808709128593985134e6553",
+    "Top_Rope_Step": "dc7b6122805fc026fd1fa396bd635eea279feac1575e4545812b67b9779c09ec",
+    "Moonsault": "66b86fbccfc4127119991707f564af11d9a1835098d211285a36500ed96895c9",
+    "Crossbody_Leap": "7f7960cbc5df1a3ff85acf808990d239e0344fb973790ab1d04ab15c5ebf8845",
+    "Crossbody_Land": "020783507593fe15fb80550e961ba6f5f5aa668d42be2fd800436fe8a4f75ec4",
+    "Springboard_Cutter_Attacker": "b3c51608c91e0be5c7e02faed37262858652559f2f1750f538be98cf3f3d771b",
+    "Springboard_Cutter_Defender": "f277aacf5294334b8dc83a3a99ce3631c2963ad02d26d88c0009a83fe0ce7f69",
+    "Springboard_Moonsault_Attacker": "ba7894315c2c9a0f502e9b951236b64ec47f4b9ea6bf9f9a8fc2a019a6fa8326",
+    "Springboard_Moonsault_Defender": "b0d81acff7d93370efa03ab601e2a999d753b7f42254de5afb03392fcdafe50d",
+    "Rebound_Hurricanrana_Attacker": "2350e9d57750994faf174017258e8db23037a71951578417e0af90f41d62583e",
+    "Rebound_Hurricanrana_Defender": "787264d7d7d5a25347d181c23dd397a70c3673b5a1b4e8c65b98ee83c737a539",
+    "Possum_Sweep": "733f80db0d47c5933c9be7b31bd02e6f35ad257f2a4e00ef34e4715938d8401b",
+    "Swept_Legs": "a4bcf79d6eb3452ed58696ff2a23619a7c3ca3bfa2c56fa3bfa1ddf65fd8c04f",
+    "Getup_Staged": "ce5993ca5a3f541320fe05681ba251d7291aaf67ab2873b4a9588ddc9c1baad0",
+    "Getup_Hauled": "05326b052ec86da4904ecab8cb31e69bcc94b23caf495e305352d7c01f40d06d",
+    "Pickup_Haul": "ced0187ce2e9b1a8e7272093a77c2497d794abf029e0be2e970a1e200269b74d",
+    "Weapon_Overhead": "69eb3687e3b4e3ca9523df225c2dd87b61008922b95d458e48f2b1f49f5c65bb",
+    "Weapon_Chair_Overhead": "024fe57159bcb56919638e759a200fc717e53c8e32915818cebb434a5fdcf514",
+    "Weapon_Side": "dd1d608c3314abb8442d37591f0279ad095c5ddc8d5bab803210bdfa5f900625",
+    "Weapon_Bat": "827aa5c5686b9b425e62458b94fc0f225a14886aa695f94d1c42ad99eaec89c0",
+    "Weapon_Slapshot": "7197f9ea29d0f294d3a50d310b56cf54a3777f41716c93a8bbd316b8fbb59506",
+    "Weapon_Kendo_Chop": "5bb85ad29bfba8cdc0e1d3b64dc1146657df1ab04c2bb87d2dd355ba1c08f301",
+    "Weapon_Two_Hand_Slam": "5f1bcfa3c7e97836dac58f084f437e56a91b731ff85f21eae20772591dc68b6e",
+    "Weapon_Shovel_Overhead": "5f1bcfa3c7e97836dac58f084f437e56a91b731ff85f21eae20772591dc68b6e",
+    "Weapon_Crutch_Overhead": "5b6497c22bc3ec0dc9ef464856e887309d4d723e4e24c485b8a7a8e638fdb836",
+    "Weapon_Bonk_Overhand": "5e27879488fb89ae76dd5a609f78471beb67c24f97a95b30350e79f478c01def",
+    "Weapon_Flat_Face": "8dbc7b79b609a29ab4092e0c96e76505be2b3001284a7a3fff4167d2bc792d8e",
+    "Weapon_Chain_Fist": "408022ebb6e45f96797a44e057c2a96cd8cbf1dcc27374be556ac8e17814a71e",
+    "Weapon_Ladder_Overhead": "8e9b50afbdfbd2dc933c4d88e6af14c3d37f574a47091c7685c4727095f841c0",
+    "Weapon_Thrust": "ce3cfbdf7fbe94bfadc08cbe63a913c1549f347bdb83e4d7e38e9441c96ca0f6",
+    "Weapon_Whip": "e823c286628ed59836a75e9d2df2c402564c16e19ad4c2b123d48f815b0e3f15",
+    "Weapon_Chop": "725632654566a1d4e62e843ea5e711661a8bb391647d9f056638948f97b365dd",
+    "Weapon_Aim": "010ed1b90efbea4220f3ba426ce32440cb475d1d28cf197002cbea2c1e5e8c26",
+    "Weapon_Throw": "da40c9a6a523290f5a46104b04eaee9ff32f80dca14938e21348e9fca325450d",
+    "Weapon_Rummage": "d875ef602158fd91ec75f4ce0ae66654c5cf2ffabf03e1b1bd845680d1df1360",
+    "Weapon_Retrieve": "caad200478cdd02e5a720b69da55d578d90b8d1a12744e212c2217a34335c5b5",
+    "Weapon_Pickup": "252ef0d6390aa2e15b4c224aef6bc155c7358ce330d9d7c4f9bd8d236831968c",
+    "Weapon_Pickup_Two": "fc94cb25cd49ce4bef068d977a228110f8fa1d2ec0669f90ee7564863cbaee8d",
+    "Weapon_Pickup_Heavy": "925fa6b3173787c94ed93745cd3d4559b7508c481e07a7d162df930536a17ed6",
+    "Weapon_Set_Up": "f7edb1a30d70a8a3b911dd21d9e9f3285eefb4dcd2519c365472d7bc20895c66",
+    "Ladder_Climb": "7c03ee9cd55e0426aed8d481125f8c4ed5f91acd1fb187d008a957349d9cbcb1",
+    "Ladder_Fall": "8fd6cd2d1fe53f2d796bbe2682faefc8e95d6ddc6071d485466c231605aaa3ce",
+    "Ladder_Aerial_Attacker": "8a3b757f0491dd82e9b5b79d2dc34afee3851ea4c93cf9d6c1060bca48a0a8c8",
+    "Ladder_Aerial_Defender": "a4852b2f208824f1101527eea36d8db37c3d526c6b78bfbd1c11d70fa7a98c87",
+    "FF_Tiger_Driver_98_Attacker": "d9df8b07431890c8ea57bd0c3d8c35cfc88b5255ecabb3b48a7db8cd3538bc67",
+    "FF_Tiger_Driver_98_Defender": "b2b2df0af839e2ebb69bd5874ba7e1540d55ad58c7f7b4c200aa2040bb421f60",
+    "Cross_Rhodes_Attacker": "394c41243643acf432b972f56622631dfa4ecb02373ee41768927f21c7feebde",
+    "Cross_Rhodes_Defender": "82a2fd79ce1f14b5023ce04406399aeb435d8aa0129e5fe4682d8f5af798ed3a",
+    "FF_One_Winged_Angel_Attacker": "a97d0ccc367ce6b76626794110cf0a4b2de61a195181b4e555109d43642be1b4",
+    "FF_One_Winged_Angel_Defender": "34e38f1128341f2c74a7955fb20327b89dddc2ebe04180e9f1e2e56260b664d9",
+    "FF_Powerbomb_1_Attacker": "ce82ffcabc1af07ead77366ffefc5ad119e993dea58a6061daacac9bef7ec625",
+    "FF_Powerbomb_1_Defender": "b949f852cbfe83a1336525d749041a4013bc7cab74fec4ae09ac07aff431403e",
+    "FF_Sit_Out_Powerbomb_2_Attacker": "79fabaf03cd22954f7330aad3bd37b7545e093af7cf92dbe089d8cb1d9bba4bf",
+    "FF_Sit_Out_Powerbomb_2_Defender": "3dcd0bad035008d34f564281ee3f06e5ce11f43fde5cd6f08d4021f702b0df66",
+    "FF_Spinebuster_5_Attacker": "0fab87fc4b9369556089ca6f946747c30c6fa00781e4e0986f208aea9460d4f5",
+    "FF_Spinebuster_5_Defender": "6cdeeb17a1ba2cab29c91f06a8709881a55e40be4eb4c0a3fce53845ba12037c",
+    "FF_Brainbuster_1_Attacker": "20e12759affdc16a2b326383e9bed91aebf96be13aa07886024a87ae2b5f3efd",
+    "FF_Brainbuster_1_Defender": "bacf94baf0eaa5250129ec05a242919371144bf537e5abd51fd011d923798419",
+    "FF_Chokeslam_1_Attacker": "15ee7db44dea3a1bc17b5ab1f45018a27b2d9a4e034816fe1c41388a3135d387",
+    "FF_Chokeslam_1_Defender": "9164bea95824a108f04ea3d4de8b5a7ebaa5dbf365b61305641d47f9c46e43db",
+    "FF_Oklahoma_Stampede_Attacker": "aca43a0d047c204744262ac8702b21cc8178b0e05a5ac44641fdd2beeb760e07",
+    "FF_Oklahoma_Stampede_Defender": "362b34a6e1db8341ff843506ff9d5e348cf012c5983980fca19fc7296358a226",
+    "FF_Fireman_Carry_Bomb_2_Attacker": "3669f833059bddae553cef0e7132f6f2e0ec31a4dcf538349ec321300f136b0c",
+    "FF_Fireman_Carry_Bomb_2_Defender": "958cca40501fe08f9cb7a143c0a7b85d6d041126b545b8feb813565f9e0687e9",
+    "FF_Code_Breaker_1_Attacker": "100c80c3294b84d4305d115c3652fa96f23780a2a0d9a77833e64ab9828c9146",
+    "FF_Code_Breaker_1_Defender": "0a429e904bb0d0d0b54ac44097e01f1081ae2b380ed3a4f77c61a7395ab05261",
+    "FF_Inverted_DDT_1_Attacker": "17e1ed6c0238696910d43acbf3b9d239656be1771d68eea5139ee36df97422aa",
+    "FF_Inverted_DDT_1_Defender": "bc2dcb7694ee2a09a02cb9b635bc52bf3c039f16e5916b6b540e2a31ccd411f4",
+    "FF_Buckle_Bomb_Attacker": "08b4579ffe0078c810ddd11fcb81882fa490dc705e637d37ce3d0a93da2e8a71",
+    "FF_Buckle_Bomb_Defender": "25119010ebc508bbf7d1d30971645b896478658ba63b61368ba6056acf328410",
+    "FF_Casualty_Of_War_Attacker": "f625611a85b92f221b79c17e1b6e01c5a227c49c6af01726caf3c9fbedbec9d4",
+    "FF_Casualty_Of_War_Defender": "dbdec5de8039f17edb89c80fb6533643a957c5baeeabaa20784080be7eae441f",
+    "FF_Running_V_Trigger_1_Attacker": "b4b86a758b107338cc97013c0ee6f72e0ab96482939ed0aece34914cdab82e6f",
+    "FF_Running_V_Trigger_1_Defender": "c00ae245092da8eaa269a8f1eb5f57ed48fb26763c69e2c087fbf215c5f033df",
+    "FF_Running_V_Trigger_3_Attacker": "3ab2673a5383dbb906eb2bcba581bc5903b04e59b4e408626b08b698991a4bf2",
+    "FF_Running_V_Trigger_3_Defender": "e96668f845b40838dfe84194268b43c9991d04e617ca9cdecc00b78bf33f4ff4",
+    "FF_V_Trigger_1_Attacker": "b6df6477b3e5af154fd4dc283eb41271276d92bacf7e4d22fb9a80416c46f6c6",
+    "FF_V_Trigger_1_Defender": "fc893447cd2141a301505bf6548e7ff8c1deeeef8a519e301d64b8692367ec2d",
+    "FF_Snap_Dragon_Suplex_2_Attacker": "f013a070b238a56c044aaf01af9e1a0bba1d5a8fa430de324d74dbd144589628",
+    "FF_Snap_Dragon_Suplex_2_Defender": "efe8552403cea37787f0b74842a7178ca495c0ce6ad9a3b7a4d73452df5794dd",
+    "FF_Snap_Dragon_Suplex_3_Attacker": "18b4b1bdd9cdb9c47b34239961f13e360e444e0486ac664574e80de886b79911",
+    "FF_Snap_Dragon_Suplex_3_Defender": "8ace88e9d224b92b19106a782bde1cec8561cd9ca967dcaf419b8632512ea574",
+    "FF_Powerbomb_V_Trigger_Combo_Attacker": "c03b860b1cf7c600a795fcf2ece2aeab118bc1b1cfb9256e360d2850cce4155a",
+    "FF_Powerbomb_V_Trigger_Combo_Defender": "85ad48cb6a0c97602b41c2fd787cbd01a1c6a9c1b73801aa3c8f58d5d9b9853e",
+    "Strike_Turning_Back_Kick_Body": "aaa7e4c343b6028e3b24979763673e1790b23547a9364d13be5d9afeb906c545",
+    "Strike_Running_Flying_Knee": "5c9ea574e5fac7ecda868e247021482a6c8b84d7b95f5c25eb14b9b8595bd5bd",
+    "Strike_Side_Kick_Knockdown": "a468fe24ba8a62d66c8f2d3fb477a8e71c213c2694e649986b26d851bef3f01d",
+    "Whip_Run": "b06254ca4847033a6f54f8e86c86565876ab9065fc4a29a7f27ec0f6025ff28f",
+    "Whip_Setup_Attacker": "84f2797900bab342c9406d4c905772b623da3c786849af3a6e9761a51de5ffea",
+    "Whip_Setup_Defender": "3ce531d9f812a7f2bee1c4b2fce4aa70824546d093b721cf2939fa4c5ecf45e1",
+    "Rebound_Slam_Attacker": "8ba73e836a07de8de63feef35e88c9ef2d2107d05decbe2d0b6b0a4c9f43fda3",
+    "Rebound_Slam_Defender": "14551d1988231eb7191c8bec4ef78b9240cbee1cee54bf4dd1df76856183a349",
+    "Bump_Kick": "a91e6a07808cbe1b4220a6c9c6e2ae3a36190b0338b89b239342a51049028903"
+  },
+  "selected_role_keys": {
+    "Run_Grapple_Attacker": [
+      [
+        0,
+        {
+          "pelvis": [
+            0.0,
+            0.0,
+            0.872
+          ],
+          "hips": [
+            0.8,
+            5.0,
+            0.0
+          ],
+          "spine": [
+            -18.0,
+            -3.0,
+            0.0
+          ],
+          "head": [
+            12,
+            0,
+            0
+          ],
+          "hand_r": [
+            0.21,
+            0.28,
+            1.32
+          ],
+          "hand_l": [
+            -0.17,
+            -0.24,
+            1.05
+          ],
+          "fist_r": 0.8,
+          "fist_l": 0.8,
+          "foot_r": [
+            0.15,
+            0.35000000000000003,
+            0.104
+          ],
+          "foot_l": [
+            -0.15,
+            -0.09168532464889068,
+            0.35849329303597677
+          ],
+          "ankle_r": [
+            -6.0,
+            0.0,
+            0.0
+          ],
+          "ankle_l": [
+            12.92937105638103,
+            0.0,
+            0.0
+          ],
+          "elbow_r": [
+            0.3,
+            -0.9,
+            -0.3
+          ],
+          "elbow_l": [
+            -0.3,
+            -0.9,
+            -0.3
+          ]
+        }
+      ],
+      [
+        5,
+        {
+          "pelvis": [
+            0.0,
+            0.0,
+            0.8
+          ],
+          "hips": [
+            0.8,
+            3.061616997868383e-16,
+            0.0
+          ],
+          "spine": [
+            -18.0,
+            -1.83697019872103e-16,
+            0.0
+          ],
+          "head": [
+            12,
+            0,
+            0
+          ],
+          "hand_r": [
+            0.21,
+            0.020000000000000018,
+            1.185
+          ],
+          "hand_l": [
+            -0.17,
+            0.019999999999999962,
+            1.185
+          ],
+          "fist_r": 0.8,
+          "fist_l": 0.8,
+          "foot_r": [
+            0.15,
+            -0.32321392224709955,
+            0.252512209089734
+          ],
+          "foot_l": [
+            -0.15,
+            0.2039588845918991,
+            0.33365721542045557
+          ],
+          "ankle_r": [
+            22.85202523916141,
+            0.0,
+            0.0
+          ],
+          "ankle_l": [
+            0.25890494606146675,
+            0.0,
+            0.0
+          ],
+          "elbow_r": [
+            0.3,
+            -0.9,
+            -0.3
+          ],
+          "elbow_l": [
+            -0.3,
+            -0.9,
+            -0.3
+          ]
+        }
+      ],
+      [
+        10,
+        {
+          "pelvis": [
+            0.0,
+            0.0,
+            0.872
+          ],
+          "hips": [
+            0.8,
+            -5.0,
+            0.0
+          ],
+          "spine": [
+            -18.0,
+            3.0,
+            0.0
+          ],
+          "head": [
+            12,
+            0,
+            0
+          ],
+          "hand_r": [
+            0.21,
+            -0.24,
+            1.05
+          ],
+          "hand_l": [
+            -0.17,
+            0.28,
+            1.32
+          ],
+          "fist_r": 0.8,
+          "fist_l": 0.8,
+          "foot_r": [
+            0.15,
+            -0.09168532464889068,
+            0.35849329303597677
+          ],
+          "foot_l": [
+            -0.15,
+            0.35000000000000003,
+            0.104
+          ],
+          "ankle_r": [
+            12.92937105638103,
+            0.0,
+            0.0
+          ],
+          "ankle_l": [
+            -6.0,
+            0.0,
+            0.0
+          ],
+          "elbow_r": [
+            0.3,
+            -0.9,
+            -0.3
+          ],
+          "elbow_l": [
+            -0.3,
+            -0.9,
+            -0.3
+          ]
+        }
+      ],
+      [
+        15,
+        {
+          "pelvis": [
+            0.0,
+            0.0,
+            0.8
+          ],
+          "hips": [
+            0.8,
+            -9.184850993605148e-16,
+            0.0
+          ],
+          "spine": [
+            -18.0,
+            5.510910596163089e-16,
+            0.0
+          ],
+          "head": [
+            12,
+            0,
+            0
+          ],
+          "hand_r": [
+            0.21,
+            0.019999999999999962,
+            1.185
+          ],
+          "hand_l": [
+            -0.17,
+            0.020000000000000073,
+            1.185
+          ],
+          "fist_r": 0.8,
+          "fist_l": 0.8,
+          "foot_r": [
+            0.15,
+            0.2039588845918991,
+            0.33365721542045557
+          ],
+          "foot_l": [
+            -0.15,
+            -0.32321392224709955,
+            0.252512209089734
+          ],
+          "ankle_r": [
+            0.25890494606146675,
+            0.0,
+            0.0
+          ],
+          "ankle_l": [
+            22.85202523916141,
+            0.0,
+            0.0
+          ],
+          "elbow_r": [
+            0.3,
+            -0.9,
+            -0.3
+          ],
+          "elbow_l": [
+            -0.3,
+            -0.9,
+            -0.3
+          ]
+        }
+      ],
+      [
+        20,
+        {
+          "pelvis": [
+            0.0,
+            0.0,
+            0.872
+          ],
+          "hips": [
+            0.8,
+            5.0,
+            0.0
+          ],
+          "spine": [
+            -18.0,
+            -3.0,
+            0.0
+          ],
+          "head": [
+            12,
+            0,
+            0
+          ],
+          "hand_r": [
+            0.21,
+            0.28,
+            1.32
+          ],
+          "hand_l": [
+            -0.17,
+            -0.24,
+            1.05
+          ],
+          "fist_r": 0.8,
+          "fist_l": 0.8,
+          "foot_r": [
+            0.15,
+            0.35000000000000003,
+            0.104
+          ],
+          "foot_l": [
+            -0.15,
+            -0.09168532464889068,
+            0.35849329303597677
+          ],
+          "ankle_r": [
+            -6.0,
+            0.0,
+            0.0
+          ],
+          "ankle_l": [
+            12.92937105638103,
+            0.0,
+            0.0
+          ],
+          "elbow_r": [
+            0.3,
+            -0.9,
+            -0.3
+          ],
+          "elbow_l": [
+            -0.3,
+            -0.9,
+            -0.3
+          ]
+        }
+      ],
+      [
+        25,
+        {
+          "pelvis": [
+            0.0,
+            0.0,
+            0.8
+          ],
+          "hips": [
+            0.8,
+            3.061616997868383e-16,
+            0.0
+          ],
+          "spine": [
+            -18.0,
+            -1.83697019872103e-16,
+            0.0
+          ],
+          "head": [
+            12,
+            0,
+            0
+          ],
+          "hand_r": [
+            0.21,
+            0.020000000000000018,
+            1.185
+          ],
+          "hand_l": [
+            -0.17,
+            0.019999999999999962,
+            1.185
+          ],
+          "fist_r": 0.8,
+          "fist_l": 0.8,
+          "foot_r": [
+            0.15,
+            -0.32321392224709955,
+            0.252512209089734
+          ],
+          "foot_l": [
+            -0.15,
+            0.2039588845918991,
+            0.33365721542045557
+          ],
+          "ankle_r": [
+            22.85202523916141,
+            0.0,
+            0.0
+          ],
+          "ankle_l": [
+            0.25890494606146675,
+            0.0,
+            0.0
+          ],
+          "elbow_r": [
+            0.3,
+            -0.9,
+            -0.3
+          ],
+          "elbow_l": [
+            -0.3,
+            -0.9,
+            -0.3
+          ]
+        }
+      ],
+      [
+        30,
+        {
+          "pelvis": [
+            0.0,
+            0.0,
+            0.872
+          ],
+          "hips": [
+            0.8,
+            -5.0,
+            0.0
+          ],
+          "spine": [
+            -18.0,
+            3.0,
+            0.0
+          ],
+          "head": [
+            12,
+            0,
+            0
+          ],
+          "hand_r": [
+            0.21,
+            -0.24,
+            1.05
+          ],
+          "hand_l": [
+            -0.17,
+            0.28,
+            1.32
+          ],
+          "fist_r": 0.8,
+          "fist_l": 0.8,
+          "foot_r": [
+            0.15,
+            -0.09168532464889068,
+            0.35849329303597677
+          ],
+          "foot_l": [
+            -0.15,
+            0.35000000000000003,
+            0.104
+          ],
+          "ankle_r": [
+            12.92937105638103,
+            0.0,
+            0.0
+          ],
+          "ankle_l": [
+            -6.0,
+            0.0,
+            0.0
+          ],
+          "elbow_r": [
+            0.3,
+            -0.9,
+            -0.3
+          ],
+          "elbow_l": [
+            -0.3,
+            -0.9,
+            -0.3
+          ]
+        }
+      ],
+      [
+        33,
+        {
+          "pelvis": [
+            0.0,
+            0.12,
+            0.76
+          ],
+          "hips": [
+            -20,
+            0,
+            0
+          ],
+          "spine": [
+            -24,
+            0,
+            0
+          ],
+          "head": [
+            8,
+            0,
+            0
+          ],
+          "hand_r": [
+            0.3,
+            0.42,
+            1.04
+          ],
+          "hand_l": [
+            -0.26,
+            0.44,
+            1.08
+          ],
+          "fist_r": 0.4,
+          "fist_l": 0.4,
+          "foot_r": [
+            0.2,
+            -0.26,
+            0.2
+          ],
+          "foot_l": [
+            -0.18,
+            0.16,
+            0.104
+          ]
+        }
+      ],
+      [
+        37,
+        {
+          "pelvis": [
+            0.0,
+            0.16,
+            0.7
+          ],
+          "hips": [
+            -24,
+            0,
+            0
+          ],
+          "spine": [
+            -30,
+            0,
+            0
+          ],
+          "head": [
+            -2,
+            0,
+            0
+          ],
+          "hand_r": [
+            0.2,
+            0.8,
+            1.0
+          ],
+          "hand_l": [
+            -0.16,
+            0.78,
+            1.14
+          ],
+          "fist_r": 0.5,
+          "fist_l": 0.5,
+          "foot_r": [
+            0.22,
+            -0.3,
+            0.104
+          ],
+          "foot_l": [
+            -0.2,
+            0.24,
+            0.14
+          ],
+          "elbow_r": [
+            0.9,
+            -0.4,
+            -0.3
+          ],
+          "elbow_l": [
+            -0.7,
+            -0.4,
+            -0.4
+          ]
+        }
+      ],
+      [
+        43,
+        {
+          "pelvis": [
+            0.0,
+            0.06,
+            0.68
+          ],
+          "hips": [
+            -30,
+            0,
+            0
+          ],
+          "spine": [
+            -30,
+            0,
+            0
+          ],
+          "head": [
+            -6,
+            0,
+            0
+          ],
+          "hand_r": [
+            0.18,
+            0.6,
+            0.92
+          ],
+          "hand_l": [
+            -0.16,
+            0.58,
+            0.9
+          ],
+          "fist_r": 0.4,
+          "fist_l": 0.4,
+          "foot_r": [
+            0.24,
+            -0.2,
+            0.104
+          ],
+          "foot_l": [
+            -0.22,
+            0.18,
+            0.104
+          ],
+          "elbow_r": [
+            0.8,
+            -0.4,
+            -0.4
+          ],
+          "elbow_l": [
+            -0.8,
+            -0.4,
+            -0.4
+          ]
+        }
+      ],
+      [
+        48,
+        {
+          "pelvis": [
+            0.0,
+            0.02,
+            0.82
+          ],
+          "hips": [
+            -6,
+            0,
+            0
+          ],
+          "spine": [
+            4,
+            0,
+            0
+          ],
+          "head": [
+            8,
+            0,
+            0
+          ],
+          "hand_r": [
+            0.18,
+            0.48,
+            1.14
+          ],
+          "hand_l": [
+            -0.16,
+            0.46,
+            1.12
+          ],
+          "fist_r": 0.6,
+          "fist_l": 0.6,
+          "foot_r": [
+            0.24,
+            -0.24,
+            0.104
+          ],
+          "foot_l": [
+            -0.22,
+            0.2,
+            0.104
+          ],
+          "elbow_r": [
+            0.7,
+            -0.4,
+            -0.4
+          ],
+          "elbow_l": [
+            -0.7,
+            -0.4,
+            -0.4
+          ]
+        }
+      ],
+      [
+        51,
+        {
+          "pelvis": [
+            0.0,
+            -0.02,
+            0.89
+          ],
+          "hips": [
+            4,
+            0,
+            0
+          ],
+          "spine": [
+            10,
+            0,
+            0
+          ],
+          "head": [
+            10,
+            0,
+            0
+          ],
+          "hand_r": [
+            0.18,
+            0.44,
+            1.18
+          ],
+          "hand_l": [
+            -0.16,
+            0.42,
+            1.16
+          ],
+          "fist_r": 0.6,
+          "fist_l": 0.6,
+          "foot_r": [
+            0.24,
+            -0.22,
+            0.104
+          ],
+          "foot_l": [
+            -0.22,
+            0.18,
+            0.104
+          ],
+          "elbow_r": [
+            0.7,
+            -0.4,
+            -0.3
+          ],
+          "elbow_l": [
+            -0.7,
+            -0.4,
+            -0.3
+          ]
+        }
+      ],
+      [
+        55,
+        {
+          "pelvis": [
+            0.0,
+            -0.04,
+            0.88
+          ],
+          "hips": [
+            6,
+            0,
+            0
+          ],
+          "spine": [
+            8,
+            0,
+            0
+          ],
+          "head": [
+            4,
+            0,
+            0
+          ],
+          "hand_r": [
+            0.16,
+            0.44,
+            1.14
+          ],
+          "hand_l": [
+            -0.14,
+            0.42,
+            1.12
+          ],
+          "fist_r": 0.5,
+          "fist_l": 0.5,
+          "foot_r": [
+            0.24,
+            -0.2,
+            0.104
+          ],
+          "foot_l": [
+            -0.22,
+            0.16,
+            0.104
+          ],
+          "elbow_r": [
+            0.7,
+            -0.4,
+            -0.2
+          ],
+          "elbow_l": [
+            -0.7,
+            -0.4,
+            -0.2
+          ]
+        }
+      ],
+      [
+        59,
+        {
+          "pelvis": [
+            0.0,
+            0.02,
+            0.84
+          ],
+          "hips": [
+            -2,
+            0,
+            0
+          ],
+          "spine": [
+            -10,
+            0,
+            0
+          ],
+          "head": [
+            -18,
+            0,
+            0
+          ],
+          "hand_r": [
+            0.22,
+            0.2,
+            0.9
+          ],
+          "hand_l": [
+            -0.2,
+            0.22,
+            0.88
+          ],
+          "fist_r": 0.3,
+          "fist_l": 0.3,
+          "foot_r": [
+            0.24,
+            -0.18,
+            0.104
+          ],
+          "foot_l": [
+            -0.22,
+            0.16,
+            0.104
+          ],
+          "elbow_r": [
+            0.5,
+            -0.2,
+            -0.3
+          ],
+          "elbow_l": [
+            -0.5,
+            -0.2,
+            -0.3
+          ]
+        }
+      ],
+      [
+        63,
+        {
+          "pelvis": [
+            0.0,
+            0.06,
+            0.85
+          ],
+          "hips": [
+            0,
+            -8,
+            0
+          ],
+          "spine": [
+            -4,
+            0,
+            0
+          ],
+          "head": [
+            -12,
+            0,
+            0
+          ],
+          "hand_r": [
+            0.26,
+            0.08,
+            0.98
+          ],
+          "hand_l": [
+            -0.24,
+            0.1,
+            0.96
+          ],
+          "fist_r": 0.2,
+          "fist_l": 0.2,
+          "foot_r": [
+            0.23,
+            -0.17,
+            0.104
+          ],
+          "foot_l": [
+            -0.19,
+            0.18,
+            0.104
+          ]
+        }
+      ],
+      [
+        66,
+        {
+          "pelvis": [
+            0.0,
+            0.02,
+            0.86
+          ],
+          "hips": [
+            0,
+            -8,
+            0
+          ],
+          "spine": [
+            -10,
+            6,
+            0
+          ],
+          "head": [
+            -6,
+            0,
+            0
+          ],
+          "hand_r": [
+            0.24,
+            0.34,
+            1.3
+          ],
+          "hand_l": [
+            -0.21,
+            0.38,
+            1.34
+          ],
+          "fist_r": 0.8,
+          "fist_l": 0.8,
+          "foot_r": [
+            0.23,
+            -0.17,
+            0.104
+          ],
+          "foot_l": [
+            -0.19,
+            0.18,
+            0.104
+          ]
+        }
+      ]
+    ],
+    "Run_Grapple_Defender": [
+      [
+        0,
+        {
+          "pelvis": [
+            0.0,
+            0.0,
+            0.78
+          ],
+          "hips": [
+            -8,
+            -8,
+            0
+          ],
+          "spine": [
+            -20,
+            6,
+            0
+          ],
+          "head": [
+            8,
+            8,
+            0
+          ],
+          "hand_r": [
+            0.3,
+            0.4,
+            1.1
+          ],
+          "hand_l": [
+            -0.27,
+            0.44,
+            1.14
+          ],
+          "elbow_r": [
+            0.6,
+            -0.2,
+            -1.0
+          ],
+          "elbow_l": [
+            -0.6,
+            -0.2,
+            -1.0
+          ],
+          "fist_r": 0.3,
+          "fist_l": 0.3,
+          "foot_r": [
+            0.27,
+            -0.2,
+            0.104
+          ],
+          "foot_l": [
+            -0.23,
+            0.2,
+            0.104
+          ]
+        }
+      ],
+      [
+        16,
+        {
+          "pelvis": [
+            0.0,
+            -0.02,
+            0.772
+          ],
+          "hips": [
+            -8,
+            -8,
+            0
+          ],
+          "spine": [
+            -20,
+            6,
+            0
+          ],
+          "head": [
+            4,
+            -6,
+            0
+          ],
+          "hand_r": [
+            0.3,
+            0.4,
+            1.1
+          ],
+          "hand_l": [
+            -0.27,
+            0.44,
+            1.14
+          ],
+          "elbow_r": [
+            0.6,
+            -0.2,
+            -1.0
+          ],
+          "elbow_l": [
+            -0.6,
+            -0.2,
+            -1.0
+          ],
+          "fist_r": 0.3,
+          "fist_l": 0.3,
+          "foot_r": [
+            0.27,
+            -0.2,
+            0.104
+          ],
+          "foot_l": [
+            -0.23,
+            0.2,
+            0.104
+          ]
+        }
+      ],
+      [
+        30,
+        {
+          "pelvis": [
+            0.0,
+            -0.04,
+            0.752
+          ],
+          "hips": [
+            -8,
+            -8,
+            0
+          ],
+          "spine": [
+            -14,
+            0,
+            0
+          ],
+          "head": [
+            8,
+            0,
+            0
+          ],
+          "hand_r": [
+            0.3,
+            0.42,
+            1.24
+          ],
+          "hand_l": [
+            -0.27,
+            0.44,
+            1.26
+          ],
+          "elbow_r": [
+            0.6,
+            -0.2,
+            -1.0
+          ],
+          "elbow_l": [
+            -0.6,
+            -0.2,
+            -1.0
+          ],
+          "fist_r": 0.3,
+          "fist_l": 0.3,
+          "foot_r": [
+            0.27,
+            -0.2,
+            0.104
+          ],
+          "foot_l": [
+            -0.23,
+            0.2,
+            0.104
+          ]
+        }
+      ],
+      [
+        37,
+        {
+          "pelvis": [
+            0.0,
+            0.0,
+            0.85
+          ],
+          "hips": [
+            6,
+            0,
+            0
+          ],
+          "spine": [
+            14,
+            0,
+            0
+          ],
+          "head": [
+            16,
+            0,
+            0
+          ],
+          "hand_r": [
+            0.24,
+            0.4,
+            1.26
+          ],
+          "hand_l": [
+            -0.22,
+            0.42,
+            1.28
+          ],
+          "fist_r": 0.4,
+          "fist_l": 0.4,
+          "foot_r": [
+            0.23,
+            -0.17,
+            0.104
+          ],
+          "foot_l": [
+            -0.19,
+            0.18,
+            0.104
+          ],
+          "elbow_r": [
+            0.6,
+            -0.4,
+            -0.5
+          ],
+          "elbow_l": [
+            -0.6,
+            -0.4,
+            -0.5
+          ]
+        }
+      ],
+      [
+        43,
+        {
+          "pelvis": [
+            0.0,
+            -0.02,
+            0.858
+          ],
+          "hips": [
+            2,
+            0,
+            0
+          ],
+          "spine": [
+            6,
+            0,
+            0
+          ],
+          "head": [
+            10,
+            0,
+            0
+          ],
+          "hand_r": [
+            0.18,
+            0.46,
+            1.34
+          ],
+          "hand_l": [
+            -0.2,
+            0.3,
+            1.14
+          ],
+          "fist_r": 0.4,
+          "fist_l": 0.4,
+          "foot_r": [
+            0.23,
+            -0.17,
+            0.104
+          ],
+          "foot_l": [
+            -0.19,
+            0.18,
+            0.104
+          ],
+          "elbow_r": [
+            0.6,
+            -0.4,
+            -0.6
+          ],
+          "elbow_l": [
+            -0.6,
+            -0.3,
+            -0.5
+          ]
+        }
+      ],
+      [
+        48,
+        {
+          "pelvis": [
+            0.0,
+            -0.06,
+            0.84
+          ],
+          "hips": [
+            20,
+            0,
+            0
+          ],
+          "spine": [
+            8,
+            0,
+            0
+          ],
+          "head": [
+            10,
+            0,
+            0
+          ],
+          "hand_r": [
+            0.16,
+            0.44,
+            1.32
+          ],
+          "hand_l": [
+            -0.18,
+            0.34,
+            1.18
+          ],
+          "fist_r": 0.4,
+          "fist_l": 0.4,
+          "foot_r": [
+            0.22,
+            -0.02,
+            0.22
+          ],
+          "foot_l": [
+            -0.19,
+            0.14,
+            0.104
+          ]
+        }
+      ],
+      [
+        51,
+        {
+          "hips": [
+            60,
+            0,
+            0
+          ],
+          "pelvis": [
+            0.0,
+            0.02,
+            1.15
+          ],
+          "foot_r": [
+            0.14000000059604645,
+            0.6030126810073853,
+            1.159807562828064
+          ],
+          "foot_l": [
+            -0.14000000059604645,
+            0.6376537084579468,
+            1.1398075819015503
+          ],
+          "knee_r": [
+            0.10000000149011612,
+            0.5,
+            0.8660253882408142
+          ],
+          "knee_l": [
+            -0.10000000149011612,
+            0.5,
+            0.8660253882408142
+          ],
+          "free_feet": true,
+          "spine": [
+            -8.0,
+            0.019999999552965164,
+            1.149999976158142
+          ],
+          "head": [
+            -8.0,
+            0.019999999552965164,
+            1.149999976158142
+          ],
+          "hand_r": [
+            0.25999999046325684,
+            0.08339746296405792,
+            1.4598076343536377
+          ],
+          "hand_l": [
+            -0.25999999046325684,
+            0.08339746296405792,
+            1.4598076343536377
+          ],
+          "elbow_r": [
+            0.699999988079071,
+            0.1964101493358612,
+            -0.4598076343536377
+          ],
+          "elbow_l": [
+            -0.699999988079071,
+            0.1964101493358612,
+            -0.4598076343536377
+          ],
+          "fist_r": 0.4,
+          "fist_l": 0.4
+        }
+      ],
+      [
+        53,
+        {
+          "hips": [
+            100,
+            0,
+            0
+          ],
+          "pelvis": [
+            0.0,
+            0.02,
+            1.2
+          ],
+          "spine": [
+            -6.0,
+            0.019999999552965164,
+            1.2000000476837158
+          ],
+          "head": [
+            -10.0,
+            0.019999999552965164,
+            1.2000000476837158
+          ],
+          "hand_r": [
+            0.30000001192092896,
+            -0.32753679156303406,
+            1.4433479309082031
+          ],
+          "hand_l": [
+            -0.30000001192092896,
+            -0.32753679156303406,
+            1.4433479309082031
+          ],
+          "elbow_r": [
+            0.800000011920929,
+            0.3475368022918701,
+            -0.2433478832244873
+          ],
+          "elbow_l": [
+            -0.800000011920929,
+            0.3475368022918701,
+            -0.2433478832244873
+          ],
+          "fist_r": 0.4,
+          "fist_l": 0.4,
+          "foot_r": [
+            0.11999999731779099,
+            0.82059645652771,
+            1.3817838430404663
+          ],
+          "foot_l": [
+            -0.11999999731779099,
+            0.8240693807601929,
+            1.3620877265930176
+          ],
+          "knee_r": [
+            0.10000000149011612,
+            -0.1736481636762619,
+            0.9848077893257141
+          ],
+          "knee_l": [
+            -0.10000000149011612,
+            -0.1736481636762619,
+            0.9848077893257141
+          ],
+          "free_feet": true
+        }
+      ],
+      [
+        55,
+        {
+          "hips": [
+            145,
+            0,
+            0
+          ],
+          "pelvis": [
+            0.0,
+            0.02,
+            1.0
+          ],
+          "spine": [
+            -6.0,
+            0.019999999552965164,
+            1.0
+          ],
+          "head": [
+            -10.0,
+            0.019999999552965164,
+            1.0
+          ],
+          "hand_r": [
+            0.30000001192092896,
+            -0.39781853556632996,
+            0.9263273477554321
+          ],
+          "hand_l": [
+            -0.30000001192092896,
+            -0.39781853556632996,
+            0.9263273477554321
+          ],
+          "elbow_r": [
+            0.800000011920929,
+            0.417818546295166,
+            0.07367266714572906
+          ],
+          "elbow_l": [
+            -0.800000011920929,
+            0.417818546295166,
+            0.07367266714572906
+          ],
+          "fist_r": 0.4,
+          "fist_l": 0.4,
+          "foot_r": [
+            0.11999999731779099,
+            0.45756661891937256,
+            1.6946477890014648
+          ],
+          "foot_l": [
+            -0.11999999731779099,
+            0.4739496409893036,
+            1.6831761598587036
+          ],
+          "knee_r": [
+            0.10000000149011612,
+            -0.8191519975662231,
+            0.5735764503479004
+          ],
+          "knee_l": [
+            -0.10000000149011612,
+            -0.8191519975662231,
+            0.5735764503479004
+          ],
+          "free_feet": true
+        }
+      ],
+      [
+        58,
+        {
+          "hips": [
+            135,
+            0,
+            0
+          ],
+          "pelvis": [
+            0.0,
+            0.02,
+            0.78
+          ],
+          "spine": [
+            -6.0,
+            0.019999999552965164,
+            0.7799999713897705
+          ],
+          "head": [
+            -10.0,
+            0.019999999552965164,
+            0.7799999713897705
+          ],
+          "hand_r": [
+            0.30000001192092896,
+            -0.40426403284072876,
+            0.7799999713897705
+          ],
+          "hand_l": [
+            -0.30000001192092896,
+            -0.40426403284072876,
+            0.7799999713897705
+          ],
+          "elbow_r": [
+            0.800000011920929,
+            0.4242640435695648,
+            -2.9802322387695312e-08
+          ],
+          "elbow_l": [
+            -0.800000011920929,
+            0.4242640435695648,
+            -2.9802322387695312e-08
+          ],
+          "fist_r": 0.4,
+          "fist_l": 0.4,
+          "foot_r": [
+            0.11999999731779099,
+            0.571543276309967,
+            1.3881115913391113
+          ],
+          "foot_l": [
+            -0.18000000715255737,
+            0.6563960313796997,
+            1.062842607498169
+          ],
+          "knee_r": [
+            0.10000000149011612,
+            -0.7071066498756409,
+            0.7071067690849304
+          ],
+          "knee_l": [
+            -0.2199999988079071,
+            -0.7778173685073853,
+            0.424264132976532
+          ],
+          "free_feet": true
+        }
+      ],
+      [
+        59,
+        {
+          "hips": [
+            125,
+            0,
+            0
+          ],
+          "pelvis": [
+            0.0,
+            0.02,
+            0.58
+          ],
+          "spine": [
+            -6.0,
+            0.019999999552965164,
+            0.5799999833106995
+          ],
+          "head": [
+            -10.0,
+            0.019999999552965164,
+            0.5799999833106995
+          ],
+          "hand_r": [
+            0.30000001192092896,
+            -0.39781859517097473,
+            0.6536726355552673
+          ],
+          "hand_l": [
+            -0.30000001192092896,
+            -0.39781859517097473,
+            0.6536726355552673
+          ],
+          "elbow_r": [
+            0.800000011920929,
+            0.4178186058998108,
+            -0.07367265224456787
+          ],
+          "elbow_l": [
+            -0.800000011920929,
+            0.4178186058998108,
+            -0.07367265224456787
+          ],
+          "fist_r": 0.4,
+          "fist_l": 0.4,
+          "foot_r": [
+            0.11999999731779099,
+            0.6687616109848022,
+            1.0830988883972168
+          ],
+          "foot_l": [
+            -0.18000000715255737,
+            0.695842981338501,
+            0.7480367422103882
+          ],
+          "knee_r": [
+            0.10000000149011612,
+            -0.5735765695571899,
+            0.8191520571708679
+          ],
+          "knee_l": [
+            -0.2199999988079071,
+            -0.6923280954360962,
+            0.5528851747512817
+          ],
+          "free_feet": true
+        }
+      ],
+      [
+        63,
+        {
+          "pelvis": [
+            -0.0,
+            -0.0,
+            0.24
+          ],
+          "hips": [
+            -84,
+            180,
+            180
+          ],
+          "spine": [
+            -10,
+            0,
+            0
+          ],
+          "head": [
+            -16,
+            8,
+            0
+          ],
+          "hand_r": [
+            0.46,
+            -0.16,
+            0.16
+          ],
+          "hand_l": [
+            -0.44,
+            -0.14,
+            0.18
+          ],
+          "elbow_r": [
+            0.6,
+            -0.2,
+            0.2
+          ],
+          "elbow_l": [
+            -0.6,
+            -0.2,
+            0.2
+          ],
+          "fist_r": 0.1,
+          "fist_l": 0.1,
+          "foot_r": [
+            0.18,
+            0.42,
+            0.34
+          ],
+          "foot_l": [
+            -0.16,
+            0.72,
+            0.12
+          ],
+          "knee_r": [
+            0.2,
+            -0.5,
+            0.8
+          ],
+          "knee_l": [
+            -0.2,
+            -0.2,
+            1.0
+          ],
+          "free_feet": true,
+          "ankle_r": [
+            60,
+            165,
+            0
+          ],
+          "ankle_l": [
+            60,
+            195,
+            0
+          ],
+          "clav_r": [
+            0,
+            -12,
+            0
+          ],
+          "clav_l": [
+            0,
+            12,
+            0
+          ]
+        }
+      ],
+      [
+        66,
+        {
+          "pelvis": [
+            -0.0,
+            -0.0,
+            0.175
+          ],
+          "hips": [
+            -84,
+            180,
+            180
+          ],
+          "spine": [
+            -6,
+            0,
+            0
+          ],
+          "head": [
+            -14,
+            0,
+            0
+          ],
+          "hand_r": [
+            0.37,
+            -0.05,
+            0.1
+          ],
+          "hand_l": [
+            -0.36,
+            -0.03,
+            0.1
+          ],
+          "elbow_r": [
+            0.7,
+            -0.3,
+            0.3
+          ],
+          "elbow_l": [
+            -0.7,
+            -0.3,
+            0.3
+          ],
+          "fist_r": 0.2,
+          "fist_l": 0.2,
+          "foot_r": [
+            0.16,
+            0.86,
+            0.1
+          ],
+          "foot_l": [
+            -0.15,
+            0.86,
+            0.1
+          ],
+          "knee_r": [
+            0.3,
+            -0.0,
+            1.0
+          ],
+          "knee_l": [
+            -0.3,
+            -0.0,
+            1.0
+          ],
+          "free_feet": true,
+          "ankle_r": [
+            60,
+            165,
+            0
+          ],
+          "ankle_l": [
+            60,
+            195,
+            0
+          ],
+          "clav_r": [
+            0,
+            -12,
+            0
+          ],
+          "clav_l": [
+            0,
+            12,
+            0
+          ]
+        }
+      ]
+    ]
+  }
+}

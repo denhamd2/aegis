@@ -1,0 +1,13 @@
+{
+  "status": "owner-approved publication pending",
+  "scope": "all current project changes including Kenny R7V3/R8 and partial running-drop correction",
+  "gameplay_animation_cases": 49,
+  "gameplay_animation_failures": 0,
+  "kenny_cases": 21,
+  "kenny_failing_cases": 1,
+  "kenny_assertion_failures": 2,
+  "full_ci_green_claimed": false,
+  "native_m1_performance_verified": false,
+  "source_glb_sha256": "4506ffae1cfdefd4a840b339df73b75195914ebc73b3858ffbedfe2691f9c11e",
+  "native_kenny_sha256": "168720eef424c31104249e005972ecffd933ee6de3aad340001c8272ab2d5cbf"
+}
