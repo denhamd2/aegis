@@ -571,6 +571,9 @@ const RECIPES := {
 	# release timing from the sparse reference panels. Root trajectories stay
 	# gameplay-owned; Run_Grapple_* supplies the paired body performance.
 	"running_grapple_inverted_drop": {
+		# Source59 is the authored impact; startup37 is the running catch.
+		# Presentation only: preserve gameplay/reversal timing.
+		"camera_impact_at": 59.0 / 66.0,
 		"authored": {"attacker": "Run_Grapple_Attacker", "defender": "Run_Grapple_Defender"},
 		# These hands follow the authored sweep; forearm contact is measured
 		# independently from wrist IK. Outside the contact window they remain

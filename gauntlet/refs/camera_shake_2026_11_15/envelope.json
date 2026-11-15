@@ -1,0 +1,773 @@
+{
+	"HIGH": {
+		"peak_offset": 0.164097338914871,
+		"samples": [
+			{
+				"horizontal": 0.164097338914871,
+				"remaining_trauma": 0.941666666666667,
+				"seconds": 0.0166666666666667,
+				"tick": 1,
+				"vertical": 0.146440804004669
+			},
+			{
+				"horizontal": 0.0982695892453194,
+				"remaining_trauma": 0.883333333333333,
+				"seconds": 0.0333333333333333,
+				"tick": 2,
+				"vertical": 0.00631615612655878
+			},
+			{
+				"horizontal": 0.00625738082453609,
+				"remaining_trauma": 0.825,
+				"seconds": 0.05,
+				"tick": 3,
+				"vertical": -0.0885234847664833
+			},
+			{
+				"horizontal": 0.023510517552495,
+				"remaining_trauma": 0.766666666666667,
+				"seconds": 0.0666666666666667,
+				"tick": 4,
+				"vertical": -0.0706670805811882
+			},
+			{
+				"horizontal": 0.040074810385704,
+				"remaining_trauma": 0.708333333333333,
+				"seconds": 0.0833333333333333,
+				"tick": 5,
+				"vertical": 0.0189878325909376
+			},
+			{
+				"horizontal": -0.0101138250902295,
+				"remaining_trauma": 0.65,
+				"seconds": 0.1,
+				"tick": 6,
+				"vertical": 0.0901649966835976
+			},
+			{
+				"horizontal": -0.0256001465022564,
+				"remaining_trauma": 0.591666666666667,
+				"seconds": 0.116666666666667,
+				"tick": 7,
+				"vertical": 0.090746782720089
+			},
+			{
+				"horizontal": 0.0334162414073944,
+				"remaining_trauma": 0.533333333333333,
+				"seconds": 0.133333333333333,
+				"tick": 8,
+				"vertical": 0.0407702215015888
+			},
+			{
+				"horizontal": 0.0731827169656754,
+				"remaining_trauma": 0.475,
+				"seconds": 0.15,
+				"tick": 9,
+				"vertical": -0.00396895874291658
+			},
+			{
+				"horizontal": 0.0515197739005089,
+				"remaining_trauma": 0.416666666666667,
+				"seconds": 0.166666666666667,
+				"tick": 10,
+				"vertical": -0.00931992568075657
+			},
+			{
+				"horizontal": 0.0276593752205372,
+				"remaining_trauma": 0.358333333333333,
+				"seconds": 0.183333333333333,
+				"tick": 11,
+				"vertical": 0.0149354487657547
+			},
+			{
+				"horizontal": 0.0319368802011013,
+				"remaining_trauma": 0.3,
+				"seconds": 0.2,
+				"tick": 12,
+				"vertical": 0.0380054675042629
+			},
+			{
+				"horizontal": 0.0362775512039661,
+				"remaining_trauma": 0.241666666666666,
+				"seconds": 0.216666666666667,
+				"tick": 13,
+				"vertical": 0.0422336496412754
+			},
+			{
+				"horizontal": 0.0314255133271217,
+				"remaining_trauma": 0.183333333333333,
+				"seconds": 0.233333333333333,
+				"tick": 14,
+				"vertical": 0.0335714817047119
+			},
+			{
+				"horizontal": 0.0323403775691986,
+				"remaining_trauma": 0.125,
+				"seconds": 0.25,
+				"tick": 15,
+				"vertical": 0.0263081397861242
+			},
+			{
+				"horizontal": 0.0374440997838974,
+				"remaining_trauma": 0.0666666666666665,
+				"seconds": 0.266666666666667,
+				"tick": 16,
+				"vertical": 0.0258881635963917
+			},
+			{
+				"horizontal": 0.0386004336178303,
+				"remaining_trauma": 0.00833333333333312,
+				"seconds": 0.283333333333333,
+				"tick": 17,
+				"vertical": 0.0280059203505516
+			},
+			{
+				"horizontal": 0.0386156216263771,
+				"remaining_trauma": 0.0,
+				"seconds": 0.3,
+				"tick": 18,
+				"vertical": 0.0287211332470179
+			},
+			{
+				"horizontal": 0.0392671376466751,
+				"remaining_trauma": 0.0,
+				"seconds": 0.316666666666667,
+				"tick": 19,
+				"vertical": 0.0288858152925968
+			},
+			{
+				"horizontal": 0.0399033389985561,
+				"remaining_trauma": 0.0,
+				"seconds": 0.333333333333333,
+				"tick": 20,
+				"vertical": 0.0290375631302595
+			},
+			{
+				"horizontal": 0.0405176542699337,
+				"remaining_trauma": 0.0,
+				"seconds": 0.35,
+				"tick": 21,
+				"vertical": 0.0291745141148567
+			},
+			{
+				"horizontal": 0.0411093384027481,
+				"remaining_trauma": 0.0,
+				"seconds": 0.366666666666667,
+				"tick": 22,
+				"vertical": 0.0292965117841959
+			},
+			{
+				"horizontal": 0.0416776947677135,
+				"remaining_trauma": 0.0,
+				"seconds": 0.383333333333333,
+				"tick": 23,
+				"vertical": 0.0294033978134394
+			},
+			{
+				"horizontal": 0.0422220379114151,
+				"remaining_trauma": 0.0,
+				"seconds": 0.4,
+				"tick": 24,
+				"vertical": 0.02949502132833
+			},
+			{
+				"horizontal": 0.0427417047321796,
+				"remaining_trauma": 0.0,
+				"seconds": 0.416666666666667,
+				"tick": 25,
+				"vertical": 0.0295712500810623
+			},
+			{
+				"horizontal": 0.0432360395789146,
+				"remaining_trauma": 0.0,
+				"seconds": 0.433333333333333,
+				"tick": 26,
+				"vertical": 0.0296319480985403
+			},
+			{
+				"horizontal": 0.0437044352293015,
+				"remaining_trauma": 0.0,
+				"seconds": 0.45,
+				"tick": 27,
+				"vertical": 0.0296769924461842
+			},
+			{
+				"horizontal": 0.0441462807357311,
+				"remaining_trauma": 0.0,
+				"seconds": 0.466666666666667,
+				"tick": 28,
+				"vertical": 0.0297062657773495
+			},
+			{
+				"horizontal": 0.044561006128788,
+				"remaining_trauma": 0.0,
+				"seconds": 0.483333333333333,
+				"tick": 29,
+				"vertical": 0.029719665646553
+			},
+			{
+				"horizontal": 0.0449480600655079,
+				"remaining_trauma": 0.0,
+				"seconds": 0.5,
+				"tick": 30,
+				"vertical": 0.0297170914709568
+			},
+			{
+				"horizontal": 0.0453069061040878,
+				"remaining_trauma": 0.0,
+				"seconds": 0.516666666666667,
+				"tick": 31,
+				"vertical": 0.0296984501183033
+			},
+			{
+				"horizontal": 0.0456370525062084,
+				"remaining_trauma": 0.0,
+				"seconds": 0.533333333333333,
+				"tick": 32,
+				"vertical": 0.0296636652201414
+			},
+			{
+				"horizontal": 0.0459380149841309,
+				"remaining_trauma": 0.0,
+				"seconds": 0.55,
+				"tick": 33,
+				"vertical": 0.0296126566827297
+			},
+			{
+				"horizontal": 0.046209342777729,
+				"remaining_trauma": 0.0,
+				"seconds": 0.566666666666667,
+				"tick": 34,
+				"vertical": 0.0295453667640686
+			},
+			{
+				"horizontal": 0.0464506149291992,
+				"remaining_trauma": 0.0,
+				"seconds": 0.583333333333333,
+				"tick": 35,
+				"vertical": 0.0294617358595133
+			},
+			{
+				"horizontal": 0.0466614365577698,
+				"remaining_trauma": 0.0,
+				"seconds": 0.6,
+				"tick": 36,
+				"vertical": 0.0293617118149996
+			}
+		]
+	},
+	"LOW": {
+		"peak_offset": 0.0911651849746704,
+		"samples": [
+			{
+				"horizontal": 0.0911651849746704,
+				"remaining_trauma": 0.941666666666667,
+				"seconds": 0.0166666666666667,
+				"tick": 1,
+				"vertical": 0.0813560038805008
+			},
+			{
+				"horizontal": 0.0545942150056362,
+				"remaining_trauma": 0.883333333333333,
+				"seconds": 0.0333333333333333,
+				"tick": 2,
+				"vertical": 0.00350897596217692
+			},
+			{
+				"horizontal": 0.00347632262855768,
+				"remaining_trauma": 0.825,
+				"seconds": 0.05,
+				"tick": 3,
+				"vertical": -0.0491797141730785
+			},
+			{
+				"horizontal": 0.0130613995715976,
+				"remaining_trauma": 0.766666666666667,
+				"seconds": 0.0666666666666667,
+				"tick": 4,
+				"vertical": -0.0392594896256924
+			},
+			{
+				"horizontal": 0.0222637839615345,
+				"remaining_trauma": 0.708333333333333,
+				"seconds": 0.0833333333333333,
+				"tick": 5,
+				"vertical": 0.0105487955734134
+			},
+			{
+				"horizontal": -0.00561879109591246,
+				"remaining_trauma": 0.65,
+				"seconds": 0.1,
+				"tick": 6,
+				"vertical": 0.050091665238142
+			},
+			{
+				"horizontal": -0.0142223034054041,
+				"remaining_trauma": 0.591666666666667,
+				"seconds": 0.116666666666667,
+				"tick": 7,
+				"vertical": 0.0504148788750172
+			},
+			{
+				"horizontal": 0.0185645781457424,
+				"remaining_trauma": 0.533333333333333,
+				"seconds": 0.133333333333333,
+				"tick": 8,
+				"vertical": 0.0226501226425171
+			},
+			{
+				"horizontal": 0.0406570620834827,
+				"remaining_trauma": 0.475,
+				"seconds": 0.15,
+				"tick": 9,
+				"vertical": -0.00220497720874846
+			},
+			{
+				"horizontal": 0.0286220982670784,
+				"remaining_trauma": 0.416666666666667,
+				"seconds": 0.166666666666667,
+				"tick": 10,
+				"vertical": -0.00517773581668735
+			},
+			{
+				"horizontal": 0.0153663204982877,
+				"remaining_trauma": 0.358333333333333,
+				"seconds": 0.183333333333333,
+				"tick": 11,
+				"vertical": 0.00829747132956982
+			},
+			{
+				"horizontal": 0.0177427120506763,
+				"remaining_trauma": 0.3,
+				"seconds": 0.2,
+				"tick": 12,
+				"vertical": 0.0211141500622034
+			},
+			{
+				"horizontal": 0.0201541967689991,
+				"remaining_trauma": 0.241666666666666,
+				"seconds": 0.216666666666667,
+				"tick": 13,
+				"vertical": 0.0234631393104792
+			},
+			{
+				"horizontal": 0.0174586176872253,
+				"remaining_trauma": 0.183333333333333,
+				"seconds": 0.233333333333333,
+				"tick": 14,
+				"vertical": 0.0186508223414421
+			},
+			{
+				"horizontal": 0.017966877669096,
+				"remaining_trauma": 0.125,
+				"seconds": 0.25,
+				"tick": 15,
+				"vertical": 0.0146156325936317
+			},
+			{
+				"horizontal": 0.0208022780716419,
+				"remaining_trauma": 0.0666666666666665,
+				"seconds": 0.266666666666667,
+				"tick": 16,
+				"vertical": 0.0143823139369488
+			},
+			{
+				"horizontal": 0.0214446857571602,
+				"remaining_trauma": 0.00833333333333312,
+				"seconds": 0.283333333333333,
+				"tick": 17,
+				"vertical": 0.0155588453635573
+			},
+			{
+				"horizontal": 0.0214531254023314,
+				"remaining_trauma": 0.0,
+				"seconds": 0.3,
+				"tick": 18,
+				"vertical": 0.0159561857581139
+			},
+			{
+				"horizontal": 0.0218150764703751,
+				"remaining_trauma": 0.0,
+				"seconds": 0.316666666666667,
+				"tick": 19,
+				"vertical": 0.0160476751625538
+			},
+			{
+				"horizontal": 0.0221685227006674,
+				"remaining_trauma": 0.0,
+				"seconds": 0.333333333333333,
+				"tick": 20,
+				"vertical": 0.0161319803446531
+			},
+			{
+				"horizontal": 0.0225098077207804,
+				"remaining_trauma": 0.0,
+				"seconds": 0.35,
+				"tick": 21,
+				"vertical": 0.0162080638110638
+			},
+			{
+				"horizontal": 0.0228385217487812,
+				"remaining_trauma": 0.0,
+				"seconds": 0.366666666666667,
+				"tick": 22,
+				"vertical": 0.0162758398801088
+			},
+			{
+				"horizontal": 0.0231542754918337,
+				"remaining_trauma": 0.0,
+				"seconds": 0.383333333333333,
+				"tick": 23,
+				"vertical": 0.0163352210074663
+			},
+			{
+				"horizontal": 0.0234566889703274,
+				"remaining_trauma": 0.0,
+				"seconds": 0.4,
+				"tick": 24,
+				"vertical": 0.0163861233741045
+			},
+			{
+				"horizontal": 0.0237453915178776,
+				"remaining_trauma": 0.0,
+				"seconds": 0.416666666666667,
+				"tick": 25,
+				"vertical": 0.0164284724742174
+			},
+			{
+				"horizontal": 0.0240200236439705,
+				"remaining_trauma": 0.0,
+				"seconds": 0.433333333333333,
+				"tick": 26,
+				"vertical": 0.0164621938019991
+			},
+			{
+				"horizontal": 0.0242802426218987,
+				"remaining_trauma": 0.0,
+				"seconds": 0.45,
+				"tick": 27,
+				"vertical": 0.016487218439579
+			},
+			{
+				"horizontal": 0.0245257131755352,
+				"remaining_trauma": 0.0,
+				"seconds": 0.466666666666667,
+				"tick": 28,
+				"vertical": 0.0165034811943769
+			},
+			{
+				"horizontal": 0.0247561149299145,
+				"remaining_trauma": 0.0,
+				"seconds": 0.483333333333333,
+				"tick": 29,
+				"vertical": 0.0165109261870384
+			},
+			{
+				"horizontal": 0.0249711442738771,
+				"remaining_trauma": 0.0,
+				"seconds": 0.5,
+				"tick": 30,
+				"vertical": 0.0165094956755638
+			},
+			{
+				"horizontal": 0.0251705031841993,
+				"remaining_trauma": 0.0,
+				"seconds": 0.516666666666667,
+				"tick": 31,
+				"vertical": 0.0164991393685341
+			},
+			{
+				"horizontal": 0.0253539178520441,
+				"remaining_trauma": 0.0,
+				"seconds": 0.533333333333333,
+				"tick": 32,
+				"vertical": 0.0164798144251108
+			},
+			{
+				"horizontal": 0.02552112005651,
+				"remaining_trauma": 0.0,
+				"seconds": 0.55,
+				"tick": 33,
+				"vertical": 0.0164514761418104
+			},
+			{
+				"horizontal": 0.0256718583405018,
+				"remaining_trauma": 0.0,
+				"seconds": 0.566666666666667,
+				"tick": 34,
+				"vertical": 0.0164140928536654
+			},
+			{
+				"horizontal": 0.0258058980107307,
+				"remaining_trauma": 0.0,
+				"seconds": 0.583333333333333,
+				"tick": 35,
+				"vertical": 0.0163676310330629
+			},
+			{
+				"horizontal": 0.0259230211377144,
+				"remaining_trauma": 0.0,
+				"seconds": 0.6,
+				"tick": 36,
+				"vertical": 0.0163120627403259
+			}
+		]
+	},
+	"OFF": {
+		"peak_offset": 0.0,
+		"samples": [
+			{
+				"horizontal": 0.0,
+				"remaining_trauma": 0.0,
+				"seconds": 0.0166666666666667,
+				"tick": 1,
+				"vertical": 0.0
+			},
+			{
+				"horizontal": 0.0,
+				"remaining_trauma": 0.0,
+				"seconds": 0.0333333333333333,
+				"tick": 2,
+				"vertical": 0.0
+			},
+			{
+				"horizontal": 0.0,
+				"remaining_trauma": 0.0,
+				"seconds": 0.05,
+				"tick": 3,
+				"vertical": 0.0
+			},
+			{
+				"horizontal": 0.0,
+				"remaining_trauma": 0.0,
+				"seconds": 0.0666666666666667,
+				"tick": 4,
+				"vertical": 0.0
+			},
+			{
+				"horizontal": 0.0,
+				"remaining_trauma": 0.0,
+				"seconds": 0.0833333333333333,
+				"tick": 5,
+				"vertical": 0.0
+			},
+			{
+				"horizontal": 0.0,
+				"remaining_trauma": 0.0,
+				"seconds": 0.1,
+				"tick": 6,
+				"vertical": 0.0
+			},
+			{
+				"horizontal": 0.0,
+				"remaining_trauma": 0.0,
+				"seconds": 0.116666666666667,
+				"tick": 7,
+				"vertical": 0.0
+			},
+			{
+				"horizontal": 0.0,
+				"remaining_trauma": 0.0,
+				"seconds": 0.133333333333333,
+				"tick": 8,
+				"vertical": 0.0
+			},
+			{
+				"horizontal": 0.0,
+				"remaining_trauma": 0.0,
+				"seconds": 0.15,
+				"tick": 9,
+				"vertical": 0.0
+			},
+			{
+				"horizontal": 0.0,
+				"remaining_trauma": 0.0,
+				"seconds": 0.166666666666667,
+				"tick": 10,
+				"vertical": 0.0
+			},
+			{
+				"horizontal": 0.0,
+				"remaining_trauma": 0.0,
+				"seconds": 0.183333333333333,
+				"tick": 11,
+				"vertical": 0.0
+			},
+			{
+				"horizontal": 0.0,
+				"remaining_trauma": 0.0,
+				"seconds": 0.2,
+				"tick": 12,
+				"vertical": 0.0
+			},
+			{
+				"horizontal": 0.0,
+				"remaining_trauma": 0.0,
+				"seconds": 0.216666666666667,
+				"tick": 13,
+				"vertical": 0.0
+			},
+			{
+				"horizontal": 0.0,
+				"remaining_trauma": 0.0,
+				"seconds": 0.233333333333333,
+				"tick": 14,
+				"vertical": 0.0
+			},
+			{
+				"horizontal": 0.0,
+				"remaining_trauma": 0.0,
+				"seconds": 0.25,
+				"tick": 15,
+				"vertical": 0.0
+			},
+			{
+				"horizontal": 0.0,
+				"remaining_trauma": 0.0,
+				"seconds": 0.266666666666667,
+				"tick": 16,
+				"vertical": 0.0
+			},
+			{
+				"horizontal": 0.0,
+				"remaining_trauma": 0.0,
+				"seconds": 0.283333333333333,
+				"tick": 17,
+				"vertical": 0.0
+			},
+			{
+				"horizontal": 0.0,
+				"remaining_trauma": 0.0,
+				"seconds": 0.3,
+				"tick": 18,
+				"vertical": 0.0
+			},
+			{
+				"horizontal": 0.0,
+				"remaining_trauma": 0.0,
+				"seconds": 0.316666666666667,
+				"tick": 19,
+				"vertical": 0.0
+			},
+			{
+				"horizontal": 0.0,
+				"remaining_trauma": 0.0,
+				"seconds": 0.333333333333333,
+				"tick": 20,
+				"vertical": 0.0
+			},
+			{
+				"horizontal": 0.0,
+				"remaining_trauma": 0.0,
+				"seconds": 0.35,
+				"tick": 21,
+				"vertical": 0.0
+			},
+			{
+				"horizontal": 0.0,
+				"remaining_trauma": 0.0,
+				"seconds": 0.366666666666667,
+				"tick": 22,
+				"vertical": 0.0
+			},
+			{
+				"horizontal": 0.0,
+				"remaining_trauma": 0.0,
+				"seconds": 0.383333333333333,
+				"tick": 23,
+				"vertical": 0.0
+			},
+			{
+				"horizontal": 0.0,
+				"remaining_trauma": 0.0,
+				"seconds": 0.4,
+				"tick": 24,
+				"vertical": 0.0
+			},
+			{
+				"horizontal": 0.0,
+				"remaining_trauma": 0.0,
+				"seconds": 0.416666666666667,
+				"tick": 25,
+				"vertical": 0.0
+			},
+			{
+				"horizontal": 0.0,
+				"remaining_trauma": 0.0,
+				"seconds": 0.433333333333333,
+				"tick": 26,
+				"vertical": 0.0
+			},
+			{
+				"horizontal": 0.0,
+				"remaining_trauma": 0.0,
+				"seconds": 0.45,
+				"tick": 27,
+				"vertical": 0.0
+			},
+			{
+				"horizontal": 0.0,
+				"remaining_trauma": 0.0,
+				"seconds": 0.466666666666667,
+				"tick": 28,
+				"vertical": 0.0
+			},
+			{
+				"horizontal": 0.0,
+				"remaining_trauma": 0.0,
+				"seconds": 0.483333333333333,
+				"tick": 29,
+				"vertical": 0.0
+			},
+			{
+				"horizontal": 0.0,
+				"remaining_trauma": 0.0,
+				"seconds": 0.5,
+				"tick": 30,
+				"vertical": 0.0
+			},
+			{
+				"horizontal": 0.0,
+				"remaining_trauma": 0.0,
+				"seconds": 0.516666666666667,
+				"tick": 31,
+				"vertical": 0.0
+			},
+			{
+				"horizontal": 0.0,
+				"remaining_trauma": 0.0,
+				"seconds": 0.533333333333333,
+				"tick": 32,
+				"vertical": 0.0
+			},
+			{
+				"horizontal": 0.0,
+				"remaining_trauma": 0.0,
+				"seconds": 0.55,
+				"tick": 33,
+				"vertical": 0.0
+			},
+			{
+				"horizontal": 0.0,
+				"remaining_trauma": 0.0,
+				"seconds": 0.566666666666667,
+				"tick": 34,
+				"vertical": 0.0
+			},
+			{
+				"horizontal": 0.0,
+				"remaining_trauma": 0.0,
+				"seconds": 0.583333333333333,
+				"tick": 35,
+				"vertical": 0.0
+			},
+			{
+				"horizontal": 0.0,
+				"remaining_trauma": 0.0,
+				"seconds": 0.6,
+				"tick": 36,
+				"vertical": 0.0
+			}
+		]
+	}
+}

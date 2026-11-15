@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites id="2026-11-15" name="report_1" tests="45" failures="0" skipped="0" flaky="0" time="0.000">
+	<testsuite id="0" name="test_camera_impact_shake" package="tests" timestamp="2026-11-15T20:58:22" hostname="localhost" tests="11" failures="0" errors="0" skipped="0" flaky="0" time="1.632">
+		<testcase name="test_every_coverage_fires_once_at_contact_even_with_residual_shake_and_cuts_off" classname="test_camera_impact_shake" time="0.005">
+		</testcase>
+		<testcase name="test_finisher_shots_do_not_replay_a_consumed_impact_after_the_pulse_settles" classname="test_camera_impact_shake" time="0.003">
+		</testcase>
+		<testcase name="test_off_clears_active_and_new_cues_without_replaying_them_when_reenabled" classname="test_camera_impact_shake" time="0.004">
+		</testcase>
+		<testcase name="test_running_catch_and_authored_landing_have_different_camera_beats" classname="test_camera_impact_shake" time="0.003">
+		</testcase>
+		<testcase name="test_cancelled_pair_discards_its_pending_impact" classname="test_camera_impact_shake" time="0.003">
+		</testcase>
+		<testcase name="test_all_shake_levels_allow_the_real_root_animation_to_advance" classname="test_camera_impact_shake" time="1.565">
+		</testcase>
+		<testcase name="test_paired_completion_does_not_shake_twice_or_suppress_a_later_strike" classname="test_camera_impact_shake" time="0.006">
+		</testcase>
+		<testcase name="test_completion_without_a_delivered_impact_keeps_the_landed_event_cue" classname="test_camera_impact_shake" time="0.003">
+		</testcase>
+		<testcase name="test_an_omitted_completion_notification_expires_without_suppressing_future_hits" classname="test_camera_impact_shake" time="0.003">
+		</testcase>
+		<testcase name="test_a_broadcast_slam_cannot_top_up_or_repeat_its_scheduled_throw_pulse" classname="test_camera_impact_shake" time="0.004">
+		</testcase>
+		<testcase name="test_standalone_slam_fallback_is_kept_but_ordinary_paired_holds_stay_steady" classname="test_camera_impact_shake" time="0.004">
+		</testcase>
+	</testsuite>
+	<testsuite id="1" name="test_camera_fight_forever" package="tests" timestamp="2026-11-15T20:58:23" hostname="localhost" tests="13" failures="0" errors="0" skipped="0" flaky="0" time="22.749">
+		<testcase name="test_it_is_the_default_coverage" classname="test_camera_fight_forever" time="2.730">
+		</testcase>
+		<testcase name="test_the_game_camera_is_high_and_on_one_side" classname="test_camera_fight_forever" time="1.928">
+		</testcase>
+		<testcase name="test_a_grapple_cuts_in_close_toward_the_stage_and_out_on_the_impact" classname="test_camera_fight_forever" time="1.976">
+		</testcase>
+		<testcase name="test_the_close_up_pulls_back_for_a_man_held_overhead" classname="test_camera_fight_forever" time="2.011">
+		</testcase>
+		<testcase name="test_ordinary_strikes_stay_wide_and_a_signature_strike_cuts" classname="test_camera_fight_forever" time="1.903">
+		</testcase>
+		<testcase name="test_running_attacks_and_dives_stay_wide" classname="test_camera_fight_forever" time="2.086">
+		</testcase>
+		<testcase name="test_a_signature_and_a_finisher_shake_the_camera_on_their_impact_only" classname="test_camera_fight_forever" time="2.004">
+		</testcase>
+		<testcase name="test_a_slam_shake_waits_for_the_moves_own_contact_frame" classname="test_camera_fight_forever" time="1.996">
+		</testcase>
+		<testcase name="test_impact_fraction_is_clamped_inside_the_move" classname="test_camera_fight_forever" time="0.004">
+		</testcase>
+		<testcase name="test_a_big_signature_blow_is_restrained_not_stacked_on_the_big_strike" classname="test_camera_fight_forever" time="1.982">
+		</testcase>
+		<testcase name="test_shake_off_writes_no_offset" classname="test_camera_fight_forever" time="2.066">
+		</testcase>
+		<testcase name="test_the_shake_settles_briefly_without_pausing_anything" classname="test_camera_fight_forever" time="1.993">
+		</testcase>
+		<testcase name="test_more_moves_shake_the_camera_as_fight_forever_does" classname="test_camera_fight_forever" time="0.004">
+		</testcase>
+	</testsuite>
+	<testsuite id="2" name="test_finisher_only" package="tests" timestamp="2026-11-15T20:58:46" hostname="localhost" tests="6" failures="0" errors="0" skipped="0" flaky="0" time="34.173">
+		<testcase name="test_the_near_fall_comes_after_two_and_before_three" classname="test_finisher_only" time="8.981">
+		</testcase>
+		<testcase name="test_only_the_finisher_makes_a_cover_winnable" classname="test_finisher_only" time="5.045">
+		</testcase>
+		<testcase name="test_damage_by_any_path_shuts_the_finisher_window" classname="test_finisher_only" time="5.102">
+		</testcase>
+		<testcase name="test_getting_up_shuts_the_finisher_window" classname="test_finisher_only" time="5.008">
+		</testcase>
+		<testcase name="test_each_man_has_a_finisher_to_win_with" classname="test_finisher_only" time="4.978">
+		</testcase>
+		<testcase name="test_the_finisher_is_three_shots_in_order" classname="test_finisher_only" time="5.034">
+		</testcase>
+	</testsuite>
+	<testsuite id="3" name="test_camera_set_piece" package="tests" timestamp="2026-11-15T20:59:21" hostname="localhost" tests="1" failures="0" errors="0" skipped="0" flaky="0" time="1.876">
+		<testcase name="test_nonbreaking_set_piece_landing_gets_the_broadcast_cut" classname="test_camera_set_piece" time="1.861">
+		</testcase>
+	</testsuite>
+	<testsuite id="4" name="test_paired_poses" package="tests" timestamp="2026-11-15T20:59:23" hostname="localhost" tests="14" failures="0" errors="0" skipped="0" flaky="0" time="0.154">
+		<testcase name="test_every_recipe_samples_a_clip_the_rig_actually_has" classname="test_paired_poses" time="0.015">
+		</testcase>
+		<testcase name="test_every_sample_time_is_inside_its_source_clip" classname="test_paired_poses" time="0.014">
+		</testcase>
+		<testcase name="test_every_recipe_has_a_matching_trajectory" classname="test_paired_poses" time="0.003">
+		</testcase>
+		<testcase name="test_role_clips_are_exactly_as_long_as_the_trajectory" classname="test_paired_poses" time="0.005">
+		</testcase>
+		<testcase name="test_generated_library_has_both_roles_for_every_recipe" classname="test_paired_poses" time="0.004">
+		</testcase>
+		<testcase name="test_generated_clips_pose_every_bone_the_rig_animates" classname="test_paired_poses" time="0.022">
+		</testcase>
+		<testcase name="test_generated_track_paths_resolve_against_a_real_wrestler" classname="test_paired_poses" time="0.015">
+		</testcase>
+		<testcase name="test_roles_resolve_to_different_clips" classname="test_paired_poses" time="0.003">
+		</testcase>
+		<testcase name="test_a_move_with_no_recipe_resolves_to_nothing" classname="test_paired_poses" time="0.003">
+		</testcase>
+		<testcase name="test_defender_grip_windows_are_inside_the_move" classname="test_paired_poses" time="0.004">
+		</testcase>
+		<testcase name="test_a_wrestler_can_play_its_half_of_an_authored_move" classname="test_paired_poses" time="0.013">
+		</testcase>
+		<testcase name="test_a_move_with_no_recipe_falls_back_instead_of_failing" classname="test_paired_poses" time="0.011">
+		</testcase>
+		<testcase name="test_thrown_bodies_land_upright" classname="test_paired_poses" time="0.004">
+		</testcase>
+		<testcase name="test_no_move_ends_with_a_body_on_its_face" classname="test_paired_poses" time="0.004">
+		</testcase>
+	</testsuite>
+</testsuites>

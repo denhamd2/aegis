@@ -1,0 +1,181 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+[2J[H[38;2;233;150;122m
+--------------------------------------------------------------------------------------------------
+GdUnit4 Comandline Tool
+--------------------------------------------------------------------------------------------------[0m
+[38;2;0;191;255mDisabled fail fast![0m
+[38;2;0;191;255mSet write reports to /workspace/aegis/game/tmp/aegis-camera-shake-combined[0m
+[38;2;218;165;32m
+Headless mode is ignored by option '--ignoreHeadlessMode'"
+
+Please note that tests that use UI interaction do not work correctly in headless mode.
+Godot 'InputEvents' are not transported by the Godot engine in headless mode and therefore
+have no effect in the test!
+[0m
+[38;2;100;149;237mInstalling GdUnit4 session system hooks.[0m
+[38;2;100;149;237mSession hook 'GdUnitHtmlTestReporter' installed.[0m
+[38;2;100;149;237mSession hook 'GdUnitXMLTestReporter' installed.[0m
+[38;2;0;206;209mRun Test Suite: [0m[38;2;250;235;215mres://tests/test_camera_impact_shake.gd[0m
+  [38;2;250;235;215mres://tests/test_camera_impact_shake.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_every_coverage_fires_once_at_contact_even_with_residual_shake_and_cuts_off[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_camera_impact_shake.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_every_coverage_fires_once_at_contact_even_with_residual_shake_and_cuts_off[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 5ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_camera_impact_shake.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_finisher_shots_do_not_replay_a_consumed_impact_after_the_pulse_settles[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_camera_impact_shake.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_finisher_shots_do_not_replay_a_consumed_impact_after_the_pulse_settles[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_camera_impact_shake.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_off_clears_active_and_new_cues_without_replaying_them_when_reenabled[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_camera_impact_shake.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_off_clears_active_and_new_cues_without_replaying_them_when_reenabled[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 4ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_camera_impact_shake.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_running_catch_and_authored_landing_have_different_camera_beats[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_camera_impact_shake.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_running_catch_and_authored_landing_have_different_camera_beats[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_camera_impact_shake.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_cancelled_pair_discards_its_pending_impact[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_camera_impact_shake.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_cancelled_pair_discards_its_pending_impact[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_camera_impact_shake.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_all_shake_levels_allow_the_real_root_animation_to_advance[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_camera_impact_shake.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_all_shake_levels_allow_the_real_root_animation_to_advance[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 1s 565ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_camera_impact_shake.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_paired_completion_does_not_shake_twice_or_suppress_a_later_strike[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_camera_impact_shake.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_paired_completion_does_not_shake_twice_or_suppress_a_later_strike[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 6ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_camera_impact_shake.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_completion_without_a_delivered_impact_keeps_the_landed_event_cue[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_camera_impact_shake.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_completion_without_a_delivered_impact_keeps_the_landed_event_cue[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_camera_impact_shake.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_an_omitted_completion_notification_expires_without_suppressing_future_hits[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_camera_impact_shake.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_an_omitted_completion_notification_expires_without_suppressing_future_hits[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_camera_impact_shake.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_a_broadcast_slam_cannot_top_up_or_repeat_its_scheduled_throw_pulse[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_camera_impact_shake.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_a_broadcast_slam_cannot_top_up_or_repeat_its_scheduled_throw_pulse[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 4ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_camera_impact_shake.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_standalone_slam_fallback_is_kept_but_ordinary_paired_holds_stay_steady[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_camera_impact_shake.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_standalone_slam_fallback_is_kept_but_ordinary_paired_holds_stay_steady[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 4ms[0m
+[38;2;128;128;128m[0m
+[38;2;30;144;255mStatistics:[0m[38;2;128;128;128m 11 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 1s 632ms[0m
+[38;2;128;128;128m[0m
+[38;2;128;128;128m[0m
+[38;2;0;206;209mRun Test Suite: [0m[38;2;250;235;215mres://tests/test_camera_fight_forever.gd[0m
+  [38;2;250;235;215mres://tests/test_camera_fight_forever.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_it_is_the_default_coverage[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_camera_fight_forever.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_it_is_the_default_coverage[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 2s 730ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_camera_fight_forever.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_game_camera_is_high_and_on_one_side[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_camera_fight_forever.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_game_camera_is_high_and_on_one_side[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 1s 928ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_camera_fight_forever.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_a_grapple_cuts_in_close_toward_the_stage_and_out_on_the_impact[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_camera_fight_forever.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_a_grapple_cuts_in_close_toward_the_stage_and_out_on_the_impact[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 1s 976ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_camera_fight_forever.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_close_up_pulls_back_for_a_man_held_overhead[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_camera_fight_forever.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_close_up_pulls_back_for_a_man_held_overhead[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 2s 11ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_camera_fight_forever.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_ordinary_strikes_stay_wide_and_a_signature_strike_cuts[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_camera_fight_forever.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_ordinary_strikes_stay_wide_and_a_signature_strike_cuts[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 1s 903ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_camera_fight_forever.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_running_attacks_and_dives_stay_wide[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_camera_fight_forever.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_running_attacks_and_dives_stay_wide[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 2s 86ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_camera_fight_forever.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_a_signature_and_a_finisher_shake_the_camera_on_their_impact_only[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_camera_fight_forever.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_a_signature_and_a_finisher_shake_the_camera_on_their_impact_only[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 2s 4ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_camera_fight_forever.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_a_slam_shake_waits_for_the_moves_own_contact_frame[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_camera_fight_forever.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_a_slam_shake_waits_for_the_moves_own_contact_frame[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 1s 996ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_camera_fight_forever.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_impact_fraction_is_clamped_inside_the_move[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_camera_fight_forever.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_impact_fraction_is_clamped_inside_the_move[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 4ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_camera_fight_forever.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_a_big_signature_blow_is_restrained_not_stacked_on_the_big_strike[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_camera_fight_forever.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_a_big_signature_blow_is_restrained_not_stacked_on_the_big_strike[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 1s 982ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_camera_fight_forever.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_shake_off_writes_no_offset[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_camera_fight_forever.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_shake_off_writes_no_offset[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 2s 66ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_camera_fight_forever.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_shake_settles_briefly_without_pausing_anything[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_camera_fight_forever.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_shake_settles_briefly_without_pausing_anything[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 1s 993ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_camera_fight_forever.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_more_moves_shake_the_camera_as_fight_forever_does[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_camera_fight_forever.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_more_moves_shake_the_camera_as_fight_forever_does[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 4ms[0m
+[38;2;128;128;128m[0m
+[38;2;30;144;255mStatistics:[0m[38;2;128;128;128m 13 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 22s 749ms[0m
+[38;2;128;128;128m[0m
+[38;2;128;128;128m[0m
+[38;2;0;206;209mRun Test Suite: [0m[38;2;250;235;215mres://tests/test_finisher_only.gd[0m
+  [38;2;250;235;215mres://tests/test_finisher_only.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_near_fall_comes_after_two_and_before_three[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_finisher_only.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_near_fall_comes_after_two_and_before_three[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 8s 981ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_finisher_only.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_only_the_finisher_makes_a_cover_winnable[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_finisher_only.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_only_the_finisher_makes_a_cover_winnable[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 5s 45ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_finisher_only.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_damage_by_any_path_shuts_the_finisher_window[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_finisher_only.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_damage_by_any_path_shuts_the_finisher_window[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 5s 102ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_finisher_only.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_getting_up_shuts_the_finisher_window[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_finisher_only.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_getting_up_shuts_the_finisher_window[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 5s 8ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_finisher_only.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_each_man_has_a_finisher_to_win_with[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_finisher_only.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_each_man_has_a_finisher_to_win_with[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 4s 978ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_finisher_only.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_finisher_is_three_shots_in_order[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_finisher_only.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_finisher_is_three_shots_in_order[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 5s 34ms[0m
+[38;2;128;128;128m[0m
+[38;2;30;144;255mStatistics:[0m[38;2;128;128;128m 6 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 34s 173ms[0m
+[38;2;128;128;128m[0m
+[38;2;128;128;128m[0m
+[38;2;0;206;209mRun Test Suite: [0m[38;2;250;235;215mres://tests/test_camera_set_piece.gd[0m
+  [38;2;250;235;215mres://tests/test_camera_set_piece.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_nonbreaking_set_piece_landing_gets_the_broadcast_cut[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_camera_set_piece.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_nonbreaking_set_piece_landing_gets_the_broadcast_cut[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 1s 861ms[0m
+[38;2;128;128;128m[0m
+[38;2;30;144;255mStatistics:[0m[38;2;128;128;128m 1 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 1s 876ms[0m
+[38;2;128;128;128m[0m
+[38;2;128;128;128m[0m
+[38;2;0;206;209mRun Test Suite: [0m[38;2;250;235;215mres://tests/test_paired_poses.gd[0m
+  [38;2;250;235;215mres://tests/test_paired_poses.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_every_recipe_samples_a_clip_the_rig_actually_has[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_paired_poses.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_every_recipe_samples_a_clip_the_rig_actually_has[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 15ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_paired_poses.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_every_sample_time_is_inside_its_source_clip[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_paired_poses.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_every_sample_time_is_inside_its_source_clip[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 14ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_paired_poses.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_every_recipe_has_a_matching_trajectory[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_paired_poses.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_every_recipe_has_a_matching_trajectory[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_paired_poses.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_role_clips_are_exactly_as_long_as_the_trajectory[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_paired_poses.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_role_clips_are_exactly_as_long_as_the_trajectory[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 5ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_paired_poses.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_generated_library_has_both_roles_for_every_recipe[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_paired_poses.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_generated_library_has_both_roles_for_every_recipe[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 4ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_paired_poses.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_generated_clips_pose_every_bone_the_rig_animates[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_paired_poses.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_generated_clips_pose_every_bone_the_rig_animates[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 22ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_paired_poses.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_generated_track_paths_resolve_against_a_real_wrestler[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_paired_poses.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_generated_track_paths_resolve_against_a_real_wrestler[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 15ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_paired_poses.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_roles_resolve_to_different_clips[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_paired_poses.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_roles_resolve_to_different_clips[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_paired_poses.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_a_move_with_no_recipe_resolves_to_nothing[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_paired_poses.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_a_move_with_no_recipe_resolves_to_nothing[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_paired_poses.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_defender_grip_windows_are_inside_the_move[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_paired_poses.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_defender_grip_windows_are_inside_the_move[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 4ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_paired_poses.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_a_wrestler_can_play_its_half_of_an_authored_move[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_paired_poses.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_a_wrestler_can_play_its_half_of_an_authored_move[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 13ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_paired_poses.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_a_move_with_no_recipe_falls_back_instead_of_failing[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_paired_poses.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_a_move_with_no_recipe_falls_back_instead_of_failing[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 11ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_paired_poses.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_thrown_bodies_land_upright[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_paired_poses.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_thrown_bodies_land_upright[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 4ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_paired_poses.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_no_move_ends_with_a_body_on_its_face[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_paired_poses.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_no_move_ends_with_a_body_on_its_face[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 4ms[0m
+[38;2;128;128;128m[0m
+[38;2;30;144;255mStatistics:[0m[38;2;128;128;128m 14 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 154ms[0m
+[38;2;128;128;128m[0m
+[38;2;128;128;128m[0m
+[38;2;30;144;255mOverall Summary:[0m[38;2;255;255;255m 45 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |[0m
+[38;2;233;150;122mExecuted test suites: (5/5)[0m
+[38;2;233;150;122mExecuted test cases : (45/45)[0m
+[38;2;233;150;122mTotal execution time: 1min 0s 584ms[0m
+[38;2;255;255;255m [0m[38;2;100;149;237mOpen XML Report at: file:///workspace/aegis/game/tmp/aegis-camera-shake-combined/report_1/results.xml[0m
+[38;2;100;149;237mOpen HTML Report at: file:///workspace/aegis/game/tmp/aegis-camera-shake-combined/report_1/index.html[0m
+[38;2;233;150;122mExit code: 0[0m
+Run dispose test resources
