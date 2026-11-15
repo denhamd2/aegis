@@ -10739,9 +10739,9 @@ def _tw(p, **adds):
 # Kenny's sprint (loop 3): leaned into, longer reach than RUN_A/B's jog.
 _KRUN_A = dict(RUN_A, pelvis=(0.0, 0.08, 0.780), hips=(-18, 0, 0), spine=(-24, 0, 0),
                head=(12, 0, 0),
-               hand_r=(0.24, -0.04, 1.00), hand_l=(-0.24, 0.40, 1.10),
+               hand_r=(0.32, -0.10, 1.00), hand_l=(-0.30, 0.44, 1.10),
                foot_r=(0.16, -0.40, 0.26), foot_l=(-0.14, 0.32, 0.104))
-_KRUN_B = dict(_KRUN_A, hand_r=(0.26, 0.40, 1.10), hand_l=(-0.24, -0.04, 1.00),
+_KRUN_B = dict(_KRUN_A, hand_r=(0.32, 0.44, 1.10), hand_l=(-0.30, -0.10, 1.00),
                foot_r=(0.16, 0.32, 0.104), foot_l=(-0.14, -0.40, 0.26))
 
 
@@ -11203,17 +11203,10 @@ CLIPS["FF_Powerbomb_V_Trigger_Combo_Defender"] = [
     (80, dict(_PBL_DEF[20])),
     (85, _blend_pose(_PBL_DEF[20], _PBL_DEF[30], 0.5)),
     (90, dict(_PBL_DEF[30])),
-    (92, dict(_PB1_DEF[32])),
-    (95, dict(_PB1_DEF[34])),
-    (96, dict(_PB1_DEF[35])),
-    (98, dict(_PB1_DEF[36])),
-    (99, dict(_PB1_DEF[37])),
-    (101, dict(_PB1_DEF[39])),
-    (106, dict(_PB1_DEF[44])),
-    (110, dict(_PB1_DEF[49])),
-    (113, dict(SUPINE_AWAY, pelvis=(0.0, 0.0, 0.190))),
+] + [(f + 62, dict(_PB1_DEF[f])) for f in (32, 34, 35, 36, 37, 39, 44, 49)] + [
+    (116, dict(SUPINE_AWAY, pelvis=(0.0, 0.0, 0.190))),
     # Up off his back, groggy, and sat there.
-    (118, dict(SUPINE_AWAY, head=(-30, 0, 0))),
+    (120, dict(SUPINE_AWAY, head=(-30, 0, 0))),
     (125, pose(SIT_UP, head=(-20, 0, 0))),
     (131, dict(_PBV_SEATED)),
     (136, _tw(_PBV_SEATED, head=(-4, 6, 0))),
