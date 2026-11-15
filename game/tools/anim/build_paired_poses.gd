@@ -4,6 +4,11 @@ extends SceneTree
 ## Run from the Godot project root:
 ##   godot4 --headless -s res://tools/anim/build_paired_poses.gd
 ##
+## Scoped iteration: AEGIS_PAIRED_MOVES=move_id[,move_id] retains other roles
+## from the current library. AEGIS_AUTHORED_PATH may select a PackedScene from
+## an isolated Godot import; AEGIS_PAIRED_OUTPUT selects a review output.
+## Unset variables preserve the full production build.
+##
 ## For every recipe sample it evaluates each of the source clip's 55 bone
 ## rotation tracks (and the one pelvis position track) at the sampled time,
 ## applies the recipe's per-bone offsets, and writes the result as one key
@@ -46,6 +51,14 @@ func _init() -> void:
 	quit(status)
 
 func _build() -> int:
+	var selected := OS.get_environment("AEGIS_PAIRED_MOVES").split(",", false)
+	for move_id in selected:
+		if not PairedRecipes.RECIPES.has(move_id):
+			push_error("Unknown paired recipe: %s" % move_id)
+			return 1
+	var output := OS.get_environment("AEGIS_PAIRED_OUTPUT")
+	if output.is_empty():
+		output = OUTPUT
 	var rig: PackedScene = load(RIG_SCENE)
 	if not rig:
 		push_error("Cannot load rig: %s" % RIG_SCENE)
@@ -65,9 +78,18 @@ func _build() -> int:
 	var template: Animation = player.get_animation(TEMPLATE_CLIP)
 	var tracks := _describe_tracks(template)
 
+	# Scoped iterations replace only requested roles in the existing library.
 	var out := AnimationLibrary.new()
+	if not selected.is_empty():
+		var existing: AnimationLibrary = load(OUTPUT)
+		if not existing:
+			model.free()
+			return 1
+		out = existing.duplicate(false) as AnimationLibrary
 	var built := 0
 	for move_id in PairedRecipes.RECIPES:
+		if not selected.is_empty() and not selected.has(move_id):
+			continue
 		if not lengths.has(move_id):
 			push_error("Recipe '%s' has no matching animation in %s"
 					% [move_id, PAIRED_MOVES])
@@ -89,16 +111,20 @@ func _build() -> int:
 				return 1
 			var suffix: String = PairedRecipes.ATTACKER_SUFFIX if role == "attacker" \
 					else PairedRecipes.DEFENDER_SUFFIX
-			out.add_animation(StringName(move_id + suffix), anim)
+			var name := StringName(move_id + suffix)
+			if out.has_animation(name):
+				anim.set_scene_unique_id(out.get_animation(name).get_scene_unique_id())
+				out.remove_animation(name)
+			out.add_animation(name, anim)
 			built += 1
 
 	model.free()
-	var err := ResourceSaver.save(out, OUTPUT)
+	var err := ResourceSaver.save(out, output)
 	if err != OK:
-		push_error("Saving %s failed: %d" % [OUTPUT, err])
+		push_error("Saving %s failed: %d" % [output, err])
 		return 1
 	print("Wrote %s -- %d clips from %d recipes"
-			% [OUTPUT, built, PairedRecipes.RECIPES.size()])
+			% [output, built, built / 2])
 	return 0
 
 ## Output clips must be exactly as long as the root-transform half of the
@@ -110,14 +136,22 @@ func _build() -> int:
 ## slide the performance out of the throw.
 func _authored(clip_name: String, tracks: Array, length: float,
 		label: String, rig: Node) -> Animation:
-	var packed: PackedScene = load(AUTHORED)
-	if not packed:
-		push_error("%s: cannot load %s" % [label, AUTHORED])
+	var authored := OS.get_environment("AEGIS_AUTHORED_PATH")
+	if authored.is_empty():
+		authored = AUTHORED
+	# Use the actual scene importer, including its optimizer. GLTFDocument's
+	# raw scene generation does not match the production import pipeline.
+	if authored.is_absolute_path() and not authored.begins_with("res://") 			and authored.get_extension() == "glb":
+		push_error("Import the candidate with Godot first, then provide its .scn: %s" % authored)
 		return null
-	var node: Node = packed.instantiate()
+	var packed: PackedScene = load(authored)
+	var node: Node = packed.instantiate() if packed else null
+	if not node:
+		push_error("%s: cannot load %s" % [label, authored])
+		return null
 	var player: AnimationPlayer = node.find_child("AnimationPlayer", true, false)
 	if not player or not player.has_animation(clip_name):
-		push_error("%s: %s has no clip '%s'" % [label, AUTHORED, clip_name])
+		push_error("%s: %s has no clip '%s'" % [label, authored, clip_name])
 		node.free()
 		return null
 	var source: Animation = player.get_animation(clip_name)

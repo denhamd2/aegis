@@ -1,0 +1,4 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+POSE_ERROR running_grapple_inverted_drop__attacker position_m 0.0 quaternion_component_distance 0.00055798958056 differing_key_counts [[10, 96, 97], [13, 97, 96], [14, 99, 100], [19, 96, 97], [29, 96, 97], [41, 97, 96]]
+POSE_ERROR running_grapple_inverted_drop__defender position_m 0.0 quaternion_component_distance 0.38026157021523 differing_key_counts [[7, 123, 120], [10, 63, 60], [11, 69, 68], [14, 68, 67], [15, 61, 62], [16, 60, 61], [17, 69, 68], [19, 61, 63], [21, 61, 62], [26, 120, 121], [29, 60, 61], [30, 66, 67], [31, 61, 63], [33, 63, 62], [35, 66, 63], [37, 59, 60], [39, 60, 61], [45, 55, 54], [48, 86, 94], [49, 79, 87]]

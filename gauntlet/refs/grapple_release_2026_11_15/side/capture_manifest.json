@@ -1,0 +1,64 @@
+{
+	"bare": true,
+	"captures": [
+		{
+			"elapsed_tick": 45,
+			"file": "running_grapple_inverted_drop_00.png",
+			"lead_in_ticks": 45,
+			"paired_seconds": 0.0166666666666667,
+			"requested_fraction": 0.0,
+			"requested_tick": 0
+		},
+		{
+			"elapsed_tick": 118,
+			"file": "running_grapple_inverted_drop_56.png",
+			"lead_in_ticks": 45,
+			"paired_seconds": 1.23333333333333,
+			"requested_fraction": 0.56060606,
+			"requested_tick": 74
+		},
+		{
+			"elapsed_tick": 132,
+			"file": "running_grapple_inverted_drop_66.png",
+			"lead_in_ticks": 45,
+			"paired_seconds": 1.46666666666667,
+			"requested_fraction": 0.66666667,
+			"requested_tick": 88
+		},
+		{
+			"elapsed_tick": 154,
+			"file": "running_grapple_inverted_drop_83.png",
+			"lead_in_ticks": 45,
+			"paired_seconds": 1.83333333333333,
+			"requested_fraction": 0.83333333,
+			"requested_tick": 110
+		},
+		{
+			"elapsed_tick": 158,
+			"file": "running_grapple_inverted_drop_86.png",
+			"lead_in_ticks": 45,
+			"paired_seconds": 1.9,
+			"requested_fraction": 0.86363636,
+			"requested_tick": 114
+		},
+		{
+			"elapsed_tick": 162,
+			"file": "running_grapple_inverted_drop_89.png",
+			"lead_in_ticks": 45,
+			"paired_seconds": 1.96666666666666,
+			"requested_fraction": 0.89393939,
+			"requested_tick": 118
+		},
+		{
+			"elapsed_tick": 176,
+			"file": "running_grapple_inverted_drop_100.png",
+			"lead_in_ticks": 45,
+			"paired_seconds": -1.0,
+			"requested_fraction": 1.0,
+			"requested_tick": 132
+		}
+	],
+	"match_camera": false,
+	"move": "running_grapple_inverted_drop",
+	"renderer": "forward_plus"
+}

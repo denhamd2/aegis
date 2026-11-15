@@ -1,0 +1,11 @@
+# R7 clay draft2: homologous camera points and bounded fit
+
+Replaced photo lid/canthus points with iris-centre annotations matching the owned mesh UV-pole anchors. Front centres [1224,365]/[1340,359] (±2px); quarter [600,359.5]/[672,344.5] (far eye occluded, ±4px); profile [175,362] (±5px). Tragus uses anterior edge, profile [315,373], quarter [817,372], ±5px. These remain manual estimates, not scan measurements. Draft1 annotations/images/audits are retained in ../draft1.
+
+Added actual raw scalp/temple/ear surface guards instead of weakening the deformation constraints. Full fit strength now 1.0, analytic Jacobian minimum .3522, capped-target RMS .912mm. The prior .4096 global attenuation was driven by unguarded extrapolation. Maximum head displacement including the unchanged historical yoke is 22.61mm. No chin-target edits or extra global jaw widening.
+
+Camera check now solves perspective yaw+pitch+roll from the three homologous camera anchors, with a stated assumed 2m distance. Result yaw47.50°, pitch−13.58°, roll3.08°. Three points do not identify lens distance: 1.2m/4m trials are recorded; low camera-anchor RMS is not anatomical or likeness evidence. Withheld nose error is7.71px (draft1 24.74px); mouth13.04px and chin38.70px remain unresolved. The chin check remains approximate because it denotes a surface landmark, not a visible silhouette extremum. Do not compensate blindly for that residual. Actual clay front/profile/quarter decides the next step.
+
+Protected neck validity correction: original RAW predates the owned production seam by <.5mm. Draft1 inadvertently restored that historical difference. Draft2 restores exact frozen owned seam positions below1.575m and smoothly blends to the canonical face over25mm; normals follow the same bounded seam transition. Eyes/weights/67binds remain unchanged, no BodyBulk/tint bake. Mouth interior follows the same canonical warp. Pigment/groom are untouched pending the geometry gate.
+
+Source bundle: Kenny.blend + kenny_character.py + kenny_reference_fit.py + kenny_reference_landmarks.json. Reference JPG is optional overlay input, never required by cold geometry rebuild. Build evidence path is explicitly selected with --audit-out to preserve draft history.

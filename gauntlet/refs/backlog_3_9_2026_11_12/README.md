@@ -87,3 +87,77 @@ assets, [comparison and checks](../weapon_realism_2026_11_13/validation.md).
 Subtle hardware/material refinement, not finished AAA acceptance. Casket,
 ambulance and remaining weapon families stay open. Grip failures on eight paths
 reproduce with original assets and remain a separate corrective follow-up.
+
+## Blender requirement and current batch
+
+Owner13November: steel cage, Hell in a Cell, ambulance and casket must all be
+modeled in Blender. Native editable sources, exports and runtime integration
+are now implemented; [validation and visual limits](../blender_props_2026_11_13/validation.md).
+This is not completed AAA acceptance or verified WWE2K visual parity.
+The all-weapon grip gate now passes without tolerance changes. Publication
+verification is recorded below; older entries describe earlier releases.
+
+Original batches3–5 remain open: entrances/moonsault, two-sided ladder routes,
+and ladder/table presentation. Remaining weapon families and further prop
+visual refinement also remain open; the new source pipeline does not close them.
+
+## Cell judge refinement
+
+Initial Blender batch published at `784d9b7`, verified mac-latest and Mac run
+43482869123; Aegis.zip1,055,710,877bytes. Three subsequent cell-only judge loops
+against confirmed silverWWE2K25 references and owner construction photos improve
+5.3→6.4→6.8→8.0/10. [Evidence](../cell_judge_2026_11_13/README.md).
+Final source31,338triangles/2materials;35affected checks pass. New refinement
+batch published at `ae0cef36edaf3db7e64836e72529a85c78ba3da9`:
+[Mac run43499679118](https://github.com/denhamd2/aegis/actions/runs/43499679118)
+succeeded, `mac-latest` resolves to that exact commit, and `Aegis.zip` is
+1,056,076,110bytes. Further fidelity work remains open;10/10 not reached.
+Exact-commit gameplay CI43499679216 was still running at this receipt;
+35/35 focused checks passed locally. Native appearance and performance await
+owner Mac review.
+
+Cell wire sampling follow-up: [evidence](../cell_judge_2026_11_13/wire_filter/README.md).
+Selective motion and MSAA-off door/roof-state review supports shipping with
+notes; overall likeness stays8.0/10. Published at
+`b40f7721948520b5004cbdaca46d46af49ec2d68`, verified against `mac-latest`;
+Mac run43502575366 succeeded, Aegis.zip1,056,076,611bytes. Exact-commit
+CI43502575462 was still running;35/35 affected local checks pass.
+Next cell step: bounded Blender walking-strip profile study; preserve roof
+height/gameplay and retain only a demonstrated close-view improvement.
+Original entrances/moonsault and ladder batches remain open.
+
+## WWE2K ambulance reference batch
+
+Three Blender/judge revisions complete:3.8→6.7→7.2→7.4/10.
+[Evidence, validation and remaining limitations](../ambulance_judge_2026_11_13/README.md).
+Final18,210triangles/10materials/23surfaces;6focused cases pass. Native source
+has assembled doors and portable maps; Godot pivot/interaction contracts remain
+unchanged. Published at `fa5c06d54cf068a387b56884a10390016e7044d8`,
+verified against `mac-latest`; Mac43511629112 succeeded, ZIP1,056,141,834bytes.
+Full CI matches the pre-ambulance baseline's4failures/2errors; no added failing
+cases. After deployment, the owner requests Kenny
+head/face/hair/body likeness review in three rounds and a Cody-independence audit.
+Other original unfinished priorities remain open.
+
+## Kenny: three-round likeness and identity separation, 14 November
+
+After the verified ambulance release, the owner requested Kenny head/face/hair/
+body review and full separation from Cody identity assets. Three fixed-camera
+independent review rounds are complete: **4.1 → 4.0 → 4.5 → 4.6/10**. Final
+verdict: ship with notes for owner review; likeness acceptance remains open.
+Facial identity, stiff ribbon-like curls and skin detail remain visible gaps.
+
+Editable Kenny.blend, packed maps/guides and the normal rebuild pipeline are
+Kenny-owned. Cody/Kenny now use a neutral shared rig adapter with separate
+identity profiles. Face bakes apply once; live bulk/tint remain. All 74 Cody
+asset fingerprints are unchanged; both load orders and instance mutation are
+covered. **78 focused cases pass**, zero failures/errors/orphans. Isolated cold
+regeneration succeeds without Cody files; one tangent component has 0.0001
+roundoff, all 17 PNG maps match exactly. [Evidence](../kenny_judge_2026_11_14/README.md).
+
+Mac publication verified: `253603dfc86b6531549d17cad7b0db3478f3caf0`,
+[Mac run 43575822777](https://github.com/denhamd2/aegis/actions/runs/43575822777)
+succeeded; exact `mac-latest` tag and uploaded ZIP 1,026,426,469 bytes checked.
+Python CI passed; broader exact-commit gameplay CI was still running.
+Original batches 3–5 and remaining weapon families
+stay open; native M1 performance and full-arena visual acceptance are unverified.

@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites id="2026-11-13" name="report_1" tests="47" failures="0" skipped="0" flaky="0" time="0.000">
+	<testsuite id="0" name="test_weapon_pickup" package="tests" timestamp="2026-11-13T14:48:45" hostname="localhost" tests="2" failures="0" errors="0" skipped="0" flaky="0" time="15.241">
+		<testcase name="test_the_lift_fits_the_weapon" classname="test_weapon_pickup" time="0.004">
+		</testcase>
+		<testcase name="test_his_hands_close_on_it_where_it_lies_and_it_does_not_jump" classname="test_weapon_pickup" time="15.229">
+		</testcase>
+	</testsuite>
+	<testsuite id="1" name="test_ladder_climb" package="tests" timestamp="2026-11-13T14:49:00" hostname="localhost" tests="6" failures="0" errors="0" skipped="0" flaky="0" time="1.391">
+		<testcase name="test_climbing_moves_up_and_returns_to_idle_at_the_base" classname="test_ladder_climb" time="0.061">
+		</testcase>
+		<testcase name="test_a_hit_tips_the_ladder_and_the_climber_falls_to_down" classname="test_ladder_climb" time="0.287">
+		</testcase>
+		<testcase name="test_a_carried_ladder_can_be_set_upright" classname="test_ladder_climb" time="0.056">
+		</testcase>
+		<testcase name="test_a_ladder_can_be_set_up_outside_and_folded_to_slide_under_the_ropes" classname="test_ladder_climb" time="0.943">
+		</testcase>
+		<testcase name="test_ladder_climb_states_have_authored_animation_clips" classname="test_ladder_climb" time="0.015">
+		</testcase>
+		<testcase name="test_top_of_ladder_aerial_has_paired_move_pose_and_landing_sell" classname="test_ladder_climb" time="0.004">
+		</testcase>
+	</testsuite>
+	<testsuite id="2" name="test_weapon_set_pieces" package="tests" timestamp="2026-11-13T14:49:01" hostname="localhost" tests="9" failures="0" errors="0" skipped="0" flaky="0" time="8.894">
+		<testcase name="test_put_down_on_a_table_he_goes_through_it" classname="test_weapon_set_pieces" time="0.819">
+		</testcase>
+		<testcase name="test_the_table_breaks_the_same_way_every_time" classname="test_weapon_set_pieces" time="1.635">
+		</testcase>
+		<testcase name="test_a_table_out_of_reach_stays_up" classname="test_weapon_set_pieces" time="0.797">
+		</testcase>
+		<testcase name="test_a_ringside_table_keeps_its_full_footprint_inside_the_barricade" classname="test_weapon_set_pieces" time="0.087">
+		</testcase>
+		<testcase name="test_not_in_a_singles_match" classname="test_weapon_set_pieces" time="0.760">
+		</testcase>
+		<testcase name="test_on_the_tacks_they_stay_and_some_stick_in_his_back" classname="test_weapon_set_pieces" time="0.820">
+		</testcase>
+		<testcase name="test_a_barbed_wire_board_hurts_him_and_stays_set_up" classname="test_weapon_set_pieces" time="0.809">
+		</testcase>
+		<testcase name="test_a_laid_out_ladder_is_a_paired_slam_landing_surface" classname="test_weapon_set_pieces" time="0.814">
+		</testcase>
+		<testcase name="test_a_chair_on_the_floor_hurts_less_than_a_table" classname="test_weapon_set_pieces" time="2.320">
+		</testcase>
+	</testsuite>
+	<testsuite id="3" name="test_man_fire" package="tests" timestamp="2026-11-13T14:49:10" hostname="localhost" tests="9" failures="0" errors="0" skipped="0" flaky="0" time="70.839">
+		<testcase name="test_a_man_who_walks_into_a_fire_catches_fire" classname="test_man_fire" time="4.319">
+		</testcase>
+		<testcase name="test_a_fire_far_off_or_at_his_feet_does_not_catch_him" classname="test_man_fire" time="2.222">
+		</testcase>
+		<testcase name="test_once_alight_he_stays_alight_and_the_marks_only_grow" classname="test_man_fire" time="2.494">
+		</testcase>
+		<testcase name="test_putting_him_out_keeps_the_burn_marks_for_the_rest_of_the_match" classname="test_man_fire" time="2.735">
+		</testcase>
+		<testcase name="test_he_is_wet_for_a_moment_after_the_put_out_and_cannot_catch_again" classname="test_man_fire" time="2.035">
+		</testcase>
+		<testcase name="test_aubrey_fetches_the_extinguisher_and_puts_the_fire_out" classname="test_man_fire" time="7.402">
+		</testcase>
+		<testcase name="test_the_fire_he_was_put_out_in_does_not_catch_him_again" classname="test_man_fire" time="3.870">
+		</testcase>
+		<testcase name="test_aubrey_keeps_after_him_until_the_fire_is_out" classname="test_man_fire" time="38.179">
+		</testcase>
+		<testcase name="test_the_extinguisher_hides_its_cloud_and_sprays_from_the_horn" classname="test_man_fire" time="7.530">
+		</testcase>
+	</testsuite>
+	<testsuite id="4" name="test_weapon_ai" package="tests" timestamp="2026-11-13T14:50:21" hostname="localhost" tests="21" failures="0" errors="0" skipped="0" flaky="0" time="1.249">
+		<testcase name="test_he_favours_his_own_weapons" classname="test_weapon_ai" time="0.127">
+		</testcase>
+		<testcase name="test_the_same_seed_picks_the_same" classname="test_weapon_ai" time="0.027">
+		</testcase>
+		<testcase name="test_rocket_gun_and_bed_of_nails_are_regular_ai_picks" classname="test_weapon_ai" time="0.047">
+		</testcase>
+		<testcase name="test_the_launcher_is_open_from_the_bell_and_the_gun_from_the_finish" classname="test_weapon_ai" time="0.071">
+		</testcase>
+		<testcase name="test_tables_stay_a_pick_but_the_wild_weapons_lead" classname="test_weapon_ai" time="0.071">
+		</testcase>
+		<testcase name="test_never_in_a_singles_match" classname="test_weapon_ai" time="0.020">
+		</testcase>
+		<testcase name="test_in_no_holds_barred_he_goes_out_for_one" classname="test_weapon_ai" time="0.044">
+		</testcase>
+		<testcase name="test_outside_weapon_approach_routes_around_the_ring" classname="test_weapon_ai" time="0.020">
+		</testcase>
+		<testcase name="test_both_outside_ai_close_the_gap_instead_of_walking_into_the_ring" classname="test_weapon_ai" time="0.018">
+		</testcase>
+		<testcase name="test_outside_route_waypoint_clears_the_entrance_steps" classname="test_weapon_ai" time="0.018">
+		</testcase>
+		<testcase name="test_same_side_ringside_ai_moves_directly_towards_opponent" classname="test_weapon_ai" time="0.022">
+		</testcase>
+		<testcase name="test_an_outside_ai_chooses_a_loose_stage_weapon_and_heads_up_the_ramp" classname="test_weapon_ai" time="0.118">
+		</testcase>
+		<testcase name="test_under_the_ring_he_hands_the_wheel_a_weapon_in_stock" classname="test_weapon_ai" time="0.021">
+		</testcase>
+		<testcase name="test_with_a_table_at_his_back_he_locks_up_for_the_suplex" classname="test_weapon_ai" time="0.087">
+		</testcase>
+		<testcase name="test_up_beside_the_table_he_powerbombs_him_through_it" classname="test_weapon_ai" time="0.088">
+		</testcase>
+		<testcase name="test_out_by_the_announce_desk_he_puts_him_through_it" classname="test_weapon_ai" time="0.037">
+		</testcase>
+		<testcase name="test_a_man_without_a_powerbomb_of_his_own_uses_the_plain_one" classname="test_weapon_ai" time="0.019">
+		</testcase>
+		<testcase name="test_tacks_and_barbed_wire_board_are_paired_ai_spots_too" classname="test_weapon_ai" time="0.152">
+		</testcase>
+		<testcase name="test_a_laid_out_ladder_selects_the_ladder_slam_pair" classname="test_weapon_ai" time="0.072">
+		</testcase>
+		<testcase name="test_a_weapon_fetched_outside_is_often_taken_back_into_the_ring" classname="test_weapon_ai" time="0.063">
+		</testcase>
+		<testcase name="test_both_out_too_long_he_takes_the_fight_back_in" classname="test_weapon_ai" time="0.018">
+		</testcase>
+	</testsuite>
+</testsuites>

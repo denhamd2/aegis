@@ -1,0 +1,32 @@
+{
+  "reference": "gauntlet/refs/characters/kenny_3view.jpg",
+  "image_size": [1600, 720],
+  "annotation": "Manual neutral-feature and visible-silhouette annotations; approximate uncertainty 3-5 pixels, larger where beard/hair obscures skin. Front roll is removed using the eye line. Profile has its own weak-perspective scale. Three-quarter is held out.",
+  "front_eyes": [[1225,360],[1344,352]],
+  "profile_eye": [180,355],
+  "features": [
+    {"name":"brow_inner","source_xy":[0.014,1.731],"front":[[1256,344],[1310,339]],"profile":[146,346]},
+    {"name":"brow_middle","source_xy":[0.033,1.734],"front":[[1217,340],[1350,332]],"profile":[144,344]},
+    {"name":"brow_outer","source_xy":[0.057,1.730],"front":[[1193,350],[1376,338]]},
+    {"name":"glabella","source_xy":[0,1.728],"front":[1283,347],"profile":[146,347]},
+    {"name":"nasion","source_xy":[0,1.714],"front":[1283,371],"profile":[155,367]},
+    {"name":"nose_bridge","source_xy":[0,1.697],"front":[1282,400],"profile":[142,395]},
+    {"name":"nose_tip","source_xy":[0,1.680],"front":[1282,432],"profile":[118,431]},
+    {"name":"nose_ala","source_xy":[0.016,1.664],"front":[[1257,440],[1310,438]],"profile":[151,443]},
+    {"name":"subnasale","source_xy":[0,1.658],"front":[1283,453],"profile":[154,454]},
+    {"name":"upper_lip","source_xy":[0,1.646],"front":[1283,483],"profile":[151,476]},
+    {"name":"mouth_corners","source_xy":[0.023,1.639],"front":[[1238,499],[1325,494]]},
+    {"name":"stomion","source_xy":[0,1.639],"front":[1283,497],"profile":[158,487]},
+    {"name":"lower_lip","source_xy":[0,1.633],"front":[1284,509],"profile":[165,500]},
+    {"name":"mentolabial","source_xy":[0,1.620],"front":[1284,532],"profile":[174,521]},
+    {"name":"chin_front","source_xy":[0,1.607],"front":[1284,559],"profile":[173,550]},
+    {"name":"chin_bottom","source_xy":[0,1.592],"front":[1285,581],"profile":[190,573]},
+    {"name":"cheek_width","source_xy":[0.068,1.680],"front":[[1155,425],[1411,410]]},
+    {"name":"lower_cheek_width","source_xy":[0.062,1.654],"front":[[1174,471],[1398,460]]},
+    {"name":"jaw_width","source_xy":[0.060,1.628],"front":[[1190,518],[1380,510]]},
+    {"name":"chin_width","source_xy":[0.035,1.606],"front":[[1226,552],[1345,547]]}
+  ],
+  "held_out_threequarter": {"eyes":[[604,346],[686,337]],"nose_tip":[589,410],"stomion":[629,476],"chin_front":[655,551],"ear_tragus":[831,370]},
+  "limits": {"maximum_control_displacement_m":0.018,"minimum_jacobian_determinant":0.18,"protected_neck_y_m":1.575},
+  "fit": {"kernel":"3D polyharmonic r^3 with affine tail","regularization":0.00025,"neck_and_back_anchors":true,"legacy_head_stack":false}
+}

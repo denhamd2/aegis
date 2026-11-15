@@ -1,0 +1,11 @@
+{
+  "face_region_xywh": [
+    265,
+    220,
+    245,
+    215
+  ],
+  "mean_absolute_rgb_8bit_difference": 0.27260243632336656,
+  "lighting_and_texture_unchanged": true,
+  "interpretation": "Disabling detail/normal maps does not remove the broad dark lower-face response; pore strength is not established as its primary cause. Isolated render/TAA differences are included."
+}

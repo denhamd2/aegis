@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites id="2026-11-13" name="report_1" tests="1" failures="0" skipped="0" flaky="0" time="0.000">
+	<testsuite id="0" name="test_weapon_grip_contact" package="tests" timestamp="2026-11-13T14:46:16" hostname="localhost" tests="1" failures="0" errors="0" skipped="0" flaky="0" time="47.768">
+		<testcase name="test_every_hand_is_on_its_grip" classname="test_weapon_grip_contact" time="47.761">
+		</testcase>
+	</testsuite>
+</testsuites>

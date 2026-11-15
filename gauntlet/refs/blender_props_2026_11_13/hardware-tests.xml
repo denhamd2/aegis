@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites id="2026-11-13" name="report_1" tests="10" failures="0" skipped="0" flaky="0" time="0.000">
+	<testsuite id="0" name="test_cell_roof" package="tests" timestamp="2026-11-13T18:17:47" hostname="localhost" tests="10" failures="0" errors="0" skipped="0" flaky="0" time="93.838">
+		<testcase name="test_the_door_is_padlocked_and_the_cutters_are_under_the_ring" classname="test_cell_roof" time="9.479">
+		</testcase>
+		<testcase name="test_no_way_out_without_the_cutters_then_cut_and_out" classname="test_cell_roof" time="10.376">
+		</testcase>
+		<testcase name="test_up_the_wall_onto_the_roof_and_back_down" classname="test_cell_roof" time="16.768">
+		</testcase>
+		<testcase name="test_spent_and_knocked_down_by_the_edge_he_goes_over_it" classname="test_cell_roof" time="11.783">
+		</testcase>
+		<testcase name="test_the_centre_panel_gives_way_into_the_ring" classname="test_cell_roof" time="8.068">
+		</testcase>
+		<testcase name="test_off_the_roof_edge_onto_the_man_down_below" classname="test_cell_roof" time="7.855">
+		</testcase>
+		<testcase name="test_hung_for_the_entrances_then_lowered_and_padlocked" classname="test_cell_roof" time="8.022">
+		</testcase>
+		<testcase name="test_the_lowering_music_plays_once_and_fades_at_the_bell" classname="test_cell_roof" time="7.118">
+		</testcase>
+		<testcase name="test_a_big_grapple_by_the_wall_drives_him_into_the_steel" classname="test_cell_roof" time="7.115">
+		</testcase>
+		<testcase name="test_through_the_open_door_he_is_on_the_other_side" classname="test_cell_roof" time="7.184">
+		</testcase>
+	</testsuite>
+</testsuites>

@@ -26,12 +26,13 @@ The owner, 11 Nov: "Hell in a Cell, Ladder, TLC, Casket, Ambulance matches."
 | Half-width (walls from the centre) | 4.7 m (barricade at 6.0: 1.3 m outside, 1.5 m to the apron, and a man can still get round the corner past the barricade chamfer) |
 | Foot | `ArenaBuilder.FLOOR_Y` (−1.1) |
 | Height | 6.1 m |
-| Rails | 0, 0.33, 0.66, 1.0 (three rows, as the references) |
+| Rails | 0, 0.5, 1.0 (two main wall tiers; roof-truss band is separate) |
 | Bays per wall | 4 (a 4×4 roof) |
 | Door | −Z (ramp side), 1.4 × 2.3 m, chained and padlocked |
 | Roof | chain-link panel with rails, collision |
 
-The cell is built in code, like the Steel Cage, with no downloaded geometry.
+Shipping cell/steel-cage visuals are authored in Blender; Godot retains gameplay,
+collision and moving-part control. No downloaded geometry is used.
 
 ## The rules (researched 11 Nov)
 

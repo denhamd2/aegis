@@ -108,6 +108,15 @@ advertise football-only rules or skills.
 - Do not commit or push a batch unless the owner has approved that batch for
   publication.
 
+## Blender asset source requirement
+
+Owner, 13 November: the steel cage, Hell in a Cell, ambulance and casket must
+all be modeled in Blender. Maintain editable `.blend` sources, reproducible
+builders and game exports. Godot retains gameplay, collision and animation
+control; moving the authoring pipeline alone does not establish AAA quality.
+Review silhouettes, manufacturing detail, materials and in-game views before
+claiming visual completion; native M1 performance still requires measurement.
+
 ## Image generation and texture work
 
 - Do not call `experimental_image_generate` or any external paid

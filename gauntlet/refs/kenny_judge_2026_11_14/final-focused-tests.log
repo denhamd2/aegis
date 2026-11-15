@@ -1,0 +1,304 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+[2J[H[38;2;233;150;122m
+--------------------------------------------------------------------------------------------------
+GdUnit4 Comandline Tool
+--------------------------------------------------------------------------------------------------[0m
+[38;2;0;191;255mSet write reports to /workspace/aegis/game/tmp/aegis-kenny-final-tests[0m
+[38;2;0;191;255mDisabled fail fast![0m
+[38;2;218;165;32m
+Headless mode is ignored by option '--ignoreHeadlessMode'"
+
+Please note that tests that use UI interaction do not work correctly in headless mode.
+Godot 'InputEvents' are not transported by the Godot engine in headless mode and therefore
+have no effect in the test!
+[0m
+[38;2;100;149;237mInstalling GdUnit4 session system hooks.[0m
+[38;2;100;149;237mSession hook 'GdUnitHtmlTestReporter' installed.[0m
+[38;2;100;149;237mSession hook 'GdUnitXMLTestReporter' installed.[0m
+[38;2;0;206;209mRun Test Suite: [0m[38;2;250;235;215mres://tests/test_cody_model.gd[0m
+  [38;2;250;235;215mres://tests/test_cody_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_skeleton_is_the_base_rigs_bones[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_cody_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_skeleton_is_the_base_rigs_bones[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 291ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_cody_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_is_rigged_on_a_single_skeleton[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_cody_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_is_rigged_on_a_single_skeleton[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 258ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_cody_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_mesh_is_skinned[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_cody_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_mesh_is_skinned[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 257ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_cody_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_hair_rides_the_head_bone[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_cody_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_hair_rides_the_head_bone[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 262ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_cody_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_animations_are_installed_and_repathed[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_cody_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_animations_are_installed_and_repathed[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 258ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_cody_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_does_not_use_universal_attire[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_cody_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_does_not_use_universal_attire[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 261ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_cody_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_animation_keys_are_not_converted[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_cody_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_animation_keys_are_not_converted[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 255ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_cody_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_stands_at_human_height[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_cody_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_stands_at_human_height[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 290ms[0m
+[38;2;128;128;128m[0m
+[38;2;30;144;255mStatistics:[0m[38;2;128;128;128m 8 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 2s 161ms[0m
+[38;2;128;128;128m[0m
+[38;2;128;128;128m[0m
+[38;2;0;206;209mRun Test Suite: [0m[38;2;250;235;215mres://tests/test_roman_model.gd[0m
+  [38;2;250;235;215mres://tests/test_roman_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_body_skeleton_keeps_named_skin_bones[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_roman_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_body_skeleton_keeps_named_skin_bones[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 1s 172ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_roman_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_base_animations_are_remapped_to_roman_bones[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_roman_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_base_animations_are_remapped_to_roman_bones[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 1s 371ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_roman_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_match_wires_roman_to_generated_move_libraries[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_roman_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_match_wires_roman_to_generated_move_libraries[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 5s 320ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_roman_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_bone_map_covers_the_spine_chain[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_roman_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_bone_map_covers_the_spine_chain[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 1s 688ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_roman_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_eyes_and_lashes_are_textured[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_roman_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_eyes_and_lashes_are_textured[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 1s 712ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_roman_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_normal_maps_import_as_normal_maps[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_roman_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_normal_maps_import_as_normal_maps[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 7ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_roman_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_pants_crotch_blends_into_the_pelvis_for_forward_bends[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_roman_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_pants_crotch_blends_into_the_pelvis_for_forward_bends[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 1s 745ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_roman_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_roman_wait_and_faceoff_wrists_clear_the_thighs[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_roman_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_roman_wait_and_faceoff_wrists_clear_the_thighs[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 16s 199ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_roman_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_adapted_poses_reference_real_roman_bones[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_roman_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_adapted_poses_reference_real_roman_bones[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3s 535ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_roman_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_helper_bones_follow_the_joint_they_belong_to[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_roman_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_helper_bones_follow_the_joint_they_belong_to[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 4s 313ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_roman_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_a_down_pose_retargets_onto_the_mat_not_into_the_air[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_roman_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_a_down_pose_retargets_onto_the_mat_not_into_the_air[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 37ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_roman_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_root_translation_is_not_vertically_inverted[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_roman_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_root_translation_is_not_vertically_inverted[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 6ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_roman_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_a_key_at_the_source_rest_lands_on_the_target_rest[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_roman_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_a_key_at_the_source_rest_lands_on_the_target_rest[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 5ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_roman_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_fingers_map_knuckle_to_knuckle[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_roman_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_fingers_map_knuckle_to_knuckle[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 2s 0ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_roman_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_lips_are_deeper_than_the_skin[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_roman_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_lips_are_deeper_than_the_skin[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 98ms[0m
+[38;2;128;128;128m[0m
+[38;2;30;144;255mStatistics:[0m[38;2;128;128;128m 15 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 39s 262ms[0m
+[38;2;128;128;128m[0m
+[38;2;128;128;128m[0m
+[38;2;0;206;209mRun Test Suite: [0m[38;2;250;235;215mres://tests/test_kenny_model.gd[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_owns_its_model_and_uses_a_neutral_adapter[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_owns_its_model_and_uses_a_neutral_adapter[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 1s 373ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_owns_its_head_finish_maps_without_donor_fallback[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_owns_its_head_finish_maps_without_donor_fallback[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 1s 186ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_skeleton_is_the_base_rigs_bones[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_skeleton_is_the_base_rigs_bones[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 1s 199ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_is_rigged_on_a_single_skeleton[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_is_rigged_on_a_single_skeleton[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 1s 143ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_meshes_are_skinned[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_meshes_are_skinned[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 1s 187ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_animations_are_installed[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_animations_are_installed[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 1s 182ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_does_not_use_universal_attire[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_does_not_use_universal_attire[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 1s 174ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_skin_is_kennys[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_skin_is_kennys[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 1s 145ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_codys_tattoos_are_gone[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_codys_tattoos_are_gone[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 143ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_gear_is_kennys[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_gear_is_kennys[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 1s 139ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_eyes_are_kennys[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_eyes_are_kennys[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 1s 179ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_beard_runs_along_the_jaw_to_the_ear[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_beard_runs_along_the_jaw_to_the_ear[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 1s 221ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_hairline_recedes_at_the_temples[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_hairline_recedes_at_the_temples[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 1s 164ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_authored_face_is_applied_once_and_preserves_protected_neck_and_eyes[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_authored_face_is_applied_once_and_preserves_protected_neck_and_eyes[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 1s 448ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_wears_kennys_curls_not_codys_groom[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_wears_kennys_curls_not_codys_groom[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 1s 176ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_slick_covers_the_crown[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_slick_covers_the_crown[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 1s 105ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_hair_cap_is_matte_roots[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_hair_cap_is_matte_roots[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 1s 168ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_hair_sits_close_to_his_head[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_hair_sits_close_to_his_head[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 1s 188ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_kenny_mutation_cannot_change_cody_or_another_kenny_in_either_load_order[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_model.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_kenny_mutation_cannot_change_cody_or_another_kenny_in_either_load_order[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 2s 751ms[0m
+[38;2;128;128;128m[0m
+[38;2;30;144;255mStatistics:[0m[38;2;128;128;128m 19 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 23s 382ms[0m
+[38;2;128;128;128m[0m
+[38;2;128;128;128m[0m
+[38;2;0;206;209mRun Test Suite: [0m[38;2;250;235;215mres://tests/test_face_expression.gd[0m
+  [38;2;250;235;215mres://tests/test_face_expression.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_detailed_wrestlers_have_two_deforming_pain_shapes[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_face_expression.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_detailed_wrestlers_have_two_deforming_pain_shapes[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3s 421ms[0m
+[38;2;128;128;128m[0m
+[38;2;30;144;255mStatistics:[0m[38;2;128;128;128m 1 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3s 430ms[0m
+[38;2;128;128;128m[0m
+[38;2;128;128;128m[0m
+[38;2;0;206;209mRun Test Suite: [0m[38;2;250;235;215mres://tests/test_body_bulk.gd[0m
+  [38;2;250;235;215mres://tests/test_body_bulk.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_a_vertex_moves_by_its_weighted_gain_along_its_normal[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_body_bulk.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_a_vertex_moves_by_its_weighted_gain_along_its_normal[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_body_bulk.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_both_men_are_built_up_and_their_heads_are_not[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_body_bulk.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_both_men_are_built_up_and_their_heads_are_not[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 38ms[0m
+[38;2;128;128;128m[0m
+[38;2;30;144;255mStatistics:[0m[38;2;128;128;128m 2 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 48ms[0m
+[38;2;128;128;128m[0m
+[38;2;128;128;128m[0m
+[38;2;0;206;209mRun Test Suite: [0m[38;2;250;235;215mres://tests/test_hip_helpers.gd[0m
+  [38;2;250;235;215mres://tests/test_hip_helpers.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_cody_gets_a_helper_bone_per_hip_under_the_pelvis[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_hip_helpers.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_cody_gets_a_helper_bone_per_hip_under_the_pelvis[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 267ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_hip_helpers.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_installing_twice_does_not_add_more_bones[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_hip_helpers.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_installing_twice_does_not_add_more_bones[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 247ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_hip_helpers.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_hip_band_carries_weight_on_the_helper_and_every_vertex_still_sums_to_one[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_hip_helpers.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_hip_band_carries_weight_on_the_helper_and_every_vertex_still_sums_to_one[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 663ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_hip_helpers.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_helper_turns_half_as_far_as_the_thigh[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_hip_helpers.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_helper_turns_half_as_far_as_the_thigh[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 239ms[0m
+[38;2;128;128;128m[0m
+[38;2;30;144;255mStatistics:[0m[38;2;128;128;128m 4 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 1s 433ms[0m
+[38;2;128;128;128m[0m
+[38;2;128;128;128m[0m
+[38;2;0;206;209mRun Test Suite: [0m[38;2;250;235;215mres://tests/test_shoulder_helpers.gd[0m
+  [38;2;250;235;215mres://tests/test_shoulder_helpers.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_cody_gets_a_helper_bone_per_shoulder_under_the_clavicle[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_shoulder_helpers.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_cody_gets_a_helper_bone_per_shoulder_under_the_clavicle[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 242ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_shoulder_helpers.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_shoulder_carries_weight_on_the_helper_and_every_vertex_sums_to_one[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_shoulder_helpers.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_shoulder_carries_weight_on_the_helper_and_every_vertex_sums_to_one[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 698ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_shoulder_helpers.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_helpers_follow_half_the_arm_in_the_celebration[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_shoulder_helpers.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_helpers_follow_half_the_arm_in_the_celebration[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 246ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_shoulder_helpers.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_mirror_seam_is_mended_once_and_shades_as_one_surface[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_shoulder_helpers.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_mirror_seam_is_mended_once_and_shades_as_one_surface[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 59ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_shoulder_helpers.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_mirror_seam_copies_share_one_skin[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_shoulder_helpers.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_mirror_seam_copies_share_one_skin[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 117ms[0m
+[38;2;128;128;128m[0m
+[38;2;30;144;255mStatistics:[0m[38;2;128;128;128m 5 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 1s 385ms[0m
+[38;2;128;128;128m[0m
+[38;2;128;128;128m[0m
+[38;2;0;206;209mRun Test Suite: [0m[38;2;250;235;215mres://tests/test_skin_look.gd[0m
+  [38;2;250;235;215mres://tests/test_skin_look.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_sweat_starts_damp_builds_and_caps[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_skin_look.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_sweat_starts_damp_builds_and_caps[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 5ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_skin_look.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_wetness_is_a_clearcoat_film[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_skin_look.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_wetness_is_a_clearcoat_film[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 4ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_skin_look.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_sweat_film_has_spatial_breakup_and_bounded_roughness[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_skin_look.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_sweat_film_has_spatial_breakup_and_bounded_roughness[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 49ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_skin_look.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_face_keeps_a_wet_finish_with_softer_highlights_than_the_body[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_skin_look.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_face_keeps_a_wet_finish_with_softer_highlights_than_the_body[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 4ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_skin_look.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_pores_leave_the_colour_alone[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_skin_look.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_pores_leave_the_colour_alone[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 6ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_skin_look.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_detail_uv_is_added_without_touching_the_mesh[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_skin_look.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_detail_uv_is_added_without_touching_the_mesh[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 4ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_skin_look.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_roman_and_cody_register_skin_with_pores_and_sweat[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_skin_look.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_roman_and_cody_register_skin_with_pores_and_sweat[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 1s 328ms[0m
+[38;2;128;128;128m[0m
+[38;2;30;144;255mStatistics:[0m[38;2;128;128;128m 7 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 1s 420ms[0m
+[38;2;128;128;128m[0m
+[38;2;128;128;128m[0m
+[38;2;0;206;209mRun Test Suite: [0m[38;2;250;235;215mres://tests/test_kenny_hair_sway.gd[0m
+  [38;2;250;235;215mres://tests/test_kenny_hair_sway.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_lengths_swing_against_his_motion_and_settle[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_hair_sway.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_lengths_swing_against_his_motion_and_settle[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 4ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_hair_sway.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_his_lengths_wear_the_swaying_card_shader[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_kenny_hair_sway.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_his_lengths_wear_the_swaying_card_shader[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 817ms[0m
+[38;2;128;128;128m[0m
+[38;2;30;144;255mStatistics:[0m[38;2;128;128;128m 2 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 831ms[0m
+[38;2;128;128;128m[0m
+[38;2;128;128;128m[0m
+[38;2;0;206;209mRun Test Suite: [0m[38;2;250;235;215mres://tests/test_wrestler_model_orientation.gd[0m
+  [38;2;250;235;215mres://tests/test_wrestler_model_orientation.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_character_model_cancels_the_rigs_backwards_forward_axis[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_wrestler_model_orientation.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_character_model_cancels_the_rigs_backwards_forward_axis[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 13ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_wrestler_model_orientation.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_character_model_is_not_offset_or_scaled[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_wrestler_model_orientation.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_character_model_is_not_offset_or_scaled[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 12ms[0m
+[38;2;128;128;128m[0m
+[38;2;30;144;255mStatistics:[0m[38;2;128;128;128m 2 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 35ms[0m
+[38;2;128;128;128m[0m
+[38;2;128;128;128m[0m
+[38;2;0;206;209mRun Test Suite: [0m[38;2;250;235;215mres://tests/test_blood.gd[0m
+  [38;2;250;235;215mres://tests/test_blood.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_face_blood_stays_in_narrow_streaks_as_it_builds[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_blood.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_face_blood_stays_in_narrow_streaks_as_it_builds[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 4ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_blood.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_every_skin_surface_has_its_reveal_map[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_blood.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_every_skin_surface_has_its_reveal_map[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 2s 259ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_blood.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_dangerous_weapons_open_him_up_and_the_soft_ones_do_not[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_blood.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_dangerous_weapons_open_him_up_and_the_soft_ones_do_not[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 1s 308ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_blood.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_barbed_wire_cuts_deeper_than_a_chair[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_blood.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_barbed_wire_cuts_deeper_than_a_chair[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 1s 905ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_blood.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_a_beaten_man_bleeds_more_from_the_same_shot[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_blood.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_a_beaten_man_bleeds_more_from_the_same_shot[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 1s 879ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_blood.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_landing_on_the_tacks_opens_his_back[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_blood.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_landing_on_the_tacks_opens_his_back[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 1s 315ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_blood.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_it_runs_rather_than_pops_and_keeps_running[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_blood.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_it_runs_rather_than_pops_and_keeps_running[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 5s 469ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_blood.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_blood_off_bleeds_nothing[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_blood.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_blood_off_bleeds_nothing[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 1s 397ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_blood.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_canvas_keeps_one_stain_map_however_much_is_spilt[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_blood.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_canvas_keeps_one_stain_map_however_much_is_spilt[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 185ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_blood.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_match_ring_canvas_has_a_live_blood_overlay[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_blood.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_match_ring_canvas_has_a_live_blood_overlay[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 230ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_blood.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_a_bloodied_man_laid_out_on_the_canvas_stains_it[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_blood.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_a_bloodied_man_laid_out_on_the_canvas_stains_it[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3s 643ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_blood.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_blood_level_defaults_to_five_and_scales_what_is_shown[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_blood.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_blood_level_defaults_to_five_and_scales_what_is_shown[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 1s 344ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_blood.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_options_screen_steps_the_blood_level[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_blood.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_options_screen_steps_the_blood_level[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 6ms[0m
+[38;2;128;128;128m[0m
+[38;2;30;144;255mStatistics:[0m[38;2;128;128;128m 13 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 21s 10ms[0m
+[38;2;128;128;128m[0m
+[38;2;128;128;128m[0m
+[38;2;30;144;255mOverall Summary:[0m[38;2;255;255;255m 78 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |[0m
+[38;2;233;150;122mExecuted test suites: (11/11)[0m
+[38;2;233;150;122mExecuted test cases : (78/78)[0m
+[38;2;233;150;122mTotal execution time: 1min 34s 397ms[0m
+[38;2;255;255;255m [0m[38;2;100;149;237mOpen XML Report at: file:///workspace/aegis/game/tmp/aegis-kenny-final-tests/report_1/results.xml[0m
+[38;2;100;149;237mOpen HTML Report at: file:///workspace/aegis/game/tmp/aegis-kenny-final-tests/report_1/index.html[0m
+[38;2;233;150;122mExit code: 0[0m
+Run dispose test resources

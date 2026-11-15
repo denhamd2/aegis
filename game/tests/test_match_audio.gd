@@ -108,6 +108,20 @@ func test_tonys_gunshot_call_follows_the_handgun_flash_once() -> void:
 	assert_str(MatchAudio.commentary_event_for_weapon_ready(&"inflatable_banana")).is_empty()
 
 
+func test_brutal_weapons_are_despicable() -> void:
+	assert_bool(MatchAudio._weapon_is_despicable(
+		WeaponCatalog.swing_move(WeaponCatalog.by_id(&"barbed_wire_chair")))).is_true()
+	assert_bool(MatchAudio._weapon_is_despicable(
+		WeaponCatalog.swing_move(WeaponCatalog.by_id(&"light_tubes")))).is_true()
+	assert_bool(MatchAudio._weapon_is_despicable(
+		WeaponCatalog.swing_move(WeaponCatalog.by_id(&"thumbtacks")))).is_true()
+	# A hard but legal weapon (a chair, a kendo stick) is not "despicable".
+	assert_bool(MatchAudio._weapon_is_despicable(
+		WeaponCatalog.swing_move(WeaponCatalog.by_id(&"trash_can")))).is_false()
+	assert_bool(MatchAudio._weapon_is_despicable(
+		WeaponCatalog.swing_move(WeaponCatalog.by_id(&"kendo_stick")))).is_false()
+
+
 func test_gunshot_and_rocket_effects_use_the_louder_signature_mix() -> void:
 	var audio: MatchAudio = auto_free(MatchAudio.new())
 	add_child(audio)
@@ -185,6 +199,60 @@ func test_excalibur_bed_of_nails_call_replaces_the_generic_warning() -> void:
 			WeaponActor.make(WeaponCatalog.by_id(&"bed_of_nails")))
 	audio._on_weapon_taken(null, bed)
 	assert_array(audio._commentary_queue).is_equal(["excalibur_bed_of_nails"])
+
+
+func test_excalibur_calls_the_fire_and_thanks_aubrey_once_each() -> void:
+	var audio: MatchAudio = auto_free(MatchAudio.new())
+	add_child(audio)
+	audio._queue_commentary("excalibur_crowd")
+	audio._on_man_ignited(null)
+	# the live call goes ahead of a line already waiting
+	assert_array(audio._commentary_queue).is_equal(["excalibur_on_fire", "excalibur_crowd"])
+	audio._on_man_extinguished(null)
+	assert_array(audio._commentary_queue).is_equal(
+			["excalibur_on_fire", "excalibur_crowd", "excalibur_thank_aubrey"])
+	audio._commentary_queue.clear()
+	audio._on_man_ignited(null)
+	audio._on_man_extinguished(null)
+	assert_array(audio._commentary_queue).is_empty()
+
+
+func test_dives_route_the_tope_and_the_springboard_cutter_calls() -> void:
+	const M := "res://resources/moves/"
+	assert_str(MatchAudio.commentary_event_for_dive("kenny", M + "dive_tope_suicida.tres")) \
+			.is_equal("excalibur_tope_suicida")
+	assert_str(MatchAudio.commentary_event_for_dive("cody", M + "dive_tope_suicida.tres")) \
+			.is_equal("excalibur_tope_suicida")
+	assert_str(MatchAudio.commentary_event_for_dive("cody", M + "dive_springboard_cutter.tres")) \
+			.is_equal("excalibur_cody_cutter")
+	assert_str(MatchAudio.commentary_event_for_dive("cody",
+			M + "dive_springboard_disaster_kick.tres")).is_empty()
+	assert_str(MatchAudio.commentary_event_for_dive("kenny",
+			M + "dive_springboard_moonsault.tres")).is_empty()
+
+
+func test_the_cody_cutter_call_is_codys_alone() -> void:
+	assert_str(MatchAudio.commentary_event_for_cody_cutter("cody", "signature_cody_cutter")) \
+			.is_equal("excalibur_cody_cutter")
+	assert_str(MatchAudio.commentary_event_for_cody_cutter("roman", "signature_cody_cutter")) \
+			.is_empty()
+	assert_str(MatchAudio.commentary_event_for_cody_cutter("cody", "signature_pedigree")) \
+			.is_empty()
+
+
+func test_codys_figure_four_gets_excaliburs_line_in_place_of_tonys() -> void:
+	var fig4 := load("res://resources/moves/submission_figure_four.tres") as MoveDef
+	assert_str(MatchAudio.commentary_event_for_submission("cody", fig4)) \
+			.is_equal("excalibur_cody_figure_four")
+	assert_str(MatchAudio.commentary_event_for_submission("roman", fig4)).is_empty()
+	assert_str(MatchAudio.commentary_event_for_submission("cody", null)).is_empty()
+
+
+func test_kenny_dives_with_the_tope_and_the_moonsault() -> void:
+	var kenny := Roster.by_id("kenny")
+	assert_array(kenny.moveset.get("dive", [])).is_equal([
+			"res://resources/moves/dive_tope_suicida.tres",
+			"res://resources/moves/dive_springboard_moonsault.tres"])
 
 
 func test_tonys_roman_heel_line_only_routes_to_roman_heel_beats() -> void:
@@ -319,7 +387,7 @@ func test_tonys_submission_call_routes_only_from_a_submission_attack() -> void:
 	assert_array(MatchAudio.commentary_events_for_kickout(2, false)).is_equal([
 		"excalibur_two_count", "tony_love_this_business"])
 	assert_array(MatchAudio.commentary_events_for_kickout(2, false, true)).is_equal([
-		"excalibur_unbelievable", "tony_love_this_business"])
+		"excalibur_unbelievable", "tony_dramatic_kickout"])
 	assert_array(MatchAudio.commentary_events_for_kickout(1, false)).is_empty()
 	assert_array(MatchAudio.commentary_events_for_kickout(2, true)).is_empty()
 	assert_str(MatchAudio.commentary_event_for_spectacular_spot(0.9, 239.0)).is_empty()
@@ -338,6 +406,14 @@ func test_excalibur_comeback_and_finish_calls_have_match_events() -> void:
 	assert_array(audio._commentary_queue).is_equal([
 		"excalibur_comeback", "tony_momentum_shift",
 		"excalibur_finish", "excalibur_coolest_job"])
+
+
+func test_pinfall_win_hears_tonys_three_count() -> void:
+	var audio: MatchAudio = auto_free(MatchAudio.new())
+	add_child(audio)
+	audio._on_match_won(null, "pinfall")
+	assert_array(audio._commentary_queue).is_equal([
+		"tony_pinfall_win", "excalibur_finish", "excalibur_coolest_job"])
 
 
 func test_cody_return_call_only_queues_on_his_entrance_cue() -> void:

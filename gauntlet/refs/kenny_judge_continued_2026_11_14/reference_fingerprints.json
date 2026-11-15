@@ -1,0 +1,21 @@
+{
+  "owner_confirmation": "Owner viewed these four images in chat and confirmed them as the targets on 14 November 2026.",
+  "references": {
+    "gauntlet/refs/characters/kenny_3view.jpg": {
+      "sha256": "34c7ce119a6fe4a7cfcc24d96324e4823db14c3c09b70b0fa310a19d315965da",
+      "bytes": 617687
+    },
+    "gauntlet/refs/characters/kenny_omega_sheet.png": {
+      "sha256": "f513e8bd0a9600f1e381e19be2e6d62e44ef7a5451ceb9040a6d0b8cdb893f80",
+      "bytes": 2697007
+    },
+    "gauntlet/refs/characters/kenny_hair_top.png": {
+      "sha256": "74d968636fe2ad39c6e35486d4bf0a6f5cd8c782c7ddc4a3b02bd435a342f0cf",
+      "bytes": 2250979
+    },
+    "gauntlet/refs/characters/kenny_hair_back.png": {
+      "sha256": "4076fec717b5264d0f84bfe74373c86690075e66f23daea144bcc59035f81861",
+      "bytes": 2346034
+    }
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "kenny_body.glb": {
+    "numeric_differences": [
+      {
+        "accessor": 45,
+        "role": "TANGENT",
+        "maximum_delta": 0.00010001659393310547,
+        "different_components": 1
+      }
+    ],
+    "embedded_images_byte_equal": [
+      "kenny_gear_tights",
+      "kenny_body_abdomen",
+      "kenny_body_arm_r",
+      "kenny_body_arm_l",
+      "kenny_gear_belt",
+      "kenny_body_chest",
+      "kenny_head",
+      "kenny_gear_boot_r",
+      "kenny_gear_boot_l",
+      "kenny_gear_wrist",
+      "ximage_f8b32e1d70a27f4",
+      "kenny_eye_color"
+    ],
+    "joint_bind_material_node_definitions_equal": true,
+    "binary_chunks_equal": false
+  },
+  "kenny_curls.glb": {
+    "numeric_differences": [],
+    "embedded_images_byte_equal": [],
+    "joint_bind_material_node_definitions_equal": true,
+    "binary_chunks_equal": true
+  }
+}

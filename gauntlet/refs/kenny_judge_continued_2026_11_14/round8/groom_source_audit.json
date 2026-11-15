@@ -1,0 +1,25 @@
+{
+  "round": 8,
+  "stage": "Rounded macro mass blockout; fibre/alpha polish deliberately pending actual neutral silhouette gate.",
+  "editable_guide_counts": {
+    "CurlSlick": 46,
+    "CurlRinglets": 43,
+    "CurlUndercoat": 12
+  },
+  "region_counts": {
+    "crown_occiput": 21,
+    "front_crest": 15,
+    "temple_sweep": 10,
+    "close_forelock": 5,
+    "nape_fall": 20,
+    "side_fall": 18,
+    "inner_coverage": 12
+  },
+  "mesh_triangles": {
+    "CurlSlick": 17576,
+    "CurlRinglets": 16428,
+    "CurlUndercoat": 2112
+  },
+  "maximum_x_envelope_m": 0.12653396207951462,
+  "minimum_y_m": 1.4563481585781544
+}

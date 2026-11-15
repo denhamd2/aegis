@@ -1,0 +1,54 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Vulkan 1.4.305 - Forward+ - Using Device #0: Unknown - llvmpipe (LLVM 19.1.7, 256 bits)
+
+PAIRED_SHOT running_grapple_inverted_drop
+CAPTURE_CLOCK running_grapple_inverted_drop_00.png requested_tick 0 paired_seconds 0.016667
+  t=0.00  defender y=0.00  attacker y=0.00
+    WrestlerA root (-2.55,0.00,-2.31) yaw -103  pelvis (-2.55,0.89,-2.31)  head (-2.44,1.55,-2.27)  lowest 0.000 (root)
+    WrestlerB root (1.73,0.00,-1.31) yaw 77  lowest 0.032 (h_toe_l_stub)
+CAPTURE_CLOCK running_grapple_inverted_drop_56.png requested_tick 74 paired_seconds 1.233333
+  t=0.55  defender y=0.00  attacker y=0.00
+    WrestlerA root (0.82,0.00,-1.50) yaw -103  pelvis (0.96,0.72,-1.46)  head (1.37,1.24,-1.36)  lowest -0.068 (ball_leaf_l)
+    WrestlerB root (1.65,0.00,-1.39) yaw 77  lowest 0.082 (h_toe_l_stub)
+CAPTURE_CLOCK running_grapple_inverted_drop_66.png requested_tick 88 paired_seconds 1.466667
+  t=0.66  defender y=0.00  attacker y=0.00
+    WrestlerA root (1.06,0.00,-1.44) yaw -103  pelvis (1.10,0.72,-1.43)  head (1.55,1.19,-1.32)  lowest 0.008 (root)
+    WrestlerB root (1.64,0.00,-1.44) yaw 77  lowest 0.028 (j_toe_l_stub)
+CAPTURE_CLOCK running_grapple_inverted_drop_83.png requested_tick 110 paired_seconds 1.833333
+  t=0.83  defender y=0.00  attacker y=0.00
+    WrestlerA root (1.22,0.00,-1.44) yaw -103  pelvis (1.16,0.89,-1.48)  head (1.09,1.55,-1.50)  lowest -0.010 (root)
+    WrestlerB root (1.79,0.00,-1.58) yaw 77  lowest 0.833 (h_neck_l)
+CAPTURE_CLOCK running_grapple_inverted_drop_86.png requested_tick 114 paired_seconds 1.900000
+  t=0.86  defender y=0.00  attacker y=0.00
+    WrestlerA root (1.20,0.00,-1.45) yaw -103  pelvis (1.16,0.87,-1.49)  head (1.18,1.54,-1.48)  lowest -0.005 (root)
+    WrestlerB root (1.87,0.00,-1.60) yaw 77  lowest 0.661 (h_neck_l)
+CAPTURE_CLOCK running_grapple_inverted_drop_89.png requested_tick 118 paired_seconds 1.966667
+  t=0.89  defender y=0.00  attacker y=0.00
+    WrestlerA root (1.16,0.00,-1.46) yaw -103  pelvis (1.15,0.86,-1.49)  head (1.26,1.52,-1.47)  lowest -0.000 (root)
+    WrestlerB root (1.92,0.00,-1.62) yaw 77  lowest 0.396 (h_neck_l)
+CAPTURE_CLOCK running_grapple_inverted_drop_100.png requested_tick 132 paired_seconds -1.000000
+  t=0.99  defender y=0.00  attacker y=0.00
+    WrestlerA root (0.82,0.00,-1.57) yaw -103  pelvis (0.81,0.88,-1.60)  head (0.91,1.54,-1.58)  lowest 0.000 (root)
+    WrestlerB root (1.98,0.00,-1.64) yaw 77  lowest 0.041 (j_thumbf3_l_stub)
+ERROR: Parameter "material" is null.
+   at: material_casts_shadows (servers/rendering/renderer_rd/storage_rd/material_storage.cpp:2404)
+ERROR: Parameter "material" is null.
+   at: material_is_animated (servers/rendering/renderer_rd/storage_rd/material_storage.cpp:2391)
+ERROR: Parameter "material" is null.
+   at: material_get_instance_shader_parameters (servers/rendering/renderer_rd/storage_rd/material_storage.cpp:2435)
+ERROR: Parameter "material" is null.
+   at: material_update_dependency (servers/rendering/renderer_rd/storage_rd/material_storage.cpp:2447)
+ERROR: Parameter "material" is null.
+   at: material_casts_shadows (servers/rendering/renderer_rd/storage_rd/material_storage.cpp:2404)
+ERROR: Parameter "material" is null.
+   at: material_is_animated (servers/rendering/renderer_rd/storage_rd/material_storage.cpp:2391)
+ERROR: Parameter "material" is null.
+   at: material_get_instance_shader_parameters (servers/rendering/renderer_rd/storage_rd/material_storage.cpp:2435)
+ERROR: Parameter "material" is null.
+   at: material_update_dependency (servers/rendering/renderer_rd/storage_rd/material_storage.cpp:2447)
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 2 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+ERROR: Pages in use exist at exit in PagedAllocator: N7Variant5Pools12BucketMediumE
+   at: ~PagedAllocator (./core/templates/paged_allocator.h:169)

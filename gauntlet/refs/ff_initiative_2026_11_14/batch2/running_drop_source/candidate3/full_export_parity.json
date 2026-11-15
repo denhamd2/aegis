@@ -1,0 +1,92 @@
+{
+  "full_path": "/tmp/aegis-running-drop-c3-full.glb",
+  "full_sha256": "4506ffae1cfdefd4a840b339df73b75195914ebc73b3858ffbedfe2691f9c11e",
+  "full_bytes": 33564816,
+  "production_sha256": "df774fc57086c8165664b87d849c2b4b0d70ec4d51746bd4c204f8dd83c65c30",
+  "animations": 317,
+  "animation_name_set_identical": true,
+  "threshold": 1e-05,
+  "full_vs_scoped": [
+    {
+      "clip": "Run_Grapple_Attacker",
+      "max_translation_component_m": 0.0,
+      "max_rotation_component": 0.0,
+      "max_scale_component": 0.0,
+      "prefix_through55_max_component": 0.0,
+      "non_left_leg_max_component": 0.0,
+      "final_max_component": 0.0,
+      "meaningful_changed_tracks": [],
+      "layout_or_time_differences": []
+    },
+    {
+      "clip": "Run_Grapple_Defender",
+      "max_translation_component_m": 0.0,
+      "max_rotation_component": 0.0,
+      "max_scale_component": 0.0,
+      "prefix_through55_max_component": 0.0,
+      "non_left_leg_max_component": 0.0,
+      "final_max_component": 0.0,
+      "meaningful_changed_tracks": [],
+      "layout_or_time_differences": []
+    }
+  ],
+  "production_vs_full_meaningful_differences": [
+    {
+      "clip": "Run_Grapple_Defender",
+      "max_translation_component_m": 3.8743019104003906e-07,
+      "max_rotation_component": 0.6684709042310715,
+      "max_scale_component": 4.76837158203125e-07,
+      "prefix_through55_max_component": 5.364418029785156e-07,
+      "non_left_leg_max_component": 5.364418029785156e-07,
+      "final_max_component": 3.5762786865234375e-07,
+      "meaningful_changed_tracks": [
+        {
+          "track": "foot_l/rotation",
+          "maximum_component_delta": 0.6684709042310715,
+          "first_changed_seconds": 1.9833333492279053
+        },
+        {
+          "track": "calf_l/rotation",
+          "maximum_component_delta": 0.23487093299627304,
+          "first_changed_seconds": 1.850000023841858
+        },
+        {
+          "track": "thigh_l/rotation",
+          "maximum_component_delta": 0.18685102835297585,
+          "first_changed_seconds": 1.850000023841858
+        }
+      ],
+      "layout_or_time_differences": []
+    }
+  ],
+  "unrelated_max_translation_component_m": 5.513429641723633e-07,
+  "unrelated_max_rotation_component": 4.6193599700927734e-06,
+  "unrelated_max_scale_component": 5.960464477539062e-07,
+  "production_vs_full_defender_boundary": {
+    "clip": "Run_Grapple_Defender",
+    "max_translation_component_m": 3.8743019104003906e-07,
+    "max_rotation_component": 0.6684709042310715,
+    "max_scale_component": 4.76837158203125e-07,
+    "prefix_through55_max_component": 5.364418029785156e-07,
+    "non_left_leg_max_component": 5.364418029785156e-07,
+    "final_max_component": 3.5762786865234375e-07,
+    "meaningful_changed_tracks": [
+      {
+        "track": "foot_l/rotation",
+        "maximum_component_delta": 0.6684709042310715,
+        "first_changed_seconds": 1.9833333492279053
+      },
+      {
+        "track": "calf_l/rotation",
+        "maximum_component_delta": 0.23487093299627304,
+        "first_changed_seconds": 1.850000023841858
+      },
+      {
+        "track": "thigh_l/rotation",
+        "maximum_component_delta": 0.18685102835297585,
+        "first_changed_seconds": 1.850000023841858
+      }
+    ],
+    "layout_or_time_differences": []
+  }
+}

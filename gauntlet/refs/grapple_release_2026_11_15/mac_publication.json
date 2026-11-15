@@ -1,0 +1,21 @@
+{
+  "commit": "5e4a1655b718e3b03bbea8a16316ac62af157715",
+  "mac_run": 43698792321,
+  "status": "success",
+  "release": "https://github.com/denhamd2/aegis/releases/tag/mac-latest",
+  "tag_object": {
+    "sha": "5e4a1655b718e3b03bbea8a16316ac62af157715",
+    "type": "commit",
+    "url": "https://api.github.com/repos/denhamd2/aegis/git/commits/5e4a1655b718e3b03bbea8a16316ac62af157715"
+  },
+  "asset": {
+    "name": "Aegis.zip",
+    "size": 1032804643,
+    "state": "uploaded",
+    "digest": "sha256:eb6c24a59ee9f04f93c7d3062b8fa5d06850cdd5ca1fac03dd093047f6ed2a78",
+    "url": "https://github.com/denhamd2/aegis/releases/download/mac-latest/Aegis.zip"
+  },
+  "focused_unique_checks_passed": 33,
+  "native_m1_performance_verified": false,
+  "full_move_acceptance": "partial/pending; authored impact and asymmetric load wrap remain open"
+}

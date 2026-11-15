@@ -1,0 +1,235 @@
+Writing
+AEGIS — Complete AEW Fight Forever Gameplay and Animation Improvement Initiative
+Mission
+I want you to significantly improve my Aegis wrestling game, using the reconstructed AEW Fight Forever Unreal Engine project as an architectural and gameplay reference.
+AEW reference repository: https://github.com/peek6/AewFFCustomUProj
+My Aegis repository: https://github.com/denhamd2/aegis
+Your objective is to implement all the improvements described below, taking Aegis towards AAA-quality wrestling animations, believable physical interactions, more intelligent gameplay and authentic broadcast presentation.
+Do not simply create a plan and stop. Execute the improvements incrementally, validate them, and continue through the work.
+Quality is the primary objective. Token and execution efficiency are secondary.
+1. Mandatory initial research
+Before making changes:
+Read the latest AGENTS.md, CLAUDE.md, gauntlet/anchor/ARCHITECTURE.md, current prioritised backlog and relevant animation/quality documentation.
+Inspect the AEW Fight Forever repository, particularly its gameplay architecture and animation interfaces.
+Examine Aegis's existing systems, implemented moves, known defects and test coverage.
+Identify which recommendations are already implemented, partially implemented or missing.
+Establish the actual current baseline, rather than trusting historical progress reports.
+Create a prioritised implementation roadmap integrated with the existing Aegis backlog.
+Important AEW reference systems include:
+ELSSSyncMotion
+SyncMotionMontage
+StMontageList_GrappleChain
+EReserveReversalType
+EReversalMotionType
+SSMoveSetGrapple
+SSMoveSetStrike
+SSMoveSetHighFly
+StSystemRefereePin
+StSystemRefereeSubmission
+ELAnimInstance_FootIK
+ELMovesCamera
+SSDamageResult
+These reconstructed headers expose architecture and interfaces, not necessarily complete working implementations.
+Use their design concepts to create original Aegis implementations. Do not copy proprietary animations, character assets or other game content.
+2. Priority One — Grapple synchronisation and realistic physical interactions
+Study the AEW synchronised animation architecture and improve Aegis's existing GrappleRig, PairedFit, PairedContacts, FootPlant and associated animation systems.
+Implement:
+Reliable synchronisation of attacker and defender animations.
+Shared animation origins and correct character alignment.
+Smooth entry into and exit from grapples.
+Realistic grip and hand placement.
+Consistent body contact throughout moves.
+Improved foot planting, balance and weight transfer.
+Better lifting, carrying and throwing mechanics.
+Weight-class and body-proportion-aware animation adjustments.
+Physically believable defender reactions and impact selling.
+Smooth transitions between AnimationTree states, authored clips and cosmetic physics.
+Elimination of obvious sliding, floating, clipping, snapping and interpenetration.
+The wrestlers should look like they are genuinely interacting with and exerting force on each other, not performing two independent animations.
+Preserve deterministic gameplay and keep cosmetic physics from changing authoritative match state.
+3. Priority Two — Upgrade existing wrestling animations
+Audit every currently implemented Fight Forever-inspired move.
+Focus initially on:
+One-Winged Angel
+Tiger Driver '98
+V-Trigger variations
+Snap Dragon Suplexes
+Cross Rhodes
+Chokeslam
+Spinebuster
+Powerbomb variations
+Samoan Drop
+Spear
+Buckshot Lariat and other configured signatures and finishers
+Use the existing Fight Forever reference videos, frame measurements and QA documentation.
+For every move:
+Compare the Aegis animation with available reference footage.
+Identify incorrect poses, movement trajectories, timing and contact.
+Improve both attacker and defender animations in Blender.
+Correct acceleration, deceleration, weight transfer and follow-through.
+Ensure clean transitions into and out of the animation.
+Add convincing impact reactions and natural recovery.
+Check the animation from front, side and broadcast-camera perspectives.
+Re-render, evaluate and refine until it meets the highest defensible quality standard.
+Pay particular attention to the One-Winged Angel, whose previously recorded impact timing was slower than the measured reference.
+All authored animations must retain the project's 60 FPS requirement.
+Do not falsely label an animation AAA-quality or 10/10 simply because automated tests pass.
+4. Priority Three — Rebuild a comprehensive reversal system
+Investigate why the previous Aegis paired reversal system was removed before restoring any functionality.
+Use Fight Forever's distinct reversal categories as design inspiration.
+Implement:
+Separate strike and grapple reversals.
+Context-sensitive directional counters.
+Special-move reversals.
+Appropriate reversal timing windows.
+Reversal opportunities based on the actual move and animation phase.
+Properly synchronised attacker and defender counter animations.
+Distinct successful and failed reversal reactions.
+Reversal probabilities influenced by difficulty, stamina, damage and wrestler attributes.
+Smooth transitions from counter animations into normal gameplay.
+Where appropriate, use the existing reversal-window data in MoveDef.
+Build the actual reversal animations and validate their gameplay integration. Do not merely add input bindings or unused states.
+Reversals should be responsive, readable, balanced and visually convincing.
+5. Priority Four — Improve wrestler AI and match psychology
+Upgrade WrestlerAI, MatchFlow, MovePlaybook and related systems.
+The goal is to make AI-versus-AI matches resemble believable televised wrestling matches.
+Implement:
+More intelligent move selection.
+Distinct wrestler-specific fighting styles.
+Realistic sequences of strikes, grapples and transitions.
+Reduced move repetition.
+Appropriate use of signatures and finishers.
+Match phases including early offence, sustained control, comebacks, near-falls and finishes.
+Better situational awareness of ropes, corners, apron, ringside and opponent position.
+Strategic use of counters, dodges, submissions and recovery.
+Appropriate stamina and momentum management.
+More realistic use of taunts and special-move opportunities.
+Weight-class-sensitive move decisions.
+More varied matches without excessive random behaviour.
+Wrestlers must retain their identities.
+Kenny Omega should wrestle differently from Roman Reigns or Cody Rhodes.
+Extend the existing data-driven systems instead of creating parallel or competing AI architectures.
+Preserve existing match rules and owner decisions unless explicitly changed and documented.
+6. Priority Five — Improve referee behaviour and near-falls
+Use Fight Forever's referee animation structures as references.
+Enhance:
+Referee positioning during pinfalls.
+Natural movement into counting position.
+Start, loop, count and release animation phases.
+Clear one-count, two-count and three-count actions.
+Dramatic but believable near-falls.
+Referee reactions to kickouts.
+Rope-break detection and presentation.
+Submission checks.
+Match-ending and post-match transitions.
+Collision avoidance around both wrestlers.
+Keep referee timing aligned with Aegis's existing measured count schedule unless new evidence justifies changing it.
+Improve the visual presentation without compromising deterministic pinfall and submission logic.
+7. Priority Six — Expand the wrestling animation library
+Aegis previously catalogued 146 Fight Forever moves, with 27 built or mapped and 119 outstanding. These are historical figures: re-audit the latest repository before proceeding.
+Once the existing moves reach acceptable quality, progressively complete the remaining library.
+Use an efficient reusable animation architecture:
+High-quality base animations for move families.
+Genuine variations in choreography, grips, timing and landing.
+Shared animations across wrestlers where appropriate.
+Unique animations for distinctive signatures and finishers.
+Context-aware selection based on opponent position.
+Properly authored attacker and defender animation pairs.
+Move metadata, damage, momentum and reversal properties.
+Cover strikes, grapples, suplexes, powerbombs, slams, submissions, aerial attacks, corner moves, rope moves, finishers and other catalogued families.
+Avoid producing hundreds of nearly identical, low-quality animations to inflate completion statistics.
+Only mark a move complete when it is playable, properly animated and validated.
+8. Priority Seven — Broadcast-quality presentation
+Improve match presentation using the existing camera, audio and impact systems.
+Implement or refine:
+Smooth broadcast camera tracking.
+Context-sensitive grapple and finisher close-ups.
+Correctly timed camera cuts around impacts.
+Convincing impact audio and wrestler reactions.
+Subtle camera shake where appropriate.
+Natural character movement after impacts.
+Readable near-fall and submission moments.
+Cinematic but responsive finisher presentation.
+Your previous Fight Forever analysis found that dramatic impact cuts are more important to its style than globally freezing the action.
+Preserve smooth playback and avoid unnecessary whole-frame hit-stop.
+9. Technical constraints
+Aegis must remain a Godot-based game.
+Preserve the repository's current engine version, architecture contract and existing Blender-to-Godot pipeline.
+Requirements:
+Godot 4, Forward+ and the repository's current physics configuration.
+Fixed 60 Hz gameplay simulation.
+60 FPS authored animations.
+Target 60 FPS on MacBook M1 with 16 GB RAM.
+Deterministic gameplay and replay compatibility.
+Existing WrestlerFSM authority.
+Existing GrappleRig ownership of paired moves.
+Data-driven MoveDef configuration.
+Existing automated testing and capture infrastructure.
+Reproducible Blender generation and exports.
+No unnecessary engine migration.
+No paid external services outside the already approved subscriptions.
+Avoid breaking existing character models, entrances, arena assets, match modes, weapons or visual improvements.
+Follow the repository's development and publication permissions.
+10. Implementation strategy and model routing
+Use the existing Aegis agent architecture and model-routing rules.
+Use the default agent for routine coding and integration. Delegate complex architecture and choreography decisions to the configured specialist, and Blender-specific work to the existing Blender specialist.
+Use the configured visual reviewer selectively for rendered animation evidence.
+Do not introduce additional paid models, tools or subscriptions without approval.
+Work in manageable, focused batches.
+For each batch:
+Inspect the relevant existing implementation.
+Define measurable acceptance criteria.
+Make the required code and animation changes.
+Execute focused tests.
+Bake and inspect the actual animation or gameplay output.
+Fix any quality or functionality regressions.
+Update the quality ledger and backlog.
+Commit, publish and deploy only in accordance with the repository's approved workflow.
+Continue to the next improvement.
+Do not repeatedly rebuild the entire animation library for minor changes when scoped tests can validate the work.
+Do not allow automated tests to substitute for actual visual inspection.
+11. Quality assurance requirements
+Every substantial animation change must pass:
+Animation timing and cadence tests.
+Attacker/defender synchronisation checks.
+Grip and contact-distance validation.
+Collision and clipping checks.
+Pose and deformation checks.
+Transition smoothness checks.
+Deterministic gameplay tests.
+Relevant match-flow and move-selection tests.
+Visual comparison with available reference footage.
+Evaluate animation quality across eight dimensions:
+Animation smoothness
+Pose accuracy
+Physical realism
+Weight and impact
+Attacker choreography
+Defender selling
+Timing and speed
+Overall presentation
+Use evidence-based scoring. Identify unresolved defects rather than inventing perfect scores.
+Validate final performance on the target Mac hardware when available, and clearly distinguish verified results from pending native visual or performance acceptance.
+12. Execution instructions
+I approve the implementation of this improvement initiative.
+This is an execution task, not a request for another research document.
+Begin by reviewing the latest state of both repositories and identifying the most valuable first implementation batch.
+Then start implementing the changes.
+Do not replace existing working systems merely for stylistic consistency.
+Do not make speculative architectural changes without establishing their benefit.
+Respect repository rules requiring separate authorisation for commits, pushes or releases. Continue with independent work where possible rather than stopping the entire initiative.
+If a recommendation is already implemented, validate its quality and move on.
+If a feature requires significant additional development, break it into smaller deliverable batches while preserving the overall goal.
+Keep a durable record of completed work, remaining tasks, test evidence and dependencies so the initiative can continue reliably across sessions.
+13. Communication
+I do not want long technical logs, code dumps or detailed reasoning in the chat.
+Provide short, plain-English updates using:
+Completed: What was actually improved.
+Validated: Tests and visual checks that passed.
+Remaining: Important unfinished work or quality gaps.
+Next: The next implementation batch.
+Do not claim success before verifying the result.
+Start now
+Begin with a current-state audit, then implement the highest-impact improvements to wrestler synchronisation, grappling and animation quality.
+The long-term goal is a polished, technically robust wrestling game with the responsiveness of Fight Forever, more realistic character interactions, excellent animation quality and convincing televised-match presentation.
+Build the improvements, test them, refine them and progressively complete the initiative.

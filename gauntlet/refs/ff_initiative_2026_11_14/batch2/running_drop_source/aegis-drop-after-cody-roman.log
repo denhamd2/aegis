@@ -1,0 +1,13 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+GRIP running_grapple_inverted_drop        waist  median 0.044  p90 0.089  (38 in reach, 274 out)
+PAIR running_grapple_inverted_drop        worst 0.067 m  A lowerarm_l-hand_l x B pelvis-spine_03 @1.06   body-body 0.079   arm 0.147   moved A 0.059 D 0.450
+PAIR_CLOCK running_grapple_inverted_drop elapsed_tick 140 lead_in_ticks 45 clip_seconds 1.566667 authored_30fps_frame 47.000
+PAIR_POINTS running_grapple_inverted_drop {"attacker":{"Head":"(0.010432, 1.424425, -2.000253)","calf_l":"(-0.195064, 0.519649, -2.093342)","calf_r":"(0.228559, 0.413287, -1.783299)","foot_l":"(-0.214885, 0.108675, -1.938752)","foot_r":"(0.259757, 0.09225, -1.484717)","hand_l":"(-0.1149, 1.153345, -2.157821)","hand_r":"(0.164294, 1.182274, -2.192093)","lowerarm_l":"(-0.311901, 1.091551, -1.970137)","lowerarm_r":"(0.347838, 1.106306, -1.996149)","pelvis":"(0.01049, 0.796613, -1.763799)","spine_03":"(0.010485, 1.184168, -1.900769)","thigh_l":"(-0.080593, 0.801185, -1.818621)","thigh_r":"(0.101574, 0.801185, -1.818621)","upperarm_l":"(-0.184137, 1.326711, -1.884927)","upperarm_r":"(0.208191, 1.325044, -1.888737)"},"defender":{"Head":"(-0.118032, 1.686089, -2.209055)","calf_l":"(0.062035, 0.594596, -1.962607)","calf_r":"(-0.346411, 0.5957, -1.990664)","foot_l":"(0.088888, 0.142677, -2.047989)","foot_r":"(-0.366339, 0.246314, -2.290285)","hand_l":"(0.027687, 1.306593, -1.764567)","hand_r":"(-0.246662, 1.4777, -1.679027)","lowerarm_l":"(0.107634, 1.325384, -2.018655)","lowerarm_r":"(-0.309998, 1.431274, -1.934249)","pelvis":"(-0.119668, 1.034289, -2.123491)","spine_03":"(-0.119461, 1.35066, -2.13918)","thigh_l":"(-0.018093, 0.966956, -2.12677)","thigh_r":"(-0.221241, 0.966956, -2.12677)","upperarm_l":"(0.051026, 1.507969, -2.206461)","upperarm_r":"(-0.300264, 1.515773, -2.188371)"}}
+PAIR_DONE 1 moves; over 0.05 m: 1
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 2 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+ERROR: Pages in use exist at exit in PagedAllocator: N7Variant5Pools12BucketMediumE
+   at: ~PagedAllocator (./core/templates/paged_allocator.h:169)

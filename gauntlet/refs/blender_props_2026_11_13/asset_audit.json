@@ -1,0 +1,37 @@
+{
+  "ambulance": {
+    "triangles": 12558,
+    "meshes": 20,
+    "materials": 8,
+    "bytes": 973172,
+    "blend_source": "tools/blender/props/ambulance.blend"
+  },
+  "casket": {
+    "triangles": 5512,
+    "meshes": 7,
+    "materials": 4,
+    "bytes": 469200,
+    "blend_source": "tools/blender/props/casket.blend"
+  },
+  "steel_cage": {
+    "triangles": 12126,
+    "meshes": 17,
+    "materials": 2,
+    "bytes": 572584,
+    "blend_source": "tools/blender/props/steel_cage.blend"
+  },
+  "hell_in_a_cell": {
+    "triangles": 20550,
+    "meshes": 29,
+    "materials": 2,
+    "bytes": 1286140,
+    "blend_source": "tools/blender/props/hell_in_a_cell.blend"
+  },
+  "cage_hardware": {
+    "triangles": 1704,
+    "meshes": 3,
+    "materials": 2,
+    "bytes": 211552,
+    "blend_source": "tools/blender/props/cage_hardware.blend"
+  }
+}

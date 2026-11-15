@@ -39,6 +39,7 @@ void fragment() {
 	ALPHA = t.a;
 	ALPHA_SCISSOR_THRESHOLD = alpha_scissor;
 	ALPHA_ANTIALIASING_EDGE = alpha_scissor;
+	ALPHA_TEXTURE_COORDINATE = UV * vec2(textureSize(albedo_tex, 0));
 	ROUGHNESS = mix(rough_dark, rough_bright, t.r);
 	SPECULAR = specular * t.r;
 	ANISOTROPY = anisotropy_ratio;

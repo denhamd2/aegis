@@ -1,0 +1,196 @@
+{
+  "scope": "sampled CPU-skinned vertices dominated by Head bones against header wedge and conservative central-flood AABB; not exhaustive skin-triangle collision",
+  "completed_escape": true,
+  "samples": [
+    {
+      "frame": 10,
+      "phase": 1,
+      "head_vertex_count": 23647,
+      "header_interior_vertices": 0,
+      "flood_aabb_candidates": 0,
+      "head_bounds": [
+        [
+          -0.0618969053030014,
+          2.50693225860596,
+          0.345930099487305
+        ],
+        [
+          0.137394890189171,
+          2.7794337272644,
+          0.599748611450195
+        ]
+      ]
+    },
+    {
+      "frame": 12,
+      "phase": 1,
+      "head_vertex_count": 23647,
+      "header_interior_vertices": 0,
+      "flood_aabb_candidates": 0,
+      "head_bounds": [
+        [
+          -0.0864111334085464,
+          2.58964943885803,
+          0.311758995056152
+        ],
+        [
+          0.112883977591991,
+          2.86727786064148,
+          0.575696468353271
+        ]
+      ]
+    },
+    {
+      "frame": 13,
+      "phase": 1,
+      "head_vertex_count": 23647,
+      "header_interior_vertices": 0,
+      "flood_aabb_candidates": 0,
+      "head_bounds": [
+        [
+          -0.0949556306004524,
+          2.61264038085938,
+          0.303442478179932
+        ],
+        [
+          0.104341253638268,
+          2.89105939865112,
+          0.571017265319824
+        ]
+      ]
+    },
+    {
+      "frame": 14,
+      "phase": 1,
+      "head_vertex_count": 23647,
+      "header_interior_vertices": 0,
+      "flood_aabb_candidates": 0,
+      "head_bounds": [
+        [
+          -0.100377433001995,
+          2.61935901641846,
+          0.306543350219727
+        ],
+        [
+          0.0989210233092308,
+          2.89783501625061,
+          0.577006340026855
+        ]
+      ]
+    },
+    {
+      "frame": 132,
+      "phase": 5,
+      "head_vertex_count": 23647,
+      "header_interior_vertices": 0,
+      "flood_aabb_candidates": 0,
+      "head_bounds": [
+        [
+          -0.14560204744339,
+          2.62025666236877,
+          -0.431572437286377
+        ],
+        [
+          0.0538544505834579,
+          2.91269111633301,
+          -0.192042350769043
+        ]
+      ]
+    },
+    {
+      "frame": 134,
+      "phase": 5,
+      "head_vertex_count": 23647,
+      "header_interior_vertices": 0,
+      "flood_aabb_candidates": 0,
+      "head_bounds": [
+        [
+          -0.13127513229847,
+          2.62645053863525,
+          -0.358068466186523
+        ],
+        [
+          0.0681804642081261,
+          2.91887736320496,
+          -0.118505477905273
+        ]
+      ]
+    },
+    {
+      "frame": 136,
+      "phase": 5,
+      "head_vertex_count": 23647,
+      "header_interior_vertices": 0,
+      "flood_aabb_candidates": 0,
+      "head_bounds": [
+        [
+          -0.126087948679924,
+          2.62716913223267,
+          -0.331468105316162
+        ],
+        [
+          0.0733607634902,
+          2.91958808898926,
+          -0.0919065475463867
+        ]
+      ]
+    },
+    {
+      "frame": 138,
+      "phase": 5,
+      "head_vertex_count": 23647,
+      "header_interior_vertices": 0,
+      "flood_aabb_candidates": 0,
+      "head_bounds": [
+        [
+          -0.125850707292557,
+          2.60682082176208,
+          -0.313319206237793
+        ],
+        [
+          0.0735933035612106,
+          2.89923000335693,
+          -0.0737738609313965
+        ]
+      ]
+    },
+    {
+      "frame": 140,
+      "phase": 5,
+      "head_vertex_count": 23647,
+      "header_interior_vertices": 0,
+      "flood_aabb_candidates": 0,
+      "head_bounds": [
+        [
+          -0.124810077250004,
+          2.55476140975952,
+          -0.2632737159729
+        ],
+        [
+          0.0746366530656815,
+          2.84716033935547,
+          -0.023749828338623
+        ]
+      ]
+    },
+    {
+      "frame": 142,
+      "phase": 5,
+      "head_vertex_count": 23647,
+      "header_interior_vertices": 0,
+      "flood_aabb_candidates": 0,
+      "head_bounds": [
+        [
+          -0.123026169836521,
+          2.47691655158997,
+          -0.187380313873291
+        ],
+        [
+          0.0764306038618088,
+          2.76930546760559,
+          0.0521149635314941
+        ]
+      ]
+    }
+  ]
+}

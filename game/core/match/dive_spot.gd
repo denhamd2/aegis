@@ -350,11 +350,14 @@ func _event(what: String) -> void:
 			if tope:
 				defender.combat.apply_damage(tope)
 				attacker.combat.apply_momentum(tope)
+			get_tree().call_group(MatchAudio.LISTENERS, "on_dive_landed", attacker, TOPE_MOVE)
 		"kick_hit":
 			var kick := load(ending_of(attacker)) as MoveDef
 			if kick:
 				defender.combat.apply_damage(kick)
 				attacker.combat.apply_momentum(kick)
+			get_tree().call_group(MatchAudio.LISTENERS, "on_dive_landed", attacker,
+					ending_of(attacker))
 
 
 ## Two cameras: a wide from the side, level with the ropes, that holds both

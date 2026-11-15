@@ -573,6 +573,9 @@ const RECIPES := {
 	# tools/blender/wrestling_clips.py.
 	"running_grapple_inverted_drop": {
 		"authored": {"attacker": "Run_Grapple_Attacker", "defender": "Run_Grapple_Defender"},
+		# Preserve the carry fit, then return cosmetic height offsets to the
+		# authored landing before impact. Fractions of the shared root clip.
+		"separation_height_release": Vector2(110.0 / 132.0, 118.0 / 132.0),
 		"attacker": [
 			{"t": 0.00, "clip": "Push", "at": 0.80},
 			{"t": 0.60, "clip": "Punch_Cross", "at": 0.50},
@@ -584,11 +587,10 @@ const RECIPES := {
 		# He braces on his feet to the catch. Once lifted, the authored arms
 		# carry him; no IK reach for the man who threw him.
 		"defender_grips_until": 0.0,
-		# The release is the impact cue, tick 118 of the 132-tick clip
-		# (1.95 s on the reference grid, authored frame 59). The helper reads a
-		# FRACTION of the clip, so write the ratio, not 118 or 1.95 (a value
-		# >= 1.0 would read as "never release" and keep the grip IK on him).
-		"attacker_grips_until": 118.0 / 132.0,  # 1.95 s / 2.2 s: impact cue
+		# Presentation decrements before the root player advances: counter111
+		# starts the seven-tick fade at clip110/frame55. Both hands are free
+		# before impact118/frame59; starting at118 held on through landing.
+		"attacker_grips_until": 111.0 / 132.0,
 	},
 	# Roman's own signature -- see Superman_Punch_Attacker.
 	"signature_superman_punch": {

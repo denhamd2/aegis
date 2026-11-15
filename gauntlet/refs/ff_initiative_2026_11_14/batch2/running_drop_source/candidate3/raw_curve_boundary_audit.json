@@ -1,0 +1,35 @@
+{
+  "candidate": "/tmp/aegis-running-drop-candidate3.glb",
+  "sha256": "a229582f89cb14de0a68f2b6b9dee0bfc948d8db4e23577a7a01152d069b2452",
+  "status": "PROVISIONAL; frozen pending actual separator-stage analysis; do not accept as runtime-lift compensation",
+  "roles": {
+    "Run_Grapple_Attacker": {
+      "prefix_through55_max_component_delta": 4.172325134277344e-07,
+      "all_non_left_leg_tracks_max_component_delta": 4.172325134277344e-07,
+      "final66_max_component_delta": 3.5762786865234375e-07,
+      "meaningfully_changed_tracks": []
+    },
+    "Run_Grapple_Defender": {
+      "prefix_through55_max_component_delta": 5.364418029785156e-07,
+      "all_non_left_leg_tracks_max_component_delta": 5.364418029785156e-07,
+      "final66_max_component_delta": 3.5762786865234375e-07,
+      "meaningfully_changed_tracks": [
+        {
+          "track": "calf_l/rotation",
+          "max_component_delta": 0.23487094044685364,
+          "first_changed_time": 1.850000023841858
+        },
+        {
+          "track": "thigh_l/rotation",
+          "max_component_delta": 0.18685102462768555,
+          "first_changed_time": 1.850000023841858
+        },
+        {
+          "track": "foot_l/rotation",
+          "max_component_delta": 0.6684709191322327,
+          "first_changed_time": 1.9833333492279053
+        }
+      ]
+    }
+  }
+}

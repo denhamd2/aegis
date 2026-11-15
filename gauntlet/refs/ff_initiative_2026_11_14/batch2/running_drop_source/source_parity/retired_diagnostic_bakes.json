@@ -1,0 +1,14 @@
+[
+  {
+    "path": "/tmp/aegis-running-drop-candidate2-poses.tres",
+    "bytes": 33550091,
+    "sha256": "9a3622f21d3b044e5587be30bce93f2a72a45f87b3784568ca6e65069c1597d8",
+    "reason": "Superseded raw GLTF loader diagnostic; production-equivalent isolated scene import is the acceptance path."
+  },
+  {
+    "path": "/tmp/aegis-running-drop-candidate2-poses-60.tres",
+    "bytes": 34061270,
+    "sha256": "35bfacaafed76f5a62aa207dd92e05bee184f04faddf19d0f95ef0914c194c3b",
+    "reason": "Superseded raw GLTF loader diagnostic; production-equivalent isolated scene import is the acceptance path."
+  }
+]

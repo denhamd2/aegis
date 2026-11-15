@@ -1,0 +1,207 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+[2J[H[38;2;233;150;122m
+--------------------------------------------------------------------------------------------------
+GdUnit4 Comandline Tool
+--------------------------------------------------------------------------------------------------[0m
+[38;2;0;191;255mDisabled fail fast![0m
+[38;2;0;191;255mSet write reports to /workspace/aegis/game/tmp/aegis-merged-audio-check[0m
+[38;2;218;165;32m
+Headless mode is ignored by option '--ignoreHeadlessMode'"
+
+Please note that tests that use UI interaction do not work correctly in headless mode.
+Godot 'InputEvents' are not transported by the Godot engine in headless mode and therefore
+have no effect in the test!
+[0m
+[38;2;100;149;237mInstalling GdUnit4 session system hooks.[0m
+[38;2;100;149;237mSession hook 'GdUnitHtmlTestReporter' installed.[0m
+[38;2;100;149;237mSession hook 'GdUnitXMLTestReporter' installed.[0m
+[38;2;0;206;209mRun Test Suite: [0m[38;2;250;235;215mres://tests/test_match_audio.gd[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_every_sound_it_plays_is_built[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_every_sound_it_plays_is_built[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 49ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_cody_crowd_chant_is_only_enabled_for_a_cody_match[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_cody_crowd_chant_is_only_enabled_for_a_cody_match[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_opening_and_finish_bells_ring_at_their_recorded_pitch_and_are_short[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_opening_and_finish_bells_ring_at_their_recorded_pitch_and_are_short[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 17ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_enda_sign_gag_is_scheduled_for_every_match[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_enda_sign_gag_is_scheduled_for_every_match[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 11ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_sneaky_heel_gag_is_seeded_and_appears_about_once_in_three_matches[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_sneaky_heel_gag_is_seeded_and_appears_about_once_in_three_matches[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 12ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_sneaky_heel_gag_follows_roman_taunt_once_per_match[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_sneaky_heel_gag_follows_roman_taunt_once_per_match[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 18ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_tonys_gunshot_call_follows_the_handgun_flash_once[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_tonys_gunshot_call_follows_the_handgun_flash_once[0m[38;2;178;34;34m[1m FAILED[0m[38;2;100;149;237m 167ms[0m
+  [38;2;0;206;209m[1m[4mReport:[0m
+  [38;2;128;128;128m[38;2;255;69;0mExpecting:[0m
+ '[38;2;30;144;255m[excalibur_restore_order][0m'
+ but was
+ '[38;2;30;144;255m[excalibur_restore_order, [48;2;38;0;0m[38;2;255;255;255mtony_carnage[0m[38;2;30;144;255m[48;2;38;0;0m[0m[38;2;30;144;255m][0m'
+
+[38;2;255;69;0mDifferences found:[0m
+[table=3][cell][right][1mIndex[0m[/right]	[/cell][cell][right][1mCurrent[0m[/right]	[/cell][cell][right][1mExpected[0m[/right]	[/cell][cell][right]1[/right]	[/cell][cell][right]tony_carnage[/right]	[/cell][cell][right]<N/A>[/right]	[/cell][/table][0m[38;2;173;216;230m	at 'test_tonys_gunshot_call_follows_the_handgun_flash_once' in res://tests/test_match_audio.gd:97[0m[38;2;128;128;128m[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_brutal_weapons_are_despicable[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_brutal_weapons_are_despicable[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 5ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_gunshot_and_rocket_effects_use_the_louder_signature_mix[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_gunshot_and_rocket_effects_use_the_louder_signature_mix[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 196ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_entrance_pyro_is_lifted_six_db_over_its_previous_mix[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_entrance_pyro_is_lifted_six_db_over_its_previous_mix[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 19ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_nonbreaking_set_piece_landing_plays_its_impact_sound[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_nonbreaking_set_piece_landing_plays_its_impact_sound[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 27ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_tonys_danger_warning_queues_on_dangerous_weapon_pickup_once[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_tonys_danger_warning_queues_on_dangerous_weapon_pickup_once[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 111ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_tonys_barbed_wire_chair_call_replaces_the_generic_warning[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_tonys_barbed_wire_chair_call_replaces_the_generic_warning[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 56ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_excalibur_bed_of_nails_call_replaces_the_generic_warning[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_excalibur_bed_of_nails_call_replaces_the_generic_warning[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 86ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_excalibur_calls_the_fire_and_thanks_aubrey_once_each[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_excalibur_calls_the_fire_and_thanks_aubrey_once_each[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 18ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_dives_route_the_tope_and_the_springboard_cutter_calls[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_dives_route_the_tope_and_the_springboard_cutter_calls[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_cody_cutter_call_is_codys_alone[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_cody_cutter_call_is_codys_alone[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 2ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_codys_figure_four_gets_excaliburs_line_in_place_of_tonys[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_codys_figure_four_gets_excaliburs_line_in_place_of_tonys[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_kenny_dives_with_the_tope_and_the_moonsault[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_kenny_dives_with_the_tope_and_the_moonsault[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_tonys_roman_heel_line_only_routes_to_roman_heel_beats[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_tonys_roman_heel_line_only_routes_to_roman_heel_beats[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 4ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_commentary_event_never_repeats_within_match[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_commentary_event_never_repeats_within_match[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 17ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_move_calls_and_unbelievable_repeat_only_after_cooldowns[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_move_calls_and_unbelievable_repeat_only_after_cooldowns[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 16ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_repeatable_commentary_cooldowns_are_long_enough_to_avoid_loops[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_repeatable_commentary_cooldowns_are_long_enough_to_avoid_loops[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_excalibur_restore_order_only_fires_after_chaos_and_never_repeats[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_excalibur_restore_order_only_fires_after_chaos_and_never_repeats[0m[38;2;178;34;34m[1m FAILED[0m[38;2;100;149;237m 16ms[0m
+  [38;2;0;206;209m[1m[4mReport:[0m
+  [38;2;128;128;128m[38;2;255;69;0mExpecting:[0m
+ '[38;2;30;144;255m[excalibur_restore_order][0m'
+ but was
+ '[38;2;30;144;255m[[48;2;38;0;0m[38;2;255;255;255m           tony_carnage[0m[38;2;30;144;255m[48;2;38;0;0m[0m[38;2;30;144;255m][0m'
+
+[38;2;255;69;0mDifferences found:[0m
+[table=3][cell][right][1mIndex[0m[/right]	[/cell][cell][right][1mCurrent[0m[/right]	[/cell][cell][right][1mExpected[0m[/right]	[/cell][cell][right]0[/right]	[/cell][cell][right]tony_carnage[/right]	[/cell][cell][right]excalibur_restore_order[/right]	[/cell][/table][0m[38;2;173;216;230m	at 'test_excalibur_restore_order_only_fires_after_chaos_and_never_repeats' in res://tests/test_match_audio.gd:321[0m  [38;2;128;128;128m[38;2;255;69;0mExpecting:[0m
+ must be empty but was
+ '[38;2;30;144;255m["tony_carnage"][0m'[0m[38;2;173;216;230m	at 'test_excalibur_restore_order_only_fires_after_chaos_and_never_repeats' in res://tests/test_match_audio.gd:326[0m[38;2;128;128;128m[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_excalibur_signs_off_after_post_match_package_finishes[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_excalibur_signs_off_after_post_match_package_finishes[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 16ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_excalibur_opening_and_crowd_lines_are_queued_on_their_beats[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_excalibur_opening_and_crowd_lines_are_queued_on_their_beats[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 49ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_dynamite_theme_plays_under_the_opening_and_fades_at_first_entrance[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_dynamite_theme_plays_under_the_opening_and_fades_at_first_entrance[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 17ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_tonys_tension_call_routes_from_the_faceoff_cue[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_tonys_tension_call_routes_from_the_faceoff_cue[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 16ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_tonys_submission_call_routes_only_from_a_submission_attack[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_tonys_submission_call_routes_only_from_a_submission_attack[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 18ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_excalibur_comeback_and_finish_calls_have_match_events[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_excalibur_comeback_and_finish_calls_have_match_events[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 23ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_pinfall_win_hears_tonys_three_count[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_pinfall_win_hears_tonys_three_count[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 18ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_cody_return_call_only_queues_on_his_entrance_cue[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_cody_return_call_only_queues_on_his_entrance_cue[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 17ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_tony_answers_only_kennys_call[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_tony_answers_only_kennys_call[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 17ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_kennys_lines_are_dropped_when_the_next_entrance_starts[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_kennys_lines_are_dropped_when_the_next_entrance_starts[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 16ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_roman_landed_moves_route_the_history_or_spear_call[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_roman_landed_moves_route_the_history_or_spear_call[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 2ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_excalibur_strike_call_only_routes_to_hard_punches[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_excalibur_strike_call_only_routes_to_hard_punches[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 4ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_strikes_sound_on_landing_and_slams_do_not[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_strikes_sound_on_landing_and_slams_do_not[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 4ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_harder_strikes_are_louder[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_harder_strikes_are_louder[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 2ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_a_bump_needs_a_real_fall_and_is_louder_the_harder_he_lands[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_a_bump_needs_a_real_fall_and_is_louder_the_harder_he_lands[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_picking_a_sound_leaves_the_global_rng_alone[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_picking_a_sound_leaves_the_global_rng_alone[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 10ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_two_pools_pick_the_same_sounds[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_two_pools_pick_the_same_sounds[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 11ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_crowd_beds_are_out_of_step[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_crowd_beds_are_out_of_step[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_house_is_for_cody_and_against_roman[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_house_is_for_cody_and_against_roman[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_room_warms_over_the_match[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_room_warms_over_the_match[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_beds_rise_with_the_intensity_and_the_new_ones_most[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_beds_rise_with_the_intensity_and_the_new_ones_most[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 2ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_heat_is_off_when_cold_and_dies_away[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_heat_is_off_when_cold_and_dies_away[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 2ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_heel_is_booed_and_the_face_cheered[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_heel_is_booed_and_the_face_cheered[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 15ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_winner_theme_starts_at_the_chorus_not_the_top[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_winner_theme_starts_at_the_chorus_not_the_top[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 30ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_weapons_sound_like_what_they_are[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_weapons_sound_like_what_they_are[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_steel_and_glass_are_lifted_three_db_and_no_further[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_steel_and_glass_are_lifted_three_db_and_no_further[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 16ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_every_new_take_has_a_length[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_every_new_take_has_a_length[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 26ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_entrance_music_sits_over_the_crowd[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_entrance_music_sits_over_the_crowd[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 16ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_break_sounds_are_there_for_the_table_the_glass_and_the_desk[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_match_audio.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_the_break_sounds_are_there_for_the_table_the_glass_and_the_desk[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 7ms[0m
+[38;2;128;128;128m[0m
+[38;2;30;144;255mStatistics:[0m[38;2;128;128;128m 53 test cases | 0 errors | 3 failures | 0 flaky | 0 skipped | 0 orphans |[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 1s 334ms[0m
+[38;2;128;128;128m[0m
+[38;2;128;128;128m[0m
+[38;2;30;144;255mOverall Summary:[0m[38;2;255;255;255m 53 test cases | 0 errors | 3 failures | 0 flaky | 0 skipped | 0 orphans |[0m
+[38;2;233;150;122mExecuted test suites: (1/1)[0m
+[38;2;233;150;122mExecuted test cases : (53/53)[0m
+[38;2;233;150;122mTotal execution time: 1s 334ms[0m
+[38;2;255;255;255m [0m[38;2;100;149;237mOpen XML Report at: file:///workspace/aegis/game/tmp/aegis-merged-audio-check/report_1/results.xml[0m
+[38;2;100;149;237mOpen HTML Report at: file:///workspace/aegis/game/tmp/aegis-merged-audio-check/report_1/index.html[0m
+[38;2;178;34;34mExit code: 100[0m
+Run dispose test resources

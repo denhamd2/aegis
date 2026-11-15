@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites id="2026-11-14" name="report_1" tests="24" failures="0" skipped="0" flaky="0" time="0.000">
+	<testsuite id="0" name="test_replay_roundtrip" package="tests" timestamp="2026-11-14T16:18:46" hostname="localhost" tests="7" failures="0" errors="0" skipped="0" flaky="0" time="9.940">
+		<testcase name="test_recording_without_advancing_keeps_only_one_tick" classname="test_replay_roundtrip" time="0.003">
+		</testcase>
+		<testcase name="test_advancing_the_tick_records_one_frame_per_tick" classname="test_replay_roundtrip" time="0.003">
+		</testcase>
+		<testcase name="test_playback_returns_each_tick_its_own_recorded_input" classname="test_replay_roundtrip" time="0.003">
+		</testcase>
+		<testcase name="test_a_recorded_match_spans_its_whole_run" classname="test_replay_roundtrip" time="4.629">
+		</testcase>
+		<testcase name="test_replaying_a_recorded_match_reproduces_it" classname="test_replay_roundtrip" time="5.229">
+		</testcase>
+		<testcase name="test_the_pin_seed_ignores_how_long_the_process_has_been_running" classname="test_replay_roundtrip" time="0.046">
+		</testcase>
+		<testcase name="test_the_pin_seed_moves_with_the_match_tick" classname="test_replay_roundtrip" time="0.006">
+		</testcase>
+	</testsuite>
+	<testsuite id="1" name="test_ff_library" package="tests" timestamp="2026-11-14T16:18:55" hostname="localhost" tests="17" failures="0" errors="0" skipped="0" flaky="0" time="3.390">
+		<testcase name="test_every_wrestler_in_the_video_is_in_it" classname="test_ff_library" time="0.006">
+		</testcase>
+		<testcase name="test_every_move_loads_and_carries_its_tags" classname="test_ff_library" time="0.052">
+		</testcase>
+		<testcase name="test_a_shared_move_is_one_move_tagged_to_each_user" classname="test_ff_library" time="0.006">
+		</testcase>
+		<testcase name="test_cody_and_kenny_have_their_video_movesets" classname="test_ff_library" time="0.004">
+		</testcase>
+		<testcase name="test_the_moves_we_already_animate_are_built" classname="test_ff_library" time="0.017">
+		</testcase>
+		<testcase name="test_batch_one_is_built" classname="test_ff_library" time="0.005">
+		</testcase>
+		<testcase name="test_chokeslam_is_reachable_in_a_configured_match" classname="test_ff_library" time="3.199">
+		</testcase>
+		<testcase name="test_samoan_drop_uses_the_carry_contact_family" classname="test_ff_library" time="0.007">
+		</testcase>
+		<testcase name="test_batch_two_is_built_and_romans" classname="test_ff_library" time="0.007">
+		</testcase>
+		<testcase name="test_batch_three_is_built_and_codys" classname="test_ff_library" time="0.004">
+		</testcase>
+		<testcase name="test_batch_four_is_built_and_romans" classname="test_ff_library" time="0.004">
+		</testcase>
+		<testcase name="test_batch_five_is_built_and_romans" classname="test_ff_library" time="0.004">
+		</testcase>
+		<testcase name="test_batch_six_is_codys_dive" classname="test_ff_library" time="0.005">
+		</testcase>
+		<testcase name="test_kenny_batch_one_is_built_and_his" classname="test_ff_library" time="0.005">
+		</testcase>
+		<testcase name="test_kenny_batch_two_is_built_and_his" classname="test_ff_library" time="0.005">
+		</testcase>
+		<testcase name="test_library_moves_find_their_contact_family" classname="test_ff_library" time="0.004">
+		</testcase>
+		<testcase name="test_cody_and_roman_have_fits" classname="test_ff_library" time="0.007">
+		</testcase>
+	</testsuite>
+</testsuites>

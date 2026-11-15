@@ -152,6 +152,27 @@ bed-of-nails weapon instead of the generic danger warning. The supplied MP3 is
 transcoded to mono Vorbis q6 at 48 kHz with metadata stripped, a -12 LUFS
 target and -1.5 dBTP peak ceiling. The same rights caveat applies.
 
+Five owner-supplied Excalibur calls (2026-11-13), each transcoded from the
+supplied MP3 to mono Vorbis q6 at 48 kHz with metadata stripped, a -12 LUFS
+target and -1.5 dBTP peak ceiling (single-pass, so the source dynamics land
+them at -13.0 to -16.9 LUFS, inside the range of the existing Excalibur
+lines). The same rights caveat applies.
+
+- `commentary/excalibur_on_fire.ogg`: "Oh my God! He's on fire!" When a
+  wrestler catches fire (ManFire.ignited); once a match, at the head of the
+  commentary queue.
+- `commentary/excalibur_thank_aubrey.ogg`: relieved and urgent, opening "Thank
+  God for Aubrey Edwards ..." When Aubrey puts the burning man out
+  (ManFire.extinguished); once a match.
+- `commentary/excalibur_tope_suicida.ogg`: "Topé Suicida!" On the tope's
+  contact in DiveSpot, for anyone who dives (Cody and, from 13 Nov, Kenny).
+- `commentary/excalibur_cody_cutter.ogg`: "Cody Cutter! Out of nowhere!" When
+  Cody lands the Cody Cutter, as a signature or off the springboard; 45 s
+  repeat gap.
+- `commentary/excalibur_cody_figure_four.ogg`: reverent, opening "And now Cody
+  looking ..." When Cody goes into his Figure Four, in place of Tony's generic
+  submission call.
+
 `commentary/tony_roman_heel.ogg` is the owner-supplied Tony Schiavone call,
 "Hey Roman! Go fuck yourself!" It plays once when Roman uses a dangerous
 weapon or performs his in-match heel pose. It is transcoded from the supplied

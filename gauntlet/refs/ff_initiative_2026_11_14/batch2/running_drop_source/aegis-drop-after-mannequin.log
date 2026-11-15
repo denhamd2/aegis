@@ -1,0 +1,11 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+GRIP running_grapple_inverted_drop        waist  median 0.023  p90 0.055  (63 in reach, 249 out)
+PAIR running_grapple_inverted_drop        worst 0.000 m   @0.00   body-body 0.036   arm 0.060   moved A 0.071 D 0.450
+PAIR_DONE 1 moves; over 0.05 m: 0
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 2 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+ERROR: Pages in use exist at exit in PagedAllocator: N7Variant5Pools12BucketMediumE
+   at: ~PagedAllocator (./core/templates/paged_allocator.h:169)

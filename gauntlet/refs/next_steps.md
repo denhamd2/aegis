@@ -1,5 +1,73 @@
 # Aegis prioritised backlog
 
+## Latest deployed batch: release fitting and grip timing
+
+Owner approved publication of the implemented runtime running-drop release fix: cosmeticY smoothly returns to zero before impact; grip fades at55 and
+is off by58.33distinct focused checks pass, both real pairing maxima preserved.
+[Current evidence](grapple_release_2026_11_15/README.md). Exact Mac release
+5e4a165 and uploaded ZIP verified; run43698792321 succeeded.
+Next source task is the asymmetric right upper-body wrap/left free arm; original
+authored impact height, teardown lifetime and full move acceptance remain open.
+
+## 15 November: owner-approved all-changes Mac review build
+
+Owner requested committing and deploying all current changes, including Kenny's
+R7/R8 art/source, the bounded running-drop left-leg correction and validation
+tools. Mac run43695558573 succeeded; exact mac-latest commitf681d07 and
+uploaded Aegis.zip are verified. See the current evidence receipt.
+The leg slice improves mannequin overlap .090→.031m without changing real-pair
+maxima. No solver experiment is included. Full move acceptance, correct load
+hand roles, runtime lift, Kenny beard coverage and the new groom's overall
+likeness remain open; the merged commentary cue-selection tests also have two
+failing cases. No10/10/AAA claim. [Current evidence](ff_initiative_2026_11_14/batch2/README.md).
+
+## Current grapple delivery
+
+Timing fallback batch `9c1976b` is deployed to Mac; exact release and ZIP verified.
+Next approved batch fixes swapped authored-role transforms and isolates
+AnimationPlayer libraries between matches/replays. All23 focused cases pass;
+Mac release `0ef511b` and uploaded ZIP are verified. Teardown suspension and source contact
+corrections remain open. [Evidence and roadmap](ff_initiative_2026_11_14/README.md).
+
+## Current owner priority: Fight Forever gameplay initiative
+
+Owner14November: prioritise synchronisation/grappling and existing animation
+quality, then reversals, AI, referee, library and broadcast improvements.
+[Current audit, roadmap and first implemented timing fix](ff_initiative_2026_11_14/README.md).
+Preserve all pending Kenny assets/likeness work and prior backlog scope.
+
+## Preserved Kenny likeness work
+
+The latest cell work is deployed atb40f772. Owner requested the ambulance next:
+remodel in Blender using the supplied screenshots, then perform three independent
+judge/revision loops aiming10/10 with honest scores. Preserve doors and match
+interactions; [current evidence/ledger](ambulance_judge_2026_11_13/README.md).
+Ambulance iterations are complete at7.4/10;6focused cases pass, exact
+`fa5c06d` Mac publication verified. After its verified deployment, Kenny likeness (head/face/hair/body)
+and an audit of model independence from Cody are the next owner priority,
+using three judge/revision loops. [Current Kenny evidence](kenny_judge_2026_11_14/README.md):
+all three revisions complete, **4.1 → 4.0 → 4.5 → 4.6/10**. Kenny now owns an editable
+Blender source and independent identity profiles/maps/builds; shared neutral
+rig/animation code remains. All 78 focused cases pass, isolated rebuild succeeds,
+and 74 Cody assets are unchanged. Exact `253603d` Mac publication is verified. Facial likeness,
+ribbon-like curls and skin detail remain open; no 10/10 or AAA acceptance.
+Owner then requested further Kenny loops: three further rounds scored 4.1 → 3.9 → 4.6, recovering but not beating the
+published likeness. They remain uncommitted/unpublished; 78 focused checks pass
+on R6. Owner confirmed the four references and reiterated 10/10. R7 now changes
+method to a measured neutral head fit in clay and an authored curl groom, with
+landmark/silhouette approval before surface detail.
+[Continuation evidence](kenny_judge_continued_2026_11_14/README.md).
+The cell walking-strip study stays deferred.
+
+## 13 November Blender requirement
+
+Owner requires Blender modeling for the steel cage, Hell in a Cell, ambulance
+and casket. Their native sources and exports are implemented; see the
+[authoring evidence and remaining visual acceptance](blender_props_2026_11_13/validation.md).
+**AAA quality and WWE2K visual parity are not complete.** Continue reference-led
+visual refinement and Mac review; retain unfinished priorities3–9 and weapon
+families in the current batch ledger.
+
 ## 12 November execution update
 
 The owner approved priorities **3–9 from the conversational ranking**, delivered
@@ -18,10 +86,24 @@ are historical, including their stale “working tree”, move-count and CI clai
 
 ## Published and remaining acceptance
 
-Latest Mac app: **`bf053267128f95bdc0420521d3756f1d30b1e530`**, verified against
-`mac-latest`, successful [Mac run 42419291426](https://github.com/denhamd2/aegis/actions/runs/42419291426),
-`Aegis.zip` 982,718,615 bytes. [Download](https://github.com/denhamd2/aegis/releases/tag/mac-latest).
-Documentation receipt `6527b5f` does not change the app.
+Latest Mac app: **`253603dfc86b6531549d17cad7b0db3478f3caf0`**, verified
+against `mac-latest`, successful [Mac run 43575822777](https://github.com/denhamd2/aegis/actions/runs/43575822777),
+`Aegis.zip` 1,026,426,469 bytes.
+[Download](https://github.com/denhamd2/aegis/releases/tag/mac-latest).
+This includes the Blender prop sources/runtime integration, grip corrections
+three cell judge revisions plus wire sampling, the three-round ambulance remodel,
+and Kenny’s three-round likeness/identity batch; [current evidence and limitations](cell_judge_2026_11_13/README.md).
+Kenny’s three-round likeness/identity batch is published with 78 focused tests
+passing; visual acceptance remains open at 4.6/10. Python CI passed, while the
+exact-commit broader gameplay suite was still running at publication. The
+next unfinished implementation batch is entrances and Cody’s moonsault setup
+(original IDs 11–12, 15), followed by two-sided ladder routes and ladder/table
+coverage. Owner review may reprioritise the documented likeness gaps.
+The bounded cell walking-strip study remains deferred.
+Cell likeness remains **8.0/10**, with motion aliasing, close detail and native
+Mac performance still open. Earlier release rows below retain their own
+validation history; [the current batch ledger](backlog_3_9_2026_11_12/README.md)
+records later work and unfinished priorities3–9.
 
 | ID | Published work | Evidence and remaining limits |
 | --- | --- | --- |

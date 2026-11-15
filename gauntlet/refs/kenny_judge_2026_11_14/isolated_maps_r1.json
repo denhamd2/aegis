@@ -1,0 +1,70 @@
+[
+  {
+    "name": "kenny_body_abdomen.png",
+    "bytes_equal": true
+  },
+  {
+    "name": "kenny_body_arm_l.png",
+    "bytes_equal": true
+  },
+  {
+    "name": "kenny_body_arm_r.png",
+    "bytes_equal": true
+  },
+  {
+    "name": "kenny_body_chest.png",
+    "bytes_equal": true
+  },
+  {
+    "name": "kenny_curl_cards.png",
+    "bytes_equal": true
+  },
+  {
+    "name": "kenny_eye_color.png",
+    "bytes_equal": true
+  },
+  {
+    "name": "kenny_eye_height.png",
+    "bytes_equal": true
+  },
+  {
+    "name": "kenny_eye_orm.png",
+    "bytes_equal": true
+  },
+  {
+    "name": "kenny_face_projected.png",
+    "bytes_equal": true
+  },
+  {
+    "name": "kenny_gear_belt.png",
+    "bytes_equal": true
+  },
+  {
+    "name": "kenny_gear_boot_l.png",
+    "bytes_equal": true
+  },
+  {
+    "name": "kenny_gear_boot_r.png",
+    "bytes_equal": true
+  },
+  {
+    "name": "kenny_gear_tights.png",
+    "bytes_equal": true
+  },
+  {
+    "name": "kenny_gear_wrist.png",
+    "bytes_equal": true
+  },
+  {
+    "name": "kenny_head.png",
+    "bytes_equal": true
+  },
+  {
+    "name": "kenny_skin_head_roughness.png",
+    "bytes_equal": true
+  },
+  {
+    "name": "kenny_skin_head_wet.png",
+    "bytes_equal": true
+  }
+]

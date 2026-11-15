@@ -1,0 +1,28 @@
+{
+  "kenny_body.glb": {
+    "active_sha256": "84c7c2f401e231faeabc347d9918774e53029dd8dcdb461305d77d8121d3f051",
+    "cold_sha256": "26b87450c97dfe50de10979c00af7e2c90f43f03e97b83dcf0eac545921ce2b7",
+    "binary_chunk_equal": false,
+    "binary_chunk_sha256": "2699652d844d47662353476a007d0e5639eb760d005a9decf02d1a6d3fe0e21c",
+    "json_differences": [],
+    "accessors_equal": true,
+    "buffer_views_equal": true,
+    "nodes_equal": true,
+    "skins_equal": true,
+    "materials_equal": true,
+    "images_equal": true
+  },
+  "kenny_curls.glb": {
+    "active_sha256": "cf2eacf425fc7f6a3323a62763bcb561467070ef23f102df35b04c5bcf73b0f6",
+    "cold_sha256": "cf2eacf425fc7f6a3323a62763bcb561467070ef23f102df35b04c5bcf73b0f6",
+    "binary_chunk_equal": true,
+    "binary_chunk_sha256": "add6c5f2e5ef621771f3a5d42a06d9753a4d999ff50ea774c0e9a37819127597",
+    "json_differences": [],
+    "accessors_equal": true,
+    "buffer_views_equal": true,
+    "nodes_equal": true,
+    "skins_equal": true,
+    "materials_equal": true,
+    "images_equal": true
+  }
+}

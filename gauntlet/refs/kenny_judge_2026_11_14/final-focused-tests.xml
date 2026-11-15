@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites id="2026-11-14" name="report_1" tests="78" failures="0" skipped="0" flaky="0" time="0.000">
+	<testsuite id="0" name="test_cody_model" package="tests" timestamp="2026-11-14T08:14:02" hostname="localhost" tests="8" failures="0" errors="0" skipped="0" flaky="0" time="2.161">
+		<testcase name="test_skeleton_is_the_base_rigs_bones" classname="test_cody_model" time="0.291">
+		</testcase>
+		<testcase name="test_is_rigged_on_a_single_skeleton" classname="test_cody_model" time="0.258">
+		</testcase>
+		<testcase name="test_mesh_is_skinned" classname="test_cody_model" time="0.257">
+		</testcase>
+		<testcase name="test_hair_rides_the_head_bone" classname="test_cody_model" time="0.262">
+		</testcase>
+		<testcase name="test_animations_are_installed_and_repathed" classname="test_cody_model" time="0.258">
+		</testcase>
+		<testcase name="test_does_not_use_universal_attire" classname="test_cody_model" time="0.261">
+		</testcase>
+		<testcase name="test_animation_keys_are_not_converted" classname="test_cody_model" time="0.255">
+		</testcase>
+		<testcase name="test_stands_at_human_height" classname="test_cody_model" time="0.290">
+		</testcase>
+	</testsuite>
+	<testsuite id="1" name="test_roman_model" package="tests" timestamp="2026-11-14T08:14:04" hostname="localhost" tests="15" failures="0" errors="0" skipped="0" flaky="0" time="39.262">
+		<testcase name="test_body_skeleton_keeps_named_skin_bones" classname="test_roman_model" time="1.172">
+		</testcase>
+		<testcase name="test_base_animations_are_remapped_to_roman_bones" classname="test_roman_model" time="1.371">
+		</testcase>
+		<testcase name="test_match_wires_roman_to_generated_move_libraries" classname="test_roman_model" time="5.320">
+		</testcase>
+		<testcase name="test_bone_map_covers_the_spine_chain" classname="test_roman_model" time="1.688">
+		</testcase>
+		<testcase name="test_eyes_and_lashes_are_textured" classname="test_roman_model" time="1.712">
+		</testcase>
+		<testcase name="test_normal_maps_import_as_normal_maps" classname="test_roman_model" time="0.007">
+		</testcase>
+		<testcase name="test_pants_crotch_blends_into_the_pelvis_for_forward_bends" classname="test_roman_model" time="1.745">
+		</testcase>
+		<testcase name="test_roman_wait_and_faceoff_wrists_clear_the_thighs" classname="test_roman_model" time="16.199">
+		</testcase>
+		<testcase name="test_adapted_poses_reference_real_roman_bones" classname="test_roman_model" time="3.535">
+		</testcase>
+		<testcase name="test_helper_bones_follow_the_joint_they_belong_to" classname="test_roman_model" time="4.313">
+		</testcase>
+		<testcase name="test_a_down_pose_retargets_onto_the_mat_not_into_the_air" classname="test_roman_model" time="0.037">
+		</testcase>
+		<testcase name="test_the_root_translation_is_not_vertically_inverted" classname="test_roman_model" time="0.006">
+		</testcase>
+		<testcase name="test_a_key_at_the_source_rest_lands_on_the_target_rest" classname="test_roman_model" time="0.005">
+		</testcase>
+		<testcase name="test_fingers_map_knuckle_to_knuckle" classname="test_roman_model" time="2.000">
+		</testcase>
+		<testcase name="test_lips_are_deeper_than_the_skin" classname="test_roman_model" time="0.098">
+		</testcase>
+	</testsuite>
+	<testsuite id="2" name="test_kenny_model" package="tests" timestamp="2026-11-14T08:14:44" hostname="localhost" tests="19" failures="0" errors="0" skipped="0" flaky="0" time="23.382">
+		<testcase name="test_owns_its_model_and_uses_a_neutral_adapter" classname="test_kenny_model" time="1.373">
+		</testcase>
+		<testcase name="test_owns_its_head_finish_maps_without_donor_fallback" classname="test_kenny_model" time="1.186">
+		</testcase>
+		<testcase name="test_skeleton_is_the_base_rigs_bones" classname="test_kenny_model" time="1.199">
+		</testcase>
+		<testcase name="test_is_rigged_on_a_single_skeleton" classname="test_kenny_model" time="1.143">
+		</testcase>
+		<testcase name="test_meshes_are_skinned" classname="test_kenny_model" time="1.187">
+		</testcase>
+		<testcase name="test_animations_are_installed" classname="test_kenny_model" time="1.182">
+		</testcase>
+		<testcase name="test_does_not_use_universal_attire" classname="test_kenny_model" time="1.174">
+		</testcase>
+		<testcase name="test_skin_is_kennys" classname="test_kenny_model" time="1.145">
+		</testcase>
+		<testcase name="test_codys_tattoos_are_gone" classname="test_kenny_model" time="0.143">
+		</testcase>
+		<testcase name="test_gear_is_kennys" classname="test_kenny_model" time="1.139">
+		</testcase>
+		<testcase name="test_eyes_are_kennys" classname="test_kenny_model" time="1.179">
+		</testcase>
+		<testcase name="test_the_beard_runs_along_the_jaw_to_the_ear" classname="test_kenny_model" time="1.221">
+		</testcase>
+		<testcase name="test_the_hairline_recedes_at_the_temples" classname="test_kenny_model" time="1.164">
+		</testcase>
+		<testcase name="test_authored_face_is_applied_once_and_preserves_protected_neck_and_eyes" classname="test_kenny_model" time="1.448">
+		</testcase>
+		<testcase name="test_wears_kennys_curls_not_codys_groom" classname="test_kenny_model" time="1.176">
+		</testcase>
+		<testcase name="test_slick_covers_the_crown" classname="test_kenny_model" time="1.105">
+		</testcase>
+		<testcase name="test_the_hair_cap_is_matte_roots" classname="test_kenny_model" time="1.168">
+		</testcase>
+		<testcase name="test_the_hair_sits_close_to_his_head" classname="test_kenny_model" time="1.188">
+		</testcase>
+		<testcase name="test_kenny_mutation_cannot_change_cody_or_another_kenny_in_either_load_order" classname="test_kenny_model" time="2.751">
+		</testcase>
+	</testsuite>
+	<testsuite id="3" name="test_face_expression" package="tests" timestamp="2026-11-14T08:15:07" hostname="localhost" tests="1" failures="0" errors="0" skipped="0" flaky="0" time="3.430">
+		<testcase name="test_detailed_wrestlers_have_two_deforming_pain_shapes" classname="test_face_expression" time="3.421">
+		</testcase>
+	</testsuite>
+	<testsuite id="4" name="test_body_bulk" package="tests" timestamp="2026-11-14T08:15:10" hostname="localhost" tests="2" failures="0" errors="0" skipped="0" flaky="0" time="0.048">
+		<testcase name="test_a_vertex_moves_by_its_weighted_gain_along_its_normal" classname="test_body_bulk" time="0.003">
+		</testcase>
+		<testcase name="test_both_men_are_built_up_and_their_heads_are_not" classname="test_body_bulk" time="0.038">
+		</testcase>
+	</testsuite>
+	<testsuite id="5" name="test_hip_helpers" package="tests" timestamp="2026-11-14T08:15:10" hostname="localhost" tests="4" failures="0" errors="0" skipped="0" flaky="0" time="1.433">
+		<testcase name="test_cody_gets_a_helper_bone_per_hip_under_the_pelvis" classname="test_hip_helpers" time="0.267">
+		</testcase>
+		<testcase name="test_installing_twice_does_not_add_more_bones" classname="test_hip_helpers" time="0.247">
+		</testcase>
+		<testcase name="test_the_hip_band_carries_weight_on_the_helper_and_every_vertex_still_sums_to_one" classname="test_hip_helpers" time="0.663">
+		</testcase>
+		<testcase name="test_the_helper_turns_half_as_far_as_the_thigh" classname="test_hip_helpers" time="0.239">
+		</testcase>
+	</testsuite>
+	<testsuite id="6" name="test_shoulder_helpers" package="tests" timestamp="2026-11-14T08:15:12" hostname="localhost" tests="5" failures="0" errors="0" skipped="0" flaky="0" time="1.385">
+		<testcase name="test_cody_gets_a_helper_bone_per_shoulder_under_the_clavicle" classname="test_shoulder_helpers" time="0.242">
+		</testcase>
+		<testcase name="test_the_shoulder_carries_weight_on_the_helper_and_every_vertex_sums_to_one" classname="test_shoulder_helpers" time="0.698">
+		</testcase>
+		<testcase name="test_the_helpers_follow_half_the_arm_in_the_celebration" classname="test_shoulder_helpers" time="0.246">
+		</testcase>
+		<testcase name="test_the_mirror_seam_is_mended_once_and_shades_as_one_surface" classname="test_shoulder_helpers" time="0.059">
+		</testcase>
+		<testcase name="test_the_mirror_seam_copies_share_one_skin" classname="test_shoulder_helpers" time="0.117">
+		</testcase>
+	</testsuite>
+	<testsuite id="7" name="test_skin_look" package="tests" timestamp="2026-11-14T08:15:13" hostname="localhost" tests="7" failures="0" errors="0" skipped="0" flaky="0" time="1.420">
+		<testcase name="test_sweat_starts_damp_builds_and_caps" classname="test_skin_look" time="0.005">
+		</testcase>
+		<testcase name="test_wetness_is_a_clearcoat_film" classname="test_skin_look" time="0.004">
+		</testcase>
+		<testcase name="test_sweat_film_has_spatial_breakup_and_bounded_roughness" classname="test_skin_look" time="0.049">
+		</testcase>
+		<testcase name="test_face_keeps_a_wet_finish_with_softer_highlights_than_the_body" classname="test_skin_look" time="0.004">
+		</testcase>
+		<testcase name="test_pores_leave_the_colour_alone" classname="test_skin_look" time="0.006">
+		</testcase>
+		<testcase name="test_detail_uv_is_added_without_touching_the_mesh" classname="test_skin_look" time="0.004">
+		</testcase>
+		<testcase name="test_roman_and_cody_register_skin_with_pores_and_sweat" classname="test_skin_look" time="1.328">
+		</testcase>
+	</testsuite>
+	<testsuite id="8" name="test_kenny_hair_sway" package="tests" timestamp="2026-11-14T08:15:15" hostname="localhost" tests="2" failures="0" errors="0" skipped="0" flaky="0" time="0.831">
+		<testcase name="test_the_lengths_swing_against_his_motion_and_settle" classname="test_kenny_hair_sway" time="0.004">
+		</testcase>
+		<testcase name="test_his_lengths_wear_the_swaying_card_shader" classname="test_kenny_hair_sway" time="0.817">
+		</testcase>
+	</testsuite>
+	<testsuite id="9" name="test_wrestler_model_orientation" package="tests" timestamp="2026-11-14T08:15:15" hostname="localhost" tests="2" failures="0" errors="0" skipped="0" flaky="0" time="0.035">
+		<testcase name="test_character_model_cancels_the_rigs_backwards_forward_axis" classname="test_wrestler_model_orientation" time="0.013">
+		</testcase>
+		<testcase name="test_character_model_is_not_offset_or_scaled" classname="test_wrestler_model_orientation" time="0.012">
+		</testcase>
+	</testsuite>
+	<testsuite id="10" name="test_blood" package="tests" timestamp="2026-11-14T08:15:15" hostname="localhost" tests="13" failures="0" errors="0" skipped="0" flaky="0" time="21.010">
+		<testcase name="test_face_blood_stays_in_narrow_streaks_as_it_builds" classname="test_blood" time="0.004">
+		</testcase>
+		<testcase name="test_every_skin_surface_has_its_reveal_map" classname="test_blood" time="2.259">
+		</testcase>
+		<testcase name="test_the_dangerous_weapons_open_him_up_and_the_soft_ones_do_not" classname="test_blood" time="1.308">
+		</testcase>
+		<testcase name="test_barbed_wire_cuts_deeper_than_a_chair" classname="test_blood" time="1.905">
+		</testcase>
+		<testcase name="test_a_beaten_man_bleeds_more_from_the_same_shot" classname="test_blood" time="1.879">
+		</testcase>
+		<testcase name="test_landing_on_the_tacks_opens_his_back" classname="test_blood" time="1.315">
+		</testcase>
+		<testcase name="test_it_runs_rather_than_pops_and_keeps_running" classname="test_blood" time="5.469">
+		</testcase>
+		<testcase name="test_blood_off_bleeds_nothing" classname="test_blood" time="1.397">
+		</testcase>
+		<testcase name="test_the_canvas_keeps_one_stain_map_however_much_is_spilt" classname="test_blood" time="0.185">
+		</testcase>
+		<testcase name="test_match_ring_canvas_has_a_live_blood_overlay" classname="test_blood" time="0.230">
+		</testcase>
+		<testcase name="test_a_bloodied_man_laid_out_on_the_canvas_stains_it" classname="test_blood" time="3.643">
+		</testcase>
+		<testcase name="test_the_blood_level_defaults_to_five_and_scales_what_is_shown" classname="test_blood" time="1.344">
+		</testcase>
+		<testcase name="test_the_options_screen_steps_the_blood_level" classname="test_blood" time="0.006">
+		</testcase>
+	</testsuite>
+</testsuites>

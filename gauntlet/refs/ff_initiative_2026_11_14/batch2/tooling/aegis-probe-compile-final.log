@@ -1,0 +1,5 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+COMPILE_OK res://tools/anim/pair_clearance.gd
+COMPILE_OK res://tools/probe/pair_clearance.gd
+COMPILE_OK res://tools/probe/paired_shot.gd

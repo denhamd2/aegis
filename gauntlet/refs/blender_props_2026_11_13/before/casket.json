@@ -1,0 +1,27 @@
+{
+	"adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+	"captures": [
+		"casket_000.png",
+		"casket_050.png",
+		"casket_100.png"
+	],
+	"contract": {
+		"bed": "[X: (-1.0, 0.0, 0.0), Y: (0.0, 1.0, 0.0), Z: (-0.0, 0.0, -1.0), O: (-4.75, -0.654, 1.85)]",
+		"collisions": [
+			{
+				"size": "(0.9, 0.82, 2.25)",
+				"transform": "[X: (1.0, 0.0, 0.0), Y: (0.0, 1.0, 0.0), Z: (0.0, 0.0, 1.0), O: (0.0, 0.41, 0.0)]"
+			}
+		],
+		"lip": "(-4.36, -0.124, 1.9)",
+		"method": "casket",
+		"mouth": "(-3.81, -1.094, 1.9)",
+		"position": "(-4.75, -1.094, 1.9)",
+		"rotation": "(0.0, 0.0, 0.0)"
+	},
+	"materials": 4,
+	"meshes": 22,
+	"performance_evidence": false,
+	"pipeline": "forward_plus",
+	"triangles": 264
+}

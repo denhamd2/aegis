@@ -1,0 +1,44 @@
+[
+  {
+    "path": "/tmp/aegis-running-drop-poses.tres",
+    "bytes": 33550110,
+    "sha256": "18282b3a34f67d0cf5c77fdcfd099a8140d3a25ef7fb1cee1b277b5cf1b2676a",
+    "reason": "invalid raw-loader or verified redundant scratch bake; source GLBs, valid imported outputs and published backup retained"
+  },
+  {
+    "path": "/tmp/aegis-running-drop-poses-repeat.tres",
+    "bytes": 33550110,
+    "sha256": "94c2f182bff12a9d48e9a353f3316d7696adf8c7bb9d58d0929e17de6ee77a45",
+    "reason": "invalid raw-loader or verified redundant scratch bake; source GLBs, valid imported outputs and published backup retained"
+  },
+  {
+    "path": "/tmp/aegis-running-drop-stable1.tres",
+    "bytes": 33550110,
+    "sha256": "18282b3a34f67d0cf5c77fdcfd099a8140d3a25ef7fb1cee1b277b5cf1b2676a",
+    "reason": "invalid raw-loader or verified redundant scratch bake; source GLBs, valid imported outputs and published backup retained"
+  },
+  {
+    "path": "/tmp/aegis-running-drop-stable2.tres",
+    "bytes": 33550110,
+    "sha256": "18282b3a34f67d0cf5c77fdcfd099a8140d3a25ef7fb1cee1b277b5cf1b2676a",
+    "reason": "invalid raw-loader or verified redundant scratch bake; source GLBs, valid imported outputs and published backup retained"
+  },
+  {
+    "path": "/tmp/aegis-running-drop-candidate2-60fps-poses.tres",
+    "bytes": 34061270,
+    "sha256": "35bfacaafed76f5a62aa207dd92e05bee184f04faddf19d0f95ef0914c194c3b",
+    "reason": "invalid raw-loader or verified redundant scratch bake; source GLBs, valid imported outputs and published backup retained"
+  },
+  {
+    "path": "/tmp/aegis-canonical-absolute-poses.tres",
+    "bytes": 34061555,
+    "sha256": "cf94f2f91d4ed9cfe3b6226cab1047c5389fd238be4815fcf1f002f70264599d",
+    "reason": "invalid raw-loader or verified redundant scratch bake; source GLBs, valid imported outputs and published backup retained"
+  },
+  {
+    "path": "/tmp/aegis-helper-repeat-poses.tres",
+    "bytes": 33633855,
+    "sha256": "fdf5cb4e2712695939fac0dd559c6161ac0ab3b786f0053e49cacd3d166099d3",
+    "reason": "invalid raw-loader or verified redundant scratch bake; source GLBs, valid imported outputs and published backup retained"
+  }
+]

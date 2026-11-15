@@ -1,0 +1,41 @@
+[
+  {
+    "roster": "mannequin",
+    "body_max_m": 0.0311844420433045,
+    "arm_max_m": 0.0606773836910725,
+    "first_grip_fade_source_frame": 54.9999999999999,
+    "first_zero_grip_source_frame": 57.9999999999999,
+    "impact_actor_separation_y": [
+      -0.0,
+      0.0
+    ],
+    "serialized_joint_prefix_max_delta_m": 0.0,
+    "release_max_wrist_step_m_per_tick": 0.09054811079752015
+  },
+  {
+    "roster": "cody-roman",
+    "body_max_m": 0.0515393280982971,
+    "arm_max_m": 0.147385866343975,
+    "first_grip_fade_source_frame": 54.9999999999999,
+    "first_zero_grip_source_frame": 57.9999999999999,
+    "impact_actor_separation_y": [
+      -0.0,
+      0.0
+    ],
+    "serialized_joint_prefix_max_delta_m": 1.0000000000287557e-06,
+    "release_max_wrist_step_m_per_tick": 0.09952465373463987
+  },
+  {
+    "roster": "roman-cody",
+    "body_max_m": 0.0342463731765747,
+    "arm_max_m": 0.0771461391448975,
+    "first_grip_fade_source_frame": 54.9999999999999,
+    "first_zero_grip_source_frame": 57.9999999999999,
+    "impact_actor_separation_y": [
+      -0.0,
+      0.0
+    ],
+    "serialized_joint_prefix_max_delta_m": 9.999999999732445e-07,
+    "release_max_wrist_step_m_per_tick": 0.09858009971084444
+  }
+]

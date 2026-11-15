@@ -43,12 +43,17 @@ var _active: bool = false
 ## wrestler tracks' NodePaths rewritten to the real attacker/defender nodes,
 ## so the authored motion always maps lifter-track -> attacker and
 ## thrown-track -> defender, whichever physical node that is this call. The
-## original clip is restored into the shared AnimationLibrary afterward
+## original clip is restored into this rig's private AnimationLibrary afterward
 ## (never mutated in place -- it's one Resource instance shared by every
 ## match/replay, same hazard MoveDef's own shared-Resource doc comment
 ## already flags elsewhere in this codebase).
 var _retargeted_anim_name: StringName
 var _original_anim: Animation
+var _private_library: AnimationLibrary
+## Cosmetic release envelope, sampled from the existing paired player.
+var _separation_height_weight := 1.0
+var _separation_height_origin := Vector2.ZERO
+var _separation_height_captured := false
 ## Frame the current move plays in — see _compute_pair_transform().
 var _pair_transform: Transform3D = Transform3D()
 
@@ -90,6 +95,9 @@ func begin(attacker: Node3D, defender: Node3D, move: MoveDef) -> void:
 	_attacker = attacker
 	_defender = defender
 	_move = move
+	_separation_height_weight = 1.0
+	_separation_height_origin = Vector2.ZERO
+	_separation_height_captured = false
 	_attacker_body = attacker as CharacterBody3D
 	_defender_body = defender as CharacterBody3D
 
@@ -138,8 +146,19 @@ func begin(attacker: Node3D, defender: Node3D, move: MoveDef) -> void:
 		# Grey-box fallback (Phase 2/3 gap): no paired animation library yet,
 		# so resolve on the move's own frame count instead of an anim signal.
 		var ticks_to_wait := move.total_frames() if move else 1
-		await Engine.get_main_loop().create_timer(ticks_to_wait / float(Engine.physics_ticks_per_second)).timeout
-		_on_animation_finished(&"")
+		if await _wait_fallback_frames(ticks_to_wait):
+			_on_animation_finished(&"")
+
+
+## MoveDef durations are simulation frames, including when no root clip exists.
+## An idle timer can expire between physics ticks and changes its frame count
+## under time scaling; both roles must remain owned for the same fixed ticks.
+func _wait_fallback_frames(frames: int) -> bool:
+	for _tick in maxi(1, frames):
+		await get_tree().physics_frame
+		if not _active:
+			return false
+	return true
 
 ## Starts each wrestler's half of the move's authored bone-level performance.
 ##
@@ -164,7 +183,7 @@ func _play_role_poses(attacker: Node3D, defender: Node3D, move: MoveDef) -> void
 			body.play_paired_pose(move, pair[1])
 
 func _play_retargeted(anim_name: StringName, attacker: Node3D, defender: Node3D) -> void:
-	var library := animation_player.get_animation_library("")
+	var library := _local_animation_library()
 	var source := library.get_animation(anim_name)
 	var root := animation_player.get_node(animation_player.root_node)
 	var retargeted := source.duplicate() as Animation
@@ -184,6 +203,21 @@ func _play_retargeted(anim_name: StringName, attacker: Node3D, defender: Node3D)
 	library.remove_animation(anim_name)
 	library.add_animation(anim_name, retargeted)
 	animation_player.play(anim_name)
+
+
+## Keep immutable source clips shared, but never replace entries in another
+## rig's library while baking this pair's world-space keys.
+func _local_animation_library() -> AnimationLibrary:
+	var source := animation_player.get_animation_library("")
+	if source == _private_library:
+		return source
+	var local := AnimationLibrary.new()
+	for name in source.get_animation_list():
+		local.add_animation(name, source.get_animation(name))
+	animation_player.remove_animation_library("")
+	animation_player.add_animation_library("", local)
+	_private_library = local
+	return local
 
 ## Rewrite one wrestler track's keys from the authored origin frame into
 ## _pair_transform.
@@ -208,7 +242,7 @@ func _transform_track_into_pair_frame(anim: Animation, track: int,
 		# so across Roman's knee Kenny lay 11 cm low and Roman's head went
 		# 15 cm into his back (PairClearance, backbreaker). Height only: on the
 		# mat (y 0) nothing moves, and the line between the two is unchanged.
-		var lift := _lift_scale if String(anim.track_get_path(track)).ends_with("WrestlerB") else 1.0
+		var lift := 1.0 if is_attacker_role else _lift_scale
 		for k in anim.track_get_key_count(track):
 			var pos: Vector3 = anim.track_get_key_value(track, k)
 			pos.y *= lift
@@ -217,8 +251,7 @@ func _transform_track_into_pair_frame(anim: Animation, track: int,
 			anim.track_set_key_value(track, k, _pair_transform * pos)
 	elif track_type == Animation.TYPE_ROTATION_3D:
 		var yaw := Quaternion(_pair_transform.basis.orthonormalized())
-		var is_defender_root := String(anim.track_get_path(track)).ends_with(
-				"WrestlerB")
+		var is_defender_root := not is_attacker_role
 		for k in anim.track_get_key_count(track):
 			var rot: Quaternion = anim.track_get_key_value(track, k)
 			anim.track_set_key_value(track, k,
@@ -246,11 +279,11 @@ func _transform_track_into_pair_frame(anim: Animation, track: int,
 static func defender_root_yaw(rot: Quaternion) -> Quaternion:
 	return Quaternion(Vector3.UP, Basis(rot).get_euler().y)
 
-## A match torn down mid-move must put the shared clip back.
+## A match torn down mid-move must restore its private playback clip.
 ##
 ## _play_retargeted() swaps a copy of the move, baked into this pair's frame,
-## into the AnimationLibrary -- and that library is paired_moves.tres, one
-## resource shared by every match in the process. Restoring only on
+## into its private library. Previously that container was paired_moves.tres,
+## shared by every match in the process. Restoring only on
 ## grapple_finished left the baked copy behind whenever a match was freed
 ## mid-move, and the NEXT match played its moves from the first one's pair
 ## frame. test_replay_roundtrip caught it once running attacks began moves
@@ -734,6 +767,12 @@ func _separate_models() -> void:
 	var d := _defender as WrestlerController
 	if a == null or d == null or a.skeleton == null or d.skeleton == null:
 		return
+	_update_separation_height()
+	if _separation_height_weight < 1.0:
+		for body: WrestlerController in [a, d]:
+			body.paired_separation = _constrain_separation(body.paired_separation,
+					ATTACKER_MAX if body == a else SEPARATION_MAX, body == a)
+			body.apply_model_offset()
 	var pushed := false
 	for _pass in SEPARATION_PASSES:
 		var push := PairClearance.push(a, d)
@@ -744,17 +783,55 @@ func _separate_models() -> void:
 		# attacker the other way: when the defender is wrapped round him (the
 		# tilt-a-whirls, Cross Rhodes), pushing only the defender just presses
 		# him into the far side and the pushes cancel.
-		d.paired_separation = (d.paired_separation + push * DEFENDER_SHARE) \
-				.limit_length(SEPARATION_MAX)
-		a.paired_separation = (a.paired_separation - push * (1.0 - DEFENDER_SHARE)) \
-				.limit_length(ATTACKER_MAX)
+		d.paired_separation = _constrain_separation(
+				d.paired_separation + push * DEFENDER_SHARE, SEPARATION_MAX)
+		a.paired_separation = _constrain_separation(
+				a.paired_separation - push * (1.0 - DEFENDER_SHARE), ATTACKER_MAX, true)
 		d.apply_model_offset()
 		a.apply_model_offset()
 	if not pushed:
 		for w: WrestlerController in [a, d]:
-			w.paired_separation *= SEPARATION_SETTLE
+			w.paired_separation = _constrain_separation(w.paired_separation * SEPARATION_SETTLE,
+					ATTACKER_MAX if w == a else SEPARATION_MAX, w == a)
 			w.apply_model_offset()
 	_pull_into_reach(a, d)
+
+
+## A move may release vertical fitting without changing its authored body or
+## gameplay roots. Keep the envelope after playback finishes, through ease-out.
+func _update_separation_height() -> void:
+	if not _move or not _original_anim or not animation_player:
+		return
+	var recipe: Dictionary = PairedRecipes.RECIPES.get(String(_move.animation_pair_id), {})
+	if not recipe.has("separation_height_release"):
+		return
+	var window: Vector2 = recipe["separation_height_release"]
+	var length := animation_player.current_animation_length
+	if length <= 0.0:
+		return
+	var phase := animation_player.current_animation_position / length
+	# Recipe Vector2 endpoints are serialized as float32.
+	if phase <= window.x + 0.000001:
+		return
+	if not _separation_height_captured:
+		var a := _attacker as WrestlerController
+		var d := _defender as WrestlerController
+		if not a or not d:
+			return
+		_separation_height_origin = Vector2(a.paired_separation.y, d.paired_separation.y)
+		_separation_height_captured = true
+	_separation_height_weight = minf(_separation_height_weight,
+			1.0 - smoothstep(window.x, window.y, phase))
+
+
+func _constrain_separation(offset: Vector3, maximum: float, attacker := false) -> Vector3:
+	if not _separation_height_captured:
+		return offset.limit_length(maximum)
+	var origin_y := _separation_height_origin.x if attacker else _separation_height_origin.y
+	var release_y := clampf(origin_y * _separation_height_weight, -maximum, maximum)
+	var planar_limit := sqrt(maxf(maximum * maximum - release_y * release_y, 0.0))
+	var planar := Vector3(offset.x, 0.0, offset.z).limit_length(planar_limit)
+	return Vector3(planar.x, release_y, planar.z)
 
 
 # --- Contact (Phase 2) --------------------------------------------------------
@@ -803,8 +880,8 @@ func _pull_into_reach(a: WrestlerController, d: WrestlerController) -> void:
 	if short <= 0.0 or short > PULL_RADIUS:
 		return
 	var before := d.paired_separation
-	d.paired_separation = (d.paired_separation - to_target.normalized() * short * PULL_GAIN) \
-			.limit_length(SEPARATION_MAX)
+	d.paired_separation = _constrain_separation(
+			d.paired_separation - to_target.normalized() * short * PULL_GAIN, SEPARATION_MAX)
 	d.apply_model_offset()
 	# Pulled in; now make sure that did not put him inside the attacker. If the
 	# separation cannot clear what the pull caused -- his head drawn into the
@@ -816,10 +893,10 @@ func _pull_into_reach(a: WrestlerController, d: WrestlerController) -> void:
 		if push.length() <= 0.0005:
 			clear = true
 			break
-		d.paired_separation = (d.paired_separation + push).limit_length(SEPARATION_MAX)
+		d.paired_separation = _constrain_separation(d.paired_separation + push, SEPARATION_MAX)
 		d.apply_model_offset()
 	if not clear and PairClearance.push(a, d).length() > 0.0005:
-		d.paired_separation = before
+		d.paired_separation = _constrain_separation(before, SEPARATION_MAX)
 		d.apply_model_offset()
 
 func _suspend(body: CharacterBody3D) -> void:

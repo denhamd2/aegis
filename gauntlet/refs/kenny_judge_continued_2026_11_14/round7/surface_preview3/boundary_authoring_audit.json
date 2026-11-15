@@ -1,0 +1,41 @@
+{
+  "recipe_version": 3,
+  "method": "Masked postprocess of frozen packed V2 albedo, not a global photo re-bake",
+  "input": "BoundarySeed::kenny_head_v2.png",
+  "input_sha256": "1b42c9933daeabe66fc370065ff12c74c665e937613de45df51f629cddb0ebbf",
+  "core_face_max_linear_colour_delta": 0.0,
+  "geometry_changes": false,
+  "groom_changes": false,
+  "global_colour_or_exposure_changes": false,
+  "forehead_frequency_source": {
+    "owned_v2_patch_atlas_px": [
+      860,
+      471,
+      1187,
+      569
+    ],
+    "highpass_blur_px": 6,
+    "ratio_limits": [
+      0.86,
+      1.14
+    ],
+    "mean_linear_rgb": [
+      0.47353149614800955,
+      0.26635560480286247,
+      0.23455058216100522
+    ]
+  },
+  "body_border_pairs": 30,
+  "neck_mean_linear_rgb": [
+    0.6307571363461467,
+    0.238397573812271,
+    0.14412847085805777
+  ],
+  "body_border_match_radius_m": 0.035,
+  "temple_tuft_provenance": {
+    "v2_source_confidence_median": 0.0,
+    "pixels_over_half_source": 0.3077385699530639,
+    "interpretation": "Confidence is the V2 projected-photo contribution; remaining contribution is the older owned fallback."
+  },
+  "limitations": "Local texture continuation uses observed owned forehead frequency, not a new measured scalp scan; border colours use existing owned body maps."
+}

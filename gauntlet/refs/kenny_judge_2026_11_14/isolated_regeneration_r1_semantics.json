@@ -1,0 +1,50 @@
+{
+  "kenny_body.glb": {
+    "active_sha256": "acfa1352baefefd6339a346b4fadfe4f112e0666c0a192497c2fabca7a953018",
+    "cold_sha256": "258b64f341db99c305e31c43393d69ef2bfbe68c2cffae8013f9e81e6ca99c41",
+    "binary_chunk_equal": true,
+    "binary_chunk_sha256": "12204fbb07acc881938de378f92a0804c5c89b56b0844d8a4a8f8ae607ef42e1",
+    "json_differences": [
+      [
+        "/meshes/0/name",
+        "Mesh_0.002",
+        "Mesh_0.003"
+      ]
+    ],
+    "accessors_equal": true,
+    "buffer_views_equal": true,
+    "nodes_equal": true,
+    "skins_equal": true,
+    "materials_equal": true,
+    "images_equal": true
+  },
+  "kenny_curls.glb": {
+    "active_sha256": "04b7658d0d94abe4037ea9c83e51bc5052ffbd603ea9f99f055dfaa0abd3329e",
+    "cold_sha256": "9136b25c097eb6cec604cf94b276746085b6e29b4ce15983adf6261d7c127248",
+    "binary_chunk_equal": true,
+    "binary_chunk_sha256": "4686d069750f0fa27c57f397f245e82f55dfe0b490a258b80ec9906340326744",
+    "json_differences": [
+      [
+        "/meshes/1/name",
+        "CurlRinglets.002",
+        "CurlRinglets"
+      ],
+      [
+        "/meshes/2/name",
+        "CurlSlick.002",
+        "CurlSlick"
+      ],
+      [
+        "/meshes/3/name",
+        "CurlUndercoat.002",
+        "CurlUndercoat"
+      ]
+    ],
+    "accessors_equal": true,
+    "buffer_views_equal": true,
+    "nodes_equal": true,
+    "skins_equal": true,
+    "materials_equal": true,
+    "images_equal": true
+  }
+}

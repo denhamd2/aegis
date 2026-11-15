@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://tools/probe/cage_art_study.gd" id="1"]
+
+[node name="CageArtStudy" type="Node"]
+script = ExtResource("1")

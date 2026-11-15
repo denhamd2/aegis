@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites id="2026-11-14" name="report_1" tests="23" failures="0" skipped="0" flaky="0" time="0.000">
+	<testsuite id="0" name="test_grapple_role_retargeting" package="tests" timestamp="2026-11-14T16:39:27" hostname="localhost" tests="3" failures="0" errors="0" skipped="0" flaky="0" time="0.024">
+		<testcase name="test_authored_roles_survive_slot_swap_height_and_rotated_frames" classname="test_grapple_role_retargeting" time="0.005">
+		</testcase>
+		<testcase name="test_overlapping_rigs_cannot_retarget_each_others_source_or_restore_it_wrongly" classname="test_grapple_role_retargeting" time="0.003">
+		</testcase>
+		<testcase name="test_ladder_entry_height_belongs_to_the_attacker_in_either_slot" classname="test_grapple_role_retargeting" time="0.003">
+		</testcase>
+	</testsuite>
+	<testsuite id="1" name="test_grapple_fallback_clock" package="tests" timestamp="2026-11-14T16:39:27" hostname="localhost" tests="1" failures="0" errors="0" skipped="0" flaky="0" time="1.003">
+		<testcase name="test_fallback_finishes_on_the_same_simulation_frame_under_slow_motion" classname="test_grapple_fallback_clock" time="0.996">
+		</testcase>
+	</testsuite>
+	<testsuite id="2" name="test_grapple_rig_placement" package="tests" timestamp="2026-11-14T16:39:28" hostname="localhost" tests="12" failures="0" errors="0" skipped="0" flaky="0" time="0.100">
+		<testcase name="test_pair_frame_sits_at_the_midpoint_not_the_origin" classname="test_grapple_rig_placement" time="0.004">
+		</testcase>
+		<testcase name="test_pair_frame_faces_the_attacker_toward_the_defender" classname="test_grapple_rig_placement" time="0.004">
+		</testcase>
+		<testcase name="test_pair_frame_is_clamped_inside_the_ring" classname="test_grapple_rig_placement" time="0.006">
+		</testcase>
+		<testcase name="test_a_travelling_move_is_kept_inside_the_ropes" classname="test_grapple_rig_placement" time="0.005">
+		</testcase>
+		<testcase name="test_a_move_that_stays_put_is_not_shifted" classname="test_grapple_rig_placement" time="0.004">
+		</testcase>
+		<testcase name="test_pair_frame_takes_height_from_the_anchor" classname="test_grapple_rig_placement" time="0.004">
+		</testcase>
+		<testcase name="test_coincident_pair_falls_back_to_attacker_facing" classname="test_grapple_rig_placement" time="0.003">
+		</testcase>
+		<testcase name="test_align_puts_the_two_wrestlers_back_to_back_at_the_frame" classname="test_grapple_rig_placement" time="0.003">
+		</testcase>
+		<testcase name="test_the_defender_root_keeps_its_authored_yaw" classname="test_grapple_rig_placement" time="0.002">
+		</testcase>
+		<testcase name="test_the_two_roots_face_each_other_through_a_paired_move" classname="test_grapple_rig_placement" time="0.016">
+		</testcase>
+		<testcase name="test_each_role_starts_on_its_trajectorys_first_key" classname="test_grapple_rig_placement" time="0.016">
+		</testcase>
+		<testcase name="test_ladder_aerial_root_track_preserves_the_climbers_actual_height" classname="test_grapple_rig_placement" time="0.004">
+		</testcase>
+	</testsuite>
+	<testsuite id="3" name="test_replay_roundtrip" package="tests" timestamp="2026-11-14T16:39:28" hostname="localhost" tests="7" failures="0" errors="0" skipped="0" flaky="0" time="9.521">
+		<testcase name="test_recording_without_advancing_keeps_only_one_tick" classname="test_replay_roundtrip" time="0.003">
+		</testcase>
+		<testcase name="test_advancing_the_tick_records_one_frame_per_tick" classname="test_replay_roundtrip" time="0.003">
+		</testcase>
+		<testcase name="test_playback_returns_each_tick_its_own_recorded_input" classname="test_replay_roundtrip" time="0.003">
+		</testcase>
+		<testcase name="test_a_recorded_match_spans_its_whole_run" classname="test_replay_roundtrip" time="4.026">
+		</testcase>
+		<testcase name="test_replaying_a_recorded_match_reproduces_it" classname="test_replay_roundtrip" time="5.412">
+		</testcase>
+		<testcase name="test_the_pin_seed_ignores_how_long_the_process_has_been_running" classname="test_replay_roundtrip" time="0.044">
+		</testcase>
+		<testcase name="test_the_pin_seed_moves_with_the_match_tick" classname="test_replay_roundtrip" time="0.006">
+		</testcase>
+	</testsuite>
+</testsuites>

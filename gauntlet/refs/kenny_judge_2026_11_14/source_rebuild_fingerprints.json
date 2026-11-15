@@ -1,0 +1,26 @@
+{
+  "round": 3,
+  "command": "blender -b --factory-startup --python tools/blender/characters/kenny_character.py -- build",
+  "normal_build_authority": "tools/blender/characters/Kenny.blend",
+  "expected_game_outputs": {
+    "game/assets/characters/kenny_body.glb": "84c7c2f401e231faeabc347d9918774e53029dd8dcdb461305d77d8121d3f051",
+    "game/assets/characters/kenny_curls.glb": "cf2eacf425fc7f6a3323a62763bcb561467070ef23f102df35b04c5bcf73b0f6",
+    "game/assets/characters/kenny_head.png": "5abde7d40bebb737ff933af6ea539c2fd022e4d5a79469de962062ed6d348025",
+    "game/assets/characters/kenny_body_abdomen.png": "3280ae6d57d7a3ae08972e58484ebec119f78b35019e7f50842a7e48541b4a16",
+    "game/assets/characters/kenny_body_arm_r.png": "052ddf200a9cb4ea4cffc0c4de7ef4e289a49460478a8cffdeb1081e78e764ee",
+    "game/assets/characters/kenny_body_arm_l.png": "ede748b8f8d767ce3bd50cddd45b74fc10da36b8a0ec7ce20ad56f2617e978a0",
+    "game/assets/characters/kenny_body_chest.png": "be361cf34cb3f068f3a8164138ca1fa61cceefd41c729624faf985b2e0330520",
+    "game/assets/characters/kenny_gear_tights.png": "5dde44928a2946ce55d2b6db1beabdf48f056142f11896f1fd8f122351b4b1e2",
+    "game/assets/characters/kenny_gear_belt.png": "3e791462cb5c3ee8be6f892a0a428e2454c18084e10ac586588083f7ed3cdd71",
+    "game/assets/characters/kenny_gear_boot_r.png": "9212006f63681dabec7f571cd2130cd7113a44297d41e93a01fd9d70e2705d72",
+    "game/assets/characters/kenny_gear_boot_l.png": "bbe266abce1c6e9ef65671a1a3ccb40b69a72fd55f8c66aaebe103a46869db9f",
+    "game/assets/characters/kenny_gear_wrist.png": "35d5f3061552b956bfe838c57a837adec4b254d4de92f42e6136e60ec3c89785",
+    "game/assets/characters/kenny_eye_color.png": "000cf06ece58635675049b9064ce3479ed3db5d0cd628ab0e89b59c98106f400",
+    "game/assets/characters/kenny_eye_orm.png": "666e82c9abd54a0b258df331afc6830e10f7be502a52f6b15c1392ada26f6dcc",
+    "game/assets/characters/kenny_eye_height.png": "9ee1282195be155b61387d59caf9924eb977ea8a7385a886b9dcfc3335ae39ff",
+    "game/assets/characters/kenny_curl_cards.png": "ef611ec168639d052a133e4cbfe08afbb2eff8a8b2aa1c8e7e4db09b1b2c83a8",
+    "game/assets/characters/kenny_face_projected.png": "bb5d9150a8dd4caf353b6e85bac418dfe523d1a060ec0509d9e9a691745ef5ab",
+    "game/assets/characters/kenny_skin_head_roughness.png": "06bb07b88af5d8c964a9e82b1fb28b01a9d6488734f2b936057f87f877faea18",
+    "game/assets/characters/kenny_skin_head_wet.png": "fa91d98003bf5a594d7884c9d41738de0f8fa1cbf98533303b5bb0c2dbfdd66f"
+  }
+}

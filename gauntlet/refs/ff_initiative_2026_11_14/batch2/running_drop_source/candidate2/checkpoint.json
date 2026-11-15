@@ -1,0 +1,12 @@
+{
+  "candidate_path": "/tmp/aegis-running-drop-candidate2.glb",
+  "sha256": "0b2dc90dd566471745f480399b7f3c3228c6cab1453c686e4baddea607bf1496",
+  "bytes": 307400,
+  "source_recipe": "B58/59 compact heel-back knee flexion; A59 and B63 restored to original",
+  "source_frozen": true,
+  "paired_pose_path": "/tmp/aegis-running-drop-candidate2-poses-60.tres",
+  "corrected_loader": "generate_scene(state,60.0,false,false)",
+  "verified_moving_track_keys_per_role": 133,
+  "runtime_acceptance": "PENDING canonical loader parity and corrected measurements",
+  "prior_candidate1_metrics": "PROVISIONAL/INVALID for source attribution because absolute loader had resampled30fps and removed immutable tracks"
+}

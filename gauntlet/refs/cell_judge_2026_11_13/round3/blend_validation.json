@@ -1,0 +1,32 @@
+{
+  "ambulance": {
+    "blend_bytes": 273084,
+    "mesh_objects": 20,
+    "missing_textures": [],
+    "absolute_texture_paths": []
+  },
+  "casket": {
+    "blend_bytes": 168842,
+    "mesh_objects": 7,
+    "missing_textures": [],
+    "absolute_texture_paths": []
+  },
+  "steel_cage": {
+    "blend_bytes": 223176,
+    "mesh_objects": 17,
+    "missing_textures": [],
+    "absolute_texture_paths": []
+  },
+  "hell_in_a_cell": {
+    "blend_bytes": 383850,
+    "mesh_objects": 29,
+    "missing_textures": [],
+    "absolute_texture_paths": []
+  },
+  "cage_hardware": {
+    "blend_bytes": 115971,
+    "mesh_objects": 3,
+    "missing_textures": [],
+    "absolute_texture_paths": []
+  }
+}

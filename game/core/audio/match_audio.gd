@@ -119,7 +119,8 @@ const COMMENTARY_CLIPS := {
 	"excalibur_kenny_resume": ["res://assets/audio/commentary/excalibur_kenny_resume.ogg"],
 	"excalibur_cody_career": ["res://assets/audio/commentary/excalibur_cody_career.ogg"],
 	"roman_record": ["res://assets/audio/commentary/tony_roman_record.ogg"],
-	"roman_spear": ["res://assets/audio/commentary/tony_roman_spear.ogg"],
+	"roman_spear": ["res://assets/audio/commentary/tony_roman_spear.ogg",
+			"res://assets/audio/commentary/tony_otc_spear.ogg"],
 	"excalibur_superman_punch": ["res://assets/audio/commentary/excalibur_superman_punch.ogg"],
 	"excalibur_strikes": ["res://assets/audio/commentary/excalibur_strikes.ogg"],
 	"excalibur_body_kicks": ["res://assets/audio/commentary/excalibur_body_kicks.ogg"],
@@ -144,7 +145,60 @@ const COMMENTARY_CLIPS := {
 	"tony_love_this_business": ["res://assets/audio/commentary/tony_love_this_business.ogg"],
 	"tony_what_a_night": ["res://assets/audio/commentary/tony_what_a_night.ogg"],
 	"tony_crowd_up": ["res://assets/audio/commentary/tony_crowd_up.ogg"],
+	# The owner's fire calls (13 Nov): Excalibur as a man goes up (ManFire.
+	# ignited), and relieved once Aubrey has put him out (ManFire.extinguished).
+	"excalibur_on_fire": ["res://assets/audio/commentary/excalibur_on_fire.ogg"],
+	"excalibur_thank_aubrey": ["res://assets/audio/commentary/excalibur_thank_aubrey.ogg"],
+	# On the dives (DiveSpot.on_dive_landed) and the Cody Cutter, standing or
+	# off the springboard (13 Nov).
+	"excalibur_tope_suicida": ["res://assets/audio/commentary/excalibur_tope_suicida.ogg"],
+	"excalibur_cody_cutter": ["res://assets/audio/commentary/excalibur_cody_cutter.ogg"],
+	# Cody going into his Figure Four (13 Nov), in place of Tony's generic
+	# submission call.
+	"excalibur_cody_figure_four": ["res://assets/audio/commentary/excalibur_cody_figure_four.ogg"],
+	# The owner-supplied Tony line (worried and reserved): "The American
+	# Nightmare is bleeding profusely, refusing to stay down."
+	"tony_american_nightmare_blood": ["res://assets/audio/commentary/tony_american_nightmare_blood.ogg"],
+	# "Look at the carnage!" -- Tony's awed call as the ring fills with chaos.
+	"tony_carnage": ["res://assets/audio/commentary/tony_carnage.ogg"],
+	# "Excalibur, I don't even know what to say to that." -- Tony, caught off
+	# guard and searching for words, after an unbelievable spot.
+	"tony_speechless": ["res://assets/audio/commentary/tony_speechless.ogg"],
+	# "No! No! He kicked out! How did he kick out of that?" -- Tony's
+	# disbelief at a dramatic late kick-out at two.
+	"tony_dramatic_kickout": ["res://assets/audio/commentary/tony_dramatic_kickout.ogg"],
+	# "Look at the blood! Look at the intensity!" -- Tony as a man bleeds.
+	"tony_blood_intensity": ["res://assets/audio/commentary/tony_blood_intensity.ogg"],
+	# "Watch out! Behind you!" -- Tony on a blindside hit from behind.
+	"tony_watch_out_behind": ["res://assets/audio/commentary/tony_watch_out_behind.ogg"],
+	# "He got him! He got him! One, two, three!" -- the pinfall-win call.
+	"tony_pinfall_win": ["res://assets/audio/commentary/tony_pinfall_win.ogg"],
+	# "I'm so sick of this guy." -- Tony's snark at a heel lording it over a
+	# man he has already put down.
+	"tony_sick_of_this_guy": ["res://assets/audio/commentary/tony_sick_of_this_guy.ogg"],
+	# Tony's outrage on a brutal weapon landing: "That's despicable! Just
+	# despicable!" or "Have you no decency?" -- picked at random.
+	"tony_despicable": [
+		"res://assets/audio/commentary/tony_despicable.ogg",
+		"res://assets/audio/commentary/tony_have_you_no_decency.ogg",
+	],
 }
+## The calls on something happening right now: they go to the head of the
+## queue, so the fire call is not still waiting behind a long line when Aubrey
+## has already put him out.
+const COMMENTARY_LIVE_CALLS := ["excalibur_on_fire", "excalibur_tope_suicida",
+		"excalibur_cody_cutter"]
+## The moves Excalibur calls the Cody Cutter on.
+const CODY_CUTTER_MOVES := ["signature_cody_cutter", "dive_springboard_cutter"]
+## Weapons whose use Tony finds beyond the pale -- wire, nails, blades, glass,
+## fire, a sledgehammer. A blow with one draws "That's despicable!"
+const DESPICABLE_WEAPONS := [
+	&"barbed_wire_bat", &"barbed_wire_board", &"barbed_wire_chair", &"bed_of_nails",
+	&"board_with_nails", &"glass_pane", &"knife", &"light_tubes", &"sledgehammer",
+	&"sword", &"thumbtacks",
+]
+## What DiveSpot calls when a dive lands (call_group, as the camera's trauma).
+const LISTENERS := "match_audio"
 const COMMENTARY_EVENT_DELAY := 0.18
 const COMMENTARY_VOICE_DB := 0.0
 ## These are live-play calls that naturally fit more than one moment in a
@@ -157,6 +211,15 @@ const COMMENTARY_REPEAT_COOLDOWNS := {
 	"excalibur_strikes": 22.0,
 	"excalibur_body_kicks": 22.0,
 	"excalibur_unbelievable": 60.0,
+	"excalibur_cody_cutter": 45.0,
+	"tony_american_nightmare_blood": 45.0,
+	"tony_carnage": 45.0,
+	"tony_speechless": 60.0,
+	"tony_dramatic_kickout": 60.0,
+	"tony_blood_intensity": 60.0,
+	"tony_watch_out_behind": 30.0,
+	"tony_sick_of_this_guy": 45.0,
+	"tony_despicable": 45.0,
 }
 const COMMENTARY_REPEAT_MIN_GAP := 12.0
 const CODY_CROWD_CHANT := "res://assets/audio/crowd_cody_chant.ogg"
@@ -176,6 +239,9 @@ const UNBELIEVABLE_LATE_MATCH_AFTER := 240.0
 const UNBELIEVABLE_SPECTACULAR_POP := 0.8
 const CHAOS_COMMENTARY_THRESHOLD := 3.0
 const CHAOS_COMMENTARY_DECAY_PER_SECOND := 0.2
+## The shown blood level at which Tony calls "Look at the blood!" -- once per
+## wrestler per match, so it lands as a moment rather than a running tally.
+const BLOOD_CALL_AT := 0.55
 
 var sfx: SfxPool
 var _bed: AudioStreamPlayer
@@ -288,6 +354,8 @@ var _enda_easter_egg_used := false
 var _sneaky_heel_easter_egg_selected := false
 var _sneaky_heel_easter_egg_used := false
 var _chaos_activity := 0.0
+## Wrestlers already called out for a bloody match ("Look at the blood!").
+var _blood_called := {}
 var _enda_easter_egg_waiting := false
 var _enda_cutaway_hold := 0.0
 var _enda_down_candidate: WrestlerController
@@ -301,6 +369,7 @@ func _ready() -> void:
 	sfx.name = "Sfx"
 	add_child(sfx)
 	add_to_group(WeaponActor.LISTENERS)
+	add_to_group(LISTENERS)
 	chants = CrowdChants.new()
 	chants.name = "Chants"
 	add_child(chants)
@@ -348,7 +417,7 @@ func watch(referee: MatchReferee, wrestlers: Array, crowd: CrowdReaction, match_
 	for w: WrestlerController in wrestlers:
 		w.move_landed.connect(_on_move_landed)
 		w.weapon_taken.connect(_on_weapon_taken)
-		w.fsm.state_changed.connect(_on_wrestler_state_changed)
+		w.fsm.state_changed.connect(_on_wrestler_state_changed.bind(w))
 		w.reversed.connect(func(_r, _s, _m): sfx.play("whoosh", -6.0))
 		w.taunted.connect(_on_wrestler_taunted)
 		w.fired_up.connect(_on_wrestler_fired_up)
@@ -371,6 +440,10 @@ func watch(referee: MatchReferee, wrestlers: Array, crowd: CrowdReaction, match_
 			# desk_break: the worktop and panels caving, the monitors going.
 			sfx.play_any("desk_break", 4.0)
 			sfx.play_any("desk_crash", 0.0))
+		var fire := w.find_child("ManFire", false, false) as ManFire
+		if fire:
+			fire.ignited.connect(_on_man_ignited)
+			fire.extinguished.connect(_on_man_extinguished)
 		_cooldown[w] = 0.0
 		_falls[w] = []
 	referee.match_won.connect(_on_match_won)
@@ -621,8 +694,19 @@ func _on_wrestler_taunted(who: WrestlerController) -> void:
 	sfx.play_any("crowd_pop", CROWD_REACTION_GAIN_DB + -9.0)
 	var event := commentary_event_for_heel_pose(who.entrance_style)
 	if event != "":
-		_queue_commentary(event)
+		# A heel lording it over a man he has already put down: Tony's snarky
+		# "I'm so sick of this guy." Otherwise the usual heel call.
+		_queue_commentary("tony_sick_of_this_guy" if _anyone_down_but(who) else event)
 		_queue_sneaky_heel_easter_egg(who.entrance_style)
+
+
+## Whether anyone other than `who` is down on the mat.
+func _anyone_down_but(who: WrestlerController) -> bool:
+	for other: WrestlerController in _wrestlers:
+		if other != who and is_instance_valid(other) \
+				and other.fsm.current_state == WrestlerFSM.State.DOWN:
+			return true
+	return false
 
 
 func _queue_sneaky_heel_easter_egg(entrance_style: String) -> void:
@@ -666,9 +750,26 @@ static func commentary_events_for_kickout(count: int, match_over: bool,
 		late_match := false) -> Array[String]:
 	if count >= 2 and not match_over:
 		if late_match:
-			return ["excalibur_unbelievable", "tony_love_this_business"]
+			# Late in the match, a kick-out at two is a "how did he kick out
+			# of that?" moment: Excalibur's Unbelievable plus Tony's disbelief.
+			return ["excalibur_unbelievable", "tony_dramatic_kickout"]
 		return ["excalibur_two_count", "tony_love_this_business"]
 	return []
+
+
+## "The American Nightmare is bleeding profusely, refusing to stay down" --
+## the owner-supplied worried and reserved Tony line, for a bloodied Cody
+## kicking out at two. Only on a bleeding Cody, not on any kickout.
+static func commentary_event_for_cody_kickout(defender: WrestlerController,
+		count: int) -> String:
+	if count < 2 or defender == null:
+		return ""
+	if Persona.of(defender.display_name) != Persona.Kind.FACE:
+		return ""
+	var blood := defender.find_child("Blood", false, false)
+	if blood == null or blood.head <= 0.5:
+		return ""
+	return "tony_american_nightmare_blood"
 
 
 static func commentary_event_for_spectacular_spot(move_pop: float, match_time: float) -> String:
@@ -676,8 +777,44 @@ static func commentary_event_for_spectacular_spot(move_pop: float, match_time: f
 			and match_time >= UNBELIEVABLE_LATE_MATCH_AFTER else ""
 
 
-func _on_wrestler_state_changed(_previous: int, current: int) -> void:
+## Cody's own hold gets Excalibur's line in place of Tony's generic
+## submission call (the owner, 13 Nov): ten reverent seconds that Tony's
+## "locked in tight" would otherwise talk over.
+static func commentary_event_for_submission(entrance_style: String, move: MoveDef) -> String:
+	if entrance_style == "cody" and move != null \
+			and move.resource_path.get_file().get_basename() == "submission_figure_four":
+		return "excalibur_cody_figure_four"
+	return ""
+
+
+## A blow with one of the DESPICABLE_WEAPONS.
+static func _weapon_is_despicable(move: MoveDef) -> bool:
+	var weapon := WeaponCatalog.of_move(move)
+	return weapon != null and weapon.id in DESPICABLE_WEAPONS
+
+
+## A move landing on a man from behind (a blindside): the attacker stands
+## behind the defender's facing. Narration only -- it writes no match state.
+static func _move_lands_from_behind(attacker: WrestlerController,
+		defender: WrestlerController) -> bool:
+	var to_attacker := attacker.global_position - defender.global_position
+	to_attacker.y = 0.0
+	if to_attacker.length() < 0.3:
+		return false
+	var forward := -defender.global_transform.basis.z
+	forward.y = 0.0
+	if forward.length() < 0.01:
+		return false
+	return forward.normalized().dot(to_attacker.normalized()) < -0.35
+
+
+func _on_wrestler_state_changed(_previous: int, current: int,
+		who: WrestlerController = null) -> void:
 	var commentary_event := commentary_event_for_state(current)
+	if commentary_event != "" and who != null:
+		var own := commentary_event_for_submission(who.entrance_style, who.submission_move)
+		if own != "":
+			commentary_event = own
 	if commentary_event != "":
 		_queue_commentary(commentary_event)
 
@@ -739,7 +876,45 @@ func _queue_commentary(event: String) -> void:
 	_commentary_event_last_queued[event] = _commentary_clock
 	if repeat_cooldown > 0.0:
 		_last_repeatable_commentary_at = _commentary_clock
-	_commentary_queue.append(event)
+	if event in COMMENTARY_LIVE_CALLS:
+		_commentary_queue.push_front(event)
+	else:
+		_commentary_queue.append(event)
+
+
+## Excalibur on a man going up, and on Aubrey putting him out. Once a match
+## each: a second "He's on fire!" would sound like a loop.
+func _on_man_ignited(_who: WrestlerController) -> void:
+	_queue_commentary("excalibur_on_fire")
+
+
+func _on_man_extinguished(_who: WrestlerController) -> void:
+	_queue_commentary("excalibur_thank_aubrey")
+
+
+## The call for a landed Cody Cutter, standing or off the springboard.
+static func commentary_event_for_cody_cutter(entrance_style: String, move_id: String) -> String:
+	return "excalibur_cody_cutter" if entrance_style == "cody" \
+			and move_id in CODY_CUTTER_MOVES else ""
+
+
+## Which call a dive landing gets (DiveSpot): the tope suicida, or the
+## springboard Cody Cutter.
+static func commentary_event_for_dive(entrance_style: String, move_path: String) -> String:
+	var move_id := move_path.get_file().get_basename()
+	if move_id == "dive_tope_suicida":
+		return "excalibur_tope_suicida"
+	return commentary_event_for_cody_cutter(entrance_style, move_id)
+
+
+## DiveSpot's contact ticks (it lands its dives itself, not through
+## move_landed).
+func on_dive_landed(attacker: WrestlerController, move_path: String) -> void:
+	if attacker == null:
+		return
+	var event := commentary_event_for_dive(attacker.entrance_style, move_path)
+	if event != "":
+		_queue_commentary(event)
 
 
 ## Loudness of a bump from how fast he was falling, or NAN for no bump.
@@ -795,7 +970,7 @@ func _heat(who: Variant, amount: float) -> void:
 		cheer = minf(cheer + amount, 1.0)
 
 
-func _on_move_landed(attacker, _defender, move: MoveDef) -> void:
+func _on_move_landed(attacker, defender, move: MoveDef) -> void:
 	_heat(attacker, 0.12 + 0.5 * CrowdReaction.move_pop(move))
 	var sound := hit_sound(move)
 	var hit_db := hit_level(sound, hit_volume(move))
@@ -814,6 +989,12 @@ func _on_move_landed(attacker, _defender, move: MoveDef) -> void:
 			_queue_commentary(commentary_event)
 			if commentary_event == "tony_roman_heel":
 				_queue_sneaky_heel_easter_egg(attacker.entrance_style)
+		elif _weapon_is_despicable(move):
+			# A blow with wire, nails, a blade, glass, light tubes or a
+			# sledgehammer: Tony's outrage, "That's despicable!"
+			_queue_commentary("tony_despicable")
+		elif commentary_event_for_cody_cutter(attacker.entrance_style, move_id) != "":
+			_queue_commentary(commentary_event_for_cody_cutter(attacker.entrance_style, move_id))
 		elif move_id in ["signature_superman_punch", "finisher_spear"]:
 			commentary_event = commentary_event_for_landed_move(attacker.entrance_style, move_id)
 			if commentary_event != "":
@@ -822,6 +1003,9 @@ func _on_move_landed(attacker, _defender, move: MoveDef) -> void:
 			commentary_event = commentary_event_for_spectacular_spot(pop, chants.match_time())
 			if commentary_event != "":
 				_queue_commentary(commentary_event)
+				# Tony, caught off guard and searching for words, to Excalibur
+				# after an unbelievable spot (Excalibur's reaction leads).
+				_queue_commentary("tony_speechless")
 			else:
 				commentary_event = commentary_event_for_landed_strike(move)
 				if commentary_event != "":
@@ -830,6 +1014,9 @@ func _on_move_landed(attacker, _defender, move: MoveDef) -> void:
 					commentary_event = commentary_event_for_landed_move(attacker.entrance_style, move_id)
 					if commentary_event != "":
 						_queue_commentary(commentary_event)
+		# A move landed on a man from behind: "Watch out! Behind you!"
+		if defender is WrestlerController and _move_lands_from_behind(attacker, defender):
+			_queue_commentary("tony_watch_out_behind")
 
 
 ## A weapon going off or breaking (WeaponActor.LISTENERS).
@@ -900,11 +1087,28 @@ func _on_set_piece_landed(who: WrestlerController, weapon: WeaponActor, broke: b
 	_register_chaos_activity(2.0 if broke else 0.5)
 
 
+## "Look at the blood! Look at the intensity!" -- Tony's call once a man's
+## blood has come up. Fires once per wrestler per match, so a gusher is a
+## broadcast moment, not a running tally.
+func _hear_blood(w: WrestlerController) -> void:
+	if _over or _blood_called.has(w):
+		return
+	var blood := w.find_child("Blood", false, false) as Blood
+	if blood == null:
+		return
+	if maxf(blood.shown_head, blood.shown_back) < BLOOD_CALL_AT:
+		return
+	_blood_called[w] = true
+	_queue_commentary("tony_blood_intensity")
+
+
 func _register_chaos_activity(amount: float) -> void:
 	_chaos_activity = minf(_chaos_activity + amount, CHAOS_COMMENTARY_THRESHOLD * 2.0)
 	if _chaos_activity < CHAOS_COMMENTARY_THRESHOLD:
 		return
-	_queue_commentary("excalibur_restore_order")
+	# Chaos: Excalibur calls for order restored, or Tony's awed "Look at the
+	# carnage!" -- alternating between the two broadcast reactions.
+	_queue_commentary("tony_carnage" if _commentary_rng.randi_range(0, 1) == 0 else "excalibur_restore_order")
 	_chaos_activity = 0.0
 
 
@@ -919,6 +1123,10 @@ func _on_match_won(winner: Variant, method: String) -> void:
 		chants.count(3, sfx)
 	sfx.play("bell_end", -1.0, MATCH_BELL_PITCH_SCALE)
 	sfx.play("crowd_finish", CROWD_REACTION_GAIN_DB)
+	# "He got him! He got him! One, two, three!" -- the pinfall-win call, ahead
+	# of Excalibur's finish so the count is heard as the hand comes down.
+	if method == "pinfall":
+		_queue_commentary("tony_pinfall_win")
 	_queue_commentary("excalibur_finish")
 	_queue_commentary("excalibur_coolest_job")
 	var w := winner as WrestlerController
@@ -1066,6 +1274,7 @@ func _process(delta: float) -> void:
 	for w: WrestlerController in _wrestlers:
 		if is_instance_valid(w):
 			_hear_bumps(w, delta)
+			_hear_blood(w)
 	_try_enda_easter_egg(delta)
 
 
@@ -1189,6 +1398,11 @@ func _hear_the_count() -> void:
 				_queue_commentary(event)
 			else:
 				_queue_commentary(event)
+		# A bleeding Cody who will not stay down: the worried and reserved Tony
+		# line, only when the man kicking out at two is a bleeding Cody.
+		var cody_event := commentary_event_for_cody_kickout(_referee._pin_defender, _count_heard)
+		if cody_event != "":
+			_queue_commentary(cody_event)
 	_was_pinning = pinning
 
 

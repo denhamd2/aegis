@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites id="2026-11-15" name="report_1" tests="5" failures="2" skipped="0" flaky="0" time="0.000">
+	<testsuite id="0" name="test_grapple_height_release" package="tests" timestamp="2026-11-15T08:59:04" hostname="localhost" tests="5" failures="2" errors="0" skipped="0" flaky="0" time="0.030">
+		<testcase name="test_early_carry_is_unchanged_then_offsets_release_on_authored_beats" classname="test_grapple_height_release" time="0.005">
+		</testcase>
+		<testcase name="test_height_release_stays_closed_after_root_playback_is_restored" classname="test_grapple_height_release" time="0.003">
+		</testcase>
+		<testcase name="test_other_moves_keep_the_existing_three_dimensional_fitting" classname="test_grapple_height_release" time="0.003">
+		</testcase>
+		<testcase name="test_no_contact_settle_keeps_the_prescribed_release_height" classname="test_grapple_height_release" time="0.003">
+			<failure message="FAILED: res://tests/test_grapple_height_release.gd:80" type="FAILURE">
+<![CDATA[
+Expecting:
+ -0.019200
+ in range between
+ -0.020010 <> -0.019990
+	at 'test_no_contact_settle_keeps_the_prescribed_release_height' in res://tests/test_grapple_height_release.gd:80
+]]>
+			</failure>
+			<failure message="FAILED: res://tests/test_grapple_height_release.gd:81" type="FAILURE">
+<![CDATA[
+Expecting:
+ 0.158400
+ in range between
+ 0.164990 <> 0.165010
+	at 'test_no_contact_settle_keeps_the_prescribed_release_height' in res://tests/test_grapple_height_release.gd:81
+]]>
+			</failure>
+		</testcase>
+		<testcase name="test_configured_release_windows_are_ordered_inside_the_clip" classname="test_grapple_height_release" time="0.003">
+		</testcase>
+	</testsuite>
+</testsuites>

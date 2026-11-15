@@ -110,3 +110,24 @@ overall. A move is complete only at overall 10/10 with no factor below 9/10.
 | Head sell | 1:01.44–1:01.96 | Reference extracted; sell check pending | — |
 | Gut sell | 1:03.95–1:05.00 | Reference extracted; sell check pending | — |
 | Knockdown sells | 1:16.68–1:21.00 | Reference extracted; sell check pending | — |
+
+## 15 November2026 — running inverted-drop partial release correction
+
+`running_grapple_inverted_drop`: [current seven-beat game-camera/side sheet](ff_review/moves/running_grapple_inverted_drop.png), both roles.
+**visual-qa: PARTIAL / PENDING full-move acceptance.** Mannequin body overlap
+.090→.031m; real pairing maxima unchanged. Match-camera figures are too small
+for detailed review; isolated views do not establish arena appearance. Knee
+alignment, load hand roles, solver lift/mat contact and normal-speed motion
+remain open. Owner explicitly requested all changes committed/deployed for Mac
+review. [Eight-dimension verdict](ff_initiative_2026_11_14/batch2/tooling/source3_visual_review.md).
+This does not increase the completed Fight Forever catalogue count.
+
+## 15 November2026 — runtime fitting/grip release review
+
+`running_grapple_inverted_drop`: current own sheet includes7beats, both roles,
+side plus game camera. **visual-qa: partial improvement, full-move acceptance
+pending.** Handoff hover reduced; no obvious new floor/knee issue in either
+order. Authored impact still airborne and asymmetric load contact remains
+unfinished. Camera evidence is isolated/wide; normal-speed and native acceptance
+remain open. [Review and tests](grapple_release_2026_11_15/README.md).
+This release repair does not mark the full move/catalogue entry complete.

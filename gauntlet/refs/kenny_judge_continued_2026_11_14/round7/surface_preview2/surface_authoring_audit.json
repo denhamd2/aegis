@@ -1,0 +1,188 @@
+{
+  "geometry_basis": "Actual accepted Body positions and its existing per-loop UVs; no guessed brow atlas line",
+  "photo_source": "gauntlet/refs/characters/kenny_3view.jpg",
+  "photograph_used_only_for_optional_authoring": true,
+  "cold_regeneration": "Packed SurfaceMap::kenny_head.png restored directly; photo not read",
+  "projection": "Corrected front iris registration plus independent profile registration; facing-angle blend on lateral tissue",
+  "recipe_version": 2,
+  "source_skin_masks": {
+    "front": [
+      [
+        1215,
+        265
+      ],
+      [
+        1255,
+        253
+      ],
+      [
+        1332,
+        253
+      ],
+      [
+        1370,
+        267
+      ],
+      [
+        1395,
+        315
+      ],
+      [
+        1410,
+        400
+      ],
+      [
+        1405,
+        457
+      ],
+      [
+        1374,
+        514
+      ],
+      [
+        1335,
+        557
+      ],
+      [
+        1284,
+        580
+      ],
+      [
+        1235,
+        562
+      ],
+      [
+        1190,
+        528
+      ],
+      [
+        1162,
+        476
+      ],
+      [
+        1149,
+        424
+      ],
+      [
+        1161,
+        354
+      ],
+      [
+        1184,
+        310
+      ]
+    ],
+    "profile": [
+      [
+        158,
+        310
+      ],
+      [
+        211,
+        294
+      ],
+      [
+        250,
+        306
+      ],
+      [
+        272,
+        334
+      ],
+      [
+        287,
+        361
+      ],
+      [
+        295,
+        397
+      ],
+      [
+        297,
+        446
+      ],
+      [
+        277,
+        495
+      ],
+      [
+        231,
+        542
+      ],
+      [
+        187,
+        566
+      ],
+      [
+        172,
+        549
+      ],
+      [
+        166,
+        519
+      ],
+      [
+        153,
+        486
+      ],
+      [
+        152,
+        459
+      ],
+      [
+        125,
+        442
+      ],
+      [
+        117,
+        430
+      ],
+      [
+        137,
+        390
+      ],
+      [
+        154,
+        369
+      ],
+      [
+        144,
+        345
+      ]
+    ],
+    "feather_blur_px": 5,
+    "C1_thresholds": [
+      0.52,
+      0.95
+    ]
+  },
+  "partial_delighting": {
+    "gaussian_radius_source_px": 15,
+    "luminance_exponent": 0.8,
+    "gain_limits": [
+      0.72,
+      2.25
+    ],
+    "reference_patch": "Unshadowed front forehead [1220:1350,285:322]"
+  },
+  "live_tint_compensation": "Divide by srgb_to_linear([.73,.65,.59]), then normalize to identical per-pixel luminance; actual Godot pixel test verified source_color conversion",
+  "effective_linear_tint": [
+    0.49190504085677866,
+    0.38005633644979925,
+    0.30699931892751636
+  ],
+  "scalp_fallback": "Clean owned skin replaces old hair pigment with C1 world-space masks, visible in hair-hidden review",
+  "eye_colour": "Separate brown eye geometry/maps unchanged. Visible photographic eyeballs excluded from skin source.",
+  "source_photo_detail_limit": "Portrait face about250px wide; this does not create scan/pore fidelity.",
+  "map_dimensions": [
+    2048,
+    2048
+  ],
+  "head_triangles_rasterized": 39767,
+  "covered_texels_over_half": 899062,
+  "maximum_projection_coverage": 1.0,
+  "geometry_changes": false,
+  "groom_changes": false,
+  "new_materials": 0,
+  "reference_sha256": "34c7ce119a6fe4a7cfcc24d96324e4823db14c3c09b70b0fa310a19d315965da"
+}

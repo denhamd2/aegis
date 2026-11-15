@@ -1936,3 +1936,7 @@ func _retarget_key(track_type: int, value: Variant, rest: Dictionary) -> Variant
 			return target_rest.origin + local * scale
 		_:
 			return value
+
+
+func expression_profile() -> Dictionary:
+	return FaceExpression.make_profile(["Material.001"], 1.650, .125)
