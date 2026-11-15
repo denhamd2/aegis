@@ -6,11 +6,11 @@
 script = ExtResource("1")
 resource_name = "Powerbomb/V-Trigger Combo"
 animation_pair_id = &"ff_powerbomb_v_trigger_combo"
-startup_frames = 294
+startup_frames = 278
 active_frames = 6
-recovery_frames = 12
-reversal_window_start = 284
-reversal_window_end = 292
+recovery_frames = 28
+reversal_window_start = 268
+reversal_window_end = 276
 damage_head = 18.0
 damage_torso = 14.0
 damage_arms = 0.0
