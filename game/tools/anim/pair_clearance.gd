@@ -205,6 +205,10 @@ static func measure(host: Node, move_id: String, roster := PackedStringArray(),
 	var drawn_hands := [Vector3.ZERO, Vector3.ZERO]
 	var drawn_shoulders := [Vector3.ZERO, Vector3.ZERO]
 	var drawn_poses := [{}, {}]
+	var authored_contacts := PairedContacts.authored_hands(move)
+	var observe_poses := collect_trace or authored_contacts
+	if authored_contacts:
+		r["authored_contacts"] = []
 	var ask := attacker.skeleton
 	# One physics tick per render frame while measuring. The drawn hands are
 	# read off the skeleton's own update, which runs on the render loop; when a
@@ -219,9 +223,10 @@ static func measure(host: Node, move_id: String, roster := PackedStringArray(),
 	var shoulder_ids := [ask.find_bone(attacker._skeleton_bone_name("upperarm_l")),
 			ask.find_bone(attacker._skeleton_bone_name("upperarm_r"))]
 	var on_update := func() -> void:
-		if collect_trace:
+		if observe_poses:
 			drawn_poses[0] = {"points": _points(attacker),
-					"seconds": rig.animation_player.current_animation_position,
+					"ik_weights": attacker._arm_ik.map(func(ik): return ik.interpolation),
+					"seconds": rig.animation_player.current_animation_position if rig.animation_player.is_playing() else -1.0,
 					"physics_tick": Engine.get_physics_frames()}
 		for side in 2:
 			drawn_hands[side] = ask.global_transform * ask.get_bone_global_pose(hand_ids[side]).origin
@@ -229,9 +234,10 @@ static func measure(host: Node, move_id: String, roster := PackedStringArray(),
 	ask.skeleton_updated.connect(on_update)
 	var on_defender_update := func() -> void:
 		drawn_poses[1] = {"points": _points(defender),
-				"seconds": rig.animation_player.current_animation_position,
+				"anchors": PairedContacts.contact_anchors(move, defender),
+				"seconds": rig.animation_player.current_animation_position if rig.animation_player.is_playing() else -1.0,
 				"physics_tick": Engine.get_physics_frames()}
-	if collect_trace:
+	if observe_poses:
 		defender.skeleton.skeleton_updated.connect(on_defender_update)
 	var tick := 0
 	if collect_trace:
@@ -244,6 +250,22 @@ static func measure(host: Node, move_id: String, roster := PackedStringArray(),
 		await host.get_tree().physics_frame
 		tick += 1
 		var d := depth(attacker, defender)
+		var contact_samples: Array[Dictionary] = []
+		if authored_contacts and rig.animation_player and rig.animation_player.is_playing():
+			var length := rig.animation_player.current_animation_length
+			var seconds := rig.animation_player.current_animation_position
+			if length > 0.0:
+				contact_samples = PairedContacts.authored_contact_samples(move, seconds / length,
+						drawn_poses[0].get("points", {}), drawn_poses[1].get("anchors", {}))
+				var coherent: bool = drawn_poses[0].get("physics_tick", -1) == drawn_poses[1].get("physics_tick", -2) \
+						and absf(float(drawn_poses[0].get("seconds", -1.0)) - seconds) < .000001 \
+						and absf(float(drawn_poses[1].get("seconds", -1.0)) - seconds) < .000001
+				for sample in contact_samples:
+					sample["clip_tick"] = int(round(seconds * Engine.physics_ticks_per_second))
+					if not coherent:
+						sample["valid"] = false
+						sample["reason"] = "post-modifier contact samples have different clocks"
+					(r["authored_contacts"] as Array).append(sample)
 		var trace_sample: Dictionary = {}
 		if collect_trace and rig.animation_player and rig.animation_player.is_playing():
 			trace_sample = {
@@ -257,7 +279,8 @@ static func measure(host: Node, move_id: String, roster := PackedStringArray(),
 				"drawn": drawn_poses.duplicate(true),
 				"drawn_depth": _depth_points(drawn_poses[0].get("points", {}),
 						drawn_poses[1].get("points", {})),
-				"grip_blend": attacker._grip_blend, "grip_samples": [],
+				"grip_blend": attacker._grip_blend, "grip_release_ticks": attacker._paired_release_ticks,
+				"grip_samples": [], "authored_contacts": contact_samples,
 			}
 			(r["trace"] as Array).append(trace_sample)
 		r["moved_attacker"] = maxf(r["moved_attacker"], attacker.paired_separation.length())
@@ -304,7 +327,7 @@ static func measure(host: Node, move_id: String, roster := PackedStringArray(),
 			r["worst_role_points"] = {"attacker": _points(attacker), "defender": _points(defender)}
 	Engine.max_physics_steps_per_frame = steps
 	ask.skeleton_updated.disconnect(on_update)
-	if collect_trace:
+	if observe_poses:
 		defender.skeleton.skeleton_updated.disconnect(on_defender_update)
 	scene.queue_free()
 	await host.get_tree().process_frame

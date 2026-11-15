@@ -67,6 +67,7 @@ Output is deterministic: the same table produces a byte-identical glb, which
 is what lets it be committed and diffed like the .tres bakes.
 """
 
+import json
 import math
 import os
 import sys
@@ -6183,176 +6184,149 @@ CLIPS["Backstabber_Defender"] = [k for k in CLIPS["Tilt_DDT_Defender"] if k[0] <
            hand_r=(0.30, 0.10, 1.20), hand_l=(-0.28, 0.10, 1.18))),
 ] + _back_fall(31, 54, pelvis_hit=0.70)
 
-# Running grapple + inverted drop, 66 frames / 2.2 s, from the reference
-# video's running-moves section: start 229.00, contact 230.23 (frame 37),
-# lift 230.70 (frame 51), impact 230.95 (frame 59), cut 231.20 (frame 66).
-# The runner closes 1.5 m -- root path in paired_recipes.gd -- catches the
-# man chest-to-chest in a waist wrap, extends the hips, and turns him over
-# his body; the victim's feet leave the mat but his ROOT stays on it, the
-# whole inversion being bone pose in his own body frame (_body), keyed in
-# steps no wider than 45 degrees. He is dropped on the head and upper back,
-# legs up, then allowed to fall flat into SUPINE_AWAY for the DOWN handoff.
-# The 0.72 s contact-to-impact budget is the reference's; the sell at the
-# cut is still folded in the video, and the last three frames here give the
-# legs back to the mat so the knockdown clip can start on its own pose.
-_RG_INV_LIMBS = dict(spine=(-6, 0, 0), head=(-10, 0, 0),
-                     hand_r=(0.30, 0.30, 0.30), hand_l=(-0.30, 0.30, 0.30),
-                     elbow_r=(0.8, -0.3, -0.3), elbow_l=(-0.8, -0.3, -0.3),
-                     fist_r=0.4, fist_l=0.4,
-                     foot_r=(0.12, 0.04, -0.82), foot_l=(-0.12, 0.02, -0.82),
-                     knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0),
-                     free_feet=True)
-# The released knee AND ankle move outside the lifter's leg corridor. The
-# guarded path below is checked in world space on both bodies; a foot-only
-# change may leave the shin crossing the other wrestler's knee.
-_RG_RELEASE_LIMBS = dict(_RG_INV_LIMBS,
-                        foot_l=(-0.30, 0.04, -0.765),
-                        knee_l=(-0.65, 0.70, 0.25))
-# The runner's strides are the engine's own sprint cycle (Run_Drive, 20
-# frames / 0.667 s for two strides at 7 m/s), sampled onto this clip rather
-# than the older four-pose run table. The root path accelerates 3.45 m into
-# the contact, so the last stride is taken at about 5.6 m/s -- the engine's
-# 7 m/s would carry him 8.6 m in the reference's 1.23 s and out of the ring.
-_RUN_SPRINT = {f: dict(p) for f, p in CLIPS["Run_Drive"]}
+# Running upper-body sweep/backward drop, 66 frames / 2.2 s. The existing
+# gameplay id remains running_grapple_inverted_drop. Author against the TOP
+# VIDEO row of ff_review/references/running_grapple_inverted_drop.png:
+# catch230.23, free-left-arm windup230.48, right-forearm sweep230.65,
+# backward turnover230.82, upper-back bump230.95, sell231.10. The lower row
+# is old Aegis output, not animation reference. These panels do NOT support
+# the former two-handed waist carry. Roots remain gameplay-owned/in-place;
+# pelvis translation below supplies the within-body arc, not a second root.
+# Blender's AUTO smoothing uses the complete action, so truncating the old
+# pose table changes earlier handles too. Keep original two-role pose INPUTS
+# as a frozen, owned source fixture; no game export is read during a rebuild.
+# Only its <=32 scalar keys are copied, retaining actual approach through30.
+with open(os.path.join(os.path.dirname(__file__),
+                       "running_drop_approach_baseline.json")) as _baseline_file:
+    _RUN_GRAPPLE_APPROACH_BASELINE = json.load(_baseline_file)["clips"]
+
 CLIPS["Run_Grapple_Attacker"] = [
-    (0,  dict(_RUN_SPRINT[0])),
-    (5,  dict(_RUN_SPRINT[5])),
-    (10, dict(_RUN_SPRINT[10])),
-    (15, dict(_RUN_SPRINT[15])),
-    (20, dict(_RUN_SPRINT[20])),
-    # Second cycle; the root is still accelerating under it.
-    (25, dict(_RUN_SPRINT[5])),
-    (30, dict(_RUN_SPRINT[10])),
-    # Feet gather under him for the wrap.
-    (33, P(pelvis=(0.0, 0.12, 0.760), hips=(-20, 0, 0), spine=(-24, 0, 0),
-           head=(8, 0, 0),
-           hand_r=(0.30, 0.42, 1.04), hand_l=(-0.26, 0.44, 1.08),
-           fist_r=0.4, fist_l=0.4,
-           foot_r=(0.20, -0.26, 0.20), foot_l=(-0.18, 0.16, 0.104))),
-    # 230.23 -- contact: the last stride is a lunge into the waist wrap,
-    # chest to chest, head under his chin, right arm round the waist and the
-    # left hand on his arm. The 0.85 m root gap is closed by the lean and the
-    # arms; the defender is pulled the rest of the way on the next beat.
-    (37, P(pelvis=(0.0, 0.16, 0.700), hips=(-24, 0, 0), spine=(-30, 0, 0),
-           head=(-2, 0, 0),
-           hand_r=(0.20, 0.80, 1.00), hand_l=(-0.16, 0.78, 1.14),
-           elbow_r=(0.9, -0.4, -0.3), elbow_l=(-0.7, -0.4, -0.4),
-           fist_r=0.5, fist_l=0.5,
-           foot_r=(0.22, -0.30, 0.104), foot_l=(-0.20, 0.24, 0.14))),
-    # 230.48 -- bent under him, both arms wrapped round the waist.
-    (43, P(pelvis=(0.0, 0.06, 0.680), hips=(-30, 0, 0), spine=(-30, 0, 0),
-           head=(-6, 0, 0),
-           hand_r=(0.18, 0.60, 0.92), hand_l=(-0.16, 0.58, 0.90),
-           elbow_r=(0.8, -0.4, -0.4), elbow_l=(-0.8, -0.4, -0.4),
-           fist_r=0.4, fist_l=0.4,
+    *[(f, dict(p, ankle_r=(0, 0, 0)) if f ==33 else dict(p))
+      for f, p in _RUN_GRAPPLE_APPROACH_BASELINE["Run_Grapple_Attacker"] if f <=33],
+    # Catch: upright enough to meet the upper torso, not head under a waist.
+    (37, P(pelvis=(0.0, 0.12, 0.800), hips=(-8, 0, 0), spine=(-12, -4, 0),
+           head=(2, 8, 0), hand_r=(0.23, 0.57, 1.25), hand_l=(-0.26, 0.47, 1.20),
+           elbow_r=(0.8, -0.2, -0.1), elbow_l=(-0.7, -0.2, -0.4),
+           fist_r=0.35, fist_l=0.2, ankle_l=(0, 0, 0),
+           foot_r=(0.22, -0.20, 0.104), foot_l=(-0.20, 0.24, 0.14))),
+    # 230.48: LEFT arm opens wide, RIGHT arm gathers at upper-body height.
+    (43, P(pelvis=(0.0, 0.05, 0.820), hips=(-5, -4, 0), spine=(-6, -8, 0),
+           head=(2, 12, 0), hand_r=(0.30, 0.49, 1.32), hand_l=(-0.62, -0.04, 1.27),
+           elbow_r=(0.8, 0.0, 0.1), elbow_l=(-0.8, -0.3, 0.0),
+           fist_r=0.3, fist_l=0.45,
            foot_r=(0.24, -0.20, 0.104), foot_l=(-0.22, 0.18, 0.104))),
-    # 230.65 -- the load: hips and knees extend, chest opens.
-    (48, P(pelvis=(0.0, 0.02, 0.820), hips=(-6, 0, 0), spine=(4, 0, 0),
-           head=(8, 0, 0),
-           hand_r=(0.18, 0.48, 1.14), hand_l=(-0.16, 0.46, 1.12),
-           elbow_r=(0.7, -0.4, -0.4), elbow_l=(-0.7, -0.4, -0.4),
-           fist_r=0.6, fist_l=0.6,
+    (47, P(pelvis=(0.0, 0.03, 0.830), hips=(-7, -8, 0), spine=(-8, -14, 0),
+           head=(2, 16, 0), hand_r=(0.02, 0.58, 1.43), hand_l=(-0.45, -0.10, 1.04),
+           elbow_r=(0.8, 0.1, 0.1), elbow_l=(-0.8, -0.3, -0.2),
+           fist_r=0.3, fist_l=0.45,
+           foot_r=(0.24, -0.22, 0.104), foot_l=(-0.22, 0.19, 0.104))),
+    # 230.65: the RIGHT forearm crosses the shoulder/chest line; the wrist
+    # finishes beyond the defender's near/left shoulder. LEFT hand is free.
+    (49, P(pelvis=(0.0, 0.02, 0.830), hips=(-9, -10, 0), spine=(-12, -14, 0),
+           head=(2, 18, 0), hand_r=(-0.08, 0.64, 1.48), hand_l=(-0.34, -0.02, 0.90),
+           elbow_r=(0.9, 0.1, 0.0), elbow_l=(-0.7, -0.3, -0.4),
+           fist_r=0.35, fist_l=0.4,
            foot_r=(0.24, -0.24, 0.104), foot_l=(-0.22, 0.20, 0.104))),
-    # 230.70 -- the lift: hips through, the man off his feet across him.
-    (51, P(pelvis=(0.0, -0.02, 0.890), hips=(4, 0, 0), spine=(10, 0, 0),
-           head=(10, 0, 0),
-           hand_r=(0.18, 0.44, 1.18), hand_l=(-0.16, 0.42, 1.16),
-           elbow_r=(0.7, -0.4, -0.3), elbow_l=(-0.7, -0.4, -0.3),
-           fist_r=0.6, fist_l=0.6,
-           foot_r=(0.24, -0.22, 0.104), foot_l=(-0.22, 0.18, 0.104))),
-    # 230.82 -- held inverted, legs up; he keeps the man's hips in front.
-    (55, P(pelvis=(0.0, -0.04, 0.880), hips=(6, 0, 0), spine=(8, 0, 0),
-           head=(4, 0, 0),
-           hand_r=(0.16, 0.44, 1.14), hand_l=(-0.14, 0.42, 1.12),
-           elbow_r=(0.7, -0.4, -0.2), elbow_l=(-0.7, -0.4, -0.2),
-           fist_r=0.5, fist_l=0.5,
+    (51, P(pelvis=(0.0, 0.00, 0.840), hips=(-8, -12, 0), spine=(-10, -14, 0),
+           head=(0, 16, 0), hand_r=(-0.15, 0.55, 1.32), hand_l=(-0.32, -0.08, 0.90),
+           elbow_r=(0.8, 0.1, -0.1), elbow_l=(-0.7, -0.3, -0.4),
+           fist_r=0.3, fist_l=0.35,
+           foot_r=(0.24, -0.23, 0.104), foot_l=(-0.22, 0.19, 0.104))),
+    # Follow through the inverted turnover; do not hold a second man's pelvis up.
+    (55, P(pelvis=(0.0, -0.02, 0.830), hips=(-10, -8, 0), spine=(-16, -10, 0),
+           head=(-2, 12, 0), hand_r=(-0.20, 0.48, 1.10), hand_l=(-0.32, -0.03, 0.88),
+           elbow_r=(0.8, 0.0, -0.3), elbow_l=(-0.7, -0.3, -0.4),
+           fist_r=0.2, fist_l=0.3,
            foot_r=(0.24, -0.20, 0.104), foot_l=(-0.22, 0.16, 0.104))),
-    # 230.95 -- impact cue, tick 118: he lets go and looks down at him.
-    (59, P(pelvis=(0.0, 0.02, 0.840), hips=(-2, 0, 0), spine=(-10, 0, 0),
-           head=(-18, 0, 0),
-           hand_r=(0.22, 0.20, 0.90), hand_l=(-0.20, 0.22, 0.88),
-           elbow_r=(0.5, -0.2, -0.3), elbow_l=(-0.5, -0.2, -0.3),
-           fist_r=0.3, fist_l=0.3,
+    (58, P(pelvis=(0.0, 0.00, 0.820), hips=(-8, -2, 0), spine=(-22, -4, 0),
+           head=(-8, 4, 0), hand_r=(0.30, 0.30, 0.90), hand_l=(-0.32, -0.02, 0.90),
+           elbow_r=(0.6, -0.2, -0.4), elbow_l=(-0.7, -0.3, -0.4),
+           fist_r=0.2, fist_l=0.25,
+           foot_r=(0.24, -0.19, 0.104), foot_l=(-0.22, 0.17, 0.104))),
+    (59, P(pelvis=(0.0, 0.02, 0.830), hips=(-6, 0, 0), spine=(-22, 0, 0),
+           head=(-10, 0, 0), hand_r=(0.31, 0.17, 0.86), hand_l=(-0.32, -0.02, 0.94),
+           elbow_r=(0.6, -0.2, -0.4), elbow_l=(-0.7, -0.3, -0.4),
+           fist_r=0.2, fist_l=0.2,
            foot_r=(0.24, -0.18, 0.104), foot_l=(-0.22, 0.16, 0.104))),
-    # 231.10 -- stepping back off him, arms down.
-    (63, pose(STAND, pelvis=(0.0, 0.06, 0.850), spine=(-4, 0, 0),
-              head=(-12, 0, 0),
-              hand_r=(0.26, 0.08, 0.98), hand_l=(-0.24, 0.10, 0.96),
-              fist_r=0.2, fist_l=0.2)),
+    # Re-form the guard progressively: closing all finger chains from.2
+    # to.8 only after63 produced the frame64 whole-body cadence spike.
+    (63, pose(STAND, pelvis=(0.0, 0.06, 0.850), spine=(-4, 0, 0), head=(-12, 0, 0),
+              hand_r=(0.26, 0.08, 0.98), hand_l=(-0.24, 0.10, 0.96), fist_r=0.55, fist_l=0.55)),
     (66, P(head=(-6, 0, 0))),
 ]
+
+# Reaction arms move with the torso; they do not reach for a sustained grip.
+# Limbs are in the rotating BODY frame until the mat-supported bump.
+_RG_TURNOVER = dict(spine=(8, 0, 0), head=(-8, 0, 0),
+                    hand_r=(0.29, 0.20, 0.42), hand_l=(-0.29, 0.18, 0.34),
+                    elbow_r=(0.8, -0.2, 0.2), elbow_l=(-0.8, -0.2, 0.2),
+                    fist_r=0.25, fist_l=0.25,
+                    foot_r=(0.15, 0.25, -0.55), foot_l=(-0.15, 0.30, -0.58),
+                    knee_r=(0.2, 1.0, 0.0), knee_l=(-0.2, 1.0, 0.0), free_feet=True)
 CLIPS["Run_Grapple_Defender"] = [
-    # Bracing, then reaching as the runner closes.
-    (0,  pose(READY)),
-    (16, pose(READY, pelvis=(0.0, -0.02, 0.772), head=(4, -6, 0))),
-    (30, pose(READY, pelvis=(0.0, -0.04, 0.752), spine=(-14, 0, 0),
-              head=(8, 0, 0),
-              hand_r=(0.30, 0.42, 1.24), hand_l=(-0.27, 0.44, 1.26),
-              fist_r=0.3, fist_l=0.3)),
-    # 230.23 -- caught: upright, back arched, chin up.
-    (37, P(pelvis=(0.0, 0.0, 0.850), hips=(6, 0, 0), spine=(14, 0, 0),
-           head=(16, 0, 0),
-           hand_r=(0.24, 0.40, 1.26), hand_l=(-0.22, 0.42, 1.28),
-           elbow_r=(0.6, -0.4, -0.5), elbow_l=(-0.6, -0.4, -0.5),
-           fist_r=0.4, fist_l=0.4,
+    *[(f, dict(p)) for f, p in _RUN_GRAPPLE_APPROACH_BASELINE["Run_Grapple_Defender"] if f <=37],
+    (43, P(pelvis=(0.0, -0.02, 0.858), hips=(2, 0, 0), spine=(6, 0, 0), head=(10, 0, 0),
+           hand_r=(0.18, 0.20, 1.32), hand_l=(-0.24, 0.25, 1.20),
+           elbow_r=(0.6, -0.4, -0.4), elbow_l=(-0.7, -0.3, -0.4),
+           fist_r=0.25, fist_l=0.25,
            foot_r=(0.23, -0.17, 0.104), foot_l=(-0.19, 0.18, 0.104))),
-    # 230.48 -- upright, right hand on the attacker's back, both feet down.
-    (43, P(pelvis=(0.0, -0.02, 0.858), hips=(2, 0, 0), spine=(6, 0, 0),
-           head=(10, 0, 0),
-           hand_r=(0.18, 0.46, 1.34), hand_l=(-0.20, 0.30, 1.14),
-           elbow_r=(0.6, -0.4, -0.6), elbow_l=(-0.6, -0.3, -0.5),
-           fist_r=0.4, fist_l=0.4,
-           foot_r=(0.23, -0.17, 0.104), foot_l=(-0.19, 0.18, 0.104))),
-    # 230.65 -- loaded: tipping back, right foot lifting.
-    (48, P(pelvis=(0.0, -0.06, 0.840), hips=(20, 0, 0), spine=(8, 0, 0),
-           head=(10, 0, 0),
-           hand_r=(0.16, 0.44, 1.32), hand_l=(-0.18, 0.34, 1.18),
-           fist_r=0.4, fist_l=0.4,
+    (47, P(pelvis=(0.0, -0.04, 0.860), hips=(4, 0, 0), spine=(8, 0, 0), head=(12, 0, 0),
+           hand_r=(0.22, 0.17, 1.34), hand_l=(-0.27, 0.20, 1.23),
+           fist_r=0.25, fist_l=0.25,
+           foot_r=(0.23, -0.16, 0.104), foot_l=(-0.19, 0.17, 0.104))),
+    (49, P(pelvis=(0.0, -0.06, 0.860), hips=(8, 0, 0), spine=(4, 0, 0), head=(12, 0, 0),
+           hand_r=(0.24, 0.15, 1.35), hand_l=(-0.27, 0.10, 1.25),
+           elbow_r=(0.7, -0.2, 0.1), elbow_l=(-0.7, -0.2, 0.0),
+           fist_r=0.25, fist_l=0.25, ankle_r=(0, 0, 0),
            foot_r=(0.22, -0.02, 0.22), foot_l=(-0.19, 0.14, 0.104))),
-    # 230.70 -- off his feet, tipped horizontal across the attacker.
-    (51, _body((60, 0, 0), (0.0, 0.02, 1.150),
-               **dict(_TUCK_LEGS, spine=(-8, 0, 0), head=(-8, 0, 0),
-                      hand_r=(0.26, 0.30, 0.10), hand_l=(-0.26, 0.30, 0.10),
-                      elbow_r=(0.7, -0.3, -0.4), elbow_l=(-0.7, -0.3, -0.4),
-                      fist_r=0.4, fist_l=0.4))),
-    # 230.78-230.82 -- legs up, head turning under; held upside down.
-    (53, _body((100, 0, 0), (0.0, 0.02, 1.200), **_RG_INV_LIMBS)),
-    (55, _body((145, 0, 0), (0.0, 0.02, 1.000), **_RG_INV_LIMBS)),
-    # 230.92-230.95 -- dropped on the head and upper back, legs up.
-    (58, _body((135, 0, 0), (0.0, 0.02, 0.780), **_RG_INV_LIMBS)),
-    (59, _body((125, 0, 0), (0.0, 0.02, 0.580), **_RG_INV_LIMBS)),
-    # 231.10 -- the sell: an arched supine bump with one knee up, not a
-    # folded ball. The cut is 0.25 s after impact and the reference still has
-    # both boots up; this keeps a readable laid-out body and the last three
-    # frames settle it into SUPINE_AWAY for the head-away DOWN handoff.
-    (63, _yawed(S(pelvis=(0.0, 0.0, 0.240),
-                   spine=(-10, 0, 0), head=(-16, 8, 0),
+    (51, _body((45, 0, 0), (0.0, -0.02, 0.910), **_RG_TURNOVER)),
+    (53, _body((85, 0, 0), (0.0, 0.02, 1.000), **dict(_RG_TURNOVER, spine=(2, 0, 0)))),
+    # 230.82: dark-haired head BELOW/right of the cyan waistband. The
+    # near forearm has passed the shoulder; do not hold him horizontal.
+    # Continue the tuck's rising boot arc through the turnover. Explicit
+    # low55 targets formerly dropped the boots then snapped them up again.
+    (55, dict(_body((125, 0, 0), (0.0, 0.05, 1.000), **dict(_RG_TURNOVER,
+                   spine=(-4, 0, 0), head=(-12, 0, 0))),
+              foot_r=(0.16, 0.35, 1.40), foot_l=(-0.18, 0.20, 1.34),
+              knee_r=(0.2, 0.9, 0.6), knee_l=(-0.2, 0.8, 0.4))),
+    (57, dict(_body((145, 0, 0), (0.0, 0.02, 0.860), **dict(_RG_TURNOVER,
+                   spine=(-12, 0, 0), head=(-20, 0, 0))),
+              foot_r=(0.14, 0.22, 1.46), foot_l=(-0.18, 0.14, 1.42),
+              knee_r=(0.2, 0.8, 0.6), knee_l=(-0.2, 0.8, 0.6))),
+    # 230.95: boots above the waistband; head/upper back approaching mat.
+    # The hips remain flexed/up; this is not a flat horizontal back bump.
+    (59, dict(_body((155, 0, 0), (0.0, -0.04, 0.670), **dict(_RG_TURNOVER,
+                   spine=(-20, 0, 0), head=(-24, 0, 0),
+                   hand_r=(0.38, 0.16, 0.34), hand_l=(-0.38, 0.16, 0.32))),
+              foot_r=(0.14, 0.14, 1.32), foot_l=(-0.18, 0.12, 1.34),
+              knee_r=(0.2, 0.8, 0.7), knee_l=(-0.2, 0.8, 0.7))),
+    (59.5, dict(_body((145, 0, 0), (0.0, -0.04, 0.585), **dict(_RG_TURNOVER,
+                   spine=(-22, 0, 0), head=(-24, 0, 0),
+                   hand_r=(0.39, 0.17, 0.34), hand_l=(-0.39, 0.17, 0.32))),
+              foot_r=(0.14, 0.17, 1.24), foot_l=(-0.18, 0.15, 1.22),
+              knee_r=(0.2, 0.8, 0.7), knee_l=(-0.2, 0.8, 0.7))),
+    (60, dict(_body((135, 0, 0), (0.0, -0.04, 0.420), **dict(_RG_TURNOVER,
+                   spine=(-25, 0, 0), head=(-24, 0, 0),
+                   hand_r=(0.40, 0.18, 0.34), hand_l=(-0.40, 0.18, 0.32))),
+              foot_r=(0.14, 0.20, 1.10), foot_l=(-0.18, 0.16, 1.00),
+              knee_r=(0.2, 0.8, 0.7), knee_l=(-0.2, 0.8, 0.7))),
+    (60.5, dict(_body((122.5, 0, 0), (0.0, -0.035, 0.360), **dict(_RG_TURNOVER,
+                   spine=(-21.5, 0, 0), head=(-23, 0, 0),
+                   hand_r=(0.41, 0.18, 0.34), hand_l=(-0.41, 0.18, 0.32))),
+              foot_r=(0.14, 0.25, 0.90), foot_l=(-0.18, 0.23, 0.80),
+              knee_r=(0.2, 0.8, 0.7), knee_l=(-0.2, 0.8, 0.7))),
+    (61, dict(_body((110, 0, 0), (0.0, -0.03, 0.230), **dict(_RG_TURNOVER,
+                   spine=(-18, 0, 0), head=(-22, 0, 0),
+                   hand_r=(0.42, 0.18, 0.34), hand_l=(-0.42, 0.18, 0.32))),
+              foot_r=(0.14, 0.30, 0.70), foot_l=(-0.18, 0.30, 0.60),
+              knee_r=(0.2, 0.8, 0.7), knee_l=(-0.2, 0.8, 0.7))),
+    (63, _yawed(S(pelvis=(0.0, 0.0, 0.180), spine=(-10, 0, 0), head=(-16, 8, 0),
                    hand_r=(-0.46, 0.16, 0.16), hand_l=(0.44, 0.14, 0.18),
-                   elbow_r=(-0.6, 0.2, 0.2), elbow_l=(0.6, 0.2, 0.2),
-                   fist_r=0.1, fist_l=0.1,
-                   foot_r=(-0.18, -0.42, 0.34), foot_l=(0.16, -0.72, 0.12),
+                   elbow_r=(-0.6, 0.2, 0.2), elbow_l=(0.6, 0.2, 0.2), fist_r=0.1, fist_l=0.1,
+                   foot_r=(-0.18, -0.60, 0.28), foot_l=(0.20, -0.72, 0.18),
                    knee_r=(-0.2, 0.5, 0.8), knee_l=(0.2, 0.2, 1.0)))),
     (66, dict(SUPINE_AWAY)),
 ]
-
-# Preserve the original paired performance as the authoring boundary. The
-# release is a local LEFT LEG correction; added guard poses must not respline
-# the torso, other leg or the already-working catch/load/carry.
-_RUN_GRAPPLE_DEFENDER_BASELINE = [(f, dict(p)) for f, p in CLIPS["Run_Grapple_Defender"]]
-_RG_GUARDS = {
-    58: _body((135, 0, 0), (0.0, 0.02, 0.780), **_RG_RELEASE_LIMBS),
-    59: _body((125, 0, 0), (0.0, 0.02, 0.580), **_RG_RELEASE_LIMBS),
-    61: _body((110, 0, 0), (0.0, 0.01, 0.400), **dict(_RG_RELEASE_LIMBS,
-              foot_l=(-0.31, 0.0, -0.76), knee_l=(-0.65, 0.65, 0.25))),
-    63: dict(dict(_RUN_GRAPPLE_DEFENDER_BASELINE)[63],
-             foot_l=(-0.32, 0.72, 0.14), knee_l=(-0.65, -0.15, 0.80)),
-    64: dict(dict(_RUN_GRAPPLE_DEFENDER_BASELINE)[63], pelvis=(0.0, 0.0, 0.210),
-             foot_l=(-0.30, 0.78, 0.11), knee_l=(-0.65, -0.10, 0.80)),
-}
-CLIPS["Run_Grapple_Defender"] = sorted(
-    [(f, _RG_GUARDS.get(f, p)) for f, p in _RUN_GRAPPLE_DEFENDER_BASELINE]
-    + [(f, p) for f, p in _RG_GUARDS.items() if f not in dict(_RUN_GRAPPLE_DEFENDER_BASELINE)]
-)
 
 # --- Cody Rhodes's moveset (gauntlet/refs/cody_moveset.md) -----------------
 #
@@ -7978,7 +7952,7 @@ def overlap(action, name):
             kps[k].co[0] += min(lag, gap / 3.0)
 
 
-def author(poser, arm, name, frames):
+def author(poser, arm, name, frames, exact_timing=False):
     """Keyframe one action from a list of (frame, pose) entries."""
     action = bpy.data.actions.new(name)
     arm.animation_data_clear()
@@ -8015,7 +7989,8 @@ def author(poser, arm, name, frames):
                     c.keyframe_points[k].co[1] = v
             prev = q
 
-    overlap(action, name)
+    if not exact_timing:
+        overlap(action, name)
 
     # Bezier everywhere. Linear interpolation on organic motion reads as
     # mechanical, and a wrestler moving at a constant rate between poses is
@@ -8038,7 +8013,7 @@ def author(poser, arm, name, frames):
     for fcurve in action.fcurves:
         path = fcurve.data_path
         bone = path[len('pose.bones["'):path.index('"]')] if path.startswith('pose.bones["') else ""
-        handle = "AUTO_CLAMPED" if name in AS_AUTHORED or bone.startswith(CLAMPED_BONES) \
+        handle = "AUTO_CLAMPED" if exact_timing or name in AS_AUTHORED or bone.startswith(CLAMPED_BONES) \
             else "AUTO"
         for key in fcurve.keyframe_points:
             key.interpolation = "BEZIER"
@@ -8071,33 +8046,32 @@ def _curve_snapshot(action):
         for k in fc.keyframe_points] for fc in action.fcurves}
 
 
-def _guard_running_release_curves(action, baseline):
-    """Keep this original performance except the guarded left-leg window.
+def _guard_running_approach_curves(action, baseline):
+    """Preserve published approach <=30, including AUTO/overlap handles.
 
-    AUTO_CLAMPED's handle at55 depends on the altered58 key, so matching pose55
-    alone does not preserve the preceding motion. Copy its exact scalar
-    handles, and keep all non-leg curves completely original.
+    The upper-body wrap and both-body landing are now authored together;
+    copying the former non-leg performance would erase these corrections.
     """
-    affected = {'pose.bones["%s"].rotation_quaternion' % bone
-                for bone in ("thigh_l", "calf_l", "foot_l")}
+    # Source30's delayed arm/neck keys lie at31..32. Preserve those too;
+    # copying only keys whose timestamp <=30 changes the approach itself.
     for fc in action.fcurves:
-        original = baseline[(fc.data_path, fc.array_index)]
-        if fc.data_path not in affected:
-            fc.keyframe_points.clear();fc.keyframe_points.add(len(original))
-            for key, saved in zip(fc.keyframe_points, original):
-                co, left, right, interp, hl, hr = saved
-                key.co=co;key.interpolation=interp
-                key.handle_left_type=hl;key.handle_right_type=hr
-                key.handle_left=left;key.handle_right=right
-        else:
-            by_time={round(float(k.co.x),6):k for k in fc.keyframe_points}
-            for co,left,right,interp,_,_ in original:
-                if co[0] <=55 or co[0]>=66:
-                    key=by_time.get(round(co[0],6))
-                    if key is None:key=fc.keyframe_points.insert(co[0],co[1])
-                    key.co=co;key.interpolation=interp
-                    key.handle_left_type=key.handle_right_type='FREE'
-                    key.handle_left=left;key.handle_right=right
+        saved = baseline[(fc.data_path, fc.array_index)]
+        original = [k for k in saved if k[0][0] <=32]
+        for i in range(len(fc.keyframe_points) - 1, -1, -1):
+            if fc.keyframe_points[i].co.x <=32:
+                fc.keyframe_points.remove(fc.keyframe_points[i])
+        for co, *_ in original:
+            fc.keyframe_points.insert(co[0], co[1])
+        fc.update()
+        # Insertion can resize neighboring handles, even FREE ones. Restore
+        # their coordinates only after all preserved keys have been inserted.
+        by_time = {round(k.co.x, 6): k for k in fc.keyframe_points}
+        for co, left, right, interp, _, _ in original:
+            key = by_time[round(co[0], 6)]
+            key.interpolation = interp
+            key.handle_left_type = key.handle_right_type = "FREE"
+            key.handle_left = left
+            key.handle_right = right
         fc.update()
 
 
@@ -12350,12 +12324,12 @@ def main():
     for name in names:
         if name not in CLIPS:
             raise ValueError("unknown clip: " + name)
-        if name == "Run_Grapple_Defender":
-            original = author(poser, arm, name, _RUN_GRAPPLE_DEFENDER_BASELINE)
+        if name in _RUN_GRAPPLE_APPROACH_BASELINE:
+            original = author(poser, arm, name, _RUN_GRAPPLE_APPROACH_BASELINE[name])
             baseline = _curve_snapshot(original)
             bpy.data.actions.remove(original)
-            action = author(poser, arm, name, CLIPS[name])
-            _guard_running_release_curves(action, baseline)
+            action = author(poser, arm, name, CLIPS[name], exact_timing=True)
+            _guard_running_approach_curves(action, baseline)
         else:
             author(poser, arm, name, CLIPS[name])
     # Every action must survive the export. ACTIONS mode walks the actions

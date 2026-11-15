@@ -1,0 +1,11 @@
+19:25:48 | INFO: Data are loaded, start creating Blender stuff
+19:25:48 | INFO: Blender create Mesh node Mannequin
+19:25:49 | INFO: glTF import finished in 0.66s
+ERROR Draco mesh compression is not available because library could not be found at /usr/bin/4.3/python/lib/python3.13/site-packages/libextern_draco.so
+19:26:27 | INFO: Starting glTF 2.0 export
+19:28:44 | INFO: Finished glTF 2.0 export in 137.07554578781128 s
+
+wrote /tmp/aegis-running-wrap-candidate4-full.glb (317 clips)
+Blender 4.3.2
+
+Blender quit

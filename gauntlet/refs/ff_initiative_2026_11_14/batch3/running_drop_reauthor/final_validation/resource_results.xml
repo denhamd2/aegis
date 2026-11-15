@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites id="2026-11-15" name="report_1" tests="51" failures="0" skipped="0" flaky="0" time="0.000">
+	<testsuite id="0" name="test_paired_poses" package="tests" timestamp="2026-11-15T19:30:26" hostname="localhost" tests="14" failures="0" errors="0" skipped="0" flaky="0" time="0.203">
+		<testcase name="test_every_recipe_samples_a_clip_the_rig_actually_has" classname="test_paired_poses" time="0.023">
+		</testcase>
+		<testcase name="test_every_sample_time_is_inside_its_source_clip" classname="test_paired_poses" time="0.018">
+		</testcase>
+		<testcase name="test_every_recipe_has_a_matching_trajectory" classname="test_paired_poses" time="0.005">
+		</testcase>
+		<testcase name="test_role_clips_are_exactly_as_long_as_the_trajectory" classname="test_paired_poses" time="0.006">
+		</testcase>
+		<testcase name="test_generated_library_has_both_roles_for_every_recipe" classname="test_paired_poses" time="0.004">
+		</testcase>
+		<testcase name="test_generated_clips_pose_every_bone_the_rig_animates" classname="test_paired_poses" time="0.019">
+		</testcase>
+		<testcase name="test_generated_track_paths_resolve_against_a_real_wrestler" classname="test_paired_poses" time="0.019">
+		</testcase>
+		<testcase name="test_roles_resolve_to_different_clips" classname="test_paired_poses" time="0.005">
+		</testcase>
+		<testcase name="test_a_move_with_no_recipe_resolves_to_nothing" classname="test_paired_poses" time="0.004">
+		</testcase>
+		<testcase name="test_defender_grip_windows_are_inside_the_move" classname="test_paired_poses" time="0.005">
+		</testcase>
+		<testcase name="test_a_wrestler_can_play_its_half_of_an_authored_move" classname="test_paired_poses" time="0.020">
+		</testcase>
+		<testcase name="test_a_move_with_no_recipe_falls_back_instead_of_failing" classname="test_paired_poses" time="0.029">
+		</testcase>
+		<testcase name="test_thrown_bodies_land_upright" classname="test_paired_poses" time="0.006">
+		</testcase>
+		<testcase name="test_no_move_ends_with_a_body_on_its_face" classname="test_paired_poses" time="0.004">
+		</testcase>
+	</testsuite>
+	<testsuite id="1" name="test_clip_authoring_gate" package="tests" timestamp="2026-11-15T19:30:27" hostname="localhost" tests="3" failures="0" errors="0" skipped="0" flaky="0" time="0.038">
+		<testcase name="test_the_authoring_files_are_readable_at_all" classname="test_clip_authoring_gate" time="0.007">
+		</testcase>
+		<testcase name="test_the_clip_authoring_surface_has_not_changed_unreviewed" classname="test_clip_authoring_gate" time="0.006">
+		</testcase>
+		<testcase name="test_the_authoring_file_still_points_at_the_skill" classname="test_clip_authoring_gate" time="0.012">
+		</testcase>
+	</testsuite>
+	<testsuite id="2" name="test_authored_clips" package="tests" timestamp="2026-11-15T19:30:27" hostname="localhost" tests="15" failures="0" errors="0" skipped="0" flaky="0" time="0.519">
+		<testcase name="test_the_authored_clips_are_in_the_baked_library" classname="test_authored_clips" time="0.004">
+		</testcase>
+		<testcase name="test_each_authored_clip_is_exactly_as_long_as_what_plays_it" classname="test_authored_clips" time="0.004">
+		</testcase>
+		<testcase name="test_the_authored_clips_actually_animate_bones" classname="test_authored_clips" time="0.006">
+		</testcase>
+		<testcase name="test_the_authored_source_glb_ships_every_clip_the_recipes_ask_for" classname="test_authored_clips" time="0.315">
+		</testcase>
+		<testcase name="test_every_authored_clip_poses_the_whole_body" classname="test_authored_clips" time="0.005">
+		</testcase>
+		<testcase name="test_every_recipe_is_authored" classname="test_authored_clips" time="0.005">
+		</testcase>
+		<testcase name="test_nothing_is_borrowed_any_more" classname="test_authored_clips" time="0.003">
+		</testcase>
+		<testcase name="test_the_running_attack_no_longer_throws_a_punch" classname="test_authored_clips" time="0.003">
+		</testcase>
+		<testcase name="test_the_clips_a_wrestler_sits_in_loop" classname="test_authored_clips" time="0.003">
+		</testcase>
+		<testcase name="test_no_clip_carries_a_duplicate_track" classname="test_authored_clips" time="0.092">
+		</testcase>
+		<testcase name="test_no_state_still_plays_a_raw_rig_clip" classname="test_authored_clips" time="0.004">
+		</testcase>
+		<testcase name="test_both_halves_of_every_paired_move_are_authored" classname="test_authored_clips" time="0.007">
+		</testcase>
+		<testcase name="test_victory_is_terminal" classname="test_authored_clips" time="0.003">
+		</testcase>
+		<testcase name="test_a_winner_can_celebrate_from_wherever_the_bell_catches_him" classname="test_authored_clips" time="0.003">
+		</testcase>
+		<testcase name="test_the_victory_state_plays_the_authored_celebration" classname="test_authored_clips" time="0.003">
+		</testcase>
+	</testsuite>
+	<testsuite id="3" name="test_sixty_fps" package="tests" timestamp="2026-11-15T19:30:27" hostname="localhost" tests="5" failures="0" errors="0" skipped="0" flaky="0" time="0.600">
+		<testcase name="test_the_match_ticks_at_sixty" classname="test_sixty_fps" time="0.003">
+		</testcase>
+		<testcase name="test_the_authored_clips_are_sampled_at_sixty" classname="test_sixty_fps" time="0.235">
+		</testcase>
+		<testcase name="test_the_paired_bake_carries_the_sixty_samples" classname="test_sixty_fps" time="0.007">
+		</testcase>
+		<testcase name="test_the_base_clips_play_cubic_between_keys" classname="test_sixty_fps" time="0.003">
+		</testcase>
+		<testcase name="test_every_authored_clip_is_sampled_at_sixty" classname="test_sixty_fps" time="0.287">
+		</testcase>
+	</testsuite>
+	<testsuite id="4" name="test_clip_cadence" package="tests" timestamp="2026-11-15T19:30:28" hostname="localhost" tests="3" failures="0" errors="0" skipped="0" flaky="0" time="1.005">
+		<testcase name="test_the_hero_moves_move_evenly" classname="test_clip_cadence" time="0.248">
+		</testcase>
+		<testcase name="test_the_weapon_swings_move_evenly" classname="test_clip_cadence" time="0.254">
+		</testcase>
+		<testcase name="test_the_clips_neither_freeze_nor_jerk" classname="test_clip_cadence" time="0.424">
+		</testcase>
+	</testsuite>
+	<testsuite id="5" name="test_grapple_role_retargeting" package="tests" timestamp="2026-11-15T19:30:29" hostname="localhost" tests="3" failures="0" errors="0" skipped="0" flaky="0" time="0.026">
+		<testcase name="test_authored_roles_survive_slot_swap_height_and_rotated_frames" classname="test_grapple_role_retargeting" time="0.006">
+		</testcase>
+		<testcase name="test_overlapping_rigs_cannot_retarget_each_others_source_or_restore_it_wrongly" classname="test_grapple_role_retargeting" time="0.004">
+		</testcase>
+		<testcase name="test_ladder_entry_height_belongs_to_the_attacker_in_either_slot" classname="test_grapple_role_retargeting" time="0.004">
+		</testcase>
+	</testsuite>
+	<testsuite id="6" name="test_pose_lint" package="tests" timestamp="2026-11-15T19:30:29" hostname="localhost" tests="3" failures="0" errors="0" skipped="0" flaky="0" time="12.136">
+		<testcase name="test_no_authored_clip_breaks_a_body" classname="test_pose_lint" time="10.883">
+		</testcase>
+		<testcase name="test_every_tagged_clip_leans_the_way_it_means_to" classname="test_pose_lint" time="0.629">
+		</testcase>
+		<testcase name="test_lint_reads_a_backbend_as_a_backbend" classname="test_pose_lint" time="0.601">
+		</testcase>
+	</testsuite>
+	<testsuite id="7" name="test_body_deformation_gate" package="tests" timestamp="2026-11-15T19:30:41" hostname="localhost" tests="5" failures="0" errors="0" skipped="0" flaky="0" time="1.303">
+		<testcase name="test_raised_arms_lift_the_clavicles" classname="test_body_deformation_gate" time="0.231">
+		</testcase>
+		<testcase name="test_limb_flips_do_not_grow" classname="test_body_deformation_gate" time="0.244">
+		</testcase>
+		<testcase name="test_the_hip_helpers_never_out_turn_the_thigh" classname="test_body_deformation_gate" time="0.245">
+		</testcase>
+		<testcase name="test_romans_walk_has_no_jerks" classname="test_body_deformation_gate" time="0.246">
+		</testcase>
+		<testcase name="test_codys_walk_has_no_jerks" classname="test_body_deformation_gate" time="0.227">
+		</testcase>
+	</testsuite>
+</testsuites>

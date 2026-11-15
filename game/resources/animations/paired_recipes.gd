@@ -564,15 +564,26 @@ const RECIPES := {
 		],
 		"defender_grips_until": 0.50,
 	},
-	# Running grapple + inverted drop, from the reference video's running-moves
-	# section: start 229.00, contact 230.23, lift 230.70, impact 230.95, cut
-	# 231.20. He sprints in, catches the man chest-to-chest in a waist wrap,
-	# extends the hips to turn him upside down across his body, and drops him
-	# on the head and upper back. The victim's root never leaves the mat -- the
-	# inversion is bone pose in his own body frame, see Run_Grapple_* in
-	# tools/blender/wrestling_clips.py.
+	# Running grapple: approximate source beats229.00 approach,230.23 catch,
+	#230.65 upper-body sweep,230.82/230.95 inverted turnover,231.20 handoff.
+	# Right forearm crosses the upper body while the left arm opens. The later
+	# grip is occluded; do not impose bilateral waist support or infer exact
+	# release timing from the sparse reference panels. Root trajectories stay
+	# gameplay-owned; Run_Grapple_* supplies the paired body performance.
 	"running_grapple_inverted_drop": {
 		"authored": {"attacker": "Run_Grapple_Attacker", "defender": "Run_Grapple_Defender"},
+		# These hands follow the authored sweep; forearm contact is measured
+		# independently from wrist IK. Outside the contact window they remain
+		# authored, with no fallback to the old bilateral waist binding.
+		# Reference230.65 supports this wrap pose; later inverted turnover
+		# changes contact. Sparse footage cannot establish a continuous hold.
+		"hand_contacts": {
+			"mode": "authored",
+			"expected": [{"id": "right_forearm", "window": Vector2(49.0 / 66.0, 49.0 / 66.0),
+					"effector": ["lowerarm_r", "hand_r"],
+					"surface_bone": "upperarm_l", "surface_offset": Vector3.ZERO,
+					"surface_radius": 0.09, "effector_radius": 0.035}],
+		},
 		# Preserve the carry fit, then return cosmetic height offsets to the
 		# authored landing before impact. Fractions of the shared root clip.
 		"separation_height_release": Vector2(110.0 / 132.0, 118.0 / 132.0),

@@ -1,0 +1,43 @@
+{
+  "Run_Grapple_Attacker": {
+    "a": "/tmp/aegis-running-wrap-candidate2.glb",
+    "b": "/tmp/aegis-running-wrap-candidate3.glb",
+    "clip": "Run_Grapple_Attacker",
+    "tracks_a": 195,
+    "tracks_b": 195,
+    "changed_tracks": []
+  },
+  "Run_Grapple_Defender": {
+    "a": "/tmp/aegis-running-wrap-candidate2.glb",
+    "b": "/tmp/aegis-running-wrap-candidate3.glb",
+    "clip": "Run_Grapple_Defender",
+    "tracks_a": 195,
+    "tracks_b": 195,
+    "changed_tracks": [
+      {
+        "track": "calf_l/rotation",
+        "maximum_component_delta": 0.7423932552337646,
+        "max_angle_degrees": 110.6476821899414,
+        "at_seconds": 1.8333333730697632
+      },
+      {
+        "track": "calf_r/rotation",
+        "maximum_component_delta": 0.45904412865638733,
+        "max_angle_degrees": 65.6567611694336,
+        "at_seconds": 1.899999976158142
+      },
+      {
+        "track": "thigh_l/rotation",
+        "maximum_component_delta": 1.3877702951431274,
+        "max_angle_degrees": 177.51214599609375,
+        "at_seconds": 1.850000023841858
+      },
+      {
+        "track": "thigh_r/rotation",
+        "maximum_component_delta": 0.9456928968429565,
+        "max_angle_degrees": 116.87271118164062,
+        "at_seconds": 1.8333333730697632
+      }
+    ]
+  }
+}

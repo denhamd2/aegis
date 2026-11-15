@@ -1,0 +1,32 @@
+{
+  "candidate3": {
+    "Run_Grapple_Attacker": {
+      "jerk": 48.49787961653545,
+      "snaps": 1,
+      "spikes": [
+        {
+          "frame": 64,
+          "speed": 666.8212048237068,
+          "median": 149.43547254337759
+        }
+      ]
+    },
+    "Run_Grapple_Defender": {
+      "jerk": 39.756496716868774,
+      "snaps": 0,
+      "spikes": []
+    }
+  },
+  "candidate4": {
+    "Run_Grapple_Attacker": {
+      "jerk": 39.368247002680256,
+      "snaps": 0,
+      "spikes": []
+    },
+    "Run_Grapple_Defender": {
+      "jerk": 39.756496716868774,
+      "snaps": 0,
+      "spikes": []
+    }
+  }
+}

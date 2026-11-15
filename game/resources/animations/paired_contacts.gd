@@ -149,9 +149,69 @@ const NO_PULL := ["signature_cody_cutter"]
 static func pulls(move: MoveDef) -> bool:
 	if move == null:
 		return false
+	# Authored forearm contact supplies no bound wrist that may pull a body.
+	if authored_hands(move):
+		return false
 	if NO_PULL.has(move.resource_path.get_file().get_basename()):
 		return false
 	return not move.resource_path.get_base_dir().ends_with("/ff")
+
+## Optional authored-contact metadata does not change legacy move behavior.
+## Expected surface contact is independent of wrist IK or model pulling.
+static func hand_profile(move: MoveDef) -> Dictionary:
+	if not move:
+		return {}
+	var recipe: Dictionary = PairedRecipes.RECIPES.get(String(move.animation_pair_id), {})
+	return recipe.get("hand_contacts", {})
+
+
+static func authored_hands(move: MoveDef) -> bool:
+	return hand_profile(move).get("mode", "") == "authored"
+
+
+## Post-modifier bone frames required by an authored contact observer.
+static func contact_anchors(move: MoveDef, defender: WrestlerController) -> Dictionary:
+	var frames := {}
+	for contact: Dictionary in hand_profile(move).get("expected", []):
+		var bone: String = contact["surface_bone"]
+		if frames.has(bone):
+			continue
+		var index := defender.skeleton.find_bone(defender._skeleton_bone_name(bone))
+		if index >= 0:
+			frames[bone] = defender.skeleton.global_transform * defender.skeleton.get_bone_global_pose(index)
+	return frames
+
+
+## Required samples include unreachable/missing anchors; no conditional median
+## can silently discard a failed authored hold. Points/frames are captured only
+## after the skeleton modifiers have finished.
+static func authored_contact_samples(move: MoveDef, phase: float,
+		attacker_points: Dictionary, defender_frames: Dictionary) -> Array[Dictionary]:
+	var samples: Array[Dictionary] = []
+	for contact: Dictionary in hand_profile(move).get("expected", []):
+		var window: Vector2 = contact["window"]
+		if phase < window.x - .000001 or phase > window.y + .000001:
+			continue
+		var bones: Array = contact["effector"]
+		var anchor: String = contact["surface_bone"]
+		var sample := {"id": contact["id"], "phase": phase, "valid": false}
+		if bones.size() != 2 or not attacker_points.has(bones[0]) \
+				or not attacker_points.has(bones[1]) or not defender_frames.has(anchor):
+			sample["reason"] = "missing contact bone or post-modifier anchor"
+			samples.append(sample)
+			continue
+		var frame: Transform3D = defender_frames[anchor]
+		var target: Vector3 = frame * contact.get("surface_offset", Vector3.ZERO)
+		var closest := Geometry3D.get_closest_point_to_segment(target,
+				attacker_points[bones[0]], attacker_points[bones[1]])
+		var distance := closest.distance_to(target)
+		var radius := float(contact["surface_radius"]) + float(contact["effector_radius"])
+		sample.merge({"valid": true, "gap_m": maxf(distance - radius, 0.0),
+				"signed_gap_m": distance - radius, "penetration_m": maxf(radius - distance, 0.0),
+				"centreline_distance_m": distance, "target": target, "closest": closest}, true)
+		samples.append(sample)
+	return samples
+
 
 ## Where a "behind" hand sits past the bone, away from the attacker: round
 ## the back of the neck or the waist, not on the front of it.

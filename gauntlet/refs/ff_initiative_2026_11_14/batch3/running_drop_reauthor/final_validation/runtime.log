@@ -1,0 +1,107 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+[2J[H[38;2;233;150;122m
+--------------------------------------------------------------------------------------------------
+GdUnit4 Comandline Tool
+--------------------------------------------------------------------------------------------------[0m
+[38;2;0;191;255mDisabled fail fast![0m
+[38;2;0;191;255mSet write reports to /workspace/aegis/game/tmp/aegis-wrap4-runtime[0m
+[38;2;218;165;32m
+Headless mode is ignored by option '--ignoreHeadlessMode'"
+
+Please note that tests that use UI interaction do not work correctly in headless mode.
+Godot 'InputEvents' are not transported by the Godot engine in headless mode and therefore
+have no effect in the test!
+[0m
+[38;2;100;149;237mInstalling GdUnit4 session system hooks.[0m
+[38;2;100;149;237mSession hook 'GdUnitHtmlTestReporter' installed.[0m
+[38;2;100;149;237mSession hook 'GdUnitXMLTestReporter' installed.[0m
+[38;2;0;206;209mRun Test Suite: [0m[38;2;250;235;215mres://tests/test_authored_hand_contacts.gd[0m
+  [38;2;250;235;215mres://tests/test_authored_hand_contacts.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_authored_policy_never_falls_back_to_waist_ik_or_model_pull[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_authored_hand_contacts.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_authored_policy_never_falls_back_to_waist_ik_or_model_pull[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 9ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_authored_hand_contacts.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_expected_contact_uses_anatomical_right_forearm_not_free_left_or_wrist[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_authored_hand_contacts.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_expected_contact_uses_anatomical_right_forearm_not_free_left_or_wrist[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 6ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_authored_hand_contacts.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_contact_observation_is_invariant_under_pair_translation_and_yaw[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_authored_hand_contacts.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_contact_observation_is_invariant_under_pair_translation_and_yaw[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 4ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_authored_hand_contacts.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_missing_anchors_and_effectors_are_required_failures_not_dropped_samples[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_authored_hand_contacts.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_missing_anchors_and_effectors_are_required_failures_not_dropped_samples[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 4ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_authored_hand_contacts.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_legacy_contact_moves_keep_their_existing_policy[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_authored_hand_contacts.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_legacy_contact_moves_keep_their_existing_policy[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 6ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_authored_hand_contacts.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_profile_windows_and_geometry_are_valid[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_authored_hand_contacts.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_profile_windows_and_geometry_are_valid[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 5ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_authored_hand_contacts.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_deep_contact_keeps_signed_penetration_visible[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_authored_hand_contacts.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_deep_contact_keeps_signed_penetration_visible[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 5ms[0m
+[38;2;128;128;128m[0m
+[38;2;30;144;255mStatistics:[0m[38;2;128;128;128m 7 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 62ms[0m
+[38;2;128;128;128m[0m
+[38;2;128;128;128m[0m
+[38;2;0;206;209mRun Test Suite: [0m[38;2;250;235;215mres://tests/test_grapple_height_release.gd[0m
+  [38;2;250;235;215mres://tests/test_grapple_height_release.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_early_carry_is_unchanged_then_offsets_release_on_authored_beats[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_height_release.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_early_carry_is_unchanged_then_offsets_release_on_authored_beats[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 6ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_height_release.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_height_release_stays_closed_after_root_playback_is_restored[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_height_release.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_height_release_stays_closed_after_root_playback_is_restored[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 4ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_height_release.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_other_moves_keep_the_existing_three_dimensional_fitting[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_height_release.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_other_moves_keep_the_existing_three_dimensional_fitting[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 5ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_height_release.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_no_contact_settle_keeps_the_prescribed_release_height[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_height_release.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_no_contact_settle_keeps_the_prescribed_release_height[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 4ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_height_release.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_configured_release_windows_are_ordered_inside_the_clip[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_height_release.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_configured_release_windows_are_ordered_inside_the_clip[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 2ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_height_release.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_grip_fade_finishes_before_the_authored_impact[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_height_release.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_grip_fade_finishes_before_the_authored_impact[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_height_release.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_authored_pair_preserves_release_counter_and_height_on_the_shared_clock[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_grapple_height_release.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_authored_pair_preserves_release_counter_and_height_on_the_shared_clock[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 15s 234ms[0m
+[38;2;128;128;128m[0m
+[38;2;30;144;255mStatistics:[0m[38;2;128;128;128m 7 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 15s 284ms[0m
+[38;2;128;128;128m[0m
+[38;2;128;128;128m[0m
+[38;2;0;206;209mRun Test Suite: [0m[38;2;250;235;215mres://tests/test_pair_clearance.gd[0m
+  [38;2;250;235;215mres://tests/test_pair_clearance.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_no_paired_move_puts_one_body_through_the_other_and_hands_hold[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_pair_clearance.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_no_paired_move_puts_one_body_through_the_other_and_hands_hold[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 4s 434ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_pair_clearance.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_segment_distance_is_the_gap_between_centre_lines[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_pair_clearance.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_segment_distance_is_the_gap_between_centre_lines[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_pair_clearance.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_each_mans_finisher_and_signature_are_clean_on_the_other[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_pair_clearance.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_each_mans_finisher_and_signature_are_clean_on_the_other[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 51s 471ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_pair_clearance.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_authored_contact_cannot_hide_a_detached_tail_behind_a_good_median[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_pair_clearance.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_authored_contact_cannot_hide_a_detached_tail_behind_a_good_median[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 4ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_pair_clearance.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_authored_contact_requires_distinct_ticks_and_coherent_anchors[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_pair_clearance.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_authored_contact_requires_distinct_ticks_and_coherent_anchors[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_pair_clearance.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_authored_contact_keeps_penetration_separate_from_surface_gap[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_pair_clearance.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_authored_contact_keeps_penetration_separate_from_surface_gap[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_pair_clearance.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_authored_running_wrap_is_clean_in_both_roster_orders[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/test_pair_clearance.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_authored_running_wrap_is_clean_in_both_roster_orders[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 24s 124ms[0m
+[38;2;128;128;128m[0m
+[38;2;30;144;255mStatistics:[0m[38;2;128;128;128m 7 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 1min 20s 105ms[0m
+[38;2;128;128;128m[0m
+[38;2;128;128;128m[0m
+[38;2;30;144;255mOverall Summary:[0m[38;2;255;255;255m 21 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |[0m
+[38;2;233;150;122mExecuted test suites: (3/3)[0m
+[38;2;233;150;122mExecuted test cases : (21/21)[0m
+[38;2;233;150;122mTotal execution time: 1min 35s 451ms[0m
+[38;2;255;255;255m [0m[38;2;100;149;237mOpen XML Report at: file:///workspace/aegis/game/tmp/aegis-wrap4-runtime/report_1/results.xml[0m
+[38;2;100;149;237mOpen HTML Report at: file:///workspace/aegis/game/tmp/aegis-wrap4-runtime/report_1/index.html[0m
+[38;2;233;150;122mExit code: 0[0m
+Run dispose test resources
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 4 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+ERROR: Pages in use exist at exit in PagedAllocator: N7Variant5Pools12BucketMediumE
+   at: ~PagedAllocator (./core/templates/paged_allocator.h:169)

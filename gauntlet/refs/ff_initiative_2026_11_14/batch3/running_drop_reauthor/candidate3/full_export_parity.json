@@ -1,0 +1,44 @@
+{
+  "full_path": "/tmp/aegis-running-wrap-candidate3-full.glb",
+  "full_sha256": "3f5dc5733dd043b591476adc6f415172349df44f9097d6d779dac6b2699ccc17",
+  "full_bytes": 33564816,
+  "published_sha256": "4506ffae1cfdefd4a840b339df73b75195914ebc73b3858ffbedfe2691f9c11e",
+  "animation_count": 317,
+  "same_animation_name_set": true,
+  "full_vs_frozen_selected": [
+    {
+      "clip": "Run_Grapple_Attacker",
+      "max_translation_component_m": 0.0,
+      "max_rotation_component": 0.0,
+      "max_scale_component": 0.0,
+      "prefix_through55_max_component": 0.0,
+      "non_left_leg_max_component": 0.0,
+      "final_max_component": 0.0,
+      "meaningful_changed_tracks": [],
+      "layout_or_time_differences": []
+    },
+    {
+      "clip": "Run_Grapple_Defender",
+      "max_translation_component_m": 0.0,
+      "max_rotation_component": 0.0,
+      "max_scale_component": 0.0,
+      "prefix_through55_max_component": 0.0,
+      "non_left_leg_max_component": 0.0,
+      "final_max_component": 0.0,
+      "meaningful_changed_tracks": [],
+      "layout_or_time_differences": []
+    }
+  ],
+  "unselected_count": 315,
+  "unselected_bit_exact_count": 315,
+  "unselected_numeric_exact_count": 315,
+  "unselected_max_translation_component_m": 0.0,
+  "unselected_max_rotation_component": 0.0,
+  "unselected_max_scale_component": 0.0,
+  "unselected_layout_or_time_differences": [],
+  "unselected_nonzero_differences": [],
+  "meaningful_changed_clips_threshold_1e_5": [
+    "Run_Grapple_Attacker",
+    "Run_Grapple_Defender"
+  ]
+}

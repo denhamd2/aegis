@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites id="2026-11-15" name="report_1" tests="7" failures="0" skipped="0" flaky="0" time="0.000">
+	<testsuite id="0" name="test_authored_hand_contacts" package="tests" timestamp="2026-11-15T14:34:19" hostname="localhost" tests="7" failures="0" errors="0" skipped="0" flaky="0" time="0.044">
+		<testcase name="test_authored_policy_never_falls_back_to_waist_ik_or_model_pull" classname="test_authored_hand_contacts" time="0.007">
+		</testcase>
+		<testcase name="test_expected_contact_uses_anatomical_right_forearm_not_free_left_or_wrist" classname="test_authored_hand_contacts" time="0.003">
+		</testcase>
+		<testcase name="test_contact_observation_is_invariant_under_pair_translation_and_yaw" classname="test_authored_hand_contacts" time="0.003">
+		</testcase>
+		<testcase name="test_missing_anchors_and_effectors_are_required_failures_not_dropped_samples" classname="test_authored_hand_contacts" time="0.003">
+		</testcase>
+		<testcase name="test_legacy_contact_moves_keep_their_existing_policy" classname="test_authored_hand_contacts" time="0.004">
+		</testcase>
+		<testcase name="test_profile_windows_and_geometry_are_valid" classname="test_authored_hand_contacts" time="0.003">
+		</testcase>
+		<testcase name="test_deep_contact_keeps_signed_penetration_visible" classname="test_authored_hand_contacts" time="0.003">
+		</testcase>
+	</testsuite>
+</testsuites>

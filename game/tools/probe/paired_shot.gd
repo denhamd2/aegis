@@ -31,6 +31,8 @@ extends Node
 ## a plain floor gridded every 0.5 m, studio light, the defender tinted blue.
 ## For judging a move's mechanics with nothing else in the frame. --top looks
 ## straight down on the pair instead of from the side.
+## --skin-floor adds actual CPU-skinned head/back/other surface minima to
+## the capture manifest; --bones reports bone origins, a different measure.
 ## --at fractions over 1.0 look past the move's end, into the knockdown or the
 ## stance it hands off to (1.5 is half the move's length again).
 ## --corner: the defender trapped in the near-right corner (CORNER_SPOT), the
@@ -239,9 +241,15 @@ func _ready() -> void:
 		var filename := "%s_%02d.png" % [shot, int(_at[grabbed] * 100)]
 		image.save_png(_out.path_join(filename))
 		var paired_seconds: float = rig.animation_player.current_animation_position 				if rig.animation_player.is_playing() else -1.0
+		var skin_floor := {}
+		if OS.get_cmdline_user_args().has("--skin-floor"):
+			for w: WrestlerController in [attacker, defender]:
+				skin_floor[String(w.name)] = _skin_floor(w)
+			print("SKIN_FLOOR %s %s" % [filename, JSON.stringify(skin_floor)])
 		captures.append({"file": filename, "requested_fraction": _at[grabbed],
 				"requested_tick": int(round(float(_at[grabbed]) * total)),
-				"paired_seconds": paired_seconds, "elapsed_tick": frame, "lead_in_ticks": lead})
+				"paired_seconds": paired_seconds, "elapsed_tick": frame, "lead_in_ticks": lead,
+				"skin_floor": skin_floor})
 		print("CAPTURE_CLOCK %s requested_tick %d paired_seconds %.6f" % [filename,
 				int(round(float(_at[grabbed]) * total)), paired_seconds])
 		print("  t=%.2f  defender y=%.2f  attacker y=%.2f"
@@ -333,3 +341,35 @@ static func _bones(w: WrestlerController) -> String:
 static func _v3(p: Vector3) -> String:
 	return "(%.2f,%.2f,%.2f)" % [p.x, p.y, p.z]
 
+
+
+## Optional CPU-skinned surface minima. Bone origins printed by --bones are
+## not skin clearance; reuse the existing wear probe's actual skinning math.
+static func _skin_floor(w: WrestlerController) -> Dictionary:
+	var probe := preload("res://tools/probe/wear_clearance.gd").new()
+	var result := {}
+	var regions := {}
+	var canonical := {"head": ["Head", "neck_01"], "back": ["spine_01", "spine_02", "spine_03"]}
+	for region in canonical:
+		for bone: String in canonical[region]:
+			regions[w._skeleton_bone_name(bone)] = region
+	for mesh: MeshInstance3D in probe._body(w):
+		var sk := mesh.get_node_or_null(mesh.skeleton) as Skeleton3D
+		if not sk:
+			continue
+		var classified := {}
+		for index in sk.get_bone_count():
+			var parent := index
+			while parent >= 0:
+				var name := sk.get_bone_name(parent)
+				if regions.has(name):
+					classified[sk.get_bone_name(index)] = regions[name]
+					break
+				parent = sk.get_bone_parent(parent)
+		var data: Array = probe._skinned(mesh, false)
+		for index in data[0].size():
+			var region: String = classified.get(data[2][index], "other")
+			var y: float = data[0][index].y
+			result[region] = minf(float(result.get(region, INF)), y)
+	probe.free()
+	return result
