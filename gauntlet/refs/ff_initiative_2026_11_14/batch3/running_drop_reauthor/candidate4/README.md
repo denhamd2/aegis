@@ -1,6 +1,6 @@
 # Candidate4: gradual finger closure during recovery
 
-Status: integrated final candidate;72 focused cases pass, publication approved. Candidate3's
+Status: published atbf785ec;72 focused cases pass and exact Mac tag/ZIP verified. Candidate3's
 bounded wrap/inverted boot-arc improvement passed independent visual QA, but
 its new recovery cadence spike blocked publication. Existing landing/torso/
 toe limitations remain separate; this correction does not broaden that scope.
@@ -33,4 +33,5 @@ The already-produced FULL candidate3 library is retained separately at
 `3f5dc5733dd043b591476adc6f415172349df44f9097d6d779dac6b2699ccc17`).
 Its audit proves all315unselected clips BIT-EXACT to published and both selected
 clips EXACT to frozen scoped3. It still contains the rejected recovery snap;
-do not integrate it as the final library. Full4 follows imported cadence pass.
+do not integrate it as the final library. Full4 regeneration,315+2 exact parity and imported cadence checks all passed.
+See ../mac_publication.json for verified delivery.

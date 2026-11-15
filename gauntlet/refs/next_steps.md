@@ -1,6 +1,6 @@
 # Aegis prioritised backlog
 
-## Approved publication: authored running-drop wrap and boot arc
+## Latest deployed: authored running-drop wrap and boot arc
 
 Owner requested committing and deploying all current changes. Candidate4 replaces
 bilateral waist forcing with an authored right-forearm sweep/free left arm,
@@ -8,7 +8,8 @@ corrects the inverted boot arc and spreads finger closure through recovery.
 All72 focused checks pass (21 runtime +51 resource/authoring); imported cadence
 has zero new holds/snaps.
 The full317-clip export preserves all315 unrelated clips exactly; native Blender
-source and approach baseline are retained. Publication verification is in progress. [Evidence](ff_initiative_2026_11_14/batch3/running_drop_reauthor/README.md).
+source and approach baseline are retained. Mac run43753948084 succeeded: exact commitbf785ec and uploaded
+Aegis.zip1,032,800,316bytes verified. [Evidence](ff_initiative_2026_11_14/batch3/running_drop_reauthor/README.md).
 
 Next after verified deployment: character-specific landing fit (Roman reaches
 the mat around61 rather than impact59), torso orientation through55, early
@@ -17,7 +18,7 @@ approach/catch/handoff. Do not lower the shared source or change global Roman
 scaling to hide a character-specific fit. Rig teardown lifetime also stays open.
 This is a bounded wrap/boot-arc improvement, not full-move acceptance.
 
-## Latest deployed batch: release fitting and grip timing
+## Previous deployed batch: release fitting and grip timing
 
 Owner approved publication of the implemented runtime running-drop release fix: cosmeticY smoothly returns to zero before impact; grip fades at55 and
 is off by58.33distinct focused checks pass, both real pairing maxima preserved.

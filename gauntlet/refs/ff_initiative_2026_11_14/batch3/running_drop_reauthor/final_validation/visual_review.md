@@ -13,5 +13,6 @@ boot-arc review. Candidate4 changes only26attacker finger tracks; all attacker
 body/arm and defender tracks are identical. Reference55 torso orientation,
 impact grounding, early toes and normal-speed release remain open.
 
-Bare game-camera framing is expected to be too wide for fine contact judgement;
+The actual final89 game-camera frame was inspected: its bare framing is too
+wide for fine contact judgement;
 use the side views for that. No full-arena or native-M1 claim is made.

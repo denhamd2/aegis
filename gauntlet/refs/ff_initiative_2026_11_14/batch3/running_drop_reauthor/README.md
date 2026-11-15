@@ -1,7 +1,9 @@
 # Running-drop authored wrap and boot arc
 
 Owner approved committing, pushing and deploying all current changes. Final
-candidate4 is integrated;72 focused cases pass. Publication verification pending.
+candidate4 is published atbf785ec;72 focused cases pass. Mac run43753948084
+succeeded; exact mac-latest tag and uploaded ZIP verified.
+[Publication receipt](mac_publication.json).
 This is a bounded animation improvement, not full-move acceptance.
 
 ## Result and source
@@ -72,4 +74,4 @@ batch;72 focused passes do not establish full-suite green.
 
 Capture/import shutdown material/resource/socket warnings are preserved in logs.
 The disk-full export was discarded; the complete retry passed exact parity.
-Publication receipt will record the exact Mac commit and uploaded ZIP.
+Mac publication receipt records the exact commit, uploaded ZIP and digest.
