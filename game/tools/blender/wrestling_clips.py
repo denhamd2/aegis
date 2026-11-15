@@ -10736,6 +10736,15 @@ def _tw(p, **adds):
     return out
 
 
+# Kenny's sprint (loop 3): leaned into, longer reach than RUN_A/B's jog.
+_KRUN_A = dict(RUN_A, pelvis=(0.0, 0.08, 0.780), hips=(-18, 0, 0), spine=(-24, 0, 0),
+               head=(12, 0, 0),
+               hand_r=(0.24, -0.04, 1.00), hand_l=(-0.24, 0.40, 1.10),
+               foot_r=(0.16, -0.40, 0.26), foot_l=(-0.14, 0.32, 0.104))
+_KRUN_B = dict(_KRUN_A, hand_r=(0.26, 0.40, 1.10), hand_l=(-0.24, -0.04, 1.00),
+               foot_r=(0.16, 0.32, 0.104), foot_l=(-0.14, -0.40, 0.26))
+
+
 # The plant before the leap: the right knee already driving (chambered) so
 # the leg reaches the strike in two beats.
 _VT_PLANT = P(pelvis=(0.0, 0.10, 0.740), hips=(-20, 0, 0), spine=(-20, 0, 0),
@@ -10762,8 +10771,8 @@ _VT_LAND = P(pelvis=(0.0, 0.06, 0.740), hips=(-10, 0, 0), spine=(-12, 0, 0),
 # 24 (48 video frames from the run's start, as at 615.0-615.8), the man
 # reeling back with both hands to his face, still standing at the end.
 CLIPS["FF_V_Trigger_1_Attacker"] = [
-    (0, pose(RUN_A)), (4, pose(RUN_B)), (8, pose(RUN_A)), (12, pose(RUN_B)),
-    (16, pose(RUN_A)),
+    (0, dict(_KRUN_A)), (4, dict(_KRUN_B)), (8, dict(_KRUN_A)), (12, dict(_KRUN_B)),
+    (16, dict(_KRUN_A)),
     (19, dict(_VT_PLANT)),
     # Off the mat, the arms swinging back for the drive.
     (21, _vt_air(1.040, foot_r=(0.18, 0.24, 0.86), knee_r=(0.2, 0.8, 0.6),
@@ -10778,7 +10787,11 @@ CLIPS["FF_V_Trigger_1_Attacker"] = [
                  foot_l=(-0.14, -0.08, 0.58),
                  hand_r=(0.34, -0.26, 1.30), hand_l=(-0.34, -0.26, 1.28))),
     (29, dict(_VT_LAND)),
-    (34, pose(STAND, pelvis=(0.0, 0.04, 0.820), spine=(-12, 0, 0))),
+    # A step back off him, watching him reel.
+    (34, pose(STAND, pelvis=(0.0, 0.02, 0.820), spine=(-12, 0, 0),
+              foot_r=(0.23, -0.12, 0.20))),
+    (38, pose(STAND, pelvis=(0.0, 0.00, 0.830), spine=(-8, 0, 0),
+              foot_l=(-0.19, 0.10, 0.18))),
     (44, pose(STAND, head=(4, 0, 0))),
     (54, P()),
 ]
@@ -10815,7 +10828,7 @@ CLIPS["FF_V_Trigger_1_Defender"] = [
 # game's), the last two strides, the plant, and the leaping knee home on 11
 # with the right arm thrown up; the man doubles over it and stays on his feet.
 CLIPS["FF_Running_V_Trigger_1_Attacker"] = [
-    (0, pose(RUN_A)), (4, pose(RUN_B)),
+    (0, dict(_KRUN_A)), (4, dict(_KRUN_B)),
     (7, dict(_VT_PLANT)),
     (9, _vt_air(1.100, foot_r=(0.18, 0.24, 0.92), knee_r=(0.2, 0.8, 0.6),
                 foot_l=(-0.14, -0.10, 0.50),
@@ -10834,7 +10847,8 @@ CLIPS["FF_Running_V_Trigger_1_Attacker"] = [
     (36, P()),
 ]
 # Doubled over, both hands to his face.
-_RV1_FOLD = pose(GUT_HURT, spine=(-46, 0, 0), head=(4, 0, 0),
+_RV1_FOLD = pose(GUT_HURT, pelvis=(0.0, -0.14, 0.700), hips=(-30, 0, 0),
+                 spine=(-56, 0, 0), head=(6, 0, 0),
                  hand_r=(0.12, 0.58, 1.02), hand_l=(-0.12, 0.58, 1.04),
                  elbow_r=(0.8, -0.2, -0.6), elbow_l=(-0.8, -0.2, -0.6))
 CLIPS["FF_Running_V_Trigger_1_Defender"] = [
@@ -10869,7 +10883,7 @@ _RV3_SLUMP = dict(_RV3_KNEEL, pelvis=(0.0, -0.14, 0.440), hips=(18, 0, 0),
                   spine=(8, 0, 0), head=(-34, 6, 0),
                   hand_r=(0.32, -0.04, 0.10), hand_l=(-0.32, -0.04, 0.10))
 CLIPS["FF_Running_V_Trigger_3_Attacker"] = [
-    (0, pose(RUN_A)), (4, pose(RUN_B)),
+    (0, dict(_KRUN_A)), (4, dict(_KRUN_B)),
     (7, P(pelvis=(0.0, 0.08, 0.760), hips=(-12, 0, 0), spine=(-12, 0, 0),
           hand_r=(0.26, 0.20, 0.90), hand_l=(-0.24, 0.24, 0.92),
           foot_r=(0.16, 0.10, 0.42), foot_l=(-0.14, 0.12, 0.104),
@@ -11143,11 +11157,12 @@ CLIPS["FF_Powerbomb_V_Trigger_Combo_Attacker"] = [
     (94, dict(_PB1_ATK[33])),
     (99, dict(_PB1_ATK[37])),
     (106, dict(_PB1_ATK[44])),
-    (112, dict(_PB1_ATK[51])),
-    # Backing off him, two steps back.
-    (116, P(foot_r=(0.23, -0.42, 0.20), spine=(-6, 0, 0))),
-    (120, P(foot_r=(0.23, -0.30, 0.104), foot_l=(-0.19, -0.04, 0.20), spine=(-6, 0, 0))),
-    (124, P(spine=(-8, 0, 0))),
+    # Backing off him, 1.5 m: four steps back.
+    (110, dict(_PB1_ATK[51])),
+    (114, P(foot_r=(0.23, -0.42, 0.20), spine=(-6, 0, 0))),
+    (118, P(foot_r=(0.23, -0.30, 0.104), foot_l=(-0.19, -0.10, 0.20), spine=(-6, 0, 0))),
+    (122, P(foot_r=(0.23, -0.40, 0.20), spine=(-6, 0, 0))),
+    (125, P(spine=(-8, 0, 0))),
     # The knee slap: the V-Trigger is coming.
     (127, P(pelvis=(0.0, 0.04, 0.780), hips=(-16, 0, 0), spine=(-18, 0, 0),
             head=(10, 0, 0),
@@ -11195,12 +11210,13 @@ CLIPS["FF_Powerbomb_V_Trigger_Combo_Defender"] = [
     (99, dict(_PB1_DEF[37])),
     (101, dict(_PB1_DEF[39])),
     (106, dict(_PB1_DEF[44])),
-    (111, dict(_PB1_DEF[49])),
-    (116, dict(SUPINE_AWAY, pelvis=(0.0, 0.0, 0.190))),
+    (110, dict(_PB1_DEF[49])),
+    (113, dict(SUPINE_AWAY, pelvis=(0.0, 0.0, 0.190))),
     # Up off his back, groggy, and sat there.
-    (122, dict(SUPINE_AWAY, head=(-30, 0, 0))),
-    (130, pose(SIT_UP, head=(-20, 0, 0))),
-    (136, dict(_PBV_SEATED)),
+    (118, dict(SUPINE_AWAY, head=(-30, 0, 0))),
+    (125, pose(SIT_UP, head=(-20, 0, 0))),
+    (131, dict(_PBV_SEATED)),
+    (136, _tw(_PBV_SEATED, head=(-4, 6, 0))),
     (142, _tw(_PBV_SEATED, head=(4, -8, 0), spine=(-2, 0, 0))),
     (147, _tw(_PBV_SEATED, head=(6, 0, 0))),
     # The head snapped back, and flat.
