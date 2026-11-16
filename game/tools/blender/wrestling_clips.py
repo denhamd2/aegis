@@ -4803,8 +4803,9 @@ def _spear_core_attacker(c, corner=False):
     keys = [
         (c - 9, dict(_SP_ARRIVE)),
         (c - 7, dict(_SP_HANDS_UP)),
-        (c - 5, dict(_SP_HANDS_SINK)),
-        # Sink to drop over two frames, not one (cadence: 1058 deg/frame).
+        (c - 5.5, dict(_SP_HANDS_SINK)),
+        # Sink to drop over three frames, not one (cadence: 1058 deg/frame).
+        (c - 4.5, _blend_pose(_SP_HANDS_SINK, _SP_DROP, 0.2)),
         (c - 4, _blend_pose(_SP_HANDS_SINK, _SP_DROP, 0.5)),
         (c - 3, dict(_SP_DROP)),
         (c - 2, dict(_SP_LAUNCH)),
@@ -4847,7 +4848,6 @@ def _spear_core_attacker(c, corner=False):
                      spine=(10, 0, 0), head=(-4, 0, 0),
                      hand_r=(0.0, -0.20, 0.24), hand_l=(0.0, -0.20, 0.22))),
         (c + 21, dict(_SP_KNEEL_UP)),
-        (c + 23, _sp_tw(_SP_KNEEL_UP, head=(6, 4, 0), spine=(2, 0, 0))),
         (c + 25, dict(_SP_ONE_KNEE)),
         # Rising to stand over the last five frames, eased out of the kneel
         # and into the stand (cadence: 612 deg/frame in the last four).
