@@ -65,3 +65,13 @@ Loop 3, independent reviewer (the rows above for loops 2 and 3 are the animator'
 | 3i | kenny_running_v_trigger_1 | 5 | 3 | 5 | 4 | 5 | 4.4 |
 | 3i | kenny_owa | 6 | 5 | 4 | 4 | 4 | 4.6 |
 | 3i | kenny_pb_v_trigger | 5 | 4 | 4 | 4 | 4 | 4.2 |
+
+Loop 4, independent reviewer:
+
+| 4i | kenny_v_trigger | 6 | 4 | 4 | 4 | 5 | 4.6 |
+| 4i | kenny_snap_dragon_2 | 6 | 5 | 3 | 4 | 5 | 4.6 |
+| 4i | kenny_snap_dragon_3 | 6 | 5 | 3 | 4 | 4 | 4.4 |
+| 4i | kenny_running_v_trigger_3 | 6 | 4 | 4 | 3 | 3 | 4.0 |
+| 4i | kenny_running_v_trigger_1 | 7 | 4 | 3 | 4 | 5 | 4.6 |
+| 4i | kenny_owa | 7 | 5 | 3 | 5 | 4 | 4.8 |
+| 4i | kenny_pb_v_trigger | 5 | 4 | 3 | 4 | 4 | 4.0 |

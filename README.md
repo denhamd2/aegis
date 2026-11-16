@@ -12269,3 +12269,28 @@ Still short of 10 (reviewer):
 - The Powerbomb/V-Trigger has no visible run-in knee.
 
 Loops 4–5 continue on `ccr-5f96c954-z0l7gs`.
+
+## 16 Nov: Kenny signature/finisher loop 4
+
+This continues the owner's "Automatically commit and deploy after each loop's
+improvement changes".
+
+Loop 4 was a knee-height pass on both V-Triggers. Independent reviewer, loop 3
+→ loop 4:
+
+| Move | L3 | L4 |
+|---|---|---|
+| One-Winged Angel | 4.6 | 4.8 |
+| V-Trigger | 4.0 | 4.6 |
+| Snap Dragon 2 | 5.0 | 4.6 |
+| Running V-Trigger 1 | 4.4 | 4.6 |
+| Snap Dragon 3 | 4.6 | 4.4 |
+| Running V-Trigger 3 | 3.8 | 4.0 |
+| Powerbomb/V-Trigger | 4.2 | 4.0 |
+
+The knee overshot: Kenny's hips now pass over the defender's head. Loop 5
+corrects this and takes the reviewer's larger fixes:
+- a fireman's carry and sit-out for the One-Winged Angel;
+- Kenny stays on his feet in the Snap Dragons;
+- the corner staging for Running V-Trigger 3;
+- Kenny drops with the Powerbomb, then a short run-in knee.
