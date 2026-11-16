@@ -43,6 +43,9 @@ extends Node
 ## over --run-ticks N physics ticks (default: at 6 m/s), then the move starts
 ## with his run carried into it. The defender holds the clip's first pose
 ## through the run (kneeling in the corner, doubled over).
+## --rope: with --run-in, the run starts beside the man (at his clip mark),
+## runs out to M metres, rebounds off the ropes and sprints back: 55% of the
+## run ticks out, 10% turning, 35% back (Running V-Trigger 1, off the ropes).
 ## --ticks a,b,c: capture at these 60 fps ticks on the shot's timeline (tick 0
 ## is the run's first tick with --run-in, else the clip's first frame), named
 ## <move>_<tick>.png -- true frame numbers, where --at names by percentage.
@@ -70,6 +73,7 @@ var _weapon_ahead := -WrestlerAI.SUPLEX_DROP
 var _corner := false
 var _run_in := 0.0
 var _run_ticks := 0
+var _rope := false
 var _ticks: Array = []
 
 
@@ -96,6 +100,8 @@ func _ready() -> void:
 			_corner = true
 		elif args[i] == "--run-in" and i + 1 < args.size():
 			_run_in = float(args[i + 1])
+		elif args[i] == "--rope":
+			_rope = true
 		elif args[i] == "--run-ticks" and i + 1 < args.size():
 			_run_ticks = int(args[i + 1])
 		elif args[i] == "--ticks" and i + 1 < args.size():
@@ -198,6 +204,7 @@ func _ready() -> void:
 	var run := 0
 	var run_dir := Vector3.ZERO
 	var run_speed := 0.0
+	var run_dir_out := Vector3.ZERO
 	if _run_in > 0.0:
 		rig.set("_move", move)
 		var pair_xform: Transform3D = rig.call("_compute_pair_transform", attacker, defender)
@@ -210,7 +217,12 @@ func _ready() -> void:
 		run_dir.y = 0.0
 		var gap := run_dir.length()
 		run_dir = run_dir / gap if gap > 0.001 else attacker.global_transform.basis.z
-		if _run_in > gap + 0.05:
+		if _rope:
+			run_from = mark_a
+			run_dir_out = run_dir
+			run = _run_ticks if _run_ticks > 0 else 60
+			run_speed = (_run_in - gap) / (0.35 * float(run)) * 60.0
+		elif _run_in > gap + 0.05:
 			run_from = Transform3D(mark_a.basis, mark_d.origin + run_dir * _run_in)
 			run = _run_ticks if _run_ticks > 0 else int(ceil((_run_in - gap) / 6.0 * 60.0))
 			run_speed = (_run_in - gap) / float(run) * 60.0
@@ -227,7 +239,8 @@ func _ready() -> void:
 	var camera: Camera3D = null
 	Engine.max_physics_steps_per_frame = 1
 	if run > 0:
-		camera = _make_camera(scene, run_from.origin, mark_d.origin, false)
+		var cam_from := mark_d.origin + run_dir * _run_in if _rope else run_from.origin
+		camera = _make_camera(scene, cam_from, mark_d.origin, false)
 		attacker.set_physics_process(false)
 		defender.set_physics_process(false)
 		defender.global_transform = mark_d
@@ -240,7 +253,20 @@ func _ready() -> void:
 			await get_tree().physics_frame
 			camera.current = true
 			var k := float(tick + 1) / float(run)
-			attacker.global_transform = Transform3D(mark_a.basis, run_from.origin.lerp(mark_a.origin, k))
+			if _rope:
+				# Out to the ropes facing away, the rebound, and back.
+				var far := mark_d.origin + run_dir_out * _run_in
+				var away := Basis(Vector3.UP, PI) * mark_a.basis
+				if k < 0.55:
+					attacker.global_transform = Transform3D(away, mark_a.origin.lerp(far, k / 0.55))
+				elif k < 0.65:
+					var q := Quaternion(away.orthonormalized()).slerp(
+							Quaternion(mark_a.basis.orthonormalized()), (k - 0.55) / 0.10)
+					attacker.global_transform = Transform3D(Basis(q), far)
+				else:
+					attacker.global_transform = Transform3D(mark_a.basis, far.lerp(mark_a.origin, (k - 0.65) / 0.35))
+			else:
+				attacker.global_transform = Transform3D(mark_a.basis, run_from.origin.lerp(mark_a.origin, k))
 			while grabbed < targets.size() and int(targets[grabbed][0]) <= tick + 1 - run:
 				await _grab(targets[grabbed], tick + 1, 0, -1.0, captures, attacker, defender)
 				grabbed += 1

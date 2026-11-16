@@ -12294,3 +12294,32 @@ corrects this and takes the reviewer's larger fixes:
 - Kenny stays on his feet in the Snap Dragons;
 - the corner staging for Running V-Trigger 3;
 - Kenny drops with the Powerbomb, then a short run-in knee.
+
+## 16 Nov: Kenny signature/finisher loop 5 (final Kenny loop)
+
+This continues the owner's "Automatically commit and deploy after each loop's
+improvement changes".
+
+Loop 5 made these changes:
+- an upright sprint;
+- Running V-Trigger 1 gains a real rope run and rebound;
+- `paired_shot --rope`;
+- Running V-Trigger 3's man is on hands and knees;
+- the Snap Dragons start from behind, with a backward arc and Kenny to one knee;
+- Snap Dragon 3 gains a squat;
+- a bent fireman's-carry pick-up and sit-out for the One-Winged Angel;
+- the Powerbomb/V-Trigger knee lands at f278.
+
+Independent reviewer, loop 1 → 3 → 4 → 5:
+
+| Move | L1 | L3 | L4 | L5 |
+|---|---|---|---|---|
+| Running V-Trigger 1 | 3.0 | 4.4 | 4.6 | 5.4 |
+| V-Trigger | 3.4 | 4.0 | 4.6 | 5.2 |
+| Snap Dragon 2 | 3.2 | 5.0 | 4.6 | 5.2 |
+| One-Winged Angel | 4.2 | 4.6 | 4.8 | 5.2 |
+| Running V-Trigger 3 | 2.2 | 3.8 | 4.0 | 4.8 |
+| Snap Dragon 3 | 3.0 | 4.6 | 4.4 | 4.6 |
+| Powerbomb/V-Trigger | 2.4 | 4.2 | 4.0 | 4.4 |
+
+The remaining gaps are listed in `gauntlet/refs/ff_review/sig_loops/scores.md`.

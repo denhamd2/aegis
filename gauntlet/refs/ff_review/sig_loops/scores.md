@@ -75,3 +75,20 @@ Loop 4, independent reviewer:
 | 4i | kenny_running_v_trigger_1 | 7 | 4 | 3 | 4 | 5 | 4.6 |
 | 4i | kenny_owa | 7 | 5 | 3 | 5 | 4 | 4.8 |
 | 4i | kenny_pb_v_trigger | 5 | 4 | 3 | 4 | 4 | 4.0 |
+
+Loop 5, independent reviewer:
+
+| 5i | kenny_v_trigger | 7 | 5 | 4 | 5 | 5 | 5.2 |
+| 5i | kenny_snap_dragon_2 | 7 | 5 | 4 | 5 | 5 | 5.2 |
+| 5i | kenny_snap_dragon_3 | 7 | 4 | 4 | 4 | 4 | 4.6 |
+| 5i | kenny_running_v_trigger_3 | 6 | 5 | 4 | 4 | 5 | 4.8 |
+| 5i | kenny_running_v_trigger_1 | 7 | 6 | 4 | 5 | 5 | 5.4 |
+| 5i | kenny_owa | 8 | 5 | 3 | 5 | 5 | 5.2 |
+| 5i | kenny_pb_v_trigger | 6 | 4 | 4 | 4 | 4 | 4.4 |
+
+Remaining gaps after loop 5 (reviewer):
+- **V-Triggers:** the knee lands on the sternum, not the face.
+- **Snap Dragon 3:** the contact and landing are still Snap Dragon 2's.
+- **One-Winged Angel:** the man snaps upright mid-lift, and Kenny's head passes through him.
+- **Powerbomb/V-Trigger:** Kenny releases rather than going down with the bomb.
+- **Running V-Trigger 3:** no corner post is rendered, and the man rests against empty air.
