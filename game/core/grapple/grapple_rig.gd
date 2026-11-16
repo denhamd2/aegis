@@ -855,7 +855,8 @@ const PULL_MIN_PELVIS := 0.45
 
 func _pull_into_reach(a: WrestlerController, d: WrestlerController) -> void:
 	# Nor once he has let go (PairedRecipes.attacker_grip_until).
-	if not a._is_grapple_attacker or a._paired_release_ticks == 0:
+	if not a._is_grapple_attacker or a._paired_release_ticks == 0 \
+			or a._paired_grip_delay_ticks > 0:
 		return
 	var family := PairedContacts.family(_move)
 	if family == "" or family == "none":

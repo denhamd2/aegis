@@ -2629,6 +2629,14 @@ static func attacker_grip_until(move_id: StringName) -> float:
 	return RECIPES[String(move_id)].get("attacker_grips_until", 1.0)
 
 
+## When the attacker first takes hold, as a fraction of the move (recipe key
+## "attacker_grips_from"); 0.0, from the first frame, unless a recipe says.
+static func attacker_grip_from(move_id: StringName) -> float:
+	if not RECIPES.has(String(move_id)):
+		return 0.0
+	return RECIPES[String(move_id)].get("attacker_grips_from", 0.0)
+
+
 static func defender_grip_until(move_id: StringName) -> float:
 	if not RECIPES.has(String(move_id)):
 		return 0.0

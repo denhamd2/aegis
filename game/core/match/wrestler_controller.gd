@@ -1194,7 +1194,7 @@ func _is_gripping_state() -> bool:
 			# The attacker holds his opponent until the recipe says he lets
 			# go (PairedRecipes.attacker_grip_until): -1 is "never".
 			if _is_grapple_attacker:
-				return _paired_release_ticks != 0
+				return _paired_release_ticks != 0 and _paired_grip_delay_ticks <= 0
 			return _paired_grip_ticks > 0 or in_chain_read()
 		_:
 			return false
@@ -1477,6 +1477,8 @@ func _update_grip_ik() -> void:
 		_paired_grip_ticks -= 1
 	if _paired_release_ticks > 0:
 		_paired_release_ticks -= 1
+	if _paired_grip_delay_ticks > 0:
+		_paired_grip_delay_ticks -= 1
 	_close_for_lock_up()
 	var held_at: Array[Vector3] = []
 	for t in _grip_targets:
@@ -1723,6 +1725,10 @@ var _paired_grip_ticks: int = 0
 ## The attacker's counterpart: ticks until he lets go, or -1 for a hold he
 ## keeps for the whole move (every move but those with attacker_grips_until).
 var _paired_release_ticks: int = -1
+## Ticks before the attacker takes hold at all (attacker_grips_from): a move
+## that opens with a run and a gesture -- the Spears -- has his hands his own
+## until the dive, not pulled to a waist three metres away.
+var _paired_grip_delay_ticks: int = 0
 
 ## Switches this wrestler into his half of `move`'s authored performance, and
 ## returns whether the move actually had one. Called by GrappleRig.begin()
@@ -1759,6 +1765,8 @@ func play_paired_pose(move: MoveDef, is_attacker: bool) -> bool:
 	var release := PairedRecipes.attacker_grip_until(move.animation_pair_id)
 	_paired_release_ticks = int(round(length * release * Engine.physics_ticks_per_second)) \
 			if is_attacker and release < 1.0 else -1
+	_paired_grip_delay_ticks = int(round(length * PairedRecipes.attacker_grip_from(move.animation_pair_id)
+			* Engine.physics_ticks_per_second)) if is_attacker else 0
 	return true
 
 func _on_fsm_state_changed(_previous: WrestlerFSM.State, current: WrestlerFSM.State) -> void:
@@ -5854,9 +5862,11 @@ func _release_grapple_hold() -> void:
 func _clear_grapple_roles() -> void:
 	_is_grapple_attacker = false
 	_paired_release_ticks = -1
+	_paired_grip_delay_ticks = 0
 	if opponent:
 		opponent._is_grapple_attacker = false
 		opponent._paired_release_ticks = -1
+		opponent._paired_grip_delay_ticks = 0
 
 func _on_grapple_finished(_attacker: Node3D, _defender: Node3D) -> void:
 	var move := _active_move
