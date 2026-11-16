@@ -4848,7 +4848,11 @@ def _spear_core_attacker(c, corner=False):
                      hand_r=(0.0, -0.20, 0.24), hand_l=(0.0, -0.20, 0.22))),
         (c + 21, dict(_SP_KNEEL_UP)),
         (c + 23, _sp_tw(_SP_KNEEL_UP, head=(6, 4, 0), spine=(2, 0, 0))),
-        (c + 26, dict(_SP_ONE_KNEE)),
+        (c + 25, dict(_SP_ONE_KNEE)),
+        # Rising to stand over the last five frames, eased out of the kneel
+        # and into the stand (cadence: 612 deg/frame in the last four).
+        (c + 27, _blend_pose(_SP_ONE_KNEE, P(), 0.30)),
+        (c + 29, _blend_pose(_SP_ONE_KNEE, P(), 0.82)),
         (c + 30, P()),
     ]
 
