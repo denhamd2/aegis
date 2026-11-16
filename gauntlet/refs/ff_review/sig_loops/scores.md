@@ -146,3 +146,16 @@ Re-blocked beats, from the loop-5 review:
 
 Gate tests: 75/76. The one failure is the Cross Rhodes grip (0.063 m), known
 on main since the merge. Independent scores are pending; the sheets are in l6/.
+
+## Roman, loop 2 (16 Nov): shared spear core
+
+All four Spears (spear, running spear, Superman Spear, corner spear) are keyed
+around one core (`_spear_core_attacker` / `_spear_core_defender`): the gesture
+15 frames before contact, a near-horizontal dive with the shoulder at the navel,
+both men down together with Roman on top and kneeling, the defender grounded;
+the Corner Spear crushes an upright man into the buckle and he slides down it.
+`attacker_grips_from` keeps his hands his own through the run and gesture.
+Cadence fix: the Spear's kneel-to-stand tail was eased and a stop-start head
+key removed (Run_Spear_Attacker jerk 101.1 to 90.7; budget untouched).
+Gate: 75/76, the one failure the known Cross Rhodes grip (0.063 m).
+Sheets in `l7/`. Independent scores pending (no self-score of record).
