@@ -11039,7 +11039,7 @@ def _snap_dragon(sit, end, squat=False, tieup=0):
                                spine=(-6, 0, 0),
                                foot_r=(0.32, -0.26, 0.104), foot_l=(-0.30, -0.06, 0.104),
                                knee_r=(0.8, 0.6, 0.2), knee_l=(-0.8, 0.6, 0.2))),
-                (sit - 3, dict(_NELSON_ATK, pelvis=(0.0, -0.10, 0.480), hips=(-16, 0, 0),
+                (sit - 3, dict(_NELSON_ATK, pelvis=(0.0, -0.10, 0.520), hips=(-16, 0, 0),
                                spine=(-8, 0, 0),
                                hand_r=(0.22, 0.24, 1.22), hand_l=(0.14, 0.24, 1.22),
                                foot_r=(0.34, -0.28, 0.104), foot_l=(-0.32, -0.08, 0.104),
