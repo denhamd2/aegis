@@ -657,7 +657,7 @@ const RECIPES := {
 		# Hands his own through the punch, the back-off, the run and the
 		# gesture; round the waist from the dive (hit at 180/240).
 		"attacker_grips_from": 174.0 / 240.0,
-		"attacker_grips_until": 212.0 / 240.0,
+		"attacker_grips_until": 196.0 / 240.0,
 		"defender_grips_until": 0.05,
 	},
 	# Cody's finisher -- see Cross_Rhodes_Attacker.
@@ -680,8 +680,8 @@ const RECIPES := {
 		"authored": {"attacker": "Spear_Attacker", "defender": "Spear_Defender"},
 		# Hands his own through the shove, back-off, run and gesture; round
 		# the waist from the dive (hit at 108/168) until he pushes up off him.
-		"attacker_grips_from": 102.0 / 168.0,
-		"attacker_grips_until": 140.0 / 168.0,
+		"attacker_grips_from": 104.0 / 168.0,
+		"attacker_grips_until": 124.0 / 168.0,
 		"attacker": [
 			{"t": 0.00, "clip": "Push", "at": 0.80},
 			{"t": 1.60, "clip": "Jump_Start", "at": 0.30},

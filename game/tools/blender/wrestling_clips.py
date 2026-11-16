@@ -4802,8 +4802,10 @@ def _spear_core_attacker(c, corner=False):
     """Roman from the end of the run (c-9) to the end of the move (c+30)."""
     keys = [
         (c - 9, dict(_SP_ARRIVE)),
-        (c - 6, dict(_SP_HANDS_UP)),
-        (c - 4, dict(_SP_HANDS_SINK)),
+        (c - 7, dict(_SP_HANDS_UP)),
+        (c - 5, dict(_SP_HANDS_SINK)),
+        # Sink to drop over two frames, not one (cadence: 1058 deg/frame).
+        (c - 4, _blend_pose(_SP_HANDS_SINK, _SP_DROP, 0.5)),
         (c - 3, dict(_SP_DROP)),
         (c - 2, dict(_SP_LAUNCH)),
         (c, dict(_SP_HIT)),
@@ -4909,7 +4911,12 @@ def _spear_core_defender(c, first, corner=False):
         return [
             (c - 9, _sp_tw(hang, head=(6, 0, 0))),
             (c - 5, _sp_tw(hang, head=(12, 0, 0), spine=(-4, 0, 0))),
-            (c - 2, _sp_tw(hang, head=(10, 0, 0), spine=(-8, 0, 0), pelvis=(0.0, 0.02, 0.0))),
+            # Braced against the pad, then folded over the shoulder in four
+            # steps, not two (cadence: 298 deg/frame against a median of 55).
+            (c - 4, _blend_pose(hang, crushed, 0.12)),
+            (c - 3, _blend_pose(hang, crushed, 0.30)),
+            (c - 2, _blend_pose(hang, crushed, 0.55)),
+            (c - 1, _blend_pose(hang, crushed, 0.82)),
             (c, crushed),
             (c + 3, _sp_tw(crushed, pelvis=(0.0, -0.04, 0.02), hips=(-6, 0, 0), spine=(-4, 0, 0))),
             (c + 6, _sp_tw(crushed, pelvis=(0.0, -0.04, 0.0), hips=(-4, 0, 0), spine=(-6, 0, 0),
