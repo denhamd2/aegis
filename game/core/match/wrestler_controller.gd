@@ -4457,6 +4457,12 @@ static func chain_hold_for(move: Vector2, facing: Basis) -> String:
 	return "headlock" if ahead > 0.0 else "waistlock"
 
 
+## True until the first move of the match has landed on either side: the
+## lock-up the bell opens on (the same test as WrestlerAI._opening_grapple_done).
+func opening_lock_up() -> bool:
+	return combat.tier_reached < 0 and (opponent == null or opponent.combat.tier_reached < 0)
+
+
 ## In the read between links: back in the lock-up, the next hold undecided.
 func in_chain_read() -> bool:
 	var holder := self if _is_grapple_attacker else opponent
@@ -4470,6 +4476,12 @@ func in_chain_read() -> bool:
 ## then throws the grapple move as it always did.
 func _tick_chain_read(input: Dictionary) -> bool:
 	if not _chain_enabled or _chain_links >= CHAIN_LINKS_MAX or _chain_done:
+		return false
+	# The match opens on a lock-up into a grapple move, never a chain of
+	# holds (the owner, 16 Nov: "start with a lock up grapple"): whoever
+	# holds him, a stick pushed at the read included.
+	if opening_lock_up():
+		_chain_done = true
 		return false
 	_chain_read += 1
 	var asked: String = String(input.get("chain", ""))

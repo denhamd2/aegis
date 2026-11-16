@@ -341,17 +341,11 @@ var _guard_decided := false
 var _guard_intent := false
 
 
-## Chain wrestling. How many links the opening lock-up runs to -- one or
-## two, seeded -- and nothing out of any later one: the power and signature
-## lock-ups are the business end of a match, and the chain is its opening.
-##
-## Fight Forever has no chain wrestling at all -- its tie-up reads in about
-## 0.3 s and the move follows (gauntlet/refs/aew_ff_animation_review.md) --
-## and each link here is 1.8 s, so the opening ran 1-3 links, 3.2 s on
-## average, before anybody threw anything. Now it is one link four times in
-## five and never three: the opening still reads as wrestling, and is over
-## in about two seconds (the owner, 25 Oct: "faster lock-ups").
-const CHAIN_LINK_WEIGHTS := [4, 1, 0]
+## Chain wrestling. The opening lock-up has none: it is a tie-up and the
+## grapple move straight out of it (the owner, 16 Nov: "start with a lock up
+## grapple"; Fight Forever's own tie-up reads in about 0.3 s and the move
+## follows, gauntlet/refs/aew_ff_animation_review.md). Chain links come only
+## from the rest hold of a later lock-up (REST_HOLD_CHANCE, below).
 ## The read tick the holder picks on, and the one the held man reads it on
 ## (inside WrestlerController.CHAIN_REVERSAL_WINDOW).
 const CHAIN_PICK_TICK := 6
@@ -434,10 +428,9 @@ func _chain_input() -> Dictionary:
 					and MatchRules.caged(controller) \
 					and (controller.outside_ring if cell else not controller.outside_ring) \
 					and (cell or _chain_rng().randf() < CAGE_WHIP_SHARE)}
-		if not _opening_grapple_done():
-			var roll := _chain_rng().randi_range(1, 5)
-			_chain_plan = 1 if roll <= CHAIN_LINK_WEIGHTS[0] else (
-					2 if roll <= CHAIN_LINK_WEIGHTS[0] + CHAIN_LINK_WEIGHTS[1] else 3)
+		# The opening lock-up goes straight to its grapple move: _chain_plan
+		# stays 0 until one has landed (the owner, 12 Nov: "start with a lock
+		# up grapple"). Chain holds are for the later lock-ups -- the rest hold.
 	if c._chain_links >= _chain_plan:
 		return {"chain": "none"}
 	if c._chain_read != CHAIN_PICK_TICK:

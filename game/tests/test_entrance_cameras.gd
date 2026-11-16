@@ -43,9 +43,19 @@ func test_no_wide_shot_has_the_rig_in_frame() -> void:
 				EntranceDirector.PYRO_RING_WIDE_FOV],
 		["pyro_set", EntranceDirector.PYRO_SET_WIDE_AT, EntranceDirector.PYRO_SET_WIDE_LOOK,
 				EntranceDirector.PYRO_SET_WIDE_FOV],
-		["match_card", EntranceDirector.INTRO_CARD_AT, EntranceDirector.INTRO_CARD_LOOK,
-				EntranceDirector.INTRO_CARD_FOV],
 	]
+	# The face-off's own move (walk in, then the push): low enough that no
+	# lamp is ever in the frame, at its widest and its tightest.
+	var ca := EntranceDirector.faceoff_corner(Vector3(0.0, 0.0, -1.5), -1.0)
+	var cb := EntranceDirector.faceoff_corner(Vector3(0.0, 0.0, 1.5), 1.0)
+	var perp := Vector3.UP.cross(EntranceDirector._flat(cb - ca).normalized()).normalized()
+	var heads := (ca + cb) * 0.5 + Vector3.UP * 1.78
+	for side: Vector3 in [perp, -perp]:
+		var walk := EntranceDirector.walk_view(ca, cb, heads, side, 0.0)
+		shots.append(["face-off walk start", walk[0], walk[1], walk[2]])
+		var stare := EntranceDirector.stare_view(Vector3(-0.375, 0, 0), Vector3(0.375, 0, 0),
+				Vector3(0, 1.78, 0), side, 1.0)
+		shots.append(["face-off stare end", stare[0], stare[1], stare[2]])
 	for i in EntranceDirector.ROMAN_INTRO_SHOTS.size():
 		var s: Array = EntranceDirector.ROMAN_INTRO_SHOTS[i]
 		shots.append(["roman_intro %d start" % i, s[0], s[2], s[4]])
@@ -361,18 +371,17 @@ func test_codys_walk_gestures_are_each_seen_once() -> void:
 ## The owner, 2 Nov: "camera slowly zooms into their faces for a staredown,
 ## bell rings". One shot over the whole stare, no cut: it starts on the
 ## profile two-shot and ends nearer, on a longer lens.
-func test_the_face_off_and_match_intro_use_broadcast_pacing() -> void:
+func test_the_face_off_uses_broadcast_pacing() -> void:
 	assert_float(EntranceDirector.STAREDOWN_CLOSE).is_less(EntranceDirector.FACEOFF_CAM_DISTANCE)
 	assert_float(EntranceDirector.STAREDOWN_FOV).is_less(EntranceDirector.FACEOFF_CAM_FOV)
-	# 9 Nov: their poses, then the stare -- together still 4-6 s to the bell.
-	assert_float(float(EntranceDirector.FACEOFF_POSE_TICKS + EntranceDirector.FACEOFF_STARE_TICKS)
-			/ EntranceDirector.TPS).is_between(4.0, 6.0)
-	# Card, check and corner mediums have distinct short holds before the bell.
-	assert_float(float(EntranceDirector.INTRO_CARD_TICKS) / EntranceDirector.TPS).is_equal(3.0)
-	assert_float(float(EntranceDirector.INTRO_CHECK_TICKS) / EntranceDirector.TPS).is_equal(2.0)
-	assert_float(float(EntranceDirector.INTRO_CLOSE_TICKS) / EntranceDirector.TPS).is_equal(2.5)
-	assert_float(EntranceDirector.INTRO_CLOSE_FOV).is_greater_equal(30.0)
-
+	# 16 Nov: no poses, no card, no check, no close-ups. The held beat and the
+	# stare, with the walk between (see test_entrance_director: the whole is
+	# under 5 s), the stare on its own long enough to read: 1-2.5 s.
+	assert_float(float(EntranceDirector.FACEOFF_STARE_TICKS) / EntranceDirector.TPS).is_between(1.0, 2.5)
+	assert_float(float(EntranceDirector.FACEOFF_HOLD_TICKS) / EntranceDirector.TPS).is_between(0.5, 1.5)
+	# The walk comes down from a low-ish height to the stare's, no crane: it
+	# stays well under the light rig and nowhere near the rig's own height.
+	assert_float(EntranceDirector.FACEOFF_WALK_HEIGHT).is_between(EntranceDirector.FACEOFF_CAM_HEIGHT, 2.5)
 
 
 ## Whenever pyro goes off the camera goes wide enough to take it all in (the

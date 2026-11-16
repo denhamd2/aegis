@@ -380,3 +380,42 @@ func test_a_spear_stalk_keeps_its_authored_setup_but_cancels_when_hit() -> void:
 	ai.controller._stalking = false
 	ai._physics_process(1.0 / 60.0)
 	assert_int(ai._spear_stalk).is_equal(WrestlerAI.STALK_OFF)
+
+
+## The opening is a lock-up straight into a grapple move, not chain wrestling
+## (the owner, 16 Nov: "I don't want them starting by doing chain wrestling,
+## start with a lock up grapple"). In the opening tie-up the AI holder asks for
+## no chain hold on any tick of the read, and a human holder's stick at the
+## read starts no link either.
+func test_the_opening_lock_up_runs_no_chain_link() -> void:
+	var ai := _make_pair(1.0)
+	var c := ai.controller
+	c._chain_enabled = true
+	c._is_grapple_attacker = true
+	c.opponent = ai.target
+	ai.target.opponent = c
+	for tick in range(0, WrestlerAI.CHAIN_PICK_TICK + 3):
+		c._chain_read = tick
+		var asked := ai._chain_input()
+		assert_str(String(asked.get("chain", "?"))).override_failure_message(
+			"The AI asked for a chain hold (%s) at read tick %d before any move had landed."
+			% [asked, tick]).is_equal("none")
+	# A human holder, stick pushed to pick a hold: the read is over at once.
+	c._chain_done = false
+	c._chain_read = 0
+	assert_bool(c._tick_chain_read({"move": Vector2(0.0, -1.0)})).is_false()
+	assert_bool(c._chain_done).is_true()
+	assert_str(c.chain_hold).is_equal("")
+	assert_int(c._chain_links).is_equal(0)
+	assert_bool(c.opening_lock_up()).is_true()
+
+## And it is the opening only: once a move has landed (either man's), the
+## gate is off, so a later lock-up's rest hold can still chain.
+func test_the_chain_gate_lifts_after_the_first_move() -> void:
+	var ai := _make_pair(1.0)
+	var c := ai.controller
+	c.opponent = ai.target
+	ai.target.opponent = c
+	assert_bool(c.opening_lock_up()).is_true()
+	ai.target.combat.record_tier(CombatSystem.Tier.GRAPPLE)
+	assert_bool(c.opening_lock_up()).is_false()

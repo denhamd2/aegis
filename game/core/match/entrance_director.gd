@@ -113,33 +113,41 @@ const SETTLE_TICKS := 40
 ## (StageVideo.ENTRANCE_FADE_SECONDS) and the room holds a beat before the
 ## next man's starts.
 const HANDOVER_TICKS := 165
-## The face-off before the bell (the owner: "just have them walk up to each
-## other to do a face off, then the bell rings"). Both walk in off their
-## marks until they are FACEOFF_GAP apart, centre to centre -- chest to chest
-## less a hand, as a stare-down is -- hold it, then turn and walk back to
-## their marks and turn round, where the bell finds them. The match starts on
-## the marks, exactly as it did, so nothing downstream moves.
+## The face-off before the bell. The owner, 2 Nov: "start off in each corner,
+## walk slowly towards each other, camera slowly zooms into their faces for a
+## staredown, bell rings and they immediately grapple"; 16 Nov: "change the
+## sequence when the wrestlers are in the corner ... don't want them posing.
+## Make that whole sequence shorter, and improve the cameras." From the second
+## man standing in his corner to the bell: a held beat (the camera settles on
+## the pair), the walk in to FACEOFF_GAP apart, centre to centre -- chest to
+## chest less a hand, as a stare-down is -- and the stare, on one push into
+## their faces. No match card, no referee's check, no signature poses: each
+## goes to his mark and stands in his own stance. The match starts on the
+## marks, so nothing downstream moves.
 const FACEOFF_GAP := 0.75
-## The slow walk out of the corners, on its own clip authored at this speed
-## (Walk_Staredown): on Entrance_Walk (1.6 m/s) the feet slid back a metre a
-## second -- the owner's "glitchy walking to their staredown" (2 Nov).
-const FACEOFF_WALK_SPEED := 0.6
-const FACEOFF_WALK_CLIP := "strikes/walk_staredown"
+## The walk in from the corners is Entrance_Walk, authored at its own 1.6 m/s,
+## so the feet are planted on the canvas at the speed they cross it. (The slow
+## walks -- Walk_Staredown at 0.6, Walk_Slow at 1.0 -- were 4.6 s and 2.8 s of
+## it; the whole beat is meant to be a couple of seconds.)
+const FACEOFF_WALK_SPEED := 1.6
+const FACEOFF_WALK_CLIP := "strikes/entrance_walk"
+## The pair in their corners before they move: the camera has cut in from the
+## entrance's last shot and settles, and the referee gets to her neutral
+## corner, off the line they are about to walk (RefereeActor.FACEOFF_WAIT_SHOTS).
+const FACEOFF_HOLD_TICKS := 72
 ## From the marks to the corners, on the slow walk authored at this speed
 ## (Walk_Slow) -- not Entrance_Walk at 1.1, which skated half a metre a second.
-## And the turn in there.
 const FACEOFF_CORNER_SPEED := 1.0
 const FACEOFF_CORNER_CLIP := "strikes/walk_slow"
-const FACEOFF_CORNER_TURN_TICKS := 36
 ## How far in from the turnbuckle pad a man stands in his corner.
 const FACEOFF_CORNER_IN := 0.95
-## The stare-down's push: from the two-shot (FACEOFF_CAM_*) in to this far
-## off the pair, on this lens, both faces in frame.
 ## The house from the walk out of the corners to the bell (realism, the
 ## owner, 2 Nov): the crowd down to this share of its match light while the
 ## ring stays at full -- the broadcast's pre-bell look, and the bright crowd
 ## no longer silhouettes the two men against it.
 const PREBELL_HOUSE_LEVEL := 0.55
+## The stare-down's push: from the two-shot (FACEOFF_CAM_*) in to this far
+## off the pair, on this lens, both faces in frame.
 const STAREDOWN_CLOSE := 1.3
 const STAREDOWN_FOV := 30.0
 ## The walk out of the corners: its lens, how far in from the frame's sides
@@ -150,12 +158,7 @@ const FACEOFF_WALK_MAX := 9.0
 ## The broadcast frame (16:9): the lens is vertical.
 const FRAME_ASPECT := 16.0 / 9.0
 ## The stare-down: one slow push into their faces, then the bell.
-const FACEOFF_STARE_TICKS := 90
-## Their poses at the face-off (faceoff_pose_clip): Kenny's arms-up and
-## finger guns run 2.5 s; Roman's finger and Cody's arms hold their last frame.
-const FACEOFF_POSE_TICKS := 156
-const FACEOFF_POSE_CAM_DISTANCE := 4.4
-const FACEOFF_POSE_CAM_FOV := 42.0
+const FACEOFF_STARE_TICKS := 96
 
 # --- Camera shots (project values; refs/camera.md measures none of these) ---
 ## The face-off two-shot: from the hard camera's side of the pair, square to
@@ -163,38 +166,10 @@ const FACEOFF_POSE_CAM_FOV := 42.0
 const FACEOFF_CAM_DISTANCE := 3.4
 const FACEOFF_CAM_HEIGHT := 1.5
 const FACEOFF_CAM_FOV := 34.0
-## The pre-match intro before the stare-down (camera_aaa_plan.md A5, 2K26
-## thumbnails 0-2), in ticks: the match card over a high wide of the ring;
-## the referee checking the man nearer her; then each man close in his
-## corner, the one she checked last so she is out of his shot.
-##
-## The entrances have already introduced each wrestler, so these are short
-## bridges to the face-off rather than another long round of introductions.
-const INTRO_CARD_TICKS := 180
-const INTRO_CHECK_TICKS := 120
-const INTRO_CLOSE_TICKS := 150
-const INTRO_CARD_AT := Vector3(-8.0, 4.4, 3.4)
-const INTRO_CARD_LOOK := Vector3(0.0, 0.9, 0.0)
-const INTRO_CARD_FOV := 40.0
-const INTRO_CLOSE_FOV := 34.0
-const INTRO_CLOSE_DISTANCE := 2.9
-## How far the corner medium drifts in over its hold, metres.
-const INTRO_CLOSE_PUSH := 0.4
-## The jib on the corner close-up: from this far out and this low (metres
-## from his chest; 0.75 under it is about a metre off the canvas) up to just
-## over his eye line.
-const INTRO_CRANE_FROM := 3.6
-const INTRO_CRANE_LOW := -0.75
-const INTRO_CRANE_HIGH := 0.42
-## The referee's check: off to the side and in toward the centre.
-const REF_CHECK_SIDE := 1.5
-const REF_CHECK_IN := 1.5
-const REF_CHECK_FOV := 36.0
-## The walk out of the corners on a crane: it starts this high and this far
-## round from the hard camera's side, and sweeps down and round to eye level
-## on the men's line as they close.
-const FACEOFF_CRANE_TOP := 3.8
-const FACEOFF_CRANE_ARC := 26.0
+## The walk in starts this high (it comes down to FACEOFF_CAM_HEIGHT as they
+## close): one move, wide to close, with no crane arc -- the owner, 12 Nov,
+## "I don't like the crane camera shots ... it looks cheesy".
+const FACEOFF_WALK_HEIGHT := 1.9
 ## Every high shot hangs at RIG_CLEAR_Y: just under the light rig over the
 ## ring (ArenaBuilder.TRUSS_Y, its keys' bodies ~0.7 m under it), so the lens
 ## sees the building under the steel instead of through it. The owner: "the
@@ -1404,15 +1379,16 @@ func _on_name_called(style: String) -> void:
 
 ## The start of the match (the owner, 2 Nov: "start off in each corner, walk
 ## slowly towards each other, camera slowly zooms into their faces for a
-## staredown, bell rings and they immediately grapple"). It used to walk up,
-## stare, turn and walk back to the marks, and after the bell the two walked
-## into each other on a walk cycle to lock up. Now: from his mark each man
-## goes to his corner -- diagonally opposite -- and turns in; the intro
-## (match card, the check, each man in his corner); the slow walk out to
-## FACEOFF_GAP; the stare-down on one slow push into their faces
-## ("staredown_push"); and the bell where they stand, so the lock-up is the
-## first thing either does. The marks become where the stare ends.
-## Each beat is a "pair" beat: both men move at once, each on his own line.
+## staredown, bell rings and they immediately grapple"; 16 Nov: shorter, no
+## posing, better cameras). Their entrances end in their corners, diagonally
+## opposite (faceoff_corner), so from the second man standing in his:
+##   * a short hold, the camera settling on the pair (FACEOFF_HOLD_TICKS);
+##   * the walk in to FACEOFF_GAP apart, on Entrance_Walk at its own speed;
+##   * the stare, on one slow push into their faces, and the bell where they
+##     stand, so the lock-up is the first thing either does.
+## About 4.5 s, one camera move that cuts only once (in from the entrance's
+## last shot). The marks become where the stare ends. Each beat is a "pair"
+## beat: both men move at once, each on his own line.
 func _add_faceoff() -> void:
 	var a: Transform3D = _mark[_a]
 	var b: Transform3D = _mark[_b]
@@ -1421,62 +1397,37 @@ func _add_faceoff() -> void:
 	var to_a := _flat(ca - a.origin)
 	var to_b := _flat(cb - b.origin)
 	var walk_out := maxi(1, int(ceil(maxf(to_a.length(), to_b.length()) / FACEOFF_CORNER_SPEED * TPS)))
-	# The house lights come up as they go to their corners, not on the match
-	# card: the owner, 2 Nov, "the camera panned to the corners but the
-	# wrestlers were not there" -- they were, in the entrance dark. Up on the
-	# card, the fade was still under way, and the walk and the card's wide of
-	# the corners showed silhouettes.
+	# The house lights come up on the first beat, not later: the owner, 2 Nov,
+	# "the camera panned to the corners but the wrestlers were not there" --
+	# they were, in the entrance dark.
 	# Their entrances end in these corners now (the owner, 9 Nov): a walk
 	# only when a skip or a route left a man short of his.
 	var walked := maxf(to_a.length(), to_b.length()) > 0.05
+	var face_a := _flat(cb - ca)
+	var face_b := -face_a
 	if walked:
 		_beats.append({"kind": "pair", "ticks": walk_out, "shot": "faceoff",
 				"events": [[1, "lights_up"]], "moves": [
 				[_a, a.origin, ca, to_a, FACEOFF_CORNER_CLIP],
 				[_b, b.origin, cb, to_b, FACEOFF_CORNER_CLIP]]})
-	var face_a := _flat(cb - ca)
-	var face_b := -face_a
-	_beats.append({"kind": "pair", "ticks": FACEOFF_CORNER_TURN_TICKS, "shot": "faceoff",
-			"events": [] if walked else [[1, "lights_up"]], "moves": [
-			[_a, ca, ca, face_a, _wait_clip(_a)], [_b, cb, cb, face_b, _wait_clip(_b)]]})
 	_add_intro(Transform3D(_facing_basis(face_a), ca), Transform3D(_facing_basis(face_b), cb),
-			face_a, face_b)
+			face_a, face_b, not walked)
 	var mid := (ca + cb) * 0.5
 	var a_in := mid + _flat(ca - mid).normalized() * (FACEOFF_GAP * 0.5)
 	var b_in := mid + _flat(cb - mid).normalized() * (FACEOFF_GAP * 0.5)
 	var walk_in := maxi(1, int(ceil(_flat(ca).distance_to(_flat(a_in)) / FACEOFF_WALK_SPEED * TPS)))
-	_beats.append({"kind": "pair", "ticks": walk_in, "shot": "faceoff_side",
+	_beats.append({"kind": "pair", "ticks": walk_in, "shot": "faceoff_side", "walk": true,
 			"events": [[1, "house_down"]], "moves": [
 			[_a, ca, a_in, face_a, FACEOFF_WALK_CLIP],
 			[_b, cb, b_in, face_b, FACEOFF_WALK_CLIP]]})
-	# The owner, 9 Nov: "When they face off, I want each of them to hit their
-	# pose. Then they should start with a grapple." Each man's signature
-	# (faceoff_pose_clip) nose to nose, then a short stare to the bell; the
-	# opening is a grapple (WrestlerAI._opening_grapple_done).
-	_beats.append({"kind": "pair", "ticks": FACEOFF_POSE_TICKS, "shot": "staredown_push",
-			"pose_wide": true, "events": [[1, "faceoff_tension"], [1, "flash_burst"]],
-			"moves": [[_a, a_in, a_in, face_a, faceoff_pose_clip(_a)],
-					[_b, b_in, b_in, face_b, faceoff_pose_clip(_b)]]})
+	# The stare: each in his own stance, nose to nose, on the push to the bell.
 	_beats.append({"kind": "pair", "ticks": FACEOFF_STARE_TICKS, "shot": "staredown_push",
-			"snap_end": true,
+			"snap_end": true, "events": [[1, "faceoff_tension"], [1, "flash_burst"]],
 			"moves": [[_a, a_in, a_in, face_a, "strikes/face_off"],
 					[_b, b_in, b_in, face_b, "strikes/face_off"]]})
 	# The match starts where the stare ends: the bell finds them here.
 	_mark[_a] = Transform3D(_facing_basis(face_a), a_in)
 	_mark[_b] = Transform3D(_facing_basis(face_b), b_in)
-
-
-## His signature pose at the face-off: Roman's finger, Cody's arms out,
-## Kenny's arms up and finger guns.
-static func faceoff_pose_clip(w: WrestlerController) -> String:
-	match w.entrance_style:
-		"roman":
-			return "strikes/finger_hold"
-		"cody":
-			return "strikes/whoa_arms"
-		"kenny":
-			return "strikes/kenny_stage_pose"
-	return "strikes/win_celebrate"
 
 
 ## A man's corner for the start: the one on his own side of the ring
@@ -1489,24 +1440,15 @@ static func faceoff_corner(mark: Vector3, x_side: float) -> Vector3:
 	return pad - RingBuilder.step_out_dir(corner) * FACEOFF_CORNER_IN
 
 
-## A5: both men on their marks while the broadcast introduces the match.
-func _add_intro(a: Transform3D, b: Transform3D, face_a: Vector3, face_b: Vector3) -> void:
+## Both men in their corners, facing across, before the walk: the held beat the
+## camera settles in (`lights` puts the house up with it when no walk to the
+## corners did). Hell in a Cell lowers its cell over them here.
+func _add_intro(a: Transform3D, b: Transform3D, face_a: Vector3, face_b: Vector3,
+		lights: bool) -> void:
 	var hold := [[_a, a.origin, a.origin, face_a, _wait_clip(_a)],
 			[_b, b.origin, b.origin, face_b, _wait_clip(_b)]]
-	var checked := intro_checked(a.origin, b.origin)
-	_checked = checked
-	var first := _b if checked == _a else _a
-	var last := _a if checked == _a else _b
-	# Both men are in and lit (lights_up, on the walk to the corners in
-	# _add_faceoff): the introductions and the stare-down, not at the bell.
-	_beats.append({"kind": "pair", "ticks": INTRO_CARD_TICKS, "shot": "match_card",
-			"match_card": true, "moves": hold})
-	_beats.append({"kind": "pair", "ticks": INTRO_CHECK_TICKS, "shot": "ref_check",
-			"focus": last, "moves": hold})
-	_beats.append({"kind": "pair", "ticks": INTRO_CLOSE_TICKS, "shot": "corner_intro",
-			"focus": first, "moves": hold})
-	_beats.append({"kind": "pair", "ticks": INTRO_CLOSE_TICKS, "shot": "corner_intro",
-			"focus": last, "moves": hold})
+	_beats.append({"kind": "pair", "ticks": FACEOFF_HOLD_TICKS, "shot": "faceoff_side",
+			"events": [[1, "lights_up"]] if lights else [], "moves": hold})
 	_add_cell_lowering(hold)
 
 
@@ -1569,27 +1511,6 @@ func cell_lower_shot(cage: CageBuilder, e: float) -> Array:
 	var at := CELL_LOWER_FROM.lerp(CELL_LOWER_TO, smoothstep(0.0, 1.0, e))
 	var look_y := maxf(cage.spec.base_y + cage.lift + 2.2, 1.2)
 	return [at, Vector3(0.0, look_y, 0.0), CELL_LOWER_FOV]
-
-
-## Which man the referee checks: the one whose mark is nearer where she
-## waits (RefereeActor.PARK) -- she picks the same one off the same rule.
-func intro_checked(a_at: Vector3, b_at: Vector3) -> WrestlerController:
-	return _a if _flat(a_at).distance_to(RefereeActor.PARK) <= _flat(b_at).distance_to(RefereeActor.PARK) else _b
-
-
-## The man the intro's check is on, once the timeline is built.
-func checked_man() -> WrestlerController:
-	return _checked
-
-
-var _checked: WrestlerController
-
-
-## Where she stands to check a man: a metre in front of him, toward the centre.
-static func check_spot(man: Vector3) -> Vector3:
-	var flat := Vector3(man.x, 0.0, man.z)
-	var to_c := -flat.normalized() if flat.length() > 0.1 else Vector3.FORWARD
-	return flat + to_c * 1.0
 
 
 ## What a man does standing in the ring waiting -- never the grapple crouch
@@ -1663,12 +1584,7 @@ func _start_beat() -> void:
 		_portal_lights(beat["lights"], true, beat.get("light_color", Color.TRANSPARENT))
 	else:
 		_portal_lights("", false)
-	if beat.get("match_card", false):
-		# Keep this broadcast hold clean: individual wrestler introductions use
-		# their own lower thirds, but the owner does not want a VS matchup plate
-		# over the ring before the bell.
-		_card.hide_card()
-	elif beat.get("ramp_card", false):
+	if beat.get("ramp_card", false):
 		pass  # shown by _tick_ramp_card once he is half way down the ramp
 	elif beat.get("card", false) and w:
 		if not _card.is_showing():
@@ -3394,32 +3310,12 @@ func _frame_shot(beat: Dictionary, delta: float, force_cut := false) -> void:
 				_camera.set_entrance_shot(sh[0], sh[1], sh[2], first, delta)
 		"staredown_push":
 			_staredown_push(first, delta)
-		"match_card":
-			# A5: high on the hard camera's side, the whole ring, a slow push.
-			_camera.set_entrance_shot(INTRO_CARD_AT, INTRO_CARD_LOOK, INTRO_CARD_FOV, first, delta)
-		"corner_intro":
-			_intro_close(beat, first, delta)
-		"ref_check":
-			_intro_close(beat, first, delta)
 		"faceoff_side":
-			# F1, the walk out of the corners to the centre: from the hard
-			# camera's side of the ring at eye height, as far back as holds
-			# both men in frame (from diagonally opposite corners they start
-			# ~5.5 m apart -- square to their line at FACEOFF_CAM_DISTANCE the
-			# frame held empty canvas between them), closing in as they come.
-			# On a crane (the owner, 2 Nov): high and round to one side as they
-			# leave their corners, sweeping down and round to eye level as
-			# they close -- where the stare's push picks it up.
-			var mid := (_a.global_position + _b.global_position) * 0.5
-			var e_c := smoothstep(0.0, 1.0, float(_tick) / maxf(float(beat["ticks"]), 1.0))
-			var crane := faceoff_crane(e_c)
-			var bearing := _flat(_camera.hard_cam_position - mid).normalized() \
-					.rotated(Vector3.UP, deg_to_rad(crane[1]))
-			var back := walk_in_distance(_a.global_position, _b.global_position, bearing)
-			_camera.set_entrance_shot(mid + bearing * back + Vector3.UP * float(crane[0]),
-					mid + Vector3.UP * lerpf(1.0, 1.3, e_c), FACEOFF_WALK_FOV,
-					first and not _was_shot("faceoff_side"), delta)
-			_key_on_pair()
+			# The walk in, and the held beat before it: the hard camera's side
+			# of the pair, square to their line, as far back as holds both and
+			# closing in as they come -- wide to the stare's two-shot in one
+			# move, no crane (F1/F2, camera_aaa_plan.md).
+			_faceoff_walk_shot(first, delta)
 		"faceoff":
 			if _cam_key:
 				_cam_key.visible = false
@@ -3446,45 +3342,63 @@ func _frame_shot(beat: Dictionary, delta: float, force_cut := false) -> void:
 # them there.
 
 
-## The walk-in crane at eased progress `e`: [height, degrees round from the
-## hard camera's bearing]. Up and round at the start, eye level and square
-## at the end.
-static func faceoff_crane(e: float) -> Array:
-	return [lerpf(FACEOFF_CRANE_TOP, FACEOFF_CAM_HEIGHT, e), lerpf(FACEOFF_CRANE_ARC, 0.0, e)]
+## The side of their line the face-off is shot from: square to it, on the hard
+## camera's side. Never crossed: the 180-degree rule (camera_aaa_plan.md).
+func _faceoff_side(mid: Vector3) -> Vector3:
+	var across := _flat(_b.global_position - _a.global_position).normalized()
+	var side := Vector3.UP.cross(across).normalized()
+	if side.dot(_camera.hard_cam_position - mid) < 0.0:
+		side = -side
+	return side
 
 
-## The stare-down as the owner asked for it: one slow push from the profile
-## two-shot into their faces over the whole hold, no cut.
+## The walk in, one move into the stare's start: as far back as holds both men
+## in frame (walk_in_distance), the lens tightening and the camera dropping to
+## the stare's height as they close. At the walk's end this is the stare's
+## opening frame exactly (stare_view at e = 0), so the two shots are one move.
+func _faceoff_walk_shot(first: bool, delta: float) -> void:
+	var beat: Dictionary = _beats[_beat]
+	var t := clampf(float(_tick) / maxf(float(beat["ticks"]), 1.0), 0.0, 1.0) \
+			if beat.get("walk", false) else 0.0
+	var mid := (_a.global_position + _b.global_position) * 0.5
+	var view := walk_view(_a.global_position, _b.global_position,
+			(_head_of(_a) + _head_of(_b)) * 0.5, _faceoff_side(mid), smoothstep(0.0, 1.0, t))
+	_camera.set_entrance_shot(view[0], view[1], view[2],
+			first and not _was_shot("faceoff_side"), delta)
+	_key_on_pair()
+
+
+## The stare-down as the owner asked for it: one slow push from the walk's
+## last frame into their faces over the whole hold, no cut.
 func _staredown_push(first: bool, delta: float) -> void:
-	if _beats[_beat].get("pose_wide", false):
-		_faceoff_pose_wide(first, delta)
-		return
 	var t := clampf(float(_tick) / maxf(float(_beats[_beat]["ticks"]), 1.0), 0.0, 1.0)
-	var e := smoothstep(0.0, 1.0, t)
-	var heads := (_head_of(_a) + _head_of(_b)) * 0.5
 	var mid := (_a.global_position + _b.global_position) * 0.5
-	var across := _flat(_b.global_position - _a.global_position).normalized()
-	var side := Vector3.UP.cross(across).normalized()
-	if side.dot(_camera.hard_cam_position - mid) < 0.0:
-		side = -side
-	var at := Vector3(mid.x, mid.y, mid.z) + side * lerpf(FACEOFF_CAM_DISTANCE, STAREDOWN_CLOSE, e) \
-			+ Vector3.UP * lerpf(FACEOFF_CAM_HEIGHT, heads.y - mid.y - 0.03, e)
-	_camera.set_entrance_shot(at, heads + Vector3.DOWN * lerpf(0.1, 0.02, e),
-			lerpf(FACEOFF_CAM_FOV, STAREDOWN_FOV, e), first, delta)
+	var view := stare_view(_a.global_position, _b.global_position,
+			(_head_of(_a) + _head_of(_b)) * 0.5, _faceoff_side(mid), smoothstep(0.0, 1.0, t))
+	_camera.set_entrance_shot(view[0], view[1], view[2],
+			first and not _was_shot("faceoff_side"), delta)
 	_key_on_pair()
 
 
-## Their face-off poses (faceoff_pose_clip): the stare's side, back far
-## enough for arms over their heads; the stare's push starts from here.
-func _faceoff_pose_wide(first: bool, delta: float) -> void:
-	var mid := (_a.global_position + _b.global_position) * 0.5
-	var across := _flat(_b.global_position - _a.global_position).normalized()
-	var side := Vector3.UP.cross(across).normalized()
-	if side.dot(_camera.hard_cam_position - mid) < 0.0:
-		side = -side
-	_camera.set_entrance_shot(mid + side * FACEOFF_POSE_CAM_DISTANCE + Vector3.UP * 1.35,
-			mid + Vector3.UP * 1.45, FACEOFF_POSE_CAM_FOV, first, delta)
-	_key_on_pair()
+## [camera, look, lens] for the walk in at eased progress `e` (0 in their
+## corners, 1 at FACEOFF_GAP): `side` is the unit vector from the pair's
+## midpoint toward the camera, square to their line.
+static func walk_view(a: Vector3, b: Vector3, heads: Vector3, side: Vector3, e: float) -> Array:
+	var mid := (a + b) * 0.5
+	var back := walk_in_distance(a, b, side)
+	return [mid + side * back + Vector3.UP * lerpf(FACEOFF_WALK_HEIGHT, FACEOFF_CAM_HEIGHT, e),
+			heads + Vector3.DOWN * lerpf(0.3, 0.1, e),
+			lerpf(FACEOFF_WALK_FOV, FACEOFF_CAM_FOV, e)]
+
+
+## [camera, look, lens] for the stare at eased progress `e`: the push from the
+## two-shot (FACEOFF_CAM_*) in on both faces (STAREDOWN_*).
+static func stare_view(a: Vector3, b: Vector3, heads: Vector3, side: Vector3, e: float) -> Array:
+	var mid := (a + b) * 0.5
+	return [mid + side * lerpf(FACEOFF_CAM_DISTANCE, STAREDOWN_CLOSE, e)
+			+ Vector3.UP * lerpf(FACEOFF_CAM_HEIGHT, heads.y - mid.y - 0.03, e),
+			heads + Vector3.DOWN * lerpf(0.1, 0.02, e),
+			lerpf(FACEOFF_CAM_FOV, STAREDOWN_FOV, e)]
 
 
 ## The camera key (_cam_key) on both men at once, aimed between their chests:
@@ -3589,54 +3503,6 @@ func _camera_intro(pick: Array) -> void:
 	var e := t * t * (3.0 - 2.0 * t)
 	_camera.set_entrance_shot((shot[0] as Vector3).lerp(shot[1], e),
 			(shot[2] as Vector3).lerp(shot[3], e), lerpf(shot[4], shot[5], e), true)
-
-
-## A5: close on him in his corner, from the centre of the ring; for the
-## check, wider and off his shoulder, so the referee walks into it.
-func _intro_close(beat: Dictionary, first: bool, delta: float) -> void:
-	var man: WrestlerController = beat["focus"]
-	var head := _head_of(man)
-	var flat := _flat(man.global_position)
-	var to_c := -flat.normalized() if flat.length() > 0.1 else Vector3.FORWARD
-	var side := Vector3.UP.cross(to_c).normalized()
-	if side.dot(_camera.hard_cam_position - man.global_position) < 0.0:
-		side = -side
-	var e := smoothstep(0.0, 1.0, float(_tick) / float(beat["ticks"]))
-	if beat["shot"] == "corner_intro":
-		var shot := intro_crane(head, to_c, side, e)
-		_camera.set_entrance_shot(shot[0], shot[1], INTRO_CLOSE_FOV, first, delta)
-		_aim_cam_key(man, true)
-	else:
-		var shot := ref_check_shot(man.global_position, check_spot(man.global_position), side)
-		_camera.set_entrance_shot(shot[0], shot[1], REF_CHECK_FOV, first, delta)
-		_aim_cam_key(man, true)
-
-
-## The corner close-up as a jib (the owner, 2 Nov: "smooth crane shots ...
-## during wrestlers intros"): from low in front of him, a little to the hard
-## camera's side, the arm rises past his chest to just over his eyes as it
-## pushes in -- the canvas and the corner at the start, his face at the end.
-## [camera, look] at eased progress `e`.
-static func intro_crane(head: Vector3, to_c: Vector3, side: Vector3, e: float) -> Array:
-	var chest := head + Vector3.DOWN * 0.38
-	var dist := lerpf(INTRO_CRANE_FROM, INTRO_CLOSE_DISTANCE - INTRO_CLOSE_PUSH, e)
-	var rise := lerpf(INTRO_CRANE_LOW, INTRO_CRANE_HIGH, e)
-	var at := chest + to_c * dist + side * lerpf(0.9, 0.55, e) + Vector3.UP * rise
-	return [at, chest.lerp(head + Vector3.DOWN * 0.08, e)]
-
-
-## The referee's check (the owner, 2 Nov: the camera "cuts to them ... it
-## actually fits to Aubrey"). It looked at him from 2.9 m in front of his
-## corner, and she stands 1 m in front of him checking him -- on that line of
-## sight, filling the frame. Now a three-quarter two-shot from inside the
-## ring, off to the side (straight to the side is out past the ropes): him in
-## his corner, her facing him, about 20 degrees apart in frame. [camera, look].
-static func ref_check_shot(man: Vector3, ref_at: Vector3, side: Vector3) -> Array:
-	var flat_man := Vector3(man.x, 0.0, man.z)
-	var mid := (flat_man + Vector3(ref_at.x, 0.0, ref_at.z)) * 0.5
-	var to_c := -flat_man.normalized() if flat_man.length() > 0.1 else Vector3.FORWARD
-	return [mid + side * REF_CHECK_SIDE + to_c * REF_CHECK_IN + Vector3.UP * 1.45,
-			mid + Vector3.UP * 1.3]
 
 
 ## His head, for the close-ups: the head bone if the rig has one, else a

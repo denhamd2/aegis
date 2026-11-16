@@ -129,17 +129,16 @@ var _winner: WrestlerController
 var _separated := false
 ## Waiting in a neutral corner while they walk out and stare (follow()).
 var _faceoff_wait := false
-## The shots she spends in the neutral corner: the corner close-ups after
-## her check, the walk out of the corners and the stare.
+## The shots she spends in the neutral corner: the hold in the corners, the
+## walk in and the stare.
 ## Where she signals for the cell's padlock from: inside the ropes on the
 ## door's side.
 const CELL_SIGNAL_IN := 2.55
 var _cell_errand := false
-const FACEOFF_WAIT_SHOTS := ["corner_intro", "faceoff_side", "staredown_push"]
+const FACEOFF_WAIT_SHOTS := ["faceoff_side", "staredown_push"]
 var _separating := false
 ## Seconds she has stood between them; she steps clear after SEPARATE_HOLD.
 var _separate_time := 0.0
-var _checking := false
 var _director: EntranceDirector
 var _errand_target := Vector3.INF
 var _errand_face := Vector3.ZERO
@@ -172,17 +171,12 @@ func watch(referee: MatchReferee, wrestlers: Array) -> void:
 func follow(director: EntranceDirector) -> void:
 	_director = director
 	director.beat_started.connect(func(shot: String) -> void:
-		# A5: the check walks her to the man nearer her; any other shot sends
-		# her back to her spot by the ropes.
-		_checking = shot == "ref_check" and mode == Mode.PARK
 		# The walk out of the corners and the stare: she waits in a neutral
 		# corner, off the diagonal the two of them walk -- her spot by the
 		# ropes is on it (EntranceDirector._add_faceoff). She goes there
-		# straight from her check, on the corner close-ups, and is standing
-		# still before they walk: the owner, 2 Nov, "Ensure Aubrey is out of
-		# their way during all that". She had set off only as the walk-in
-		# began, and crossed the back of the shot between them, and stood
-		# 0.8 m off the checked man's shoulder through his close-up.
+		# on the held beat before they walk (FACEOFF_HOLD_TICKS), and is
+		# standing still before they move: the owner, 2 Nov, "Ensure Aubrey is
+		# out of their way during all that".
 		_faceoff_wait = shot in FACEOFF_WAIT_SHOTS
 		# Hell in a Cell: as it comes down she crosses to the ropes on the
 		# door's side and waits facing it; once it is down she signals for
@@ -212,7 +206,6 @@ func follow(director: EntranceDirector) -> void:
 func begin_errand(after_match := false) -> void:
 	if mode == Mode.PARK or after_match:
 		_separating = false
-		_checking = false
 		_set_mode(Mode.ERRAND)
 
 
@@ -245,7 +238,6 @@ func begin_live_errand() -> bool:
 	if mode != Mode.FOLLOW:
 		return false
 	_separating = false
-	_checking = false
 	_set_mode(Mode.ERRAND)
 	return true
 
@@ -312,14 +304,6 @@ func _process(delta: float) -> void:
 				_separate_time += delta
 				if _separate_time >= SEPARATE_HOLD:
 					_separating = false
-			elif _checking and _director:
-				var man: WrestlerController = _director.checked_man()
-				if man == null:
-					return
-				var at := EntranceDirector.check_spot(man.global_position)
-				if not _go(at, WALK_SPEED, delta, false):
-					return
-				_face(_yaw_towards(_flat(man.global_position) - at), delta)
 			elif _faceoff_wait and _flat(global_position).distance_to(neutral_corner(
 					_wrestlers[0].global_position)) > ARRIVED * 2.0:
 				if not _go(neutral_corner(_wrestlers[0].global_position), WALK_SPEED, delta, false):
@@ -360,7 +344,6 @@ func _process(delta: float) -> void:
 				_errand_face = at - _errand_target
 				_errand_faced = false
 				_separating = false
-				_checking = false
 				_set_mode(Mode.ERRAND)
 		Mode.TO_WINNER:
 			_square_winner(delta)

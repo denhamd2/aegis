@@ -156,11 +156,50 @@ func test_roman_faces_cody_on_the_last_pre_bell_frame() -> void:
 				.is_greater(0.99)
 
 
-func test_the_match_intro_and_faceoff_are_kept_brief() -> void:
-	assert_int(EntranceDirector.INTRO_CARD_TICKS).is_less_equal(180)
-	assert_int(EntranceDirector.INTRO_CHECK_TICKS).is_less_equal(120)
-	assert_int(EntranceDirector.INTRO_CLOSE_TICKS).is_less_equal(150)
-	assert_int(EntranceDirector.FACEOFF_STARE_TICKS).is_less_equal(360)
+## The owner, 16 Nov: "Make that whole sequence shorter". From the second man
+## standing in his corner to the bell is the held beat, the walk in and the
+## stare: about 4.5 s, never more than 5 -- and never so short the stare does not
+## register (2 s of it at the least, hold included).
+func test_the_corner_to_bell_sequence_is_short() -> void:
+	var scene := _match(true, "roman", "cody")
+	var director: EntranceDirector = scene.get_node("EntranceDirector")
+	var ticks := 0
+	var shots := {}
+	for beat: Dictionary in director._beats:
+		if beat["kind"] != "pair":
+			continue
+		ticks += director.beat_ticks(beat)
+		shots[beat.get("shot", "")] = true
+	var seconds := float(ticks) / EntranceDirector.TPS
+	assert_float(seconds).override_failure_message(
+			"corner to bell is %.1f s; the owner asked for it shorter" % seconds).is_less_equal(5.0)
+	assert_float(seconds).is_greater_equal(3.0)
+	assert_int(EntranceDirector.FACEOFF_STARE_TICKS).is_less_equal(120)
+	assert_int(EntranceDirector.FACEOFF_HOLD_TICKS).is_less_equal(90)
+	# One camera move and one stare: nothing else is cut to between the
+	# entrance's last shot and the bell.
+	for shot: String in shots:
+		assert_bool(shot in ["faceoff", "faceoff_side", "staredown_push"]) \
+				.override_failure_message("unexpected shot %s before the bell" % shot).is_true()
+
+
+## The owner, 16 Nov: "don't want them posing". Nothing before the bell plays
+## a signature pose: the pair beats are the stand, the walk and the face-off
+## stance, and no beat is flagged as a pose wide.
+func test_nobody_poses_between_the_corner_and_the_bell() -> void:
+	var scene := _match(true, "roman", "cody")
+	var director: EntranceDirector = scene.get_node("EntranceDirector")
+	var allowed := ["strikes/roman_stand", "strikes/cody_stand", "strikes/kenny_stand",
+			"strikes/face_off", EntranceDirector.FACEOFF_WALK_CLIP,
+			EntranceDirector.FACEOFF_CORNER_CLIP]
+	for beat: Dictionary in director._beats:
+		if beat["kind"] != "pair":
+			continue
+		assert_bool(beat.get("pose_wide", false)).is_false()
+		for move: Array in beat["moves"]:
+			assert_bool(move[4] in allowed).override_failure_message(
+					"%s plays %s before the bell" % [beat.get("shot", ""), move[4]]).is_true()
+			assert_str(move[4]).is_not_equal("strikes/idle_ready")
 
 
 func test_broadcast_open_uses_stage_facing_pyro_angles_and_the_sign_cutaway() -> void:
@@ -489,16 +528,16 @@ func test_roman_waits_for_his_music_under_dimmed_lights() -> void:
 ## The owner, 3 Nov: "still not standing in their corners during the corner
 ## camera pan". They were, on an unlit ring: lights_up put the match look up
 ## and then undid it, restoring the ring keys the last entrance had dimmed.
-func test_the_ring_is_lit_for_the_match_card_and_the_corner_intros() -> void:
+func test_the_ring_is_lit_for_the_hold_in_the_corners() -> void:
 	var scene := _match(true, "roman", "cody")
 	var director: EntranceDirector = scene.get_node("EntranceDirector")
 	var rig := scene.get_node("LightRig")
 	var ticks := 0
 	while ticks < 30000 and director._beat < director._beats.size() \
-			and (director._beats[director._beat] as Dictionary).get("shot", "") != "match_card":
+			and (director._beats[director._beat] as Dictionary).get("kind", "") != "pair":
 		director._physics_process(1.0 / 60.0)
 		ticks += 1
-	assert_str(String((director._beats[director._beat] as Dictionary).get("shot", ""))).is_equal("match_card")
+	assert_str(String((director._beats[director._beat] as Dictionary).get("shot", ""))).is_equal("faceoff_side")
 	for _i in 30:
 		director._physics_process(1.0 / 60.0)
 	assert_int(rig.look).is_equal(ArenaLighting.Look.MATCH)
@@ -507,7 +546,7 @@ func test_the_ring_is_lit_for_the_match_card_and_the_corner_intros() -> void:
 		if child is Light3D and (String(child.name).begins_with("Key") or String(child.name).begins_with("Top")):
 			keys += 1
 			assert_float((child as Light3D).light_energy).override_failure_message(
-					"%s at %.2f on the match card" % [child.name, (child as Light3D).light_energy]) \
+					"%s at %.2f in the corners" % [child.name, (child as Light3D).light_energy]) \
 					.is_equal_approx(_after_bell(rig, child, 0.0), 0.0001)
 	assert_int(keys).is_greater(0)
 
@@ -998,13 +1037,12 @@ func test_the_match_starts_from_the_corners_on_the_stare() -> void:
 	var beats: Array = director._beats
 	var stare: Dictionary = beats[-1]
 	assert_str(stare.get("shot", "")).is_equal("staredown_push")
-	# 9 Nov: their poses before the stare.
-	var poses: Dictionary = beats[-2]
-	assert_bool(poses.get("pose_wide", false)).is_true()
-	for move: Array in poses["moves"]:
-		assert_str(move[4]).is_equal(EntranceDirector.faceoff_pose_clip(move[0]))
-	var walk_in: Dictionary = beats[-3]
+	var walk_in: Dictionary = beats[-2]
 	assert_str(walk_in.get("shot", "")).is_equal("faceoff_side")
+	assert_bool(walk_in.get("walk", false)).is_true()
+	# The held beat in the corners comes first.
+	assert_str(beats[-3].get("shot", "")).is_equal("faceoff_side")
+	assert_bool(beats[-3].get("walk", false)).is_false()
 	# Each entrance ends in his corner: no stand in mid-ring first.
 	for man: WrestlerController in [a, b]:
 		assert_float(_flat(director._entrance_mark[man].origin).length()).is_greater(2.0)
@@ -1042,12 +1080,15 @@ func test_the_walks_to_the_corners_and_the_stare_play_clips_made_for_their_speed
 	var scene := _match(true, "roman", "cody")
 	var director: EntranceDirector = scene.get_node("EntranceDirector")
 	var beats: Array = director._beats
-	var walk_in: Dictionary = beats[-3]
+	var walk_in: Dictionary = beats[-2]
 	var to_corners: Dictionary
 	for beat: Dictionary in beats:
 		if beat.get("shot", "") == "faceoff" and beat.get("kind", "") == "pair":
 			to_corners = beat
 			break
+	# Entrance_Walk is authored at 1.6 m/s (gait_audit.gd "entrance_walk");
+	# Walk_Slow at 1.0 (the walk to a corner a skip left a man short of).
+	assert_float(EntranceDirector.FACEOFF_WALK_SPEED).is_equal(EntranceDirector.WALK_SPEED)
 	var authored := {EntranceDirector.FACEOFF_WALK_CLIP: EntranceDirector.FACEOFF_WALK_SPEED,
 			EntranceDirector.FACEOFF_CORNER_CLIP: EntranceDirector.FACEOFF_CORNER_SPEED}
 	# (No walk to the corners when the entrances end there, 9 Nov.)
@@ -1063,10 +1104,9 @@ func test_the_walks_to_the_corners_and_the_stare_play_clips_made_for_their_speed
 	assert_float(StrikeRecipes.RECIPES["walk_staredown"]["seconds"]).is_greater(1.0)
 
 
-## "Ensure Aubrey is out of their way during all that": from the corner
-## close-ups on she is in the neutral corner, off both men's walk.
-func test_aubrey_waits_in_the_neutral_corner_from_the_close_ups() -> void:
-	assert_bool(RefereeActor.FACEOFF_WAIT_SHOTS.has("corner_intro")).is_true()
+## "Ensure Aubrey is out of their way during all that": from the hold in the
+## corners on she is in the neutral corner, off both men's walk.
+func test_aubrey_waits_in_the_neutral_corner_from_the_hold() -> void:
 	assert_bool(RefereeActor.FACEOFF_WAIT_SHOTS.has("faceoff_side")).is_true()
 	assert_bool(RefereeActor.FACEOFF_WAIT_SHOTS.has("staredown_push")).is_true()
 	var a := EntranceDirector.faceoff_corner(Vector3(0, 0, -1.5), -1.0)
@@ -1084,18 +1124,18 @@ func test_aubrey_waits_in_the_neutral_corner_from_the_close_ups() -> void:
 func test_the_lights_come_up_as_they_walk_to_their_corners() -> void:
 	var scene := _match(true, "roman", "cody")
 	var director: EntranceDirector = scene.get_node("EntranceDirector")
-	var first_faceoff := -1
+	var first_pair := -1
 	var lit := -1
 	var beats: Array = director._beats
 	for i in beats.size():
 		var beat: Dictionary = beats[i]
-		if first_faceoff < 0 and beat.get("shot", "") == "faceoff" and beat.get("kind", "") == "pair":
-			first_faceoff = i
+		if first_pair < 0 and beat.get("kind", "") == "pair":
+			first_pair = i
 		for e: Array in beat.get("events", []):
 			if e[1] == "lights_up":
 				lit = i
-	assert_int(first_faceoff).is_greater(0)
-	assert_int(lit).is_equal(first_faceoff)
+	assert_int(first_pair).is_greater(0)
+	assert_int(lit).is_equal(first_pair)
 
 
 ## A beat's length in seconds, as _start_beat sets a walk's: its path at its
@@ -1176,49 +1216,66 @@ func test_no_shot_of_romans_entrance_drags() -> void:
 	assert_array(long).override_failure_message("long shots: %s" % [long]).is_empty()
 
 
-## The owner, 2 Nov: in the intros the camera "cuts to them ... it actually
-## fits to Aubrey". The check shot looked at him down the line she stands on.
-## Now she and he are well apart in frame, both inside it, and the camera is
-## inside the ropes.
-func test_the_referee_check_shows_him_not_just_her() -> void:
-	for man: Vector3 in [Vector3(2.23, 0, 2.23), Vector3(-2.23, 0, -2.23), Vector3(2.23, 0, -2.23)]:
-		var ref := EntranceDirector.check_spot(man)
-		var to_c := -Vector3(man.x, 0, man.z).normalized()
-		var side := Vector3.UP.cross(to_c).normalized()
-		var shot := EntranceDirector.ref_check_shot(man, ref, side)
-		var at: Vector3 = shot[0]
-		var look: Vector3 = shot[1]
-		var axis := Vector3(look.x - at.x, 0, look.z - at.z).normalized()
-		var to_man := Vector3(man.x - at.x, 0, man.z - at.z).normalized()
-		var to_ref := Vector3(ref.x - at.x, 0, ref.z - at.z).normalized()
-		assert_float(rad_to_deg(to_man.angle_to(to_ref))).is_greater(12.0)
-		var half_h := rad_to_deg(atan(tan(deg_to_rad(EntranceDirector.REF_CHECK_FOV) * 0.5) * 16.0 / 9.0))
-		assert_float(rad_to_deg(axis.angle_to(to_man))).is_less(half_h - 4.0)
-		assert_float(rad_to_deg(axis.angle_to(to_ref))).is_less(half_h - 4.0)
-		assert_float(maxf(absf(at.x), absf(at.z))).is_less(RingBuilder.ROPE_SPAN)
+## The owner, 16 Nov: "improve the cameras" -- fewer, cleaner shots, no
+## jarring cuts (camera_aaa_plan.md F1-F7, never across the line; the owner,
+## 12 Nov, no crane). The walk in and the stare are one move: at the walk's
+## end the camera is exactly where the stare begins, on the same lens, so
+## the one cut in the sequence is in from the entrance's last shot.
+func test_the_walk_in_hands_the_stare_its_first_frame() -> void:
+	var a := Vector3(-0.375, 0.0, 0.0)
+	var b := Vector3(0.375, 0.0, 0.0)
+	var heads := Vector3(0.0, 1.78, 0.0)
+	var side := Vector3(0.0, 0.0, 1.0)
+	var walk_end := EntranceDirector.walk_view(a, b, heads, side, 1.0)
+	var stare_start := EntranceDirector.stare_view(a, b, heads, side, 0.0)
+	assert_vector(walk_end[0]).is_equal_approx(stare_start[0], Vector3.ONE * 0.001)
+	assert_vector(walk_end[1]).is_equal_approx(stare_start[1], Vector3.ONE * 0.001)
+	assert_float(walk_end[2]).is_equal_approx(stare_start[2], 0.001)
+	# And it is a push, not a pull: wider and higher at the start of the walk,
+	# the stare ends tighter than it begins, never nearer than STAREDOWN_CLOSE.
+	var corner_a := Vector3(-2.23, 0.0, -2.23)
+	var corner_b := Vector3(2.23, 0.0, 2.23)
+	var line := (corner_b - corner_a).normalized()
+	var perp := Vector3.UP.cross(line).normalized()
+	var walk_start := EntranceDirector.walk_view(corner_a, corner_b, heads, perp, 0.0)
+	var walk_finish := EntranceDirector.walk_view(corner_a.lerp(a, 1.0), corner_b.lerp(b, 1.0),
+			heads, perp, 1.0)
+	assert_float(walk_start[2]).is_greater(walk_finish[2])
+	assert_float(((walk_start[0] as Vector3) - heads).length()) \
+			.is_greater(((walk_finish[0] as Vector3) - heads).length())
+	var stare_end := EntranceDirector.stare_view(a, b, heads, side, 1.0)
+	assert_float(stare_end[2]).is_less(stare_start[2])
+	assert_float(((stare_end[0] as Vector3) - heads).length()) \
+			.is_less(((stare_start[0] as Vector3) - heads).length())
+	assert_float(((stare_end[0] as Vector3) - heads).length()) \
+			.is_greater_equal(EntranceDirector.STAREDOWN_CLOSE - 0.01)
 
 
-## "Smooth crane shots ... during wrestlers intros and also during the face
-## off": the corner close-up rises from low and pushes in; the walk-in comes
-## down from high and round to eye level, square to them.
-func test_the_intros_and_the_walk_in_are_crane_moves() -> void:
-	var head := Vector3(2.2, 1.75, 2.2)
-	var to_c := -Vector3(1, 0, 1).normalized()
-	var side := Vector3.UP.cross(to_c).normalized()
-	var start: Array = EntranceDirector.intro_crane(head, to_c, side, 0.0)
-	var end: Array = EntranceDirector.intro_crane(head, to_c, side, 1.0)
-	assert_float((start[0] as Vector3).y).is_less((end[0] as Vector3).y - 0.8)
-	assert_float(((start[0] as Vector3) - head).length()).is_greater(((end[0] as Vector3) - head).length())
-	# ends just over his eye line, his face framed
-	assert_float((end[0] as Vector3).y).is_greater(head.y - 0.1)
-	var top: Array = EntranceDirector.faceoff_crane(0.0)
-	var settle: Array = EntranceDirector.faceoff_crane(1.0)
-	assert_float(float(top[0])).is_greater(float(settle[0]) + 1.5)
-	assert_float(float(settle[0])).is_equal(EntranceDirector.FACEOFF_CAM_HEIGHT)
-	assert_float(absf(float(top[1]))).is_greater(15.0)
-	assert_float(float(settle[1])).is_equal(0.0)
-	# under the rig at its highest
-	assert_float(float(top[0])).is_less(EntranceDirector.RIG_CLEAR_Y)
+## The walk's camera holds both men in frame all the way in (they start 6.3 m
+## apart, diagonal corners), and stays under the light rig and outside the
+## 180-degree line: square to the line between them, never past it.
+func test_the_walk_in_camera_holds_both_men_square_to_their_line() -> void:
+	var ca := EntranceDirector.faceoff_corner(Vector3(0, 0, -1.5), -1.0)
+	var cb := EntranceDirector.faceoff_corner(Vector3(0, 0, 1.5), 1.0)
+	var line := _flat(cb - ca).normalized()
+	var side := Vector3.UP.cross(line).normalized()
+	var heads := (ca + cb) * 0.5 + Vector3.UP * 1.78
+	for e in [0.0, 0.5, 1.0]:
+		var a := ca.lerp((ca + cb) * 0.5, e * 0.88)
+		var b := cb.lerp((ca + cb) * 0.5, e * 0.88)
+		var view := EntranceDirector.walk_view(a, b, heads, side, e)
+		var at: Vector3 = view[0]
+		assert_float(at.y).is_less(EntranceDirector.RIG_CLEAR_Y)
+		# square to the line: the camera sits on the perpendicular through
+		# the midpoint, so the line between the men is across the frame.
+		var from_mid := _flat(at - (a + b) * 0.5).normalized()
+		assert_float(absf(from_mid.dot(line))).is_less(0.01)
+		# both men inside the horizontal frame
+		var half := atan(tan(deg_to_rad(float(view[2])) * 0.5) * EntranceDirector.FRAME_ASPECT)
+		for p: Vector3 in [a, b]:
+			var to_p := _flat(p - at).normalized()
+			assert_float(to_p.angle_to(-from_mid)).override_failure_message(
+					"a man is out of frame at e=%.1f" % e).is_less(half)
 
 
 ## The owner, 3 Nov: "the pyro actually go off during our loading screen so we

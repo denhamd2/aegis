@@ -12350,3 +12350,32 @@ Independent reviewer, loop 1 → loop 5 → loop 6:
 
 The remaining gaps are in `gauntlet/refs/ff_review/sig_loops/scores.md`.
 Kenny's loops are paused here; Roman's spear loops are next.
+
+## 16 Nov: the opening is a lock-up, and a shorter pre-match
+
+The owner: "I also don't want them starting by doing chain wrestling, start
+with a lock up grapple", and "change the sequence when the wrestlers are in
+the corner ... They also have a glitch where they run to and from the corner.
+Also don't want them posing. Make that whole sequence shorter, and improve the
+cameras", then "commit and deploy all changes".
+
+The 12 Nov versions of these changes had only ever been on the working branch,
+not on main, so deployed builds still opened with chain links and the long
+pre-match. This ports them to main:
+
+- The opening lock-up goes straight to its grapple move. The AI no longer
+  rolls 1-3 chain links, and a human holder can no longer start a link by
+  pushing the stick before the first move has landed
+  (`WrestlerController.opening_lock_up`). Chain holds remain for later
+  lock-ups' rest holds. New tests in `test_wrestler_ai_match_shape.gd`.
+- The pre-match drops the match card, the referee check and the signature
+  poses. The walk-in is `entrance_walk` at 1.6 m/s (was 0.6 m/s
+  `walk_staredown`) after a 72-tick hold in the corners, then the stare
+  (96 ticks). The referee waits in her neutral corner from the hold.
+- The unused card, check and crane camera code is removed.
+
+Verified: the focused tests pass (entrance director and cameras, AI match
+shape, chain wrestling, match loop, 2K26 flow, referee locomotion, and the
+clip gates). Not verified by render: the cause of the run-to-and-from-the-corner
+glitch (suspected: the men are 0.75 m apart at the bell but the AI keeps
+1.1 m) and how the new cameras look. Those need a look on the Mac.
