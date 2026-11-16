@@ -92,3 +92,57 @@ Remaining gaps after loop 5 (reviewer):
 - **One-Winged Angel:** the man snaps upright mid-lift, and Kenny's head passes through him.
 - **Powerbomb/V-Trigger:** Kenny releases rather than going down with the bomb.
 - **Running V-Trigger 3:** no corner post is rendered, and the man rests against empty air.
+
+## Kenny, loop 5: independent reviewer (coordinator)
+
+| loop | move | Overall (independent) |
+|---|---|---|
+| 5 | kenny_v_trigger | 5.2 |
+| 5 | kenny_snap_dragon_2 | 5.2 |
+| 5 | kenny_snap_dragon_3 | 4.6 |
+| 5 | kenny_running_v_trigger_3 | 4.8 |
+| 5 | kenny_running_v_trigger_1 | 5.4 |
+| 5 | kenny_owa | 5.2 |
+| 5 | kenny_pb_v_trigger | 4.4 |
+
+## Kenny, loop 6 (16 Nov): re-blocked beats
+
+Harness:
+- `paired_shot --ring` keeps the ring with `--bare`. With `--corner` the
+  camera looks into the corner from the ring, so Running V-Trigger 3 is
+  seen against the buckle.
+- `sig_loop.sh` takes `extra=<ref s>@<our tick>` columns, so the
+  PB/V-Trigger knee (649.7 s, our f278) gets its own column.
+- There are front-on sheets for the V-Triggers (`*_front`, `--orbit 90`).
+
+Re-blocked beats, from the loop-5 review:
+- **V-Trigger:** at f48 Kenny's hips are at 1.30 with the knee driven up to
+  the face, both feet off the mat. He lands 0.4 m back and to the side with a
+  30-degree knee bend. The man snaps back about 25 degrees within 4 f.
+- **Running V-Trigger 1:** the knee rises to the face with Kenny's hips at
+  the man's chest. Kenny lands 0.5 m to the side and past the man, then backs
+  off 0.8 m with his hands off him.
+- **Running V-Trigger 3:**
+  - Kenny is airborne with his knee coming down onto the low head, the shin
+    trailing back.
+  - The man sags back onto his heels, then slides down the buckle to seated
+    over f86-f117.
+- **Snap Dragon 2:**
+  - The front tie-up comes back (15 key frames), then Kenny circles behind.
+  - The man arcs over Kenny's hip and lands 0.43 m from him.
+  - Kenny holds the kneel for 10 key frames.
+- **Snap Dragon 3:**
+  - Its own contact: hips 0.4 m higher, near horizontal.
+  - A crumpled landing on his side with the knees tucked.
+  - A wide squat with Kenny backing off 0.22 m, so the thighs clear.
+- **OWA:**
+  - The pick-up goes from folded over Kenny's back to across the shoulders;
+    the vertical pose is gone.
+  - Kenny stands nearly straight under him.
+  - The man is carried behind Kenny's head.
+- **PB/V-Trigger:** Kenny keeps hold and goes down to a knee over the man at
+  the bomb, holds it 19 key frames, backs off 1.5 m, and lands the knee at
+  f278 with both feet off the mat.
+
+Gate tests: 75/76. The one failure is the Cross Rhodes grip (0.063 m), known
+on main since the merge. Independent scores are pending; the sheets are in l6/.
