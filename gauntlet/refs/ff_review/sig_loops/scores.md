@@ -78,3 +78,44 @@ Smooth and Cadence were mostly 4. The reviewer's fixes are folded into loop 5
 Changed: the V-Trigger and Running V-Trigger 1 knees land about 0.1 m higher
 with the thigh more upright; the V-Trigger leap starts 5 cm further out.
 Independent scores: pending (sheets in l4/).
+
+## Kenny, loop 4: independent reviewer (coordinator)
+
+| loop | move | Overall (independent) |
+|---|---|---|
+| 4 | kenny_v_trigger | 4.6 |
+| 4 | kenny_snap_dragon_2 | 4.6 |
+| 4 | kenny_snap_dragon_3 | 4.4 |
+| 4 | kenny_running_v_trigger_3 | 4.0 |
+| 4 | kenny_running_v_trigger_1 | 4.6 |
+| 4 | kenny_owa | 4.8 |
+| 4 | kenny_pb_v_trigger | 4.0 |
+
+## Kenny, loop 5 (16 Nov)
+
+Both independent fix lists (loop 3 and loop 4) folded in:
+- Sprint: about 10 degrees off upright, feet under the hips. V-Trigger and
+  Running V-Trigger 1 contact with Kenny's hips at the man's chest (pelvis
+  1.05/1.10) and the knee to the face; Kenny lands and steps 0.5 m off the
+  man's line. The V-Trigger defender reels about 20 degrees and 0.5 m, and is
+  upright by +40.
+- Running V-Trigger 1: `paired_shot --rope` (out 2.9 m to the ropes, the
+  rebound, and the sprint back); the man stays doubled over (hips 0.8 m,
+  torso about 70 degrees) to the end.
+- Running V-Trigger 3: on hands and knees (head 0.5 m), feet flat; the knee
+  into the low head; he slumps back flat into the corner over 20 f and holds
+  52 f. Run 37 ticks. (`--corner` places the pair at the corner spot, but the
+  bare render hides the ring, so no buckle is drawn.)
+- Snap Dragons: no front tie-up, from behind with the nelson held; a backward
+  arc (hips peaking at 1.2 m in 2 and 1.4 m in 3), Kenny to one knee (pelvis
+  0.57), the man rolled onto his side. Snap Dragon 3 is distinct: a deep squat
+  before a high flip, and he lands crumpled. Kenny stands 0.82 m behind and
+  0.26 m to the side (PairClearance).
+- OWA: a bent fireman's-carry pick-up (about 60 degrees, the man folded over
+  his back), carried 6 cm lower, and Kenny's sit-out hips 0.35 m back from
+  the landing; he gets up and moves 0.35 m clear.
+- PB/V-Trigger: Kenny goes down to a knee over him at +10, stays at his feet
+  until f236, backs off 1.2 m in two steps, and lands the knee at f278 on the
+  seated man (0.8 m). The man's knees come up after the bomb.
+
+Independent scores: pending (sheets in l5/).
