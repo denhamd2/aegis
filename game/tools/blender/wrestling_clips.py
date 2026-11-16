@@ -4659,108 +4659,377 @@ def _face_first_then_roll(land, end):
 # travelling backward in the world; Cross Rhodes lands him face-down, and he
 # rolls onto his back selling it.
 
-# The Spear, 42 frames / 1.4s.
+# --- The Spear, re-blocked against the reference (sig loop 2, 16 Nov) --------
+#
+# All four of Roman's Spears are judged against Ricky Starks's Spear in the
+# AEW Fight Forever compilation (1104.4-1106.3 s; gauntlet/refs/ff_review/
+# sig_loops/). Its beats, in 60 fps video frames from the hit (keys here are
+# at 30, so half these):
+#   -66..-18  the run, about 3.5 m;
+#   -18..-6   up out of the run, both arms thrown up -- the gesture -- within
+#             arm's length of the man;
+#    -6..0    down into the dive; the shoulder into the navel at 0, the head
+#             past his hip, near horizontal by +6;
+#     0..+18  the man folds over his back, is carried backward, tips over
+#             and goes down WITH him -- both on the mat by +18, the man's legs
+#             thrown up over Roman, Roman across his waist;
+#   +18..+42  Roman on his knees over him, then up to kneeling upright
+#             between his legs.
+# One core (_spear_core_*) carries every beat from the end of the run, keyed
+# on the hit frame `c`; the four moves differ only in what comes before it
+# (a shove and back-off from the lock-up, the game's own run, the Superman
+# Punch) and, for the corner, after it: the man is crushed into the buckle
+# and slides down it instead of going over.
+#
+# Roman's root runs 0.20 m to the side of the man's line from the gesture on
+# (paired_recipes.gd), so his right shoulder meets the navel and his head
+# goes past the hip instead of through it.
+
+# His sprint: leaned in, arms pumping.
+_SP_RUN_A = dict(pelvis=(0.0, 0.06, 0.820), hips=(-12, 0, 0), spine=(-16, 0, 0),
+                 head=(10, 0, 0),
+                 hand_r=(0.28, -0.12, 1.02), hand_l=(-0.26, 0.38, 1.12),
+                 fist_r=0.7, fist_l=0.7,
+                 foot_r=(0.16, -0.32, 0.26), foot_l=(-0.14, 0.26, 0.104))
+_SP_RUN_B = dict(_SP_RUN_A, hand_r=(0.28, 0.38, 1.12), hand_l=(-0.26, -0.12, 1.02),
+                 foot_r=(0.16, 0.26, 0.104), foot_l=(-0.14, -0.32, 0.26))
+
+
+def _sp_tw(p, **adds):
+    """`p` with each named tuple nudged by the given amounts: a held beat
+    kept alive instead of a statue."""
+    out = dict(p)
+    for k, d in adds.items():
+        v = out.get(k) or tuple(0.0 for _ in d)
+        out[k] = tuple(a + b for a, b in zip(v, d))
+    return out
+
+
+def _sp_strides(first, last):
+    """Strides every four frames from `first` up to (not including) `last`,
+    alternating, ending on whichever foot falls there."""
+    keys, k, f = [], 0, first
+    while f < last:
+        keys.append((f, dict(_SP_RUN_A if k % 2 == 0 else _SP_RUN_B)))
+        k += 1
+        f += 4
+    return keys
+
+
+# Out of the run, rising, the arms on their way up (-18).
+_SP_ARRIVE = P(pelvis=(0.0, 0.04, 0.850), hips=(-6, 0, 0), spine=(-4, 0, 0),
+               head=(6, 0, 0),
+               hand_r=(0.38, 0.14, 1.42), hand_l=(-0.38, 0.14, 1.40),
+               elbow_r=(1.0, -0.2, 0.0), elbow_l=(-1.0, -0.2, 0.0),
+               fist_r=0.8, fist_l=0.8,
+               foot_r=(0.20, -0.30, 0.16), foot_l=(-0.18, 0.24, 0.104))
+# The gesture: chest up, both arms thrown up over his head, yelling (-12).
+_SP_HANDS_UP = P(pelvis=(0.0, 0.0, 0.880), hips=(2, 0, 0), spine=(10, 0, 0),
+                 head=(12, 0, 0),
+                 hand_r=(0.38, 0.06, 1.86), hand_l=(-0.38, 0.06, 1.84),
+                 elbow_r=(1.0, 0.0, 0.3), elbow_l=(-1.0, 0.0, 0.3),
+                 fist_r=0.9, fist_l=0.9,
+                 foot_r=(0.24, -0.24, 0.104), foot_l=(-0.20, 0.26, 0.104))
+# Still up, sinking onto the back foot to go (-8).
+_SP_HANDS_SINK = pose(_SP_HANDS_UP, pelvis=(0.0, -0.02, 0.830), hips=(-6, 0, 0),
+                      spine=(2, 0, 0), head=(14, 0, 0),
+                      hand_r=(0.40, 0.12, 1.74), hand_l=(-0.40, 0.12, 1.72))
+# Coming down into the dive, arms dropping forward (-6/-4).
+_SP_DROP = P(pelvis=(0.0, 0.06, 0.720), hips=(-30, 0, 0), spine=(-20, 0, 0),
+             head=(24, 0, 0),
+             hand_r=(0.34, 0.34, 1.10), hand_l=(-0.34, 0.34, 1.08),
+             elbow_r=(0.8, -0.2, -0.4), elbow_l=(-0.8, -0.2, -0.4),
+             fist_r=0.5, fist_l=0.5,
+             foot_r=(0.22, -0.40, 0.104), foot_l=(-0.18, 0.24, 0.104))
+# Launched off the back foot, torso tipping to horizontal (-2).
+_SP_LAUNCH = dict(pelvis=(0.0, 0.18, 0.680), hips=(-58, 0, 0), spine=(-18, 0, 0),
+                  head=(28, 0, 0),
+                  hand_r=(0.30, 0.62, 0.86), hand_l=(-0.30, 0.62, 0.86),
+                  elbow_r=(0.8, -0.2, -0.4), elbow_l=(-0.8, -0.2, -0.4),
+                  fist_r=0.4, fist_l=0.4,
+                  foot_r=(0.22, -0.58, 0.16), foot_l=(-0.18, 0.06, 0.104),
+                  knee_r=(0.2, 0.8, -0.4), knee_l=(-0.2, 1.0, 0.0))
+# The hit: shoulder in the navel, near horizontal, both feet off the mat,
+# arms wrapping the waist (0).
+_SP_HIT = dict(pelvis=(0.0, 0.30, 0.720), hips=(-72, 0, 0), spine=(-12, 0, 0),
+               head=(22, 0, 0),
+               hand_r=(0.20, 0.80, 0.90), hand_l=(-0.26, 0.78, 0.92),
+               elbow_r=(0.8, 0.0, -0.4), elbow_l=(-0.8, 0.0, -0.4),
+               fist_r=0.6, fist_l=0.6,
+               foot_r=(0.20, -0.66, 0.34), foot_l=(-0.18, -0.40, 0.22),
+               knee_r=(0.2, 0.4, -0.9), knee_l=(-0.2, 0.6, -0.8), free_feet=True)
+# Driving through him, flat out in the air (+6).
+_SP_FLY = dict(_SP_HIT, pelvis=(0.0, 0.30, 0.680), hips=(-84, 0, 0), spine=(-6, 0, 0),
+               head=(18, 0, 0),
+               hand_r=(0.22, 0.84, 0.74), hand_l=(-0.26, 0.82, 0.76),
+               foot_r=(0.20, -0.84, 0.60), foot_l=(-0.18, -0.80, 0.52))
+# Going down with him (+12).
+_SP_DOWN = dict(_SP_FLY, pelvis=(0.0, 0.26, 0.500), hips=(-86, 0, 0), spine=(-4, 0, 0),
+                head=(12, 0, 0),
+                hand_r=(0.24, 0.80, 0.46), hand_l=(-0.26, 0.78, 0.48),
+                foot_r=(0.20, -0.86, 0.40), foot_l=(-0.18, -0.84, 0.34))
+# On top across his waist, knees down behind (+18).
+_SP_ON_TOP = dict(pelvis=(0.0, 0.18, 0.440), hips=(-74, 0, 0), spine=(-10, 0, 0),
+                  head=(4, 0, 0),
+                  hand_r=(0.30, 0.66, 0.12), hand_l=(-0.32, 0.62, 0.14),
+                  elbow_r=(0.7, 0.0, 0.5), elbow_l=(-0.7, 0.0, 0.5),
+                  fist_r=0.2, fist_l=0.2,
+                  foot_r=(0.20, -0.52, 0.09), foot_l=(-0.20, -0.48, 0.09),
+                  knee_r=(0.3, 0.9, -0.2), knee_l=(-0.3, 0.9, -0.2))
+# Up on his hands and knees over him (+24/+30).
+_SP_HANDS_KNEES = dict(_SP_ON_TOP, pelvis=(0.0, 0.08, 0.520), hips=(-46, 0, 0),
+                       spine=(-28, 0, 0), head=(-6, 0, 0),
+                       hand_r=(0.28, 0.58, 0.10), hand_l=(-0.30, 0.56, 0.10),
+                       foot_r=(0.19, -0.30, 0.09), foot_l=(-0.19, -0.28, 0.09))
+# Kneeling upright between his legs, looking down at him (+36/+42).
+_SP_KNEEL_UP = dict(pelvis=(0.0, 0.02, 0.560), hips=(2, 0, 0), spine=(-6, 0, 0),
+                    head=(-16, 0, 0),
+                    hand_r=(0.30, 0.16, 0.62), hand_l=(-0.30, 0.18, 0.60),
+                    elbow_r=(0.6, -0.4, -0.8), elbow_l=(-0.6, -0.4, -0.8),
+                    fist_r=0.6, fist_l=0.6,
+                    foot_r=(0.19, -0.42, 0.09), foot_l=(-0.19, -0.40, 0.09),
+                    knee_r=(0.2, 1.0, 0.0), knee_l=(-0.2, 1.0, 0.0))
+# Up onto one knee (ONE_KNEE, which is defined further down).
+_SP_ONE_KNEE = dict(pelvis=(0.0, -0.04, 0.600), hips=(-6, 0, 0), spine=(-14, 0, 0),
+                    head=(-10, 0, 0),
+                    hand_r=(0.22, 0.30, 0.66), hand_l=(-0.26, 0.20, 0.60),
+                    fist_r=0.2, fist_l=0.2,
+                    foot_r=(0.20, -0.26, 0.09), foot_l=(-0.20, 0.28, 0.104),
+                    knee_r=(0.3, 0.9, -0.2), knee_l=(-0.2, 1.0, 0.1))
+
+
+def _spear_core_attacker(c, corner=False):
+    """Roman from the end of the run (c-9) to the end of the move (c+30)."""
+    keys = [
+        (c - 9, dict(_SP_ARRIVE)),
+        (c - 6, dict(_SP_HANDS_UP)),
+        (c - 4, dict(_SP_HANDS_SINK)),
+        (c - 3, dict(_SP_DROP)),
+        (c - 2, dict(_SP_LAUNCH)),
+        (c, dict(_SP_HIT)),
+    ]
+    if corner:
+        # Into the buckle: the feet come down and drive, he does not fly.
+        drive = dict(_SP_HIT, pelvis=(0.0, 0.24, 0.660), hips=(-64, 0, 0),
+                     spine=(-14, 0, 0), head=(18, 0, 0),
+                     foot_r=(0.22, -0.56, 0.104), foot_l=(-0.18, -0.18, 0.104),
+                     knee_r=(0.2, 1.0, -0.2), knee_l=(-0.2, 1.0, -0.2),
+                     free_feet=False)
+        return keys + [
+            (c + 3, drive),
+            (c + 6, _sp_tw(drive, pelvis=(0.0, 0.02, -0.02), head=(-4, 0, 0))),
+            # Out of him, still bent, hands coming off his waist.
+            (c + 10, P(pelvis=(0.0, 0.04, 0.720), hips=(-34, 0, 0), spine=(-26, 0, 0),
+                       head=(10, 0, 0),
+                       hand_r=(0.30, 0.42, 0.90), hand_l=(-0.30, 0.40, 0.90),
+                       fist_r=0.5, fist_l=0.5,
+                       foot_r=(0.22, -0.34, 0.104), foot_l=(-0.18, 0.06, 0.104))),
+            # Stepping back, upright, eyes on him sliding down.
+            (c + 16, P(pelvis=(0.0, -0.02, 0.840), spine=(-10, 0, 0), head=(-6, 0, 0),
+                       hand_r=(0.30, 0.16, 1.00), hand_l=(-0.30, 0.16, 0.98),
+                       fist_r=0.8, fist_l=0.8,
+                       foot_r=(0.22, -0.30, 0.16), foot_l=(-0.18, 0.12, 0.104))),
+            (c + 22, P(pelvis=(0.0, 0.0, 0.860), spine=(-6, 0, 0), head=(-10, 0, 0),
+                       hand_r=(0.32, 0.10, 0.98), hand_l=(-0.32, 0.10, 0.96),
+                       fist_r=0.9, fist_l=0.9)),
+            (c + 30, P()),
+        ]
+    return keys + [
+        (c + 3, dict(_SP_FLY)),
+        (c + 6, dict(_SP_DOWN)),
+        (c + 9, dict(_SP_ON_TOP)),
+        (c + 12, _sp_tw(_SP_ON_TOP, pelvis=(0.0, -0.04, 0.04), hips=(10, 0, 0),
+                     spine=(-6, 0, 0))),
+        (c + 15, dict(_SP_HANDS_KNEES)),
+        (c + 18, _sp_tw(_SP_HANDS_KNEES, pelvis=(0.0, -0.04, 0.02), hips=(22, 0, 0),
+                     spine=(10, 0, 0), head=(-4, 0, 0),
+                     hand_r=(0.0, -0.20, 0.24), hand_l=(0.0, -0.20, 0.22))),
+        (c + 21, dict(_SP_KNEEL_UP)),
+        (c + 23, _sp_tw(_SP_KNEEL_UP, head=(6, 4, 0), spine=(2, 0, 0))),
+        (c + 26, dict(_SP_ONE_KNEE)),
+        (c + 30, P()),
+    ]
+
+
+# The man, square to him as he comes (the run), bracing too late (-6).
+_SPD_SQUARE = P(pelvis=(0.0, -0.02, 0.835), spine=(-4, 0, 0), head=(6, 0, 0),
+                hand_r=(0.26, 0.30, 1.14), hand_l=(-0.24, 0.32, 1.12),
+                fist_r=0.5, fist_l=0.5)
+_SPD_BRACE = P(pelvis=(0.0, -0.06, 0.805), spine=(6, 0, 0), head=(10, 0, 0),
+               hand_r=(0.30, 0.38, 1.20), hand_l=(-0.28, 0.40, 1.18),
+               fist_r=0.15, fist_l=0.15,
+               foot_r=(0.23, -0.22, 0.104), foot_l=(-0.19, 0.10, 0.104))
+# The hit: folded forward over the shoulder at the navel, pelvis driven back,
+# feet starting to leave the mat (0).
+_SPD_FOLD = dict(pelvis=(0.0, -0.14, 0.930), hips=(-28, 0, 0), spine=(-40, 0, 0),
+                 head=(-16, 0, 0),
+                 hand_r=(0.36, 0.40, 1.04), hand_l=(-0.34, 0.42, 1.02),
+                 elbow_r=(0.8, -0.3, -0.3), elbow_l=(-0.8, -0.3, -0.3),
+                 fist_r=0.3, fist_l=0.3,
+                 foot_r=(0.20, 0.04, 0.14), foot_l=(-0.18, 0.10, 0.18),
+                 knee_r=(0.3, 0.8, 0.4), knee_l=(-0.3, 0.8, 0.4), free_feet=True)
+# Carried, jackknifed over his back (+6).
+_SPD_CARRIED = dict(_SPD_FOLD, pelvis=(0.0, -0.18, 0.980), hips=(-36, 0, 0),
+                    spine=(-44, 0, 0), head=(-20, 0, 0),
+                    hand_r=(0.38, 0.40, 0.96), hand_l=(-0.36, 0.42, 0.94),
+                    foot_r=(0.20, 0.10, 0.34), foot_l=(-0.18, 0.16, 0.40))
+# Tipping over backward, legs thrown up toward Roman (+12).
+_SPD_TIP = dict(pelvis=(0.0, -0.24, 0.640), hips=(40, 0, 0), spine=(-14, 0, 0),
+                head=(-20, 0, 0),
+                hand_r=(0.44, 0.24, 0.92), hand_l=(-0.44, 0.22, 0.90),
+                elbow_r=(0.8, -0.3, -0.3), elbow_l=(-0.8, -0.3, -0.3),
+                fist_r=0.2, fist_l=0.2,
+                foot_r=(0.26, 0.56, 0.76), foot_l=(-0.24, 0.60, 0.84),
+                knee_r=(0.4, 0.6, 0.7), knee_l=(-0.4, 0.6, 0.7), free_feet=True)
+
+
+def _spd_down(feet_up, arm_up=0.10, spread=0.38):
+    """On his back, head away from Roman, the legs `feet_up` off the mat and
+    spread round him (SUPINE's frame, turned half round: _yawed)."""
+    fwd = -0.40 - (0.40 * (1.0 - min(feet_up, 0.70) / 0.70))
+    return _yawed(S(pelvis=(0.0, 0.0, 0.200), head=(-4, 0, 0),
+                    hand_r=(-0.56, 0.14, 0.10), hand_l=(0.50, 0.04, arm_up),
+                    elbow_r=(-0.7, 0.3, -0.3), elbow_l=(0.7, 0.3, -0.3),
+                    fist_r=0.1, fist_l=0.1,
+                    foot_r=(-spread, fwd, feet_up), foot_l=(spread, fwd - 0.02, feet_up + 0.04),
+                    knee_r=(-0.6, 0.0, 1.0), knee_l=(0.6, 0.0, 1.0)))
+
+
+def _spear_core_defender(c, first, corner=False):
+    """The man from the end of Roman's run to the end of the move (c+30);
+    `first` is the pose he stood in before it."""
+    if corner:
+        hang = dict(first)
+        crushed = dict(pelvis=(0.0, -0.22, 0.860), hips=(-28, 0, 0), spine=(-44, 0, 0),
+                       head=(-22, 0, 0),
+                       hand_r=(0.38, 0.30, 1.00), hand_l=(-0.36, 0.32, 0.98),
+                       elbow_r=(0.8, -0.3, -0.3), elbow_l=(-0.8, -0.3, -0.3),
+                       fist_r=0.2, fist_l=0.2,
+                       foot_r=(0.24, 0.04, 0.104), foot_l=(-0.22, 0.10, 0.104))
+        return [
+            (c - 9, _sp_tw(hang, head=(6, 0, 0))),
+            (c - 5, _sp_tw(hang, head=(12, 0, 0), spine=(-4, 0, 0))),
+            (c - 2, _sp_tw(hang, head=(10, 0, 0), spine=(-8, 0, 0), pelvis=(0.0, 0.02, 0.0))),
+            (c, crushed),
+            (c + 3, _sp_tw(crushed, pelvis=(0.0, -0.04, 0.02), hips=(-6, 0, 0), spine=(-4, 0, 0))),
+            (c + 6, _sp_tw(crushed, pelvis=(0.0, -0.04, 0.0), hips=(-4, 0, 0), spine=(-6, 0, 0),
+                        head=(-6, 0, 0))),
+            # Roman out of him: he sags back into the buckle, chin down.
+            (c + 10, dict(crushed, pelvis=(0.0, -0.22, 0.760), hips=(-4, 0, 0),
+                          spine=(4, 0, 0), head=(-30, 0, 0),
+                          hand_r=(0.36, 0.06, 0.80), hand_l=(-0.36, 0.06, 0.78),
+                          foot_r=(0.24, 0.10, 0.104), foot_l=(-0.22, 0.14, 0.104))),
+            # Sliding down it.
+            (c + 16, dict(pelvis=(0.0, -0.22, 0.480), hips=(6, 0, 0), spine=(0, 0, 0),
+                          head=(-30, 4, 0),
+                          hand_r=(0.36, -0.04, 0.44), hand_l=(-0.36, -0.04, 0.42),
+                          elbow_r=(0.6, -0.2, -0.6), elbow_l=(-0.6, -0.2, -0.6),
+                          fist_r=0.1, fist_l=0.1,
+                          foot_r=(0.24, 0.30, 0.104), foot_l=(-0.22, 0.34, 0.104),
+                          knee_r=(0.3, 0.6, 0.8), knee_l=(-0.3, 0.6, 0.8))),
+            # Sitting in the corner, legs out, chin on his chest.
+            (c + 22, dict(_SPD_SLUMP)),
+            (c + 30, _sp_tw(_SPD_SLUMP, head=(-4, -4, 0))),
+        ]
+    return [
+        (c - 9, dict(_SPD_SQUARE)),
+        (c - 5, _sp_tw(_SPD_SQUARE, head=(4, 0, 0), spine=(4, 0, 0))),
+        (c - 3, dict(_SPD_BRACE)),
+        (c, dict(_SPD_FOLD)),
+        (c + 3, dict(_SPD_CARRIED)),
+        (c + 6, dict(_SPD_TIP)),
+        (c + 9, _spd_down(0.66)),
+        (c + 12, _spd_down(0.60, arm_up=0.16)),
+        (c + 15, _spd_down(0.52, arm_up=0.30)),
+        (c + 18, _spd_down(0.34, arm_up=0.44)),
+        (c + 21, _spd_down(0.12, arm_up=0.50)),
+        (c + 25, _spd_down(0.10, arm_up=0.36, spread=0.30)),
+        (c + 30, dict(SUPINE_AWAY)),
+    ]
+
+
+# Seated against the buckle, legs out, chin on his chest (the corner Spear's end).
+_SPD_SLUMP = dict(pelvis=(0.0, -0.22, 0.200), hips=(10, 0, 0), spine=(2, 0, 0),
+                  head=(-30, 6, 0),
+                  hand_r=(0.32, -0.10, 0.08), hand_l=(-0.32, -0.10, 0.08),
+                  elbow_r=(0.6, -0.2, -0.6), elbow_l=(-0.6, -0.2, -0.6),
+                  fist_r=0.1, fist_l=0.1,
+                  foot_r=(0.22, 0.50, 0.104), foot_l=(-0.20, 0.46, 0.104),
+                  knee_r=(0.3, 0.4, 1.0), knee_l=(-0.3, 0.4, 1.0))
+
+# Upright in the buckle, back against it, arms along the top rope.
+_SPD_IN_CORNER = pose(CORNER_HANG, pelvis=(0.02, -0.14, 0.830), hips=(4, 0, 2),
+                      spine=(6, -4, 4), head=(-8, -6, 4))
+
+
+# The Spear from the lock-up, 84 frames / 2.8 s. He shoves him off, the man
+# stumbling back a metre; Roman back-pedals to 3.2 m, sets in his crouch, and
+# runs it in (frame 26 on), the hit on 54.
+SPEAR_HIT = 54
 CLIPS["Spear_Attacker"] = [
     (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(-14, 0, 0),
            hand_r=(0.12, 0.50, 1.40), hand_l=(-0.26, 0.46, 1.30),
            fist_r=0.6, fist_l=0.6)),
-    # Shoves off to make room -- quick: the back-off was a third of the move
-    # and read as a stroll (stage 8 review); 2K26 snaps into the crouch.
-    (4,  P(pelvis=(0.0, -0.04, 0.840), spine=(-6, 0, 0),
-           hand_r=(0.18, 0.52, 1.28), hand_l=(-0.18, 0.52, 1.26),
+    # Shoves him off.
+    (4,  P(pelvis=(0.0, 0.02, 0.840), spine=(-10, 0, 0),
+           hand_r=(0.20, 0.58, 1.28), hand_l=(-0.20, 0.58, 1.26),
            fist_r=0.1, fist_l=0.1)),
-    # Loads: dropped low over wide feet, eyes up on the target, hands clawed.
-    (8,  P(pelvis=(0.0, -0.05, 0.600), hips=(-30, 0, 0), spine=(-30, 0, 0),
-           head=(24, 0, 0),
-           hand_r=(0.32, 0.26, 0.52), hand_l=(-0.32, 0.26, 0.52),
+    # Back-pedalling, eyes on him.
+    (8,  P(pelvis=(0.0, -0.02, 0.830), spine=(-10, 0, 0), head=(8, 0, 0),
+           hand_r=(0.26, 0.30, 1.10), hand_l=(-0.24, 0.32, 1.08),
+           fist_r=0.6, fist_l=0.6,
+           foot_r=(0.22, -0.36, 0.18), foot_l=(-0.18, 0.16, 0.104))),
+    (12, P(pelvis=(0.0, -0.02, 0.820), spine=(-12, 0, 0), head=(10, 0, 0),
+           hand_r=(0.26, 0.30, 1.06), hand_l=(-0.24, 0.32, 1.04),
+           fist_r=0.6, fist_l=0.6,
+           foot_r=(0.22, -0.20, 0.104), foot_l=(-0.18, -0.30, 0.18))),
+    (16, P(pelvis=(0.0, -0.03, 0.810), spine=(-14, 0, 0), head=(12, 0, 0),
+           hand_r=(0.28, 0.28, 1.00), hand_l=(-0.26, 0.30, 0.98),
+           fist_r=0.5, fist_l=0.5,
+           foot_r=(0.22, -0.34, 0.18), foot_l=(-0.18, -0.10, 0.104))),
+    # Sets: dropped low over wide feet, eyes up on him.
+    (20, P(pelvis=(0.0, -0.06, 0.620), hips=(-30, 0, 0), spine=(-30, 0, 0),
+           head=(26, 0, 0),
+           hand_r=(0.32, 0.24, 0.52), hand_l=(-0.32, 0.24, 0.52),
            elbow_r=(0.6, -0.2, -0.7), elbow_l=(-0.6, -0.2, -0.7),
-           fist_r=0.35, fist_l=0.35,
+           fist_r=0.4, fist_l=0.4,
            foot_r=(0.28, -0.30, 0.104), foot_l=(-0.26, 0.20, 0.104))),
-    # The coil, held: rocking back onto the rear foot, wound tight.
-    (12, P(pelvis=(0.0, -0.09, 0.565), hips=(-32, 0, 0), spine=(-34, 0, 0),
+    (23, P(pelvis=(0.0, -0.09, 0.580), hips=(-32, 0, 0), spine=(-34, 0, 0),
            head=(30, 0, 0),
            hand_r=(0.34, 0.20, 0.48), hand_l=(-0.34, 0.20, 0.48),
            elbow_r=(0.6, -0.2, -0.7), elbow_l=(-0.6, -0.2, -0.7),
            fist_r=0.45, fist_l=0.45,
            foot_r=(0.28, -0.32, 0.104), foot_l=(-0.26, 0.20, 0.104))),
-    (16, P(pelvis=(0.0, -0.06, 0.575), hips=(-34, 0, 0), spine=(-34, 0, 0),
-           head=(28, 0, 0),
-           hand_r=(0.34, 0.24, 0.48), hand_l=(-0.34, 0.24, 0.48),
-           elbow_r=(0.6, -0.2, -0.7), elbow_l=(-0.6, -0.2, -0.7),
-           fist_r=0.4, fist_l=0.4,
-           foot_r=(0.28, -0.32, 0.104), foot_l=(-0.26, 0.20, 0.104))),
-    # Explodes OFF the mat: both feet leave it, torso near flat, shoulder
-    # leading. He used to run into the man with a foot down (stage 8 review).
-    # (Driven forward, not up: lifted 14 cm, the hands came off the waist
-    # hold -- PairClearance, 9-11 cm short on all three Spears.)
-    (19, P(pelvis=(0.0, 0.22, 0.750), hips=(-56, 0, 0), spine=(-28, 0, 0),
-           head=(30, 0, 0),
-           hand_r=(0.30, 0.60, 0.86), hand_l=(-0.30, 0.60, 0.86),
-           fist_r=0.4, fist_l=0.4,
-           foot_r=(0.20, -0.58, 0.34), foot_l=(-0.18, -0.22, 0.24),
-           knee_r=(0.2, 0.6, -0.6), knee_l=(-0.2, 0.8, -0.3), free_feet=True)),
-    # Impact, airborne: shoulder in the midsection, arms wrapping the waist.
-    (21, P(pelvis=(0.0, 0.28, 0.800), hips=(-64, 0, 0), spine=(-24, 0, 0),
-           head=(20, 0, 0),
-           hand_r=(0.26, 0.72, 0.96), hand_l=(-0.26, 0.72, 0.96),
-           elbow_r=(0.7, 0.0, -0.4), elbow_l=(-0.7, 0.0, -0.4),
-           fist_r=0.6, fist_l=0.6,
-           foot_r=(0.20, -0.52, 0.40), foot_l=(-0.18, -0.36, 0.32),
-           knee_r=(0.2, 0.6, -0.6), knee_l=(-0.2, 0.6, -0.6), free_feet=True)),
-    # Drives through him and goes down with him.
-    (25, dict(pelvis=(0.0, 0.30, 0.450), hips=(-75, 0, 0), spine=(-15, 0, 0),
-              head=(10, 0, 0),
-              hand_r=(0.26, 0.78, 0.34), hand_l=(-0.26, 0.78, 0.34),
-              fist_r=0.4, fist_l=0.4,
-              foot_r=(0.20, -0.40, 0.10), foot_l=(-0.20, -0.30, 0.10),
-              knee_r=(0.3, 0.9, -0.2), knee_l=(-0.3, 0.9, -0.2))),
-    # On his knees over him.
-    (30, dict(pelvis=(0.0, 0.05, 0.500), hips=(-40, 0, 0), spine=(-30, 0, 0),
-              head=(-10, 0, 0),
-              hand_r=(0.26, 0.60, 0.10), hand_l=(-0.26, 0.60, 0.10),
-              fist_r=0.1, fist_l=0.1,
-              foot_r=(0.19, -0.22, 0.09), foot_l=(-0.19, -0.20, 0.09),
-              knee_r=(0.3, 0.9, -0.2), knee_l=(-0.3, 0.9, -0.2))),
-    (36, P(pelvis=(0.0, 0.02, 0.750), hips=(-10, 0, 0), spine=(-20, 0, 0),
-           hand_r=(0.22, 0.30, 0.90), hand_l=(-0.20, 0.30, 0.90),
-           fist_r=0.6, fist_l=0.6)),
-    (42, P()),
-]
+    # Off the back foot.
+    (26, P(pelvis=(0.0, 0.10, 0.740), hips=(-24, 0, 0), spine=(-20, 0, 0),
+           head=(14, 0, 0),
+           hand_r=(0.28, 0.30, 0.96), hand_l=(-0.26, -0.06, 0.96),
+           fist_r=0.7, fist_l=0.7,
+           foot_r=(0.18, -0.44, 0.24), foot_l=(-0.16, 0.20, 0.104))),
+] + _sp_strides(30, SPEAR_HIT - 9) + _spear_core_attacker(SPEAR_HIT)
 
-# The Spear's victim. Past frame 21 his root is yawing a half-turn
-# (finisher_spear's trajectory: -90 at t0.70 to +90 at t0.83, frames 21-25),
-# and each key's hips yaw undoes the part of it already done, so in the world
-# he keeps falling straight backward and lands on his back.
+# The man: shoved off, stumbles back a metre holding his head, turns back to
+# find Roman, squares up too late.
 CLIPS["Spear_Defender"] = [
     (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(-14, 0, 0),
            hand_r=(0.22, 0.46, 1.32), hand_l=(-0.20, 0.48, 1.30),
            fist_r=0.6, fist_l=0.6)),
-    # Shoved back a step.
     (4,  P(pelvis=(0.0, -0.08, 0.830), spine=(8, 0, 0), head=(6, 0, 0),
            hand_r=(0.22, 0.26, 1.12), hand_l=(-0.20, 0.28, 1.10),
            fist_r=0.4, fist_l=0.4,
            foot_r=(0.23, -0.24, 0.104), foot_l=(-0.19, 0.10, 0.104))),
-    # Rocked, a hand to his head. He stood like a dummy through the load
-    # (stage 8 review); now he is still shaking off what came before it.
-    (9,  HEAD_HURT),
-    # Looks up and finds him...
-    (14, P(pelvis=(0.0, -0.02, 0.835), spine=(-2, 0, 0), head=(8, 0, 0),
-           hand_r=(0.24, 0.26, 1.10), hand_l=(-0.22, 0.28, 1.06),
+    (9,  pose(HEAD_HURT, foot_r=(0.28, -0.36, 0.16))),
+    (14, pose(HEAD_HURT, pelvis=(0.02, -0.10, 0.800), spine=(-10, 10, -4),
+              head=(12, 14, -6), foot_l=(-0.20, -0.20, 0.16))),
+    (20, pose(HEAD_HURT, pelvis=(0.01, -0.06, 0.810), spine=(-8, 6, -2),
+              head=(8, 4, -2), hand_l=(-0.16, 0.30, 1.30))),
+    (30, P(pelvis=(0.0, -0.02, 0.825), spine=(-6, 4, 0), head=(4, 6, 0),
+           hand_r=(0.26, 0.24, 1.08), hand_l=(-0.18, 0.30, 1.24),
            fist_r=0.4, fist_l=0.4)),
-    # ...sees it coming and braces, a beat too late: weight back, hands up.
-    (18, P(pelvis=(0.0, -0.06, 0.805), spine=(6, 0, 0), head=(10, 0, 0),
-           hand_r=(0.26, 0.36, 1.22), hand_l=(-0.24, 0.38, 1.20),
-           fist_r=0.15, fist_l=0.15,
-           foot_r=(0.23, -0.22, 0.104), foot_l=(-0.19, 0.10, 0.104))),
-    # The hit: folded forward over the shoulder, lifted, feet leaving the mat.
-    (21, dict(pelvis=(0.0, -0.15, 0.980), hips=(-30, 0, 0), spine=(-40, 0, 0),
-              head=(-20, 0, 0),
-              hand_r=(0.34, 0.40, 1.10), hand_l=(-0.32, 0.42, 1.08),
-              elbow_r=(0.8, -0.3, -0.3), elbow_l=(-0.8, -0.3, -0.3),
-              fist_r=0.3, fist_l=0.3,
-              foot_r=(0.20, 0.25, 0.32), foot_l=(-0.18, 0.28, 0.36),
-              knee_r=(0.3, 0.8, 0.4), knee_l=(-0.3, 0.8, 0.4))),
-] + _back_fall(21, 42, skip_hit=True, fall_z=0.76)
+    (38, P(pelvis=(0.0, -0.02, 0.835), spine=(-2, 0, 0), head=(8, 0, 0),
+           hand_r=(0.24, 0.28, 1.10), hand_l=(-0.22, 0.30, 1.08),
+           fist_r=0.4, fist_l=0.4)),
+] + _spear_core_defender(SPEAR_HIT, _SPD_SQUARE)
 
 
 # --- per-wrestler signatures ---------------------------------------------------
@@ -6135,13 +6404,25 @@ CLIPS["Gamengiri_Attacker"] = _run_in(kick=True) + [
 CLIPS["Gamengiri_Defender"] = [(0, pose(STAND)), (9, pose(STAND, head=(4, 0, 0)))] \
     + _face_fall(11, 36, spine=(-10, 20, 0), head=(-4, 30, 0))
 
-# Spear, running. The finisher's charge from a sprint, without the shove-off
-# and load it needs from a lock-up (video frames 55-57): Spear_Attacker's
-# explosion, impact and follow-through, fed from the run.
-CLIPS["Run_Spear_Attacker"] = [(0, pose(RUN_A)), (4, pose(RUN_B))] + \
-    [(k - 12, v) for k, v in CLIPS["Spear_Attacker"] if k >= 16]
-CLIPS["Run_Spear_Defender"] = [(0, pose(STAND))] + \
-    [(k - 12, v) for k, v in CLIPS["Spear_Defender"] if k >= 18]
+# Spear, running, 45 frames / 1.5 s: the game's run (GrappleRig carries his
+# RUN into the first frame) into the last two strides, then the Spear's core
+# from the gesture (_spear_core_attacker), the hit on 15.
+RUN_SPEAR_HIT = 15
+CLIPS["Run_Spear_Attacker"] = _sp_strides(0, RUN_SPEAR_HIT - 9) \
+    + _spear_core_attacker(RUN_SPEAR_HIT)
+CLIPS["Run_Spear_Defender"] = [(0, dict(_SPD_SQUARE)),
+                               (3, _sp_tw(_SPD_SQUARE, head=(2, 0, 0)))] \
+    + _spear_core_defender(RUN_SPEAR_HIT, _SPD_SQUARE)
+
+# The corner Spear, 45 frames: the same run and gesture into a man standing
+# in the buckle; the shoulder crushes him into it (his pelvis driven back
+# against the pad), Roman stays on his feet and backs out, and the man slides
+# down the buckle to sitting.
+CLIPS["Corner_Spear_Attacker"] = _sp_strides(0, RUN_SPEAR_HIT - 9) \
+    + _spear_core_attacker(RUN_SPEAR_HIT, corner=True)
+CLIPS["Corner_Spear_Defender"] = [(0, dict(_SPD_IN_CORNER)),
+                                  (3, _sp_tw(_SPD_IN_CORNER, head=(2, 2, 0)))] \
+    + _spear_core_defender(RUN_SPEAR_HIT, _SPD_IN_CORNER, corner=True)
 
 # Stundog Millionaire, 42 frames. Leaps into a front facelock, hangs from it
 # with his legs swung up (video frames 18-22), and drops to his back, spiking
@@ -8109,14 +8390,13 @@ def export(path):
 # --- The Superman Punch into the Spear (Roman's 2K26 "super") ------------------
 #
 # gauntlet/refs/moveset_audit_2k26.md: in 2K26 the Superman Punch is the set-up
-# for the Spear. One cinematic, stitched from the two authored moves rather
-# than re-keyed, so it is the same punch and the same Spear the match already
-# shows: the Superman Punch up to the moment it lands (frames 0-29), the
-# victim rocked onto his heels and staggering instead of going over, Roman
-# backing off into the Spear's crouch, then the Spear from its load (Spear
-# frame 12) to the end. 84 frames / 2.8 s; the Spear's frames are shifted by
-# SUPERMAN_SPEAR_SHIFT, so its impact (Spear frame 21) lands on frame 63.
-SUPERMAN_SPEAR_SHIFT = 42
+# for the Spear. The Superman Punch up to the moment it lands (frames 0-29),
+# the man rocked onto his heels and staggering back instead of going over;
+# then room (sig loop 2: "space between the punch and the spear"): Roman
+# back-pedals to three metres, sets, and runs the Spear in -- the same run,
+# gesture and dive as the others (_spear_core_attacker), the hit on 90.
+# 120 frames / 4.0 s.
+SUPERMAN_SPEAR_HIT = 90
 
 
 def _shift(keys, by, start=0):
@@ -8130,38 +8410,67 @@ CLIPS["Superman_Spear_Attacker"] = (
         (34, P(pelvis=(0.0, 0.0, 0.840), spine=(-10, 0, 0), head=(6, 0, 0),
                hand_r=(0.24, 0.30, 1.10), hand_l=(-0.22, 0.32, 1.10),
                fist_r=0.7, fist_l=0.7)),
-        # Backing off to give himself room, eyes on him: the root travels
-        # back 1.2 m, so the feet step under him.
-        (39, P(pelvis=(0.0, -0.02, 0.820), spine=(-12, 0, 0), head=(10, 0, 0),
-               hand_r=(0.26, 0.28, 1.06), hand_l=(-0.24, 0.30, 1.06),
-               foot_r=(0.23, -0.30, 0.16), foot_l=(-0.19, 0.20, 0.104),
-               fist_r=0.7, fist_l=0.7)),
-        (44, P(pelvis=(0.0, -0.02, 0.810), spine=(-14, 0, 0), head=(12, 0, 0),
-               hand_r=(0.26, 0.28, 1.00), hand_l=(-0.24, 0.30, 1.00),
-               foot_r=(0.23, -0.16, 0.104), foot_l=(-0.19, -0.10, 0.16),
-               fist_r=0.6, fist_l=0.6)),
-        (49, P(pelvis=(0.0, -0.04, 0.700), hips=(-18, 0, 0), spine=(-22, 0, 0),
-               head=(18, 0, 0),
-               hand_r=(0.30, 0.26, 0.72), hand_l=(-0.30, 0.26, 0.72),
-               foot_r=(0.28, -0.30, 0.104), foot_l=(-0.26, 0.20, 0.104),
-               fist_r=0.4, fist_l=0.4)),
+        # Back-pedalling for room, eyes on him: the root travels back
+        # 1.85 m, so the feet step under him.
+        (38, P(pelvis=(0.0, -0.02, 0.830), spine=(-10, 0, 0), head=(8, 0, 0),
+               hand_r=(0.26, 0.30, 1.08), hand_l=(-0.24, 0.32, 1.08),
+               fist_r=0.7, fist_l=0.7,
+               foot_r=(0.22, -0.36, 0.18), foot_l=(-0.18, 0.16, 0.104))),
+        (43, P(pelvis=(0.0, -0.02, 0.820), spine=(-12, 0, 0), head=(10, 0, 0),
+               hand_r=(0.26, 0.30, 1.04), hand_l=(-0.24, 0.32, 1.04),
+               fist_r=0.7, fist_l=0.7,
+               foot_r=(0.22, -0.20, 0.104), foot_l=(-0.18, -0.30, 0.18))),
+        (48, P(pelvis=(0.0, -0.02, 0.820), spine=(-12, 0, 0), head=(10, 0, 0),
+               hand_r=(0.26, 0.30, 1.04), hand_l=(-0.24, 0.32, 1.04),
+               fist_r=0.7, fist_l=0.7,
+               foot_r=(0.22, -0.34, 0.18), foot_l=(-0.18, -0.12, 0.104))),
+        (53, P(pelvis=(0.0, -0.03, 0.810), spine=(-14, 0, 0), head=(12, 0, 0),
+               hand_r=(0.28, 0.28, 1.00), hand_l=(-0.26, 0.30, 0.98),
+               fist_r=0.6, fist_l=0.6,
+               foot_r=(0.22, -0.18, 0.104), foot_l=(-0.18, -0.30, 0.16))),
+        # Sets in his crouch, eyes up on him.
+        (58, P(pelvis=(0.0, -0.06, 0.620), hips=(-30, 0, 0), spine=(-30, 0, 0),
+               head=(26, 0, 0),
+               hand_r=(0.32, 0.24, 0.52), hand_l=(-0.32, 0.24, 0.52),
+               elbow_r=(0.6, -0.2, -0.7), elbow_l=(-0.6, -0.2, -0.7),
+               fist_r=0.4, fist_l=0.4,
+               foot_r=(0.28, -0.30, 0.104), foot_l=(-0.26, 0.20, 0.104))),
+        (61, P(pelvis=(0.0, -0.09, 0.580), hips=(-32, 0, 0), spine=(-34, 0, 0),
+               head=(30, 0, 0),
+               hand_r=(0.34, 0.20, 0.48), hand_l=(-0.34, 0.20, 0.48),
+               elbow_r=(0.6, -0.2, -0.7), elbow_l=(-0.6, -0.2, -0.7),
+               fist_r=0.45, fist_l=0.45,
+               foot_r=(0.28, -0.32, 0.104), foot_l=(-0.26, 0.20, 0.104))),
+        (64, P(pelvis=(0.0, 0.10, 0.740), hips=(-24, 0, 0), spine=(-20, 0, 0),
+               head=(14, 0, 0),
+               hand_r=(0.28, 0.30, 0.96), hand_l=(-0.26, -0.06, 0.96),
+               fist_r=0.7, fist_l=0.7,
+               foot_r=(0.18, -0.44, 0.24), foot_l=(-0.16, 0.20, 0.104))),
     ]
-    + _shift(CLIPS["Spear_Attacker"], SUPERMAN_SPEAR_SHIFT, start=12)
+    + _sp_strides(67, SUPERMAN_SPEAR_HIT - 9)
+    + _spear_core_attacker(SUPERMAN_SPEAR_HIT)
 )
 
 CLIPS["Superman_Spear_Defender"] = (
     [(f, p) for f, p in CLIPS["Superman_Punch_Defender"] if f <= 26]
     + [
-        # Rocked onto his heels, not over: a step back, the hand to the jaw.
+        # Rocked onto his heels, not over: staggering back, the hand to the jaw.
         (31, HEAD_HURT),
         (38, pose(HEAD_HURT, pelvis=(0.02, -0.10, 0.800), spine=(-10, 10, -4),
-                  head=(12, 14, -6))),
-        # Shaking it off, turning back to find him -- into the Spear's own
-        # "squares up, not seeing it coming" (Spear_Defender frame 14).
+                  head=(12, 14, -6), foot_l=(-0.20, -0.20, 0.16))),
         (46, pose(HEAD_HURT, pelvis=(0.01, -0.06, 0.810), spine=(-8, 6, -2),
                   head=(8, 4, -2), hand_l=(-0.16, 0.30, 1.30))),
+        (56, pose(HEAD_HURT, pelvis=(0.0, -0.08, 0.800), spine=(-12, 12, -4),
+                  head=(4, 20, -6), hand_l=(-0.12, 0.28, 1.40))),
+        # Shaking it off, turning back to find him.
+        (66, P(pelvis=(0.0, -0.02, 0.825), spine=(-6, 4, 0), head=(4, 6, 0),
+               hand_r=(0.26, 0.24, 1.08), hand_l=(-0.18, 0.30, 1.24),
+               fist_r=0.4, fist_l=0.4)),
+        (74, P(pelvis=(0.0, -0.02, 0.835), spine=(-2, 0, 0), head=(8, 0, 0),
+               hand_r=(0.24, 0.28, 1.10), hand_l=(-0.22, 0.30, 1.08),
+               fist_r=0.4, fist_l=0.4)),
     ]
-    + _shift([(f, p) for f, p in CLIPS["Spear_Defender"]], SUPERMAN_SPEAR_SHIFT, start=14)
+    + _spear_core_defender(SUPERMAN_SPEAR_HIT, _SPD_SQUARE)
 )
 
 

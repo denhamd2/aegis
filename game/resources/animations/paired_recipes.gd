@@ -501,27 +501,31 @@ const RECIPES := {
 		"authored": {"attacker": "Run_Spear_Attacker", "defender": "Run_Spear_Defender"},
 		"attacker": [
 			{"t": 0.00, "clip": "Push", "at": 0.80},
-			{"t": 0.60, "clip": "Punch_Cross", "at": 0.50},
+			{"t": 0.50, "clip": "Punch_Cross", "at": 0.50},
 		],
 		"defender": [
 			{"t": 0.00, "clip": "Idle", "at": 0.00},
-			{"t": 0.60, "clip": "Death01", "at": 1.60},
+			{"t": 0.50, "clip": "Death01", "at": 1.60},
 		],
-		"defender_grips_until": 0.25,
+		# Hands his own through the run and the gesture; round the waist from
+		# the dive (hit at 30/90) until he pushes up off him.
+		"attacker_grips_from": 24.0 / 90.0,
+		"attacker_grips_until": 62.0 / 90.0,
+		"defender_grips_until": 0.0,
 	},
 	# Roman's, from the corner -- the Spear's clips, played against a man who
 	# has nowhere to go (see TRAJECTORIES): he folds into the buckle.
 	"running_corner_spear": {
-		"authored": {"attacker": "Run_Spear_Attacker", "defender": "Run_Spear_Defender"},
+		"authored": {"attacker": "Corner_Spear_Attacker", "defender": "Corner_Spear_Defender"},
 		"attacker": [
 			{"t": 0.00, "clip": "Push", "at": 0.80},
-			{"t": 0.60, "clip": "Punch_Cross", "at": 0.50},
+			{"t": 0.50, "clip": "Punch_Cross", "at": 0.50},
 		],
 		"defender": [
 			{"t": 0.00, "clip": "Idle", "at": 0.00},
-			{"t": 0.60, "clip": "Death01", "at": 1.60},
+			{"t": 0.50, "clip": "Death01", "at": 1.60},
 		],
-		"defender_grips_until": 0.25,
+		"defender_grips_until": 0.0,
 	},
 	# Cody's, from the corner -- the Bicycle Knee's clips, played against a man
 	# hanging in the buckle (see TRAJECTORIES): the head snaps back into the
@@ -642,15 +646,19 @@ const RECIPES := {
 		"authored": {"attacker": "Superman_Spear_Attacker", "defender": "Superman_Spear_Defender"},
 		"attacker": [
 			{"t": 0.00, "clip": "Push", "at": 0.80},
-			{"t": 1.40, "clip": "Jump_Start", "at": 0.30},
-			{"t": 2.80, "clip": "Idle", "at": 0.00},
+			{"t": 2.80, "clip": "Jump_Start", "at": 0.30},
+			{"t": 4.00, "clip": "Idle", "at": 0.00},
 		],
 		"defender": [
 			{"t": 0.00, "clip": "Push", "at": 0.80},
-			{"t": 2.10, "clip": "Death01", "at": 0.40},
-			{"t": 2.80, "clip": "Death01", "at": 1.60},
+			{"t": 3.00, "clip": "Death01", "at": 0.40},
+			{"t": 4.00, "clip": "Death01", "at": 1.60},
 		],
-		"defender_grips_until": 0.10,
+		# Hands his own through the punch, the back-off, the run and the
+		# gesture; round the waist from the dive (hit at 180/240).
+		"attacker_grips_from": 174.0 / 240.0,
+		"attacker_grips_until": 212.0 / 240.0,
+		"defender_grips_until": 0.05,
 	},
 	# Cody's finisher -- see Cross_Rhodes_Attacker.
 	"finisher_cross_rhodes": {
@@ -670,17 +678,21 @@ const RECIPES := {
 	# Roman's finisher -- see Spear_Attacker in tools/blender/wrestling_clips.py.
 	"finisher_spear": {
 		"authored": {"attacker": "Spear_Attacker", "defender": "Spear_Defender"},
+		# Hands his own through the shove, back-off, run and gesture; round
+		# the waist from the dive (hit at 108/168) until he pushes up off him.
+		"attacker_grips_from": 102.0 / 168.0,
+		"attacker_grips_until": 140.0 / 168.0,
 		"attacker": [
 			{"t": 0.00, "clip": "Push", "at": 0.80},
-			{"t": 0.60, "clip": "Jump_Start", "at": 0.30},
-			{"t": 1.40, "clip": "Idle", "at": 0.00},
+			{"t": 1.60, "clip": "Jump_Start", "at": 0.30},
+			{"t": 2.80, "clip": "Idle", "at": 0.00},
 		],
 		"defender": [
 			{"t": 0.00, "clip": "Push", "at": 0.80},
-			{"t": 0.70, "clip": "Death01", "at": 0.40},
-			{"t": 1.40, "clip": "Death01", "at": 1.60},
+			{"t": 1.80, "clip": "Death01", "at": 0.40},
+			{"t": 2.80, "clip": "Death01", "at": 1.60},
 		],
-		"defender_grips_until": 0.10,
+		"defender_grips_until": 0.05,
 	},
 	"signature_backbreaker": {
 		# Authored in Blender: both halves keyframed against each other
@@ -1706,28 +1718,31 @@ const TRAJECTORIES := {
 			"rot": [[0.000, 0.00, -90.00, 0.00], [1.200, 0.00, -90.00, 0.00]],
 		},
 	},
+	# The Spear off the run: the clip opens 2.1 m out at a sprint, two strides
+	# to the gesture, the hit at 0.50 s -- then finisher_spear's core.
 	"running_spear": {
-		"length": 1.0,
+		"length": 1.5,
 		"attacker": {
-			"pos": [[0.000, 1.20, 0.00, 0.00], [0.133, 0.75, 0.00, 0.00], [0.300, 0.00, 0.00, 0.00], [0.433, -0.35, 0.00, 0.00], [1.000, -0.40, 0.00, 0.00]],
-			"rot": [[0.000, 0.00, 90.00, 0.00], [1.000, 0.00, 90.00, 0.00]],
+			"pos": [[0.000, 1.70, 0.00, 0.00], [0.100, 1.22, 0.00, 0.00], [0.200, 0.75, 0.00, 0.00], [0.300, 0.62, 0.00, 0.10], [0.400, 0.52, 0.00, 0.20], [0.500, 0.40, 0.00, 0.20], [0.600, 0.05, 0.00, 0.20], [0.700, -0.35, 0.00, 0.20], [0.800, -0.82, 0.00, 0.20], [0.900, -1.00, 0.00, 0.20], [1.100, -1.02, 0.00, 0.20], [1.200, -0.95, 0.00, 0.20], [1.370, -0.75, 0.00, 0.14], [1.500, -0.20, 0.00, 0.10]],
+			"rot": [[0.000, 0.0, 90.0, 0.0], [1.500, 0.0, 90.0, 0.0]],
 		},
 		"defender": {
-			"pos": [[0.000, -0.40, 0.00, 0.00], [0.300, -0.52, 0.00, 0.00], [0.533, -1.05, 0.00, 0.00], [1.000, -1.05, 0.00, 0.00]],
-			"rot": [[0.000, 0.00, -90.00, 0.00], [1.000, 0.00, -90.00, 0.00]],
+			"pos": [[0.000, -0.40, 0.00, 0.00], [0.500, -0.40, 0.00, 0.00], [0.600, -0.65, 0.00, 0.00], [0.700, -0.95, 0.00, 0.00], [0.800, -1.40, 0.00, 0.00], [1.500, -1.40, 0.00, 0.00]],
+			"rot": [[0.000, 0.0, -90.0, 0.0], [1.500, 0.0, -90.0, 0.0]],
 		},
 	},
-	# The corner Spear: the Spear's run, but the man is against the buckle, so
-	# he is driven in and folds down where he stands instead of flying back.
+	# The corner Spear: the Spear's run and gesture, but the man is against the
+	# buckle: crushed into it 6 cm, Roman stays on his feet and backs out, and
+	# the man slides down it to sitting where he stands.
 	"running_corner_spear": {
-		"length": 1.0,
+		"length": 1.5,
 		"attacker": {
-			"pos": [[0.000, 1.20, 0.00, 0.00], [0.133, 0.75, 0.00, 0.00], [0.300, 0.20, 0.00, 0.00], [0.433, 0.05, 0.00, 0.00], [1.000, 0.05, 0.00, 0.00]],
-			"rot": [[0.000, 0.00, 90.00, 0.00], [1.000, 0.00, 90.00, 0.00]],
+			"pos": [[0.000, 1.70, 0.00, 0.00], [0.100, 1.22, 0.00, 0.00], [0.200, 0.75, 0.00, 0.00], [0.300, 0.62, 0.00, 0.10], [0.400, 0.52, 0.00, 0.20], [0.500, 0.40, 0.00, 0.20], [0.600, 0.22, 0.00, 0.20], [0.700, 0.20, 0.00, 0.20], [0.830, 0.35, 0.00, 0.16], [1.030, 0.70, 0.00, 0.08], [1.230, 0.90, 0.00, 0.00], [1.500, 1.00, 0.00, 0.00]],
+			"rot": [[0.000, 0.0, 90.0, 0.0], [1.500, 0.0, 90.0, 0.0]],
 		},
 		"defender": {
-			"pos": [[0.000, -0.40, 0.00, 0.00], [0.300, -0.45, 0.00, 0.00], [0.533, -0.60, 0.00, 0.00], [1.000, -0.60, 0.00, 0.00]],
-			"rot": [[0.000, 0.00, -90.00, 0.00], [1.000, 0.00, -90.00, 0.00]],
+			"pos": [[0.000, -0.40, 0.00, 0.00], [0.500, -0.40, 0.00, 0.00], [0.600, -0.46, 0.00, 0.00], [0.830, -0.44, 0.00, 0.00], [1.500, -0.44, 0.00, 0.00]],
+			"rot": [[0.000, 0.0, -90.0, 0.0], [1.500, 0.0, -90.0, 0.0]],
 		},
 	},
 	# The corner knee: the Bicycle Knee's run and leap, but the man is against
@@ -1799,57 +1814,41 @@ const TRAJECTORIES := {
 	},
 
 	# --- finisher tier -------------------------------------------------
-	# Roman's Spear: he shoves off, loads 0.9 m back, and charges through
-	# the victim's midsection -- 1.6 m in six frames -- going down on top of
-	# him. The victim is driven 0.6 m back and, while airborne (t0.70-0.83),
-	# his root yaws a half-turn so he lands facing the way Down_Supine lies;
-	# Spear_Defender's bones counter-yaw so he keeps falling straight back in
-	# the world. No root leaves the mat (y = 0 throughout), so the yaw is
-	# free of the airborne-landing invariant.
-	# The back-off is quick (at his mark by 0.27 s, not 0.40) and the crouch is
-	# held longer -- tension, not a stroll (stage 8 review); impact unmoved.
+	# Roman's Spear (sig loop 2, against Starks's Spear, 1104.4-1106.3 s):
+	# he shoves the man off, who stumbles back a metre to -1.45; Roman
+	# back-pedals to 1.80, sets, and runs it in, 3.2 m from the set. The
+	# gesture at 1.15-0.92 m from him, the hit at 1.80 s, 0.80 m apart; then
+	# Roman drives him 1.0 m back and goes down on top of him (2.10 s), and
+	# kneels up between his legs. From the gesture on Roman's root runs 0.20 m
+	# to his LEFT (+Z: he faces -X), so his right shoulder meets the navel and
+	# his head goes past the man's hip, not through it. Roots stay at y = 0;
+	# the man lands head-away (MoveDef.defender_lands_head_away).
 	"finisher_spear": {
-		"length": 1.4,
+		"length": 2.8,
 		"attacker": {
-			"pos": [[0.00, 0.40, 0.00, 0.00], [0.13, 0.75, 0.00, 0.00],
-					[0.27, 1.30, 0.00, 0.00], [0.53, 1.30, 0.00, 0.00],
-					[0.63, 0.30, 0.00, 0.00], [0.70, 0.00, 0.00, 0.00],
-					[0.83, -0.35, 0.00, 0.00], [1.40, -0.40, 0.00, 0.00]],
-			"rot": [[0.00, 0.0, 90.0, 0.0], [1.40, 0.0, 90.0, 0.0]],
+			"pos": [[0.000, 0.40, 0.00, 0.00], [0.133, 0.55, 0.00, 0.00], [0.267, 1.00, 0.00, 0.00], [0.533, 1.62, 0.00, 0.00], [0.667, 1.80, 0.00, 0.00], [0.867, 1.78, 0.00, 0.00], [0.994, 1.62, 0.00, 0.00], [1.120, 1.21, 0.00, 0.00], [1.247, 0.67, 0.00, 0.00], [1.373, 0.13, 0.00, 0.00], [1.500, -0.30, 0.00, 0.00], [1.600, -0.43, 0.00, 0.10], [1.700, -0.53, 0.00, 0.20], [1.800, -0.65, 0.00, 0.20], [1.900, -1.00, 0.00, 0.20], [2.000, -1.40, 0.00, 0.20], [2.100, -1.87, 0.00, 0.20], [2.200, -2.05, 0.00, 0.20], [2.400, -2.07, 0.00, 0.20], [2.500, -2.00, 0.00, 0.20], [2.670, -1.80, 0.00, 0.14], [2.800, -1.25, 0.00, 0.10]],
+			"rot": [[0.000, 0.0, 90.0, 0.0], [2.800, 0.0, 90.0, 0.0]],
 		},
 		"defender": {
-			"pos": [[0.00, -0.40, 0.00, 0.00], [0.13, -0.52, 0.00, 0.00],
-					[0.63, -0.52, 0.00, 0.00], [0.70, -0.62, 0.00, 0.00],
-					[0.93, -1.05, 0.00, 0.00], [1.40, -1.05, 0.00, 0.00]],
-			"rot": [[0.00, 0.0, -90.0, 0.0], [1.400, 0.00, -90.0, 0.00]],
+			"pos": [[0.000, -0.40, 0.00, 0.00], [0.133, -0.55, 0.00, 0.00], [0.333, -1.05, 0.00, 0.00], [0.667, -1.40, 0.00, 0.00], [1.000, -1.45, 0.00, 0.00], [1.800, -1.45, 0.00, 0.00], [1.900, -1.70, 0.00, 0.00], [2.000, -2.00, 0.00, 0.00], [2.100, -2.45, 0.00, 0.00], [2.800, -2.45, 0.00, 0.00]],
+			"rot": [[0.000, 0.0, -90.0, 0.0], [2.800, 0.0, -90.0, 0.0]],
 		},
 	},
 
 	# Roman's Superman Punch into the Spear: the Superman Punch's keys to the
-	# punch landing, short (0.15 m: landing where the Superman Punch lands
-	# put him on the man's feet, PairClearance 9.5 cm), the victim rocked back
-	# to -0.72, Roman backing off to 1.30 m, then the Spear's keys from its
-	# crouch, shifted 1.4 s (SUPERMAN_SPEAR_SHIFT) and 0.18 m to keep its
-	# spacing.
+	# punch landing (0.15 m: landing where the Superman Punch lands put him on
+	# the man's feet, PairClearance 9.5 cm), the man rocked back to -0.95;
+	# Roman back-pedals to 2.00 for room (sig loop 2) and runs the Spear in,
+	# the hit at 3.00 s, then finisher_spear's core.
 	"finisher_superman_spear": {
-		"length": 2.8,
+		"length": 4.0,
 		"attacker": {
-			"pos": [[0.00, 0.40, 0.00, 0.00], [0.20, 0.90, 0.00, 0.00],
-					[0.47, 1.30, 0.00, 0.00], [0.63, 0.45, 0.00, 0.00],
-					[0.87, 0.15, 0.00, 0.00], [0.97, 0.15, 0.00, 0.00],
-					[1.13, 0.35, 0.00, 0.00], [1.63, 1.15, 0.00, 0.00],
-					[1.80, 1.30, 0.00, 0.00], [1.93, 1.30, 0.00, 0.00],
-					[2.03, 0.12, 0.00, 0.00], [2.10, -0.18, 0.00, 0.00],
-					[2.23, -0.53, 0.00, 0.00], [2.80, -0.58, 0.00, 0.00]],
-			"rot": [[0.00, 0.0, 90.0, 0.0], [2.80, 0.0, 90.0, 0.0]],
+			"pos": [[0.000, 0.40, 0.00, 0.00], [0.200, 0.90, 0.00, 0.00], [0.470, 1.30, 0.00, 0.00], [0.630, 0.45, 0.00, 0.00], [0.870, 0.15, 0.00, 0.00], [0.970, 0.15, 0.00, 0.00], [1.130, 0.25, 0.00, 0.00], [1.400, 0.80, 0.00, 0.00], [1.670, 1.40, 0.00, 0.00], [1.930, 1.98, 0.00, 0.00], [2.130, 2.00, 0.00, 0.00], [2.272, 1.79, 0.00, 0.00], [2.415, 1.28, 0.00, 0.00], [2.558, 0.68, 0.00, 0.00], [2.700, 0.20, 0.00, 0.00], [2.800, 0.07, 0.00, 0.10], [2.900, -0.03, 0.00, 0.20], [3.000, -0.15, 0.00, 0.20], [3.100, -0.50, 0.00, 0.20], [3.200, -0.90, 0.00, 0.20], [3.300, -1.37, 0.00, 0.20], [3.400, -1.55, 0.00, 0.20], [3.600, -1.57, 0.00, 0.20], [3.700, -1.50, 0.00, 0.20], [3.870, -1.30, 0.00, 0.14], [4.000, -0.75, 0.00, 0.10]],
+			"rot": [[0.000, 0.0, 90.0, 0.0], [4.000, 0.0, 90.0, 0.0]],
 		},
 		"defender": {
-			"pos": [[0.00, -0.40, 0.00, 0.00], [0.20, -0.55, 0.00, 0.00],
-					[0.53, -0.45, 0.00, 0.00], [0.87, -0.48, 0.00, 0.00],
-					[1.07, -0.72, 0.00, 0.00], [2.03, -0.70, 0.00, 0.00],
-					[2.10, -0.80, 0.00, 0.00], [2.33, -1.23, 0.00, 0.00],
-					[2.80, -1.23, 0.00, 0.00]],
-			"rot": [[0.00, 0.0, -90.0, 0.0], [2.80, 0.00, -90.0, 0.00]],
+			"pos": [[0.000, -0.40, 0.00, 0.00], [0.200, -0.55, 0.00, 0.00], [0.530, -0.45, 0.00, 0.00], [0.870, -0.48, 0.00, 0.00], [1.070, -0.72, 0.00, 0.00], [1.400, -0.92, 0.00, 0.00], [1.900, -0.95, 0.00, 0.00], [3.000, -0.95, 0.00, 0.00], [3.100, -1.20, 0.00, 0.00], [3.200, -1.50, 0.00, 0.00], [3.300, -1.95, 0.00, 0.00], [4.000, -1.95, 0.00, 0.00]],
+			"rot": [[0.000, 0.0, -90.0, 0.0], [4.000, 0.0, -90.0, 0.0]],
 		},
 	},
 
