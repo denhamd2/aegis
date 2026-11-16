@@ -12379,3 +12379,50 @@ shape, chain wrestling, match loop, 2K26 flow, referee locomotion, and the
 clip gates). Not verified by render: the cause of the run-to-and-from-the-corner
 glitch (suspected: the men are 0.75 m apart at the bell but the AI keeps
 1.1 m) and how the new cameras look. Those need a look on the Mac.
+
+## 16 Nov: the camera shake is now visible
+
+The owner: "I didn't see the camera shake animation during high impact moves",
+then "Go ahead on camera shake fix".
+
+Why it was not seen. The shake moved the camera by `trauma^2 * 0.09 m` and
+spent itself at 3.5 trauma/s. A finisher (trauma 1.0) peaked at 0.09 m, about
+1.7% of a ringside frame's height, and was gone in 0.29 s; a signature peaked
+at 0.05 m for 0.21 s. A throw (0.5) was 2 cm for 0.14 s. The V-Trigger knees
+and Running V-Trigger 1 have `leaves_defender_down = false`, so they armed no
+shake at all.
+
+What changed (`game/core/camera/match_camera.gd`):
+- The peak is now `0.07` of the frame's height at the two men
+  (`MatchCamera.shake_amplitude`), not a fixed 0.09 m. A close-up and the far
+  hard camera read the same, and neither is thrown out of frame. The decay is
+  1.9/s, so a finisher takes 0.53 s to settle.
+- More moves arm it. A Fight Forever set-piece (anything in
+  `resources/moves/ff/`) or a spear shakes on its contact even if it leaves the
+  man standing (`TRAUMA_SET_PIECE` 0.6). That covers `ff/v_trigger_1`,
+  `ff/running_v_trigger_*`, `ff/powerbomb_v_trigger_combo` and every spear. A
+  strike at or above `MEDIUM_STRIKE_DAMAGE` gives a light thump, as before. Its
+  trauma was always armed; it was just invisible at the old scale. Jabs and
+  plain holds still do not shake.
+- The aim is untouched: the shake is still only `h_offset`/`v_offset`, and it
+  settles exactly where it was. OFF still cancels everything; LOW is 1.0x and
+  HIGH 1.8x of the new size. I did not add a roll or an FOV punch: the finisher
+  shots set `fov` themselves every tick, so a punch would be overwritten on
+  exactly the biggest hits.
+
+Before and after, at a ringside shot (41 degree lens, 7 m, a 5.4 m frame):
+
+| Impact | Trauma | Peak before | Peak after | Lasts before | Lasts after |
+|---|---|---|---|---|---|
+| Finisher | 1.0 | 0.090 m | 0.376 m | 0.29 s | 0.53 s |
+| Signature | 0.75 | 0.051 m | 0.212 m | 0.21 s | 0.39 s |
+| V-Trigger knee (a plain spear) | 0.6 (0.5) | none (0.023 m) | 0.135 m | none (0.14 s) | 0.32 s |
+| Throw or slam | 0.5 | 0.023 m | 0.094 m | 0.14 s | 0.26 s |
+| Heavy strike | 0.4 | 0.014 m | 0.060 m | 0.11 s | 0.21 s |
+
+Tests: `test_camera_impact_shake` (the old 0.2 m offset bound is now a bound on
+the frame, and new tests for the V-Trigger knees, the spears, a jab, a heavy
+strike, a plain hold, OFF and the 0.4-0.6 s duration) and
+`test_camera_fight_forever` (its "spent in 0.3 s" and 0.2 m bound encoded the
+old tuning, which the owner's request changes). The amplitudes come from the
+offsets, not from a render: how it feels is for the owner to judge on the Mac.

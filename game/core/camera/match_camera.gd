@@ -323,8 +323,9 @@ const CUT_HOLD := {Cut.STRIKE: 0.85, Cut.SLAM: 0.35, Cut.HERO: 1.5, Cut.FIRE_UP:
 ## match's biggest moment and the default camera cannot see it.
 const CELL_FALL_CUTS := [Cut.ROOF_FALL, Cut.PANEL_FALL]
 ## Trauma (0..1, squared into the shake) per kind of impact.
-## An ordinary strike no longer shakes the camera (_on_move_landed); kept for
-## anything that still asks for a light shake.
+## A jab does not shake the camera (_on_move_landed); a heavy strike
+## (MEDIUM_STRIKE_DAMAGE and up) gives it a light thump. Kept for anything that
+## still asks for a light shake.
 const TRAUMA_STRIKE := 0.3
 const TRAUMA_BIG_STRIKE := 0.45
 const TRAUMA_SLAM := 0.55
@@ -406,8 +407,18 @@ const FINISH_LEAD := 0.5
 ## Rhodes from behind gave way to Fight Forever's front one (19 Oct); kept
 ## for the next move set up from behind.
 const FINISH_OVER_SHOULDER: Array[StringName] = []
-const FINISH_SHAKE := 0.09
-const FINISH_SHAKE_DECAY := 3.5
+## The shake's peak offset at full trauma, as a fraction of the frame's height
+## at the men (so a close-up and the far hard camera both read it the same, and
+## neither is thrown out of frame). Was a fixed 0.09 m at 3.5 trauma/s: about
+## 1.7% of a ringside frame for 0.29 s, which the owner could not see on a
+## finisher (16 Nov: "I didn't see the camera shake animation during high
+## impact moves"). Now ~4x that, and 1/FINISH_SHAKE_DECAY = 0.53 s long.
+const FINISH_SHAKE := 0.07
+const FINISH_SHAKE_DECAY := 1.9
+## Used until both men are known (a probe camera in a test).
+const SHAKE_REF_DISTANCE := 6.0
+## A paired set-piece that leaves the man standing: a V-Trigger knee, a spear.
+const TRAUMA_SET_PIECE := 0.6
 const FINISH_SETUP_FOV := Vector2(24.0, 19.0)
 const FINISH_SETUP_DISTANCE := Vector2(2.9, 2.3)
 const FINISH_IMPACT_FOV := 58.0
@@ -1221,6 +1232,16 @@ static func _is_signature(move: MoveDef) -> bool:
 	return move != null and _move_key(move).begins_with("signature")
 
 
+## A Fight Forever set-piece (anything in the FF library: its signatures and
+## specials) or a spear: shakes on its contact whether or not it leaves him down.
+static func _is_set_piece(move: MoveDef) -> bool:
+	if move == null:
+		return false
+	if move.has_meta("ff_name") or String(move.resource_path).contains("/moves/ff/"):
+		return true
+	return _move_key(move).contains("spear")
+
+
 ## The fraction of a paired move at which contact lands: its own startup
 ## frames over its whole length, unless the authored recipe identifies a later
 ## landing. A running catch and its eventual slam can be different beats.
@@ -1456,10 +1477,31 @@ func _shake(delta: float) -> void:
 		v_offset = breath.y
 		return
 	_shake_t += delta
-	var amt := _trauma * _trauma * FINISH_SHAKE * scale
-	h_offset = amt * sin(_shake_t * 71.0) * cos(_shake_t * 23.0) + breath.x
+	var amt := shake_amplitude(_trauma, fov, _shake_distance(), scale)
+	h_offset = 0.7 * amt * sin(_shake_t * 71.0) * cos(_shake_t * 23.0) + breath.x
 	v_offset = amt * sin(_shake_t * 59.0 + 1.3) + breath.y
 	_trauma = maxf(0.0, _trauma - FINISH_SHAKE_DECAY * delta)
+
+
+## The peak film-back offset (metres) of a trauma level: FINISH_SHAKE of the
+## frame's height at `distance` for a lens of `fov_deg`, squared in trauma.
+static func shake_amplitude(trauma: float, fov_deg: float, distance: float, scale := 1.0) -> float:
+	var frame_height := 2.0 * distance * tan(deg_to_rad(fov_deg) * 0.5)
+	return trauma * trauma * FINISH_SHAKE * scale * frame_height
+
+
+## How long a trauma level takes to settle, seconds.
+static func shake_duration(trauma: float) -> float:
+	return trauma / FINISH_SHAKE_DECAY
+
+
+## From the camera to the men, which sets how big a frame the shake is a
+## fraction of.
+func _shake_distance() -> float:
+	if not is_inside_tree() or wrestler_a == null or wrestler_b == null:
+		return SHAKE_REF_DISTANCE
+	var mid := (wrestler_a.global_position + wrestler_b.global_position) * 0.5
+	return clampf(global_position.distance_to(mid), 2.0, 30.0)
 
 
 ## One paired-impact cue, independent of coverage, shot holds and cut settings.
@@ -1476,6 +1518,10 @@ func _arm_impact_shake(wrestler: WrestlerController, move: MoveDef) -> void:
 		_impact_shake = TRAUMA_FINISHER
 	elif tier == CombatSystem.Tier.SIGNATURE or _is_signature(move):
 		_impact_shake = TRAUMA_SIGNATURE
+	elif _is_set_piece(move):
+		# A V-Trigger knee or a spear lands on a man who stays standing, so
+		# leaves_defender_down is false; it is still the move's big beat.
+		_impact_shake = maxf(TRAUMA_SET_PIECE, TRAUMA_THROW if move.leaves_defender_down else 0.0)
 	elif move.leaves_defender_down:
 		# Any throw or slam that puts him on the mat; holds do not shake.
 		_impact_shake = TRAUMA_THROW
@@ -1662,6 +1708,8 @@ func _on_move_landed(attacker: WrestlerController, defender: WrestlerController,
 			trauma = maxf(trauma, TRAUMA_FINISHER)
 		elif tier == CombatSystem.Tier.SIGNATURE or _is_signature(move):
 			trauma = maxf(trauma, TRAUMA_SIGNATURE)
+	if _is_set_piece(move):
+		trauma = maxf(trauma, TRAUMA_SET_PIECE)
 	if trauma > 0.0 and not paired_completion:
 		add_trauma(trauma)
 	if CameraSettings.fight_forever():

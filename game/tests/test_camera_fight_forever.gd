@@ -253,12 +253,19 @@ func test_the_shake_settles_briefly_without_pausing_anything() -> void:
 	var time_scale := Engine.time_scale
 	camera.add_trauma(1.0)
 	camera._shake(1.0 / 60.0)
-	# One frame at full finisher trauma stays inside the film-back budget.
-	assert_float(absf(camera.h_offset)).is_less(0.2)
-	assert_float(absf(camera.v_offset)).is_less(0.2)
-	for i in 36:
+	# One frame at full finisher trauma stays inside the film-back budget: the
+	# peak of HIGH, FINISH_SHAKE x 1.8 of a frame's height at the men. (Was a
+	# fixed 0.2 m, with the shake spent in 0.3 s; 16 Nov, the owner could not
+	# see it: now ~0.5 s and several times the size.)
+	var bound := MatchCamera.shake_amplitude(1.0, camera.fov, 30.0, 1.8) * 1.01
+	assert_float(absf(camera.h_offset)).is_less_equal(bound)
+	assert_float(absf(camera.v_offset)).is_less_equal(bound)
+	for i in 28:
 		camera._shake(1.0 / 60.0)
-	assert_float(camera._trauma).is_equal(0.0)    # under 0.3 s at 60 fps
+	assert_float(camera._trauma).is_greater(0.0)    # still going at 0.48 s
+	for i in 8:
+		camera._shake(1.0 / 60.0)
+	assert_float(camera._trauma).is_equal(0.0)    # spent inside 0.6 s at 60 fps
 	assert_float(Engine.time_scale).is_equal_approx(time_scale, 0.0001)
 	assert_bool(get_tree().paused).is_false()
 
