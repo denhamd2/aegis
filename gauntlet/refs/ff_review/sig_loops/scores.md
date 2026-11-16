@@ -92,3 +92,22 @@ Remaining gaps after loop 5 (reviewer):
 - **One-Winged Angel:** the man snaps upright mid-lift, and Kenny's head passes through him.
 - **Powerbomb/V-Trigger:** Kenny releases rather than going down with the bomb.
 - **Running V-Trigger 3:** no corner post is rendered, and the man rests against empty air.
+
+Loop 6, independent reviewer:
+
+| 6i | kenny_v_trigger | 7 | 5 | 4 | 5 | 6 | 5.4 |
+| 6i | kenny_snap_dragon_2 | 7 | 5 | 3 | 5 | 5 | 5.0 |
+| 6i | kenny_snap_dragon_3 | 7 | 4 | 3 | 4 | 4 | 4.4 |
+| 6i | kenny_running_v_trigger_3 | 7 | 5 | 4 | 5 | 5 | 5.2 |
+| 6i | kenny_running_v_trigger_1 | 7 | 6 | 5 | 5 | 6 | 5.8 |
+| 6i | kenny_owa | 8 | 5 | 3 | 5 | 5 | 5.2 |
+| 6i | kenny_pb_v_trigger | 6 | 4 | 4 | 4 | 5 | 4.6 |
+
+Remaining gaps after loop 6 (reviewer):
+- **Both V-Triggers:** the knee hits the belt, not the face.
+- **One-Winged Angel:** it finishes as a head-down piledriver, and Kenny's head passes through the man.
+- **Powerbomb/V-Trigger:** Kenny releases at the bomb instead of going down with the man.
+- **Snap Dragon 3:** the man flies forward rather than going back over Kenny's hip.
+- **Snap Dragon 2:** the man kneels mid-nelson.
+
+Key-value nudging has plateaued at about +0.1 to +0.5 a loop. The next step is pose-by-pose re-blocking against reference frames.

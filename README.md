@@ -12323,3 +12323,30 @@ Independent reviewer, loop 1 → 3 → 4 → 5:
 | Powerbomb/V-Trigger | 2.4 | 4.2 | 4.0 | 4.4 |
 
 The remaining gaps are listed in `gauntlet/refs/ff_review/sig_loops/scores.md`.
+
+## 16 Nov: Kenny signature/finisher loop 6
+
+The owner: "Run one more loop on Kenny, I want 10/10", then "Commit and deploy
+for what we have, then move onto Romans loops".
+
+The harness gained the following:
+- `paired_shot --ring`: the ring and corner stay visible;
+- `extra=` contact columns, here the PB/V-Trigger knee at f278;
+- front-on sheets for both V-Triggers.
+
+Loop 6 re-blocked every move.
+
+Independent reviewer, loop 1 → loop 5 → loop 6:
+
+| Move | L1 | L5 | L6 |
+|---|---|---|---|
+| Running V-Trigger 1 | 3.0 | 5.4 | 5.8 |
+| V-Trigger | 3.4 | 5.2 | 5.4 |
+| Running V-Trigger 3 | 2.2 | 4.8 | 5.2 |
+| One-Winged Angel | 4.2 | 5.2 | 5.2 |
+| Snap Dragon 2 | 3.2 | 5.2 | 5.0 |
+| Powerbomb/V-Trigger | 2.4 | 4.4 | 4.6 |
+| Snap Dragon 3 | 3.0 | 4.6 | 4.4 |
+
+The remaining gaps are in `gauntlet/refs/ff_review/sig_loops/scores.md`.
+Kenny's loops are paused here; Roman's spear loops are next.
