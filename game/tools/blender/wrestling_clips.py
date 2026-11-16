@@ -10971,15 +10971,14 @@ def _snap(pitch, z, limbs=_SNAP_LIMBS, spine=(-4, 0, 0), head=(-20, 0, 0)):
 _NELSON_CRANK_ATK = (
     dict(spine=(4, 0, 0), head=(0, 4, 0), pelvis=(0.0, -0.01, -0.02),
          hand_r=(0.0, -0.02, -0.03), hand_l=(0.0, -0.02, -0.03)),
-    dict(spine=(-3, 2, 0), hips=(0, 3, 0), pelvis=(0.01, 0.0, 0.01),
-         foot_l=(0.0, 0.03, 0.0)),
+    dict(spine=(-3, 2, 0), hips=(0, 3, 0), pelvis=(0.0, 0.0, 0.01)),
 )
 # Fighting it: shoulders working, a foot shuffling, the head pushed down.
 _NELSON_FIGHT_DEF = (
     dict(spine=(-4, 6, 0), head=(-6, 0, 0), hand_r=(0.04, 0.0, -0.04),
          hand_l=(-0.02, 0.0, 0.03), pelvis=(0.0, 0.0, -0.02)),
     dict(spine=(2, -6, 0), head=(4, 0, 0), hand_r=(-0.02, 0.0, 0.03),
-         hand_l=(0.04, 0.0, -0.04), foot_r=(0.0, 0.04, 0.0)),
+         hand_l=(0.04, 0.0, -0.04)),
 )
 
 
