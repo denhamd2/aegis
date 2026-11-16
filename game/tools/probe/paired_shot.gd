@@ -46,6 +46,8 @@ extends Node
 ## --rope: with --run-in, the run starts beside the man (at his clip mark),
 ## runs out to M metres, rebounds off the ropes and sprints back: 55% of the
 ## run ticks out, 10% turning, 35% back (Running V-Trigger 1, off the ropes).
+## --ring: with --bare, keep the ring (posts, buckles, ropes) visible -- a
+## corner move's turnbuckle in shot.
 ## --ticks a,b,c: capture at these 60 fps ticks on the shot's timeline (tick 0
 ## is the run's first tick with --run-in, else the clip's first frame), named
 ## <move>_<tick>.png -- true frame numbers, where --at names by percentage.
@@ -74,6 +76,7 @@ var _corner := false
 var _run_in := 0.0
 var _run_ticks := 0
 var _rope := false
+var _ring := false
 var _ticks: Array = []
 
 
@@ -100,6 +103,8 @@ func _ready() -> void:
 			_corner = true
 		elif args[i] == "--run-in" and i + 1 < args.size():
 			_run_in = float(args[i + 1])
+		elif args[i] == "--ring":
+			_ring = true
 		elif args[i] == "--rope":
 			_rope = true
 		elif args[i] == "--run-ticks" and i + 1 < args.size():
@@ -361,6 +366,14 @@ func _make_camera(scene: Node, a: Vector3, d: Vector3, defer_to_match: bool) -> 
 		focus = mid + Vector3(0.0, 0.8, 0.0)
 		camera.global_position = focus + across * _dist + Vector3(0.0, 0.3, 0.0)
 		camera.fov = 45.0
+	if _corner and _ring:
+		# Into the corner from the ring: the buckle behind the man, the run
+		# coming in from the camera's side (--orbit swings it round).
+		var inward := Vector3(-d.x, 0.0, -d.z).normalized()
+		inward = inward.rotated(Vector3.UP, deg_to_rad(_orbit))
+		focus = d + Vector3(0.0, 0.6, 0.0) + inward * 0.8
+		camera.global_position = d + inward * _dist + Vector3(0.0, 1.3, 0.0)
+		camera.fov = 50.0
 	if _top:
 		var mid := (a + d) * 0.5
 		focus = mid
@@ -410,6 +423,8 @@ func _strip(scene: Node, attacker: Node3D, defender: Node3D,
 		if child == attacker or child == defender:
 			continue
 		if keep_weapon != null and (child == keep_weapon or child == keep_weapon.get_parent()):
+			continue
+		if _ring and child.name == "Ring":
 			continue
 		if child is Node3D:
 			(child as Node3D).visible = false

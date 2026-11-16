@@ -9,7 +9,9 @@
 #   <name> <MoveDef path under res://resources/moves, no .tres> <ref start s> <ref impact s> <ref end s> [extra ...]
 # Optional extras after the fifth column: contact=<fraction of the move> (our
 # impact; default the MoveDef's startup_frames, which ends on impact), and any
-# paired_shot flags (--run-in 3.5 --run-ticks 36, --corner, ...). Our columns
+# paired_shot flags (--run-in 3.5 --run-ticks 36, --corner, ...), and
+# extra=<ref s>@<our tick> for an added column at a second beat (the
+# PB/V-Trigger's knee after its bomb). Our columns
 # are true 60 fps ticks (paired_shot --ticks): the contact column sits on our
 # impact tick, and the columns before and after it spread evenly over our run
 # and approach and over our recovery, as the reference's do over its window.
@@ -29,7 +31,7 @@ while read -r name mv s i e extra; do
   if [ $# -gt 0 ] && [[ ! " $* " =~ " $name " ]]; then continue; fi
   O=$OUT/l$L/$name; rm -rf "$O"; mkdir -p "$O"
   # The schedule: run ticks, our total and contact tick, the ten columns.
-  read -r RUN CT TICKS < <(python3 - "$REPO/game/resources/moves/$mv.tres" "$s" "$i" "$e" $extra <<'PY'
+  read -r RUN CT TICKS REFS < <(python3 - "$REPO/game/resources/moves/$mv.tres" "$s" "$i" "$e" $extra <<'PY'
 import sys, re
 tres, s, i, e = sys.argv[1], float(sys.argv[2]), float(sys.argv[3]), float(sys.argv[4])
 extra = sys.argv[5:]
@@ -39,7 +41,11 @@ fr = {k: int(re.search(r'^%s = (\d+)' % k, txt, re.M).group(1))
 total = sum(fr.values())
 contact = fr['startup_frames']
 run = 0
+added = []
 for k, tok in enumerate(extra):
+    if tok.startswith('extra='):
+        r, t = tok[6:].split('@')
+        added.append((float(r), int(t)))
     if tok.startswith('contact='):
         contact = int(round(float(tok[8:]) * total))
     if tok == '--run-ticks':
@@ -56,17 +62,20 @@ for k in range(10):
         ticks.append(c)
     else:
         ticks.append(int(round(c + (end - c) * (k - ci) / (9 - ci))))
-print(run, c, ','.join(str(t) for t in ticks))
+refs[ci] = i
+cols = list(zip(refs, ticks)) + [(r, run + t) for r, t in added]
+cols.sort()
+print(run, c, ','.join(str(t) for _, t in cols), ','.join('%.3f' % r for r, _ in cols))
 PY
 )
-  FLAGS=$(for t in $extra; do case $t in contact=*) ;; *) printf '%s ' "$t";; esac; done)
+  FLAGS=$(for t in $extra; do case $t in contact=*|extra=*) ;; *) printf '%s ' "$t";; esac; done)
   flock "$LOCK" timeout 900 xvfb-run -a "$GODOT" --path . --rendering-driver opengl3 \
       --resolution 960x540 tools/probe/paired_shot.tscn -- --move "$mv" --out "$O/raw" \
       --side --orbit 45 --lit --bare --dist 5 $FLAGS --ticks "$TICKS" > "$O/log.txt" 2>&1
-  python3 - "$O" "$VIDEO" "$s" "$i" "$e" "$name" "$L" "$REPO" "$CT" <<'PY'
+  python3 - "$O" "$VIDEO" "$s" "$i" "$e" "$name" "$L" "$REPO" "$CT" "$REFS" <<'PY'
 import sys, glob, os, re, subprocess
 from PIL import Image
-O, V, s, i, e, name, L, REPO, CT = sys.argv[1:]
+O, V, s, i, e, name, L, REPO, CT, REFS = sys.argv[1:]
 s, i, e = float(s), float(i), float(e)
 fs = sorted(glob.glob(O + '/raw/*.png'), key=lambda p: int(re.search(r'_(\d+)\.png$', p).group(1)))
 os.makedirs(O + '/f', exist_ok=True)
@@ -74,9 +83,7 @@ nums = []
 for p in fs:
     n = int(re.search(r'_(\d+)\.png$', p).group(1)); nums.append(n)
     Image.open(p).save(O + '/f/f%03d.png' % n)
-refs = [s + (e - s) * k / 9 for k in range(10)]
-ci = min(range(10), key=lambda k: abs(refs[k] - i))
-refs[ci] = i
+refs = [float(r) for r in REFS.split(',')]
 subprocess.run(['python3', REPO + '/game/tools/anim/parity_sheet.py', '--video', V,
                 '--ref', ','.join('%.3f' % r for r in refs), '--contact-ref', '%.3f' % i,
                 '--ours', O + '/f', '--ours-frames', ','.join('%03d' % n for n in nums),

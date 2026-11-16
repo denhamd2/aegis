@@ -2,12 +2,14 @@ cody_disaster_kick signature_disaster_kick 375.3 376.3 377.3
 cody_cross_rhodes finisher_cross_rhodes 380.4 384.95 385.4
 cody_figure_four submission_figure_four 388.0 391.0 395.0
 kenny_v_trigger ff/v_trigger_1 615.0 615.8 617.6 --orbit 0 --dist 6
+kenny_v_trigger_front ff/v_trigger_1 615.0 615.8 617.6 --orbit 90 --dist 6
 kenny_snap_dragon_2 ff/snap_dragon_suplex_2 619.8 622.3 622.7 --dist 6.5
 kenny_snap_dragon_3 ff/snap_dragon_suplex_3 625.8 627.9 628.2 --dist 6.5
-kenny_running_v_trigger_3 ff/running_v_trigger_3 631.35 632.35 632.6 --corner --run-in 4.0 --run-ticks 37 --orbit 0 --dist 6
+kenny_running_v_trigger_3 ff/running_v_trigger_3 631.35 632.35 632.6 --corner --run-in 4.0 --run-ticks 37 --orbit 40 --dist 5 --ring
 kenny_running_v_trigger_1 ff/running_v_trigger_1 658.4 659.45 660.0 --rope --run-in 4.6 --run-ticks 41 --orbit 0 --dist 6
+kenny_running_v_trigger_1_front ff/running_v_trigger_1 658.4 659.45 660.0 --rope --run-in 4.6 --run-ticks 41 --orbit 90 --dist 6
 kenny_owa ff/one_winged_angel 636.8 640.85 641.2
-kenny_pb_v_trigger ff/powerbomb_v_trigger_combo 644.8 648.1 650.0 contact=0.6346 --dist 6
+kenny_pb_v_trigger ff/powerbomb_v_trigger_combo 644.8 648.1 650.0 contact=0.6346 extra=649.7@278 --dist 6
 roman_spear finisher_spear 1104.4 1105.5 1106.3
 roman_running_spear finisher_running_spear 1104.4 1105.5 1106.3
 roman_superman_spear finisher_superman_spear 1104.4 1105.5 1106.3
