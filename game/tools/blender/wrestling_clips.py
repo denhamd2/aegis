@@ -11033,17 +11033,22 @@ def _snap_dragon(sit, end, squat=False, tieup=0):
         # 0.4 m, video f100-120), then pulls him back into a high flip.
         atk = [k for k in atk if k[0] < sit - 9]
         dfn = [k for k in dfn if k[0] < sit - 9]
-        atk += [(sit - 8, dict(_NELSON_ATK, pelvis=(0.0, -0.06, 0.620), hips=(-10, 0, 0),
-                               spine=(-6, 0, 0), knee_r=(0.3, 1.0, 0.2), knee_l=(-0.3, 1.0, 0.2))),
-                (sit - 3, dict(_NELSON_ATK, pelvis=(0.0, -0.08, 0.440), hips=(-16, 0, 0),
+        # Squatting wide, knees out to the sides, feet back: his thighs clear
+        # of the man's (PairClearance).
+        atk += [(sit - 8, dict(_NELSON_ATK, pelvis=(0.0, -0.08, 0.620), hips=(-10, 0, 0),
+                               spine=(-6, 0, 0),
+                               foot_r=(0.32, -0.26, 0.104), foot_l=(-0.30, -0.06, 0.104),
+                               knee_r=(0.8, 0.6, 0.2), knee_l=(-0.8, 0.6, 0.2))),
+                (sit - 3, dict(_NELSON_ATK, pelvis=(0.0, -0.10, 0.480), hips=(-16, 0, 0),
                                spine=(-8, 0, 0),
                                hand_r=(0.22, 0.24, 1.22), hand_l=(0.14, 0.24, 1.22),
-                               knee_r=(0.4, 1.0, 0.2), knee_l=(-0.4, 1.0, 0.2)))]
-        dfn += [(sit - 8, dict(_NELSON_DEF, pelvis=(0.0, 0.17, 0.800), spine=(-14, 0, 0),
-                               foot_r=(0.24, 0.11, 0.104), foot_l=(-0.22, 0.25, 0.104))),
-                (sit - 3, dict(_NELSON_DEF, pelvis=(0.0, 0.17, 0.780), hips=(-4, 0, 0),
+                               foot_r=(0.34, -0.28, 0.104), foot_l=(-0.32, -0.08, 0.104),
+                               knee_r=(0.9, 0.5, 0.2), knee_l=(-0.9, 0.5, 0.2)))]
+        dfn += [(sit - 8, dict(_NELSON_DEF, pelvis=(0.0, 0.22, 0.800), spine=(-14, 0, 0),
+                               foot_r=(0.24, 0.16, 0.104), foot_l=(-0.22, 0.30, 0.104))),
+                (sit - 3, dict(_NELSON_DEF, pelvis=(0.0, 0.22, 0.780), hips=(-4, 0, 0),
                                spine=(-16, 0, 0), head=(-30, 0, 0),
-                               foot_r=(0.24, 0.11, 0.104), foot_l=(-0.22, 0.25, 0.104)))]
+                               foot_r=(0.24, 0.16, 0.104), foot_l=(-0.22, 0.30, 0.104)))]
     else:
         atk.append((sit - 3, dict(_NELSON_ATK)))
         dfn.append((sit - 3, dict(_NELSON_DEF)))
