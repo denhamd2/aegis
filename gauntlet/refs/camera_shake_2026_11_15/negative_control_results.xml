@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites id="2026-11-15" name="report_1" tests="11" failures="13" skipped="0" flaky="0" time="0.000">
+	<testsuite id="0" name="_camera_shake_negative_control" package="tests" timestamp="2026-11-15T20:37:42" hostname="localhost" tests="11" failures="13" errors="0" skipped="0" flaky="0" time="1.649">
+		<testcase name="test_every_coverage_fires_once_at_contact_even_with_residual_shake_and_cuts_off" classname="_camera_shake_negative_control" time="0.005">
+			<failure message="FAILED: res://tests/_camera_shake_negative_control.gd:75" type="FAILURE">
+<![CDATA[
+Expecting:
+ 0.150000
+ in range between
+ 0.999990 <> 1.000010
+	at 'test_every_coverage_fires_once_at_contact_even_with_residual_shake_and_cuts_off' in res://tests/_camera_shake_negative_control.gd:75
+]]>
+			</failure>
+		</testcase>
+		<testcase name="test_finisher_shots_do_not_replay_a_consumed_impact_after_the_pulse_settles" classname="_camera_shake_negative_control" time="0.003">
+			<failure message="FAILED: res://tests/_camera_shake_negative_control.gd:99" type="FAILURE">
+<![CDATA[
+Expecting:
+ 0.000000
+ but was
+ 1.000000
+	at 'test_finisher_shots_do_not_replay_a_consumed_impact_after_the_pulse_settles' in res://tests/_camera_shake_negative_control.gd:99
+]]>
+			</failure>
+		</testcase>
+		<testcase name="test_off_clears_active_and_new_cues_without_replaying_them_when_reenabled" classname="_camera_shake_negative_control" time="0.003">
+			<failure message="FAILED: res://tests/_camera_shake_negative_control.gd:106" type="FAILURE">
+<![CDATA[
+Expecting:
+ 0.000000
+ but was
+ 0.941667
+	at 'test_off_clears_active_and_new_cues_without_replaying_them_when_reenabled' in res://tests/_camera_shake_negative_control.gd:106
+]]>
+			</failure>
+			<failure message="FAILED: res://tests/_camera_shake_negative_control.gd:110" type="FAILURE">
+<![CDATA[
+Expecting:
+ 0.000000
+ but was
+ 1.000000
+	at 'test_off_clears_active_and_new_cues_without_replaying_them_when_reenabled' in res://tests/_camera_shake_negative_control.gd:110
+]]>
+			</failure>
+			<failure message="FAILED: res://tests/_camera_shake_negative_control.gd:116" type="FAILURE">
+<![CDATA[
+Expecting:
+ 0.000000
+ but was
+ 0.941667
+	at 'test_off_clears_active_and_new_cues_without_replaying_them_when_reenabled' in res://tests/_camera_shake_negative_control.gd:116
+]]>
+			</failure>
+		</testcase>
+		<testcase name="test_running_catch_and_authored_landing_have_different_camera_beats" classname="_camera_shake_negative_control" time="0.003">
+			<failure message="FAILED: res://tests/_camera_shake_negative_control.gd:120" type="FAILURE">
+<![CDATA[
+Expecting:
+ 0.560606
+ in range between
+ 0.893938 <> 0.893940
+	at 'test_running_catch_and_authored_landing_have_different_camera_beats' in res://tests/_camera_shake_negative_control.gd:120
+]]>
+			</failure>
+			<failure message="FAILED: res://tests/_camera_shake_negative_control.gd:121" type="FAILURE">
+<![CDATA[
+Expecting to be greater than:
+ 0.560606 but was 0.560606
+	at 'test_running_catch_and_authored_landing_have_different_camera_beats' in res://tests/_camera_shake_negative_control.gd:121
+]]>
+			</failure>
+		</testcase>
+		<testcase name="test_cancelled_pair_discards_its_pending_impact" classname="_camera_shake_negative_control" time="0.003">
+		</testcase>
+		<testcase name="test_all_shake_levels_allow_the_real_root_animation_to_advance" classname="_camera_shake_negative_control" time="1.572">
+			<failure message="FAILED: res://tests/_camera_shake_negative_control.gd:154" type="FAILURE">
+<![CDATA[
+Expecting:
+ 1.000000
+ in range between
+ -0.000010 <> 0.000010
+	at 'test_all_shake_levels_allow_the_real_root_animation_to_advance' in res://tests/_camera_shake_negative_control.gd:154
+]]>
+			</failure>
+		</testcase>
+		<testcase name="test_paired_completion_does_not_shake_twice_or_suppress_a_later_strike" classname="_camera_shake_negative_control" time="0.006">
+			<failure message="FAILED: res://tests/_camera_shake_negative_control.gd:171" type="FAILURE">
+<![CDATA[
+Expecting:
+ 0.000000
+ but was
+ 1.000000
+	at 'test_paired_completion_does_not_shake_twice_or_suppress_a_later_strike' in res://tests/_camera_shake_negative_control.gd:171
+]]>
+			</failure>
+		</testcase>
+		<testcase name="test_completion_without_a_delivered_impact_keeps_the_landed_event_cue" classname="_camera_shake_negative_control" time="0.004">
+		</testcase>
+		<testcase name="test_an_omitted_completion_notification_expires_without_suppressing_future_hits" classname="_camera_shake_negative_control" time="0.008">
+		</testcase>
+		<testcase name="test_a_broadcast_slam_cannot_top_up_or_repeat_its_scheduled_throw_pulse" classname="_camera_shake_negative_control" time="0.005">
+			<failure message="FAILED: res://tests/_camera_shake_negative_control.gd:226" type="FAILURE">
+<![CDATA[
+Expecting:
+ 0.550000
+ in range between
+ 0.441657 <> 0.441677
+	at 'test_a_broadcast_slam_cannot_top_up_or_repeat_its_scheduled_throw_pulse' in res://tests/_camera_shake_negative_control.gd:226
+]]>
+			</failure>
+			<failure message="FAILED: res://tests/_camera_shake_negative_control.gd:230" type="FAILURE">
+<![CDATA[
+Expecting:
+ 0.000000
+ but was
+ 0.550000
+	at 'test_a_broadcast_slam_cannot_top_up_or_repeat_its_scheduled_throw_pulse' in res://tests/_camera_shake_negative_control.gd:230
+]]>
+			</failure>
+		</testcase>
+		<testcase name="test_standalone_slam_fallback_is_kept_but_ordinary_paired_holds_stay_steady" classname="_camera_shake_negative_control" time="0.004">
+			<failure message="FAILED: res://tests/_camera_shake_negative_control.gd:246" type="FAILURE">
+<![CDATA[
+Expecting:
+ 0.000000
+ but was
+ 0.550000
+	at 'test_standalone_slam_fallback_is_kept_but_ordinary_paired_holds_stay_steady' in res://tests/_camera_shake_negative_control.gd:246
+]]>
+			</failure>
+			<failure message="FAILED: res://tests/_camera_shake_negative_control.gd:251" type="FAILURE">
+<![CDATA[
+Expecting:
+ 0.000000
+ but was
+ 0.950000
+	at 'test_standalone_slam_fallback_is_kept_but_ordinary_paired_holds_stay_steady' in res://tests/_camera_shake_negative_control.gd:251
+]]>
+			</failure>
+		</testcase>
+	</testsuite>
+</testsuites>

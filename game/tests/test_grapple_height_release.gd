@@ -95,7 +95,7 @@ func test_grip_fade_finishes_before_the_authored_impact() -> void:
 	var fade_ticks := int(ceil(1.0 / WrestlerController.IK_BLEND_PER_TICK))
 	assert_int(fade_start + fade_ticks).is_less_equal(118)
 
-func test_real_pair_releases_its_grip_and_height_on_the_shared_clock() -> void:
+func test_authored_pair_preserves_release_counter_and_height_on_the_shared_clock() -> void:
 	var result: Dictionary = await PairClearance.measure(self,
 			"running_grapple_inverted_drop", PackedStringArray(["cody", "roman"]), true)
 	var rows: Array = result["trace"]
@@ -103,8 +103,15 @@ func test_real_pair_releases_its_grip_and_height_on_the_shared_clock() -> void:
 	var fade := _trace_at(rows, 55.0)
 	var released := _trace_at(rows, 58.0)
 	var impact := _trace_at(rows, 59.0)
-	assert_float(before.get("grip_blend", -1.0)).is_equal_approx(1.0, .00001)
-	assert_float(fade.get("grip_blend", 1.0)).is_less(1.0)
+	assert_int(before.get("grip_release_ticks", -1)).is_greater(0)
+	assert_int(fade.get("grip_release_ticks", -1)).is_equal(0)
+	for row: Dictionary in rows:
+		if float(row["seconds"]) < 43.0/30 or float(row["seconds"]) > 55.0/30:
+			continue
+		var pose: Dictionary = row["drawn"][0]
+		assert_int(pose.get("ik_weights", []).size()).is_equal(2)
+		for weight: float in pose.get("ik_weights", []):
+			assert_float(weight).is_equal_approx(0.0, .00001)
 	assert_float(released.get("grip_blend", -1.0)).is_equal_approx(0.0, .00001)
 	assert_float((impact.get("separation_attacker", Vector3.INF) as Vector3).y).is_equal_approx(0.0, .00001)
 	assert_float((impact.get("separation_defender", Vector3.INF) as Vector3).y).is_equal_approx(0.0, .00001)

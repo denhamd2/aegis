@@ -49,6 +49,12 @@ func _ready() -> void:
 				push_error("Cannot write trace: %s" % _trace_out)
 				get_tree().quit(1)
 				return
+		if r.has("authored_contacts"):
+			var contacts: Array = r["authored_contacts"]
+			var gaps: Array = contacts.filter(func(c): return c.get("valid", false)).map(func(c): return c["gap_m"])
+			gaps.sort()
+			print("AUTHORED_CONTACT %s required %d valid %d median_gap %s" % [move_id,
+					contacts.size(), gaps.size(), str(gaps[gaps.size() / 2]) if not gaps.is_empty() else "missing"])
 		var g: Array = r["grip"]
 		g.sort()
 		if not g.is_empty():

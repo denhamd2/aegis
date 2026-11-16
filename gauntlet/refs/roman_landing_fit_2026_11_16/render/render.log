@@ -1,0 +1,48 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Vulkan 1.4.305 - Forward+ - Using Device #0: Unknown - llvmpipe (LLVM 19.1.7, 256 bits)
+
+PAIRED_SHOT running_grapple_inverted_drop
+CAPTURE_CLOCK running_grapple_inverted_drop_89.png requested_tick 118 paired_seconds 1.950000
+    WrestlerA root (1.16,0.00,-1.46) yaw -103  pelvis (1.19,0.85,-1.45)  head (1.41,1.48,-1.40)  lowest 0.000 (root)
+    WrestlerB root (1.92,0.00,-1.62) yaw 77  lowest 0.100 (h_neck_l)
+  t=0.89  defender y=0.00  attacker y=0.00
+CAPTURE_CLOCK running_grapple_inverted_drop_90.png requested_tick 119 paired_seconds 1.966667
+    WrestlerA root (1.14,0.00,-1.47) yaw -103  pelvis (1.18,0.86,-1.45)  head (1.38,1.49,-1.41)  lowest 0.000 (root)
+    WrestlerB root (1.93,0.00,-1.62) yaw 77  lowest 0.148 (h_neck_l)
+  t=0.89  defender y=0.00  attacker y=0.00
+CAPTURE_CLOCK running_grapple_inverted_drop_91.png requested_tick 121 paired_seconds 2.000000
+    WrestlerA root (1.09,0.00,-1.49) yaw -103  pelvis (1.14,0.86,-1.47)  head (1.30,1.51,-1.44)  lowest 0.000 (root)
+    WrestlerB root (1.94,0.00,-1.63) yaw 77  lowest 0.177 (j_neck)
+  t=0.91  defender y=0.00  attacker y=0.00
+CAPTURE_CLOCK running_grapple_inverted_drop_93.png requested_tick 123 paired_seconds 2.033333
+    WrestlerA root (1.02,0.00,-1.51) yaw -103  pelvis (1.08,0.87,-1.47)  head (1.20,1.53,-1.46)  lowest 0.000 (root)
+    WrestlerB root (1.96,0.00,-1.63) yaw 77  lowest 0.081 (h_leg_vol_b_r)
+  t=0.92  defender y=0.00  attacker y=0.00
+CAPTURE_CLOCK running_grapple_inverted_drop_96.png requested_tick 127 paired_seconds 2.100000
+    WrestlerA root (0.90,0.00,-1.55) yaw -103  pelvis (0.96,0.87,-1.51)  head (1.04,1.54,-1.50)  lowest 0.000 (root)
+    WrestlerB root (1.97,0.00,-1.64) yaw 77  lowest 0.081 (j_foot_l)
+  t=0.95  defender y=0.00  attacker y=0.00
+CAPTURE_CLOCK running_grapple_inverted_drop_100.png requested_tick 132 paired_seconds 2.183333
+    WrestlerA root (0.82,0.00,-1.57) yaw -76  pelvis (0.85,0.88,-1.56)  head (0.95,1.54,-1.60)  lowest 0.000 (root)
+    WrestlerB root (1.98,0.00,-1.64) yaw -103  lowest 0.061 (j_thumbf3_r_stub)
+  t=0.99  defender y=0.00  attacker y=0.00
+CAPTURE_CLOCK running_grapple_inverted_drop_110.png requested_tick 145 paired_seconds -1.000000
+    WrestlerA root (0.87,0.00,-1.51) yaw -83  pelvis (0.89,0.86,-1.49)  head (1.06,1.51,-1.53)  lowest 0.000 (root)
+    WrestlerB root (1.98,0.00,-1.64) yaw -103  lowest 0.061 (j_thumbf3_l_stub)
+  t=1.09  defender y=0.00  attacker y=0.00
+ERROR: Parameter "material" is null.
+   at: material_casts_shadows (servers/rendering/renderer_rd/storage_rd/material_storage.cpp:2404)
+ERROR: Parameter "material" is null.
+   at: material_is_animated (servers/rendering/renderer_rd/storage_rd/material_storage.cpp:2391)
+ERROR: Parameter "material" is null.
+   at: material_get_instance_shader_parameters (servers/rendering/renderer_rd/storage_rd/material_storage.cpp:2435)
+ERROR: Parameter "material" is null.
+   at: material_update_dependency (servers/rendering/renderer_rd/storage_rd/material_storage.cpp:2447)
+ERROR: Parameter "material" is null.
+   at: material_casts_shadows (servers/rendering/renderer_rd/storage_rd/material_storage.cpp:2404)
+ERROR: Parameter "material" is null.
+   at: material_is_animated (servers/rendering/renderer_rd/storage_rd/material_storage.cpp:2391)
+ERROR: Parameter "material" is null.
+   at: material_get_instance_shader_parameters (servers/rendering/renderer_rd/storage_rd/material_storage.cpp:2435)
+ERROR: Parameter "material" is null.
+   at: material_update_dependency (servers/rendering/renderer_rd/storage_rd/material_storage.cpp:2447)

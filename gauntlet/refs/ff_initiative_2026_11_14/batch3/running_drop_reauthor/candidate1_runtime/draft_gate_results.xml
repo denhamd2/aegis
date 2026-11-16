@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites id="2026-11-15" name="report_1" tests="5" failures="1" skipped="0" flaky="0" time="0.000">
+	<testsuite id="0" name="test_pair_clearance" package="tests" timestamp="2026-11-15T14:38:57" hostname="localhost" tests="5" failures="1" errors="0" skipped="0" flaky="0" time="4.814">
+		<testcase name="test_no_paired_move_puts_one_body_through_the_other_and_hands_hold" classname="test_pair_clearance" time="4.789">
+			<failure message="FAILED: res://tests/test_pair_clearance.gd:36" type="FAILURE">
+<![CDATA[
+running_grapple_inverted_drop right_forearm loses required contact at ticks[98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110]: maximum gap 0.881m, median 0.546m, limit 0.055m
+	at 'test_no_paired_move_puts_one_body_through_the_other_and_hands_hold' in res://tests/test_pair_clearance.gd:36
+	at 'measure' in res://tools/anim/pair_clearance.gd:334
+]]>
+			</failure>
+		</testcase>
+		<testcase name="test_segment_distance_is_the_gap_between_centre_lines" classname="test_pair_clearance" time="0.004">
+		</testcase>
+		<testcase name="test_authored_contact_cannot_hide_a_detached_tail_behind_a_good_median" classname="test_pair_clearance" time="0.003">
+		</testcase>
+		<testcase name="test_authored_contact_requires_distinct_ticks_and_coherent_anchors" classname="test_pair_clearance" time="0.004">
+		</testcase>
+		<testcase name="test_authored_contact_keeps_penetration_separate_from_surface_gap" classname="test_pair_clearance" time="0.003">
+		</testcase>
+	</testsuite>
+</testsuites>

@@ -1,0 +1,41 @@
+{
+  "version": "candidate2",
+  "files": {
+    "/tmp/aegis-running-wrap-candidate2.glb": {
+      "bytes": 307400,
+      "sha256": "056b5dbb40e1bd286decfaeb43b8d5aca0535728dfe6dfc22f6153bf6d35b01c"
+    },
+    "/tmp/aegis-running-wrap-candidate2.blend": {
+      "bytes": 3443828,
+      "sha256": "17ff4d54cbf771ab476f67a3affe25bf4f4792b46d75c5db456c2b6bccc9c956"
+    },
+    "/workspace/aegis/game/tools/blender/wrestling_clips.py": {
+      "bytes": 669416,
+      "sha256": "0da5db54c91a9b247541456166c36a9d7e68ee1b74cb9e6f4da9e1b88234a127"
+    },
+    "/workspace/aegis/game/tools/blender/running_drop_approach_baseline.json": {
+      "bytes": 33468,
+      "sha256": "a19e211352b8ba7a3836b9e5ef61bc61cea6461096b9e2389650afe76d7a9628"
+    }
+  },
+  "animations": [
+    {
+      "name": "Run_Grapple_Attacker",
+      "channel_count": 195,
+      "input_sample_counts": [
+        2,
+        133
+      ],
+      "duration_seconds": 2.2
+    },
+    {
+      "name": "Run_Grapple_Defender",
+      "channel_count": 195,
+      "input_sample_counts": [
+        2,
+        133
+      ],
+      "duration_seconds": 2.2
+    }
+  ]
+}

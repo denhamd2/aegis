@@ -1,0 +1,42 @@
+{
+  "version": "candidate1b",
+  "files": {
+    "/tmp/aegis-running-wrap-candidate1b.glb": {
+      "bytes": 307400,
+      "sha256": "b0239c3bbdd8826b3466e12049938af2303afb9d2659ffd39eae1929c9e78cd7"
+    },
+    "/tmp/aegis-running-wrap-candidate1b.blend": {
+      "bytes": 3424892,
+      "sha256": "ca5100be45e655ba1471d0b483281abd8d7356b514bbdf14036026ed2e7fb767"
+    },
+    "/workspace/aegis/game/tools/blender/wrestling_clips.py": {
+      "bytes": 669416,
+      "sha256": "0da5db54c91a9b247541456166c36a9d7e68ee1b74cb9e6f4da9e1b88234a127"
+    },
+    "/workspace/aegis/game/tools/blender/running_drop_approach_baseline.json": {
+      "bytes": 33468,
+      "sha256": "a19e211352b8ba7a3836b9e5ef61bc61cea6461096b9e2389650afe76d7a9628"
+    }
+  },
+  "animations": [
+    {
+      "name": "Run_Grapple_Attacker",
+      "channel_count": 195,
+      "input_sample_counts": [
+        2,
+        133
+      ],
+      "duration_seconds": 2.2
+    },
+    {
+      "name": "Run_Grapple_Defender",
+      "channel_count": 195,
+      "input_sample_counts": [
+        2,
+        133
+      ],
+      "duration_seconds": 2.2
+    }
+  ],
+  "source_fingerprint_note": "Builder fingerprint reflects boundary fixture integration followed by candidate2authoring; candidate1b GLB/native hashes remain historical frozen output."
+}

@@ -342,8 +342,7 @@ const TRAUMA_TABLE := 0.7
 const TRAUMA_BLAST := 0.95
 ## Fight Forever shakes the camera a little on the impact of a signature or a
 ## finisher, whatever shot it is on (the owner, 19 Oct). Fired on the move's
-## own contact frame (MoveDef.startup_frames), once a move. The BROADCAST
-## finisher sequence keeps its own shake (_finish_impact).
+## own contact frame, once a move, independently of coverage or shot holds.
 ## More moves shake, the way AEW Fight Forever's camera does (the owner, 9
 ## Nov: "I want the camera shake effect more more moves, similar to aew fight
 ## forever"): a solid strike that is not yet a big one, every weapon shot,
@@ -362,6 +361,12 @@ const TRAUMA_FINISHER := 1.0
 ## -1 when none is.
 var _impact_shake_at := -1.0
 var _impact_shake := 0.0
+# The controller reports a paired move as landed after the rig releases it.
+# Consume that synchronous completion notification without a second pulse.
+var _paired_impact_move: MoveDef
+var _paired_impact_consumed := false
+var _completed_impact_move: MoveDef
+var _completed_impact_attacker: Node3D
 ## Where the crowd cutaway looks: the ringside rows on +X, where the sign
 ## fans sit (SignFans.FANS), from the floor at the far apron.
 const CUTAWAY_AT := Vector3(4.3, 1.3, -0.6)
@@ -1124,7 +1129,7 @@ func _on_grapple_started(attacker: Node3D, defender: Node3D, move: MoveDef) -> v
 		_after_pending = false
 		_held = 0.0
 		var total := maxf(float(move.total_frames()), 1.0)
-		_finish_impact = clampf(move.startup_frames / total, 0.2, 0.95)
+		_finish_impact = impact_fraction(move)
 		_finish_setup_end = maxf(0.15, _finish_impact
 				- FINISH_LEAD * 60.0 / total)
 		_finish_over_shoulder = move.animation_pair_id in FINISH_OVER_SHOULDER
@@ -1217,13 +1222,14 @@ static func _is_signature(move: MoveDef) -> bool:
 
 
 ## The fraction of a paired move at which contact lands: its own startup
-## frames over its whole length, clamped so a shake cannot fire before the move
-## has visibly begun or after it has finished.
+## frames over its whole length, unless the authored recipe identifies a later
+## landing. A running catch and its eventual slam can be different beats.
 static func impact_fraction(move: MoveDef) -> float:
 	if move == null:
 		return 0.5
 	var total := maxf(float(move.total_frames()), 1.0)
-	return clampf(move.startup_frames / total, 0.05, 0.98)
+	var recipe: Dictionary = PairedRecipes.RECIPES.get(String(move.animation_pair_id), {})
+	return clampf(float(recipe.get("camera_impact_at", move.startup_frames / total)), 0.05, 0.98)
 
 
 ## Whether a bound shot's progress has reached its contact frame.
@@ -1232,6 +1238,14 @@ static func contact_reached(progress: float, at: float) -> bool:
 
 
 func _on_grapple_finished(attacker: Node3D, defender: Node3D) -> void:
+	# A completed hold has no impact cue. A qualifying fallback move that
+	# never delivered its scheduled cue still uses move_landed below.
+	_completed_impact_move = _paired_impact_move if (_paired_impact_consumed or _impact_shake <= 0.0) else null
+	_completed_impact_attacker = attacker
+	_paired_impact_move = null
+	_paired_impact_consumed = false
+	_impact_shake_at = -1.0
+	_clear_completed_impact.call_deferred()
 	if mode == Mode.FINISHER_CUT and _finish_shot >= 0 and _finish_shot_t < MIN_SHOT:
 		# The shot on screen gets its minimum first (_update_mode).
 		_after_pending = true
@@ -1305,12 +1319,6 @@ func _finisher_shot(delta: float) -> bool:
 	if cut:
 		_finish_shot_t = 0.0
 	_finish_shot_t += delta
-	if shot == 1 and _finish_shot == 1 and p >= _finish_impact and _trauma <= 0.0 \
-			and not _impact_shaken:
-		_trauma = 1.0
-		_impact_shaken = true
-	if cut:
-		_impact_shaken = false
 	_finish_shot = shot
 	var a := _finish_attacker.global_position
 	var d := _finish_defender.global_position if _finish_defender else a
@@ -1383,7 +1391,6 @@ static func finish_shot_for(p: float, setup_end := FINISH_SETUP_END) -> int:
 	return 2
 
 
-var _impact_shaken := false
 
 
 ## The aftermath: low at the winner's feet, up past him standing over the man.
@@ -1437,27 +1444,35 @@ static func breathing(t: float, cam_mode: int) -> Vector2:
 ## settles exactly where it was. Presentation only.
 func _shake(delta: float) -> void:
 	_breath_t += delta
-	var breath := breathing(_breath_t, mode) * CameraSettings.shake_scale()
+	var scale := CameraSettings.shake_scale()
+	if scale <= 0.0:
+		_trauma = 0.0
+		h_offset = 0.0
+		v_offset = 0.0
+		return
+	var breath := breathing(_breath_t, mode) * scale
 	if _trauma <= 0.0:
 		h_offset = breath.x
 		v_offset = breath.y
 		return
 	_shake_t += delta
-	var amt := _trauma * _trauma * FINISH_SHAKE * CameraSettings.shake_scale()
+	var amt := _trauma * _trauma * FINISH_SHAKE * scale
 	h_offset = amt * sin(_shake_t * 71.0) * cos(_shake_t * 23.0) + breath.x
 	v_offset = amt * sin(_shake_t * 59.0 + 1.3) + breath.y
 	_trauma = maxf(0.0, _trauma - FINISH_SHAKE_DECAY * delta)
 
 
-## A signature or finisher: the shake waits for its contact frame.
+## One paired-impact cue, independent of coverage, shot holds and cut settings.
 func _arm_impact_shake(wrestler: WrestlerController, move: MoveDef) -> void:
+	_paired_impact_move = move
+	_paired_impact_consumed = false
+	_clear_completed_impact()
 	_impact_shake_at = -1.0
+	_impact_shake = 0.0
 	if wrestler == null or move == null:
 		return
 	var tier := wrestler.tier_of(move)
 	if tier == CombatSystem.Tier.FINISHER:
-		if not CameraSettings.fight_forever() and not CameraSettings.gameplay():
-			return    # the finisher sequence shakes on its own impact
 		_impact_shake = TRAUMA_FINISHER
 	elif tier == CombatSystem.Tier.SIGNATURE or _is_signature(move):
 		_impact_shake = TRAUMA_SIGNATURE
@@ -1476,14 +1491,24 @@ func _impact_shake_due() -> void:
 		_impact_shake_at = -1.0
 		return
 	if grapple_rig.progress() >= _impact_shake_at:
-		# Up to this shake, not on top of one already running: the slam cut
-		# shakes on the same frame, and the two summed hit the ceiling.
-		_trauma = maxf(_trauma, _impact_shake)
+		_paired_impact_consumed = true
+		# Coalesce with an existing impact instead of stacking to the ceiling.
+		# Camera-shot and completion callbacks must not replay this cue.
+		if CameraSettings.shake_scale() > 0.0:
+			_trauma = maxf(_trauma, _impact_shake)
 		_impact_shake_at = -1.0
+
+
+func _clear_completed_impact() -> void:
+	_completed_impact_move = null
+	_completed_impact_attacker = null
 
 
 ## Kick the shake from outside (a big bump).
 func add_trauma(amount: float) -> void:
+	if CameraSettings.shake_scale() <= 0.0:
+		_trauma = 0.0
+		return
 	_trauma = clampf(_trauma + amount, 0.0, 1.0)
 
 
@@ -1617,6 +1642,9 @@ static func _outside_ring(p: Vector3, bearing: Vector3) -> Vector3:
 func _on_move_landed(attacker: WrestlerController, defender: WrestlerController, move: MoveDef) -> void:
 	if move == null or grapple_rig != null and grapple_rig.is_active():
 		return
+	var paired_completion := move == _completed_impact_move and attacker == _completed_impact_attacker
+	if paired_completion:
+		_clear_completed_impact()
 	var damage := move.damage_head + move.damage_torso + move.damage_arms + move.damage_legs
 	var big := damage >= BIG_STRIKE_DAMAGE
 	# 2K26 shakes on a big blow, not on every punch: a shake on every jab
@@ -1634,7 +1662,7 @@ func _on_move_landed(attacker: WrestlerController, defender: WrestlerController,
 			trauma = maxf(trauma, TRAUMA_FINISHER)
 		elif tier == CombatSystem.Tier.SIGNATURE or _is_signature(move):
 			trauma = maxf(trauma, TRAUMA_SIGNATURE)
-	if trauma > 0.0:
+	if trauma > 0.0 and not paired_completion:
 		add_trauma(trauma)
 	if CameraSettings.fight_forever():
 		if attacker != null and (attacker.is_finisher(move) or _is_signature(move)):
@@ -1856,7 +1884,10 @@ func _event_shot(delta: float) -> bool:
 					and contact_reached(grapple_rig.progress(), _cut_impact_at) \
 					and not _cut_landed:
 				_cut_landed = true
-				_trauma = maxf(_trauma, TRAUMA_SLAM)
+				# Paired moves already own a scheduled impact, even when the
+				# shot arrives late. Keep this only for standalone slam cuts.
+				if _paired_impact_move == null and CameraSettings.shake_scale() > 0.0:
+					_trauma = maxf(_trauma, TRAUMA_SLAM)
 		Cut.HERO:
 			# The taunt: low, in front of him, up at him against the lights.
 			var right := Vector3.UP.cross(-facing).normalized()

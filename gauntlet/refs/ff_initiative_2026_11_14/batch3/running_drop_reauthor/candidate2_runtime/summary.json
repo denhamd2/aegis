@@ -1,0 +1,75 @@
+{
+  "status": "Numeric candidate checks pass; rendered review pending",
+  "glb_sha256": "056b5dbb40e1bd286decfaeb43b8d5aca0535728dfe6dfc22f6153bf6d35b01c",
+  "required_contact_source_frame": 49,
+  "contact_gap_limit_m": 0.055,
+  "proxy_penetration_limit_m": 0.085,
+  "numeric_epsilon_m": 1e-06,
+  "changed_pose_roles": [
+    "running_grapple_inverted_drop__attacker",
+    "running_grapple_inverted_drop__defender"
+  ],
+  "unchanged_pose_roles": 144,
+  "pairs": {
+    "base": {
+      "body": 0.0250375151634216,
+      "arm": 0.0475457142293453,
+      "drawn_body": 0.0250377237796783,
+      "drawn_arm": 0.0479329097270966,
+      "contacts": [
+        {
+          "centreline_distance_m": 0.0687507018446922,
+          "clip_tick": 98,
+          "closest": "(-0.021126, 1.467294, -2.347413)",
+          "gap_m": 0.0,
+          "id": "right_forearm",
+          "penetration_m": 0.0562492981553078,
+          "phase": 0.74242422633263,
+          "signed_gap_m": -0.0562492981553078,
+          "target": "(0.038205, 1.466734, -2.382143)",
+          "valid": true
+        }
+      ]
+    },
+    "cody-roman": {
+      "body": 0.0133729359507561,
+      "arm": 0.0617070215940475,
+      "drawn_body": 0.144086390435696,
+      "drawn_arm": 0.0617071482539177,
+      "contacts": [
+        {
+          "centreline_distance_m": 0.0619731917977333,
+          "clip_tick": 98,
+          "closest": "(0.044405, 1.488474, -2.251447)",
+          "gap_m": 0.0,
+          "id": "right_forearm",
+          "penetration_m": 0.0630268082022667,
+          "phase": 0.74242422633263,
+          "signed_gap_m": -0.0630268082022667,
+          "target": "(0.021358, 1.431552, -2.25978)",
+          "valid": true
+        }
+      ]
+    },
+    "roman-cody": {
+      "body": 0.0180042806267738,
+      "arm": 0.0520680993050337,
+      "drawn_body": 0.0411008942127228,
+      "drawn_arm": 0.0520681179314852,
+      "contacts": [
+        {
+          "centreline_distance_m": 0.039999958127737,
+          "clip_tick": 98,
+          "closest": "(-0.003664, 1.448007, -2.382596)",
+          "gap_m": 0.0,
+          "id": "right_forearm",
+          "penetration_m": 0.085000041872263,
+          "phase": 0.74242422633263,
+          "signed_gap_m": -0.085000041872263,
+          "target": "(-0.009805, 1.408866, -2.388099)",
+          "valid": true
+        }
+      ]
+    }
+  }
+}

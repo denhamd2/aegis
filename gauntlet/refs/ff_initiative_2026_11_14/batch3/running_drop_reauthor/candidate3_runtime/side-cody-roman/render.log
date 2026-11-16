@@ -1,0 +1,66 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Vulkan 1.4.305 - Forward+ - Using Device #0: Unknown - llvmpipe (LLVM 19.1.7, 256 bits)
+
+PAIRED_SHOT running_grapple_inverted_drop
+SKIN_FLOOR running_grapple_inverted_drop_00.png {"WrestlerA":{"back":0.894923210144043,"head":1.43027484416962,"other":0.00684033753350377},"WrestlerB":{"back":0.869936048984528,"head":1.21036088466644,"other":-0.012483611702919}}
+CAPTURE_CLOCK running_grapple_inverted_drop_00.png requested_tick 0 paired_seconds 0.016667
+  t=0.00  defender y=0.00  attacker y=0.00
+    WrestlerA root (-2.55,0.00,-2.31) yaw -103  pelvis (-2.55,0.89,-2.31)  head (-2.44,1.55,-2.27)  lowest 0.000 (root)
+    WrestlerB root (1.73,0.00,-1.31) yaw 77  lowest 0.032 (h_toe_l_stub)
+SKIN_FLOOR running_grapple_inverted_drop_56.png {"WrestlerA":{"back":0.920429706573486,"head":1.33584690093994,"other":0.000393052236177027},"WrestlerB":{"back":0.990437626838684,"head":1.23504757881165,"other":-0.013635003939271}}
+CAPTURE_CLOCK running_grapple_inverted_drop_56.png requested_tick 74 paired_seconds 1.233333
+  t=0.55  defender y=0.00  attacker y=0.00
+    WrestlerA root (0.82,0.00,-1.50) yaw -103  pelvis (0.94,0.82,-1.47)  head (1.13,1.46,-1.43)  lowest -0.001 (root)
+    WrestlerB root (1.65,0.00,-1.39) yaw 77  lowest 0.025 (h_toe_l_stub)
+SKIN_FLOOR running_grapple_inverted_drop_65.png {"WrestlerA":{"back":0.952421426773071,"head":1.37627291679382,"other":0.00516940606757998},"WrestlerB":{"back":0.961742877960205,"head":1.23526537418365,"other":-0.0489371567964554}}
+CAPTURE_CLOCK running_grapple_inverted_drop_65.png requested_tick 86 paired_seconds 1.433333
+  t=0.64  defender y=0.00  attacker y=0.00
+    WrestlerA root (1.04,0.00,-1.45) yaw -103  pelvis (1.09,0.84,-1.44)  head (1.23,1.50,-1.42)  lowest 0.004 (root)
+    WrestlerB root (1.64,0.00,-1.43) yaw 77  lowest 0.001 (h_toe_l_stub)
+SKIN_FLOOR running_grapple_inverted_drop_74.png {"WrestlerA":{"back":0.777982473373413,"head":1.37979078292847,"other":0.00332255614921451},"WrestlerB":{"back":0.984326601028442,"head":1.24222123622894,"other":-0.0489373654127121}}
+CAPTURE_CLOCK running_grapple_inverted_drop_74.png requested_tick 98 paired_seconds 1.633333
+  t=0.73  defender y=0.00  attacker y=0.00
+    WrestlerA root (1.18,0.00,-1.43) yaw -103  pelvis (1.20,0.85,-1.43)  head (1.40,1.49,-1.43)  lowest 0.003 (root)
+    WrestlerB root (1.64,0.00,-1.50) yaw 77  lowest 0.004 (j_toe_l_stub)
+SKIN_FLOOR running_grapple_inverted_drop_83.png {"WrestlerA":{"back":0.756762623786926,"head":1.37186419963837,"other":0.00372301042079926},"WrestlerB":{"back":0.810587048530579,"head":0.75394880771637,"other":0.993651151657104}}
+CAPTURE_CLOCK running_grapple_inverted_drop_83.png requested_tick 110 paired_seconds 1.833333
+  t=0.83  defender y=0.00  attacker y=0.00
+    WrestlerA root (1.22,0.00,-1.44) yaw -103  pelvis (1.21,0.85,-1.43)  head (1.45,1.48,-1.41)  lowest 0.003 (root)
+    WrestlerB root (1.79,0.00,-1.58) yaw 77  lowest 0.843 (h_neck_l)
+SKIN_FLOOR running_grapple_inverted_drop_89.png {"WrestlerA":{"back":0.769563913345337,"head":1.39716899394989,"other":0.000760089780669659},"WrestlerB":{"back":0.28361988067627,"head":0.187307894229889,"other":0.640515148639679}}
+CAPTURE_CLOCK running_grapple_inverted_drop_89.png requested_tick 118 paired_seconds 1.966667
+  t=0.89  defender y=0.00  attacker y=0.00
+    WrestlerA root (1.16,0.00,-1.46) yaw -103  pelvis (1.19,0.85,-1.45)  head (1.41,1.48,-1.40)  lowest 0.000 (root)
+    WrestlerB root (1.92,0.00,-1.62) yaw 77  lowest 0.285 (h_neck_l)
+SKIN_FLOOR running_grapple_inverted_drop_92.png {"WrestlerA":{"back":0.811980605125427,"head":1.42207491397858,"other":0.00278742471709847},"WrestlerB":{"back":0.040674015879631,"head":-0.00105047225952148,"other":0.145819127559662}}
+CAPTURE_CLOCK running_grapple_inverted_drop_92.png requested_tick 122 paired_seconds 2.033333
+  t=0.92  defender y=0.00  attacker y=0.00
+    WrestlerA root (1.05,0.00,-1.50) yaw -103  pelvis (1.10,0.87,-1.47)  head (1.24,1.52,-1.45)  lowest 0.000 (root)
+    WrestlerB root (1.95,0.00,-1.63) yaw 77  lowest 0.176 (h_leg_vol_b_r)
+SKIN_FLOOR running_grapple_inverted_drop_100.png {"WrestlerA":{"back":0.999223709106445,"head":1.42111098766327,"other":0.000518656161148101},"WrestlerB":{"back":0.0382305383682251,"head":0.0157782286405563,"other":-0.0214978326112032}}
+CAPTURE_CLOCK running_grapple_inverted_drop_100.png requested_tick 132 paired_seconds -1.000000
+  t=0.99  defender y=0.00  attacker y=0.00
+    WrestlerA root (0.82,0.00,-1.57) yaw -103  pelvis (0.84,0.88,-1.55)  head (0.94,1.54,-1.53)  lowest 0.000 (root)
+    WrestlerB root (1.98,0.00,-1.64) yaw 77  lowest 0.041 (j_thumbf3_l_stub)
+ERROR: Parameter "material" is null.
+   at: material_casts_shadows (servers/rendering/renderer_rd/storage_rd/material_storage.cpp:2404)
+ERROR: Parameter "material" is null.
+   at: material_is_animated (servers/rendering/renderer_rd/storage_rd/material_storage.cpp:2391)
+ERROR: Parameter "material" is null.
+   at: material_get_instance_shader_parameters (servers/rendering/renderer_rd/storage_rd/material_storage.cpp:2435)
+ERROR: Parameter "material" is null.
+   at: material_update_dependency (servers/rendering/renderer_rd/storage_rd/material_storage.cpp:2447)
+ERROR: Parameter "material" is null.
+   at: material_casts_shadows (servers/rendering/renderer_rd/storage_rd/material_storage.cpp:2404)
+ERROR: Parameter "material" is null.
+   at: material_is_animated (servers/rendering/renderer_rd/storage_rd/material_storage.cpp:2391)
+ERROR: Parameter "material" is null.
+   at: material_get_instance_shader_parameters (servers/rendering/renderer_rd/storage_rd/material_storage.cpp:2435)
+ERROR: Parameter "material" is null.
+   at: material_update_dependency (servers/rendering/renderer_rd/storage_rd/material_storage.cpp:2447)
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 2 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+ERROR: Pages in use exist at exit in PagedAllocator: N7Variant5Pools12BucketMediumE
+   at: ~PagedAllocator (./core/templates/paged_allocator.h:169)

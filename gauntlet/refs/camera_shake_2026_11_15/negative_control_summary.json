@@ -1,0 +1,17 @@
+{
+  "source": "published MatchCamera before this repair",
+  "isolated_baseline_copy": true,
+  "tests": 11,
+  "failed_cases": [
+    "test_every_coverage_fires_once_at_contact_even_with_residual_shake_and_cuts_off",
+    "test_finisher_shots_do_not_replay_a_consumed_impact_after_the_pulse_settles",
+    "test_off_clears_active_and_new_cues_without_replaying_them_when_reenabled",
+    "test_running_catch_and_authored_landing_have_different_camera_beats",
+    "test_all_shake_levels_allow_the_real_root_animation_to_advance",
+    "test_paired_completion_does_not_shake_twice_or_suppress_a_later_strike",
+    "test_a_broadcast_slam_cannot_top_up_or_repeat_its_scheduled_throw_pulse",
+    "test_standalone_slam_fallback_is_kept_but_ordinary_paired_holds_stay_steady"
+  ],
+  "exit_code": 100,
+  "animation_continuity_note": "Baseline failures in the continuity test concern OFF cue banking, not an observed animation freeze."
+}

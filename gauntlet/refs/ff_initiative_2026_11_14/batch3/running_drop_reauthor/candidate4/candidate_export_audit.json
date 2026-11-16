@@ -1,0 +1,42 @@
+{
+  "version": "candidate4",
+  "files": {
+    "/tmp/aegis-running-wrap-candidate4.glb": {
+      "bytes": 307400,
+      "sha256": "cedcc2aef246de69bed55729b9d0ae433bd8d8860fa30c2dc683fcfde47ed573"
+    },
+    "/tmp/aegis-running-wrap-candidate4.blend": {
+      "bytes": 3443828,
+      "sha256": "407cd895a46f408d7d514f60d4e0fe395a49d4495336922f64a1ed9c29e2dc8d"
+    },
+    "game/tools/blender/wrestling_clips.py": {
+      "bytes": 669715,
+      "sha256": "c70d0cc56d9d36fb3f21ed6ed3ba78942831633f7699eeba1c1768478ae2fd12"
+    },
+    "game/tools/blender/running_drop_approach_baseline.json": {
+      "bytes": 33468,
+      "sha256": "a19e211352b8ba7a3836b9e5ef61bc61cea6461096b9e2389650afe76d7a9628"
+    }
+  },
+  "animations": [
+    {
+      "name": "Run_Grapple_Attacker",
+      "channels": 195,
+      "input_sample_counts": [
+        2,
+        133
+      ],
+      "duration_seconds": 2.2
+    },
+    {
+      "name": "Run_Grapple_Defender",
+      "channels": 195,
+      "input_sample_counts": [
+        2,
+        133
+      ],
+      "duration_seconds": 2.2
+    }
+  ],
+  "source_doc_note": "Final builder fingerprint includes comment-only correction from backward fall to inverted turnover; all executable motion inputs unchanged."
+}

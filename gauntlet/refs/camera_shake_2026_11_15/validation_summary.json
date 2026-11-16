@@ -1,0 +1,14 @@
+{
+  "focused_camera_cases": 31,
+  "pose_wiring_cases": 14,
+  "distinct_cases_passed": 45,
+  "failures": 0,
+  "errors": 0,
+  "full_suite_claim": false,
+  "native_M1_performance": "unverified",
+  "subjective_shake_feel": "awaiting owner Mac review",
+  "tested_upstream_commit": "8cb7576205045d5ccf6fd9456494d8f57f629f35",
+  "final_combined_report": "focused_results.xml",
+  "negative_control_failed_cases": 8,
+  "negative_control_cases": 11
+}

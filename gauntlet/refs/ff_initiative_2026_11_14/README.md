@@ -1,7 +1,15 @@
 # Fight Forever gameplay initiative — current audit and execution
 
-Owner-approved implementation initiative,14 November2026. Full scope: [owner request](owner_request.txt). Existing Kenny work
-is preserved and unpublished; gameplay changes are staged independently.
+Owner-approved implementation initiative,14 November2026. Full scope: [owner request](owner_request.txt). Kenny R7/R8 source/assets were published atf681d07; further likeness/beard
+acceptance remains open. Gameplay work is delivered in bounded batches.
+
+## Current verified Mac delivery
+
+Running-drop wrap/boot arc published atbf785ec, Mac run43753948084 succeeded,
+exact mac-latest tag and uploaded ZIP verified.72 focused cases pass;315
+unrelated exported clips remain bit-exact. Owner requested committing and
+deploying all changes. [Evidence and remaining landing-fit work](batch3/running_drop_reauthor/README.md).
+No full-move, full-suite or native-M1 performance acceptance is claimed.
 
 ## Source and evidence boundary
 

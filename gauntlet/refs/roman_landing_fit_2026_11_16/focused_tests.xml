@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites id="2026-11-16" name="report_1" tests="37" failures="0" skipped="0" flaky="0" time="0.000">
+	<testsuite id="0" name="test_roman_landing_fit" package="tests" timestamp="2026-11-16T07:24:54" hostname="localhost" tests="3" failures="0" errors="0" skipped="0" flaky="0" time="5.605">
+		<testcase name="test_fit_respects_both_imported_parent_axes_and_keeps_approach_handoff" classname="test_roman_landing_fit" time="2.761">
+		</testcase>
+		<testcase name="test_source_attacker_other_moves_and_rotations_remain_unmodified" classname="test_roman_landing_fit" time="2.541">
+		</testcase>
+		<testcase name="test_measured_source_clip_and_mesh_have_not_silently_changed" classname="test_roman_landing_fit" time="0.280">
+		</testcase>
+	</testsuite>
+	<testsuite id="1" name="test_grapple_height_release" package="tests" timestamp="2026-11-16T07:24:59" hostname="localhost" tests="7" failures="0" errors="0" skipped="0" flaky="0" time="10.152">
+		<testcase name="test_early_carry_is_unchanged_then_offsets_release_on_authored_beats" classname="test_grapple_height_release" time="0.004">
+		</testcase>
+		<testcase name="test_height_release_stays_closed_after_root_playback_is_restored" classname="test_grapple_height_release" time="0.003">
+		</testcase>
+		<testcase name="test_other_moves_keep_the_existing_three_dimensional_fitting" classname="test_grapple_height_release" time="0.003">
+		</testcase>
+		<testcase name="test_no_contact_settle_keeps_the_prescribed_release_height" classname="test_grapple_height_release" time="0.003">
+		</testcase>
+		<testcase name="test_configured_release_windows_are_ordered_inside_the_clip" classname="test_grapple_height_release" time="0.002">
+		</testcase>
+		<testcase name="test_grip_fade_finishes_before_the_authored_impact" classname="test_grapple_height_release" time="0.003">
+		</testcase>
+		<testcase name="test_authored_pair_preserves_release_counter_and_height_on_the_shared_clock" classname="test_grapple_height_release" time="10.114">
+		</testcase>
+	</testsuite>
+	<testsuite id="2" name="test_grapple_role_retargeting" package="tests" timestamp="2026-11-16T07:25:09" hostname="localhost" tests="3" failures="0" errors="0" skipped="0" flaky="0" time="0.024">
+		<testcase name="test_authored_roles_survive_slot_swap_height_and_rotated_frames" classname="test_grapple_role_retargeting" time="0.005">
+		</testcase>
+		<testcase name="test_overlapping_rigs_cannot_retarget_each_others_source_or_restore_it_wrongly" classname="test_grapple_role_retargeting" time="0.003">
+		</testcase>
+		<testcase name="test_ladder_entry_height_belongs_to_the_attacker_in_either_slot" classname="test_grapple_role_retargeting" time="0.003">
+		</testcase>
+	</testsuite>
+	<testsuite id="3" name="test_paired_poses" package="tests" timestamp="2026-11-16T07:25:09" hostname="localhost" tests="14" failures="0" errors="0" skipped="0" flaky="0" time="0.145">
+		<testcase name="test_every_recipe_samples_a_clip_the_rig_actually_has" classname="test_paired_poses" time="0.015">
+		</testcase>
+		<testcase name="test_every_sample_time_is_inside_its_source_clip" classname="test_paired_poses" time="0.014">
+		</testcase>
+		<testcase name="test_every_recipe_has_a_matching_trajectory" classname="test_paired_poses" time="0.003">
+		</testcase>
+		<testcase name="test_role_clips_are_exactly_as_long_as_the_trajectory" classname="test_paired_poses" time="0.005">
+		</testcase>
+		<testcase name="test_generated_library_has_both_roles_for_every_recipe" classname="test_paired_poses" time="0.003">
+		</testcase>
+		<testcase name="test_generated_clips_pose_every_bone_the_rig_animates" classname="test_paired_poses" time="0.015">
+		</testcase>
+		<testcase name="test_generated_track_paths_resolve_against_a_real_wrestler" classname="test_paired_poses" time="0.013">
+		</testcase>
+		<testcase name="test_roles_resolve_to_different_clips" classname="test_paired_poses" time="0.003">
+		</testcase>
+		<testcase name="test_a_move_with_no_recipe_resolves_to_nothing" classname="test_paired_poses" time="0.004">
+		</testcase>
+		<testcase name="test_defender_grip_windows_are_inside_the_move" classname="test_paired_poses" time="0.004">
+		</testcase>
+		<testcase name="test_a_wrestler_can_play_its_half_of_an_authored_move" classname="test_paired_poses" time="0.015">
+		</testcase>
+		<testcase name="test_a_move_with_no_recipe_falls_back_instead_of_failing" classname="test_paired_poses" time="0.013">
+		</testcase>
+		<testcase name="test_thrown_bodies_land_upright" classname="test_paired_poses" time="0.004">
+		</testcase>
+		<testcase name="test_no_move_ends_with_a_body_on_its_face" classname="test_paired_poses" time="0.003">
+		</testcase>
+	</testsuite>
+	<testsuite id="4" name="test_authored_hand_contacts" package="tests" timestamp="2026-11-16T07:25:09" hostname="localhost" tests="7" failures="0" errors="0" skipped="0" flaky="0" time="0.049">
+		<testcase name="test_authored_policy_never_falls_back_to_waist_ik_or_model_pull" classname="test_authored_hand_contacts" time="0.004">
+		</testcase>
+		<testcase name="test_expected_contact_uses_anatomical_right_forearm_not_free_left_or_wrist" classname="test_authored_hand_contacts" time="0.003">
+		</testcase>
+		<testcase name="test_contact_observation_is_invariant_under_pair_translation_and_yaw" classname="test_authored_hand_contacts" time="0.007">
+		</testcase>
+		<testcase name="test_missing_anchors_and_effectors_are_required_failures_not_dropped_samples" classname="test_authored_hand_contacts" time="0.003">
+		</testcase>
+		<testcase name="test_legacy_contact_moves_keep_their_existing_policy" classname="test_authored_hand_contacts" time="0.005">
+		</testcase>
+		<testcase name="test_profile_windows_and_geometry_are_valid" classname="test_authored_hand_contacts" time="0.007">
+		</testcase>
+		<testcase name="test_deep_contact_keeps_signed_penetration_visible" classname="test_authored_hand_contacts" time="0.003">
+		</testcase>
+	</testsuite>
+	<testsuite id="5" name="test_clip_authoring_gate" package="tests" timestamp="2026-11-16T07:25:09" hostname="localhost" tests="3" failures="0" errors="0" skipped="0" flaky="0" time="0.028">
+		<testcase name="test_the_authoring_files_are_readable_at_all" classname="test_clip_authoring_gate" time="0.005">
+		</testcase>
+		<testcase name="test_the_clip_authoring_surface_has_not_changed_unreviewed" classname="test_clip_authoring_gate" time="0.005">
+		</testcase>
+		<testcase name="test_the_authoring_file_still_points_at_the_skill" classname="test_clip_authoring_gate" time="0.008">
+		</testcase>
+	</testsuite>
+</testsuites>

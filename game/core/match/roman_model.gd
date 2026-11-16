@@ -1653,6 +1653,7 @@ func adapt_animation_library(source: AnimationLibrary,
 		for skeleton in skeletons:
 			_add_helper_tracks(animation, skeleton)
 		target.add_animation(name, animation)
+	preload("res://core/match/roman_landing_fit.gd").apply(target, skeletons, self)
 	if owned_source_root:
 		owned_source_root.free()
 	return target

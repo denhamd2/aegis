@@ -1,0 +1,7285 @@
+{
+	"roster": "roman,cody",
+	"samples": [
+		{
+			"active": true,
+			"finished_tick": -1,
+			"physics_tick": 157,
+			"pose_node": "GRAPPLE_HOLD",
+			"pose_seconds": 1.81666672229767,
+			"source_frame": 54.4999988187443,
+			"state": 5,
+			"surfaces": [
+				{
+					"cosmetic": false,
+					"material": "xmaterial_e531cd813705b95",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 157,
+					"regions": {
+						"back": {
+							"vertex": 824,
+							"y": 0.524877071380615
+						},
+						"leg": {
+							"vertex": 1539,
+							"y": 0.704432547092438
+						},
+						"pelvis": {
+							"vertex": 759,
+							"y": 0.528092503547668
+						}
+					},
+					"surface": 0
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_495900de7002683",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 157,
+					"regions": {
+						"back": {
+							"vertex": 107,
+							"y": 0.45642626285553
+						},
+						"pelvis": {
+							"vertex": 138,
+							"y": 0.541649103164673
+						}
+					},
+					"surface": 1
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b39911eb484a2",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 157,
+					"regions": {
+						"arm": {
+							"vertex": 2263,
+							"y": 0.60769784450531
+						},
+						"back": {
+							"vertex": 384,
+							"y": 0.533804535865784
+						}
+					},
+					"surface": 2
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b2b911eb46cd8",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 157,
+					"regions": {
+						"arm": {
+							"vertex": 1740,
+							"y": 0.602685809135437
+						},
+						"back": {
+							"vertex": 305,
+							"y": 0.547292292118073
+						}
+					},
+					"surface": 3
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c7ae1bc9f4b14",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 157,
+					"regions": {
+						"back": {
+							"vertex": 58,
+							"y": 0.492406487464905
+						},
+						"pelvis": {
+							"vertex": 556,
+							"y": 0.515380263328552
+						}
+					},
+					"surface": 4
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_5a329cd32db96c3",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 157,
+					"regions": {
+						"arm": {
+							"vertex": 758,
+							"y": 0.605101346969604
+						},
+						"back": {
+							"vertex": 170,
+							"y": 0.417943030595779
+						},
+						"neck": {
+							"vertex": 71,
+							"y": 0.458720803260803
+						}
+					},
+					"surface": 5
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c3d4d9e78b44a79",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 157,
+					"regions": {
+						"back": {
+							"vertex": 129,
+							"y": 0.434088468551636
+						},
+						"head": {
+							"vertex": 1890,
+							"y": 0.407722562551498
+						},
+						"neck": {
+							"vertex": 46,
+							"y": 0.442605018615723
+						}
+					},
+					"surface": 6
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d1e7e57b971093",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 157,
+					"regions": {
+						"leg": {
+							"vertex": 487,
+							"y": 0.896056294441223
+						}
+					},
+					"surface": 7
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d205e57b97438d",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 157,
+					"regions": {
+						"leg": {
+							"vertex": 661,
+							"y": 0.935165286064148
+						}
+					},
+					"surface": 8
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_f003af958238385",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 157,
+					"regions": {
+						"arm": {
+							"vertex": 257,
+							"y": 0.776439011096954
+						}
+					},
+					"surface": 9
+				},
+				{
+					"cosmetic": false,
+					"material": "head_shared_inside_mouth_iw9",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 157,
+					"regions": {
+						"head": {
+							"vertex": 345,
+							"y": 0.553517162799835
+						}
+					},
+					"surface": 10
+				},
+				{
+					"cosmetic": true,
+					"material": "Eye_cody",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 157,
+					"regions": {
+						"head": {
+							"vertex": 11,
+							"y": 0.581988871097565
+						}
+					},
+					"surface": 11
+				}
+			],
+			"tick": 155
+		},
+		{
+			"active": true,
+			"finished_tick": -1,
+			"physics_tick": 158,
+			"pose_node": "GRAPPLE_HOLD",
+			"pose_seconds": 1.83333337306976,
+			"source_frame": 54.9999988079071,
+			"state": 5,
+			"surfaces": [
+				{
+					"cosmetic": false,
+					"material": "xmaterial_e531cd813705b95",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 158,
+					"regions": {
+						"back": {
+							"vertex": 822,
+							"y": 0.509087264537811
+						},
+						"leg": {
+							"vertex": 1617,
+							"y": 0.707308769226074
+						},
+						"pelvis": {
+							"vertex": 1277,
+							"y": 0.520405471324921
+						}
+					},
+					"surface": 0
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_495900de7002683",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 158,
+					"regions": {
+						"back": {
+							"vertex": 107,
+							"y": 0.410230487585068
+						},
+						"pelvis": {
+							"vertex": 138,
+							"y": 0.531265377998352
+						}
+					},
+					"surface": 1
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b39911eb484a2",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 158,
+					"regions": {
+						"arm": {
+							"vertex": 2263,
+							"y": 0.528470814228058
+						},
+						"back": {
+							"vertex": 384,
+							"y": 0.465173423290253
+						}
+					},
+					"surface": 2
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b2b911eb46cd8",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 158,
+					"regions": {
+						"arm": {
+							"vertex": 1740,
+							"y": 0.537762939929962
+						},
+						"back": {
+							"vertex": 304,
+							"y": 0.478212088346481
+						}
+					},
+					"surface": 3
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c7ae1bc9f4b14",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 158,
+					"regions": {
+						"back": {
+							"vertex": 58,
+							"y": 0.468702405691147
+						},
+						"pelvis": {
+							"vertex": 556,
+							"y": 0.50155782699585
+						}
+					},
+					"surface": 4
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_5a329cd32db96c3",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 158,
+					"regions": {
+						"arm": {
+							"vertex": 758,
+							"y": 0.523205399513245
+						},
+						"back": {
+							"vertex": 172,
+							"y": 0.338238567113876
+						},
+						"neck": {
+							"vertex": 71,
+							"y": 0.371241986751556
+						}
+					},
+					"surface": 5
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c3d4d9e78b44a79",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 158,
+					"regions": {
+						"back": {
+							"vertex": 51,
+							"y": 0.347614705562592
+						},
+						"head": {
+							"vertex": 4694,
+							"y": 0.289456009864807
+						},
+						"neck": {
+							"vertex": 43,
+							"y": 0.351974844932556
+						}
+					},
+					"surface": 6
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d1e7e57b971093",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 158,
+					"regions": {
+						"leg": {
+							"vertex": 806,
+							"y": 0.937777400016785
+						}
+					},
+					"surface": 7
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d205e57b97438d",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 158,
+					"regions": {
+						"leg": {
+							"vertex": 664,
+							"y": 0.921497821807861
+						}
+					},
+					"surface": 8
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_f003af958238385",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 158,
+					"regions": {
+						"arm": {
+							"vertex": 257,
+							"y": 0.701081156730652
+						}
+					},
+					"surface": 9
+				},
+				{
+					"cosmetic": false,
+					"material": "head_shared_inside_mouth_iw9",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 158,
+					"regions": {
+						"head": {
+							"vertex": 345,
+							"y": 0.450637340545654
+						}
+					},
+					"surface": 10
+				},
+				{
+					"cosmetic": true,
+					"material": "Eye_cody",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 158,
+					"regions": {
+						"head": {
+							"vertex": 11,
+							"y": 0.465583264827728
+						}
+					},
+					"surface": 11
+				}
+			],
+			"tick": 156
+		},
+		{
+			"active": true,
+			"finished_tick": -1,
+			"physics_tick": 159,
+			"pose_node": "GRAPPLE_HOLD",
+			"pose_seconds": 1.85000002384186,
+			"source_frame": 55.4999987970699,
+			"state": 5,
+			"surfaces": [
+				{
+					"cosmetic": false,
+					"material": "xmaterial_e531cd813705b95",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 159,
+					"regions": {
+						"back": {
+							"vertex": 822,
+							"y": 0.502914607524872
+						},
+						"leg": {
+							"vertex": 1617,
+							"y": 0.710253059864044
+						},
+						"pelvis": {
+							"vertex": 1277,
+							"y": 0.518072187900543
+						}
+					},
+					"surface": 0
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_495900de7002683",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 159,
+					"regions": {
+						"back": {
+							"vertex": 107,
+							"y": 0.379082143306732
+						},
+						"pelvis": {
+							"vertex": 96,
+							"y": 0.529629170894623
+						}
+					},
+					"surface": 1
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b39911eb484a2",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 159,
+					"regions": {
+						"arm": {
+							"vertex": 2263,
+							"y": 0.467640519142151
+						},
+						"back": {
+							"vertex": 384,
+							"y": 0.414098978042603
+						}
+					},
+					"surface": 2
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b2b911eb46cd8",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 159,
+					"regions": {
+						"arm": {
+							"vertex": 1740,
+							"y": 0.488041043281555
+						},
+						"back": {
+							"vertex": 304,
+							"y": 0.426046788692474
+						}
+					},
+					"surface": 3
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c7ae1bc9f4b14",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 159,
+					"regions": {
+						"back": {
+							"vertex": 58,
+							"y": 0.456575572490692
+						},
+						"pelvis": {
+							"vertex": 556,
+							"y": 0.497613817453384
+						}
+					},
+					"surface": 4
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_5a329cd32db96c3",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 159,
+					"regions": {
+						"arm": {
+							"vertex": 758,
+							"y": 0.460295140743256
+						},
+						"back": {
+							"vertex": 200,
+							"y": 0.278378844261169
+						},
+						"neck": {
+							"vertex": 71,
+							"y": 0.306139945983887
+						}
+					},
+					"surface": 5
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c3d4d9e78b44a79",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 159,
+					"regions": {
+						"back": {
+							"vertex": 51,
+							"y": 0.282331883907318
+						},
+						"head": {
+							"vertex": 1089,
+							"y": 0.199531495571136
+						},
+						"neck": {
+							"vertex": 43,
+							"y": 0.281683057546616
+						}
+					},
+					"surface": 6
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d1e7e57b971093",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 159,
+					"regions": {
+						"leg": {
+							"vertex": 806,
+							"y": 0.982354164123535
+						}
+					},
+					"surface": 7
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d205e57b97438d",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 159,
+					"regions": {
+						"leg": {
+							"vertex": 35,
+							"y": 0.919490098953247
+						}
+					},
+					"surface": 8
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_f003af958238385",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 159,
+					"regions": {
+						"arm": {
+							"vertex": 257,
+							"y": 0.638138353824615
+						}
+					},
+					"surface": 9
+				},
+				{
+					"cosmetic": false,
+					"material": "head_shared_inside_mouth_iw9",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 159,
+					"regions": {
+						"head": {
+							"vertex": 345,
+							"y": 0.371618777513504
+						}
+					},
+					"surface": 10
+				},
+				{
+					"cosmetic": true,
+					"material": "Eye_cody",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 159,
+					"regions": {
+						"head": {
+							"vertex": 1,
+							"y": 0.375994652509689
+						}
+					},
+					"surface": 11
+				}
+			],
+			"tick": 157
+		},
+		{
+			"active": true,
+			"finished_tick": -1,
+			"physics_tick": 160,
+			"pose_node": "GRAPPLE_HOLD",
+			"pose_seconds": 1.86666667461395,
+			"source_frame": 55.9999987862327,
+			"state": 5,
+			"surfaces": [
+				{
+					"cosmetic": false,
+					"material": "xmaterial_e531cd813705b95",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 160,
+					"regions": {
+						"back": {
+							"vertex": 822,
+							"y": 0.509753227233887
+						},
+						"leg": {
+							"vertex": 1620,
+							"y": 0.720694839954376
+						},
+						"pelvis": {
+							"vertex": 1277,
+							"y": 0.527713716030121
+						}
+					},
+					"surface": 0
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_495900de7002683",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 160,
+					"regions": {
+						"back": {
+							"vertex": 107,
+							"y": 0.366769194602966
+						},
+						"pelvis": {
+							"vertex": 96,
+							"y": 0.539596557617188
+						}
+					},
+					"surface": 1
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b39911eb484a2",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 160,
+					"regions": {
+						"arm": {
+							"vertex": 2264,
+							"y": 0.432487487792969
+						},
+						"back": {
+							"vertex": 383,
+							"y": 0.386423587799072
+						}
+					},
+					"surface": 2
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b2b911eb46cd8",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 160,
+					"regions": {
+						"arm": {
+							"vertex": 295,
+							"y": 0.454400718212128
+						},
+						"back": {
+							"vertex": 303,
+							"y": 0.397076368331909
+						}
+					},
+					"surface": 3
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c7ae1bc9f4b14",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 160,
+					"regions": {
+						"back": {
+							"vertex": 58,
+							"y": 0.458793610334396
+						},
+						"pelvis": {
+							"vertex": 556,
+							"y": 0.506154894828796
+						}
+					},
+					"surface": 4
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_5a329cd32db96c3",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 160,
+					"regions": {
+						"arm": {
+							"vertex": 758,
+							"y": 0.423994839191437
+						},
+						"back": {
+							"vertex": 176,
+							"y": 0.244492396712303
+						},
+						"neck": {
+							"vertex": 71,
+							"y": 0.269465684890747
+						}
+					},
+					"surface": 5
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c3d4d9e78b44a79",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 160,
+					"regions": {
+						"back": {
+							"vertex": 51,
+							"y": 0.245841890573502
+						},
+						"head": {
+							"vertex": 1862,
+							"y": 0.146630942821503
+						},
+						"neck": {
+							"vertex": 43,
+							"y": 0.241464480757713
+						}
+					},
+					"surface": 6
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d1e7e57b971093",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 160,
+					"regions": {
+						"leg": {
+							"vertex": 703,
+							"y": 1.01396930217743
+						}
+					},
+					"surface": 7
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d205e57b97438d",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 160,
+					"regions": {
+						"leg": {
+							"vertex": 35,
+							"y": 0.938430070877075
+						}
+					},
+					"surface": 8
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_f003af958238385",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 160,
+					"regions": {
+						"arm": {
+							"vertex": 257,
+							"y": 0.595832884311676
+						}
+					},
+					"surface": 9
+				},
+				{
+					"cosmetic": false,
+					"material": "head_shared_inside_mouth_iw9",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 160,
+					"regions": {
+						"head": {
+							"vertex": 345,
+							"y": 0.324910491704941
+						}
+					},
+					"surface": 10
+				},
+				{
+					"cosmetic": true,
+					"material": "Eye_cody",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 160,
+					"regions": {
+						"head": {
+							"vertex": 1,
+							"y": 0.322803020477295
+						}
+					},
+					"surface": 11
+				}
+			],
+			"tick": 158
+		},
+		{
+			"active": true,
+			"finished_tick": -1,
+			"physics_tick": 161,
+			"pose_node": "GRAPPLE_HOLD",
+			"pose_seconds": 1.88333332538605,
+			"source_frame": 56.4999987753955,
+			"state": 5,
+			"surfaces": [
+				{
+					"cosmetic": false,
+					"material": "xmaterial_e531cd813705b95",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 161,
+					"regions": {
+						"back": {
+							"vertex": 822,
+							"y": 0.512735962867737
+						},
+						"leg": {
+							"vertex": 1620,
+							"y": 0.722473502159119
+						},
+						"pelvis": {
+							"vertex": 1277,
+							"y": 0.532740294933319
+						}
+					},
+					"surface": 0
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_495900de7002683",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 161,
+					"regions": {
+						"back": {
+							"vertex": 107,
+							"y": 0.354693830013275
+						},
+						"pelvis": {
+							"vertex": 169,
+							"y": 0.544616460800171
+						}
+					},
+					"surface": 1
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b39911eb484a2",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 161,
+					"regions": {
+						"arm": {
+							"vertex": 2264,
+							"y": 0.403621673583984
+						},
+						"back": {
+							"vertex": 383,
+							"y": 0.362599909305573
+						}
+					},
+					"surface": 2
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b2b911eb46cd8",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 161,
+					"regions": {
+						"arm": {
+							"vertex": 295,
+							"y": 0.42304652929306
+						},
+						"back": {
+							"vertex": 303,
+							"y": 0.371471405029297
+						}
+					},
+					"surface": 3
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c7ae1bc9f4b14",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 161,
+					"regions": {
+						"back": {
+							"vertex": 58,
+							"y": 0.457963079214096
+						},
+						"pelvis": {
+							"vertex": 556,
+							"y": 0.510363876819611
+						}
+					},
+					"surface": 4
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_5a329cd32db96c3",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 161,
+					"regions": {
+						"arm": {
+							"vertex": 758,
+							"y": 0.394676029682159
+						},
+						"back": {
+							"vertex": 176,
+							"y": 0.217346057295799
+						},
+						"neck": {
+							"vertex": 71,
+							"y": 0.240421280264854
+						}
+					},
+					"surface": 5
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c3d4d9e78b44a79",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 161,
+					"regions": {
+						"back": {
+							"vertex": 51,
+							"y": 0.217190727591515
+						},
+						"head": {
+							"vertex": 1862,
+							"y": 0.108412206172943
+						},
+						"neck": {
+							"vertex": 43,
+							"y": 0.210195407271385
+						}
+					},
+					"surface": 6
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d1e7e57b971093",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 161,
+					"regions": {
+						"leg": {
+							"vertex": 703,
+							"y": 1.04639148712158
+						}
+					},
+					"surface": 7
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d205e57b97438d",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 161,
+					"regions": {
+						"leg": {
+							"vertex": 35,
+							"y": 0.975866198539734
+						}
+					},
+					"surface": 8
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_f003af958238385",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 161,
+					"regions": {
+						"arm": {
+							"vertex": 257,
+							"y": 0.557759881019592
+						}
+					},
+					"surface": 9
+				},
+				{
+					"cosmetic": false,
+					"material": "head_shared_inside_mouth_iw9",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 161,
+					"regions": {
+						"head": {
+							"vertex": 345,
+							"y": 0.289539873600006
+						}
+					},
+					"surface": 10
+				},
+				{
+					"cosmetic": true,
+					"material": "Eye_cody",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 161,
+					"regions": {
+						"head": {
+							"vertex": 1,
+							"y": 0.284307777881622
+						}
+					},
+					"surface": 11
+				}
+			],
+			"tick": 159
+		},
+		{
+			"active": true,
+			"finished_tick": -1,
+			"physics_tick": 162,
+			"pose_node": "GRAPPLE_HOLD",
+			"pose_seconds": 1.89999997615814,
+			"source_frame": 56.9999987645582,
+			"state": 5,
+			"surfaces": [
+				{
+					"cosmetic": false,
+					"material": "xmaterial_e531cd813705b95",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 162,
+					"regions": {
+						"back": {
+							"vertex": 822,
+							"y": 0.511361241340637
+						},
+						"leg": {
+							"vertex": 1620,
+							"y": 0.717379570007324
+						},
+						"pelvis": {
+							"vertex": 1277,
+							"y": 0.532946646213531
+						}
+					},
+					"surface": 0
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_495900de7002683",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 162,
+					"regions": {
+						"back": {
+							"vertex": 107,
+							"y": 0.340395510196686
+						},
+						"pelvis": {
+							"vertex": 169,
+							"y": 0.544715881347656
+						}
+					},
+					"surface": 1
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b39911eb484a2",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 162,
+					"regions": {
+						"arm": {
+							"vertex": 2264,
+							"y": 0.376444309949875
+						},
+						"back": {
+							"vertex": 383,
+							"y": 0.339073896408081
+						}
+					},
+					"surface": 2
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b2b911eb46cd8",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 162,
+					"regions": {
+						"arm": {
+							"vertex": 812,
+							"y": 0.392908275127411
+						},
+						"back": {
+							"vertex": 303,
+							"y": 0.346523821353912
+						}
+					},
+					"surface": 3
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c7ae1bc9f4b14",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 162,
+					"regions": {
+						"back": {
+							"vertex": 58,
+							"y": 0.453180968761444
+						},
+						"pelvis": {
+							"vertex": 556,
+							"y": 0.509892582893372
+						}
+					},
+					"surface": 4
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_5a329cd32db96c3",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 162,
+					"regions": {
+						"arm": {
+							"vertex": 758,
+							"y": 0.367301970720291
+						},
+						"back": {
+							"vertex": 176,
+							"y": 0.19239903986454
+						},
+						"neck": {
+							"vertex": 71,
+							"y": 0.213934972882271
+						}
+					},
+					"surface": 5
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c3d4d9e78b44a79",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 162,
+					"regions": {
+						"back": {
+							"vertex": 52,
+							"y": 0.191177278757095
+						},
+						"head": {
+							"vertex": 1862,
+							"y": 0.077175498008728
+						},
+						"neck": {
+							"vertex": 43,
+							"y": 0.182349354028702
+						}
+					},
+					"surface": 6
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d1e7e57b971093",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 162,
+					"regions": {
+						"leg": {
+							"vertex": 703,
+							"y": 1.07913517951965
+						}
+					},
+					"surface": 7
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d205e57b97438d",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 162,
+					"regions": {
+						"leg": {
+							"vertex": 407,
+							"y": 1.02209258079529
+						}
+					},
+					"surface": 8
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_f003af958238385",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 162,
+					"regions": {
+						"arm": {
+							"vertex": 257,
+							"y": 0.522818565368652
+						}
+					},
+					"surface": 9
+				},
+				{
+					"cosmetic": false,
+					"material": "head_shared_inside_mouth_iw9",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 162,
+					"regions": {
+						"head": {
+							"vertex": 345,
+							"y": 0.259268879890442
+						}
+					},
+					"surface": 10
+				},
+				{
+					"cosmetic": true,
+					"material": "Eye_cody",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 162,
+					"regions": {
+						"head": {
+							"vertex": 1,
+							"y": 0.252923309803009
+						}
+					},
+					"surface": 11
+				}
+			],
+			"tick": 160
+		},
+		{
+			"active": true,
+			"finished_tick": -1,
+			"physics_tick": 163,
+			"pose_node": "GRAPPLE_HOLD",
+			"pose_seconds": 1.91666662693024,
+			"source_frame": 57.499998753721,
+			"state": 5,
+			"surfaces": [
+				{
+					"cosmetic": false,
+					"material": "xmaterial_e531cd813705b95",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 163,
+					"regions": {
+						"back": {
+							"vertex": 822,
+							"y": 0.506288230419159
+						},
+						"leg": {
+							"vertex": 1623,
+							"y": 0.706178843975067
+						},
+						"pelvis": {
+							"vertex": 1277,
+							"y": 0.52921599149704
+						}
+					},
+					"surface": 0
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_495900de7002683",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 163,
+					"regions": {
+						"back": {
+							"vertex": 107,
+							"y": 0.323018133640289
+						},
+						"pelvis": {
+							"vertex": 169,
+							"y": 0.540863931179047
+						}
+					},
+					"surface": 1
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b39911eb484a2",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 163,
+					"regions": {
+						"arm": {
+							"vertex": 2264,
+							"y": 0.347570359706879
+						},
+						"back": {
+							"vertex": 386,
+							"y": 0.312962174415588
+						}
+					},
+					"surface": 2
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b2b911eb46cd8",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 163,
+					"regions": {
+						"arm": {
+							"vertex": 812,
+							"y": 0.35427787899971
+						},
+						"back": {
+							"vertex": 303,
+							"y": 0.320117741823196
+						}
+					},
+					"surface": 3
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c7ae1bc9f4b14",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 163,
+					"regions": {
+						"back": {
+							"vertex": 601,
+							"y": 0.444419473409653
+						},
+						"pelvis": {
+							"vertex": 556,
+							"y": 0.505559206008911
+						}
+					},
+					"surface": 4
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_5a329cd32db96c3",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 163,
+					"regions": {
+						"arm": {
+							"vertex": 758,
+							"y": 0.33845454454422
+						},
+						"back": {
+							"vertex": 176,
+							"y": 0.166807264089584
+						},
+						"neck": {
+							"vertex": 71,
+							"y": 0.186939209699631
+						}
+					},
+					"surface": 5
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c3d4d9e78b44a79",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 163,
+					"regions": {
+						"back": {
+							"vertex": 52,
+							"y": 0.164522796869278
+						},
+						"head": {
+							"vertex": 1862,
+							"y": 0.0472375154495239
+						},
+						"neck": {
+							"vertex": 43,
+							"y": 0.154441878199577
+						}
+					},
+					"surface": 6
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d1e7e57b971093",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 163,
+					"regions": {
+						"leg": {
+							"vertex": 703,
+							"y": 1.10459017753601
+						}
+					},
+					"surface": 7
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d205e57b97438d",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 163,
+					"regions": {
+						"leg": {
+							"vertex": 407,
+							"y": 1.06500601768494
+						}
+					},
+					"surface": 8
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_f003af958238385",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 163,
+					"regions": {
+						"arm": {
+							"vertex": 138,
+							"y": 0.490187168121338
+						}
+					},
+					"surface": 9
+				},
+				{
+					"cosmetic": false,
+					"material": "head_shared_inside_mouth_iw9",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 163,
+					"regions": {
+						"head": {
+							"vertex": 345,
+							"y": 0.229670837521553
+						}
+					},
+					"surface": 10
+				},
+				{
+					"cosmetic": true,
+					"material": "Eye_cody",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 163,
+					"regions": {
+						"head": {
+							"vertex": 1,
+							"y": 0.222920492291451
+						}
+					},
+					"surface": 11
+				}
+			],
+			"tick": 161
+		},
+		{
+			"active": true,
+			"finished_tick": -1,
+			"physics_tick": 164,
+			"pose_node": "GRAPPLE_HOLD",
+			"pose_seconds": 1.93333327770233,
+			"source_frame": 57.9999987428838,
+			"state": 5,
+			"surfaces": [
+				{
+					"cosmetic": false,
+					"material": "xmaterial_e531cd813705b95",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 164,
+					"regions": {
+						"back": {
+							"vertex": 822,
+							"y": 0.497870951890945
+						},
+						"leg": {
+							"vertex": 1623,
+							"y": 0.690842509269714
+						},
+						"pelvis": {
+							"vertex": 1277,
+							"y": 0.522020578384399
+						}
+					},
+					"surface": 0
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_495900de7002683",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 164,
+					"regions": {
+						"back": {
+							"vertex": 107,
+							"y": 0.302423536777496
+						},
+						"pelvis": {
+							"vertex": 169,
+							"y": 0.533517241477966
+						}
+					},
+					"surface": 1
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b39911eb484a2",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 164,
+					"regions": {
+						"arm": {
+							"vertex": 2264,
+							"y": 0.315476387739182
+						},
+						"back": {
+							"vertex": 386,
+							"y": 0.283018350601196
+						}
+					},
+					"surface": 2
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b2b911eb46cd8",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 164,
+					"regions": {
+						"arm": {
+							"vertex": 812,
+							"y": 0.314876317977905
+						},
+						"back": {
+							"vertex": 303,
+							"y": 0.291326731443405
+						}
+					},
+					"surface": 3
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c7ae1bc9f4b14",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 164,
+					"regions": {
+						"back": {
+							"vertex": 601,
+							"y": 0.431024760007858
+						},
+						"pelvis": {
+							"vertex": 556,
+							"y": 0.497826278209686
+						}
+					},
+					"surface": 4
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_5a329cd32db96c3",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 164,
+					"regions": {
+						"arm": {
+							"vertex": 758,
+							"y": 0.306530982255936
+						},
+						"back": {
+							"vertex": 176,
+							"y": 0.138999879360199
+						},
+						"neck": {
+							"vertex": 71,
+							"y": 0.157775655388832
+						}
+					},
+					"surface": 5
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c3d4d9e78b44a79",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 164,
+					"regions": {
+						"back": {
+							"vertex": 52,
+							"y": 0.135702922940254
+						},
+						"head": {
+							"vertex": 1862,
+							"y": 0.0148533582687378
+						},
+						"neck": {
+							"vertex": 43,
+							"y": 0.12441074103117
+						}
+					},
+					"surface": 6
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d1e7e57b971093",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 164,
+					"regions": {
+						"leg": {
+							"vertex": 703,
+							"y": 1.11565637588501
+						}
+					},
+					"surface": 7
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d205e57b97438d",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 164,
+					"regions": {
+						"leg": {
+							"vertex": 407,
+							"y": 1.0957692861557
+						}
+					},
+					"surface": 8
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_f003af958238385",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 164,
+					"regions": {
+						"arm": {
+							"vertex": 138,
+							"y": 0.461445271968842
+						}
+					},
+					"surface": 9
+				},
+				{
+					"cosmetic": false,
+					"material": "head_shared_inside_mouth_iw9",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 164,
+					"regions": {
+						"head": {
+							"vertex": 345,
+							"y": 0.197861567139626
+						}
+					},
+					"surface": 10
+				},
+				{
+					"cosmetic": true,
+					"material": "Eye_cody",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 164,
+					"regions": {
+						"head": {
+							"vertex": 1,
+							"y": 0.190446406602859
+						}
+					},
+					"surface": 11
+				}
+			],
+			"tick": 162
+		},
+		{
+			"active": true,
+			"finished_tick": -1,
+			"physics_tick": 165,
+			"pose_node": "GRAPPLE_HOLD",
+			"pose_seconds": 1.95000004768372,
+			"source_frame": 58.4999987320466,
+			"state": 5,
+			"surfaces": [
+				{
+					"cosmetic": false,
+					"material": "xmaterial_e531cd813705b95",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 165,
+					"regions": {
+						"back": {
+							"vertex": 579,
+							"y": 0.479451239109039
+						},
+						"leg": {
+							"vertex": 1622,
+							"y": 0.66639906167984
+						},
+						"pelvis": {
+							"vertex": 1277,
+							"y": 0.505463302135468
+						}
+					},
+					"surface": 0
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_495900de7002683",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 165,
+					"regions": {
+						"back": {
+							"vertex": 107,
+							"y": 0.274043470621109
+						},
+						"pelvis": {
+							"vertex": 169,
+							"y": 0.516807496547699
+						}
+					},
+					"surface": 1
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b39911eb484a2",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 165,
+					"regions": {
+						"arm": {
+							"vertex": 2264,
+							"y": 0.277268588542938
+						},
+						"back": {
+							"vertex": 386,
+							"y": 0.246615499258041
+						}
+					},
+					"surface": 2
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b2b911eb46cd8",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 165,
+					"regions": {
+						"arm": {
+							"vertex": 812,
+							"y": 0.27229905128479
+						},
+						"back": {
+							"vertex": 303,
+							"y": 0.256431818008423
+						}
+					},
+					"surface": 3
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c7ae1bc9f4b14",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 165,
+					"regions": {
+						"back": {
+							"vertex": 601,
+							"y": 0.408913850784302
+						},
+						"pelvis": {
+							"vertex": 556,
+							"y": 0.48081037402153
+						}
+					},
+					"surface": 4
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_5a329cd32db96c3",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 165,
+					"regions": {
+						"arm": {
+							"vertex": 758,
+							"y": 0.268553912639618
+						},
+						"back": {
+							"vertex": 176,
+							"y": 0.104963801801205
+						},
+						"neck": {
+							"vertex": 71,
+							"y": 0.122654438018799
+						}
+					},
+					"surface": 5
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c3d4d9e78b44a79",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 165,
+					"regions": {
+						"back": {
+							"vertex": 52,
+							"y": 0.100844748318195
+						},
+						"head": {
+							"vertex": 1862,
+							"y": -0.0231302976608276
+						},
+						"neck": {
+							"vertex": 43,
+							"y": 0.0885381549596786
+						}
+					},
+					"surface": 6
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d1e7e57b971093",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 165,
+					"regions": {
+						"leg": {
+							"vertex": 703,
+							"y": 1.10742652416229
+						}
+					},
+					"surface": 7
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d205e57b97438d",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 165,
+					"regions": {
+						"leg": {
+							"vertex": 407,
+							"y": 1.10606694221497
+						}
+					},
+					"surface": 8
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_f003af958238385",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 165,
+					"regions": {
+						"arm": {
+							"vertex": 138,
+							"y": 0.434620976448059
+						}
+					},
+					"surface": 9
+				},
+				{
+					"cosmetic": false,
+					"material": "head_shared_inside_mouth_iw9",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 165,
+					"regions": {
+						"head": {
+							"vertex": 345,
+							"y": 0.160432979464531
+						}
+					},
+					"surface": 10
+				},
+				{
+					"cosmetic": true,
+					"material": "Eye_cody",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 165,
+					"regions": {
+						"head": {
+							"vertex": 1,
+							"y": 0.152382239699364
+						}
+					},
+					"surface": 11
+				}
+			],
+			"tick": 163
+		},
+		{
+			"active": true,
+			"finished_tick": -1,
+			"physics_tick": 166,
+			"pose_node": "GRAPPLE_HOLD",
+			"pose_seconds": 1.96666669845581,
+			"source_frame": 58.9999987212094,
+			"state": 5,
+			"surfaces": [
+				{
+					"cosmetic": false,
+					"material": "xmaterial_e531cd813705b95",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 166,
+					"regions": {
+						"back": {
+							"vertex": 579,
+							"y": 0.443409621715546
+						},
+						"leg": {
+							"vertex": 1622,
+							"y": 0.6259446144104
+						},
+						"pelvis": {
+							"vertex": 1277,
+							"y": 0.47100356221199
+						}
+					},
+					"surface": 0
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_495900de7002683",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 166,
+					"regions": {
+						"back": {
+							"vertex": 107,
+							"y": 0.230654060840607
+						},
+						"pelvis": {
+							"vertex": 169,
+							"y": 0.482249200344086
+						}
+					},
+					"surface": 1
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b39911eb484a2",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 166,
+					"regions": {
+						"arm": {
+							"vertex": 2264,
+							"y": 0.227783963084221
+						},
+						"back": {
+							"vertex": 387,
+							"y": 0.197870895266533
+						}
+					},
+					"surface": 2
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b2b911eb46cd8",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 166,
+					"regions": {
+						"arm": {
+							"vertex": 812,
+							"y": 0.222426205873489
+						},
+						"back": {
+							"vertex": 302,
+							"y": 0.209377273917198
+						}
+					},
+					"surface": 3
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c7ae1bc9f4b14",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 166,
+					"regions": {
+						"back": {
+							"vertex": 601,
+							"y": 0.370092868804932
+						},
+						"pelvis": {
+							"vertex": 556,
+							"y": 0.445957541465759
+						}
+					},
+					"surface": 4
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_5a329cd32db96c3",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 166,
+					"regions": {
+						"arm": {
+							"vertex": 758,
+							"y": 0.219331666827202
+						},
+						"back": {
+							"vertex": 176,
+							"y": 0.0586567670106888
+						},
+						"neck": {
+							"vertex": 71,
+							"y": 0.0757749825716019
+						}
+					},
+					"surface": 5
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c3d4d9e78b44a79",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 166,
+					"regions": {
+						"back": {
+							"vertex": 52,
+							"y": 0.0541401132941246
+						},
+						"head": {
+							"vertex": 1862,
+							"y": -0.0710345506668091
+						},
+						"neck": {
+							"vertex": 43,
+							"y": 0.0413048714399338
+						}
+					},
+					"surface": 6
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d1e7e57b971093",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 166,
+					"regions": {
+						"leg": {
+							"vertex": 703,
+							"y": 1.07523465156555
+						}
+					},
+					"surface": 7
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d205e57b97438d",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 166,
+					"regions": {
+						"leg": {
+							"vertex": 407,
+							"y": 1.08749902248383
+						}
+					},
+					"surface": 8
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_f003af958238385",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 166,
+					"regions": {
+						"arm": {
+							"vertex": 138,
+							"y": 0.398987382650375
+						}
+					},
+					"surface": 9
+				},
+				{
+					"cosmetic": false,
+					"material": "head_shared_inside_mouth_iw9",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 166,
+					"regions": {
+						"head": {
+							"vertex": 345,
+							"y": 0.112542942166328
+						}
+					},
+					"surface": 10
+				},
+				{
+					"cosmetic": true,
+					"material": "Eye_cody",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 166,
+					"regions": {
+						"head": {
+							"vertex": 1,
+							"y": 0.104495160281658
+						}
+					},
+					"surface": 11
+				}
+			],
+			"tick": 164
+		},
+		{
+			"active": true,
+			"finished_tick": -1,
+			"physics_tick": 167,
+			"pose_node": "GRAPPLE_HOLD",
+			"pose_seconds": 1.98333334922791,
+			"source_frame": 59.4999987103722,
+			"state": 5,
+			"surfaces": [
+				{
+					"cosmetic": false,
+					"material": "xmaterial_e531cd813705b95",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 167,
+					"regions": {
+						"back": {
+							"vertex": 579,
+							"y": 0.394246965646744
+						},
+						"leg": {
+							"vertex": 1622,
+							"y": 0.575392544269562
+						},
+						"pelvis": {
+							"vertex": 1277,
+							"y": 0.422656863927841
+						}
+					},
+					"surface": 0
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_495900de7002683",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 167,
+					"regions": {
+						"back": {
+							"vertex": 107,
+							"y": 0.177502080798149
+						},
+						"pelvis": {
+							"vertex": 169,
+							"y": 0.433919489383698
+						}
+					},
+					"surface": 1
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b39911eb484a2",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 167,
+					"regions": {
+						"arm": {
+							"vertex": 2264,
+							"y": 0.174308940768242
+						},
+						"back": {
+							"vertex": 387,
+							"y": 0.144225582480431
+						}
+					},
+					"surface": 2
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b2b911eb46cd8",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 167,
+					"regions": {
+						"arm": {
+							"vertex": 591,
+							"y": 0.1727284938097
+						},
+						"back": {
+							"vertex": 303,
+							"y": 0.156881421804428
+						}
+					},
+					"surface": 3
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c7ae1bc9f4b14",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 167,
+					"regions": {
+						"back": {
+							"vertex": 601,
+							"y": 0.319069474935532
+						},
+						"pelvis": {
+							"vertex": 556,
+							"y": 0.397255748510361
+						}
+					},
+					"surface": 4
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_5a329cd32db96c3",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 167,
+					"regions": {
+						"arm": {
+							"vertex": 758,
+							"y": 0.166127756237984
+						},
+						"back": {
+							"vertex": 176,
+							"y": 0.00653002969920635
+						},
+						"neck": {
+							"vertex": 71,
+							"y": 0.0238332748413086
+						}
+					},
+					"surface": 5
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c3d4d9e78b44a79",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 167,
+					"regions": {
+						"back": {
+							"vertex": 52,
+							"y": 0.00227006897330284
+						},
+						"head": {
+							"vertex": 1862,
+							"y": -0.12073028087616
+						},
+						"neck": {
+							"vertex": 43,
+							"y": -0.010327834635973
+						}
+					},
+					"surface": 6
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d1e7e57b971093",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 167,
+					"regions": {
+						"leg": {
+							"vertex": 703,
+							"y": 1.02733421325684
+						}
+					},
+					"surface": 7
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d205e57b97438d",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 167,
+					"regions": {
+						"leg": {
+							"vertex": 407,
+							"y": 1.04460024833679
+						}
+					},
+					"surface": 8
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_f003af958238385",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 167,
+					"regions": {
+						"arm": {
+							"vertex": 138,
+							"y": 0.354626357555389
+						}
+					},
+					"surface": 9
+				},
+				{
+					"cosmetic": false,
+					"material": "head_shared_inside_mouth_iw9",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 167,
+					"regions": {
+						"head": {
+							"vertex": 345,
+							"y": 0.0617994889616966
+						}
+					},
+					"surface": 10
+				},
+				{
+					"cosmetic": true,
+					"material": "Eye_cody",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 167,
+					"regions": {
+						"head": {
+							"vertex": 1,
+							"y": 0.0549843013286591
+						}
+					},
+					"surface": 11
+				}
+			],
+			"tick": 165
+		},
+		{
+			"active": true,
+			"finished_tick": -1,
+			"physics_tick": 168,
+			"pose_node": "GRAPPLE_HOLD",
+			"pose_seconds": 2.0,
+			"source_frame": 59.999998699535,
+			"state": 5,
+			"surfaces": [
+				{
+					"cosmetic": false,
+					"material": "xmaterial_e531cd813705b95",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 168,
+					"regions": {
+						"back": {
+							"vertex": 579,
+							"y": 0.300679504871368
+						},
+						"leg": {
+							"vertex": 1623,
+							"y": 0.501014530658722
+						},
+						"pelvis": {
+							"vertex": 1277,
+							"y": 0.324458748102188
+						}
+					},
+					"surface": 0
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_495900de7002683",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 168,
+					"regions": {
+						"back": {
+							"vertex": 107,
+							"y": 0.102468326687813
+						},
+						"pelvis": {
+							"vertex": 169,
+							"y": 0.336728185415268
+						}
+					},
+					"surface": 1
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b39911eb484a2",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 168,
+					"regions": {
+						"arm": {
+							"vertex": 2263,
+							"y": 0.146017745137215
+						},
+						"back": {
+							"vertex": 383,
+							"y": 0.101725392043591
+						}
+					},
+					"surface": 2
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b2b911eb46cd8",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 168,
+					"regions": {
+						"arm": {
+							"vertex": 812,
+							"y": 0.157081559300423
+						},
+						"back": {
+							"vertex": 303,
+							"y": 0.111996926367283
+						}
+					},
+					"surface": 3
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c7ae1bc9f4b14",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 168,
+					"regions": {
+						"back": {
+							"vertex": 601,
+							"y": 0.228596031665802
+						},
+						"pelvis": {
+							"vertex": 556,
+							"y": 0.298573762178421
+						}
+					},
+					"surface": 4
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_5a329cd32db96c3",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 168,
+					"regions": {
+						"arm": {
+							"vertex": 758,
+							"y": 0.140472590923309
+						},
+						"back": {
+							"vertex": 176,
+							"y": -0.0263969972729683
+						},
+						"neck": {
+							"vertex": 71,
+							"y": -0.00359799340367317
+						}
+					},
+					"surface": 5
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c3d4d9e78b44a79",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 168,
+					"regions": {
+						"back": {
+							"vertex": 51,
+							"y": -0.0244791302829981
+						},
+						"head": {
+							"vertex": 4694,
+							"y": -0.0968191623687744
+						},
+						"neck": {
+							"vertex": 43,
+							"y": -0.0276868101209402
+						}
+					},
+					"surface": 6
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d1e7e57b971093",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 168,
+					"regions": {
+						"leg": {
+							"vertex": 703,
+							"y": 0.947084486484528
+						}
+					},
+					"surface": 7
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d205e57b97438d",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 168,
+					"regions": {
+						"leg": {
+							"vertex": 407,
+							"y": 0.92887544631958
+						}
+					},
+					"surface": 8
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_f003af958238385",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 168,
+					"regions": {
+						"arm": {
+							"vertex": 138,
+							"y": 0.326137244701385
+						}
+					},
+					"surface": 9
+				},
+				{
+					"cosmetic": false,
+					"material": "head_shared_inside_mouth_iw9",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 168,
+					"regions": {
+						"head": {
+							"vertex": 345,
+							"y": 0.0642687305808067
+						}
+					},
+					"surface": 10
+				},
+				{
+					"cosmetic": true,
+					"material": "Eye_cody",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 168,
+					"regions": {
+						"head": {
+							"vertex": 1,
+							"y": 0.0792849659919739
+						}
+					},
+					"surface": 11
+				}
+			],
+			"tick": 166
+		},
+		{
+			"active": true,
+			"finished_tick": -1,
+			"physics_tick": 169,
+			"pose_node": "GRAPPLE_HOLD",
+			"pose_seconds": 2.01666665077209,
+			"source_frame": 60.4999986886978,
+			"state": 5,
+			"surfaces": [
+				{
+					"cosmetic": false,
+					"material": "xmaterial_e531cd813705b95",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 169,
+					"regions": {
+						"back": {
+							"vertex": 822,
+							"y": 0.132686659693718
+						},
+						"leg": {
+							"vertex": 1620,
+							"y": 0.341882556676865
+						},
+						"pelvis": {
+							"vertex": 1277,
+							"y": 0.152642831206322
+						}
+					},
+					"surface": 0
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_495900de7002683",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 169,
+					"regions": {
+						"back": {
+							"vertex": 107,
+							"y": -0.0385685861110687
+						},
+						"pelvis": {
+							"vertex": 169,
+							"y": 0.165573745965958
+						}
+					},
+					"surface": 1
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b39911eb484a2",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 169,
+					"regions": {
+						"arm": {
+							"vertex": 2263,
+							"y": 0.0534939207136631
+						},
+						"back": {
+							"vertex": 384,
+							"y": -0.00733253173530102
+						}
+					},
+					"surface": 2
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b2b911eb46cd8",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 169,
+					"regions": {
+						"arm": {
+							"vertex": 1738,
+							"y": 0.0577065870165825
+						},
+						"back": {
+							"vertex": 304,
+							"y": 0.000507337972521782
+						}
+					},
+					"surface": 3
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c7ae1bc9f4b14",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 169,
+					"regions": {
+						"back": {
+							"vertex": 58,
+							"y": 0.0660470351576805
+						},
+						"pelvis": {
+							"vertex": 556,
+							"y": 0.126968041062355
+						}
+					},
+					"surface": 4
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_5a329cd32db96c3",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 169,
+					"regions": {
+						"arm": {
+							"vertex": 758,
+							"y": 0.0518468953669071
+						},
+						"back": {
+							"vertex": 172,
+							"y": -0.119167745113373
+						},
+						"neck": {
+							"vertex": 71,
+							"y": -0.0881602466106415
+						}
+					},
+					"surface": 5
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c3d4d9e78b44a79",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 169,
+					"regions": {
+						"back": {
+							"vertex": 129,
+							"y": -0.108902037143707
+						},
+						"head": {
+							"vertex": 1890,
+							"y": -0.127004638314247
+						},
+						"neck": {
+							"vertex": 46,
+							"y": -0.102874346077442
+						}
+					},
+					"surface": 6
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d1e7e57b971093",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 169,
+					"regions": {
+						"leg": {
+							"vertex": 703,
+							"y": 0.801900923252106
+						}
+					},
+					"surface": 7
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d205e57b97438d",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 169,
+					"regions": {
+						"leg": {
+							"vertex": 407,
+							"y": 0.718666195869446
+						}
+					},
+					"surface": 8
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_f003af958238385",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 169,
+					"regions": {
+						"arm": {
+							"vertex": 571,
+							"y": 0.224379539489746
+						}
+					},
+					"surface": 9
+				},
+				{
+					"cosmetic": false,
+					"material": "head_shared_inside_mouth_iw9",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 169,
+					"regions": {
+						"head": {
+							"vertex": 345,
+							"y": 0.00837493129074574
+						}
+					},
+					"surface": 10
+				},
+				{
+					"cosmetic": true,
+					"material": "Eye_cody",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 169,
+					"regions": {
+						"head": {
+							"vertex": 11,
+							"y": 0.0457177758216858
+						}
+					},
+					"surface": 11
+				}
+			],
+			"tick": 167
+		},
+		{
+			"active": true,
+			"finished_tick": -1,
+			"physics_tick": 170,
+			"pose_node": "GRAPPLE_HOLD",
+			"pose_seconds": 2.03333330154419,
+			"source_frame": 60.9999986778606,
+			"state": 5,
+			"surfaces": [
+				{
+					"cosmetic": false,
+					"material": "xmaterial_e531cd813705b95",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 170,
+					"regions": {
+						"back": {
+							"vertex": 822,
+							"y": 0.0858131945133209
+						},
+						"leg": {
+							"vertex": 1617,
+							"y": 0.289055168628693
+						},
+						"pelvis": {
+							"vertex": 1277,
+							"y": 0.10034716874361
+						}
+					},
+					"surface": 0
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_495900de7002683",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 170,
+					"regions": {
+						"back": {
+							"vertex": 107,
+							"y": -0.0410185903310776
+						},
+						"pelvis": {
+							"vertex": 138,
+							"y": 0.112652890384197
+						}
+					},
+					"surface": 1
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b39911eb484a2",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 170,
+					"regions": {
+						"arm": {
+							"vertex": 980,
+							"y": 0.0887449160218239
+						},
+						"back": {
+							"vertex": 384,
+							"y": 0.0174479819834232
+						}
+					},
+					"surface": 2
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b2b911eb46cd8",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 170,
+					"regions": {
+						"arm": {
+							"vertex": 1740,
+							"y": 0.0788047835230827
+						},
+						"back": {
+							"vertex": 305,
+							"y": 0.023533508181572
+						}
+					},
+					"surface": 3
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c7ae1bc9f4b14",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 170,
+					"regions": {
+						"back": {
+							"vertex": 58,
+							"y": 0.0310744196176529
+						},
+						"pelvis": {
+							"vertex": 556,
+							"y": 0.0773507952690125
+						}
+					},
+					"surface": 4
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_5a329cd32db96c3",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 170,
+					"regions": {
+						"arm": {
+							"vertex": 758,
+							"y": 0.0925604403018951
+						},
+						"back": {
+							"vertex": 169,
+							"y": -0.0829924196004868
+						},
+						"neck": {
+							"vertex": 71,
+							"y": -0.0414446182549
+						}
+					},
+					"surface": 5
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c3d4d9e78b44a79",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 170,
+					"regions": {
+						"back": {
+							"vertex": 129,
+							"y": -0.0640909671783447
+						},
+						"head": {
+							"vertex": 41,
+							"y": -0.0440993458032608
+						},
+						"neck": {
+							"vertex": 46,
+							"y": -0.0526435934007168
+						}
+					},
+					"surface": 6
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d1e7e57b971093",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 170,
+					"regions": {
+						"leg": {
+							"vertex": 703,
+							"y": 0.639913439750671
+						}
+					},
+					"surface": 7
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d205e57b97438d",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 170,
+					"regions": {
+						"leg": {
+							"vertex": 407,
+							"y": 0.580028057098389
+						}
+					},
+					"surface": 8
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_f003af958238385",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 170,
+					"regions": {
+						"arm": {
+							"vertex": 571,
+							"y": 0.252907156944275
+						}
+					},
+					"surface": 9
+				},
+				{
+					"cosmetic": false,
+					"material": "head_shared_inside_mouth_iw9",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 170,
+					"regions": {
+						"head": {
+							"vertex": 345,
+							"y": 0.0728398934006691
+						}
+					},
+					"surface": 10
+				},
+				{
+					"cosmetic": true,
+					"material": "Eye_cody",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 170,
+					"regions": {
+						"head": {
+							"vertex": 11,
+							"y": 0.125068068504333
+						}
+					},
+					"surface": 11
+				}
+			],
+			"tick": 168
+		},
+		{
+			"active": true,
+			"finished_tick": -1,
+			"physics_tick": 171,
+			"pose_node": "GRAPPLE_HOLD",
+			"pose_seconds": 2.04999995231628,
+			"source_frame": 61.4999986670234,
+			"state": 5,
+			"surfaces": [
+				{
+					"cosmetic": false,
+					"material": "xmaterial_e531cd813705b95",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 171,
+					"regions": {
+						"back": {
+							"vertex": 824,
+							"y": -0.0198105555027723
+						},
+						"leg": {
+							"vertex": 1617,
+							"y": 0.160243183374405
+						},
+						"pelvis": {
+							"vertex": 1277,
+							"y": -0.0110684279352427
+						}
+					},
+					"surface": 0
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_495900de7002683",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 171,
+					"regions": {
+						"back": {
+							"vertex": 107,
+							"y": -0.100555814802647
+						},
+						"pelvis": {
+							"vertex": 138,
+							"y": -0.000318999314913526
+						}
+					},
+					"surface": 1
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b39911eb484a2",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 171,
+					"regions": {
+						"arm": {
+							"vertex": 980,
+							"y": 0.0497117787599564
+						},
+						"back": {
+							"vertex": 382,
+							"y": -0.0181827507913113
+						}
+					},
+					"surface": 2
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b2b911eb46cd8",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 171,
+					"regions": {
+						"arm": {
+							"vertex": 1740,
+							"y": 0.0343675948679447
+						},
+						"back": {
+							"vertex": 307,
+							"y": -0.0167622864246368
+						}
+					},
+					"surface": 3
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c7ae1bc9f4b14",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 171,
+					"regions": {
+						"back": {
+							"vertex": 58,
+							"y": -0.0613077878952026
+						},
+						"pelvis": {
+							"vertex": 556,
+							"y": -0.0305831767618656
+						}
+					},
+					"surface": 4
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_5a329cd32db96c3",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 171,
+					"regions": {
+						"arm": {
+							"vertex": 758,
+							"y": 0.0728457570075989
+						},
+						"back": {
+							"vertex": 206,
+							"y": -0.110226452350616
+						},
+						"neck": {
+							"vertex": 71,
+							"y": -0.0520564503967762
+						}
+					},
+					"surface": 5
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c3d4d9e78b44a79",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 171,
+					"regions": {
+						"back": {
+							"vertex": 129,
+							"y": -0.0760085359215736
+						},
+						"head": {
+							"vertex": 42,
+							"y": -0.0446898229420185
+						},
+						"neck": {
+							"vertex": 46,
+							"y": -0.0595817714929581
+						}
+					},
+					"surface": 6
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d1e7e57b971093",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 171,
+					"regions": {
+						"leg": {
+							"vertex": 21,
+							"y": 0.466173350811005
+						}
+					},
+					"surface": 7
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d205e57b97438d",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 171,
+					"regions": {
+						"leg": {
+							"vertex": 664,
+							"y": 0.400140702724457
+						}
+					},
+					"surface": 8
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_f003af958238385",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 171,
+					"regions": {
+						"arm": {
+							"vertex": 571,
+							"y": 0.213998913764954
+						}
+					},
+					"surface": 9
+				},
+				{
+					"cosmetic": false,
+					"material": "head_shared_inside_mouth_iw9",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 171,
+					"regions": {
+						"head": {
+							"vertex": 345,
+							"y": 0.0764122530817986
+						}
+					},
+					"surface": 10
+				},
+				{
+					"cosmetic": true,
+					"material": "Eye_cody",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 171,
+					"regions": {
+						"head": {
+							"vertex": 11,
+							"y": 0.142018556594849
+						}
+					},
+					"surface": 11
+				}
+			],
+			"tick": 169
+		},
+		{
+			"active": true,
+			"finished_tick": -1,
+			"physics_tick": 172,
+			"pose_node": "GRAPPLE_HOLD",
+			"pose_seconds": 2.06666660308838,
+			"source_frame": 61.9999986561861,
+			"state": 5,
+			"surfaces": [
+				{
+					"cosmetic": false,
+					"material": "xmaterial_e531cd813705b95",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 172,
+					"regions": {
+						"back": {
+							"vertex": 824,
+							"y": -0.0261031687259674
+						},
+						"leg": {
+							"vertex": 561,
+							"y": 0.135581314563751
+						},
+						"pelvis": {
+							"vertex": 759,
+							"y": -0.031745258718729
+						}
+					},
+					"surface": 0
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_495900de7002683",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 172,
+					"regions": {
+						"back": {
+							"vertex": 107,
+							"y": -0.0869760736823082
+						},
+						"pelvis": {
+							"vertex": 138,
+							"y": -0.01132423710078
+						}
+					},
+					"surface": 1
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b39911eb484a2",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 172,
+					"regions": {
+						"arm": {
+							"vertex": 980,
+							"y": 0.0537478104233742
+						},
+						"back": {
+							"vertex": 382,
+							"y": -0.00813820585608482
+						}
+					},
+					"surface": 2
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b2b911eb46cd8",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 172,
+					"regions": {
+						"arm": {
+							"vertex": 1740,
+							"y": 0.0476347357034683
+						},
+						"back": {
+							"vertex": 307,
+							"y": -0.00714425556361675
+						}
+					},
+					"surface": 3
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c7ae1bc9f4b14",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 172,
+					"regions": {
+						"back": {
+							"vertex": 58,
+							"y": -0.0585802085697651
+						},
+						"pelvis": {
+							"vertex": 556,
+							"y": -0.0378202721476555
+						}
+					},
+					"surface": 4
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_5a329cd32db96c3",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 172,
+					"regions": {
+						"arm": {
+							"vertex": 906,
+							"y": 0.0921527519822121
+						},
+						"back": {
+							"vertex": 517,
+							"y": -0.091961033642292
+						},
+						"neck": {
+							"vertex": 71,
+							"y": -0.0106356516480446
+						}
+					},
+					"surface": 5
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c3d4d9e78b44a79",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 172,
+					"regions": {
+						"back": {
+							"vertex": 129,
+							"y": -0.0313826352357864
+						},
+						"head": {
+							"vertex": 122,
+							"y": 0.00871009472757578
+						},
+						"neck": {
+							"vertex": 3431,
+							"y": -0.0107068307697773
+						}
+					},
+					"surface": 6
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d1e7e57b971093",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 172,
+					"regions": {
+						"leg": {
+							"vertex": 703,
+							"y": 0.410916417837143
+						}
+					},
+					"surface": 7
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d205e57b97438d",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 172,
+					"regions": {
+						"leg": {
+							"vertex": 453,
+							"y": 0.298340618610382
+						}
+					},
+					"surface": 8
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_f003af958238385",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 172,
+					"regions": {
+						"arm": {
+							"vertex": 572,
+							"y": 0.208375513553619
+						}
+					},
+					"surface": 9
+				},
+				{
+					"cosmetic": false,
+					"material": "head_shared_inside_mouth_iw9",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 172,
+					"regions": {
+						"head": {
+							"vertex": 345,
+							"y": 0.133003905415535
+						}
+					},
+					"surface": 10
+				},
+				{
+					"cosmetic": true,
+					"material": "Eye_cody",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 172,
+					"regions": {
+						"head": {
+							"vertex": 28,
+							"y": 0.204042911529541
+						}
+					},
+					"surface": 11
+				}
+			],
+			"tick": 170
+		},
+		{
+			"active": true,
+			"finished_tick": -1,
+			"physics_tick": 173,
+			"pose_node": "GRAPPLE_HOLD",
+			"pose_seconds": 2.08333325386047,
+			"source_frame": 62.4999986453489,
+			"state": 5,
+			"surfaces": [
+				{
+					"cosmetic": false,
+					"material": "xmaterial_e531cd813705b95",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 173,
+					"regions": {
+						"back": {
+							"vertex": 824,
+							"y": -0.0270974282175303
+						},
+						"leg": {
+							"vertex": 561,
+							"y": 0.101963505148888
+						},
+						"pelvis": {
+							"vertex": 961,
+							"y": -0.0447351299226284
+						}
+					},
+					"surface": 0
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_495900de7002683",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 173,
+					"regions": {
+						"back": {
+							"vertex": 16,
+							"y": -0.0853770449757576
+						},
+						"pelvis": {
+							"vertex": 138,
+							"y": -0.01490209531039
+						}
+					},
+					"surface": 1
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b39911eb484a2",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 173,
+					"regions": {
+						"arm": {
+							"vertex": 980,
+							"y": 0.0371321141719818
+						},
+						"back": {
+							"vertex": 382,
+							"y": -0.0287234615534544
+						}
+					},
+					"surface": 2
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b2b911eb46cd8",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 173,
+					"regions": {
+						"arm": {
+							"vertex": 1739,
+							"y": 0.0355535671114922
+						},
+						"back": {
+							"vertex": 305,
+							"y": -0.0282223746180534
+						}
+					},
+					"surface": 3
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c7ae1bc9f4b14",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 173,
+					"regions": {
+						"back": {
+							"vertex": 58,
+							"y": -0.0547833293676376
+						},
+						"pelvis": {
+							"vertex": 603,
+							"y": -0.0407668352127075
+						}
+					},
+					"surface": 4
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_5a329cd32db96c3",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 173,
+					"regions": {
+						"arm": {
+							"vertex": 908,
+							"y": 0.0601643845438957
+						},
+						"back": {
+							"vertex": 544,
+							"y": -0.0895900577306747
+						},
+						"neck": {
+							"vertex": 71,
+							"y": -0.00368433352559805
+						}
+					},
+					"surface": 5
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c3d4d9e78b44a79",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 173,
+					"regions": {
+						"back": {
+							"vertex": 129,
+							"y": -0.0174454730004072
+						},
+						"head": {
+							"vertex": 122,
+							"y": 0.0292280819267035
+						},
+						"neck": {
+							"vertex": 48,
+							"y": -0.00367437489330769
+						}
+					},
+					"surface": 6
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d1e7e57b971093",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 173,
+					"regions": {
+						"leg": {
+							"vertex": 281,
+							"y": 0.30156084895134
+						}
+					},
+					"surface": 7
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d205e57b97438d",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 173,
+					"regions": {
+						"leg": {
+							"vertex": 273,
+							"y": 0.185177683830261
+						}
+					},
+					"surface": 8
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_f003af958238385",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 173,
+					"regions": {
+						"arm": {
+							"vertex": 870,
+							"y": 0.157611012458801
+						}
+					},
+					"surface": 9
+				},
+				{
+					"cosmetic": false,
+					"material": "head_shared_inside_mouth_iw9",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 173,
+					"regions": {
+						"head": {
+							"vertex": 345,
+							"y": 0.157772526144981
+						}
+					},
+					"surface": 10
+				},
+				{
+					"cosmetic": true,
+					"material": "Eye_cody",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 173,
+					"regions": {
+						"head": {
+							"vertex": 28,
+							"y": 0.228300809860229
+						}
+					},
+					"surface": 11
+				}
+			],
+			"tick": 171
+		},
+		{
+			"active": true,
+			"finished_tick": -1,
+			"physics_tick": 174,
+			"pose_node": "GRAPPLE_HOLD",
+			"pose_seconds": 2.09999990463257,
+			"source_frame": 62.9999986345117,
+			"state": 5,
+			"surfaces": [
+				{
+					"cosmetic": false,
+					"material": "xmaterial_e531cd813705b95",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 174,
+					"regions": {
+						"back": {
+							"vertex": 1275,
+							"y": -0.0272076111286879
+						},
+						"leg": {
+							"vertex": 337,
+							"y": 0.0605301037430763
+						},
+						"pelvis": {
+							"vertex": 961,
+							"y": -0.0498414412140846
+						}
+					},
+					"surface": 0
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_495900de7002683",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 174,
+					"regions": {
+						"back": {
+							"vertex": 16,
+							"y": -0.082366056740284
+						},
+						"pelvis": {
+							"vertex": 138,
+							"y": -0.0156336892396212
+						}
+					},
+					"surface": 1
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b39911eb484a2",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 174,
+					"regions": {
+						"arm": {
+							"vertex": 2263,
+							"y": 0.0243014246225357
+						},
+						"back": {
+							"vertex": 384,
+							"y": -0.045381348580122
+						}
+					},
+					"surface": 2
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b2b911eb46cd8",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 174,
+					"regions": {
+						"arm": {
+							"vertex": 1672,
+							"y": 0.0331833437085152
+						},
+						"back": {
+							"vertex": 304,
+							"y": -0.0452189967036247
+						}
+					},
+					"surface": 3
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c7ae1bc9f4b14",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 174,
+					"regions": {
+						"back": {
+							"vertex": 58,
+							"y": -0.0525685846805573
+						},
+						"pelvis": {
+							"vertex": 603,
+							"y": -0.0415691547095776
+						}
+					},
+					"surface": 4
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_5a329cd32db96c3",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 174,
+					"regions": {
+						"arm": {
+							"vertex": 908,
+							"y": 0.0269799046218395
+						},
+						"back": {
+							"vertex": 540,
+							"y": -0.0916943624615669
+						},
+						"neck": {
+							"vertex": 71,
+							"y": -0.0113341920077801
+						}
+					},
+					"surface": 5
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c3d4d9e78b44a79",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 174,
+					"regions": {
+						"back": {
+							"vertex": 129,
+							"y": -0.0192757863551378
+						},
+						"head": {
+							"vertex": 7856,
+							"y": 0.0283808968961239
+						},
+						"neck": {
+							"vertex": 48,
+							"y": -0.0113233579322696
+						}
+					},
+					"surface": 6
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d1e7e57b971093",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 174,
+					"regions": {
+						"leg": {
+							"vertex": 281,
+							"y": 0.175033643841743
+						}
+					},
+					"surface": 7
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d205e57b97438d",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 174,
+					"regions": {
+						"leg": {
+							"vertex": 453,
+							"y": 0.0580881834030151
+						}
+					},
+					"surface": 8
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_f003af958238385",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 174,
+					"regions": {
+						"arm": {
+							"vertex": 861,
+							"y": 0.127498745918274
+						}
+					},
+					"surface": 9
+				},
+				{
+					"cosmetic": false,
+					"material": "head_shared_inside_mouth_iw9",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 174,
+					"regions": {
+						"head": {
+							"vertex": 345,
+							"y": 0.161187216639519
+						}
+					},
+					"surface": 10
+				},
+				{
+					"cosmetic": true,
+					"material": "Eye_cody",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 174,
+					"regions": {
+						"head": {
+							"vertex": 28,
+							"y": 0.228293538093567
+						}
+					},
+					"surface": 11
+				}
+			],
+			"tick": 172
+		},
+		{
+			"active": true,
+			"finished_tick": -1,
+			"physics_tick": 175,
+			"pose_node": "GRAPPLE_HOLD",
+			"pose_seconds": 2.11666655540466,
+			"source_frame": 63.4999986236745,
+			"state": 5,
+			"surfaces": [
+				{
+					"cosmetic": false,
+					"material": "xmaterial_e531cd813705b95",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 175,
+					"regions": {
+						"back": {
+							"vertex": 1275,
+							"y": -0.0273222085088491
+						},
+						"leg": {
+							"vertex": 337,
+							"y": 0.0261526796966791
+						},
+						"pelvis": {
+							"vertex": 961,
+							"y": -0.051201730966568
+						}
+					},
+					"surface": 0
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_495900de7002683",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 175,
+					"regions": {
+						"back": {
+							"vertex": 16,
+							"y": -0.080680675804615
+						},
+						"pelvis": {
+							"vertex": 138,
+							"y": -0.0158171616494656
+						}
+					},
+					"surface": 1
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b39911eb484a2",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 175,
+					"regions": {
+						"arm": {
+							"vertex": 2263,
+							"y": 0.0119086829945445
+						},
+						"back": {
+							"vertex": 383,
+							"y": -0.051755353808403
+						}
+					},
+					"surface": 2
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b2b911eb46cd8",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 175,
+					"regions": {
+						"arm": {
+							"vertex": 298,
+							"y": 0.022838992998004
+						},
+						"back": {
+							"vertex": 303,
+							"y": -0.050413079559803
+						}
+					},
+					"surface": 3
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c7ae1bc9f4b14",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 175,
+					"regions": {
+						"back": {
+							"vertex": 58,
+							"y": -0.0521313063800335
+						},
+						"pelvis": {
+							"vertex": 603,
+							"y": -0.0417347028851509
+						}
+					},
+					"surface": 4
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_5a329cd32db96c3",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 175,
+					"regions": {
+						"arm": {
+							"vertex": 908,
+							"y": 0.0140508525073528
+						},
+						"back": {
+							"vertex": 540,
+							"y": -0.0926075577735901
+						},
+						"neck": {
+							"vertex": 71,
+							"y": -0.0201299693435431
+						}
+					},
+					"surface": 5
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c3d4d9e78b44a79",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 175,
+					"regions": {
+						"back": {
+							"vertex": 129,
+							"y": -0.025975625962019
+						},
+						"head": {
+							"vertex": 7856,
+							"y": 0.0200950521975756
+						},
+						"neck": {
+							"vertex": 48,
+							"y": -0.0201191697269678
+						}
+					},
+					"surface": 6
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d1e7e57b971093",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 175,
+					"regions": {
+						"leg": {
+							"vertex": 487,
+							"y": 0.0595078468322754
+						}
+					},
+					"surface": 7
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d205e57b97438d",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 175,
+					"regions": {
+						"leg": {
+							"vertex": 453,
+							"y": -0.0426643341779709
+						}
+					},
+					"surface": 8
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_f003af958238385",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 175,
+					"regions": {
+						"arm": {
+							"vertex": 190,
+							"y": 0.117028594017029
+						}
+					},
+					"surface": 9
+				},
+				{
+					"cosmetic": false,
+					"material": "head_shared_inside_mouth_iw9",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 175,
+					"regions": {
+						"head": {
+							"vertex": 345,
+							"y": 0.153926804661751
+						}
+					},
+					"surface": 10
+				},
+				{
+					"cosmetic": true,
+					"material": "Eye_cody",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 175,
+					"regions": {
+						"head": {
+							"vertex": 28,
+							"y": 0.217306852340698
+						}
+					},
+					"surface": 11
+				}
+			],
+			"tick": 173
+		},
+		{
+			"active": true,
+			"finished_tick": -1,
+			"physics_tick": 176,
+			"pose_node": "GRAPPLE_HOLD",
+			"pose_seconds": 2.13333344459534,
+			"source_frame": 63.9999986128373,
+			"state": 5,
+			"surfaces": [
+				{
+					"cosmetic": false,
+					"material": "xmaterial_e531cd813705b95",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 176,
+					"regions": {
+						"back": {
+							"vertex": 1275,
+							"y": -0.0279903374612331
+						},
+						"leg": {
+							"vertex": 337,
+							"y": 0.00877690501511097
+						},
+						"pelvis": {
+							"vertex": 961,
+							"y": -0.0523026585578918
+						}
+					},
+					"surface": 0
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_495900de7002683",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 176,
+					"regions": {
+						"back": {
+							"vertex": 16,
+							"y": -0.0823398008942604
+						},
+						"pelvis": {
+							"vertex": 138,
+							"y": -0.0165064837783575
+						}
+					},
+					"surface": 1
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b39911eb484a2",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 176,
+					"regions": {
+						"arm": {
+							"vertex": 2263,
+							"y": 0.00594347482547164
+						},
+						"back": {
+							"vertex": 383,
+							"y": -0.0563531890511513
+						}
+					},
+					"surface": 2
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b2b911eb46cd8",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 176,
+					"regions": {
+						"arm": {
+							"vertex": 298,
+							"y": 0.0181280001997948
+						},
+						"back": {
+							"vertex": 303,
+							"y": -0.054514404386282
+						}
+					},
+					"surface": 3
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c7ae1bc9f4b14",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 176,
+					"regions": {
+						"back": {
+							"vertex": 58,
+							"y": -0.0526851117610931
+						},
+						"pelvis": {
+							"vertex": 603,
+							"y": -0.0423929169774055
+						}
+					},
+					"surface": 4
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_5a329cd32db96c3",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 176,
+					"regions": {
+						"arm": {
+							"vertex": 908,
+							"y": 0.00910840183496475
+						},
+						"back": {
+							"vertex": 315,
+							"y": -0.0960681885480881
+						},
+						"neck": {
+							"vertex": 71,
+							"y": -0.0269383750855923
+						}
+					},
+					"surface": 5
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c3d4d9e78b44a79",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 176,
+					"regions": {
+						"back": {
+							"vertex": 132,
+							"y": -0.0328956320881844
+						},
+						"head": {
+							"vertex": 7856,
+							"y": 0.0117653561756015
+						},
+						"neck": {
+							"vertex": 48,
+							"y": -0.0269285123795271
+						}
+					},
+					"surface": 6
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d1e7e57b971093",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 176,
+					"regions": {
+						"leg": {
+							"vertex": 487,
+							"y": -0.0258267391473055
+						}
+					},
+					"surface": 7
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d205e57b97438d",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 176,
+					"regions": {
+						"leg": {
+							"vertex": 453,
+							"y": -0.0968512520194054
+						}
+					},
+					"surface": 8
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_f003af958238385",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 176,
+					"regions": {
+						"arm": {
+							"vertex": 190,
+							"y": 0.120280861854553
+						}
+					},
+					"surface": 9
+				},
+				{
+					"cosmetic": false,
+					"material": "head_shared_inside_mouth_iw9",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 176,
+					"regions": {
+						"head": {
+							"vertex": 345,
+							"y": 0.145200401544571
+						}
+					},
+					"surface": 10
+				},
+				{
+					"cosmetic": true,
+					"material": "Eye_cody",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 176,
+					"regions": {
+						"head": {
+							"vertex": 28,
+							"y": 0.206557393074036
+						}
+					},
+					"surface": 11
+				}
+			],
+			"tick": 174
+		},
+		{
+			"active": true,
+			"finished_tick": -1,
+			"physics_tick": 177,
+			"pose_node": "GRAPPLE_HOLD",
+			"pose_seconds": 2.15000009536743,
+			"source_frame": 64.4999986020001,
+			"state": 5,
+			"surfaces": [
+				{
+					"cosmetic": false,
+					"material": "xmaterial_e531cd813705b95",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 177,
+					"regions": {
+						"back": {
+							"vertex": 1275,
+							"y": -0.0289821475744247
+						},
+						"leg": {
+							"vertex": 134,
+							"y": -0.00946401804685593
+						},
+						"pelvis": {
+							"vertex": 961,
+							"y": -0.0535941384732723
+						}
+					},
+					"surface": 0
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_495900de7002683",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 177,
+					"regions": {
+						"back": {
+							"vertex": 16,
+							"y": -0.0840858072042465
+						},
+						"pelvis": {
+							"vertex": 138,
+							"y": -0.017516054213047
+						}
+					},
+					"surface": 1
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b39911eb484a2",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 177,
+					"regions": {
+						"arm": {
+							"vertex": 2263,
+							"y": 0.000219031324377283
+						},
+						"back": {
+							"vertex": 383,
+							"y": -0.0606942437589169
+						}
+					},
+					"surface": 2
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b2b911eb46cd8",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 177,
+					"regions": {
+						"arm": {
+							"vertex": 298,
+							"y": 0.0140945734456182
+						},
+						"back": {
+							"vertex": 303,
+							"y": -0.0580838955938816
+						}
+					},
+					"surface": 3
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c7ae1bc9f4b14",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 177,
+					"regions": {
+						"back": {
+							"vertex": 58,
+							"y": -0.0535710006952286
+						},
+						"pelvis": {
+							"vertex": 603,
+							"y": -0.0433765016496181
+						}
+					},
+					"surface": 4
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_5a329cd32db96c3",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 177,
+					"regions": {
+						"arm": {
+							"vertex": 908,
+							"y": 0.00490403082221746
+						},
+						"back": {
+							"vertex": 315,
+							"y": -0.099630281329155
+						},
+						"neck": {
+							"vertex": 71,
+							"y": -0.0325217135250568
+						}
+					},
+					"surface": 5
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c3d4d9e78b44a79",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 177,
+					"regions": {
+						"back": {
+							"vertex": 132,
+							"y": -0.0390762574970722
+						},
+						"head": {
+							"vertex": 7856,
+							"y": 0.00452845543622971
+						},
+						"neck": {
+							"vertex": 48,
+							"y": -0.0325132831931114
+						}
+					},
+					"surface": 6
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d1e7e57b971093",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 177,
+					"regions": {
+						"leg": {
+							"vertex": 487,
+							"y": -0.0850138515233994
+						}
+					},
+					"surface": 7
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d205e57b97438d",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 177,
+					"regions": {
+						"leg": {
+							"vertex": 453,
+							"y": -0.119359880685806
+						}
+					},
+					"surface": 8
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_f003af958238385",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 177,
+					"regions": {
+						"arm": {
+							"vertex": 189,
+							"y": 0.116035223007202
+						}
+					},
+					"surface": 9
+				},
+				{
+					"cosmetic": false,
+					"material": "head_shared_inside_mouth_iw9",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 177,
+					"regions": {
+						"head": {
+							"vertex": 345,
+							"y": 0.137656256556511
+						}
+					},
+					"surface": 10
+				},
+				{
+					"cosmetic": true,
+					"material": "Eye_cody",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 177,
+					"regions": {
+						"head": {
+							"vertex": 28,
+							"y": 0.198294520378113
+						}
+					},
+					"surface": 11
+				}
+			],
+			"tick": 175
+		},
+		{
+			"active": true,
+			"finished_tick": -1,
+			"physics_tick": 178,
+			"pose_node": "GRAPPLE_HOLD",
+			"pose_seconds": 2.16666674613953,
+			"source_frame": 64.9999985911629,
+			"state": 5,
+			"surfaces": [
+				{
+					"cosmetic": false,
+					"material": "xmaterial_e531cd813705b95",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 178,
+					"regions": {
+						"back": {
+							"vertex": 1275,
+							"y": -0.0300994217395782
+						},
+						"leg": {
+							"vertex": 134,
+							"y": -0.00891218334436417
+						},
+						"pelvis": {
+							"vertex": 961,
+							"y": -0.054853331297636
+						}
+					},
+					"surface": 0
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_495900de7002683",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 178,
+					"regions": {
+						"back": {
+							"vertex": 16,
+							"y": -0.0857514590024948
+						},
+						"pelvis": {
+							"vertex": 138,
+							"y": -0.0186473913490772
+						}
+					},
+					"surface": 1
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b39911eb484a2",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 178,
+					"regions": {
+						"arm": {
+							"vertex": 2263,
+							"y": -0.00488002970814705
+						},
+						"back": {
+							"vertex": 383,
+							"y": -0.0645237043499947
+						}
+					},
+					"surface": 2
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b2b911eb46cd8",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 178,
+					"regions": {
+						"arm": {
+							"vertex": 298,
+							"y": 0.0107044037431479
+						},
+						"back": {
+							"vertex": 303,
+							"y": -0.0610298849642277
+						}
+					},
+					"surface": 3
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c7ae1bc9f4b14",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 178,
+					"regions": {
+						"back": {
+							"vertex": 58,
+							"y": -0.0545983538031578
+						},
+						"pelvis": {
+							"vertex": 603,
+							"y": -0.0444873161613941
+						}
+					},
+					"surface": 4
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_5a329cd32db96c3",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 178,
+					"regions": {
+						"arm": {
+							"vertex": 908,
+							"y": 0.00142815941944718
+						},
+						"back": {
+							"vertex": 315,
+							"y": -0.102771125733852
+						},
+						"neck": {
+							"vertex": 71,
+							"y": -0.0368407480418682
+						}
+					},
+					"surface": 5
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c3d4d9e78b44a79",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 178,
+					"regions": {
+						"back": {
+							"vertex": 132,
+							"y": -0.0442552603781223
+						},
+						"head": {
+							"vertex": 7856,
+							"y": -0.00137191778048873
+						},
+						"neck": {
+							"vertex": 48,
+							"y": -0.0368339791893959
+						}
+					},
+					"surface": 6
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d1e7e57b971093",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 178,
+					"regions": {
+						"leg": {
+							"vertex": 487,
+							"y": -0.111191228032112
+						}
+					},
+					"surface": 7
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d205e57b97438d",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 178,
+					"regions": {
+						"leg": {
+							"vertex": 453,
+							"y": -0.118422448635101
+						}
+					},
+					"surface": 8
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_f003af958238385",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 178,
+					"regions": {
+						"arm": {
+							"vertex": 253,
+							"y": 0.105148911476135
+						}
+					},
+					"surface": 9
+				},
+				{
+					"cosmetic": false,
+					"material": "head_shared_inside_mouth_iw9",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 178,
+					"regions": {
+						"head": {
+							"vertex": 345,
+							"y": 0.131509467959404
+						}
+					},
+					"surface": 10
+				},
+				{
+					"cosmetic": true,
+					"material": "Eye_cody",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 178,
+					"regions": {
+						"head": {
+							"vertex": 28,
+							"y": 0.192273736000061
+						}
+					},
+					"surface": 11
+				}
+			],
+			"tick": 176
+		},
+		{
+			"active": true,
+			"finished_tick": -1,
+			"physics_tick": 179,
+			"pose_node": "GRAPPLE_HOLD",
+			"pose_seconds": 2.18333339691162,
+			"source_frame": 65.4999985803257,
+			"state": 5,
+			"surfaces": [
+				{
+					"cosmetic": false,
+					"material": "xmaterial_e531cd813705b95",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 179,
+					"regions": {
+						"back": {
+							"vertex": 1275,
+							"y": -0.0311436168849468
+						},
+						"leg": {
+							"vertex": 337,
+							"y": -0.00122739607468247
+						},
+						"pelvis": {
+							"vertex": 961,
+							"y": -0.0559406690299511
+						}
+					},
+					"surface": 0
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_495900de7002683",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 179,
+					"regions": {
+						"back": {
+							"vertex": 16,
+							"y": -0.0871639028191566
+						},
+						"pelvis": {
+							"vertex": 138,
+							"y": -0.019701736047864
+						}
+					},
+					"surface": 1
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b39911eb484a2",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 179,
+					"regions": {
+						"arm": {
+							"vertex": 2263,
+							"y": -0.00897308252751827
+						},
+						"back": {
+							"vertex": 383,
+							"y": -0.0675826519727707
+						}
+					},
+					"surface": 2
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b2b911eb46cd8",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 179,
+					"regions": {
+						"arm": {
+							"vertex": 298,
+							"y": 0.00803719274699688
+						},
+						"back": {
+							"vertex": 303,
+							"y": -0.06325663626194
+						}
+					},
+					"surface": 3
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c7ae1bc9f4b14",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 179,
+					"regions": {
+						"back": {
+							"vertex": 58,
+							"y": -0.0555744357407093
+						},
+						"pelvis": {
+							"vertex": 603,
+							"y": -0.0455268509685993
+						}
+					},
+					"surface": 4
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_5a329cd32db96c3",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 179,
+					"regions": {
+						"arm": {
+							"vertex": 908,
+							"y": -0.00124693010002375
+						},
+						"back": {
+							"vertex": 315,
+							"y": -0.105280585587025
+						},
+						"neck": {
+							"vertex": 71,
+							"y": -0.0398784652352333
+						}
+					},
+					"surface": 5
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c3d4d9e78b44a79",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 179,
+					"regions": {
+						"back": {
+							"vertex": 132,
+							"y": -0.0481919012963772
+						},
+						"head": {
+							"vertex": 7856,
+							"y": -0.00572935631498694
+						},
+						"neck": {
+							"vertex": 48,
+							"y": -0.0398732423782349
+						}
+					},
+					"surface": 6
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d1e7e57b971093",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 179,
+					"regions": {
+						"leg": {
+							"vertex": 487,
+							"y": -0.109717428684235
+						}
+					},
+					"surface": 7
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d205e57b97438d",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 179,
+					"regions": {
+						"leg": {
+							"vertex": 453,
+							"y": -0.108569115400314
+						}
+					},
+					"surface": 8
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_f003af958238385",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 179,
+					"regions": {
+						"arm": {
+							"vertex": 253,
+							"y": 0.0871037244796753
+						}
+					},
+					"surface": 9
+				},
+				{
+					"cosmetic": false,
+					"material": "head_shared_inside_mouth_iw9",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 179,
+					"regions": {
+						"head": {
+							"vertex": 345,
+							"y": 0.126951396465302
+						}
+					},
+					"surface": 10
+				},
+				{
+					"cosmetic": true,
+					"material": "Eye_cody",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 179,
+					"regions": {
+						"head": {
+							"vertex": 28,
+							"y": 0.188253045082092
+						}
+					},
+					"surface": 11
+				}
+			],
+			"tick": 177
+		},
+		{
+			"active": false,
+			"finished_tick": 177,
+			"physics_tick": 180,
+			"pose_node": "DOWN",
+			"pose_seconds": 0.0,
+			"source_frame": 66.0,
+			"state": 8,
+			"surfaces": [
+				{
+					"cosmetic": false,
+					"material": "xmaterial_e531cd813705b95",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 180,
+					"regions": {
+						"back": {
+							"vertex": 1275,
+							"y": -0.0315494649112225
+						},
+						"leg": {
+							"vertex": 134,
+							"y": -0.00754097104072571
+						},
+						"pelvis": {
+							"vertex": 961,
+							"y": -0.0571840181946754
+						}
+					},
+					"surface": 0
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_495900de7002683",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 180,
+					"regions": {
+						"back": {
+							"vertex": 16,
+							"y": -0.0818676576018333
+						},
+						"pelvis": {
+							"vertex": 138,
+							"y": -0.0204151533544064
+						}
+					},
+					"surface": 1
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b39911eb484a2",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 180,
+					"regions": {
+						"arm": {
+							"vertex": 2263,
+							"y": 0.000268075324129313
+						},
+						"back": {
+							"vertex": 383,
+							"y": -0.0589961484074593
+						}
+					},
+					"surface": 2
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b2b911eb46cd8",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 180,
+					"regions": {
+						"arm": {
+							"vertex": 298,
+							"y": 0.0182331055402756
+						},
+						"back": {
+							"vertex": 303,
+							"y": -0.0542163625359535
+						}
+					},
+					"surface": 3
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c7ae1bc9f4b14",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 180,
+					"regions": {
+						"back": {
+							"vertex": 58,
+							"y": -0.0535688251256943
+						},
+						"pelvis": {
+							"vertex": 603,
+							"y": -0.0462620258331299
+						}
+					},
+					"surface": 4
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_5a329cd32db96c3",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 180,
+					"regions": {
+						"arm": {
+							"vertex": 908,
+							"y": 0.00909260287880898
+						},
+						"back": {
+							"vertex": 315,
+							"y": -0.0973908752202988
+						},
+						"neck": {
+							"vertex": 180,
+							"y": -0.028184711933136
+						}
+					},
+					"surface": 5
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c3d4d9e78b44a79",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 180,
+					"regions": {
+						"back": {
+							"vertex": 132,
+							"y": -0.0373957492411137
+						},
+						"head": {
+							"vertex": 7856,
+							"y": 0.00612816866487265
+						},
+						"neck": {
+							"vertex": 135,
+							"y": -0.0280779972672462
+						}
+					},
+					"surface": 6
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d1e7e57b971093",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 180,
+					"regions": {
+						"leg": {
+							"vertex": 487,
+							"y": -0.108602195978165
+						}
+					},
+					"surface": 7
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d205e57b97438d",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 180,
+					"regions": {
+						"leg": {
+							"vertex": 453,
+							"y": -0.10675248503685
+						}
+					},
+					"surface": 8
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_f003af958238385",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 180,
+					"regions": {
+						"arm": {
+							"vertex": 376,
+							"y": 0.0630757138133049
+						}
+					},
+					"surface": 9
+				},
+				{
+					"cosmetic": false,
+					"material": "head_shared_inside_mouth_iw9",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 180,
+					"regions": {
+						"head": {
+							"vertex": 345,
+							"y": 0.138906836509705
+						}
+					},
+					"surface": 10
+				},
+				{
+					"cosmetic": true,
+					"material": "Eye_cody",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 180,
+					"regions": {
+						"head": {
+							"vertex": 28,
+							"y": 0.203125357627869
+						}
+					},
+					"surface": 11
+				}
+			],
+			"tick": 178
+		},
+		{
+			"active": false,
+			"finished_tick": 177,
+			"physics_tick": 181,
+			"pose_node": "DOWN",
+			"pose_seconds": 0.0166666675359011,
+			"source_frame": 66.0,
+			"state": 8,
+			"surfaces": [
+				{
+					"cosmetic": false,
+					"material": "xmaterial_e531cd813705b95",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 181,
+					"regions": {
+						"back": {
+							"vertex": 1275,
+							"y": -0.0315494649112225
+						},
+						"leg": {
+							"vertex": 144,
+							"y": -0.028893306851387
+						},
+						"pelvis": {
+							"vertex": 961,
+							"y": -0.0571539998054504
+						}
+					},
+					"surface": 0
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_495900de7002683",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 181,
+					"regions": {
+						"back": {
+							"vertex": 16,
+							"y": -0.0818676576018333
+						},
+						"pelvis": {
+							"vertex": 138,
+							"y": -0.0204151533544064
+						}
+					},
+					"surface": 1
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b39911eb484a2",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 181,
+					"regions": {
+						"arm": {
+							"vertex": 2263,
+							"y": 0.000268075324129313
+						},
+						"back": {
+							"vertex": 383,
+							"y": -0.0589961484074593
+						}
+					},
+					"surface": 2
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b2b911eb46cd8",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 181,
+					"regions": {
+						"arm": {
+							"vertex": 298,
+							"y": 0.0182331055402756
+						},
+						"back": {
+							"vertex": 303,
+							"y": -0.0542163625359535
+						}
+					},
+					"surface": 3
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c7ae1bc9f4b14",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 181,
+					"regions": {
+						"back": {
+							"vertex": 58,
+							"y": -0.0535688251256943
+						},
+						"pelvis": {
+							"vertex": 603,
+							"y": -0.0462620258331299
+						}
+					},
+					"surface": 4
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_5a329cd32db96c3",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 181,
+					"regions": {
+						"arm": {
+							"vertex": 908,
+							"y": 0.00909260287880898
+						},
+						"back": {
+							"vertex": 315,
+							"y": -0.0973908752202988
+						},
+						"neck": {
+							"vertex": 180,
+							"y": -0.028184711933136
+						}
+					},
+					"surface": 5
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c3d4d9e78b44a79",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 181,
+					"regions": {
+						"back": {
+							"vertex": 132,
+							"y": -0.0373957492411137
+						},
+						"head": {
+							"vertex": 7856,
+							"y": 0.00612816866487265
+						},
+						"neck": {
+							"vertex": 135,
+							"y": -0.0280779972672462
+						}
+					},
+					"surface": 6
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d1e7e57b971093",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 181,
+					"regions": {
+						"leg": {
+							"vertex": 487,
+							"y": -0.110970869660378
+						}
+					},
+					"surface": 7
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d205e57b97438d",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 181,
+					"regions": {
+						"leg": {
+							"vertex": 453,
+							"y": -0.109483979642391
+						}
+					},
+					"surface": 8
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_f003af958238385",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 181,
+					"regions": {
+						"arm": {
+							"vertex": 376,
+							"y": 0.0630758181214333
+						}
+					},
+					"surface": 9
+				},
+				{
+					"cosmetic": false,
+					"material": "head_shared_inside_mouth_iw9",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 181,
+					"regions": {
+						"head": {
+							"vertex": 345,
+							"y": 0.138906836509705
+						}
+					},
+					"surface": 10
+				},
+				{
+					"cosmetic": true,
+					"material": "Eye_cody",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 181,
+					"regions": {
+						"head": {
+							"vertex": 28,
+							"y": 0.203084588050842
+						}
+					},
+					"surface": 11
+				}
+			],
+			"tick": 179
+		},
+		{
+			"active": false,
+			"finished_tick": 177,
+			"physics_tick": 182,
+			"pose_node": "DOWN",
+			"pose_seconds": 0.0333333350718021,
+			"source_frame": 66.0,
+			"state": 8,
+			"surfaces": [
+				{
+					"cosmetic": false,
+					"material": "xmaterial_e531cd813705b95",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 182,
+					"regions": {
+						"back": {
+							"vertex": 1275,
+							"y": -0.0315495057147928
+						},
+						"leg": {
+							"vertex": 377,
+							"y": -0.0431324688834138
+						},
+						"pelvis": {
+							"vertex": 961,
+							"y": -0.0571237838012166
+						}
+					},
+					"surface": 0
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_495900de7002683",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 182,
+					"regions": {
+						"back": {
+							"vertex": 16,
+							"y": -0.0818730292958207
+						},
+						"pelvis": {
+							"vertex": 138,
+							"y": -0.0204151811194606
+						}
+					},
+					"surface": 1
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b39911eb484a2",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 182,
+					"regions": {
+						"arm": {
+							"vertex": 2263,
+							"y": 0.000311320356559008
+						},
+						"back": {
+							"vertex": 383,
+							"y": -0.0589808000368066
+						}
+					},
+					"surface": 2
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b2b911eb46cd8",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 182,
+					"regions": {
+						"arm": {
+							"vertex": 298,
+							"y": 0.0181336646783166
+						},
+						"back": {
+							"vertex": 303,
+							"y": -0.0542307457071729
+						}
+					},
+					"surface": 3
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c7ae1bc9f4b14",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 182,
+					"regions": {
+						"back": {
+							"vertex": 58,
+							"y": -0.0535688324016519
+						},
+						"pelvis": {
+							"vertex": 603,
+							"y": -0.0462620591861196
+						}
+					},
+					"surface": 4
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_5a329cd32db96c3",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 182,
+					"regions": {
+						"arm": {
+							"vertex": 908,
+							"y": 0.0090191030758433
+						},
+						"back": {
+							"vertex": 315,
+							"y": -0.0973867846769281
+						},
+						"neck": {
+							"vertex": 180,
+							"y": -0.0281160565209575
+						}
+					},
+					"surface": 5
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c3d4d9e78b44a79",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 182,
+					"regions": {
+						"back": {
+							"vertex": 132,
+							"y": -0.0373512169462629
+						},
+						"head": {
+							"vertex": 7856,
+							"y": 0.00621586729539558
+						},
+						"neck": {
+							"vertex": 135,
+							"y": -0.0280093381297775
+						}
+					},
+					"surface": 6
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d1e7e57b971093",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 182,
+					"regions": {
+						"leg": {
+							"vertex": 487,
+							"y": -0.111304424528498
+						}
+					},
+					"surface": 7
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d205e57b97438d",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 182,
+					"regions": {
+						"leg": {
+							"vertex": 453,
+							"y": -0.111366644327063
+						}
+					},
+					"surface": 8
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_f003af958238385",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 182,
+					"regions": {
+						"arm": {
+							"vertex": 376,
+							"y": 0.0639824421959929
+						}
+					},
+					"surface": 9
+				},
+				{
+					"cosmetic": false,
+					"material": "head_shared_inside_mouth_iw9",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 182,
+					"regions": {
+						"head": {
+							"vertex": 345,
+							"y": 0.139026791031938
+						}
+					},
+					"surface": 10
+				},
+				{
+					"cosmetic": true,
+					"material": "Eye_cody",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 182,
+					"regions": {
+						"head": {
+							"vertex": 28,
+							"y": 0.203289106662851
+						}
+					},
+					"surface": 11
+				}
+			],
+			"tick": 180
+		},
+		{
+			"active": false,
+			"finished_tick": 177,
+			"physics_tick": 183,
+			"pose_node": "DOWN",
+			"pose_seconds": 0.0500000007450581,
+			"source_frame": 66.0,
+			"state": 8,
+			"surfaces": [
+				{
+					"cosmetic": false,
+					"material": "xmaterial_e531cd813705b95",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 183,
+					"regions": {
+						"back": {
+							"vertex": 1275,
+							"y": -0.0315495057147928
+						},
+						"leg": {
+							"vertex": 134,
+							"y": -0.046581581060309
+						},
+						"pelvis": {
+							"vertex": 961,
+							"y": -0.0571237838012166
+						}
+					},
+					"surface": 0
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_495900de7002683",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 183,
+					"regions": {
+						"back": {
+							"vertex": 16,
+							"y": -0.0818783713621087
+						},
+						"pelvis": {
+							"vertex": 138,
+							"y": -0.0204151811194606
+						}
+					},
+					"surface": 1
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b39911eb484a2",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 183,
+					"regions": {
+						"arm": {
+							"vertex": 2263,
+							"y": 0.000354704505298287
+						},
+						"back": {
+							"vertex": 383,
+							"y": -0.0589653624338098
+						}
+					},
+					"surface": 2
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b2b911eb46cd8",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 183,
+					"regions": {
+						"arm": {
+							"vertex": 298,
+							"y": 0.0178651736932807
+						},
+						"back": {
+							"vertex": 303,
+							"y": -0.0542450731736608
+						}
+					},
+					"surface": 3
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c7ae1bc9f4b14",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 183,
+					"regions": {
+						"back": {
+							"vertex": 58,
+							"y": -0.0535688324016519
+						},
+						"pelvis": {
+							"vertex": 603,
+							"y": -0.0462620591861196
+						}
+					},
+					"surface": 4
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_5a329cd32db96c3",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 183,
+					"regions": {
+						"arm": {
+							"vertex": 908,
+							"y": 0.00882623827783391
+						},
+						"back": {
+							"vertex": 315,
+							"y": -0.0973826421541162
+						},
+						"neck": {
+							"vertex": 180,
+							"y": -0.0280471293372102
+						}
+					},
+					"surface": 5
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c3d4d9e78b44a79",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 183,
+					"regions": {
+						"back": {
+							"vertex": 132,
+							"y": -0.0373064240557142
+						},
+						"head": {
+							"vertex": 7856,
+							"y": 0.00630393315805122
+						},
+						"neck": {
+							"vertex": 135,
+							"y": -0.0279404034954496
+						}
+					},
+					"surface": 6
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d1e7e57b971093",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 183,
+					"regions": {
+						"leg": {
+							"vertex": 487,
+							"y": -0.111304424528498
+						}
+					},
+					"surface": 7
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d205e57b97438d",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 183,
+					"regions": {
+						"leg": {
+							"vertex": 453,
+							"y": -0.111448779527564
+						}
+					},
+					"surface": 8
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_f003af958238385",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 183,
+					"regions": {
+						"arm": {
+							"vertex": 376,
+							"y": 0.0666845517116599
+						}
+					},
+					"surface": 9
+				},
+				{
+					"cosmetic": false,
+					"material": "head_shared_inside_mouth_iw9",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 183,
+					"regions": {
+						"head": {
+							"vertex": 345,
+							"y": 0.139147043402772
+						}
+					},
+					"surface": 10
+				},
+				{
+					"cosmetic": true,
+					"material": "Eye_cody",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 183,
+					"regions": {
+						"head": {
+							"vertex": 28,
+							"y": 0.203498318966012
+						}
+					},
+					"surface": 11
+				}
+			],
+			"tick": 181
+		},
+		{
+			"active": false,
+			"finished_tick": 177,
+			"physics_tick": 184,
+			"pose_node": "DOWN",
+			"pose_seconds": 0.0666666701436043,
+			"source_frame": 66.0,
+			"state": 8,
+			"surfaces": [
+				{
+					"cosmetic": false,
+					"material": "xmaterial_e531cd813705b95",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 184,
+					"regions": {
+						"back": {
+							"vertex": 1275,
+							"y": -0.0315495057147928
+						},
+						"leg": {
+							"vertex": 134,
+							"y": -0.046581581060309
+						},
+						"pelvis": {
+							"vertex": 961,
+							"y": -0.0571237838012166
+						}
+					},
+					"surface": 0
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_495900de7002683",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 184,
+					"regions": {
+						"back": {
+							"vertex": 16,
+							"y": -0.0818837059778161
+						},
+						"pelvis": {
+							"vertex": 138,
+							"y": -0.0204151811194606
+						}
+					},
+					"surface": 1
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b39911eb484a2",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 184,
+					"regions": {
+						"arm": {
+							"vertex": 2263,
+							"y": 0.000410315289627761
+						},
+						"back": {
+							"vertex": 383,
+							"y": -0.0589499173802324
+						}
+					},
+					"surface": 2
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b2b911eb46cd8",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 184,
+					"regions": {
+						"arm": {
+							"vertex": 298,
+							"y": 0.0174321943777613
+						},
+						"back": {
+							"vertex": 303,
+							"y": -0.0542593857389875
+						}
+					},
+					"surface": 3
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c7ae1bc9f4b14",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 184,
+					"regions": {
+						"back": {
+							"vertex": 58,
+							"y": -0.0535688324016519
+						},
+						"pelvis": {
+							"vertex": 603,
+							"y": -0.0462620591861196
+						}
+					},
+					"surface": 4
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_5a329cd32db96c3",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 184,
+					"regions": {
+						"arm": {
+							"vertex": 908,
+							"y": 0.00851728505222127
+						},
+						"back": {
+							"vertex": 315,
+							"y": -0.0973784847301431
+						},
+						"neck": {
+							"vertex": 180,
+							"y": -0.0279548538965173
+						}
+					},
+					"surface": 5
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c3d4d9e78b44a79",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 184,
+					"regions": {
+						"back": {
+							"vertex": 132,
+							"y": -0.0372478885692544
+						},
+						"head": {
+							"vertex": 7856,
+							"y": 0.00642775994492695
+						},
+						"neck": {
+							"vertex": 48,
+							"y": -0.0278735829633661
+						}
+					},
+					"surface": 6
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d1e7e57b971093",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 184,
+					"regions": {
+						"leg": {
+							"vertex": 487,
+							"y": -0.111304424528498
+						}
+					},
+					"surface": 7
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d205e57b97438d",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 184,
+					"regions": {
+						"leg": {
+							"vertex": 453,
+							"y": -0.111448779527564
+						}
+					},
+					"surface": 8
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_f003af958238385",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 184,
+					"regions": {
+						"arm": {
+							"vertex": 376,
+							"y": 0.0712250025826506
+						}
+					},
+					"surface": 9
+				},
+				{
+					"cosmetic": false,
+					"material": "head_shared_inside_mouth_iw9",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 184,
+					"regions": {
+						"head": {
+							"vertex": 345,
+							"y": 0.13932824152289
+						}
+					},
+					"surface": 10
+				},
+				{
+					"cosmetic": true,
+					"material": "Eye_cody",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 184,
+					"regions": {
+						"head": {
+							"vertex": 28,
+							"y": 0.203825548465829
+						}
+					},
+					"surface": 11
+				}
+			],
+			"tick": 182
+		},
+		{
+			"active": false,
+			"finished_tick": 177,
+			"physics_tick": 185,
+			"pose_node": "DOWN",
+			"pose_seconds": 0.0833333358168602,
+			"source_frame": 66.0,
+			"state": 8,
+			"surfaces": [
+				{
+					"cosmetic": false,
+					"material": "xmaterial_e531cd813705b95",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 185,
+					"regions": {
+						"back": {
+							"vertex": 1275,
+							"y": -0.0315495057147928
+						},
+						"leg": {
+							"vertex": 134,
+							"y": -0.046581581060309
+						},
+						"pelvis": {
+							"vertex": 961,
+							"y": -0.0571237838012166
+						}
+					},
+					"surface": 0
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_495900de7002683",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 185,
+					"regions": {
+						"back": {
+							"vertex": 16,
+							"y": -0.0818955002469011
+						},
+						"pelvis": {
+							"vertex": 138,
+							"y": -0.0204151811194606
+						}
+					},
+					"surface": 1
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b39911eb484a2",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 185,
+					"regions": {
+						"arm": {
+							"vertex": 2263,
+							"y": 0.000515459629241377
+						},
+						"back": {
+							"vertex": 383,
+							"y": -0.0589157341164537
+						}
+					},
+					"surface": 2
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b2b911eb46cd8",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 185,
+					"regions": {
+						"arm": {
+							"vertex": 298,
+							"y": 0.0168223550426774
+						},
+						"back": {
+							"vertex": 303,
+							"y": -0.0542908532661386
+						}
+					},
+					"surface": 3
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c7ae1bc9f4b14",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 185,
+					"regions": {
+						"back": {
+							"vertex": 58,
+							"y": -0.0535688324016519
+						},
+						"pelvis": {
+							"vertex": 603,
+							"y": -0.0462620591861196
+						}
+					},
+					"surface": 4
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_5a329cd32db96c3",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 185,
+					"regions": {
+						"arm": {
+							"vertex": 908,
+							"y": 0.00807986891595647
+						},
+						"back": {
+							"vertex": 315,
+							"y": -0.0973692609113641
+						},
+						"neck": {
+							"vertex": 71,
+							"y": -0.0278456414234824
+						}
+					},
+					"surface": 5
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c3d4d9e78b44a79",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 185,
+					"regions": {
+						"back": {
+							"vertex": 132,
+							"y": -0.0371373629313894
+						},
+						"head": {
+							"vertex": 7856,
+							"y": 0.00665130809647962
+						},
+						"neck": {
+							"vertex": 48,
+							"y": -0.0278410015744157
+						}
+					},
+					"surface": 6
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d1e7e57b971093",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 185,
+					"regions": {
+						"leg": {
+							"vertex": 487,
+							"y": -0.111304424528498
+						}
+					},
+					"surface": 7
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d205e57b97438d",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 185,
+					"regions": {
+						"leg": {
+							"vertex": 453,
+							"y": -0.111448779527564
+						}
+					},
+					"surface": 8
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_f003af958238385",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 185,
+					"regions": {
+						"arm": {
+							"vertex": 376,
+							"y": 0.0777353646117263
+						}
+					},
+					"surface": 9
+				},
+				{
+					"cosmetic": false,
+					"material": "head_shared_inside_mouth_iw9",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 185,
+					"regions": {
+						"head": {
+							"vertex": 345,
+							"y": 0.139640629466157
+						}
+					},
+					"surface": 10
+				},
+				{
+					"cosmetic": true,
+					"material": "Eye_cody",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 185,
+					"regions": {
+						"head": {
+							"vertex": 28,
+							"y": 0.204349711711984
+						}
+					},
+					"surface": 11
+				}
+			],
+			"tick": 183
+		},
+		{
+			"active": false,
+			"finished_tick": 177,
+			"physics_tick": 186,
+			"pose_node": "DOWN",
+			"pose_seconds": 0.100000001490116,
+			"source_frame": 66.0,
+			"state": 8,
+			"surfaces": [
+				{
+					"cosmetic": false,
+					"material": "xmaterial_e531cd813705b95",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 186,
+					"regions": {
+						"back": {
+							"vertex": 1275,
+							"y": -0.0315495057147928
+						},
+						"leg": {
+							"vertex": 134,
+							"y": -0.046581581060309
+						},
+						"pelvis": {
+							"vertex": 961,
+							"y": -0.0571237838012166
+						}
+					},
+					"surface": 0
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_495900de7002683",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 186,
+					"regions": {
+						"back": {
+							"vertex": 16,
+							"y": -0.081910103384871
+						},
+						"pelvis": {
+							"vertex": 138,
+							"y": -0.0204151811194606
+						}
+					},
+					"surface": 1
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b39911eb484a2",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 186,
+					"regions": {
+						"arm": {
+							"vertex": 2263,
+							"y": 0.000646152242552489
+						},
+						"back": {
+							"vertex": 383,
+							"y": -0.058873288158793
+						}
+					},
+					"surface": 2
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b2b911eb46cd8",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 186,
+					"regions": {
+						"arm": {
+							"vertex": 1672,
+							"y": 0.0156870895880274
+						},
+						"back": {
+							"vertex": 303,
+							"y": -0.0543296484393068
+						}
+					},
+					"surface": 3
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c7ae1bc9f4b14",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 186,
+					"regions": {
+						"back": {
+							"vertex": 58,
+							"y": -0.0535688324016519
+						},
+						"pelvis": {
+							"vertex": 603,
+							"y": -0.0462620591861196
+						}
+					},
+					"surface": 4
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_5a329cd32db96c3",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 186,
+					"regions": {
+						"arm": {
+							"vertex": 908,
+							"y": 0.00752373429713771
+						},
+						"back": {
+							"vertex": 315,
+							"y": -0.0973577572149225
+						},
+						"neck": {
+							"vertex": 71,
+							"y": -0.027803148899693
+						}
+					},
+					"surface": 5
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c3d4d9e78b44a79",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 186,
+					"regions": {
+						"back": {
+							"vertex": 132,
+							"y": -0.0369987225276418
+						},
+						"head": {
+							"vertex": 7856,
+							"y": 0.00693140708608553
+						},
+						"neck": {
+							"vertex": 48,
+							"y": -0.0277983209234662
+						}
+					},
+					"surface": 6
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d1e7e57b971093",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 186,
+					"regions": {
+						"leg": {
+							"vertex": 487,
+							"y": -0.111304424528498
+						}
+					},
+					"surface": 7
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d205e57b97438d",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 186,
+					"regions": {
+						"leg": {
+							"vertex": 453,
+							"y": -0.111448779527564
+						}
+					},
+					"surface": 8
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_f003af958238385",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 186,
+					"regions": {
+						"arm": {
+							"vertex": 376,
+							"y": 0.0864246638375334
+						}
+					},
+					"surface": 9
+				},
+				{
+					"cosmetic": false,
+					"material": "head_shared_inside_mouth_iw9",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 186,
+					"regions": {
+						"head": {
+							"vertex": 345,
+							"y": 0.14002971368609
+						}
+					},
+					"surface": 10
+				},
+				{
+					"cosmetic": true,
+					"material": "Eye_cody",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 186,
+					"regions": {
+						"head": {
+							"vertex": 28,
+							"y": 0.204959824855905
+						}
+					},
+					"surface": 11
+				}
+			],
+			"tick": 184
+		},
+		{
+			"active": false,
+			"finished_tick": 177,
+			"physics_tick": 187,
+			"pose_node": "DOWN",
+			"pose_seconds": 0.116666667163372,
+			"source_frame": 66.0,
+			"state": 8,
+			"surfaces": [
+				{
+					"cosmetic": false,
+					"material": "xmaterial_e531cd813705b95",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 187,
+					"regions": {
+						"back": {
+							"vertex": 1275,
+							"y": -0.0315495057147928
+						},
+						"leg": {
+							"vertex": 134,
+							"y": -0.046581581060309
+						},
+						"pelvis": {
+							"vertex": 961,
+							"y": -0.0571237838012166
+						}
+					},
+					"surface": 0
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_495900de7002683",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 187,
+					"regions": {
+						"back": {
+							"vertex": 16,
+							"y": -0.0819272546214052
+						},
+						"pelvis": {
+							"vertex": 138,
+							"y": -0.0204151811194606
+						}
+					},
+					"surface": 1
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b39911eb484a2",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 187,
+					"regions": {
+						"arm": {
+							"vertex": 2263,
+							"y": 0.000800493115093559
+						},
+						"back": {
+							"vertex": 383,
+							"y": -0.0588232128066011
+						}
+					},
+					"surface": 2
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b2b911eb46cd8",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 187,
+					"regions": {
+						"arm": {
+							"vertex": 1672,
+							"y": 0.0131419861572795
+						},
+						"back": {
+							"vertex": 303,
+							"y": -0.0543749740463682
+						}
+					},
+					"surface": 3
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c7ae1bc9f4b14",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 187,
+					"regions": {
+						"back": {
+							"vertex": 58,
+							"y": -0.0535688324016519
+						},
+						"pelvis": {
+							"vertex": 603,
+							"y": -0.0462620591861196
+						}
+					},
+					"surface": 4
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_5a329cd32db96c3",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 187,
+					"regions": {
+						"arm": {
+							"vertex": 908,
+							"y": 0.00685208028880879
+						},
+						"back": {
+							"vertex": 315,
+							"y": -0.0973440853995271
+						},
+						"neck": {
+							"vertex": 71,
+							"y": -0.0277499945950694
+						}
+					},
+					"surface": 5
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c3d4d9e78b44a79",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 187,
+					"regions": {
+						"back": {
+							"vertex": 132,
+							"y": -0.0368332674843259
+						},
+						"head": {
+							"vertex": 7856,
+							"y": 0.00726513675181195
+						},
+						"neck": {
+							"vertex": 48,
+							"y": -0.0277449375134893
+						}
+					},
+					"surface": 6
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d1e7e57b971093",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 187,
+					"regions": {
+						"leg": {
+							"vertex": 487,
+							"y": -0.111304424528498
+						}
+					},
+					"surface": 7
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d205e57b97438d",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 187,
+					"regions": {
+						"leg": {
+							"vertex": 453,
+							"y": -0.111448779527564
+						}
+					},
+					"surface": 8
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_f003af958238385",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 187,
+					"regions": {
+						"arm": {
+							"vertex": 376,
+							"y": 0.0975717754918151
+						}
+					},
+					"surface": 9
+				},
+				{
+					"cosmetic": false,
+					"material": "head_shared_inside_mouth_iw9",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 187,
+					"regions": {
+						"head": {
+							"vertex": 345,
+							"y": 0.14049004035769
+						}
+					},
+					"surface": 10
+				},
+				{
+					"cosmetic": true,
+					"material": "Eye_cody",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 187,
+					"regions": {
+						"head": {
+							"vertex": 28,
+							"y": 0.20566172915278
+						}
+					},
+					"surface": 11
+				}
+			],
+			"tick": 185
+		},
+		{
+			"active": false,
+			"finished_tick": 177,
+			"physics_tick": 188,
+			"pose_node": "DOWN",
+			"pose_seconds": 0.133333340287209,
+			"source_frame": 66.0,
+			"state": 8,
+			"surfaces": [
+				{
+					"cosmetic": false,
+					"material": "xmaterial_e531cd813705b95",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 188,
+					"regions": {
+						"back": {
+							"vertex": 1275,
+							"y": -0.0315495057147928
+						},
+						"leg": {
+							"vertex": 134,
+							"y": -0.046581581060309
+						},
+						"pelvis": {
+							"vertex": 961,
+							"y": -0.0571237838012166
+						}
+					},
+					"surface": 0
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_495900de7002683",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 188,
+					"regions": {
+						"back": {
+							"vertex": 16,
+							"y": -0.0819466782850213
+						},
+						"pelvis": {
+							"vertex": 138,
+							"y": -0.0204151811194606
+						}
+					},
+					"surface": 1
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b39911eb484a2",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 188,
+					"regions": {
+						"arm": {
+							"vertex": 2263,
+							"y": 0.000976549519691616
+						},
+						"back": {
+							"vertex": 383,
+							"y": -0.0587661562603898
+						}
+					},
+					"surface": 2
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b2b911eb46cd8",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 188,
+					"regions": {
+						"arm": {
+							"vertex": 1672,
+							"y": 0.0102847723173909
+						},
+						"back": {
+							"vertex": 303,
+							"y": -0.0544260813039728
+						}
+					},
+					"surface": 3
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c7ae1bc9f4b14",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 188,
+					"regions": {
+						"back": {
+							"vertex": 58,
+							"y": -0.0535688324016519
+						},
+						"pelvis": {
+							"vertex": 603,
+							"y": -0.0462620591861196
+						}
+					},
+					"surface": 4
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_5a329cd32db96c3",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 188,
+					"regions": {
+						"arm": {
+							"vertex": 908,
+							"y": 0.00607130414573476
+						},
+						"back": {
+							"vertex": 315,
+							"y": -0.0973283870262094
+						},
+						"neck": {
+							"vertex": 71,
+							"y": -0.0276855861884542
+						}
+					},
+					"surface": 5
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c3d4d9e78b44a79",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 188,
+					"regions": {
+						"back": {
+							"vertex": 132,
+							"y": -0.0366423351806588
+						},
+						"head": {
+							"vertex": 7856,
+							"y": 0.00764955504564568
+						},
+						"neck": {
+							"vertex": 48,
+							"y": -0.0276802776497789
+						}
+					},
+					"surface": 6
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d1e7e57b971093",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 188,
+					"regions": {
+						"leg": {
+							"vertex": 487,
+							"y": -0.111304424528498
+						}
+					},
+					"surface": 7
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d205e57b97438d",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 188,
+					"regions": {
+						"leg": {
+							"vertex": 453,
+							"y": -0.111448779527564
+						}
+					},
+					"surface": 8
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_f003af958238385",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 188,
+					"regions": {
+						"arm": {
+							"vertex": 376,
+							"y": 0.111508682544809
+						}
+					},
+					"surface": 9
+				},
+				{
+					"cosmetic": false,
+					"material": "head_shared_inside_mouth_iw9",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 188,
+					"regions": {
+						"head": {
+							"vertex": 345,
+							"y": 0.141016215260606
+						}
+					},
+					"surface": 10
+				},
+				{
+					"cosmetic": true,
+					"material": "Eye_cody",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 188,
+					"regions": {
+						"head": {
+							"vertex": 28,
+							"y": 0.206422880466562
+						}
+					},
+					"surface": 11
+				}
+			],
+			"tick": 186
+		},
+		{
+			"active": false,
+			"finished_tick": 177,
+			"physics_tick": 189,
+			"pose_node": "DOWN",
+			"pose_seconds": 0.150000005960464,
+			"source_frame": 66.0,
+			"state": 8,
+			"surfaces": [
+				{
+					"cosmetic": false,
+					"material": "xmaterial_e531cd813705b95",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 189,
+					"regions": {
+						"back": {
+							"vertex": 1275,
+							"y": -0.0315495057147928
+						},
+						"leg": {
+							"vertex": 134,
+							"y": -0.046581581060309
+						},
+						"pelvis": {
+							"vertex": 961,
+							"y": -0.0571237838012166
+						}
+					},
+					"surface": 0
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_495900de7002683",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 189,
+					"regions": {
+						"back": {
+							"vertex": 16,
+							"y": -0.0819681210559793
+						},
+						"pelvis": {
+							"vertex": 138,
+							"y": -0.0204151811194606
+						}
+					},
+					"surface": 1
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b39911eb484a2",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 189,
+					"regions": {
+						"arm": {
+							"vertex": 2263,
+							"y": 0.00117242470150813
+						},
+						"back": {
+							"vertex": 383,
+							"y": -0.0587027369183488
+						}
+					},
+					"surface": 2
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b2b911eb46cd8",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 189,
+					"regions": {
+						"arm": {
+							"vertex": 1672,
+							"y": 0.0072197841363959
+						},
+						"back": {
+							"vertex": 303,
+							"y": -0.0544821692747064
+						}
+					},
+					"surface": 3
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c7ae1bc9f4b14",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 189,
+					"regions": {
+						"back": {
+							"vertex": 58,
+							"y": -0.0535688324016519
+						},
+						"pelvis": {
+							"vertex": 603,
+							"y": -0.0462620591861196
+						}
+					},
+					"surface": 4
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_5a329cd32db96c3",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 189,
+					"regions": {
+						"arm": {
+							"vertex": 908,
+							"y": 0.00519363320199773
+						},
+						"back": {
+							"vertex": 315,
+							"y": -0.0973107813042589
+						},
+						"neck": {
+							"vertex": 71,
+							"y": -0.027609295968432
+						}
+					},
+					"surface": 5
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c3d4d9e78b44a79",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 189,
+					"regions": {
+						"back": {
+							"vertex": 132,
+							"y": -0.0364272071165033
+						},
+						"head": {
+							"vertex": 7856,
+							"y": 0.00808180606691167
+						},
+						"neck": {
+							"vertex": 48,
+							"y": -0.0276036987197585
+						}
+					},
+					"surface": 6
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d1e7e57b971093",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 189,
+					"regions": {
+						"leg": {
+							"vertex": 487,
+							"y": -0.111304424528498
+						}
+					},
+					"surface": 7
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d205e57b97438d",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 189,
+					"regions": {
+						"leg": {
+							"vertex": 453,
+							"y": -0.111448779527564
+						}
+					},
+					"surface": 8
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_f003af958238385",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 189,
+					"regions": {
+						"arm": {
+							"vertex": 376,
+							"y": 0.128593847330194
+						}
+					},
+					"surface": 9
+				},
+				{
+					"cosmetic": false,
+					"material": "head_shared_inside_mouth_iw9",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 189,
+					"regions": {
+						"head": {
+							"vertex": 345,
+							"y": 0.141602859075647
+						}
+					},
+					"surface": 10
+				},
+				{
+					"cosmetic": true,
+					"material": "Eye_cody",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 189,
+					"regions": {
+						"head": {
+							"vertex": 28,
+							"y": 0.207254842098337
+						}
+					},
+					"surface": 11
+				}
+			],
+			"tick": 187
+		},
+		{
+			"active": false,
+			"finished_tick": 177,
+			"physics_tick": 190,
+			"pose_node": "DOWN",
+			"pose_seconds": 0.16666667163372,
+			"source_frame": 66.0,
+			"state": 8,
+			"surfaces": [
+				{
+					"cosmetic": false,
+					"material": "xmaterial_e531cd813705b95",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 190,
+					"regions": {
+						"back": {
+							"vertex": 1275,
+							"y": -0.0315495057147928
+						},
+						"leg": {
+							"vertex": 134,
+							"y": -0.046581581060309
+						},
+						"pelvis": {
+							"vertex": 961,
+							"y": -0.0571237838012166
+						}
+					},
+					"surface": 0
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_495900de7002683",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 190,
+					"regions": {
+						"back": {
+							"vertex": 16,
+							"y": -0.0819913296145387
+						},
+						"pelvis": {
+							"vertex": 138,
+							"y": -0.0204151811194606
+						}
+					},
+					"surface": 1
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b39911eb484a2",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 190,
+					"regions": {
+						"arm": {
+							"vertex": 2263,
+							"y": 0.00138614297611639
+						},
+						"back": {
+							"vertex": 383,
+							"y": -0.0586336402338929
+						}
+					},
+					"surface": 2
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b2b911eb46cd8",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 190,
+					"regions": {
+						"arm": {
+							"vertex": 1672,
+							"y": 0.00410027307225391
+						},
+						"back": {
+							"vertex": 303,
+							"y": -0.0545424891752191
+						}
+					},
+					"surface": 3
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c7ae1bc9f4b14",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 190,
+					"regions": {
+						"back": {
+							"vertex": 58,
+							"y": -0.0535688324016519
+						},
+						"pelvis": {
+							"vertex": 603,
+							"y": -0.0462620591861196
+						}
+					},
+					"surface": 4
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_5a329cd32db96c3",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 190,
+					"regions": {
+						"arm": {
+							"vertex": 908,
+							"y": 0.00424074119655415
+						},
+						"back": {
+							"vertex": 315,
+							"y": -0.0972914172452874
+						},
+						"neck": {
+							"vertex": 71,
+							"y": -0.0275206601363607
+						}
+					},
+					"surface": 5
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c3d4d9e78b44a79",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 190,
+					"regions": {
+						"back": {
+							"vertex": 132,
+							"y": -0.0361893585068174
+						},
+						"head": {
+							"vertex": 7856,
+							"y": 0.00855870096711442
+						},
+						"neck": {
+							"vertex": 48,
+							"y": -0.0275147667271085
+						}
+					},
+					"surface": 6
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d1e7e57b971093",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 190,
+					"regions": {
+						"leg": {
+							"vertex": 487,
+							"y": -0.111304424528498
+						}
+					},
+					"surface": 7
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d205e57b97438d",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 190,
+					"regions": {
+						"leg": {
+							"vertex": 453,
+							"y": -0.111448779527564
+						}
+					},
+					"surface": 8
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_f003af958238385",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 190,
+					"regions": {
+						"arm": {
+							"vertex": 376,
+							"y": 0.149166539486032
+						}
+					},
+					"surface": 9
+				},
+				{
+					"cosmetic": false,
+					"material": "head_shared_inside_mouth_iw9",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 190,
+					"regions": {
+						"head": {
+							"vertex": 345,
+							"y": 0.142244368966203
+						}
+					},
+					"surface": 10
+				},
+				{
+					"cosmetic": true,
+					"material": "Eye_cody",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 190,
+					"regions": {
+						"head": {
+							"vertex": 28,
+							"y": 0.208158865745645
+						}
+					},
+					"surface": 11
+				}
+			],
+			"tick": 188
+		},
+		{
+			"active": false,
+			"finished_tick": 177,
+			"physics_tick": 191,
+			"pose_node": "DOWN",
+			"pose_seconds": 0.183333337306976,
+			"source_frame": 66.0,
+			"state": 8,
+			"surfaces": [
+				{
+					"cosmetic": false,
+					"material": "xmaterial_e531cd813705b95",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 191,
+					"regions": {
+						"back": {
+							"vertex": 1275,
+							"y": -0.0315495057147928
+						},
+						"leg": {
+							"vertex": 134,
+							"y": -0.046581581060309
+						},
+						"pelvis": {
+							"vertex": 961,
+							"y": -0.0571237838012166
+						}
+					},
+					"surface": 0
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_495900de7002683",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 191,
+					"regions": {
+						"back": {
+							"vertex": 16,
+							"y": -0.0820160282892175
+						},
+						"pelvis": {
+							"vertex": 138,
+							"y": -0.0204151811194606
+						}
+					},
+					"surface": 1
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b39911eb484a2",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 191,
+					"regions": {
+						"arm": {
+							"vertex": 2263,
+							"y": 0.00161572796059772
+						},
+						"back": {
+							"vertex": 383,
+							"y": -0.0585594771546312
+						}
+					},
+					"surface": 2
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_90b2b911eb46cd8",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 191,
+					"regions": {
+						"arm": {
+							"vertex": 1672,
+							"y": 0.00114071666030213
+						},
+						"back": {
+							"vertex": 303,
+							"y": -0.0546062586945482
+						}
+					},
+					"surface": 3
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c7ae1bc9f4b14",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 191,
+					"regions": {
+						"back": {
+							"vertex": 58,
+							"y": -0.0535688324016519
+						},
+						"pelvis": {
+							"vertex": 603,
+							"y": -0.0462620591861196
+						}
+					},
+					"surface": 4
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_5a329cd32db96c3",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 191,
+					"regions": {
+						"arm": {
+							"vertex": 908,
+							"y": 0.00324769056169316
+						},
+						"back": {
+							"vertex": 315,
+							"y": -0.0972704066080041
+						},
+						"neck": {
+							"vertex": 71,
+							"y": -0.0274192297947593
+						}
+					},
+					"surface": 5
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_c3d4d9e78b44a79",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 191,
+					"regions": {
+						"back": {
+							"vertex": 132,
+							"y": -0.035930234764237
+						},
+						"head": {
+							"vertex": 7856,
+							"y": 0.00907710584579036
+						},
+						"neck": {
+							"vertex": 48,
+							"y": -0.0274130141478963
+						}
+					},
+					"surface": 6
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d1e7e57b971093",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 191,
+					"regions": {
+						"leg": {
+							"vertex": 487,
+							"y": -0.111304424528498
+						}
+					},
+					"surface": 7
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_6d205e57b97438d",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 191,
+					"regions": {
+						"leg": {
+							"vertex": 453,
+							"y": -0.111448779527564
+						}
+					},
+					"surface": 8
+				},
+				{
+					"cosmetic": false,
+					"material": "xmaterial_f003af958238385",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 191,
+					"regions": {
+						"arm": {
+							"vertex": 867,
+							"y": 0.172137245710474
+						}
+					},
+					"surface": 9
+				},
+				{
+					"cosmetic": false,
+					"material": "head_shared_inside_mouth_iw9",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 191,
+					"regions": {
+						"head": {
+							"vertex": 345,
+							"y": 0.142935097392183
+						}
+					},
+					"surface": 10
+				},
+				{
+					"cosmetic": true,
+					"material": "Eye_cody",
+					"path": "CharacterModel/Source/Armature/Skeleton3D/Body",
+					"pose_tick": 191,
+					"regions": {
+						"head": {
+							"vertex": 28,
+							"y": 0.209130898292642
+						}
+					},
+					"surface": 11
+				}
+			],
+			"tick": 189
+		}
+	]
+}

@@ -1,0 +1,168 @@
+{
+	"bare": true,
+	"captures": [
+		{
+			"elapsed_tick": 45,
+			"file": "running_grapple_inverted_drop_00.png",
+			"lead_in_ticks": 45,
+			"paired_seconds": 0.0166666666666667,
+			"requested_fraction": 0.0,
+			"requested_tick": 0,
+			"skin_floor": {
+				"WrestlerA": {
+					"back": 0.894923210144043,
+					"head": 1.43027484416962,
+					"other": 0.00684033753350377
+				},
+				"WrestlerB": {
+					"back": 0.869936048984528,
+					"head": 1.21036088466644,
+					"other": -0.012483611702919
+				}
+			}
+		},
+		{
+			"elapsed_tick": 118,
+			"file": "running_grapple_inverted_drop_56.png",
+			"lead_in_ticks": 45,
+			"paired_seconds": 1.23333333333333,
+			"requested_fraction": 0.56060606,
+			"requested_tick": 74,
+			"skin_floor": {
+				"WrestlerA": {
+					"back": 0.920429706573486,
+					"head": 1.33584690093994,
+					"other": 0.000393052236177027
+				},
+				"WrestlerB": {
+					"back": 0.990437626838684,
+					"head": 1.23504757881165,
+					"other": -0.013635003939271
+				}
+			}
+		},
+		{
+			"elapsed_tick": 130,
+			"file": "running_grapple_inverted_drop_65.png",
+			"lead_in_ticks": 45,
+			"paired_seconds": 1.43333333333333,
+			"requested_fraction": 0.65151515,
+			"requested_tick": 86,
+			"skin_floor": {
+				"WrestlerA": {
+					"back": 0.952421426773071,
+					"head": 1.37627291679382,
+					"other": 0.00516940606757998
+				},
+				"WrestlerB": {
+					"back": 0.961742877960205,
+					"head": 1.23526537418365,
+					"other": -0.0489371567964554
+				}
+			}
+		},
+		{
+			"elapsed_tick": 142,
+			"file": "running_grapple_inverted_drop_74.png",
+			"lead_in_ticks": 45,
+			"paired_seconds": 1.63333333333333,
+			"requested_fraction": 0.74242424,
+			"requested_tick": 98,
+			"skin_floor": {
+				"WrestlerA": {
+					"back": 0.777982473373413,
+					"head": 1.37979078292847,
+					"other": 0.00332255614921451
+				},
+				"WrestlerB": {
+					"back": 0.984326601028442,
+					"head": 1.24222123622894,
+					"other": -0.0489373654127121
+				}
+			}
+		},
+		{
+			"elapsed_tick": 154,
+			"file": "running_grapple_inverted_drop_83.png",
+			"lead_in_ticks": 45,
+			"paired_seconds": 1.83333333333333,
+			"requested_fraction": 0.83333333,
+			"requested_tick": 110,
+			"skin_floor": {
+				"WrestlerA": {
+					"back": 0.756762623786926,
+					"head": 1.37186419963837,
+					"other": 0.00372301042079926
+				},
+				"WrestlerB": {
+					"back": 0.810587048530579,
+					"head": 0.75394880771637,
+					"other": 0.993651151657104
+				}
+			}
+		},
+		{
+			"elapsed_tick": 162,
+			"file": "running_grapple_inverted_drop_89.png",
+			"lead_in_ticks": 45,
+			"paired_seconds": 1.96666666666666,
+			"requested_fraction": 0.89393939,
+			"requested_tick": 118,
+			"skin_floor": {
+				"WrestlerA": {
+					"back": 0.769563913345337,
+					"head": 1.39716899394989,
+					"other": 0.000760089780669659
+				},
+				"WrestlerB": {
+					"back": 0.28361988067627,
+					"head": 0.187307894229889,
+					"other": 0.640515148639679
+				}
+			}
+		},
+		{
+			"elapsed_tick": 166,
+			"file": "running_grapple_inverted_drop_92.png",
+			"lead_in_ticks": 45,
+			"paired_seconds": 2.03333333333333,
+			"requested_fraction": 0.92424242,
+			"requested_tick": 122,
+			"skin_floor": {
+				"WrestlerA": {
+					"back": 0.811980605125427,
+					"head": 1.42207491397858,
+					"other": 0.00278742471709847
+				},
+				"WrestlerB": {
+					"back": 0.040674015879631,
+					"head": -0.00105047225952148,
+					"other": 0.145819127559662
+				}
+			}
+		},
+		{
+			"elapsed_tick": 176,
+			"file": "running_grapple_inverted_drop_100.png",
+			"lead_in_ticks": 45,
+			"paired_seconds": -1.0,
+			"requested_fraction": 1.0,
+			"requested_tick": 132,
+			"skin_floor": {
+				"WrestlerA": {
+					"back": 0.999223709106445,
+					"head": 1.42111098766327,
+					"other": 0.000518656161148101
+				},
+				"WrestlerB": {
+					"back": 0.0382305383682251,
+					"head": 0.0157782286405563,
+					"other": -0.0214978326112032
+				}
+			}
+		}
+	],
+	"match_camera": false,
+	"move": "running_grapple_inverted_drop",
+	"renderer": "forward_plus"
+}

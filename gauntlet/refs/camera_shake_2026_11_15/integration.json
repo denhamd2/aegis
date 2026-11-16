@@ -1,0 +1,24 @@
+{
+  "prior_base": "0dc334ede74f535cb2d2ed6474302f86b431cc20",
+  "upstream_included": "8cb7576205045d5ccf6fd9456494d8f57f629f35",
+  "method": "Three-way merge preserving camera repair and all upstream source/assets; blobs verified by Git SHA",
+  "materialized_source_files": [
+    "README.md",
+    "game/assets/animations/wrestling_clips.glb",
+    "game/resources/animations/paired_fit.gd",
+    "game/resources/animations/paired_moves.tres",
+    "game/resources/animations/paired_poses.tres",
+    "game/resources/animations/paired_recipes.gd",
+    "game/resources/moves/ff/one_winged_angel.tres",
+    "game/resources/moves/ff/powerbomb_v_trigger_combo.tres",
+    "game/resources/moves/ff/running_v_trigger_1.tres",
+    "game/resources/moves/ff/snap_dragon_suplex_2.tres",
+    "game/resources/moves/ff/snap_dragon_suplex_3.tres",
+    "game/resources/moves/ff/v_trigger_1.tres",
+    "game/tests/test_clip_authoring_gate.gd",
+    "game/tests/test_ff_library.gd",
+    "game/tools/blender/wrestling_clips.py",
+    "game/tools/probe/paired_shot.gd"
+  ],
+  "reference_only_skip_worktree_files": 55
+}

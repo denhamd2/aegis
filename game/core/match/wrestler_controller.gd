@@ -1643,6 +1643,8 @@ func _aim_grip_targets() -> bool:
 	# In a paired move, the move says what the attacker holds (PairedContacts).
 	if fsm.current_state == WrestlerFSM.State.GRAPPLE_HOLD and _is_grapple_attacker \
 			and grapple_rig and grapple_rig.is_active():
+		if PairedContacts.authored_hands(grapple_rig._move):
+			return false
 		var family := PairedContacts.family(grapple_rig._move)
 		if family == "none":
 			return false

@@ -1,0 +1,7 @@
+{
+  "cause": "Disk full interrupted full4 export; invalid output discarded before integration",
+  "evicted_cache_pack": "24411df1064c45a9ec38c86404e9567d4843b318",
+  "verification": "git verify-pack:5535 blobs only; promisor pack; remote-backed cache, no local commits/trees",
+  "source_and_worktree_preserved": true,
+  "partial_export_sha256": "dff8836ce1ab458bddbde2deb5c05bf162f9c148274d13b2a1eb760a2cbaeaca"
+}

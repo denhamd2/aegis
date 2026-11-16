@@ -1,0 +1,14 @@
+[
+  {
+    "scratch_path": "/tmp/aegis-wrap-candidate-poses.tres",
+    "sha256": "eec974e18fe5043a3c33ec881a2fb55ca43c52f6577b7e8e3b793304479cc0a2",
+    "bytes": 33586508,
+    "reason": "Superseded rejected/review candidate; scoped GLB and source/evidence retained. Published baseline and current candidate3 library retained."
+  },
+  {
+    "scratch_path": "/tmp/aegis-wrap-candidate2-poses.tres",
+    "sha256": "fd7a05ef70f0fa4eb8bfdb7037bb039a43ef5f4b99336dae0a7c8a593229e04f",
+    "bytes": 33586419,
+    "reason": "Superseded rejected/review candidate; scoped GLB and source/evidence retained. Published baseline and current candidate3 library retained."
+  }
+]

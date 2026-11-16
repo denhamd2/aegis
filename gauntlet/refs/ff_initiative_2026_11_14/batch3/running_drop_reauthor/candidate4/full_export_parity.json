@@ -1,0 +1,28 @@
+{
+  "full_path": "/tmp/aegis-running-wrap-candidate4-full.glb",
+  "full_sha256": "bd77d216984dba1b990a38ddc43b7879b78785bccde12040ecdcd1c517304374",
+  "full_bytes": 33564816,
+  "published_sha256": "4506ffae1cfdefd4a840b339df73b75195914ebc73b3858ffbedfe2691f9c11e",
+  "scoped_sha256": "cedcc2aef246de69bed55729b9d0ae433bd8d8860fa30c2dc683fcfde47ed573",
+  "animation_count": 317,
+  "animation_name_set_identical": true,
+  "static_nodes_identical_to_published": true,
+  "unselected_count": 315,
+  "unselected_decoded_track_bit_exact_count": 315,
+  "unselected_non_exact": [],
+  "selected_vs_frozen_scoped": [
+    {
+      "clip": "Run_Grapple_Attacker",
+      "decoded_tracks_bit_exact": true,
+      "track_layout_identical": true,
+      "differences": []
+    },
+    {
+      "clip": "Run_Grapple_Defender",
+      "decoded_tracks_bit_exact": true,
+      "track_layout_identical": true,
+      "differences": []
+    }
+  ],
+  "exact_parity_pass": true
+}

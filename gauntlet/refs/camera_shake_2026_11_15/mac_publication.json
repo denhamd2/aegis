@@ -1,0 +1,24 @@
+{
+  "verified_at_utc": "2026-11-15 21:09:58 UTC",
+  "published_commit": "fb01d89f6d45f1b250d1723d73c9bf624a7cd2d3",
+  "upstream_preserved": "8cb7576205045d5ccf6fd9456494d8f57f629f35",
+  "owner_standing_instruction": "Commit and deploy any changes",
+  "workflow_run_id": 43761306666,
+  "workflow_url": "https://github.com/denhamd2/aegis/actions/runs/43761306666",
+  "conclusion": "success",
+  "release_id": 446368520,
+  "tag": "mac-latest",
+  "tag_commit": "fb01d89f6d45f1b250d1723d73c9bf624a7cd2d3",
+  "asset": {
+    "name": "Aegis.zip",
+    "bytes": 1033207483,
+    "state": "uploaded",
+    "sha256": "da598059131c1dcfc2d320aedfd2e1a0ad7b2cfa408f7bde53270d36c755f72f",
+    "digest_source": "GitHub release asset metadata",
+    "download_url": "https://github.com/denhamd2/aegis/releases/download/mac-latest/Aegis.zip"
+  },
+  "focused_checks_passed": 45,
+  "full_suite_claim": false,
+  "native_shake_feel": "awaiting owner Mac review",
+  "native_M1_performance": "unverified"
+}

@@ -1,0 +1,8 @@
+{
+  "path": "tools/blender/animations/running_grapple_inverted_drop.blend",
+  "source_review_native": "/tmp/aegis-running-wrap-candidate4.blend",
+  "bytes": 3443828,
+  "sha256": "407cd895a46f408d7d514f60d4e0fe395a49d4495336922f64a1ed9c29e2dc8d",
+  "canonical_builder": "game/tools/blender/wrestling_clips.py",
+  "frozen_approach_inputs": "game/tools/blender/running_drop_approach_baseline.json"
+}

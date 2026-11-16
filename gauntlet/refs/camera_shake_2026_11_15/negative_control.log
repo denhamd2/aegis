@@ -1,0 +1,116 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+[2J[H[38;2;233;150;122m
+--------------------------------------------------------------------------------------------------
+GdUnit4 Comandline Tool
+--------------------------------------------------------------------------------------------------[0m
+[38;2;0;191;255mDisabled fail fast![0m
+[38;2;0;191;255mSet write reports to /workspace/aegis/game/tmp/aegis-camera-shake-negative-final[0m
+[38;2;218;165;32m
+Headless mode is ignored by option '--ignoreHeadlessMode'"
+
+Please note that tests that use UI interaction do not work correctly in headless mode.
+Godot 'InputEvents' are not transported by the Godot engine in headless mode and therefore
+have no effect in the test!
+[0m
+[38;2;100;149;237mInstalling GdUnit4 session system hooks.[0m
+[38;2;100;149;237mSession hook 'GdUnitHtmlTestReporter' installed.[0m
+[38;2;100;149;237mSession hook 'GdUnitXMLTestReporter' installed.[0m
+[38;2;0;206;209mRun Test Suite: [0m[38;2;250;235;215mres://tests/_camera_shake_negative_control.gd[0m
+  [38;2;250;235;215mres://tests/_camera_shake_negative_control.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_every_coverage_fires_once_at_contact_even_with_residual_shake_and_cuts_off[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/_camera_shake_negative_control.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_every_coverage_fires_once_at_contact_even_with_residual_shake_and_cuts_off[0m[38;2;178;34;34m[1m FAILED[0m[38;2;100;149;237m 5ms[0m
+  [38;2;0;206;209m[1m[4mReport:[0m
+  [38;2;128;128;128m[38;2;255;69;0mExpecting:[0m
+ [38;2;30;144;255m0.150000[0m
+ in range between
+ [38;2;30;144;255m0.999990[0m <> [38;2;30;144;255m1.000010[0m[0m[38;2;173;216;230m	at 'test_every_coverage_fires_once_at_contact_even_with_residual_shake_and_cuts_off' in res://tests/_camera_shake_negative_control.gd:75[0m[38;2;128;128;128m[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/_camera_shake_negative_control.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_finisher_shots_do_not_replay_a_consumed_impact_after_the_pulse_settles[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/_camera_shake_negative_control.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_finisher_shots_do_not_replay_a_consumed_impact_after_the_pulse_settles[0m[38;2;178;34;34m[1m FAILED[0m[38;2;100;149;237m 3ms[0m
+  [38;2;0;206;209m[1m[4mReport:[0m
+  [38;2;128;128;128m[38;2;255;69;0mExpecting:[0m
+ [38;2;30;144;255m0.000000[0m
+ but was
+ [38;2;30;144;255m1.000000[0m[0m[38;2;173;216;230m	at 'test_finisher_shots_do_not_replay_a_consumed_impact_after_the_pulse_settles' in res://tests/_camera_shake_negative_control.gd:99[0m[38;2;128;128;128m[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/_camera_shake_negative_control.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_off_clears_active_and_new_cues_without_replaying_them_when_reenabled[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/_camera_shake_negative_control.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_off_clears_active_and_new_cues_without_replaying_them_when_reenabled[0m[38;2;178;34;34m[1m FAILED[0m[38;2;100;149;237m 3ms[0m
+  [38;2;0;206;209m[1m[4mReport:[0m
+  [38;2;128;128;128m[38;2;255;69;0mExpecting:[0m
+ [38;2;30;144;255m0.000000[0m
+ but was
+ [38;2;30;144;255m0.941667[0m[0m[38;2;173;216;230m	at 'test_off_clears_active_and_new_cues_without_replaying_them_when_reenabled' in res://tests/_camera_shake_negative_control.gd:106[0m  [38;2;128;128;128m[38;2;255;69;0mExpecting:[0m
+ [38;2;30;144;255m0.000000[0m
+ but was
+ [38;2;30;144;255m1.000000[0m[0m[38;2;173;216;230m	at 'test_off_clears_active_and_new_cues_without_replaying_them_when_reenabled' in res://tests/_camera_shake_negative_control.gd:110[0m  [38;2;128;128;128m[38;2;255;69;0mExpecting:[0m
+ [38;2;30;144;255m0.000000[0m
+ but was
+ [38;2;30;144;255m0.941667[0m[0m[38;2;173;216;230m	at 'test_off_clears_active_and_new_cues_without_replaying_them_when_reenabled' in res://tests/_camera_shake_negative_control.gd:116[0m[38;2;128;128;128m[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/_camera_shake_negative_control.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_running_catch_and_authored_landing_have_different_camera_beats[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/_camera_shake_negative_control.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_running_catch_and_authored_landing_have_different_camera_beats[0m[38;2;178;34;34m[1m FAILED[0m[38;2;100;149;237m 3ms[0m
+  [38;2;0;206;209m[1m[4mReport:[0m
+  [38;2;128;128;128m[38;2;255;69;0mExpecting:[0m
+ [38;2;30;144;255m0.560606[0m
+ in range between
+ [38;2;30;144;255m0.893938[0m <> [38;2;30;144;255m0.893940[0m[0m[38;2;173;216;230m	at 'test_running_catch_and_authored_landing_have_different_camera_beats' in res://tests/_camera_shake_negative_control.gd:120[0m  [38;2;128;128;128m[38;2;255;69;0mExpecting to be greater than:[0m
+ [38;2;30;144;255m0.560606[0m but was [38;2;30;144;255m0.560606[0m[0m[38;2;173;216;230m	at 'test_running_catch_and_authored_landing_have_different_camera_beats' in res://tests/_camera_shake_negative_control.gd:121[0m[38;2;128;128;128m[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/_camera_shake_negative_control.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_cancelled_pair_discards_its_pending_impact[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/_camera_shake_negative_control.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_cancelled_pair_discards_its_pending_impact[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 3ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/_camera_shake_negative_control.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_all_shake_levels_allow_the_real_root_animation_to_advance[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/_camera_shake_negative_control.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_all_shake_levels_allow_the_real_root_animation_to_advance[0m[38;2;178;34;34m[1m FAILED[0m[38;2;100;149;237m 1s 572ms[0m
+  [38;2;0;206;209m[1m[4mReport:[0m
+  [38;2;128;128;128m[38;2;255;69;0mExpecting:[0m
+ [38;2;30;144;255m1.000000[0m
+ in range between
+ [38;2;30;144;255m-0.000010[0m <> [38;2;30;144;255m0.000010[0m[0m[38;2;173;216;230m	at 'test_all_shake_levels_allow_the_real_root_animation_to_advance' in res://tests/_camera_shake_negative_control.gd:154[0m[38;2;128;128;128m[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/_camera_shake_negative_control.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_paired_completion_does_not_shake_twice_or_suppress_a_later_strike[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/_camera_shake_negative_control.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_paired_completion_does_not_shake_twice_or_suppress_a_later_strike[0m[38;2;178;34;34m[1m FAILED[0m[38;2;100;149;237m 6ms[0m
+  [38;2;0;206;209m[1m[4mReport:[0m
+  [38;2;128;128;128m[38;2;255;69;0mExpecting:[0m
+ [38;2;30;144;255m0.000000[0m
+ but was
+ [38;2;30;144;255m1.000000[0m[0m[38;2;173;216;230m	at 'test_paired_completion_does_not_shake_twice_or_suppress_a_later_strike' in res://tests/_camera_shake_negative_control.gd:171[0m[38;2;128;128;128m[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/_camera_shake_negative_control.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_completion_without_a_delivered_impact_keeps_the_landed_event_cue[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/_camera_shake_negative_control.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_completion_without_a_delivered_impact_keeps_the_landed_event_cue[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 4ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/_camera_shake_negative_control.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_an_omitted_completion_notification_expires_without_suppressing_future_hits[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/_camera_shake_negative_control.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_an_omitted_completion_notification_expires_without_suppressing_future_hits[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 8ms[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/_camera_shake_negative_control.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_a_broadcast_slam_cannot_top_up_or_repeat_its_scheduled_throw_pulse[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/_camera_shake_negative_control.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_a_broadcast_slam_cannot_top_up_or_repeat_its_scheduled_throw_pulse[0m[38;2;178;34;34m[1m FAILED[0m[38;2;100;149;237m 5ms[0m
+  [38;2;0;206;209m[1m[4mReport:[0m
+  [38;2;128;128;128m[38;2;255;69;0mExpecting:[0m
+ [38;2;30;144;255m0.550000[0m
+ in range between
+ [38;2;30;144;255m0.441657[0m <> [38;2;30;144;255m0.441677[0m[0m[38;2;173;216;230m	at 'test_a_broadcast_slam_cannot_top_up_or_repeat_its_scheduled_throw_pulse' in res://tests/_camera_shake_negative_control.gd:226[0m  [38;2;128;128;128m[38;2;255;69;0mExpecting:[0m
+ [38;2;30;144;255m0.000000[0m
+ but was
+ [38;2;30;144;255m0.550000[0m[0m[38;2;173;216;230m	at 'test_a_broadcast_slam_cannot_top_up_or_repeat_its_scheduled_throw_pulse' in res://tests/_camera_shake_negative_control.gd:230[0m[38;2;128;128;128m[0m
+[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/_camera_shake_negative_control.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_standalone_slam_fallback_is_kept_but_ordinary_paired_holds_stay_steady[0m[38;2;34;139;34m STARTED[0m[38;2;128;128;128m[0m
+  [38;2;250;235;215mres://tests/_camera_shake_negative_control.gd[0m[38;2;128;128;128m > [0m[38;2;250;235;215mtest_standalone_slam_fallback_is_kept_but_ordinary_paired_holds_stay_steady[0m[38;2;178;34;34m[1m FAILED[0m[38;2;100;149;237m 4ms[0m
+  [38;2;0;206;209m[1m[4mReport:[0m
+  [38;2;128;128;128m[38;2;255;69;0mExpecting:[0m
+ [38;2;30;144;255m0.000000[0m
+ but was
+ [38;2;30;144;255m0.550000[0m[0m[38;2;173;216;230m	at 'test_standalone_slam_fallback_is_kept_but_ordinary_paired_holds_stay_steady' in res://tests/_camera_shake_negative_control.gd:246[0m  [38;2;128;128;128m[38;2;255;69;0mExpecting:[0m
+ [38;2;30;144;255m0.000000[0m
+ but was
+ [38;2;30;144;255m0.950000[0m[0m[38;2;173;216;230m	at 'test_standalone_slam_fallback_is_kept_but_ordinary_paired_holds_stay_steady' in res://tests/_camera_shake_negative_control.gd:251[0m[38;2;128;128;128m[0m
+[38;2;128;128;128m[0m
+[38;2;30;144;255mStatistics:[0m[38;2;128;128;128m 11 test cases | 0 errors | 13 failures | 0 flaky | 0 skipped | 0 orphans |[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 1s 649ms[0m
+[38;2;128;128;128m[0m
+[38;2;128;128;128m[0m
+[38;2;30;144;255mOverall Summary:[0m[38;2;255;255;255m 11 test cases | 0 errors | 13 failures | 0 flaky | 0 skipped | 0 orphans |[0m
+[38;2;233;150;122mExecuted test suites: (1/1)[0m
+[38;2;233;150;122mExecuted test cases : (11/11)[0m
+[38;2;233;150;122mTotal execution time: 1s 649ms[0m
+[38;2;255;255;255m [0m[38;2;100;149;237mOpen XML Report at: file:///workspace/aegis/game/tmp/aegis-camera-shake-negative-final/report_1/results.xml[0m
+[38;2;100;149;237mOpen HTML Report at: file:///workspace/aegis/game/tmp/aegis-camera-shake-negative-final/report_1/index.html[0m
+[38;2;178;34;34mExit code: 100[0m
+Run dispose test resources

@@ -1,6 +1,50 @@
 # Aegis prioritised backlog
 
-## Latest deployed batch: release fitting and grip timing
+## Current batch: character-specific Roman impact fit
+
+37 focused checks pass. Roman's real head skin at running-drop impact improves
+from24.6cm to2.1cm above the mat (next sample0.8cm), with no new protected-surface
+penetration in the fitted window. Both physical slots and intermediate samples
+were checked; newer Kenny loop4 workec72208 is preserved. Mac publication pending.
+[Evidence and remaining anatomical limits](roman_landing_fit_2026_11_16/README.md).
+
+The previous claim that Roman's head reached the mat at61 included hair; actual
+skin needs its own measurement. Late boot/back fitting cannot be solved by a
+single vertical offset. Next: correct that late anatomical pose and Cody's
+penetration, review recovery continuously, then resume grapple lifetime/remaining
+initiative priorities. Full move acceptance and native M1 performance remain open.
+
+## Latest deployed: camera impact-shake repair
+
+Owner moved backlog8 ahead of landing fit.45 focused cases pass. One scheduled
+cue now covers all camera modes, avoiding shot-delayed/repeated pulses and the
+second notification at paired completion. OFF cancels old/new cues; LOW/HIGH
+retain their strength and continuous animation. Running-drop shake uses authored
+impact59 rather than catch37. [Evidence](camera_shake_2026_11_15/README.md).
+Mac run43761306666 succeeded; exact commitfb01d89 and uploaded
+Aegis.zip1,033,207,483bytes verified. Latest Kenny work8cb7576 is preserved.
+Native shake feel awaits owner Mac review; landing fit remains queued.
+After verified delivery, resume landing fit unless the owner changes priorities.
+
+## Previous deployed: authored running-drop wrap and boot arc
+
+Owner requested committing and deploying all current changes. Candidate4 replaces
+bilateral waist forcing with an authored right-forearm sweep/free left arm,
+corrects the inverted boot arc and spreads finger closure through recovery.
+All72 focused checks pass (21 runtime +51 resource/authoring); imported cadence
+has zero new holds/snaps.
+The full317-clip export preserves all315 unrelated clips exactly; native Blender
+source and approach baseline are retained. Mac run43753948084 succeeded: exact commitbf785ec and uploaded
+Aegis.zip1,032,800,316bytes verified. [Evidence](ff_initiative_2026_11_14/batch3/running_drop_reauthor/README.md).
+
+Next after verified deployment: character-specific landing fit (Roman reaches
+the mat around61 rather than impact59), torso orientation through55, early
+toe penetration and normal-speed recovery review. Preserve roots and exact
+approach/catch/handoff. Do not lower the shared source or change global Roman
+scaling to hide a character-specific fit. Rig teardown lifetime also stays open.
+This is a bounded wrap/boot-arc improvement, not full-move acceptance.
+
+## Previous deployed batch: release fitting and grip timing
 
 Owner approved publication of the implemented runtime running-drop release fix: cosmeticY smoothly returns to zero before impact; grip fades at55 and
 is off by58.33distinct focused checks pass, both real pairing maxima preserved.
@@ -137,7 +181,7 @@ all smaller improvements.
 | ---: | --- | --- | --- | --- | --- |
 | 1 | 7 | Faster validation and Mac-only delivery — **implemented in this batch; publication check pending** | Very high enabling impact | M | Reduces the cost of every later batch. Profile setup separately; use safe fixtures and affected-subsystem selection, retain full regressions for broad changes, audit Web dependencies before retiring publishing. Preserve Mac builds/shared code. |
 | 2 | 13a | Punch corrections: first active move-family batch — **source re-keyed and pose-audited in this batch; regeneration and focused tests pending on Mac** | Very high | M per batch; L overall | Seen throughout every match. Start with the most visible joint/contact failures against available Fight Forever footage; review both bodies, contacts and recovery. Jab, cross, gut punch, Bionic Elbow and dropdown uppercut now meet the phase, contact-height, gaze, reach and mat-clearance criteria; the Bionic Elbow is elbow-led at head height with the measurement tool extended to measure the elbow. See [validation](punch_corrections_2026_11_08/validation.md). |
-| 3 | 8 | Existing signature/finisher impact shake — **published in `bf053267`** | High | S–M | Strong broadcast payoff for limited scope. Trigger only at actual impact, respect settings, stay brief, and never pause animation. |
+| 3 | 8 | Existing impact shake — **follow-up published in `fb01d89`** | High | S–M | Strong broadcast payoff for limited scope. Trigger only at actual impact, respect settings, stay brief, and never pause animation. |
 | 4 | 9–10 | Weapon retrieval and extinguisher pickup/effect lifecycle — **implemented in this batch; tests and renders pending on Mac** | High in weapon matches | S–M each | Related prop-interaction batch: distinct reserved apron locations with cleanup; remove pickup cloud and keep spray confined to the authored action. Apron claims are 1.1 m apart, released on completion/interruption/cancellation, with a `APRON TAKEN · STEP ALONG` HUD cue and a visible AI step to a free lane; the extinguisher's Cloud root is hidden, foam leaves the muzzle, the horn aims with a controlled tank-down roll, the prop appears in her hand at the grab and is carried back before being put away. See [validation](weapons_2026_11_08/validation.md). |
 | 5 | 19–20 | Blood default and bounded sweat assessment/tuning | Medium | S + S–M | Cheap surface/settings batch before larger reauthoring. Raise blood one capped step while preserving saved choices/OFF. Compare early/mid/late sweat first; tune modestly only if justified and avoid uniformly glossy skin. Do not hold the blood fix for an open-ended material overhaul. |
 | 6 | 14 | Cross Rhodes attacker/defender correction | High | M–L | Cody's finish is a prominent identity moment. Reauthor hold, rotation, descent, impact and release together against the existing reference. |

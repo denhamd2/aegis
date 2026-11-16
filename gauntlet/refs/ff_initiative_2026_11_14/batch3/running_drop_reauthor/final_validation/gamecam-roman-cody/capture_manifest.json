@@ -1,0 +1,96 @@
+{
+	"bare": true,
+	"captures": [
+		{
+			"elapsed_tick": 45,
+			"file": "running_grapple_inverted_drop_00.png",
+			"lead_in_ticks": 45,
+			"paired_seconds": 0.0166666666666667,
+			"requested_fraction": 0.0,
+			"requested_tick": 0,
+			"skin_floor": {
+
+			}
+		},
+		{
+			"elapsed_tick": 118,
+			"file": "running_grapple_inverted_drop_56.png",
+			"lead_in_ticks": 45,
+			"paired_seconds": 1.23333333333333,
+			"requested_fraction": 0.56060606,
+			"requested_tick": 74,
+			"skin_floor": {
+
+			}
+		},
+		{
+			"elapsed_tick": 142,
+			"file": "running_grapple_inverted_drop_74.png",
+			"lead_in_ticks": 45,
+			"paired_seconds": 1.63333333333333,
+			"requested_fraction": 0.74242424,
+			"requested_tick": 98,
+			"skin_floor": {
+
+			}
+		},
+		{
+			"elapsed_tick": 154,
+			"file": "running_grapple_inverted_drop_83.png",
+			"lead_in_ticks": 45,
+			"paired_seconds": 1.83333333333333,
+			"requested_fraction": 0.83333333,
+			"requested_tick": 110,
+			"skin_floor": {
+
+			}
+		},
+		{
+			"elapsed_tick": 162,
+			"file": "running_grapple_inverted_drop_89.png",
+			"lead_in_ticks": 45,
+			"paired_seconds": 1.96666666666666,
+			"requested_fraction": 0.89393939,
+			"requested_tick": 118,
+			"skin_floor": {
+
+			}
+		},
+		{
+			"elapsed_tick": 170,
+			"file": "running_grapple_inverted_drop_95.png",
+			"lead_in_ticks": 45,
+			"paired_seconds": 2.1,
+			"requested_fraction": 0.95454545,
+			"requested_tick": 126,
+			"skin_floor": {
+
+			}
+		},
+		{
+			"elapsed_tick": 172,
+			"file": "running_grapple_inverted_drop_96.png",
+			"lead_in_ticks": 45,
+			"paired_seconds": 2.13333333333333,
+			"requested_fraction": 0.96969697,
+			"requested_tick": 128,
+			"skin_floor": {
+
+			}
+		},
+		{
+			"elapsed_tick": 176,
+			"file": "running_grapple_inverted_drop_100.png",
+			"lead_in_ticks": 45,
+			"paired_seconds": -1.0,
+			"requested_fraction": 1.0,
+			"requested_tick": 132,
+			"skin_floor": {
+
+			}
+		}
+	],
+	"match_camera": true,
+	"move": "running_grapple_inverted_drop",
+	"renderer": "forward_plus"
+}

@@ -1,0 +1,22 @@
+{
+  "Run_Grapple_Attacker": {
+    "prefix_0_to_30": {
+      "max_translation_delta_m": 0.0,
+      "max_quaternion_component_delta": 0.004428673842971631
+    },
+    "end66": {
+      "max_translation_delta_m": 0.0,
+      "max_quaternion_component_delta": 7.719148864548941e-08
+    }
+  },
+  "Run_Grapple_Defender": {
+    "prefix_0_to_30": {
+      "max_translation_delta_m": 0.0,
+      "max_quaternion_component_delta": 0.02450807900605753
+    },
+    "end66": {
+      "max_translation_delta_m": 7.347898754174519e-09,
+      "max_quaternion_component_delta": 8.217716281760934e-08
+    }
+  }
+}

@@ -1,0 +1,175 @@
+[
+  {
+    "a": "/tmp/aegis-running-wrap-candidate3.glb",
+    "b": "/tmp/aegis-running-wrap-candidate4.glb",
+    "clip": "Run_Grapple_Attacker",
+    "tracks_a": 195,
+    "tracks_b": 195,
+    "changed_tracks": [
+      {
+        "track": "index_01_l/rotation",
+        "maximum_component_delta": 0.1286962926387787,
+        "max_angle_degrees": 21.386829376220703,
+        "at_seconds": 2.116666555404663
+      },
+      {
+        "track": "index_01_r/rotation",
+        "maximum_component_delta": 0.12869638204574585,
+        "max_angle_degrees": 21.38679313659668,
+        "at_seconds": 2.116666555404663
+      },
+      {
+        "track": "index_02_l/rotation",
+        "maximum_component_delta": 0.2229643315076828,
+        "max_angle_degrees": 26.562150955200195,
+        "at_seconds": 2.116666555404663
+      },
+      {
+        "track": "index_02_r/rotation",
+        "maximum_component_delta": 0.2229643017053604,
+        "max_angle_degrees": 26.56212043762207,
+        "at_seconds": 2.116666555404663
+      },
+      {
+        "track": "index_03_l/rotation",
+        "maximum_component_delta": 0.19387900829315186,
+        "max_angle_degrees": 22.864742279052734,
+        "at_seconds": 2.116666555404663
+      },
+      {
+        "track": "index_03_r/rotation",
+        "maximum_component_delta": 0.19387906789779663,
+        "max_angle_degrees": 22.864709854125977,
+        "at_seconds": 2.116666555404663
+      },
+      {
+        "track": "middle_01_l/rotation",
+        "maximum_component_delta": 0.1293288767337799,
+        "max_angle_degrees": 21.386829376220703,
+        "at_seconds": 2.116666555404663
+      },
+      {
+        "track": "middle_01_r/rotation",
+        "maximum_component_delta": 0.1293288767337799,
+        "max_angle_degrees": 21.386829376220703,
+        "at_seconds": 2.116666555404663
+      },
+      {
+        "track": "middle_02_l/rotation",
+        "maximum_component_delta": 0.22296404838562012,
+        "max_angle_degrees": 26.562091827392578,
+        "at_seconds": 2.116666555404663
+      },
+      {
+        "track": "middle_02_r/rotation",
+        "maximum_component_delta": 0.2229641079902649,
+        "max_angle_degrees": 26.56212043762207,
+        "at_seconds": 2.116666555404663
+      },
+      {
+        "track": "middle_03_l/rotation",
+        "maximum_component_delta": 0.19387897849082947,
+        "max_angle_degrees": 22.864709854125977,
+        "at_seconds": 2.116666555404663
+      },
+      {
+        "track": "middle_03_r/rotation",
+        "maximum_component_delta": 0.1938788741827011,
+        "max_angle_degrees": 22.864709854125977,
+        "at_seconds": 2.116666555404663
+      },
+      {
+        "track": "pinky_01_l/rotation",
+        "maximum_component_delta": 0.12957316637039185,
+        "max_angle_degrees": 21.386865615844727,
+        "at_seconds": 2.116666555404663
+      },
+      {
+        "track": "pinky_01_r/rotation",
+        "maximum_component_delta": 0.12957313656806946,
+        "max_angle_degrees": 21.38679313659668,
+        "at_seconds": 2.116666555404663
+      },
+      {
+        "track": "pinky_02_l/rotation",
+        "maximum_component_delta": 0.22296422719955444,
+        "max_angle_degrees": 26.562091827392578,
+        "at_seconds": 2.116666555404663
+      },
+      {
+        "track": "pinky_02_r/rotation",
+        "maximum_component_delta": 0.22296419739723206,
+        "max_angle_degrees": 26.56212043762207,
+        "at_seconds": 2.116666555404663
+      },
+      {
+        "track": "pinky_03_l/rotation",
+        "maximum_component_delta": 0.19387902319431305,
+        "max_angle_degrees": 22.864742279052734,
+        "at_seconds": 2.116666555404663
+      },
+      {
+        "track": "pinky_03_r/rotation",
+        "maximum_component_delta": 0.19387903809547424,
+        "max_angle_degrees": 22.864742279052734,
+        "at_seconds": 2.116666555404663
+      },
+      {
+        "track": "ring_01_l/rotation",
+        "maximum_component_delta": 0.12917949259281158,
+        "max_angle_degrees": 21.386865615844727,
+        "at_seconds": 2.116666555404663
+      },
+      {
+        "track": "ring_01_r/rotation",
+        "maximum_component_delta": 0.12917950749397278,
+        "max_angle_degrees": 21.38679313659668,
+        "at_seconds": 2.116666555404663
+      },
+      {
+        "track": "ring_02_l/rotation",
+        "maximum_component_delta": 0.2229643166065216,
+        "max_angle_degrees": 26.56212043762207,
+        "at_seconds": 2.116666555404663
+      },
+      {
+        "track": "ring_02_r/rotation",
+        "maximum_component_delta": 0.2229643315076828,
+        "max_angle_degrees": 26.562150955200195,
+        "at_seconds": 2.116666555404663
+      },
+      {
+        "track": "ring_03_l/rotation",
+        "maximum_component_delta": 0.1938788890838623,
+        "max_angle_degrees": 22.864709854125977,
+        "at_seconds": 2.116666555404663
+      },
+      {
+        "track": "ring_03_r/rotation",
+        "maximum_component_delta": 0.1938789188861847,
+        "max_angle_degrees": 22.864709854125977,
+        "at_seconds": 2.116666555404663
+      },
+      {
+        "track": "thumb_01_l/rotation",
+        "maximum_component_delta": 0.12413564324378967,
+        "max_angle_degrees": 14.742630004882812,
+        "at_seconds": 2.116666555404663
+      },
+      {
+        "track": "thumb_01_r/rotation",
+        "maximum_component_delta": 0.12413565069437027,
+        "max_angle_degrees": 14.742524147033691,
+        "at_seconds": 2.116666555404663
+      }
+    ]
+  },
+  {
+    "a": "/tmp/aegis-running-wrap-candidate3.glb",
+    "b": "/tmp/aegis-running-wrap-candidate4.glb",
+    "clip": "Run_Grapple_Defender",
+    "tracks_a": 195,
+    "tracks_b": 195,
+    "changed_tracks": []
+  }
+]
