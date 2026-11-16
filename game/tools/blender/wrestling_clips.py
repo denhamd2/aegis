@@ -4803,9 +4803,8 @@ def _spear_core_attacker(c, corner=False):
     keys = [
         (c - 9, dict(_SP_ARRIVE)),
         (c - 7, dict(_SP_HANDS_UP)),
-        (c - 5.5, dict(_SP_HANDS_SINK)),
-        # Sink to drop over three frames, not one (cadence: 1058 deg/frame).
-        (c - 4.5, _blend_pose(_SP_HANDS_SINK, _SP_DROP, 0.2)),
+        (c - 5, dict(_SP_HANDS_SINK)),
+        # Sink to drop over two frames, not one (cadence: 1058 deg/frame).
         (c - 4, _blend_pose(_SP_HANDS_SINK, _SP_DROP, 0.5)),
         (c - 3, dict(_SP_DROP)),
         (c - 2, dict(_SP_LAUNCH)),
