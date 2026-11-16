@@ -36,14 +36,15 @@ const POP_FIRED_UP := 0.55
 const POP_TAUNT := 0.6
 ## The finish: full, held while the winner celebrates.
 const WIN_HOLD := 8.0
-## Camera flashes, per fully active emitter per second (CrowdFlashes: about
-## 900 emitters, each busier or quieter by where it sits). Phones are up during
-## entrances; during the match only big moments trigger short bursts.
-const ENTRANCE_FLASH_RATE := 0.26
+## Camera flashes in the crowd are off (the owner, 16 Nov: "I don't want the
+## flashlights going off in the crowd anymore, remove them"). The arena no
+## longer builds the flash emitters (ArenaBuilder._build_bowl), and every rate
+## is zero so nothing could light them if one were built.
+const ENTRANCE_FLASH_RATE := 0.0
 const MATCH_FLASH_RATE := 0.0
-## A burst adds up to this many flashes a second to every emitter, falling away
-## by half every BURST_HALF_LIFE seconds: pyro, a finisher, a near-fall, a count.
-const BURST_RATE := 1.4
+## A burst used to add flashes a second to every emitter, halving every
+## BURST_HALF_LIFE seconds. The burst level is still tracked; it publishes nothing.
+const BURST_RATE := 0.0
 const BURST_HALF_LIFE := 0.55
 
 var excitement := 0.0

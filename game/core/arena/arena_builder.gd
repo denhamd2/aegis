@@ -1194,16 +1194,10 @@ static func in_desk_bay(point: Vector3) -> bool:
 func _build_bowl() -> void:
 	var bowl := _build_bowl_model()
 	add_child(bowl)
-	# The cameras in the stands: small flashes at head height, sampled off the
-	# crowd's own figures (CrowdFlashes).
-	var flashes := CrowdFlashes.new()
-	flashes.name = "CrowdFlashes"
-	var people: Array = []
-	for part: String in CROWD_PARTS:
-		people.append(bowl.find_child(part, true, false))
-	flashes.build(CrowdFlashes.sample_positions(people, CrowdFlashes.EMITTERS,
-			CrowdFlashes.SEED))
-	add_child(flashes)
+	# No camera flashes in the stands (the owner, 16 Nov: "I don't want the
+	# flashlights going off in the crowd anymore, remove them"): CrowdFlashes is
+	# no longer built, so there is nothing for an entrance, a burst or the bell
+	# to set off.
 
 
 # ---------------------------------------------------------------------------

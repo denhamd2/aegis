@@ -1,7 +1,9 @@
 extends GdUnitTestSuite
-## The camera flashes and the crowd's per-person roles: small points of light
-## at head height rather than a lit figure, never on one clock, bursting on the
-## big moments; and a crowd whose people are not all doing the same thing.
+## The crowd's camera flashes are OFF (the owner, 16 Nov: "I don't want the
+## flashlights going off in the crowd anymore, remove them"): the arena builds
+## no emitters and every flash rate is zero. The emitter helpers stay under test,
+## and the crowd's per-person roles: a crowd whose people are not all doing the
+## same thing.
 
 const BOWL := "res://assets/environment/arena_bowl.glb"
 
@@ -62,32 +64,32 @@ func test_building_makes_one_billboard_per_emitter() -> void:
 	assert_int(seeds.size()).is_equal(200)
 
 
-func test_a_big_moment_sets_the_cameras_off_and_it_dies_away() -> void:
+func test_a_big_moment_no_longer_sets_any_camera_off() -> void:
 	var crowd: CrowdReaction = auto_free(CrowdReaction.new())
 	add_child(crowd)
 	assert_float(crowd.burst_level).is_equal(0.0)
 	crowd.pop(CrowdReaction.POP_SIGNATURE)
+	# The burst level is still tracked, and dies away as before...
 	assert_float(crowd.burst_level).is_equal(1.0)
-	assert_float(CrowdReaction.published_rate(crowd.flash_rate, crowd.burst_level)) \
-			.is_equal_approx(CrowdReaction.BURST_RATE, 0.001)
-	# A jab is not a camera moment.
-	var quiet: CrowdReaction = auto_free(CrowdReaction.new())
-	add_child(quiet)
-	quiet.pop(0.3)
-	assert_float(quiet.burst_level).is_equal(0.0)
 	crowd._process(CrowdReaction.BURST_HALF_LIFE)
 	assert_float(crowd.burst_level).is_equal_approx(0.5, 0.01)
+	# ...but it publishes no flashes.
+	assert_float(CrowdReaction.published_rate(crowd.flash_rate, crowd.burst_level)).is_equal(0.0)
+	assert_float(CrowdReaction.published_rate(5.0, 1.0)).is_equal(5.0 + CrowdReaction.BURST_RATE)
+	assert_float(CrowdReaction.BURST_RATE).is_equal(0.0)
 
 
-func test_the_rest_rate_is_low_and_an_entrance_rate_higher() -> void:
-	# Matches have no ambient flashes; entrances bring the phones out.
+func test_every_flash_rate_is_zero_and_the_arena_builds_no_emitters() -> void:
 	assert_float(CrowdReaction.MATCH_FLASH_RATE).is_equal(0.0)
-	assert_float(CrowdReaction.ENTRANCE_FLASH_RATE).is_between(0.1, 0.3)
+	assert_float(CrowdReaction.ENTRANCE_FLASH_RATE).is_equal(0.0)
 	var crowd: CrowdReaction = auto_free(CrowdReaction.new())
 	add_child(crowd)
 	assert_float(crowd.flash_rate).is_equal(0.0)
 	crowd.set_flashes(CrowdReaction.ENTRANCE_FLASH_RATE)
-	assert_float(crowd.flash_rate).is_equal(CrowdReaction.ENTRANCE_FLASH_RATE)
+	assert_float(crowd.flash_rate).is_equal(0.0)
+	var source := FileAccess.get_file_as_string("res://core/arena/arena_builder.gd")
+	assert_bool(source.contains("CrowdFlashes.new()")).is_false()
+	assert_bool(source.contains("add_child(flashes)")).is_false()
 
 
 func test_only_big_moves_trigger_camera_flash_bursts() -> void:

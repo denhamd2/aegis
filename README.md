@@ -12426,3 +12426,12 @@ strike, a plain hold, OFF and the 0.4-0.6 s duration) and
 `test_camera_fight_forever` (its "spent in 0.3 s" and 0.2 m bound encoded the
 old tuning, which the owner's request changes). The amplitudes come from the
 offsets, not from a render: how it feels is for the owner to judge on the Mac.
+
+## 17 Nov: no camera flashes in the crowd
+
+The owner: "I don't want the flashlights going off in the crowd anymore,
+remove them". The arena no longer builds the crowd's flash emitters
+(`ArenaBuilder._build_bowl`), and every flash rate in `CrowdReaction` is zero,
+so entrances, big moves and the bell set nothing off. `test_crowd_flashes`
+now checks that the flashes are off. Tests: `test_crowd_flashes`,
+`test_arena_bowl` and `test_entrance_director` pass (70 cases).
