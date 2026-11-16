@@ -44,7 +44,7 @@ const PINNED := {
 	"res://tools/blender/running_drop_approach_baseline.json":
 		"a19e211352b8ba7a3836b9e5ef61bc61cea6461096b9e2389650afe76d7a9628",
 	"res://tools/blender/wrestling_clips.py":
-		"6c4acda0d1869385c7f6e6d50c84e307efa651f23837a92f6ab2252fbf2b092c",
+		"0fb526e4052c9ae64b580385163c9c6af4b00443aec3c241ec72ae4171ba231f",
 	"res://tools/blender/rig_pose.py":
 		"6444f42b82a66284fdf51d4cf75db7c0fbeda0bcaf293fe7510da22856018a54",
 }
