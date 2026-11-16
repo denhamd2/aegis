@@ -1,5 +1,19 @@
 # Aegis prioritised backlog
 
+## Current batch: character-specific Roman impact fit
+
+37 focused checks pass. Roman's real head skin at running-drop impact improves
+from24.6cm to2.1cm above the mat (next sample0.8cm), with no new protected-surface
+penetration in the fitted window. Both physical slots and intermediate samples
+were checked; newer Kenny loop4 workec72208 is preserved. Mac publication pending.
+[Evidence and remaining anatomical limits](roman_landing_fit_2026_11_16/README.md).
+
+The previous claim that Roman's head reached the mat at61 included hair; actual
+skin needs its own measurement. Late boot/back fitting cannot be solved by a
+single vertical offset. Next: correct that late anatomical pose and Cody's
+penetration, review recovery continuously, then resume grapple lifetime/remaining
+initiative priorities. Full move acceptance and native M1 performance remain open.
+
 ## Latest deployed: camera impact-shake repair
 
 Owner moved backlog8 ahead of landing fit.45 focused cases pass. One scheduled

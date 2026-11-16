@@ -1,0 +1,7 @@
+{
+  "game/assets/characters/roman_reigns.glb": "4d6d9c3841334a88d733acc1dd1d2c036e9ebf1de1e8812be817d6769dd639b5",
+  "game/core/match/roman_model.gd": "1156cca7020fb27c980622b71155cace2edc9ced51ac78c3730fdb181d1293da",
+  "game/core/match/roman_landing_fit.gd": "7850e2f797ed3c0a8c4a874087e2f4be87d4455a3c82cc796bb7fec605cb0fa4",
+  "game/tools/probe/landing_fit_probe.gd": "e8341bfda1e1ad3d9da4cd0b3d0694246c2e35e9823fa6c73eca54036ab4636d",
+  "game/tools/anim/fit_roman_landing.py": "e883db68c76d48cec0f9d01656d8e8c00f6f1ce51328aa14499f89e726c46bdb"
+}

@@ -261,7 +261,13 @@ func _ready() -> void:
 		defender.opponent = attacker
 		attacker.fsm.transition_to(WrestlerFSM.State.GRAPPLE_HOLD)
 		defender.fsm.transition_to(WrestlerFSM.State.GRAPPLE_HOLD)
+	# Opt in to the controller's real damage/Down handoff for recovery review.
+	# Historic direct-rig captures retain their original behavior by default.
+	if OS.get_cmdline_user_args().has("--controller-finish"):
+		attacker._active_move = move
 	rig.begin(attacker, defender, move)
+	if OS.get_cmdline_user_args().has("--controller-finish"):
+		rig.grapple_finished.connect(attacker._on_grapple_finished, CONNECT_ONE_SHOT)
 	print("PAIRED_SHOT %s" % _move_id)
 
 	if camera == null:
