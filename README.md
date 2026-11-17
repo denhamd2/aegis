@@ -12486,3 +12486,63 @@ spear setup, grapple height release, walk-in). The one failing case,
 - the known Cross Rhodes grip, 0.094 m;
 - Kenny's Snap Dragon 3 at body 0.080. Its clip, fit and bake are
   byte-identical to main's.
+
+## 16-17 Nov: a walk test for Roman, Cody and Kenny (part 1: the test)
+
+The owner: "create a walk test for Roman, Cody and Kenny. Especially for their
+walks to the ring, but also during gameplay. They should look natural with
+their leg, body and arm movements during a walk, not robotic." Then: "work on
+the walk test and fixes".
+
+`tests/test_walks_look_natural.gd` measures every walk the three men play.
+- To the ring: Roman's `Walk_Slow_Look`, Cody's `Walk_Crowd`, Kenny's
+  `Kenny_Walk`, and the shared `Entrance_Walk` (also the face-off walk-in).
+- In the match: `Walk_Stalk`, `Run_Jog` and `Run_Drive`.
+
+It reads each baked clip on the rig (`tools/anim/walk_metrics.gd`) and checks:
+- the planted sole against the engine's speed, and the loop seam in pose and
+  in motion;
+- the arm swing, and whether it opposes the legs;
+- the pelvis turning with the stride and the shoulders against it;
+- the pelvis's drop, sway and roll, and a steady head;
+- the stride against the leg's length (for a walk) or a runner's cadence (for
+  a run), with double support and no flight in a walk;
+- robotic signs: frozen joints, a rigid spine, holds.
+
+Per-man checks follow `refs/entrances.md`: Roman's arms barely swing and his
+head stays still; Cody's and Kenny's arms swing. The thresholds come from the
+walks that read well, the three entrance walks on `_heavy_gait`. Two control
+tests make sure it fails a walk with frozen arms and spine, and that it
+notices when the arms are moved half a stride. `KNOWN_FAILS` lists what each
+walk gets wrong today, and the test fails if that list goes stale in either
+direction. `tools/probe/walk_quality.gd` prints the numbers.
+`tools/anim/gait_audit.gd` now covers the four entrance walks; its ankle
+reading no longer counts a low foot that is still swinging forward as
+planted.
+
+**What it found:** all seven walks pace. The hands swing with the leg on their
+own side, and the pelvis and shoulders turn the wrong way against the stride.
+The cause is a sign error in the upper-body phase in `_heavy_gait` and
+`_gait`. The `_gait` walks also:
+- slide the sole, at 0.75-0.84 of the speed;
+- carry the pelvis on a rail, with no sway or roll;
+- Entrance_Walk has no double support;
+- Walk_Stalk is a 16-frame cycle at 225 steps/min with 10 cm of arm swing.
+
+Contact sheets for 3 men × entrance and gameplay walk, with the jog and run,
+are in `gauntlet/refs/walks/before/`.
+
+Independent reviewer (read-only), before any fix:
+
+| Walk | Score /10 |
+|---|---|
+| Roman, Walk_Slow_Look | 4 |
+| Cody, Walk_Crowd | 4 |
+| Kenny, Kenny_Walk | 5 |
+| Entrance_Walk (all three) | 3 |
+| Walk_Stalk (gameplay, all three) | 2 |
+| Run_Jog | 4 |
+| Run_Drive | 3 |
+
+Tests: `test_walks_look_natural` passes (10 cases). The ledger holds the 34
+failing gates. No clip changed in this part.

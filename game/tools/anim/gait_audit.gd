@@ -47,6 +47,12 @@ const CYCLES := {
 	"walk_staredown": 0.6,  # EntranceDirector.FACEOFF_WALK_SPEED
 	"ref_walk": 1.4,     # RefereeActor.WALK_SPEED, on the base rig
 	"ref_jog": 3.6,      # RefereeActor.JOG_SPEED, on the base rig
+	# The entrance walks (tests/test_walks_look_natural.gd measures how they
+	# look; this is only that they hold the mat and close their loops).
+	"entrance_walk": 1.6,   # EntranceDirector.WALK_SPEED / FACEOFF_WALK_SPEED
+	"walk_slow_look": 0.5,  # EntranceDirector.ROMAN_WALK_SPEED
+	"walk_crowd": 1.2,      # EntranceDirector.CODY_WALK_SPEED
+	"kenny_walk": 1.1,      # EntranceDirector.KENNY_WALK_SPEED
 }
 ## The official and timekeeper share AubreyModel's retargeted base-rig
 ## cycles. These rates are measured from their planted feet after retargeting,
@@ -159,7 +165,13 @@ func _audit(skeleton: Skeleton3D, lib: AnimationLibrary, clip_name: String,
 		var step := 1.0 / 60.0
 		while t <= anim.length:
 			var p: Vector3 = _global(skeleton, anim, bone, t).origin
-			if p.y < PLANT_HEIGHT:
+			# Low but moving FORWARD is a foot at the start or end of its
+			# swing, not a planted one: the entrance walks roll the heel up
+			# and lift the foot only a few centimetres (_heavy_gait), and
+			# counting those ticks as planted read a correct 0.50 m/s walk as
+			# 0.38 (walk_metrics.gd's sole reading has the same rule).
+			var swinging := contiguous and speed > 0.0 and not sideways and p.z > previous
+			if p.y < PLANT_HEIGHT and not swinging:
 				if contiguous:
 					# The rig's own forward is +Z, so backward travel -- the
 					# direction a planted foot must move -- is a falling z.
