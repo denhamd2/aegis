@@ -159,3 +159,16 @@ Cadence fix: the Spear's kneel-to-stand tail was eased and a stop-start head
 key removed (Run_Spear_Attacker jerk 101.1 to 90.7; budget untouched).
 Gate: 75/76, the one failure the known Cross Rhodes grip (0.063 m).
 Sheets in `l7/`. Independent scores pending (no self-score of record).
+
+Roman loop 2, independent reviewer (coordinator):
+
+| 2i | roman_spear | 4.0 |
+| 2i | roman_running_spear | 6.0 |
+| 2i | roman_superman_spear | 4.0 |
+| 2i | roman_corner_spear | 5.6 |
+
+(loop 1: 3.4, 2.2, 2.4, 2.0.) Loop-2 gaps: the Spear and Superman Spear have no
+run-in and are 36-108 f too long before contact; no near-horizontal dive at
+contact; the man flies as a plank 0.5-0.7 m up at +15; Roman is standing, not
+kneeling, at +45; the corner man folds forward over Roman instead of being
+crushed back into the buckle.
