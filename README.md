@@ -12435,3 +12435,54 @@ remove them". The arena no longer builds the crowd's flash emitters
 so entrances, big moves and the bell set nothing off. `test_crowd_flashes`
 now checks that the flashes are off. Tests: `test_crowd_flashes`,
 `test_arena_bowl` and `test_entrance_director` pass (70 cases).
+
+## 17 Nov: Roman spear loop 2
+
+The owner: "Commit and deploy Roman's changes".
+
+All four Spears are now keyed around one core in `wrestling_clips.py`
+(`_spear_core_attacker` / `_spear_core_defender`, plus `Corner_Spear_*`):
+- the gesture 15 frames before contact;
+- a near-horizontal dive with the shoulder at the navel;
+- both men down together, Roman on top and kneeling, the man grounded;
+- the Corner Spear crushes an upright man into the buckle, and he slides
+  down it to sitting.
+
+The Spear, Running Spear and Superman Spear MoveDefs and recipes are
+retimed to the new clips. The Superman Spear gets room between the punch
+and the Spear: Roman back-pedals, sets and runs it in. A new recipe key,
+`attacker_grips_from`, keeps Roman's hands his own through the run and the
+gesture, read by `WrestlerController._paired_grip_delay_ticks` and
+`GrappleRig._pull_into_reach`. The Spear's kneel-to-stand tail is eased.
+Run_Spear_Attacker's jerk falls from 101.1 to 90.7, and the budget is
+unchanged.
+
+Independent reviewer, loop 1 → loop 2:
+
+| Move | L1 | L2 |
+|---|---|---|
+| Running Spear | 2.2 | 6.0 |
+| Corner Spear | 2.0 | 5.6 |
+| Spear | 3.4 | 4.0 |
+| Superman Spear | 2.4 | 4.0 |
+
+The first bake on main failed the hand-hold gate:
+- Spear: 0.078 m;
+- Superman Spear: 0.068 m;
+- Running Spear: 0.135 m;
+- Roman's Spear on Cody: 0.098 m arm overlap.
+
+The bake had refitted on top of main's loop-1 clearance fit
+(`paired_fit.gd`). Those offsets and inserted keys belonged to the old
+timing, and the retimed keys no longer lined up with them. The five spear
+entries were cleared and refitted from zero over four passes. All four
+failures are gone; no limit, baseline or budget changed. The sheets are in
+`gauntlet/refs/ff_review/sig_loops/l7/`.
+
+Tests: 97 of 98 cases pass across the 12 focused suites (clearance, poses,
+moveset, 60 fps, cadence, pose lint, clip gate, FF library, corner spear,
+spear setup, grapple height release, walk-in). The one failing case,
+`test_pair_clearance`, reports two failures, and both are already on main:
+- the known Cross Rhodes grip, 0.094 m;
+- Kenny's Snap Dragon 3 at body 0.080. Its clip, fit and bake are
+  byte-identical to main's.
