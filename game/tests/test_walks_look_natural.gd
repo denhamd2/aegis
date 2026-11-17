@@ -26,22 +26,15 @@ const WalkMetrics := preload("res://tools/anim/walk_metrics.gd")
 const RIG := "res://assets/characters/wrestler_base.glb"
 const LIB := "res://resources/animations/strike_clips.tres"
 
-## Measured 16 Nov on main 12cd89f1 (gauntlet/refs/walks/README.md). Every
-## walk paced: the hands, the hips and the shoulders all turned the wrong
-## way round against the legs. _gait's walks also roll the planted foot the
-## wrong way (the sole slides), carry the pelvis on a rail (no sway, no
-## roll), and Walk_Stalk is a 16-frame walk cycle run at 3.5 m/s.
-const KNOWN_FAILS := {
-	"walk_slow_look": ["arm_opposition", "hip_rotation", "shoulder_counter"],
-	"walk_crowd": ["arm_opposition", "hip_rotation", "shoulder_counter"],
-	"kenny_walk": ["arm_opposition", "hip_rotation", "shoulder_counter"],
-	"entrance_walk": ["skate", "arm_opposition", "hip_rotation", "pelvis_dip", "pelvis_sway",
-			"pelvis_roll", "double_support", "no_flight"],
-	"walk_stalk": ["skate", "arm_opposition", "hip_rotation", "spine_alive", "pelvis_dip",
-			"pelvis_sway", "arm_swing", "cadence"],
-	"run_jog": ["arm_opposition", "hip_rotation", "spine_alive", "pelvis_sway"],
-	"run_drive": ["skate", "arm_opposition", "hip_rotation", "spine_alive", "pelvis_sway"],
-}
+## Measured 16 Nov on main 12cd89f1 (gauntlet/refs/walks/README.md), 34
+## gates over all seven walks: every one paced -- the hands, the hips and the
+## shoulders all turned the wrong way round against the legs -- _gait's walks
+## rolled the planted foot so the sole slid and carried the pelvis on a rail,
+## Entrance_Walk had no double support, and Walk_Stalk was a 16-frame walk
+## cycle run at 3.5 m/s. All fixed 17 Nov in the walk generators
+## (_heavy_gait / _natural_gait); the ledger is empty, so every gate holds for
+## every walk.
+const KNOWN_FAILS := {}
 
 var _skeleton: Skeleton3D
 var _lib: AnimationLibrary

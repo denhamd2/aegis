@@ -29,14 +29,14 @@ const AUTHORED_LENGTHS := {
 	"idle_ready": 2.500,          # loops; matches the rig's Idle
 	"roman_stand": 2.000,         # loops for the pre-bell intro hold
 	"face_off": 3.000,             # loops through the stare-down
-	# 0.533s, not the rig's 1.333s Walk. The cycle is generated against
-	# MOVE_SPEED (_gait() in tools/blender/wrestling_clips.py): a planted foot
+	# 0.733s, not the rig's 1.333s Walk. The cycle is generated against
+	# MOVE_SPEED (_natural_gait() in tools/blender/wrestling_clips.py): a planted foot
 	# has to travel backward at exactly the speed the engine carries the body
 	# forward, and the planted rate is travel / (contact_frames / frames *
 	# seconds). At 1.333s the cycle delivered 0.42 m/s against MOVE_SPEED 3.5
 	# and the mat slid 6.6x under every step. tools/anim/gait_audit.gd is the
 	# check; this line and the recipe's `seconds` must move together.
-	"walk_stalk": 0.533,          # loops; 16 frames at 30fps
+	"walk_stalk": 0.733,          # loops; 22 frames at 30fps (0.533 until 17 Nov)
 	"run_drive": 0.667,           # loops; matches the rig's Sprint
 	"whip_run": 0.400,            # loops; two 0.20 s steps at 5.0 m/s
 	"whip_rope_absorb": 0.500,    # contact -> push-off, 15 frames at 30fps

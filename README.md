@@ -12546,3 +12546,78 @@ Independent reviewer (read-only), before any fix:
 
 Tests: `test_walks_look_natural` passes (10 cases). The ledger holds the 34
 failing gates. No clip changed in this part.
+
+## 17 Nov: the walks fixed (part 2)
+
+This follows the walk test above ("work on the walk test and fixes"). Only
+the walk generators in `wrestling_clips.py` changed. All 34 gates on the
+`KNOWN_FAILS` ledger now pass and the ledger is empty, so every gate is
+enforced for all seven walks.
+
+- **No more pacing.** The upper body's yaw and arm phase were the wrong way
+  round in `_heavy_gait`. They are flipped, and now timed to the measured
+  phase of the feet, not to the contact window, so a run's arms no longer
+  drift a quarter-cycle off its legs.
+  - Hands against the legs: from about +0.9 to between -0.75 and -0.96
+    (-1 is natural).
+  - Hips +1.00 and shoulders -1.00 in every walk.
+- **The generic and gameplay gaits are rebuilt.** `Entrance_Walk`,
+  `Walk_Stalk`, `Run_Jog` and `Run_Drive` move from `_gait` to `_heavy_gait`,
+  through a new `_natural_gait` wrapper (steady head, elbow poles, open
+  hands). Each keeps its speed, lean and arm range, and gains:
+  - weight that drops and shifts over the planted foot, with hip roll;
+  - a chest that turns against the hips;
+  - a heel-to-toe roll, so the sole no longer slides (it was 0.75-0.84 of
+    the speed; now 0.97-1.02).
+- **Entrance_Walk is a walk again.** Each foot is down 14 of 24 frames (it
+  was 12), so both feet share the ground and nothing is in the air. The chest
+  leans a little forward and the head is level.
+- **The gameplay walk is a proper jog at the same 3.5 m/s.** `Walk_Stalk` was
+  a 16-frame cycle at 225 steps a minute, a sprinter's turnover, with 10 cm of
+  arm swing. It is now 22 frames at 164 steps a minute, close to a runner's at
+  this speed, with the same planted contact and 0.29 m of opposed arm swing.
+  `MOVE_SPEED` is unchanged. Its recipe moves from 0.533 to 0.733 s, and
+  `test_authored_clips`'s pin moves with it, on purpose.
+- **Heel strike** is 12 degrees toes-up (was 8) and toe-off is -20 (was -14).
+  Roman keeps 8 because his walk is slow and square.
+- **Arms and posture.**
+  - Cody's and Kenny's arms carry less forward bias and less lag.
+  - Roman stands taller (pelvis 0.89) and his swing stays small.
+  - Run_Drive's hands stay outside the chest.
+- **The seam.** The seven gait loops skip `overlap()` and use cycle-aware
+  Bezier handles. Overlap could move each key only a third of a frame and
+  never the seam, so the loop's last interval came out short: Run_Drive's
+  hand hitched 19 degrees a frame there.
+- **Not changed:** Cody's and Kenny's cadence, 138 steps a minute in a
+  26-frame cycle. The reviewer called it mincing.
+  `EntranceDirector.WALK_CYCLE_TICKS` and their gesture variants are keyed to
+  that cycle, so slowing it is a director change. It is the next step if the
+  owner wants it.
+
+Sheets: `gauntlet/refs/walks/after/`, next to `before/`.
+
+Measured (`tools/probe/walk_quality.gd`, `gauntlet/refs/walks/after/metrics.txt`):
+
+| Walk | Gates failed, before → after | Hands vs legs (-1 natural) | Skate (1.0 = holds) |
+|---|---|---|---|
+| Roman, Walk_Slow_Look | 3 → 0 | +0.94 → -0.87 | 1.03 → 1.08 |
+| Cody, Walk_Crowd | 3 → 0 | +0.81 → -0.89 | 0.99 → 1.02 |
+| Kenny, Kenny_Walk | 3 → 0 | +0.65 → -0.75 | 0.99 → 1.03 |
+| Entrance_Walk | 8 → 0 | +0.99 → -0.87 | 0.84 → 0.98 |
+| Walk_Stalk | 8 → 0 | +0.62 → -0.96 | 0.80 → 0.97 |
+| Run_Jog | 4 → 0 | +0.42 → -0.96 | 0.91 → 1.01 |
+| Run_Drive | 5 → 0 | +0.30 → -0.95 | 0.75 → 0.99 |
+
+Independent reviewer (read-only), before: Roman 4, Cody 4, Kenny 5,
+Entrance_Walk 3, Walk_Stalk 2, Run_Jog 4, Run_Drive 3. The after-scores are
+still pending and will be added in a follow-up.
+
+Tests:
+- These pass: `test_walks_look_natural` (10), `test_sixty_fps`,
+  `test_clip_cadence`, `test_pose_lint`, `test_clip_authoring_gate` (sha
+  re-pinned), `test_entrance_director` (46) and `test_authored_clips`.
+  `gait_audit` passes.
+- `test_pair_clearance` fails only on the two failures already on main:
+  Cross Rhodes at 0.094 m, and snap_dragon_suplex_3 at body 0.080.
+- The paired libraries are byte-identical; the fit passes were skipped
+  because walks are not paired moves.

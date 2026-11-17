@@ -435,16 +435,18 @@ HEEL_RISE = 0.045
 # HEEL_STRIKE_PITCH / TOE_OFF_PITCH run the other way round from their names
 # (+24 at "toe-off" lifts the toes), which only showed once the heel rose
 # with it: the owner saw Roman's back boot bent the wrong way.
-ROLL_HEEL_STRIKE = 8.0
-ROLL_TOE_OFF = -14.0
+# 17 Nov: 8 / -14 read as the foot landing flat (walk review, gauntlet/refs/
+# walks/before/review.md: "no visible heel strike").
+ROLL_HEEL_STRIKE = 12.0
+ROLL_TOE_OFF = -20.0
 
 
-def _roll_stance(k):
+def _roll_stance(k, heel_strike=ROLL_HEEL_STRIKE):
     """Toes up at heel strike, flat by a fifth of the stance, flat until
     half way, then onto the toes as the heel lifts (HEEL_RISE)."""
     if k < 0.2:
         t = k / 0.2
-        return ROLL_HEEL_STRIKE * (1.0 - t * t * (3.0 - 2.0 * t))
+        return heel_strike * (1.0 - t * t * (3.0 - 2.0 * t))
     if k < 0.5:
         return 0.0
     t = (k - 0.5) / 0.5
@@ -453,7 +455,8 @@ def _roll_stance(k):
 
 def _heavy_gait(frames, fps, speed, contact, plant_up, lift_up, foot_x,
                 pelvis_up, pelvis_dip, sway, hips_yaw, spine_lean, shoulder_twist,
-                side_roll, hand_x, hand_fwd, hand_up, arm_lag, low_at=None):
+                side_roll, hand_x, hand_fwd, hand_up, arm_lag, low_at=None,
+                heel_strike=ROLL_HEEL_STRIKE):
     """Roman's gait: a heavy, continuous stride (gauntlet/refs/
     roman_entrance_aaa_plan.md step 2), keyed every frame, looping.
 
@@ -484,9 +487,8 @@ def _heavy_gait(frames, fps, speed, contact, plant_up, lift_up, foot_x,
     # lands moving at it, so the swing has no corner at either end.
     tangent = -speed * (swing_frames / float(fps))
     c_mid = contact * 0.5 / frames
-    for f in range(frames + 1):
-        phase = (f % frames) / float(frames)
-        over = {}
+
+    def feet(f, over):
         for side, start in (("r", 0), ("l", frames // 2)):
             rel = (f - start) % frames
             if rel <= contact:
@@ -499,7 +501,8 @@ def _heavy_gait(frames, fps, speed, contact, plant_up, lift_up, foot_x,
                 heel = HEEL_RISE * k * k * (3.0 - 2.0 * k)
                 over["foot_%s" % side] = (
                     foot_x[side], half - (rel / float(fps)) * speed, plant_up + heel)
-                over["ankle_%s" % side] = (_roll_stance(rel / float(contact)), 0.0, 0.0)
+                over["ankle_%s" % side] = (
+                    _roll_stance(rel / float(contact), heel_strike), 0.0, 0.0)
             else:
                 u = (rel - contact) / float(swing_frames)
                 h00 = 2 * u ** 3 - 3 * u ** 2 + 1
@@ -512,7 +515,27 @@ def _heavy_gait(frames, fps, speed, contact, plant_up, lift_up, foot_x,
                     foot_x[side], fwd, plant_up + lift_up * math.sin(math.pi * u) ** 2
                     + HEEL_RISE * max(0.0, 1.0 - u / 0.4) ** 2 * (1.0 + 2.0 * min(u / 0.4, 1.0)))
                 over["ankle_%s" % side] = (
-                    ROLL_TOE_OFF + (ROLL_HEEL_STRIKE - ROLL_TOE_OFF) * eased, 0.0, 0.0)
+                    ROLL_TOE_OFF + (heel_strike - ROLL_TOE_OFF) * eased, 0.0, 0.0)
+
+    # The phase of the stride itself: the first harmonic of how far the
+    # right foot leads the left. A walk's feet lead at frame 0, where the
+    # right lands; a run's swing is most of its cycle and its feet lead a
+    # few frames before the strike. The pelvis, shoulders and arms are
+    # timed to THIS, not to the contact window, or a run's arms drift a
+    # quarter cycle off its legs (measured: -0.00 against the -1 of a real
+    # cross-body swing).
+    re_part = im_part = 0.0
+    for f in range(frames):
+        o = {}
+        feet(f, o)
+        lead = o["foot_r"][1] - o["foot_l"][1]
+        re_part += lead * math.cos(2.0 * math.pi * f / frames)
+        im_part += lead * math.sin(2.0 * math.pi * f / frames)
+    stride_phase = math.atan2(im_part, re_part) / (2.0 * math.pi)
+    for f in range(frames + 1):
+        phase = (f % frames) / float(frames)
+        over = {}
+        feet(f, over)
         # Low a few frames after each heel strike, high mid-stance.
         if low_at is None:
             dip = 0.5 - 0.5 * math.cos(4.0 * math.pi * (phase - 0.06))
@@ -521,10 +544,17 @@ def _heavy_gait(frames, fps, speed, contact, plant_up, lift_up, foot_x,
         # Over the planted foot: right (+x) while the right is down.
         lateral = math.cos(2.0 * math.pi * (phase - c_mid))
         over["pelvis"] = (sway * lateral, 0.0, pelvis_up - pelvis_dip * dip)
-        swing_yaw = math.cos(2.0 * math.pi * phase)
+        # The upper body against the legs, measured (tools/anim/
+        # walk_metrics.gd, 16 Nov): the right foot lands FORWARD on frame 0,
+        # so the right hip must be forward then, the left shoulder and the
+        # left hand. With +cos here all three were the other way round --
+        # the hands swung with the leg of their own side (a pace, the
+        # owner's "robotic"), the pelvis turned against the stride and the
+        # chest with it.
+        swing_yaw = -math.cos(2.0 * math.pi * (phase - stride_phase))
         over["hips"] = (spine_lean * 0.2, hips_yaw * swing_yaw, -side_roll * 0.5 * lateral)
         over["spine"] = (spine_lean, -shoulder_twist * swing_yaw, side_roll * lateral)
-        lagged = math.cos(2.0 * math.pi * (phase - arm_lag / float(frames)))
+        lagged = -math.cos(2.0 * math.pi * (phase - stride_phase - arm_lag / float(frames)))
         for side, sign in (("r", 1.0), ("l", -1.0)):
             drive = sign * lagged
             over["hand_%s" % side] = (
@@ -534,6 +564,25 @@ def _heavy_gait(frames, fps, speed, contact, plant_up, lift_up, foot_x,
         over["_shoulder_yaw"] = -shoulder_twist * swing_yaw + hips_yaw * swing_yaw
         out.append((f, over))
     return out
+
+
+def _natural_gait(head=(0.0, 0.0, 0.0), elbow=None, curl=None, steady=0.8, **gait):
+    """A _heavy_gait() cycle as a finished clip: the head held level and its
+    gaze steadied against the shoulders' turn (`steady` of it taken back),
+    elbow poles on every frame if named (so the arms solve the same way at
+    the seam as anywhere else), open hands at `curl` if given. The gameplay
+    walk, jog and run and the generic entrance walk are built on it (16-17
+    Nov): _gait() swung them on a rail -- no sway, no roll, the planted boot
+    rolling back onto its heel so the sole slid -- with the arms pacing."""
+    out = []
+    for f, pose_f in _heavy_gait(**gait):
+        clean = {k: v for k, v in pose_f.items() if not k.startswith("_")}
+        clean["head"] = (head[0], head[1] - pose_f["_shoulder_yaw"] * steady, head[2])
+        if elbow:
+            clean["elbow_r"] = elbow["r"]
+            clean["elbow_l"] = elbow["l"]
+        out.append((f, P(**clean)))
+    return out if curl is None else _open_hands(out, curl=curl)
 
 
 def _methodical_walk():
@@ -557,16 +606,18 @@ def _methodical_walk():
         frames=48, fps=FPS, speed=0.5, contact=28,
         plant_up=0.104, lift_up=0.06,
         foot_x={"r": 0.15, "l": -0.14},
-        pelvis_up=0.875, pelvis_dip=0.030, sway=0.025,
+        pelvis_up=0.890, pelvis_dip=0.030, sway=0.025,
         hips_yaw=6.0, spine_lean=-6.0, shoulder_twist=8.0, side_roll=1.5,
-        hand_x={"r": 0.33, "l": -0.32}, hand_fwd=(0.06, 0.20),
-        hand_up=(0.89, 0.925), arm_lag=4)], curl=0.40)
+        hand_x={"r": 0.33, "l": -0.32}, hand_fwd=(-0.02, 0.13),
+        hand_up=(0.89, 0.925), arm_lag=4,
+        heel_strike=8.0)], curl=0.40)
     twist = {f: pose["_shoulder_yaw"] for f, pose in _heavy_gait(
         frames=48, fps=FPS, speed=0.5, contact=28, plant_up=0.104, lift_up=0.06,
-        foot_x={"r": 0.15, "l": -0.14}, pelvis_up=0.875, pelvis_dip=0.030,
+        foot_x={"r": 0.15, "l": -0.14}, pelvis_up=0.890, pelvis_dip=0.030,
         sway=0.025, hips_yaw=6.0, spine_lean=-6.0, shoulder_twist=8.0,
-        side_roll=1.5, hand_x={"r": 0.33, "l": -0.32}, hand_fwd=(0.06, 0.20),
-        hand_up=(0.89, 0.925), arm_lag=4)}
+        side_roll=1.5, hand_x={"r": 0.33, "l": -0.32}, hand_fwd=(-0.02, 0.13),
+        hand_up=(0.89, 0.925), arm_lag=4,
+        heel_strike=8.0)}
     # (frame, yaw degrees): + is to his left. Long eased moves, long holds.
     looks = [(0, 0.0), (14, 0.0), (40, 26.0), (62, 26.0), (84, 0.0),
              (94, 0.0), (112, -24.0), (122, -24.0), (144, 0.0)]
@@ -582,7 +633,7 @@ def _methodical_walk():
         sp = base["spine"]
         # The gaze stays put while the shoulders swing: the head takes back
         # most of the chest's turn.
-        steady = -twist[f % 48] * 0.8
+        steady = -twist[f % 48]
         out.append((f, dict(base, head=(-4.0, yaw * 0.75 + steady, 0.0),
                             spine=(sp[0], sp[1] + yaw * 0.25, sp[2]))))
     return out
@@ -620,8 +671,8 @@ CODY_GAIT = dict(
     foot_x={"r": 0.15, "l": -0.14},
     pelvis_up=0.885, pelvis_dip=0.032, sway=0.018, low_at=1.5 / 26.0,
     hips_yaw=7.0, spine_lean=-3.0, shoulder_twist=9.0, side_roll=2.0,
-    hand_x={"r": 0.29, "l": -0.28}, hand_fwd=(-0.02, 0.22),
-    hand_up=(0.885, 0.945), arm_lag=3)
+    hand_x={"r": 0.29, "l": -0.28}, hand_fwd=(-0.10, 0.16),
+    hand_up=(0.885, 0.945), arm_lag=2)
 
 # How far in front of the straight line a gesturing hand travels, at mid-way.
 ARM_ARC = 0.24
@@ -771,8 +822,8 @@ KENNY_GAIT = dict(
     foot_x={"r": 0.16, "l": -0.15},
     pelvis_up=0.880, pelvis_dip=0.044, sway=0.026, low_at=1.5 / 26.0,
     hips_yaw=9.0, spine_lean=-2.0, shoulder_twist=13.0, side_roll=3.5,
-    hand_x={"r": 0.31, "l": -0.30}, hand_fwd=(-0.06, 0.25),
-    hand_up=(0.875, 0.945), arm_lag=4)
+    hand_x={"r": 0.31, "l": -0.30}, hand_fwd=(-0.14, 0.20),
+    hand_up=(0.875, 0.945), arm_lag=3)
 ## Playing to both sides as he goes: longer looks, further round.
 KENNY_LOOKS = [(0, 0.0), (6, 0.0), (26, 40.0), (46, 40.0), (60, 0.0),
                (74, -38.0), (92, -38.0), (104, 0.0)]
@@ -1358,13 +1409,14 @@ CLIPS = {
         (75, GUARD),
     ],
 
-    # 16 frames / 0.533s, looping: two steps, generated by _gait() above.
+    # 22 frames / 0.733s, looping: two steps, generated by _natural_gait()
+    # (it was 16 frames / 0.533s on _gait()).
     #
     # Labelled a stalk, and at MOVE_SPEED 3.5 m/s that is a generous word for
     # it -- 3.5 m/s is a jog, not a circle. The clip is now honest about the
     # speed it is played at rather than about the word: contact is 5 frames
     # (0.167 s) covering 0.583 m, which is 3.50 m/s under the boot, and the
-    # remaining 37% of the cycle is flight. The tabled version it replaced
+    # remaining 55% of the cycle is flight. The tabled version it replaced
     # delivered 0.42 m/s and the mat slid 6.6x under every step.
     #
     # Hands open, low and close, elbows down and bent, so a man walking in for
@@ -1374,16 +1426,27 @@ CLIPS = {
     # -- READY leans 20 degrees into its reach, this does not -- so the arms
     # came out near straight, reaching in front of him at waist height (the
     # owner flagged it on Cody). The shoulders still counter the hips.
-    "Walk_Stalk": _open_hands(_gait(
-        frames=16, fps=FPS, speed=3.5,
-        contacts={"r": (0, 5), "l": (8, 5)},
-        plant_up=0.104, lift_up=0.11,
-        foot_x={"r": 0.20, "l": -0.19},
-        pelvis_up=0.862, pelvis_dip=0.018,
-        hips_yaw=6.0, spine=(4.0, 0.0), head=(-2, 0, 0),
-        hand_fwd=(0.24, 0.32), hand_up=(1.04, 1.10),
-        hand_x={"r": 0.27, "l": -0.25},
-        elbow={"r": (0.6, -0.2, -1.0), "l": (-0.6, -0.2, -1.0)})),
+    "Walk_Stalk": _natural_gait(
+        # A jog, honestly (owner, 17 Nov: the gameplay walk looked "robotic",
+        # a jog on a walk cycle). It was 16 frames, 225 steps a minute -- a
+        # sprinter's turnover at a jogger's speed -- the stride 0.81 of what
+        # a body of this leg takes at 3.5 m/s, the hands parked (10 cm of
+        # swing) and pacing with the legs. Now 22 frames, 164 steps a minute
+        # (a runner's at this speed is ~173): the same contact, 5 frames
+        # (0.167 s) under the boot covering 0.583 m = 3.50 m/s, so the longer
+        # cycle is all flight and swing -- a longer, floating stride. Still
+        # the stalk's carriage: upright and a little forward, hands open and
+        # low in front of him, elbows down, the arms now swinging 0.3 m
+        # against the legs.
+        frames=22, fps=FPS, speed=3.5, contact=5,
+        plant_up=0.104, lift_up=0.17,
+        foot_x={"r": 0.15, "l": -0.14},
+        pelvis_up=0.905, pelvis_dip=0.045, sway=0.010, low_at=2.5 / 22.0,
+        hips_yaw=6.0, spine_lean=-5.0, shoulder_twist=10.0, side_roll=1.5,
+        hand_x={"r": 0.25, "l": -0.23}, hand_fwd=(-0.08, 0.26),
+        hand_up=(0.98, 1.10), arm_lag=1,
+        head=(-2.0, 0.0, 0.0), elbow={"r": (0.6, -0.4, -1.0), "l": (-0.6, -0.4, -1.0)},
+        curl=0.35),
 
     # 20 frames / 0.667s, looping: two strides, generated by _gait() above.
     #
@@ -1413,37 +1476,39 @@ CLIPS = {
     #
     # Elbow poles are supplied on every frame by the generator, so the arms
     # solve the same way at the seam as anywhere else.
-    "Run_Drive": _gait(
-        frames=20, fps=FPS, speed=7.0,
-        contacts={"r": (0, 3), "l": (10, 3)},
+    "Run_Drive": _natural_gait(
+        # On _heavy_gait since 17 Nov (_natural_gait): the same 20 frames, 3
+        # on the mat at 7.0 m/s, the same lean, lift and arm range -- now
+        # with the arms driving against the legs (they paced), the pelvis
+        # turning with the stride and the shoulders against it, a centimetre
+        # of sway and the boot rolling heel-to-toe instead of back onto its
+        # heel (the sole slid at 0.75 of the run's speed).
+        frames=20, fps=FPS, speed=7.0, contact=3,
         plant_up=0.104, lift_up=0.26,
         foot_x={"r": 0.15, "l": -0.15},
-        pelvis_up=0.872, pelvis_dip=0.072,
-        hips_yaw=5.0, spine=(4.0, -18.0), head=(12, 0, 0),
-        hand_fwd=(-0.24, 0.28), hand_up=(1.05, 1.32),
-        hand_x={"r": 0.21, "l": -0.17},
-        elbow={"r": (0.3, -0.9, -0.3), "l": (-0.3, -0.9, -0.3)}),
+        pelvis_up=0.872, pelvis_dip=0.072, sway=0.010, low_at=1.5 / 20.0,
+        hips_yaw=5.0, spine_lean=-18.0, shoulder_twist=9.0, side_roll=1.0,
+        hand_x={"r": 0.24, "l": -0.22}, hand_fwd=(-0.24, 0.28),
+        hand_up=(1.05, 1.32), arm_lag=1,
+        head=(12.0, 0.0, 0.0), elbow={"r": (0.3, -0.9, -0.3), "l": (-0.3, -0.9, -0.3)}),
 
     # The jog: running outside the ring (the owner, 2 Nov: "the wrestlers
     # running outside the ring is too fast, it should be a jog not a
     # sprint"). The same generator at 4.2 m/s: four frames (0.133 s) planted
     # covering 0.56 m -- 4.2 m/s, WrestlerController.JOG_SPEED -- a shorter,
     # lower stride, the torso near upright and the arms carried loose.
-    "Run_Jog": _gait(
-        frames=22, fps=FPS, speed=4.2,
-        contacts={"r": (0, 4), "l": (11, 4)},
+    "Run_Jog": _natural_gait(
         # hips up near the walk's height: at 0.89 / 0.045 the planted knee
-        # bent so deep it read as creeping (clip_shot review, 2 Nov).
-        # lifted clear fast, as the sprint is: at 0.17 the foot hung under
-        # the planted height a frame past its contact and skated 1.2x
-        # (gait_audit).
+        # bent so deep it read as creeping (clip_shot review, 2 Nov). On
+        # _heavy_gait since 17 Nov, as Run_Drive above.
+        frames=22, fps=FPS, speed=4.2, contact=4,
         plant_up=0.104, lift_up=0.24,
         foot_x={"r": 0.13, "l": -0.13},
-        pelvis_up=0.915, pelvis_dip=0.035,
-        hips_yaw=4.0, spine=(2.0, -9.0), head=(6, 0, 0),
-        hand_fwd=(-0.18, 0.2), hand_up=(1.0, 1.18),
-        hand_x={"r": 0.22, "l": -0.19},
-        elbow={"r": (0.3, -0.9, -0.3), "l": (-0.3, -0.9, -0.3)}),
+        pelvis_up=0.915, pelvis_dip=0.040, sway=0.010, low_at=2.0 / 22.0,
+        hips_yaw=5.0, spine_lean=-9.0, shoulder_twist=9.0, side_roll=1.0,
+        hand_x={"r": 0.22, "l": -0.19}, hand_fwd=(-0.18, 0.2),
+        hand_up=(1.0, 1.18), arm_lag=1,
+        head=(6.0, 0.0, 0.0), elbow={"r": (0.3, -0.9, -0.3), "l": (-0.3, -0.9, -0.3)}),
 
     # --- the whipped runner (Irish-whip reference 02) --------------------
     #
@@ -2808,18 +2873,25 @@ CLIPS = {
     # out, arms swinging low and loose -- where Walk_Stalk is a man circling
     # an opponent with his hands up. Generated like the stalk, so the planted
     # foot travels at exactly the speed the director moves him:
-    # EntranceDirector.WALK_SPEED 1.6 m/s. Contact is 12 of 24 frames per
-    # foot, so one is always down and neither is in the air -- a walk, not a
-    # jog -- and the half-stride that buys is 0.32 m, inside the leg's reach.
-    "Entrance_Walk": _open_hands(_gait(
-        frames=24, fps=FPS, speed=1.6,
-        contacts={"r": (0, 12), "l": (12, 12)},
+    # EntranceDirector.WALK_SPEED 1.6 m/s. Contact is 14 of 24 frames per
+    # foot (it was 12, which measured as a tenth of the cycle in the air):
+    # both feet down a sixth of the time, a walk, and the half-stride is
+    # 0.37 m, reached with the hips at 0.84-0.875 and the heel rolling up.
+    "Entrance_Walk": _natural_gait(
+        # On _heavy_gait since 17 Nov (_natural_gait). _gait() gave it 12 of
+        # 24 frames a foot -- never both down, a tenth of the cycle in the
+        # air, so the "walk" was a stiff little run -- no sway or hip roll,
+        # the arms pacing. Now 14 of 24: both feet down a sixth of the
+        # cycle, the weight dropping and moving over each planted foot, the
+        # shoulders against the hips, the arms swinging against the legs.
+        frames=24, fps=FPS, speed=1.6, contact=14,
         plant_up=0.104, lift_up=0.08,
         foot_x={"r": 0.14, "l": -0.13},
-        pelvis_up=0.895, pelvis_dip=0.015,
-        hips_yaw=7.0, spine=(0.0, 3.0), head=(5, 0, 0),
-        hand_fwd=(-0.14, 0.16), hand_up=(0.84, 0.90),
-        hand_x={"r": 0.25, "l": -0.23}, elbow=None), curl=0.5),
+        pelvis_up=0.875, pelvis_dip=0.035, sway=0.020, low_at=1.0 / 24.0,
+        hips_yaw=7.0, spine_lean=-3.0, shoulder_twist=10.0, side_roll=3.0,
+        hand_x={"r": 0.25, "l": -0.23}, hand_fwd=(-0.14, 0.18),
+        hand_up=(0.84, 0.91), arm_lag=2,
+        head=(0.0, 0.0, 0.0), curl=0.5),
 
     # 55 frames / 1.83s: up the ring's four-tier flight, a tread a step,
     # right foot leading, the left joining it on the platform -- from the
@@ -8220,6 +8292,17 @@ AS_AUTHORED = {
 }
 
 
+## The generated walk and run cycles (_heavy_gait / _natural_gait). They
+## carry their own follow-through -- the arms trail the shoulders by
+## `arm_lag` frames, the head is steadied against them -- and every key is a
+## frame, so overlap() could only move each key a third of a frame and the
+## seam not at all: the last interval of the loop came out two thirds of a
+## frame long and the arms hitched across it every cycle (walk_metrics.gd:
+## Run_Drive's left hand 19 deg/frame at the seam against 7 anywhere else).
+GAIT_LOOPS = {"Walk_Slow_Look", "Walk_Crowd", "Kenny_Walk", "Entrance_Walk",
+              "Walk_Stalk", "Run_Jog", "Run_Drive"}
+
+
 def overlap(action, name):
     if name in AS_AUTHORED:
         return
@@ -8280,7 +8363,7 @@ def author(poser, arm, name, frames, exact_timing=False):
                     c.keyframe_points[k].co[1] = v
             prev = q
 
-    if not exact_timing:
+    if not exact_timing and name not in GAIT_LOOPS:
         overlap(action, name)
 
     # Bezier everywhere. Linear interpolation on organic motion reads as
@@ -8310,6 +8393,12 @@ def author(poser, arm, name, frames, exact_timing=False):
             key.interpolation = "BEZIER"
             key.handle_left_type = handle
             key.handle_right_type = handle
+        if name in GAIT_LOOPS and not fcurve.modifiers:
+            # Cycle-aware handles: with a Cycles modifier first on the curve
+            # Blender computes the handles of the first and last key from
+            # their neighbours ACROSS the seam, so the motion runs through
+            # it instead of braking into the end of the loop.
+            fcurve.modifiers.new("CYCLES")
         # Recompute the handles from the keys as they now stand. Without it
         # the sign flips above move a key's value and leave its handles
         # aimed at the old one, and the curve bows away between two keys

@@ -38,3 +38,9 @@ All seven paced: the hands swung with the leg on their own side. The pelvis
 and the shoulders also turned the wrong way against the stride: a sign error
 in `_heavy_gait` and `_gait` (`wrestling_clips.py`). Full review:
 `before/review.md`.
+
+## After (17 Nov, part 2)
+
+All seven walks pass every gate. The `KNOWN_FAILS` ledger is empty; the
+numbers are in `after/metrics.txt` and the sheets in `after/`. The
+independent after-scores are pending.
