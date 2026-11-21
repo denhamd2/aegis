@@ -950,6 +950,11 @@ const RECIPES := {
 		],
 		"defender_grips_until": 0.83,
 	},
+	# Penta's Mexican Destroyer -- authored frame-dense from the owner's
+	# reference (wrestling_clips.py Mexican_Destroyer_*), not sampled.
+	"ff_mexican_destroyer": {
+		"authored": {"attacker": "Mexican_Destroyer_Attacker", "defender": "Mexican_Destroyer_Defender"},
+	},
 	# Batch 1 (FFMoveLibrary) -- see FF_Powerbomb_1_Attacker: up on the shoulders, thrown down.
 	"ff_powerbomb_1": {
 		"authored": {"attacker": "FF_Powerbomb_1_Attacker", "defender": "FF_Powerbomb_1_Defender"},
@@ -2193,6 +2198,19 @@ const TRAJECTORIES := {
 		"defender": {
 			"pos": [[0.000, -0.40, 0.00, 0.00], [1.133, -0.10, 0.00, 0.00], [1.800, 0.34, 0.00, 0.00], [2.267, 0.36, 0.00, 0.04], [2.733, 0.40, 0.00, 0.06], [3.167, 0.44, 0.00, 0.04], [3.633, 0.46, 0.00, 0.00], [3.767, 0.46, 0.00, 0.00], [3.900, 0.46, 0.00, -0.15], [4.033, 0.46, 0.00, -0.30], [4.133, 0.80, 0.00, -0.40], [4.233, 1.10, 0.00, -0.45], [4.900, 1.15, 0.00, -0.45]],
 			"rot": [[0.000, 0.0, -90.0, 0.0], [1.800, 0.0, -90.0, 0.0], [2.267, 0.0, -45.0, 0.0], [2.733, 0.0, 0.0, 0.0], [3.167, 0.0, 45.0, 0.0], [3.633, 0.0, 90.0, 0.0], [4.900, 0.0, 90.0, 0.0]],
+		},
+	},
+	# Penta's Mexican Destroyer: the clips carry the travel over the bent man;
+	# the roots hold the 0.58 m grapple distance the pair was tuned at.
+	"ff_mexican_destroyer": {
+		"length": 2.533,
+		"attacker": {
+			"pos": [[0.00, 0.29, 0.00, 0.00], [2.533, 0.29, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, 90.0, 0.0], [2.533, 0.0, 90.0, 0.0]],
+		},
+		"defender": {
+			"pos": [[0.00, -0.29, 0.00, 0.00], [2.533, -0.29, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, -90.0, 0.0], [2.533, 0.0, -90.0, 0.0]],
 		},
 	},
 	# Batch 1 (FFMoveLibrary). The Liger Bomb's path without the run: the man's root comes in under the lift and goes out in front as he is thrown down.

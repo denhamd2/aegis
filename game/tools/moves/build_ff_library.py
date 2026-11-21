@@ -139,6 +139,7 @@ MOVES = {
     "diving_shooting_star": ("Diving Shooting Star", "aerial", "top_rope"),
     "black_arrow": ("Black Arrow", "aerial", "top_rope"),
     "penta_driver": ("Penta Driver", "driver", "front"),
+    "mexican_destroyer": ("Mexican Destroyer", "driver", "front"),
     "package_piledriver_2": ("Package Piledriver 2", "piledriver", "front"),
     "oklahoma_stampede": ("Oklahoma Stampede", "slam", "running"),
     "running_step_up_tornillo_kick": ("Running Step-Up Tornillo Kick", "kick", "corner"),
@@ -228,7 +229,7 @@ WRESTLERS = {
     "nyla_rose": ("Nyla Rose", ["draping_diving_knee_drop"], ["draping_diving_knee_drop"]),
     "orange_cassidy": ("Orange Cassidy", ["orange_punch"], ["orange_punch", "beach_break"]),
     "pac": ("PAC", ["sit_out_powerbomb_2", "diving_shooting_star"], ["black_arrow", "brutalizer"]),
-    "penta": ("Penta El Zero M", ["penta_driver"], ["package_piledriver_2"]),
+    "penta": ("Penta El Zero M", ["penta_driver", "mexican_destroyer"], ["package_piledriver_2"]),
     "powerhouse_hobbs": ("Powerhouse Hobbs", [], ["spinebuster_5", "oklahoma_stampede"]),
     "aubrey_edwards": ("Aubrey Edwards", ["superkick_5"], ["superkick_5"]),
     "fenix": ("Rey Fenix", ["running_step_up_tornillo_kick"], ["fenix_driver_1", "fenix_driver_2"]),
@@ -328,6 +329,8 @@ CLIP_FRAMES = {
     "snap_dragon_suplex_2": (56, 6, 46),
     "snap_dragon_suplex_3": (56, 6, 58),
     "powerbomb_v_trigger_combo": (142, 6, 40),
+    # The Mexican Destroyer: 76-frame clip at 30 fps, contact at 48.
+    "mexican_destroyer": (96, 8, 48),
 }
 
 # Damage by tier: (head, torso, legs). A special is the big one.

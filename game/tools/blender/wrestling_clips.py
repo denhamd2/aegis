@@ -5850,6 +5850,133 @@ CLIPS["Tilt_DDT_Defender"] = [
     (42, _flip(-150, (0.0, 0.10, 0.800))),
 ] + _face_first_then_roll(46, 60)
 
+# --- Mexican Destroyer (Penta El Zero M) ------------------------------------
+#
+# Front facelock, a forward somersault over the bent man's back, and a sit-out
+# that drives his head into the mat; the attacker rises over him. Reference:
+# the owner's signature/finisher compilation, the Fight Forever Mexican
+# Destroyer at 10:08.3-10:11.3 (60 fps): facelock at 1008.3, over the back
+# 1009.9, inverted 1010.2, impact 1011.0, standing 1011.4. Keyed densely
+# through the flip, since the reference reads by the frame there.
+
+MD_SEAT = dict(pelvis=(0.0, 0.0, 0.280), hips=(12, 0, 0), spine=(4, 0, 0),
+               head=(-8, 0, 0),
+               hand_r=(0.30, -0.10, 0.10), hand_l=(-0.30, -0.10, 0.10),
+               elbow_r=(0.7, 0.0, 0.7), elbow_l=(-0.7, 0.0, 0.7),
+               fist_r=0.9, fist_l=0.9,
+               foot_r=(0.18, 0.58, 0.104), foot_l=(-0.18, 0.52, 0.104),
+               knee_r=(0.2, 0.3, 1.0), knee_l=(-0.2, 0.3, 1.0))
+
+
+def _md_flip(pitch, pelvis, hands_z=0.0, **over):
+    """The attacker's forward somersault: body carried round the pelvis with
+    the hands held out in front of the chest (they keep the facelock)."""
+    body = _body((pitch, 0, 0), pelvis,
+                 spine=(-6, 0, 0), head=(-6, 0, 0),
+                 hand_r=(0.10, 0.32, hands_z), hand_l=(-0.08, 0.34, hands_z + 0.02),
+                 elbow_r=(0.3, -0.6, 0.2), elbow_l=(-0.3, -0.6, 0.2),
+                 fist_r=0.8, fist_l=0.8, **_TUCK_LEGS)
+    body.update(over)
+    return body
+
+
+CLIPS["Mexican_Destroyer_Attacker"] = [
+    (0, P()),
+    # Step in and reach for the head.
+    (4, P(pelvis=(0.0, 0.03, 0.840), spine=(-12, 0, 0), head=(2, 0, 0),
+          hand_r=(0.16, 0.40, 1.46), hand_l=(-0.14, 0.42, 1.48),
+          fist_r=0.4, fist_l=0.4,
+          foot_r=(0.20, -0.10, 0.104), foot_l=(-0.18, 0.14, 0.104))),
+    # The facelock closes: both hands on the head, elbows in.
+    (10, P(pelvis=(0.0, 0.04, 0.820), hips=(-8, 0, 0), spine=(-20, 0, 0),
+           head=(6, 0, 0),
+           hand_r=(0.12, 0.46, 1.42), hand_l=(-0.10, 0.48, 1.44),
+           fist_r=0.5, fist_l=0.5,
+           foot_r=(0.22, -0.16, 0.104), foot_l=(-0.18, 0.16, 0.104))),
+    # Pull the head down under the arm; the man bends.
+    (16, P(pelvis=(0.0, 0.02, 0.800), hips=(-14, 0, 0), spine=(-26, 0, 0),
+           head=(10, 0, 0),
+           hand_r=(0.10, 0.16, 1.16), hand_l=(-0.08, 0.18, 1.18),
+           fist_r=0.5, fist_l=0.5,
+           foot_r=(0.22, -0.18, 0.104), foot_l=(-0.20, 0.18, 0.104))),
+    # Held low, chest over his back, knees loaded.
+    (24, P(pelvis=(0.0, 0.02, 0.760), hips=(-20, 0, 0), spine=(-32, 0, 0),
+           head=(14, 0, 0),
+           hand_r=(0.08, 0.15, 1.02), hand_l=(-0.06, 0.17, 1.04),
+           fist_r=0.6, fist_l=0.6,
+           foot_r=(0.24, -0.20, 0.104), foot_l=(-0.20, 0.20, 0.104))),
+    (30, P(pelvis=(0.0, 0.04, 0.700), hips=(-26, 0, 0), spine=(-36, 0, 0),
+           head=(16, 0, 0),
+           hand_r=(0.06, 0.14, 0.94), hand_l=(-0.04, 0.16, 0.96),
+           fist_r=0.7, fist_l=0.7,
+           foot_r=(0.24, -0.22, 0.104), foot_l=(-0.20, 0.22, 0.104))),
+    # The somersault over his back: 55 -> 310 degrees, two frames a key. The
+    # forward travel carries him past the bent head so he lands over it.
+    (34, _md_flip(55, (0.0, 0.16, 1.000), hands_z=-0.02)),
+    (36, _md_flip(95, (0.0, 0.26, 1.140), hands_z=-0.03)),
+    (38, _md_flip(135, (0.0, 0.34, 1.220), hands_z=-0.05)),
+    (40, _md_flip(175, (0.0, 0.40, 1.240), hands_z=-0.07)),
+    (42, _md_flip(220, (0.0, 0.44, 1.180), hands_z=-0.06)),
+    (44, _md_flip(265, (0.0, 0.46, 1.000), hands_z=-0.03)),
+    (46, _md_flip(310, (0.0, 0.46, 0.760), hands_z=0.00)),
+    # Sit-out: his head driven into the mat between Kenny's legs.
+    (48, pose(MD_SEAT, pelvis=(0.0, 0.44, 0.300),
+              hand_r=(0.12, 0.40, 0.10), hand_l=(-0.12, 0.42, 0.12),
+              fist_r=0.9, fist_l=0.9)),
+    (50, pose(MD_SEAT, pelvis=(0.0, 0.44, 0.280),
+              hand_r=(0.14, 0.36, 0.08), hand_l=(-0.14, 0.38, 0.10),
+              fist_r=0.8, fist_l=0.8)),
+    (54, pose(MD_SEAT, pelvis=(0.0, 0.42, 0.280),
+              hand_r=(0.16, 0.34, 0.10), hand_l=(-0.16, 0.36, 0.12),
+              fist_r=0.6, fist_l=0.6)),
+    # Up over him: hands on the mat, then standing.
+    (60, dict(pelvis=(0.0, 0.36, 0.560), hips=(-18, 0, 0), spine=(-24, 0, 0),
+              head=(-10, 0, 0),
+              hand_r=(0.24, 0.32, 0.34), hand_l=(-0.22, 0.34, 0.36),
+              elbow_r=(0.6, -0.3, -0.4), elbow_l=(-0.6, -0.3, -0.4),
+              fist_r=0.4, fist_l=0.4,
+              foot_r=(0.22, -0.08, 0.104), foot_l=(-0.20, 0.10, 0.104))),
+    (68, P(pelvis=(0.0, 0.34, 0.780), spine=(-16, 0, 0), head=(-14, 0, 0),
+           hand_r=(0.28, 0.22, 0.78), hand_l=(-0.26, 0.24, 0.80),
+           fist_r=0.2, fist_l=0.2)),
+    (76, P(pelvis=(0.0, 0.30, 0.860), spine=(-8, 0, 0), head=(0, 0, 0))),
+]
+CLIPS["Mexican_Destroyer_Defender"] = [
+    (0, pose(STAND)),
+    (6, P(spine=(-10, 0, 0), head=(-4, 0, 0),
+          hand_r=(0.22, 0.36, 1.30), hand_l=(-0.20, 0.38, 1.30),
+          fist_r=0.5, fist_l=0.5)),
+    # Bent forward into the facelock.
+    (14, dict(pelvis=(0.0, -0.04, 0.800), hips=(-38, 0, 0), spine=(-26, 0, 0),
+              head=(-8, 0, 0),
+              hand_r=(0.24, 0.30, 0.82), hand_l=(-0.22, 0.32, 0.80),
+              fist_r=0.4, fist_l=0.4,
+              foot_r=(0.20, -0.14, 0.104), foot_l=(-0.18, 0.10, 0.104))),
+    (22, dict(pelvis=(0.0, -0.06, 0.780), hips=(-44, 0, 0), spine=(-30, 0, 0),
+              head=(-12, 0, 0),
+              hand_r=(0.24, 0.32, 0.78), hand_l=(-0.22, 0.34, 0.76),
+              fist_r=0.3, fist_l=0.3,
+              foot_r=(0.20, -0.14, 0.104), foot_l=(-0.18, 0.10, 0.104))),
+    (30, dict(pelvis=(0.0, -0.06, 0.780), hips=(-44, 0, 0), spine=(-30, 0, 0),
+              head=(-12, 0, 0),
+              hand_r=(0.24, 0.32, 0.78), hand_l=(-0.22, 0.34, 0.76),
+              fist_r=0.3, fist_l=0.3,
+              foot_r=(0.20, -0.14, 0.104), foot_l=(-0.18, 0.10, 0.104))),
+    # Taken over with him: head first, legs coming up.
+    (36, _flip(-55, (0.0, 0.05, 0.930))),
+    (40, _flip(-100, (0.0, 0.10, 0.950))),
+    (44, _flip(-145, (0.0, 0.15, 0.980))),
+    (48, _flip(-185, (0.0, 0.15, 0.900))),
+    # The head and shoulders hit; the body folds and the legs come down.
+    (52, _flip(-200, (0.0, 0.12, 0.620))),
+    (56, S(pelvis=(0.0, 0.0, 0.200), head=(-4, 0, 0),
+           hand_r=(0.52, 0.12, 0.10), hand_l=(-0.52, 0.12, 0.10),
+           fist_r=0.1, fist_l=0.1)),
+    (64, S(spine=(-8, 0, 0), head=(-14, 0, 0))),
+    (80, SELL),
+]
+
+
 # --- batch 2: shared pieces ----------------------------------------------------
 
 # The attacker flat on his back after going down backward: head toward -fwd,

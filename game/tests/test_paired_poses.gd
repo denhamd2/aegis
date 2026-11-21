@@ -28,6 +28,9 @@ func test_every_recipe_samples_a_clip_the_rig_actually_has() -> void:
 	var player := _make_wrestler().anim_player
 	var missing: Array[String] = []
 	for move_id in PairedRecipes.RECIPES:
+		# Authored recipes copy a baked clip; they carry no sampled beats.
+		if PairedRecipes.RECIPES[move_id].has("authored"):
+			continue
 		for role in ["attacker", "defender"]:
 			for sample: Dictionary in PairedRecipes.RECIPES[move_id][role]:
 				if not player.has_animation(sample["clip"]):
@@ -42,6 +45,9 @@ func test_every_sample_time_is_inside_its_source_clip() -> void:
 	var player := _make_wrestler().anim_player
 	var bad: Array[String] = []
 	for move_id in PairedRecipes.RECIPES:
+		# Authored recipes copy a baked clip; they carry no sampled beats.
+		if PairedRecipes.RECIPES[move_id].has("authored"):
+			continue
 		for role in ["attacker", "defender"]:
 			for sample: Dictionary in PairedRecipes.RECIPES[move_id][role]:
 				var length: float = player.get_animation(sample["clip"]).length

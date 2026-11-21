@@ -189,9 +189,11 @@ func test_every_paired_move_def_has_an_animation_and_both_recipes() -> void:
 		if not PAIRED_MOVES.has_animation(id):
 			broken.append("%s: recipe but no trajectory" % id)
 		var recipe: Dictionary = PairedRecipes.RECIPES[id]
-		for role: String in ["attacker", "defender"]:
-			if not recipe.has(role) or (recipe[role] as Array).is_empty():
-				broken.append("%s: no %s poses" % [id, role])
+		# Authored recipes name a baked clip per role; they carry no sample arrays.
+		if not recipe.has("authored"):
+			for role: String in ["attacker", "defender"]:
+				if not recipe.has(role) or (recipe[role] as Array).is_empty():
+					broken.append("%s: no %s poses" % [id, role])
 	assert_array(broken).is_empty()
 
 func test_generated_trajectories_key_both_roots() -> void:
@@ -309,10 +311,26 @@ func test_the_match_scene_gives_both_wrestlers_the_whole_moveset() -> void:
 	# The whip setup is played by _begin_irish_whip() out of a won grapple
 	# hold, then hands the victim to Whip_Run; it is never drawn from a tier.
 	reachable["whip_setup"] = true
+	var tags_of := {}
+	for def in _move_defs():
+		tags_of[String(def.animation_pair_id)] = def.get_meta("ff_wrestlers", PackedStringArray())
 	var unreachable: Array[String] = []
 	for name in _paired_move_names():
-		if not reachable.has(name):
-			unreachable.append(name)
+		if reachable.has(name):
+			continue
+		# The FF library holds moves for wrestlers this build does not offer
+		# (Penta, Cole, ...). A move tagged only to those men has no match
+		# route by design; it is not an orphan. The tags below are the FF
+		# library names of our three roster entries.
+		var tags: PackedStringArray = tags_of.get(name, PackedStringArray())
+		var offered := false
+		for tag in tags:
+			if tag in ["cody_rhodes", "kenny_omega", "roman_reigns"]:
+				offered = true
+				break
+		if not tags.is_empty() and not offered:
+			continue
+		unreachable.append(name)
 	assert_array(unreachable).override_failure_message(
 		"Authored but unreachable in match.tscn: %s" % [unreachable]
 	).is_empty()
