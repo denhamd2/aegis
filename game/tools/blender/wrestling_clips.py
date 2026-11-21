@@ -5972,7 +5972,12 @@ CLIPS["Mexican_Destroyer_Defender"] = [
     (56, S(pelvis=(0.0, 0.0, 0.200), head=(-4, 0, 0),
            hand_r=(0.52, 0.12, 0.10), hand_l=(-0.52, 0.12, 0.10),
            fist_r=0.1, fist_l=0.1)),
-    (64, S(spine=(-8, 0, 0), head=(-14, 0, 0))),
+    # The bump settles: a short recoil through the shoulders, then the
+    # asymmetric sell rather than lying flat.
+    (60, S(pelvis=(0.0, 0.0, 0.195), spine=(-6, 0, 0), head=(-10, 0, 0),
+           hand_r=(0.44, 0.16, 0.14), hand_l=(-0.40, 0.14, 0.12),
+           fist_r=0.0, fist_l=0.0)),
+    (70, SELL),
     (80, SELL),
 ]
 
