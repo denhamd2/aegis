@@ -296,7 +296,7 @@ static func entries() -> Array:
 		"grapple": [M + "grapple_vertical_suplex.tres", M + "power_bodyslam.tres",
 				M + "ff/snap_dragon_suplex_2.tres"],
 		"power": [M + "power_powerslam.tres", M + "ff/tiger_driver_98.tres",
-				M + "ff/snap_dragon_suplex_3.tres"],
+				M + "ff/snap_dragon_suplex_3.tres", M + "ff/mexican_destroyer.tres"],
 		# The V-Trigger: the knee off the wrist; and the powerbomb with the
 		# knee after it.
 		"signature": [M + "ff/v_trigger_1.tres", M + "ff/powerbomb_v_trigger_combo.tres"],
