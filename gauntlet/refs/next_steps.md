@@ -4,8 +4,8 @@
 
 Kenny starts behind the grounded defender and the rear walk-in preserves their
 approach sides. Defender shin clearance improves in all three probe pairings.
-The move completes and restores physics in both player slots. Mac publication
-is tracked separately. [Validation and remaining hold and landing work](snap_dragon_3_2026_11_22/README.md).
+The move completes and restores physics in both player slots. Published for Mac
+at `0c15f09` with the exact tag and uploaded ZIP. [Validation and remaining hold and landing work](snap_dragon_3_2026_11_22/README.md).
 
 The next paired contact task is the Cross Rhodes facelock gap. Running-drop
 late boot/back contact and Cody's landing and recovery are still open.

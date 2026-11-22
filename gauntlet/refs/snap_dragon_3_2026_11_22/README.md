@@ -1,5 +1,7 @@
 # Snap Dragon 3 rear entry and throw clearance
 
+The Mac workflow published `0c15f09`. The exact tag and uploaded Aegis.zip (1,034,159,104 bytes) were verified. [Mac run 45065380236](https://github.com/denhamd2/aegis/actions/runs/45065380236) · [Release receipt](mac-publication.json)
+
 Snap Dragon 3 uses a rear opening. The old root fit placed the defender behind
 Kenny and raised the defender's opening root by about 23 cm. The standard
 face-to-face pair frame also directed the walk-in across the opponent. Their
