@@ -468,6 +468,12 @@ func _compute_pair_transform(attacker: Node3D, defender: Node3D) -> Transform3D:
 		facing.y = 0.0
 	if facing.length() < 0.001:
 		return Transform3D(Basis(), midpoint)
+	# Front lock-ups aim local -X toward the defender. A rear opening has
+	# both roles looking down +X, so its entry must use the opposite frame.
+	# Otherwise the walk-in crosses the actors before the rear hold begins.
+	if _move and PairedRecipes.RECIPES.get(String(_move.animation_pair_id), {}).get(
+			"opening_alignment", "front") == "rear":
+		facing = -facing
 	# rotY(theta) takes -X to (-cos theta, 0, sin theta); solve for `facing`.
 	var xform := Transform3D(Basis(Vector3.UP, atan2(facing.z, -facing.x)), midpoint)
 	if not outside:

@@ -1,5 +1,15 @@
 # Aegis prioritised backlog
 
+## Snap Dragon 3 rear entry and clearance
+
+Kenny starts behind the grounded defender and the rear walk-in preserves their
+approach sides. Defender shin clearance improves in all three probe pairings.
+The move completes and restores physics in both player slots. Mac publication
+is tracked separately. [Validation and remaining hold and landing work](snap_dragon_3_2026_11_22/README.md).
+
+The next paired contact task is the Cross Rhodes facelock gap. Running-drop
+late boot/back contact and Cody's landing and recovery are still open.
+
 ## Latest Mac batch: Mexican Destroyer timing
 
 Published at `6afc76d` with the exact `mac-latest` tag and uploaded Aegis.zip
@@ -9,9 +19,8 @@ for both wrestlers. [Timing, release and CI triage](paired_ci_2026_11_22/README.
 
 Continue with the remaining paired contact and source pose failures. Mexican
 Destroyer needs hand and cadence corrections plus real-roster clearance work.
-Snap Dragon 3 still shows overlap and needs a guard that recognizes a rear
-start. The Cross Rhodes facelock gap, walk-arm cadence, and running-drop
-landing and recovery work remain open.
+The Snap Dragon 3 clearance and entry work is recorded above. The Cross
+Rhodes facelock gap, walk-arm cadence, and running-drop recovery remain open.
 
 ## Published: character-specific Roman impact fit
 

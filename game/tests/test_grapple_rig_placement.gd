@@ -154,28 +154,60 @@ func test_the_defender_root_keeps_its_authored_yaw() -> void:
 	# And stands him up: no pitch or roll survives.
 	assert_vector(Basis(kept) * Vector3.UP).is_equal_approx(Vector3.UP, Vector3.ONE * 0.001)
 
-func test_the_two_roots_face_each_other_through_a_paired_move() -> void:
+func test_paired_roots_match_the_authored_opening_alignment() -> void:
 	var library: AnimationLibrary = load("res://resources/animations/paired_moves.tres")
 	var wrong: Array[String] = []
 	for name in library.get_animation_list():
 		var anim := library.get_animation(name)
 		var facing := {}
+		var starts := {}
 		for i in anim.get_track_count():
-			if anim.track_get_type(i) != Animation.TYPE_ROTATION_3D:
-				continue
 			var path := String(anim.track_get_path(i))
-			var rot: Quaternion = anim.track_get_key_value(i, 0)
-			if path.ends_with("WrestlerB"):
-				rot = GrappleRig.defender_root_yaw(rot)
-			facing[path.get_slice("/", 1)] = Basis(rot) * Vector3.FORWARD
+			var role := path.get_slice("/", 1)
+			match anim.track_get_type(i):
+				Animation.TYPE_POSITION_3D:
+					starts[role] = anim.track_get_key_value(i, 0)
+				Animation.TYPE_ROTATION_3D:
+					var rot: Quaternion = anim.track_get_key_value(i, 0)
+					if role == "WrestlerB":
+						rot = GrappleRig.defender_root_yaw(rot)
+					facing[role] = Basis(rot) * Vector3.FORWARD
 		if facing.size() != 2:
 			continue
-		# First key: the lock-up, attacker at +X facing -X, defender opposite.
-		if facing["WrestlerA"].dot(facing["WrestlerB"]) > -0.99:
-			wrong.append("%s: A %s, B %s" % [name, facing["WrestlerA"], facing["WrestlerB"]])
-	assert_array(wrong).override_failure_message(
-		"Paired moves that open with the two men not facing each other: %s" % [wrong]
-	).is_empty()
+		var attacker_forward: Vector3 = facing["WrestlerA"]
+		var defender_forward: Vector3 = facing["WrestlerB"]
+		var facing_dot := attacker_forward.dot(defender_forward)
+		var recipe: Dictionary = PairedRecipes.RECIPES.get(String(name), {})
+		if recipe.get("opening_alignment", "front") == "rear":
+			var attacker_start: Vector3 = starts["WrestlerA"]
+			var defender_start: Vector3 = starts["WrestlerB"]
+			var gap := defender_start - attacker_start
+			if facing_dot < 0.99 or gap.dot(defender_forward) < 0.08 \
+					or absf(attacker_start.y) > 0.001 or absf(defender_start.y) > 0.001:
+				wrong.append("%s must start grounded behind, aligned with the defender (gap %s, facing %.3f)"
+						% [name, gap, facing_dot])
+		elif facing_dot > -0.99:
+			wrong.append("%s must start face-to-face (facing %.3f)" % [name, facing_dot])
+	assert_array(wrong).override_failure_message("\n".join(wrong)).is_empty()
+
+
+func test_rear_entry_puts_the_attacker_on_his_own_side_of_the_defender() -> void:
+	var rig := _make_rig()
+	var player := AnimationPlayer.new()
+	rig.add_child(player)
+	player.add_animation_library("", load("res://resources/animations/paired_moves.tres"))
+	rig.animation_player = player
+	var move: MoveDef = load("res://resources/moves/ff/snap_dragon_suplex_3.tres")
+	rig._move = move
+	var attacker := _make_body(Vector3(-1.0, 0.0, 1.5))
+	var defender := _make_body(Vector3(-0.4, 0.0, 0.5))
+	var before := (defender.global_position - attacker.global_position).normalized()
+	var frame := rig._compute_pair_transform(attacker, defender)
+	var from := frame * rig._role_start(move, true)
+	var to := frame * rig._role_start(move, false)
+	assert_float((to.origin - from.origin).dot(before)).is_greater(0.08)
+	assert_float((-from.basis.z).dot(before)).is_greater(0.99)
+
 
 ## The lead-in lands each man on his clip's first frame, standing where the
 ## trajectory's first key puts him -- not both on the pair frame's origin.

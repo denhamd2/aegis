@@ -11569,6 +11569,11 @@ def _snap_dragon(sit, end, squat=False, tieup=0):
         dfn.append((sit - 3, dict(_NELSON_DEF)))
     hit = sit + 9
     peak = 1.400 if squat else 1.200
+    # Open the shins around Kenny's torso on 3's first airborne key.
+    # Return to the normal tuck on the next key as the defender goes over.
+    pop_limbs = dict(_SNAP_LIMBS, foot_r=(0.21, 0.10, -0.80),
+                     foot_l=(-0.23, 0.08, -0.80),
+                     knee_r=(0.25, 1.0, 0.0), knee_l=(-0.25, 1.0, 0.0)) if squat else _SNAP_LIMBS
     _knee = dict(ONE_KNEE, spine=(6, 0, 0), head=(-4, -20, 0),
                  hand_r=(0.30, -0.24, 1.00), hand_l=(-0.30, -0.24, 1.00),
                  elbow_r=(0.7, 0.0, 0.7), elbow_l=(-0.7, 0.0, 0.7))
@@ -11603,7 +11608,7 @@ def _snap_dragon(sit, end, squat=False, tieup=0):
                    foot_r=(0.24, 0.10, 0.124), foot_l=(-0.22, 0.20, 0.124),
                    knee_r=(0.3, 1.0, 0.2), knee_l=(-0.3, 1.0, 0.2))),
         # The backward arc: hips up to 1.2 m and over, not a legs-up hang.
-        (sit + 3, _snap(60, peak - 0.14)),
+        (sit + 3, _snap(60, peak - 0.14, pop_limbs)),
         (sit + 5, _snap(115, peak)),
         (sit + 7, _snap(165, peak - 0.20)),
     ] + ([

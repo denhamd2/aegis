@@ -1174,6 +1174,7 @@ const RECIPES := {
 		"defender_grips_until": 0.20,
 	},
 	"ff_snap_dragon_suplex_3": {
+		"opening_alignment": "rear",
 		"authored": {"attacker": "FF_Snap_Dragon_Suplex_3_Attacker", "defender": "FF_Snap_Dragon_Suplex_3_Defender"},
 		"attacker": [
 			{"t": 0.00, "clip": "Push", "at": 0.80},
@@ -2480,7 +2481,8 @@ const TRAJECTORIES := {
 			"rot": [[0.000, 0.0, -90.0, 0.0], [3.067, 0.0, -90.0, 0.0]],
 		},
 	},
-	# Snap dragon: the nelson from behind (2 opens on the tie-up and goes round), held; the man goes over in a backward arc beyond Kenny, who drops to one knee and is up and round at the end.
+	# Snap 3 opens in the rear hold. Keep the defender on the mat through
+	# the load, then travel back as the defender rolls over the attacker.
 	"ff_snap_dragon_suplex_3": {
 		"length": 2.667,
 		"attacker": {
@@ -2488,7 +2490,12 @@ const TRAJECTORIES := {
 			"rot": [[0.000, 0.0, -90.0, 0.0], [2.367, 0.0, -90.0, 0.0], [2.517, 0.0, 0.0, 0.0], [2.667, 0.0, 90.0, 0.0]],
 		},
 		"defender": {
-			"pos": [[0.000, -0.40, 0.00, 0.00], [1.800, -0.40, 0.00, 0.00], [1.900, -0.55, 0.00, 0.00], [1.967, -0.95, 0.00, 0.00], [2.033, -1.70, 0.00, 0.00], [2.100, -2.35, 0.00, 0.00], [2.167, -2.45, 0.00, 0.00], [2.667, -2.50, 0.00, 0.00]],
+			"pos": [[0.000, -0.53, 0.00, -0.07], [0.500, -0.53, 0.00, -0.075],
+					[1.383, -0.53, 0.00, -0.095], [1.533, -0.68, 0.00, -0.110],
+					[1.667, -0.73, 0.00, -0.125], [1.800, -0.45, 0.00, -0.14],
+					[1.900, -0.53, 0.00, -0.14], [1.967, -0.79, 0.00, -0.15],
+					[2.100, -1.32, 0.04, -0.15], [2.233, -1.60, 0.01, -0.12],
+					[2.667, -1.65, 0.00, -0.11]],
 			"rot": [[0.000, 0.0, -90.0, 0.0], [2.667, 0.0, -90.0, 0.0]],
 		},
 	},

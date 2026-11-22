@@ -1,0 +1,48 @@
+{
+  "base": {
+    "default": {
+      "raw_body_m": 0.0802751660346985,
+      "raw_arm_m": 0.0496907459199429,
+      "raw_peak_clip_seconds": 1.9,
+      "drawn_body_m": 0.0937981243431568,
+      "drawn_arm_m": 0.0681405094638467
+    },
+    "kenny-cody": {
+      "raw_body_m": 0.100290890038013,
+      "raw_arm_m": 0.0624337011575699,
+      "raw_peak_clip_seconds": 1.9,
+      "drawn_body_m": 0.118130050711334,
+      "drawn_arm_m": 0.0622209013998508
+    },
+    "kenny-roman": {
+      "raw_body_m": 0.0790057733654976,
+      "raw_arm_m": 0.0656391297653317,
+      "raw_peak_clip_seconds": 1.9,
+      "drawn_body_m": 0.106208381373435,
+      "drawn_arm_m": 0.0784776665223762
+    }
+  },
+  "final": {
+    "default": {
+      "raw_body_m": 0.0331636193394661,
+      "raw_arm_m": 0.0621013873815537,
+      "raw_peak_clip_seconds": -1.0,
+      "drawn_body_m": 0.0148782247304917,
+      "drawn_arm_m": 0.075191115885973
+    },
+    "kenny-cody": {
+      "raw_body_m": 0.0334123942255974,
+      "raw_arm_m": 0.069048390686512,
+      "raw_peak_clip_seconds": -1.0,
+      "drawn_body_m": 0.0155405515432358,
+      "drawn_arm_m": 0.0795876556495205
+    },
+    "kenny-roman": {
+      "raw_body_m": 0.0335150557756424,
+      "raw_arm_m": 0.060896021425724,
+      "raw_peak_clip_seconds": -1.0,
+      "drawn_body_m": 0.0103086775541306,
+      "drawn_arm_m": 0.0788939714385197
+    }
+  }
+}
