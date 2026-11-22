@@ -125,12 +125,16 @@ func test_each_mans_finisher_and_signature_are_clean_on_the_other() -> void:
 	for spec: Array in [["roman", "cody", "finisher_spear"],
 			["roman", "cody", "signature_superman_punch"],
 			["cody", "roman", "finisher_cross_rhodes"],
+			["cody", "kenny", "finisher_cross_rhodes"],
 			["cody", "roman", "signature_cody_cutter"]]:
 		var r: Dictionary = await PairClearance.measure(self, spec[2],
 				PackedStringArray([spec[0], spec[1]]))
 		if r["body"] > PairClearance.BODY_LIMIT or r["arm"] > PairClearance.ARM_LIMIT:
 			failures.append("%s on %s: %s body %.3f arm %.3f -- %s"
 					% [spec[0], spec[1], spec[2], r["body"], r["arm"], r["where"]])
+		if spec[2] == "finisher_cross_rhodes":
+			var move: MoveDef = load("res://resources/moves/finisher_cross_rhodes.tres")
+			failures.append_array(_authored_contact_failures("%s on %s" % [spec[0], spec[1]], move, r))
 	assert_array(failures).override_failure_message("\n".join(failures)).is_empty()
 
 

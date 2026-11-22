@@ -10496,18 +10496,21 @@ CLIPS["FF_Tiger_Driver_98_Defender"] = [k for k in CLIPS["Pedigree_Defender"] if
 # trajectory: a half-turn about Cody, frames 9-19); the flip is the man's
 # own body frame, the Tiger Driver '98's tested inversion path (pitch falling
 # in steps under 60 degrees), so the turn reads as one motion, not a cut.
-_CR_HOLD = P(pelvis=(0.0, 0.02, 0.830), hips=(-4, 0, 0), spine=(-10, 0, 0),
-             head=(-6, 0, 0),
-             hand_r=(0.06, 0.40, 1.30), hand_l=(-0.10, 0.44, 1.10),
-             elbow_r=(0.7, -0.3, -0.5), elbow_l=(-0.6, -0.3, -0.4),
+_CR_HOLD = P(pelvis=(0.0, 0.02, 0.830), hips=(2, 0, 0), spine=(4, -4, -5),
+             head=(-8, 10, 0),
+             hand_r=(-0.15, 0.42, 1.41), hand_l=(-0.34, 0.28, 1.10),
+             elbow_r=(0.9, 0.30, 0.16), elbow_l=(-0.75, -0.3, -0.4),
              fist_r=0.7, fist_l=0.7,
              foot_r=(0.24, -0.06, 0.104), foot_l=(-0.22, 0.08, 0.104))
 CLIPS["Cross_Rhodes_Attacker"] = [
     (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(-14, 0, 0),
-           hand_r=(0.12, 0.50, 1.40), hand_l=(-0.26, 0.46, 1.30),
+           hand_r=(0.12, 0.50, 1.40), hand_l=(0.08, 0.38, 1.29),
+           elbow_l=(-0.9, 0.1, -0.45),
            fist_r=0.6, fist_l=0.6)),
     # The hold: right arm round the head, left hand on the wrist.
-    (4,  dict(_CR_HOLD, spine=(-14, 0, 0))),
+    (4,  dict(_CR_HOLD, spine=(1, -3, -3),
+              hand_r=(-0.145, 0.37, 1.42), hand_l=(-0.28, 0.23, 1.11),
+              elbow_r=(0.9, 0.22, 0.16))),
     (9,  dict(_CR_HOLD)),
     # Spinning, leaning back against the man's weight as he comes over.
     (13, P(pelvis=(0.0, 0.04, 0.800), hips=(-8, 0, 0), spine=(-2, -10, 0),
@@ -10536,17 +10539,20 @@ CLIPS["Cross_Rhodes_Attacker"] = [
 # his back, head away from Cody (as the Tiger Driver '98 leaves him).
 CLIPS["Cross_Rhodes_Defender"] = [
     (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(-14, 0, 0),
-           hand_r=(0.22, 0.46, 1.32), hand_l=(-0.20, 0.48, 1.30),
+           hand_r=(0.22, 0.46, 1.32), hand_l=(-0.12, 0.38, 1.29),
            fist_r=0.6, fist_l=0.6)),
-    # Head trapped, bent forward into Cody's chest; the held arm drawn out.
-    (4,  P(pelvis=(0.0, -0.04, 0.800), hips=(-18, 0, 0), spine=(-26, 0, 0),
-           head=(-14, 0, 0),
-           hand_r=(0.18, 0.40, 0.98), hand_l=(-0.24, 0.30, 0.92),
+    # Lean back into Cody's right forearm as the turn ends. The left wrist
+    # reaches back along the near side where Cody can catch it.
+    (4,  P(pelvis=(0.0, -0.04, 0.800), hips=(4, 0, 0), spine=(10, 0, -5),
+           head=(0, -8, 6),
+           hand_r=(0.18, 0.21, 1.04), hand_l=(-0.29, -0.12, 1.11),
+           elbow_l=(-0.82, -0.21, -0.3),
            fist_r=0.3, fist_l=0.3,
            foot_r=(0.22, -0.10, 0.104), foot_l=(-0.20, 0.06, 0.104))),
-    (9,  P(pelvis=(0.0, -0.04, 0.790), hips=(-24, 0, 0), spine=(-30, 0, 0),
-           head=(-16, 0, 0),
-           hand_r=(0.18, 0.42, 0.94), hand_l=(-0.24, 0.32, 0.88),
+    (9,  P(pelvis=(0.0, -0.04, 0.790), hips=(5, 0, 0), spine=(14, 0, -7),
+           head=(-4, -8, 7),
+           hand_r=(0.18, 0.22, 1.03), hand_l=(-0.24, -0.15, 1.10),
+           elbow_l=(-0.82, -0.21, -0.3),
            fist_r=0.3, fist_l=0.3,
            foot_r=(0.22, -0.12, 0.104), foot_l=(-0.20, 0.08, 0.104))),
     # Over his own head as they turn.

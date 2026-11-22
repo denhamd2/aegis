@@ -252,7 +252,10 @@ func _on_mixer_applied() -> void:
 	_last_node = node
 	_last_clip = clip
 	_last_time = time
-	_track_facing()
+	# Cross Rhodes turns the defender into the hold through keyed root yaw.
+	# Carrying each step as a snap leaves his wrist on the wrong side of Cody.
+	var keyed_turn := clip == &"paired/finisher_cross_rhodes__defender" and time <= 0.15
+	_track_facing(keyed_turn)
 	if _freeze_until >= 0:
 		if Engine.get_physics_frames() < _freeze_until:
 			# Held: what is drawn is the held pose, whatever the clip does.
@@ -368,7 +371,7 @@ func _carried_pos(b: int, t: float) -> Vector3:
 	return _pos_dir[b] * _eval(_pos_curve[b], t)
 
 
-func _track_facing() -> void:
+func _track_facing(keyed_turn: bool) -> void:
 	if body == null:
 		return
 	var fwd := -body.global_basis.z
@@ -377,7 +380,7 @@ func _track_facing() -> void:
 	if not is_nan(_last_yaw):
 		var d := wrapf(yaw - _last_yaw, -PI, PI)
 		var placed := origin.distance_to(_last_origin) > TELEPORT
-		if absf(d) > SNAP_YAW and not placed and not _skip_turn:
+		if absf(d) > SNAP_YAW and not placed and not _skip_turn and not keyed_turn:
 			# Draw him still facing where he was: whatever is still being
 			# turned out, less this snap.
 			var now := _yaw_sign * Inertializer._eval(_yaw_curve, float(Engine.get_physics_frames() - _yaw_start))

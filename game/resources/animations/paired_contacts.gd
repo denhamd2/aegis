@@ -149,7 +149,8 @@ const NO_PULL := ["signature_cody_cutter"]
 static func pulls(move: MoveDef) -> bool:
 	if move == null:
 		return false
-	# Authored forearm contact supplies no bound wrist that may pull a body.
+	# Authored holds follow the fitted trajectory. A wrist assist may move
+	# the hand, but does not pull the defender away from that trajectory.
 	if authored_hands(move):
 		return false
 	if NO_PULL.has(move.resource_path.get_file().get_basename()):

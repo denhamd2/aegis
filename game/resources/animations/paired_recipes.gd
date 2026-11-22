@@ -663,6 +663,19 @@ const RECIPES := {
 	# Cody's finisher -- see Cross_Rhodes_Attacker.
 	"finisher_cross_rhodes": {
 		"authored": {"attacker": "Cross_Rhodes_Attacker", "defender": "Cross_Rhodes_Defender"},
+		"attacker_grips_until": 19.0 / 114.0,
+		"hand_contacts": {
+			"mode": "authored",
+			"assist_left_wrist": true,
+			"expected": [
+				{"id": "neck_hook", "window": Vector2(9.0, 18.0) / 114.0,
+					"effector": ["lowerarm_r", "hand_r"], "surface_bone": "neck_01",
+					"surface_radius": 0.064, "effector_radius": 0.037},
+				{"id": "wrist_control", "window": Vector2(9.0, 18.0) / 114.0,
+					"effector": ["hand_l", "hand_l"], "surface_bone": "hand_l",
+					"surface_radius": 0.033, "effector_radius": 0.035},
+			],
+		},
 		"attacker": [
 			{"t": 0.00, "clip": "Push", "at": 0.80},
 			{"t": 0.75, "clip": "Sitting_Enter", "at": 0.60},
@@ -673,7 +686,7 @@ const RECIPES := {
 			{"t": 0.83, "clip": "Death01", "at": 0.90},
 			{"t": 1.90, "clip": "Death01", "at": 1.60},
 		],
-		"defender_grips_until": 0.30,
+		"defender_grips_until": 0.0,
 	},
 	# Roman's finisher -- see Spear_Attacker in tools/blender/wrestling_clips.py.
 	"finisher_spear": {

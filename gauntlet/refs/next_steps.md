@@ -1,14 +1,21 @@
 # Aegis prioritised backlog
 
+## Cross Rhodes rear hold
+
+Cody reaches for the left wrist and hooks the neck with his right forearm
+from behind. The regression measures both contacts through the hold with
+Roman, Kenny, and the mannequin. The rotation into the lift, impact pose,
+and recovery still need review. [Implementation and validation](cross_rhodes_opening_2026_11_22/README.md).
+
+Running-drop late boot/back contact and Cody's landing and recovery remain
+next in the paired queue, followed by the interruption and teardown audit.
+
 ## Snap Dragon 3 rear entry and clearance
 
 Kenny starts behind the grounded defender and the rear walk-in preserves their
 approach sides. Defender shin clearance improves in all three probe pairings.
 The move completes and restores physics in both player slots. Published for Mac
 at `0c15f09` with the exact tag and uploaded ZIP. [Validation and remaining hold and landing work](snap_dragon_3_2026_11_22/README.md).
-
-The next paired contact task is the Cross Rhodes facelock gap. Running-drop
-late boot/back contact and Cody's landing and recovery are still open.
 
 ## Latest Mac batch: Mexican Destroyer timing
 
@@ -19,8 +26,8 @@ for both wrestlers. [Timing, release and CI triage](paired_ci_2026_11_22/README.
 
 Continue with the remaining paired contact and source pose failures. Mexican
 Destroyer needs hand and cadence corrections plus real-roster clearance work.
-The Snap Dragon 3 clearance and entry work is recorded above. The Cross
-Rhodes facelock gap, walk-arm cadence, and running-drop recovery remain open.
+The Snap Dragon 3 clearance and entry work is recorded above. Cross Rhodes's remaining rotation and impact work, walk-arm cadence, and
+running-drop recovery remain open.
 
 ## Published: character-specific Roman impact fit
 

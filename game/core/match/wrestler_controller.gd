@@ -1489,8 +1489,8 @@ func _update_grip_ik() -> void:
 	var step := IK_BLEND_PER_TICK if engaged else -IK_BLEND_PER_TICK
 	_grip_blend_prev = _grip_blend
 	_grip_blend = clampf(_grip_blend + step, 0.0, 1.0)
-	for ik in _arm_ik:
-		ik.interpolation = _grip_blend
+	for side in _arm_ik.size():
+		_arm_ik[side].interpolation = _grip_weight(side, _grip_blend)
 	if _grip_cur_local.size() != _grip_targets.size():
 		_grip_cur_local.resize(_grip_targets.size())
 		for i in _grip_targets.size():
@@ -1541,7 +1541,11 @@ func draw_grip_between_ticks(f: float) -> void:
 	var blend := lerpf(_grip_blend_prev, _grip_blend, f)
 	for i in _grip_targets.size():
 		_grip_targets[i].position = _grip_prev_local[i].lerp(_grip_cur_local[i], f)
-		_arm_ik[i].interpolation = blend
+		_arm_ik[i].interpolation = _grip_weight(i, blend)
+
+
+func _grip_weight(side: int, blend: float) -> float:
+	return 0.0 if side == 1 and _paired_left_wrist_assist else blend
 
 
 # --- The lock-up's distance --------------------------------------------------
@@ -1645,6 +1649,18 @@ func _aim_grip_targets() -> bool:
 	# In a paired move, the move says what the attacker holds (PairedContacts).
 	if fsm.current_state == WrestlerFSM.State.GRAPPLE_HOLD and _is_grapple_attacker \
 			and grapple_rig and grapple_rig.is_active():
+		if _paired_left_wrist_assist:
+			var wrist := opponent.skeleton.find_bone(opponent._skeleton_bone_name("hand_l"))
+			if wrist < 0:
+				return false
+			var target := opponent.skeleton.global_transform \
+					* opponent.skeleton.get_bone_global_pose(wrist).origin
+			# Hold the near surface of the wrist rather than stacking both
+			# hand bones at the same point.
+			target += global_basis.z.normalized() * 0.045
+			_grip_mode = "paired:left_wrist"
+			_grip_targets[0].global_position = _reachable(ARM_CHAINS[0]["root"], target)
+			return true
 		if PairedContacts.authored_hands(grapple_rig._move):
 			return false
 		var family := PairedContacts.family(grapple_rig._move)
@@ -1729,6 +1745,7 @@ var _paired_release_ticks: int = -1
 ## that opens with a run and a gesture -- the Spears -- has his hands his own
 ## until the dive, not pulled to a waist three metres away.
 var _paired_grip_delay_ticks: int = 0
+var _paired_left_wrist_assist := false
 
 ## Switches this wrestler into his half of `move`'s authored performance, and
 ## returns whether the move actually had one. Called by GrappleRig.begin()
@@ -1767,9 +1784,12 @@ func play_paired_pose(move: MoveDef, is_attacker: bool) -> bool:
 			if is_attacker and release < 1.0 else -1
 	_paired_grip_delay_ticks = int(round(length * PairedRecipes.attacker_grip_from(move.animation_pair_id)
 			* Engine.physics_ticks_per_second)) if is_attacker else 0
+	_paired_left_wrist_assist = is_attacker and PairedContacts.hand_profile(move).get("assist_left_wrist", false)
 	return true
 
 func _on_fsm_state_changed(_previous: WrestlerFSM.State, current: WrestlerFSM.State) -> void:
+	if current != WrestlerFSM.State.GRAPPLE_HOLD:
+		_paired_left_wrist_assist = false
 	if current != WrestlerFSM.State.TAUNT:
 		_authored_pose = false
 	if current != WrestlerFSM.State.RUN:

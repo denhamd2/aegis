@@ -287,7 +287,7 @@ static func measure(host: Node, move_id: String, roster := PackedStringArray(),
 		# The attacker's hands against where PairedContacts says they hold.
 		r["grip_blend"] = maxf(r["grip_blend"], attacker._grip_blend)
 		var fam := PairedContacts.family(move)
-		if fam != "" and fam != "none" and attacker._grip_blend > 0.9:
+		if not authored_contacts and fam != "" and fam != "none" and attacker._grip_blend > 0.9:
 			var sk := attacker.skeleton
 			var chest := sk.global_transform * sk.get_bone_global_pose(
 					sk.find_bone(attacker._skeleton_bone_name("spine_03"))).origin
