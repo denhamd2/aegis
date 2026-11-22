@@ -5896,18 +5896,18 @@ CLIPS["Mexican_Destroyer_Attacker"] = [
     # Pull the head down under the arm; the man bends.
     (16, P(pelvis=(0.0, 0.02, 0.800), hips=(-14, 0, 0), spine=(-26, 0, 0),
            head=(10, 0, 0),
-           hand_r=(0.10, 0.16, 1.16), hand_l=(-0.08, 0.18, 1.18),
+           hand_r=(0.10, 0.30, 1.16), hand_l=(-0.18, 0.32, 1.18),
            fist_r=0.5, fist_l=0.5,
            foot_r=(0.22, -0.18, 0.104), foot_l=(-0.20, 0.18, 0.104))),
     # Held low, chest over his back, knees loaded.
     (24, P(pelvis=(0.0, 0.02, 0.760), hips=(-20, 0, 0), spine=(-32, 0, 0),
            head=(14, 0, 0),
-           hand_r=(0.08, 0.15, 1.02), hand_l=(-0.06, 0.17, 1.04),
+           hand_r=(0.08, 0.30, 1.02), hand_l=(-0.16, 0.32, 1.04),
            fist_r=0.6, fist_l=0.6,
            foot_r=(0.24, -0.20, 0.104), foot_l=(-0.20, 0.20, 0.104))),
     (30, P(pelvis=(0.0, 0.04, 0.700), hips=(-26, 0, 0), spine=(-36, 0, 0),
            head=(16, 0, 0),
-           hand_r=(0.06, 0.14, 0.94), hand_l=(-0.04, 0.16, 0.96),
+           hand_r=(0.06, 0.28, 0.94), hand_l=(-0.14, 0.30, 0.96),
            fist_r=0.7, fist_l=0.7,
            foot_r=(0.24, -0.22, 0.104), foot_l=(-0.20, 0.22, 0.104))),
     # The somersault over his back: 55 -> 310 degrees, two frames a key. The
