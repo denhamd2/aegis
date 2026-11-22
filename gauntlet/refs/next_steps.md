@@ -4,8 +4,8 @@
 
 Cody reaches for the left wrist and hooks the neck with his right forearm
 from behind. The regression measures both contacts through the hold with
-Roman, Kenny, and the mannequin. The rotation into the lift, impact pose,
-and recovery still need review. [Implementation and validation](cross_rhodes_opening_2026_11_22/README.md).
+Roman, Kenny, and the mannequin. Published and verified for Mac at `1c87df0`.
+The rotation into the lift, impact pose, and recovery still need review. [Implementation and validation](cross_rhodes_opening_2026_11_22/README.md).
 
 Running-drop late boot/back contact and Cody's landing and recovery remain
 next in the paired queue, followed by the interruption and teardown audit.

@@ -1,0 +1,77 @@
+{
+  "default": {
+    "valid_samples": 20,
+    "contacts": {
+      "neck_hook": {
+        "largest_surface_gap_m": 0.0441109647750854,
+        "largest_surface_penetration_m": 0.00113004839420319
+      },
+      "wrist_control": {
+        "largest_surface_gap_m": 0.0446958131790161,
+        "largest_surface_penetration_m": 0.0439565014392138
+      }
+    },
+    "pre_modifier_clearance_m": {
+      "body": 0.0163213831186295,
+      "arm": 0.0488749106228352
+    },
+    "post_modifier_baseline_m": {
+      "body": 0.12414710149169,
+      "arm": 0.112366067599505
+    },
+    "post_modifier_revised_m": {
+      "body": 0.031339750289917,
+      "arm": 0.112413237690926
+    }
+  },
+  "cody-roman": {
+    "valid_samples": 20,
+    "contacts": {
+      "neck_hook": {
+        "largest_surface_gap_m": 0.0127452274560928,
+        "largest_surface_penetration_m": 0.0157321507334709
+      },
+      "wrist_control": {
+        "largest_surface_gap_m": 0.0387658737301826,
+        "largest_surface_penetration_m": 0.0505324341654778
+      }
+    },
+    "pre_modifier_clearance_m": {
+      "body": 0.0108734971284866,
+      "arm": 0.0427662859857082
+    },
+    "post_modifier_baseline_m": {
+      "body": 0.115409019589424,
+      "arm": 0.10521625071764
+    },
+    "post_modifier_revised_m": {
+      "body": 0.0994449682533741,
+      "arm": 0.0534193289279938
+    }
+  },
+  "cody-kenny": {
+    "valid_samples": 20,
+    "contacts": {
+      "neck_hook": {
+        "largest_surface_gap_m": 0.0478626897335052,
+        "largest_surface_penetration_m": 0.00767784214019776
+      },
+      "wrist_control": {
+        "largest_surface_gap_m": 0.0183004997372627,
+        "largest_surface_penetration_m": 0.0454041101336479
+      }
+    },
+    "pre_modifier_clearance_m": {
+      "body": 0.0225343924760819,
+      "arm": 0.0487692084908486
+    },
+    "post_modifier_baseline_m": {
+      "body": 0.0703242510557175,
+      "arm": 0.128633973151445
+    },
+    "post_modifier_revised_m": {
+      "body": 0.0490578037500382,
+      "arm": 0.104819354489446
+    }
+  }
+}

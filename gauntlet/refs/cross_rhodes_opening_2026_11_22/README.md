@@ -33,3 +33,14 @@ Cody completed Cross Rhodes once against Roman and Kenny in both player
 slots. The defender entered Down and both actors resumed physics. The root
 track and both pose clocks reached the same final simulation tick.
 [Controller report](controller.json).
+
+All 60 required contact samples were valid and within tolerance in the
+production import. The side-view capture uses the real Cody and Kenny
+meshes, with the defender tinted blue by the studio probe.
+[Contact and clearance measurements](contact-clearance.json).
+[Side-view capture](cross-rhodes-side.jpg).
+
+Mac run [45083956159](https://github.com/denhamd2/aegis/actions/runs/45083956159)
+published `1c87df0`. The `mac-latest` tag and release target resolve to that
+commit. The uploaded ZIP size and digest are in the
+[publication receipt](mac-publication.json).
