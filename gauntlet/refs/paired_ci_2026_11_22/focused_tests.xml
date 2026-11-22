@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites id="2026-11-22" name="report_1" tests="34" failures="0" skipped="0" flaky="0" time="0.000">
+	<testsuite id="0" name="test_paired_poses" package="tests" timestamp="2026-11-22T11:20:16" hostname="localhost" tests="14" failures="0" errors="0" skipped="0" flaky="0" time="0.131">
+		<testcase name="test_every_recipe_samples_a_clip_the_rig_actually_has" classname="test_paired_poses" time="0.015">
+		</testcase>
+		<testcase name="test_every_sample_time_is_inside_its_source_clip" classname="test_paired_poses" time="0.012">
+		</testcase>
+		<testcase name="test_every_recipe_has_a_matching_trajectory" classname="test_paired_poses" time="0.004">
+		</testcase>
+		<testcase name="test_role_clips_are_exactly_as_long_as_the_trajectory" classname="test_paired_poses" time="0.005">
+		</testcase>
+		<testcase name="test_generated_library_has_both_roles_for_every_recipe" classname="test_paired_poses" time="0.003">
+		</testcase>
+		<testcase name="test_generated_clips_pose_every_bone_the_rig_animates" classname="test_paired_poses" time="0.013">
+		</testcase>
+		<testcase name="test_generated_track_paths_resolve_against_a_real_wrestler" classname="test_paired_poses" time="0.011">
+		</testcase>
+		<testcase name="test_roles_resolve_to_different_clips" classname="test_paired_poses" time="0.003">
+		</testcase>
+		<testcase name="test_a_move_with_no_recipe_resolves_to_nothing" classname="test_paired_poses" time="0.002">
+		</testcase>
+		<testcase name="test_defender_grip_windows_are_inside_the_move" classname="test_paired_poses" time="0.004">
+		</testcase>
+		<testcase name="test_a_wrestler_can_play_its_half_of_an_authored_move" classname="test_paired_poses" time="0.012">
+		</testcase>
+		<testcase name="test_a_move_with_no_recipe_falls_back_instead_of_failing" classname="test_paired_poses" time="0.012">
+		</testcase>
+		<testcase name="test_thrown_bodies_land_upright" classname="test_paired_poses" time="0.003">
+		</testcase>
+		<testcase name="test_no_move_ends_with_a_body_on_its_face" classname="test_paired_poses" time="0.003">
+		</testcase>
+	</testsuite>
+	<testsuite id="1" name="test_ff_library" package="tests" timestamp="2026-11-22T11:20:16" hostname="localhost" tests="17" failures="0" errors="0" skipped="0" flaky="0" time="1.375">
+		<testcase name="test_every_wrestler_in_the_video_is_in_it" classname="test_ff_library" time="0.004">
+		</testcase>
+		<testcase name="test_every_move_loads_and_carries_its_tags" classname="test_ff_library" time="0.025">
+		</testcase>
+		<testcase name="test_a_shared_move_is_one_move_tagged_to_each_user" classname="test_ff_library" time="0.003">
+		</testcase>
+		<testcase name="test_cody_and_kenny_have_their_video_movesets" classname="test_ff_library" time="0.003">
+		</testcase>
+		<testcase name="test_the_moves_we_already_animate_are_built" classname="test_ff_library" time="0.002">
+		</testcase>
+		<testcase name="test_batch_one_is_built" classname="test_ff_library" time="0.003">
+		</testcase>
+		<testcase name="test_chokeslam_is_reachable_in_a_configured_match" classname="test_ff_library" time="1.256">
+		</testcase>
+		<testcase name="test_samoan_drop_uses_the_carry_contact_family" classname="test_ff_library" time="0.006">
+		</testcase>
+		<testcase name="test_batch_two_is_built_and_romans" classname="test_ff_library" time="0.005">
+		</testcase>
+		<testcase name="test_batch_three_is_built_and_codys" classname="test_ff_library" time="0.004">
+		</testcase>
+		<testcase name="test_batch_four_is_built_and_romans" classname="test_ff_library" time="0.004">
+		</testcase>
+		<testcase name="test_batch_five_is_built_and_romans" classname="test_ff_library" time="0.004">
+		</testcase>
+		<testcase name="test_batch_six_is_codys_dive" classname="test_ff_library" time="0.003">
+		</testcase>
+		<testcase name="test_kenny_batch_one_is_built_and_his" classname="test_ff_library" time="0.004">
+		</testcase>
+		<testcase name="test_kenny_batch_two_is_built_and_his" classname="test_ff_library" time="0.005">
+		</testcase>
+		<testcase name="test_library_moves_find_their_contact_family" classname="test_ff_library" time="0.006">
+		</testcase>
+		<testcase name="test_cody_and_roman_have_fits" classname="test_ff_library" time="0.004">
+		</testcase>
+	</testsuite>
+	<testsuite id="2" name="test_roman_landing_fit" package="tests" timestamp="2026-11-22T11:20:18" hostname="localhost" tests="3" failures="0" errors="0" skipped="0" flaky="0" time="16.871">
+		<testcase name="test_fit_respects_both_imported_parent_axes_and_keeps_approach_handoff" classname="test_roman_landing_fit" time="6.938">
+		</testcase>
+		<testcase name="test_source_attacker_other_moves_and_rotations_remain_unmodified" classname="test_roman_landing_fit" time="8.524">
+		</testcase>
+		<testcase name="test_measured_source_clip_and_mesh_have_not_silently_changed" classname="test_roman_landing_fit" time="1.373">
+		</testcase>
+	</testsuite>
+</testsuites>

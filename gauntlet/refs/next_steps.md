@@ -1,11 +1,25 @@
 # Aegis prioritised backlog
 
-## Current batch: character-specific Roman impact fit
+## Latest Mac batch: Mexican Destroyer timing
+
+Published at `6afc76d` with the exact `mac-latest` tag and uploaded Aegis.zip
+verified. Both role clips finish with the 2.533 s root track. All 34 focused
+tests pass. The real controller delivered the move once and restored physics
+for both wrestlers. [Timing, release and CI triage](paired_ci_2026_11_22/README.md).
+
+Continue with the remaining paired contact and source pose failures. Mexican
+Destroyer needs hand and cadence corrections plus real-roster clearance work.
+Snap Dragon 3 still shows overlap and needs a guard that recognizes a rear
+start. The Cross Rhodes facelock gap, walk-arm cadence, and running-drop
+landing and recovery work remain open.
+
+## Published: character-specific Roman impact fit
 
 37 focused checks pass. Roman's real head skin at running-drop impact improves
 from24.6cm to2.1cm above the mat (next sample0.8cm), with no new protected-surface
 penetration in the fitted window. Both physical slots and intermediate samples
-were checked; newer Kenny loop4 workec72208 is preserved. Mac publication pending.
+were checked. Mac run [43824387319](https://github.com/denhamd2/aegis/actions/runs/43824387319)
+published the batch at `d1c1c3e`. Subsequent releases retain the fit.
 [Evidence and remaining anatomical limits](roman_landing_fit_2026_11_16/README.md).
 
 The previous claim that Roman's head reached the mat at61 included hair; actual
@@ -14,7 +28,7 @@ single vertical offset. Next: correct that late anatomical pose and Cody's
 penetration, review recovery continuously, then resume grapple lifetime/remaining
 initiative priorities. Full move acceptance and native M1 performance remain open.
 
-## Latest deployed: camera impact-shake repair
+## Published: camera impact-shake repair
 
 Owner moved backlog8 ahead of landing fit.45 focused cases pass. One scheduled
 cue now covers all camera modes, avoiding shot-delayed/repeated pulses and the
@@ -23,8 +37,8 @@ retain their strength and continuous animation. Running-drop shake uses authored
 impact59 rather than catch37. [Evidence](camera_shake_2026_11_15/README.md).
 Mac run43761306666 succeeded; exact commitfb01d89 and uploaded
 Aegis.zip1,033,207,483bytes verified. Latest Kenny work8cb7576 is preserved.
-Native shake feel awaits owner Mac review; landing fit remains queued.
-After verified delivery, resume landing fit unless the owner changes priorities.
+Native shake feel awaits owner Mac review. Later tuning is included in the
+Mac build from `29cfb01` onward.
 
 ## Previous deployed: authored running-drop wrap and boot arc
 

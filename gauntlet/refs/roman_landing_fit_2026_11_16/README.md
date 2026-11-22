@@ -1,7 +1,8 @@
 # Roman running-drop impact fit — 16 November 2026
 
-Publication: focused validation complete; Mac publication pending. Includes the
-newer Kenny loop-4 commit `ec72208` without replacing its animation assets.
+Mac run [43824387319](https://github.com/denhamd2/aegis/actions/runs/43824387319)
+published this batch at `d1c1c3e`. Current builds retain the fit. The batch also
+includes Kenny loop 4 (`ec72208`).
 
 Roman's retargeted defender clip now receives a measured, character-specific
 hips translation during source frames 55–63. The source Blender motion, root tracks,
