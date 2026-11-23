@@ -26,8 +26,11 @@ retained. Published and verified for Mac at `bf25f3f`. [Implementation and valid
 Godot releases surviving wrestlers and restores their previous physics state
 when the rig or a participant exits or when the move is cancelled. Cancelled
 moves clear pending completion callbacks, camera impact cues and replay
-capture. All 34 focused Godot checks pass. Broader reversal and interruption
-coverage and the Unreal implementation remain open.
+capture. All 65 focused Godot checks pass, including camera and replay.
+Mac run [45173653558](https://github.com/denhamd2/aegis/actions/runs/45173653558)
+published `8d06861`. The exact tag, release target and uploaded 1,034,172,437-byte
+ZIP were verified. Broader reversal coverage and the Unreal implementation
+remain open.
 [Unreal parity cases](../../tools/unreal/GRAPPLE_LIFETIME.md).
 
 ## Snap Dragon 3 rear entry and clearance
