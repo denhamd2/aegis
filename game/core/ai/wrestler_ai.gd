@@ -390,7 +390,7 @@ func _chain_input() -> Dictionary:
 	var c := controller
 	if not c._is_grapple_attacker:
 		# In it: read the hold coming, and maybe take it over.
-		if c.opponent and c.opponent._chain_enabled and c.opponent.chain_hold == "" \
+		if c.in_chain_read() and not c.opponent._chain_done \
 				and c.opponent._chain_read == CHAIN_READ_TICK:
 			var stamina: float = c.combat.stamina
 			var go := _chain_rng().randf() < CHAIN_REVERSAL_CHANCE \

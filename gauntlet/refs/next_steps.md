@@ -34,8 +34,19 @@ for AI and allowing either slot to start the same parry on the last legal
 contact frame. All 60 focused checks passed. Mac run
 [45177947449](https://github.com/denhamd2/aegis/actions/runs/45177947449) published
 `ae1d641`. The exact tag, release target and uploaded 1,034,173,564-byte ZIP
-were verified. Paired grapple counters and Unreal runtime parity remain open.
+were verified. Unreal runtime parity remains open.
 [Unreal parity cases](../../tools/unreal/GRAPPLE_LIFETIME.md).
+
+## Paired chain grapple counters
+
+The referee resolves both slots against the same chain-read clock. The
+defender gets one stamina-charged attempt per read. A successful read
+immediately transfers both roles to the existing authored paired hold.
+Misses leave the holder's move available. Interrupted reads and cancelled
+playback release both wrestlers without landing wear. All 89 focused checks
+passed, including authored playback and cancellation in both slots. Separately authored
+counters for committed throws, directional attacks and specials still need
+source and animation work. [Unreal parity cases](../../tools/unreal/GRAPPLE_LIFETIME.md#paired-chain-grapple-counters).
 
 ## Grapple cancellation and teardown
 

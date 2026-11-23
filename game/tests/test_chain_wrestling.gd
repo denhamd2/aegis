@@ -29,7 +29,6 @@ func test_the_reversal_window_sits_inside_the_read() -> void:
 	var w := WrestlerController.CHAIN_REVERSAL_WINDOW
 	assert_int(w.x).is_greater(0)
 	assert_int(w.y).is_less(WrestlerController.CHAIN_READ_TICKS)
-	assert_int(WrestlerController.CHAIN_REVERSAL_HEAD_START).is_less(WrestlerController.CHAIN_READ_TICKS)
 	# The AI reads inside it too.
 	assert_int(WrestlerAI.CHAIN_READ_TICK).is_between(w.x, w.y)
 
@@ -70,3 +69,163 @@ func test_each_link_ends_with_the_two_squared_up() -> void:
 				"%s: the holder ends facing away" % id).is_greater(0.9)
 		assert_float((d[1] as Vector3).dot(-a_to_d)).override_failure_message(
 				"%s: the man held ends facing away" % id).is_greater(0.9)
+
+
+func _chain_pair(swapped: bool) -> Array[WrestlerController]:
+	const WRESTLER := preload("res://scenes/wrestler.tscn")
+	var a: WrestlerController = auto_free(WRESTLER.instantiate())
+	var b: WrestlerController = auto_free(WRESTLER.instantiate())
+	var pair_root: Node3D = auto_free(Node3D.new())
+	add_child(pair_root)
+	a.name = &"WrestlerA"
+	b.name = &"WrestlerB"
+	var rig := GrappleRig.new()
+	var trajectories := AnimationPlayer.new()
+	trajectories.callback_mode_process = AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_PHYSICS
+	trajectories.add_animation_library(&"", preload("res://resources/animations/paired_moves.tres"))
+	rig.add_child(trajectories)
+	rig.animation_player = trajectories
+	pair_root.add_child(rig)
+	var holder := b if swapped else a
+	var held := a if swapped else b
+	for wrestler: WrestlerController in [a, b]:
+		pair_root.add_child(wrestler)
+		wrestler.set_physics_process(false)
+		wrestler.is_ai = false
+		wrestler.grapple_rig = rig
+		wrestler.opponent = held if wrestler == holder else holder
+		wrestler.fsm.transition_to(WrestlerFSM.State.TIE_UP)
+	holder.position.x = -0.45
+	held.position.x = 0.45
+	holder.combat.record_tier(0)
+	holder._is_grapple_attacker = true
+	holder.fsm.transition_to(WrestlerFSM.State.GRAPPLE_HOLD)
+	held.fsm.transition_to(WrestlerFSM.State.GRAPPLE_HOLD)
+	return [holder, held]
+
+
+func _chain_tick(holder: WrestlerController, held: WrestlerController,
+		swapped: bool, holder_input: Dictionary, held_input: Dictionary) -> void:
+	var referee := MatchReferee.new()
+	referee.wrestler_a = held if swapped else holder
+	referee.wrestler_b = holder if swapped else held
+	holder._read_reversal(holder_input)
+	held._read_reversal(held_input)
+	holder._chain_input_this_tick = holder_input
+	held._chain_input_this_tick = held_input
+	referee._resolve_tick()
+	referee.free()
+
+
+func test_window_edges_start_the_paired_counter_once_in_either_slot() -> void:
+	var window := WrestlerController.CHAIN_REVERSAL_WINDOW
+	for swapped: bool in [false, true]:
+		for tick: int in [window.x, window.y]:
+			var pair := _chain_pair(swapped)
+			var holder := pair[0]
+			var held := pair[1]
+			holder._chain_read = tick
+			var health_before := holder.combat.health()
+			_chain_tick(holder, held, swapped, {"chain": "headlock"}, {"reversal": true})
+			assert_bool(held.grapple_rig.is_active()).is_true()
+			assert_bool(holder._is_grapple_attacker).is_false()
+			assert_bool(held._is_grapple_attacker).is_true()
+			assert_str(held.chain_hold).is_equal("waistlock")
+			assert_int(held.chain_reversals).is_equal(1)
+			assert_int(held._reversal_lockout).is_equal(0)
+			assert_float(held.combat.stamina).is_equal_approx(
+					1.0 - CombatSystem.STAMINA_REVERSAL, 0.0001)
+
+			_chain_tick(held, holder, not swapped, {}, {"reversal": true})
+			assert_int(holder.chain_reversals).is_equal(0)
+
+			var played := false
+			var landed: Array[MoveDef] = []
+			held.chain_hold_landed.connect(func(_a, _d, move): landed.append(move))
+			for _tick in 160:
+				if not held.grapple_rig.is_active():
+					break
+				await get_tree().physics_frame
+				if held.grapple_rig.animation_player.current_animation == &"chain_waistlock":
+					played = true
+			assert_bool(played).is_true()
+			assert_array(landed).is_equal([WrestlerController.CHAIN_HOLDS["waistlock"]])
+			assert_float(holder.combat.health()).is_less(health_before)
+			assert_str(held.chain_hold).is_empty()
+			assert_int(held._chain_read).is_equal(0)
+			assert_int(held.fsm.current_state).is_equal(WrestlerFSM.State.GRAPPLE_HOLD)
+			assert_int(holder.fsm.current_state).is_equal(WrestlerFSM.State.GRAPPLE_HOLD)
+
+
+func test_an_outside_window_read_cannot_steal_the_hold_or_charge_twice() -> void:
+	var window := WrestlerController.CHAIN_REVERSAL_WINDOW
+	for swapped: bool in [false, true]:
+		for tick: int in [window.x - 1, window.y + 1]:
+			var pair := _chain_pair(swapped)
+			var holder := pair[0]
+			var held := pair[1]
+			holder._chain_read = tick
+			_chain_tick(holder, held, swapped, {"chain": "wristlock"}, {"reversal": true})
+			assert_bool(held.grapple_rig.is_active()).is_false()
+			assert_bool(held._chain_reversal_spent).is_true()
+			_chain_tick(holder, held, swapped, {}, {"reversal": true})
+			assert_int(held.chain_reversals).is_equal(0)
+			assert_float(held.combat.stamina).is_equal_approx(
+					1.0 - CombatSystem.STAMINA_REVERSAL, 0.0001)
+			holder._chain_read = WrestlerController.CHAIN_READ_TICKS - 1
+			_chain_tick(holder, held, swapped, {}, {})
+			assert_bool(holder.grapple_rig.is_active()).is_true()
+			assert_str(holder.chain_hold).is_equal("wristlock")
+			holder.grapple_rig.cancel()
+
+
+func test_counter_cancelled_at_rig_start_clears_both_roles_and_its_callback() -> void:
+	for swapped: bool in [false, true]:
+		var pair := _chain_pair(swapped)
+		var holder := pair[0]
+		var held := pair[1]
+		var rig := holder.grapple_rig
+		rig.grapple_started.connect(func(_a, _d, _move): rig.cancel(), CONNECT_ONE_SHOT)
+		holder._chain_read = WrestlerController.CHAIN_REVERSAL_WINDOW.x
+		_chain_tick(holder, held, swapped, {}, {"reversal": true})
+		assert_bool(rig.is_active()).is_false()
+		assert_bool(rig.grapple_finished.is_connected(held._on_chain_link_finished)).is_false()
+		for wrestler: WrestlerController in pair:
+			assert_int(wrestler.fsm.current_state).is_equal(WrestlerFSM.State.IDLE)
+			assert_bool(wrestler._is_grapple_attacker).is_false()
+			assert_float(wrestler.combat.health()).is_equal(1.0)
+
+
+func test_an_interrupted_read_releases_the_other_wrestler() -> void:
+	for holder_leaves: bool in [false, true]:
+		var pair := _chain_pair(false)
+		var holder := pair[0]
+		var held := pair[1]
+		var leaving := holder if holder_leaves else held
+		leaving.fsm.transition_to(WrestlerFSM.State.IDLE)
+		_chain_tick(holder, held, false, {}, {"reversal": true})
+		for wrestler: WrestlerController in pair:
+			assert_int(wrestler.fsm.current_state).is_equal(WrestlerFSM.State.IDLE)
+			assert_bool(wrestler._is_grapple_attacker).is_false()
+			assert_int(wrestler.chain_reversals).is_equal(0)
+
+
+func test_leaving_the_hold_during_counter_playback_cancels_the_pair() -> void:
+	for holder_leaves: bool in [false, true]:
+		var pair := _chain_pair(false)
+		var holder := pair[0]
+		var held := pair[1]
+		var rig := holder.grapple_rig
+		holder._chain_read = WrestlerController.CHAIN_REVERSAL_WINDOW.x
+		_chain_tick(holder, held, false, {}, {"reversal": true})
+		assert_bool(rig.is_active()).is_true()
+		var leaving := held if holder_leaves else holder
+		leaving.fsm.transition_to(WrestlerFSM.State.IDLE)
+		_chain_tick(held, holder, true, {}, {})
+		assert_bool(rig.is_active()).is_false()
+		assert_bool(rig.grapple_finished.is_connected(held._on_chain_link_finished)).is_false()
+		for wrestler: WrestlerController in pair:
+			assert_int(wrestler.fsm.current_state).is_equal(WrestlerFSM.State.IDLE)
+			assert_bool(wrestler._is_grapple_attacker).is_false()
+			assert_float(wrestler.combat.health()).is_equal(1.0)
+			assert_bool(wrestler._active_move == null).is_true()

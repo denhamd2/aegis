@@ -1822,6 +1822,12 @@ func _on_fsm_state_changed(_previous: WrestlerFSM.State, current: WrestlerFSM.St
 			_begin_sell(part if part != "" else "head", groggy_ticks)
 		else:
 			_begin_sell(most_hurt(combat.limb_damage, SELL_GETUP_MIN), SELL_GETUP_TICKS)
+	if _previous == WrestlerFSM.State.GRAPPLE_HOLD and current != _previous:
+		_chain_enabled = false
+		_chain_input_this_tick = null
+		if chain_hold != "":
+			_active_move = null
+			chain_hold = ""
 	if current == WrestlerFSM.State.GRAPPLE_HOLD:
 		# A tie-up's hold chains (see "chain wrestling"); a running paired
 		# move's does not. Both men reset: either may end up the holder.
@@ -2027,7 +2033,10 @@ func _physics_process(delta: float) -> void:
 			# wrestlers are in TIE_UP — mirrors PIN_DEFENDER's input capture.
 			_tie_up_input_this_tick = input.get("grapple", false)
 		WrestlerFSM.State.GRAPPLE_HOLD:
-			_process_grapple_hold(input)
+			if _chain_enabled:
+				_chain_input_this_tick = input
+			else:
+				_process_grapple_hold(input)
 		WrestlerFSM.State.MOVE_EXEC:
 			_process_active_move(input)
 		WrestlerFSM.State.HIT_REACT, WrestlerFSM.State.STUNNED:
@@ -4452,9 +4461,6 @@ const CHAIN_COUNTER := {
 }
 const CHAIN_LINKS_MAX := 3
 const CHAIN_READ_TICKS := 18
-## After a reversal the new holder's read is this much shorter: he is already
-## moving.
-const CHAIN_REVERSAL_HEAD_START := 12
 ## Ticks into a read inside which a Reversal press takes it over.
 const CHAIN_REVERSAL_WINDOW := Vector2i(4, 14)
 ## A stick push under this is no pick.
@@ -4471,6 +4477,8 @@ signal chain_hold_landed(holder: WrestlerController, held: WrestlerController, m
 
 ## Whether this hold chains at all: a tie-up's, not a running paired move's.
 var _chain_enabled := false
+# MatchReferee consumes both inputs together before advancing the read.
+var _chain_input_this_tick: Variant = null
 var _chain_links := 0
 var _chain_read := 0
 var _chain_pick := ""
@@ -4517,7 +4525,7 @@ func in_chain_read() -> bool:
 ## The holder's tick of the read. Returns true while the read goes on (or a
 ## link has started), false when it is over with nothing picked -- the caller
 ## then throws the grapple move as it always did.
-func _tick_chain_read(input: Dictionary) -> bool:
+func _tick_chain_read(input: Dictionary, defender_input: Dictionary = {}) -> bool:
 	if not _chain_enabled or _chain_links >= CHAIN_LINKS_MAX or _chain_done:
 		return false
 	# The match opens on a lock-up into a grapple move, never a chain of
@@ -4526,7 +4534,6 @@ func _tick_chain_read(input: Dictionary) -> bool:
 	if opening_lock_up():
 		_chain_done = true
 		return false
-	_chain_read += 1
 	var asked: String = String(input.get("chain", ""))
 	if asked == "none":
 		_chain_done = true
@@ -4535,6 +4542,9 @@ func _tick_chain_read(input: Dictionary) -> bool:
 		asked = chain_hold_for_stick(input.get("move", Vector2.ZERO))
 	if CHAIN_HOLDS.has(asked):
 		_chain_pick = asked
+	if opponent._try_chain_counter(defender_input):
+		return true
+	_chain_read += 1
 	if _chain_read < CHAIN_READ_TICKS:
 		return true
 	if _chain_pick == "":
@@ -4544,38 +4554,33 @@ func _tick_chain_read(input: Dictionary) -> bool:
 	return true
 
 
-## The held man's tick of the read: a Reversal press in the window takes it.
-func _tick_chain_counter(input: Dictionary) -> void:
-	if opponent == null or not opponent._chain_enabled or opponent.chain_hold != "" \
-			or opponent._chain_links >= CHAIN_LINKS_MAX or opponent._chain_done:
-		return
+## One attempt per read. The window uses the clock before it advances.
+func _try_chain_counter(input: Dictionary) -> bool:
 	if not input.get("reversal", false) or _chain_reversal_spent:
-		return
+		return false
+	_chain_reversal_spent = true
+	combat.spend_stamina(CombatSystem.STAMINA_REVERSAL)
 	var at := opponent._chain_read
 	if at < CHAIN_REVERSAL_WINDOW.x or at > CHAIN_REVERSAL_WINDOW.y:
-		_chain_reversal_spent = true
-		return
+		return false
 	_take_chain_over()
+	return true
 
 
-## Reverses the hold he was about to be put in: he is the holder now, and
-## goes into its counter.
+## Hand the roles to the counter immediately so both bodies enter its paired
+## animation together and neither can reverse again before the link ends.
 func _take_chain_over() -> void:
 	var held := opponent
 	var counter: String = CHAIN_COUNTER.get(held._chain_pick, "wristlock")
 	held._is_grapple_attacker = false
 	_is_grapple_attacker = true
-	_chain_enabled = true
 	_chain_links = held._chain_links
 	_chain_done = false
-	_chain_pick = counter
-	_chain_read = CHAIN_REVERSAL_HEAD_START
-	_chain_reversal_spent = false
-	held._chain_reversal_spent = false
 	held._chain_pick = ""
 	held._chain_read = 0
-	combat.spend_stamina(CombatSystem.STAMINA_REVERSAL)
 	chain_reversals += 1
+	# Start first so an interrupt from a reversal listener can cancel it.
+	_begin_chain_link(counter)
 	chain_reversed.emit(self, held)
 
 
@@ -4586,8 +4591,8 @@ func _begin_chain_link(hold: String) -> void:
 	opponent._chain_links = _chain_links
 	_active_move = move
 	if grapple_rig:
-		grapple_rig.begin(self, opponent, move)
 		grapple_rig.grapple_finished.connect(_on_chain_link_finished, CONNECT_ONE_SHOT)
+		grapple_rig.begin(self, opponent, move)
 	else:
 		_on_chain_link_finished(self, opponent)
 
@@ -5056,7 +5061,8 @@ func _read_reversal(input: Dictionary) -> void:
 	var can_read := CAN_REVERSE.has(fsm.current_state) and _has_reversible_strike(striker)
 	if not can_read or not _matches_reversal_read(striker):
 		_reversal_striker = null
-	if not input.get("reversal", false) or _reversal_lockout > 0 or _reversal_striker:
+	if not input.get("reversal", false) or _reversal_lockout > 0 or _reversal_striker \
+			or fsm.current_state == WrestlerFSM.State.GRAPPLE_HOLD:
 		return
 	combat.spend_stamina(CombatSystem.STAMINA_REVERSAL)
 	if can_read:
@@ -5655,11 +5661,30 @@ func _story_has(primary: MoveDef, pool: Array[MoveDef]) -> bool:
 	return false
 
 
-func _process_grapple_hold(input: Dictionary) -> void:
+func _release_interrupted_chain() -> bool:
+	if not _chain_enabled or fsm.current_state != WrestlerFSM.State.GRAPPLE_HOLD:
+		return false
+	if is_instance_valid(opponent) and opponent.is_inside_tree() \
+			and opponent.fsm.current_state == WrestlerFSM.State.GRAPPLE_HOLD:
+		return false
+	if grapple_rig and grapple_rig.is_active():
+		grapple_rig.cancel()
+	else:
+		_release_grapple_hold()
+	return true
+
+
+func _resolve_chain_hold_tick() -> void:
+	if _release_interrupted_chain() or not (_chain_input_this_tick is Dictionary) \
+			or not _is_grapple_attacker or fsm.current_state != WrestlerFSM.State.GRAPPLE_HOLD:
+		return
+	var defender_input: Dictionary = opponent._chain_input_this_tick \
+			if opponent._chain_input_this_tick is Dictionary else {}
+	_process_grapple_hold(_chain_input_this_tick, defender_input)
+
+
+func _process_grapple_hold(input: Dictionary, defender_input: Dictionary = {}) -> void:
 	if not _is_grapple_attacker:
-		# The defender has nothing to press while the attacker's paired move
-		# plays: he waits it out. Between chain links he may reverse.
-		_tick_chain_counter(input)
 		return
 	# A rig move is already playing (a running paired attack started this same
 	# tick, from the AI, after the rig had suspended this body): the hold is
@@ -5673,7 +5698,7 @@ func _process_grapple_hold(input: Dictionary) -> void:
 				_wants_shut_in_whip(input))
 		return
 	# Chain wrestling first: the read, and the holds it strings together.
-	if _tick_chain_read(input):
+	if _tick_chain_read(input, defender_input):
 		return
 	# Pick the rung FIRST, then ask whether it can be thrown.
 	#
@@ -5932,7 +5957,8 @@ func _pick_tier_move(primary: MoveDef, pool: Array[MoveDef]) -> MoveDef:
 func _release_grapple_hold() -> void:
 	_clear_grapple_roles()
 	fsm.transition_to(WrestlerFSM.State.IDLE)
-	if opponent and opponent.fsm.current_state == WrestlerFSM.State.GRAPPLE_HOLD:
+	if is_instance_valid(opponent) and opponent.is_inside_tree() \
+			and opponent.fsm.current_state == WrestlerFSM.State.GRAPPLE_HOLD:
 		opponent.fsm.transition_to(WrestlerFSM.State.IDLE)
 
 
@@ -5971,7 +5997,7 @@ func _clear_grapple_roles() -> void:
 	_is_grapple_attacker = false
 	_paired_release_ticks = -1
 	_paired_grip_delay_ticks = 0
-	if opponent:
+	if is_instance_valid(opponent):
 		opponent._is_grapple_attacker = false
 		opponent._paired_release_ticks = -1
 		opponent._paired_grip_delay_ticks = 0

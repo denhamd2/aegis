@@ -56,3 +56,26 @@ at frame zero in both slots. In PIE, test a button edge on the last
 legal contact frame in both slots, with full damage suppression and
 one parry. Run the unopposed jab as a control and verify one hit.
 Unreal standing reversal logic and PIE validation remain open.
+
+## Paired chain grapple counters
+
+Resolve these reads once at 60 Hz in the match referee after both player,
+AI or replay inputs arrive. Check the current chain read clock before it
+advances. Use ticks 4 through 14 inclusive in the 18-tick read. A defender
+has one attempt per read and pays reversal stamina once. A miss leaves the
+holder's choice in place. A whip or an explicit end to the read takes
+precedence. Keep the opening lock-up's existing direct grapple behavior.
+
+On success, start the existing paired counter immediately with swapped
+roles. Headlock and waistlock choices map to the waistlock pair. A wristlock
+or a read with no choice maps to the wristlock pair. Reserve both wrestlers
+through lead-in and playback. Apply the link's wear once on completion,
+then resume the chain read if links remain. Cancellation clears both role
+flags and the completion handler and restores each wrestler's previous
+physics processing state.
+
+In PIE, swap physical slots across the start and end boundary cases
+(ticks 4 and 14), misses at ticks 3 and 15, and cancellation when the rig
+starts. Verify one stamina charge per attempt, no second counter while
+the rig owns the pair, and no damage or stale completion on cancellation.
+The Unreal runtime and these PIE checks still require the Mac checkout.
