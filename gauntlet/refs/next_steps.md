@@ -31,7 +31,10 @@ published `5b9c253`. The exact tag, release target and uploaded 1,034,173,123-by
 ZIP were verified. The contact-tick follow-up resolves valid standing
 contacts after both wrestlers read input, using the original strike frame
 for AI and allowing either slot to start the same parry on the last legal
-contact frame. Paired grapple counters and Unreal runtime parity remain open.
+contact frame. All 60 focused checks passed. Mac run
+[45177947449](https://github.com/denhamd2/aegis/actions/runs/45177947449) published
+`ae1d641`. The exact tag, release target and uploaded 1,034,173,564-byte ZIP
+were verified. Paired grapple counters and Unreal runtime parity remain open.
 [Unreal parity cases](../../tools/unreal/GRAPPLE_LIFETIME.md).
 
 ## Grapple cancellation and teardown
