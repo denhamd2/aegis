@@ -3977,6 +3977,7 @@ func _far_rope_from_here(dir: Vector3) -> Vector3:
 	return Vector3(clampf(here.x, -edge, edge), here.y, signf(flat.z) * edge)
 
 func _start_move(state: WrestlerFSM.State, move: MoveDef) -> void:
+	_move_sequence += 1
 	if state in [WrestlerFSM.State.STRIKE, WrestlerFSM.State.RUNNING_ATTACK]:
 		_record_move_attempt(move)
 	_active_move = move
@@ -5021,7 +5022,9 @@ const REVERSAL_LOCKOUT := 30
 ## States he can parry from: on his feet with his hands free.
 const CAN_REVERSE := [WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION]
 
-var _reversal_armed := false
+var _move_sequence := 0
+var _reversal_striker: WrestlerController
+var _reversal_sequence := -1
 var _reversal_lockout := 0
 ## Reversals landed, for probes and the HUD.
 var reversals_landed := 0
@@ -5037,18 +5040,27 @@ static func in_reversal_window(move: MoveDef, frame: int) -> bool:
 func _read_reversal(input: Dictionary) -> void:
 	if _reversal_lockout > 0:
 		_reversal_lockout -= 1
-	if _reversal_armed and (opponent == null or opponent.fsm.current_state != WrestlerFSM.State.STRIKE):
-		# The strike he read never arrived (missed, or cut short).
-		_reversal_armed = false
-	if not input.get("reversal", false) or _reversal_lockout > 0 or _reversal_armed:
+	var striker := opponent
+	if not _matches_reversal_read(striker) or not CAN_REVERSE.has(fsm.current_state):
+		_reversal_striker = null
+	if not input.get("reversal", false) or _reversal_lockout > 0 or _reversal_striker:
 		return
 	combat.spend_stamina(CombatSystem.STAMINA_REVERSAL)
-	var striker := opponent
-	if striker and striker.fsm.current_state == WrestlerFSM.State.STRIKE and striker._active_move \
+	if CAN_REVERSE.has(fsm.current_state) and striker \
+			and striker.fsm.current_state == WrestlerFSM.State.STRIKE \
+			and not striker._active_move_hit_applied \
 			and in_reversal_window(striker._active_move, striker.strike_frame()):
-		_reversal_armed = true
+		_reversal_striker = striker
+		_reversal_sequence = striker._move_sequence
 	else:
 		_reversal_lockout = REVERSAL_LOCKOUT
+
+
+func _matches_reversal_read(striker: WrestlerController) -> bool:
+	return is_instance_valid(striker) and _reversal_striker == striker \
+			and striker._move_sequence == _reversal_sequence \
+			and striker.fsm.current_state == WrestlerFSM.State.STRIKE \
+			and in_reversal_window(striker._active_move, striker.strike_frame())
 
 
 ## Frames into the strike he is throwing.
@@ -5059,9 +5071,9 @@ func strike_frame() -> int:
 ## Called by the striker at contact. True if this man read it: he parries and
 ## counters, and the strike does nothing.
 func _take_reversal(striker: WrestlerController, move: MoveDef) -> bool:
-	if not _reversal_armed:
+	if not _matches_reversal_read(striker) or striker._active_move != move:
 		return false
-	_reversal_armed = false
+	_reversal_striker = null
 	if not CAN_REVERSE.has(fsm.current_state):
 		return false
 	reversals_landed += 1

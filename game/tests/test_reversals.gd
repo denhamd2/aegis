@@ -42,3 +42,74 @@ func test_stamina_is_spent_and_won_back_within_its_range() -> void:
 	assert_float(c.stamina).is_equal(0.0)
 	c.regen_stamina(5.0)
 	assert_float(c.stamina).is_equal(CombatSystem.STAMINA_MAX)
+
+
+func _reversal_pair(swapped: bool) -> Array[WrestlerController]:
+	const WRESTLER := preload("res://scenes/wrestler.tscn")
+	var a: WrestlerController = auto_free(WRESTLER.instantiate())
+	var b: WrestlerController = auto_free(WRESTLER.instantiate())
+	for wrestler: WrestlerController in [a, b]:
+		add_child(wrestler)
+		wrestler.set_physics_process(false)
+		wrestler.is_ai = false
+	var striker := b if swapped else a
+	var defender := a if swapped else b
+	striker.opponent = defender
+	defender.opponent = striker
+	striker.global_position = Vector3.ZERO
+	defender.global_position = Vector3(0.0, 0.0, -0.75)
+	return [striker, defender]
+
+
+func test_read_jab_parries_real_contact_in_either_slot() -> void:
+	var jab := load("res://resources/moves/strike_jab.tres") as MoveDef
+	for swapped: bool in [false, true]:
+		var pair := _reversal_pair(swapped)
+		var striker := pair[0]
+		var defender := pair[1]
+		striker._start_move(WrestlerFSM.State.STRIKE, jab)
+		for tick in jab.startup_frames:
+			defender._read_reversal({"reversal": tick == jab.reversal_window_start - WrestlerController.REVERSAL_LEAD})
+			striker._process_active_move({})
+		var before := defender.combat.health()
+		striker._process_active_move({})
+		defender._resolve_pending_hits()
+		assert_float(defender.combat.health()).is_equal(before)
+		assert_int(defender.reversals_landed).is_equal(1)
+		assert_object(defender._active_move).is_same(WrestlerController.REVERSAL_MOVE)
+		assert_int(defender.fsm.current_state).is_equal(WrestlerFSM.State.STRIKE)
+
+
+func test_read_does_not_transfer_to_a_restarted_jab() -> void:
+	var pair := _reversal_pair(false)
+	var striker := pair[0]
+	var defender := pair[1]
+	var jab := load("res://resources/moves/strike_jab.tres") as MoveDef
+	striker._start_move(WrestlerFSM.State.STRIKE, jab)
+	striker._move_ticks_remaining = jab.total_frames() - jab.startup_frames
+	defender._read_reversal({"reversal": true})
+	assert_object(defender._reversal_striker).is_same(striker)
+	striker._start_move(WrestlerFSM.State.STRIKE, jab)
+	striker._move_ticks_remaining = jab.total_frames() - jab.startup_frames
+	striker._process_active_move({})
+	defender._resolve_pending_hits()
+	assert_int(defender.reversals_landed).is_equal(0)
+	assert_int(defender.fsm.current_state).is_equal(WrestlerFSM.State.HIT_REACT)
+
+
+func test_early_read_locks_out_a_second_attempt_and_hit_still_resolves() -> void:
+	var pair := _reversal_pair(true)
+	var striker := pair[0]
+	var defender := pair[1]
+	var jab := load("res://resources/moves/strike_jab.tres") as MoveDef
+	striker._start_move(WrestlerFSM.State.STRIKE, jab)
+	defender._read_reversal({"reversal": true})
+	assert_int(defender._reversal_lockout).is_equal(WrestlerController.REVERSAL_LOCKOUT)
+	var after_miss := defender.combat.stamina
+	striker._move_ticks_remaining = jab.total_frames() - jab.startup_frames
+	defender._read_reversal({"reversal": true})
+	striker._process_active_move({})
+	defender._resolve_pending_hits()
+	assert_float(defender.combat.stamina).is_equal(after_miss)
+	assert_int(defender.reversals_landed).is_equal(0)
+	assert_int(defender.fsm.current_state).is_equal(WrestlerFSM.State.HIT_REACT)

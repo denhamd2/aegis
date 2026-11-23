@@ -32,3 +32,19 @@ attacker. The Godot regressions use real begin, cancellation and exit paths.
 
 Unreal implementation and PIE validation require the Mac checkout and editor
 MCP. This repository supplies the acceptance cases and the Godot implementation.
+
+## Standing strike reversal parity
+
+A valid parry read belongs to one opponent and one strike instance. Use
+the move's reversal window with the established input lead. A new swing,
+even one using the same move definition, needs its own read. Consume it
+once at valid strike contact. Expire it when that strike's window closes
+or the defender leaves a state that can parry.
+
+Check both physical player slots with a jab. A valid early read should
+prevent damage and enter the existing strike parry. A read made before the
+window should spend stamina and apply its lockout. Restarting the same jab
+after a read should allow the replacement strike to land. Godot parity
+covers those cases. Input that arrives on the exact physics tick of contact
+still needs slot-order arbitration. Paired grapple counters are a later
+slice and are not part of standing strike parry.

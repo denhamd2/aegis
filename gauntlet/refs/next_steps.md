@@ -21,6 +21,14 @@ The late settle and private Roman and Cody recovery clips address measured
 boot, head and back penetration. The original Roman head impact fit is
 retained. Published and verified for Mac at `bf25f3f`. [Implementation and validation](running_drop_landing_2026_11_22/README.md).
 
+## Standing reversal audit
+
+Godot binds a standing parry read to the exact incoming strike and expires it
+at the end of that strike's window. Live jab contacts cover both player slots,
+a restarted jab, and lockout after an early attempt. All 35 focused checks
+pass. Arbitration for input on the contact tick and paired grapple counters
+remain open. [Unreal parity cases](../../tools/unreal/GRAPPLE_LIFETIME.md).
+
 ## Grapple cancellation and teardown
 
 Godot releases surviving wrestlers and restores their previous physics state

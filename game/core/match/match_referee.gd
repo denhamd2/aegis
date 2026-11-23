@@ -276,19 +276,6 @@ func _try_start_tie_up() -> bool:
 	_tie_up_minigame = TieUpMinigame.new()
 	return true
 
-## Why there is no reversal here any more.
-##
-## A reversal used to cancel an incoming strike and play a paired counter
-## animation (reversal_counter.tres and five siblings) with the reverser in
-## the attacker role. Those counters were cut along with the power and
-## finisher throws -- they did not read on screen, and a counter that does
-## not read is a strike that simply vanishes. Nothing replaced the
-## mechanic: a strike thrown in this match loop now always resolves, and
-## the answer to being struck is to strike back.
-##
-## MoveDef still carries reversal_window_start/end. Those are measured
-## frame numbers, not decoration, so they stay -- but nothing reads them
-## today, and a reversal window without a consumer decides nothing.
 ## Covers a downed opponent. One function, one decision per pair: whoever
 ## is on his feet and close enough to a downed man goes for the cover.
 func _check_for_downed_opponent_action() -> void:
