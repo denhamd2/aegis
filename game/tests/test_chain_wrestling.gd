@@ -177,6 +177,8 @@ func test_an_outside_window_read_cannot_steal_the_hold_or_charge_twice() -> void
 			assert_bool(holder.grapple_rig.is_active()).is_true()
 			assert_str(holder.chain_hold).is_equal("wristlock")
 			holder.grapple_rig.cancel()
+	# Let the cancelled lead-in observe the cancellation before freeing its rig.
+	await get_tree().physics_frame
 
 
 func test_counter_cancelled_at_rig_start_clears_both_roles_and_its_callback() -> void:
@@ -229,3 +231,4 @@ func test_leaving_the_hold_during_counter_playback_cancels_the_pair() -> void:
 			assert_bool(wrestler._is_grapple_attacker).is_false()
 			assert_float(wrestler.combat.health()).is_equal(1.0)
 			assert_bool(wrestler._active_move == null).is_true()
+	await get_tree().physics_frame
