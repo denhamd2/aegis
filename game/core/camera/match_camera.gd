@@ -512,6 +512,7 @@ func _ready() -> void:
 	if grapple_rig:
 		grapple_rig.grapple_started.connect(_on_grapple_started)
 		grapple_rig.grapple_finished.connect(_on_grapple_finished)
+		grapple_rig.grapple_cancelled.connect(_on_grapple_cancelled)
 	for w in [wrestler_a, wrestler_b]:
 		var wc := w as WrestlerController
 		if wc == null:
@@ -1276,6 +1277,16 @@ func _on_grapple_finished(attacker: Node3D, defender: Node3D) -> void:
 		_finish_attacker = attacker
 		_finish_defender = defender
 		_held = 0.0
+
+func _on_grapple_cancelled() -> void:
+	_paired_impact_move = null
+	_paired_impact_consumed = false
+	_impact_shake_at = -1.0
+	_after_pending = false
+	_clear_completed_impact()
+	if mode == Mode.FINISHER_CUT:
+		resume_play()
+
 
 func cut_to_finisher() -> void:
 	mode = Mode.FINISHER_CUT

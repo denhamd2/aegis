@@ -122,3 +122,34 @@ func _trace_at(rows: Array, source_frame: float) -> Dictionary:
 			return row
 	fail("Missing paired-clock sample at source frame %s" % source_frame)
 	return {}
+
+
+func test_cancelled_running_drop_restores_controller_states_without_landing() -> void:
+	var scene: Node = auto_free(load("res://scenes/match.tscn").instantiate())
+	for child_name: String in ["Arena", "LightRig", "RingReflections"]:
+		var cosmetic := scene.get_node_or_null(child_name)
+		if cosmetic:
+			cosmetic.free()
+	scene.entrances = false
+	add_child(scene)
+	var a: WrestlerController = scene.get_node("WrestlerA")
+	var d: WrestlerController = scene.get_node("WrestlerB")
+	var rig: GrappleRig = scene.get_node("GrappleRig")
+	a.is_ai = false
+	d.is_ai = false
+	await get_tree().physics_frame
+	var move: MoveDef = load("res://resources/moves/running_grapple_inverted_drop.tres")
+	var landings: Array[MoveDef] = []
+	a.move_landed.connect(func(_a, _d, landed): landings.append(landed))
+	var health := d.combat.health()
+	a._begin_running_paired(move)
+	assert_bool(rig.is_active()).is_true()
+	rig.cancel()
+	assert_int(a.fsm.current_state).is_equal(WrestlerFSM.State.IDLE)
+	assert_int(d.fsm.current_state).is_equal(WrestlerFSM.State.IDLE)
+	assert_bool(a.is_physics_processing()).is_true()
+	assert_bool(d.is_physics_processing()).is_true()
+	assert_bool(rig.grapple_finished.is_connected(a._on_grapple_finished)).is_false()
+	assert_bool(a._is_grapple_attacker).is_false()
+	assert_float(d.combat.health()).is_equal(health)
+	assert_array(landings).is_empty()

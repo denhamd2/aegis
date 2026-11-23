@@ -59,6 +59,7 @@ func watch(p_buffer: ReplayBuffer, p_camera: MatchCamera, rig: GrappleRig,
 	_layer.add_child(_badge)
 	rig.grapple_started.connect(_on_started)
 	rig.grapple_finished.connect(_on_finished)
+	rig.grapple_cancelled.connect(_on_cancelled)
 
 
 ## A move worth replaying: a signature or bigger that is not the finisher,
@@ -96,6 +97,11 @@ func _on_finished(_a: Node3D, _d: Node3D) -> void:
 	# Not before the tail has been recorded: the replay ends on it. A move
 	# started in the meantime only delays it to the next gap (_in_move).
 	_due = maxf(_to, buffer.now()) + DELAY
+
+
+func _on_cancelled() -> void:
+	_in_move = false
+	_capture_from = -1.0
 
 
 func _process(delta: float) -> void:

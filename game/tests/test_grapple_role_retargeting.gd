@@ -101,3 +101,84 @@ func test_ladder_entry_height_belongs_to_the_attacker_in_either_slot() -> void:
 		assert_vector(baked.track_get_key_value(0,0)).is_equal_approx(Vector3(.4,.2+.7*GrappleRig.ladder_dive_lift(0),0),Vector3.ONE*.00001)
 		assert_vector(baked.track_get_key_value(2,0)).is_equal_approx(Vector3(-.4,1.12,0),Vector3.ONE*.00001)
 		p.container.free()
+
+
+func test_cancel_during_authored_playback_releases_both_slots_and_restores_clip() -> void:
+	for swapped: bool in [false, true]:
+		var library := AnimationLibrary.new()
+		var source := make_anim()
+		library.add_animation("probe", source)
+		var p := make_pair("CancelPair", library)
+		var attacker: CharacterBody3D = p.b if swapped else p.a
+		var defender: CharacterBody3D = p.a if swapped else p.b
+		attacker.set_physics_process(true)
+		defender.set_physics_process(false)
+		var move := MoveDef.new()
+		move.animation_pair_id = &"probe"
+		var results: Array[String] = []
+		p.rig.grapple_finished.connect(func(_a, _d): results.append("finish"))
+		p.rig.grapple_cancelled.connect(func(): results.append("cancel"))
+		p.rig.begin(attacker, defender, move)
+		for tick in range(p.rig.lead_in_ticks + 1):
+			await get_tree().physics_frame
+		assert_bool(p.player.is_playing()).is_true()
+		assert_bool(attacker.is_physics_processing()).is_false()
+		p.rig.cancel()
+		p.rig.cancel()
+		assert_bool(p.player.is_playing()).is_false()
+		assert_object(p.player.get_animation("probe")).is_same(source)
+		assert_bool(attacker.is_physics_processing()).is_true()
+		assert_bool(defender.is_physics_processing()).is_false()
+		assert_array(results).is_equal(["cancel"])
+		assert_bool(p.rig.is_active()).is_false()
+		p.container.free()
+
+
+func test_lost_participant_and_rig_teardown_resume_survivors() -> void:
+	for remove_rig: bool in [false, true]:
+		var p := make_pair("Teardown", AnimationLibrary.new())
+		p.a.set_physics_process(true)
+		p.b.set_physics_process(true)
+		var results: Array[String] = []
+		p.rig.grapple_finished.connect(func(_a, _d): results.append("finish"))
+		p.rig.grapple_cancelled.connect(func(): results.append("cancel"))
+		p.rig.begin(p.a, p.b, MoveDef.new())
+		if remove_rig:
+			p.rig.free()
+			assert_bool(p.b.is_physics_processing()).is_true()
+		else:
+			p.b.free()
+			assert_bool(p.rig.is_active()).is_false()
+		assert_bool(p.a.is_physics_processing()).is_true()
+		await get_tree().physics_frame
+		assert_array(results).is_equal(["cancel"])
+		p.container.free()
+
+
+func test_cancel_during_release_does_not_report_a_landing() -> void:
+	var library := AnimationLibrary.new()
+	library.add_animation("probe", make_anim())
+	var p := make_pair("CancelRelease", library)
+	p.a.set_physics_process(true)
+	p.b.set_physics_process(true)
+	var move := MoveDef.new()
+	move.animation_pair_id = &"probe"
+	var results: Array[String] = []
+	p.rig.grapple_finished.connect(func(_a, _d): results.append("finish"))
+	p.rig.grapple_cancelled.connect(func(): results.append("cancel"))
+	p.rig.begin(p.a, p.b, move)
+	for tick in range(p.rig.lead_in_ticks + 1):
+		await get_tree().physics_frame
+	# End the clip with overlapping capsules, so the rig enters its
+	# asynchronous release while it still owns both wrestlers.
+	p.player.seek(0.1, true)
+	p.b.global_position = p.a.global_position + Vector3(0.01, 0.0, 0.0)
+	p.player.animation_finished.emit(&"probe")
+	assert_bool(p.rig.is_active()).is_true()
+	p.rig.cancel()
+	for tick in range(GrappleRig.EASE_APART_TICKS + 1):
+		await get_tree().physics_frame
+	assert_array(results).is_equal(["cancel"])
+	assert_bool(p.a.is_physics_processing()).is_true()
+	assert_bool(p.b.is_physics_processing()).is_true()
+	p.container.free()

@@ -19,6 +19,7 @@ extends Node3D
 
 signal grapple_started(attacker: Node3D, defender: Node3D, move: MoveDef)
 signal grapple_finished(attacker: Node3D, defender: Node3D)
+signal grapple_cancelled
 
 @export var anchor: Marker3D
 @export var animation_player: AnimationPlayer
@@ -29,6 +30,9 @@ var _attacker_body: CharacterBody3D
 var _defender_body: CharacterBody3D
 var _move: MoveDef
 var _active: bool = false
+var _playback_id := 0
+var _attacker_physics := false
+var _defender_physics := false
 
 ## Paired clips are authored once against fixed node names -- "WrestlerA" is
 ## always the grounded/lifting role's track, "WrestlerB" always the thrown/
@@ -101,6 +105,12 @@ func begin(attacker: Node3D, defender: Node3D, move: MoveDef) -> void:
 	_attacker_body = attacker as CharacterBody3D
 	_defender_body = defender as CharacterBody3D
 
+	_playback_id += 1
+	var playback_id := _playback_id
+	_attacker_physics = is_instance_valid(_attacker_body) and _attacker_body.is_physics_processing()
+	_defender_physics = is_instance_valid(_defender_body) and _defender_body.is_physics_processing()
+	attacker.tree_exiting.connect(cancel)
+	defender.tree_exiting.connect(cancel)
 	_suspend(_attacker_body)
 	_suspend(_defender_body)
 	_pair_transform = _compute_pair_transform(attacker, defender)
@@ -132,31 +142,33 @@ func begin(attacker: Node3D, defender: Node3D, move: MoveDef) -> void:
 	# Suspended for the whole slide, so neither man's own _physics_process
 	# fights the interpolation, and _active is already true so nothing else
 	# can start a second grapple during it.
-	await _lead_in(attacker, defender)
-	if not _active:
+	if not _owns_playback(playback_id):
+		return
+	await _lead_in(attacker, defender, playback_id)
+	if not _owns_playback(playback_id):
 		return # the match ended, or the rig was torn down, mid-lock-up
 
 	_align_to_pair(attacker, defender)
 	_play_role_poses(attacker, defender, move)
 
-	if animation_player and move.animation_pair_id != &"" and animation_player.has_animation(move.animation_pair_id):
+	if animation_player and move and move.animation_pair_id != &"" and animation_player.has_animation(move.animation_pair_id):
 		_play_retargeted(move.animation_pair_id, attacker, defender)
 		animation_player.animation_finished.connect(_on_animation_finished, CONNECT_ONE_SHOT)
 	else:
 		# Grey-box fallback (Phase 2/3 gap): no paired animation library yet,
 		# so resolve on the move's own frame count instead of an anim signal.
 		var ticks_to_wait := move.total_frames() if move else 1
-		if await _wait_fallback_frames(ticks_to_wait):
+		if await _wait_fallback_frames(ticks_to_wait, playback_id):
 			_on_animation_finished(&"")
 
 
 ## MoveDef durations are simulation frames, including when no root clip exists.
 ## An idle timer can expire between physics ticks and changes its frame count
 ## under time scaling; both roles must remain owned for the same fixed ticks.
-func _wait_fallback_frames(frames: int) -> bool:
+func _wait_fallback_frames(frames: int, playback_id: int) -> bool:
 	for _tick in maxi(1, frames):
 		await get_tree().physics_frame
-		if not _active:
+		if not _owns_playback(playback_id):
 			return false
 	return true
 
@@ -290,12 +302,55 @@ static func defender_root_yaw(rot: Quaternion) -> Quaternion:
 ## at tick 18: the recording run was freed mid-move and its replay then
 ## diverged on the very tick the same move began.
 func _exit_tree() -> void:
+	cancel()
 	_restore_original_animation()
+
+
+func cancel() -> void:
+	if not _active:
+		return
+	if is_instance_valid(animation_player):
+		if animation_player.animation_finished.is_connected(_on_animation_finished):
+			animation_player.animation_finished.disconnect(_on_animation_finished)
+		if _original_anim:
+			animation_player.stop(true)
+	_restore_original_animation()
+	_level_bodies()
+	var participants := [_attacker, _defender]
+	_release_ownership()
+	for body: Node3D in participants:
+		if is_instance_valid(body) and body.has_method("cancel_paired_playback"):
+			body.cancel_paired_playback(self)
+	grapple_cancelled.emit()
+
+
+func _owns_playback(playback_id: int) -> bool:
+	return _active and _playback_id == playback_id
+
+
+func _release_ownership() -> void:
+	_active = false
+	for body in [_attacker, _defender]:
+		if is_instance_valid(body) and body.tree_exiting.is_connected(cancel):
+			body.tree_exiting.disconnect(cancel)
+	if is_instance_valid(_attacker_body):
+		_attacker_body.set_physics_process(_attacker_physics)
+	if is_instance_valid(_defender_body):
+		_defender_body.set_physics_process(_defender_physics)
+	_attacker = null
+	_defender = null
+	_attacker_body = null
+	_defender_body = null
+	_move = null
 
 func _restore_original_animation() -> void:
 	if not _original_anim:
 		return
-	var library := animation_player.get_animation_library("")
+	var library := _private_library
+	if library == null and is_instance_valid(animation_player):
+		library = animation_player.get_animation_library("")
+	if library == null:
+		return
 	if library.has_animation(_retargeted_anim_name):
 		library.remove_animation(_retargeted_anim_name)
 	library.add_animation(_retargeted_anim_name, _original_anim)
@@ -643,7 +698,7 @@ static func walk_in_ticks(from: Transform3D, to: Transform3D) -> int:
 ## authored trajectory starts from the wrong place. Rotation goes through the
 ## quaternion so a man who has to turn 170 degrees turns the short way round
 ## instead of through his own shoulder.
-func _lead_in(attacker: Node3D, defender: Node3D) -> void:
+func _lead_in(attacker: Node3D, defender: Node3D, playback_id: int) -> void:
 	var from_attacker := attacker.global_transform
 	var from_defender := defender.global_transform
 	var to_attacker := _pair_transform * _role_start(_move, true)
@@ -672,7 +727,7 @@ func _lead_in(attacker: Node3D, defender: Node3D) -> void:
 			pair[0].begin_walk_in(pair[1], pair[2], lead_in_ticks, _move, pair[3])
 	for tick in range(1, lead_in_ticks + 1):
 		await Engine.get_main_loop().physics_frame
-		if not _active:
+		if not _owns_playback(playback_id):
 			return
 		# Ease in and out: a man stepping into a hold starts from standing and
 		# settles onto his mark. (The old ease-out moved at three times the
@@ -910,19 +965,20 @@ func _suspend(body: CharacterBody3D) -> void:
 	if body:
 		body.set_physics_process(false)
 
-func _resume(body: CharacterBody3D) -> void:
-	if body:
-		body.set_physics_process(true)
-
 func _on_animation_finished(_anim_name: StringName) -> void:
+	if not _active:
+		return
+	var playback_id := _playback_id
 	_apply_root_motion()
 	_restore_original_animation()
 	_level_bodies()
-	await _ease_apart()
-	_resume(_attacker_body)
-	_resume(_defender_body)
-	_active = false
-	grapple_finished.emit(_attacker, _defender)
+	await _ease_apart(playback_id)
+	if not _owns_playback(playback_id):
+		return
+	var finished_attacker := _attacker
+	var finished_defender := _defender
+	_release_ownership()
+	grapple_finished.emit(finished_attacker, finished_defender)
 
 ## Ticks spent sliding the pair apart at the end of a move. Shorter than the
 ## lock-up's LEAD_IN_TICKS: coming out of a hold is a shove, not a step.
@@ -937,18 +993,18 @@ const EASE_APART_TICKS := 8
 ## clips finish 0.14-0.28 m apart and the legal distance is 0.95 m, so almost
 ## the whole correction was happening in a single frame.
 ##
-## Done here, before _resume(), because both bodies are still suspended: their
+## Done before releasing ownership because both bodies are still suspended: their
 ## own _physics_process is off, so writing the transform is how the rig moves
 ## them for the whole move and there is no floor contact to lose. (Driving
 ## velocity here instead would do nothing -- move_and_slide() is not running.)
-func _ease_apart() -> void:
+func _ease_apart(playback_id: int) -> void:
 	var target := _separation_target()
 	if target == Vector3.INF or not _defender_body:
 		return
 	var from := _defender_body.global_position
 	for tick in range(1, EASE_APART_TICKS + 1):
 		await Engine.get_main_loop().physics_frame
-		if not _active or not is_instance_valid(_defender_body):
+		if not _owns_playback(playback_id) or not is_instance_valid(_defender_body):
 			return
 		var t := float(tick) / float(EASE_APART_TICKS)
 		# Ease out: most of the push happens immediately, the way being shoved
@@ -964,7 +1020,7 @@ func _ease_apart() -> void:
 ## stand: measured, 4 of the 5 clips finish with the wrestlers closer together
 ## than one capsule diameter (0.8m) -- signature_backbreaker ends 0.28m apart,
 ## finisher_piledriver 0.14m. Physics is suspended for the whole move, so
-## nothing notices until _resume(), at which point Jolt resolves the
+## nothing notices until physics resumes, at which point Jolt resolves the
 ## interpenetration the only way it can and the defender climbs on top of the
 ## attacker -- confirmed live as the defender resting at y=0.4 (exactly one
 ## capsule radius) for 85% of a match, visibly hovering above the mat.
@@ -989,7 +1045,7 @@ func _ease_apart() -> void:
 ## upright; this handles it for every clip, including the 13 unwritten ones.
 func _level_bodies() -> void:
 	for body: CharacterBody3D in [_attacker_body, _defender_body]:
-		if not body:
+		if not is_instance_valid(body) or not body.is_inside_tree():
 			continue
 		# Rebuild the basis from yaw alone. Reading rotation.y off a basis
 		# that's pitched 90deg is unreliable (gimbal-degenerate), so recover

@@ -5888,6 +5888,26 @@ func _release_grapple_hold() -> void:
 	if opponent and opponent.fsm.current_state == WrestlerFSM.State.GRAPPLE_HOLD:
 		opponent.fsm.transition_to(WrestlerFSM.State.IDLE)
 
+
+func cancel_paired_playback(rig: GrappleRig) -> void:
+	for callback in [_on_grapple_finished, _on_whip_setup_finished, _on_chain_link_finished]:
+		if rig.grapple_finished.is_connected(callback):
+			rig.grapple_finished.disconnect(callback)
+	_is_grapple_attacker = false
+	_paired_grip_ticks = 0
+	_paired_release_ticks = -1
+	_paired_grip_delay_ticks = 0
+	_paired_left_wrist_assist = false
+	paired_separation = Vector3.ZERO
+	if not is_instance_valid(fsm) or not fsm.is_inside_tree() \
+			or fsm.current_state != WrestlerFSM.State.GRAPPLE_HOLD:
+		return
+	_active_move = null
+	chain_hold = ""
+	_chain_read = 0
+	velocity = Vector3.ZERO
+	fsm.transition_to(WrestlerFSM.State.IDLE)
+
 ## Drops the attacker/defender roles once a grapple is over.
 ##
 ## _is_grapple_attacker used to be set only, never cleared: whoever won the

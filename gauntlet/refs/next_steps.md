@@ -21,7 +21,14 @@ The late settle and private Roman and Cody recovery clips address measured
 boot, head and back penetration. The original Roman head impact fit is
 retained. Published and verified for Mac at `bf25f3f`. [Implementation and validation](running_drop_landing_2026_11_22/README.md).
 
-The grapple interruption and teardown audit is next in the paired queue.
+## Grapple cancellation and teardown
+
+Godot releases surviving wrestlers and restores their previous physics state
+when the rig or a participant exits or when the move is cancelled. Cancelled
+moves clear pending completion callbacks, camera impact cues and replay
+capture. All 34 focused Godot checks pass. Broader reversal and interruption
+coverage and the Unreal implementation remain open.
+[Unreal parity cases](../../tools/unreal/GRAPPLE_LIFETIME.md).
 
 ## Snap Dragon 3 rear entry and clearance
 
