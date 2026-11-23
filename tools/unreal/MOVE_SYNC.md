@@ -25,6 +25,23 @@ defaults directly. It includes move definitions in both the base and Fight
 Forever directories. The Godot step uses a temporary project with no arena
 import.
 
+In `move_defs.json`, `paired_rules` is keyed by pair ID. Timing values keep
+their source fractions and have corresponding zero-based `_tick` or
+`_ticks` fields on the paired trajectory clock. Contact windows include
+both endpoints. Grip ticks mark the start or release setting. An engine
+that eases out its grip still needs to implement that blend. Contact anchors
+use the authored skeleton's bone names and bone-local XYZ offsets in metres.
+`move_defs` also contains strike contact offsets in Godot wrestler-local
+metres, with -Z forward, strike-hand and reaction enums, and the landing
+orientation flags.
+
+For example, Cross Rhodes exports the right-forearm neck hook and left-wrist
+contact at ticks 9–18, with wrist assist enabled and release at tick 19.
+The running inverted drop exports forearm contact at tick 98, separation
+height release at ticks 110–118, and camera impact at tick 118. These values
+are inputs for the Unreal implementation. Importing the move tables alone
+does not activate those behaviors in Unreal.
+
 ## Refresh the Unreal project
 
 1. Download and unpack the workflow artifact for the commit being ported.

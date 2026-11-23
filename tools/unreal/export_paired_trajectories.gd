@@ -34,6 +34,7 @@ const MOVE_FIELDS := [
 	"damage_arms", "damage_legs", "momentum_cost", "momentum_gain",
 	"leaves_defender_down", "defender_lands_head_away", "down_face_first",
 	"required_opponent_state", "weight_class_min", "weight_class_max",
+	"strike_hand", "head_reaction", "contact_radius", "shove_m",
 ]
 
 
@@ -83,7 +84,8 @@ func _init() -> void:
 				return
 			var pair := String(def.animation_pair_id)
 			var row := {"animation_pair_id": pair, "total_frames": def.total_frames(),
-					"group": String(def.get_meta("ff_family", ""))}
+					"group": String(def.get_meta("ff_family", "")),
+					"contact_offset": _xyz(def.contact_offset)}
 			for field: String in MOVE_FIELDS:
 				row[field] = def.get(field)
 			definitions[id] = row
@@ -94,7 +96,8 @@ func _init() -> void:
 	if not _write(out_path, doc):
 		quit(1)
 		return
-	if args.size() > 1 and not _write(args[1], {"move_defs": definitions, "paired_rules": _paired_rules()}):
+	if args.size() > 1 and not _write(args[1], {
+			"move_defs": definitions, "paired_rules": _paired_rules(trajectories)}):
 		quit(1)
 		return
 	print("paired trajectories: %d clips, %d moves -> %s" % [trajectories.size(), moves.size(), out_path])
@@ -110,18 +113,42 @@ func _write(path: String, data: Dictionary) -> bool:
 	return file.get_error() == OK
 
 
-func _paired_rules() -> Dictionary:
+func _paired_rules(trajectories: Dictionary) -> Dictionary:
 	var rules := {}
 	for id: String in Recipes.RECIPES:
 		var recipe: Dictionary = Recipes.RECIPES[id]
 		var row := {}
-		for field: String in ["opening_alignment", "camera_impact_at", "attacker_grips_from",
+		var ticks: int = trajectories[id]["ticks"]
+		if recipe.has("opening_alignment"):
+			row["opening_alignment"] = recipe["opening_alignment"]
+		for field: String in ["camera_impact_at", "attacker_grips_from",
 				"attacker_grips_until", "defender_grips_until"]:
 			if recipe.has(field):
 				row[field] = recipe[field]
+				row[field + "_tick"] = roundi(float(recipe[field]) * ticks)
+		if recipe.has("separation_height_release"):
+			var release: Vector2 = recipe["separation_height_release"]
+			row["separation_height_release"] = [release.x, release.y]
+			row["separation_height_release_ticks"] = _tick_range(release, ticks)
+		if recipe.has("hand_contacts"):
+			var profile: Dictionary = recipe["hand_contacts"].duplicate(true)
+			for contact: Dictionary in profile.get("expected", []):
+				var window: Vector2 = contact["window"]
+				contact["window"] = [window.x, window.y]
+				contact["window_ticks"] = _tick_range(window, ticks)
+				contact["surface_offset"] = _xyz(contact.get("surface_offset", Vector3.ZERO))
+			row["hand_contacts"] = profile
 		if not row.is_empty():
 			rules[id] = row
 	return rules
+
+
+func _tick_range(window: Vector2, ticks: int) -> Array[int]:
+	return [roundi(window.x * ticks), roundi(window.y * ticks)]
+
+
+func _xyz(point: Vector3) -> Array[float]:
+	return [point.x, point.y, point.z]
 
 
 func _tracks(anim: Animation, role_node: String) -> Dictionary:
