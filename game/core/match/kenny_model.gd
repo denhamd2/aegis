@@ -61,8 +61,8 @@ const CROSS_RHODES_DOWN := &"cross_rhodes_down_out"
 ## Each point is a controller sample at 60 Hz and a height correction in metres.
 const CROSS_RHODES_LANDING := [
 	Vector2(42, 0.0), Vector2(46, 0.020), Vector2(47, 0.045),
-	Vector2(48, 0.090), Vector2(49, 0.150), Vector2(50, 0.237),
-	Vector2(51, 0.307), Vector2(52, 0.299), Vector2(53, 0.240),
+	Vector2(48, 0.090), Vector2(49, 0.150), Vector2(50, 0.224),
+	Vector2(51, 0.284), Vector2(52, 0.287), Vector2(53, 0.240),
 	Vector2(54, 0.182), Vector2(55, 0.141), Vector2(56, 0.111),
 	Vector2(59, 0.053), Vector2(62, 0.016), Vector2(65, 0.015),
 	Vector2(68, 0.028), Vector2(71, 0.056), Vector2(75, 0.099),

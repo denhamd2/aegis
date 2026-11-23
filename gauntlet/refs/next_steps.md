@@ -23,12 +23,14 @@ head leads the landing before his shoulders and hips settle. The move hands
 off to Down in the authored direction and eases into a small forearm guard.
 Kenny has an individual fit into the cover.
 
-On the displayed impact sample, Roman's head skin was 0.9 cm below the
-mat and Kenny's was 0.9 cm above it. Kenny's back and boots cleared the mat
-through the first 12 Down frames. All 50 focused checks passed, including
-the opening and closing edges of the wristlock window across both slots. Native
-review, tighter control through the inversion and Roman's late boot and leg
-clearance remain open. [Side and match-camera samples](ff_review/moves/cross_rhodes.png).
+The revised clips have zero detected one-frame jerks or dead holds in the
+cadence check. On the displayed impact sample, Roman's head skin was 0.3 cm
+above the mat and Kenny's was 2.0 cm above it. Kenny's back and boots cleared
+the mat through the first 12 Down frames. The wristlock window passed at
+both edges across the wrestler slots. Both seed-1 Roman–Cody orders retained
+their pinfall winners in the gameplay validation. Native review, tighter
+control through the inversion and Roman's late boot clearance remain open.
+[Side and match-camera samples](ff_review/moves/cross_rhodes.png).
 [Unreal timing and fitting cases](../../tools/unreal/GRAPPLE_LIFETIME.md#cross-rhodes-descent-and-wristlock-counter).
 
 ## Running inverted drop landing and recovery
