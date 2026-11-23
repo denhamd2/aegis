@@ -29,6 +29,9 @@ and 8 (impact shake).
 The backlog ranks the remaining batches by impact, effort and dependencies.
 Update the backlog with completed work and remaining limitations. Large move
 families and the remaining catalogue ship in separately validated small batches.
+The owner requested individual releases for the aerial moves on 23 November.
+Use the [aerial move order and evidence](ff_review/aerial_moves.md) for that
+work, and confirm the published Mac build for each move.
 
 **Owner update, 7 November:** deploy the validated changes for review on the
 owner's Mac, then continue the priorities. A cloud GPU/full-arena comparison is

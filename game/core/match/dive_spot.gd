@@ -70,6 +70,13 @@ const SPRING_MOVE := "res://resources/moves/dive_springboard_disaster_kick.tres"
 ## The springboard's other ending (gauntlet/refs/moveset_audit_2k26.md): the
 ## Cody Cutter off the same spring.
 const CUTTER_MOVE := "res://resources/moves/dive_springboard_cutter.tres"
+## Authored at 30 fps. Cody catches on frame 24 and both hit the mat on 35.
+const CUTTER_TICKS := 112
+const CUTTER_CATCH := 48
+const CUTTER_IMPACT := 70
+const CUTTER_DEFENDER_DELAY := 28
+const CUTTER_SIDE := 0.42
+const CUTTER_BUMP_TRAVEL := 0.34
 ## The third (Fight Forever's Springboard Moonsault 3): his back to the ring,
 ## up onto the middle rope and a backflip off it onto the man. Its own timing
 ## -- the turn and the hop up onto the rope come before the spring -- and its
@@ -207,8 +214,7 @@ func _build() -> void:
 			_hold("strikes/apron_climb", apron, 0, at(0.0, up_lane)))
 	_seg_add(24, _hold("strikes/idle_ready", kicked, 0, apron),
 			_hold("strikes/apron_climb", apron, 0, kicked))
-	# 12. The springboard Disaster Kick -- or the springboard Cody Cutter, the
-	# same spring and the same contact tick -- or the springboard moonsault.
+	# 12. The chosen springboard ending, with the timing of its own contact.
 	var ending := ending_of(attacker)
 	if ending == MOONSAULT_MOVE:
 		var flip := _go("strikes/springboard_moonsault_attacker", apron,
@@ -220,13 +226,21 @@ func _build() -> void:
 				_go("strikes/springboard_moonsault_defender", kicked, kicked, _out,
 						MOONSAULT_CONTACT - KICKED_CONTACT),
 				flip, "wide", [[MOONSAULT_CONTACT, "kick_hit"]])
+	elif ending == CUTTER_MOVE:
+		var beside := (-_out).cross(Vector3.UP) * CUTTER_SIDE
+		var bump := _go("strikes/springboard_cutter_defender", kicked,
+				kicked - _out * CUTTER_BUMP_TRAVEL, _out, CUTTER_DEFENDER_DELAY)
+		bump["travel_from"] = CUTTER_CATCH
+		bump["travel_until"] = CUTTER_IMPACT
+		_seg_add(CUTTER_TICKS, bump,
+				_go("strikes/springboard_cutter_attacker", apron,
+						at(SPRING_TO, up_lane) + beside, -_out),
+				"wide", [[CUTTER_IMPACT, "kick_hit"]])
 	else:
-		var cutter := ending == CUTTER_MOVE
 		_seg_add(SPRING_TICKS,
-				_go("strikes/springboard_cutter_defender" if cutter else "strikes/disaster_kick_defender",
-						kicked, kicked, _out, SPRING_CONTACT - KICKED_CONTACT),
-				_go("strikes/springboard_cutter_attacker" if cutter else "strikes/springboard_dk_attacker",
-						apron, at(SPRING_TO, up_lane), -_out),
+				_go("strikes/disaster_kick_defender", kicked, kicked, _out,
+						SPRING_CONTACT - KICKED_CONTACT),
+				_go("strikes/springboard_dk_attacker", apron, at(SPRING_TO, up_lane), -_out),
 				"wide", [[SPRING_CONTACT, "kick_hit"]])
 
 
@@ -311,9 +325,8 @@ func _physics_process(delta: float) -> void:
 		return
 	var seg: Dictionary = _segments[_seg]
 	_tick += 1
-	var t := clampf(float(_tick) / float(seg["ticks"]), 0.0, 1.0)
 	for pair: Array in [[defender, seg["d"]], [attacker, seg["a"]]]:
-		_drive(pair[0], pair[1], t, delta)
+		_drive(pair[0], pair[1], int(seg["ticks"]), delta)
 	for cue: Array in seg["events"]:
 		if int(cue[0]) == _tick:
 			_event(cue[1])
@@ -322,15 +335,18 @@ func _physics_process(delta: float) -> void:
 		_next()
 
 
-func _drive(w: WrestlerController, beat: Dictionary, t: float, delta: float) -> void:
+func _drive(w: WrestlerController, beat: Dictionary, segment_ticks: int, delta: float) -> void:
 	var delay: int = beat["delay"]
 	if delay > 0 and _tick == delay and beat["clip"] != "":
 		w.play_presentation_clip(beat["clip"])
 	var from: Vector3 = beat["from"]
 	var to: Vector3 = beat["to"]
-	# A delayed clip's travel runs over what is left of the segment.
-	var span := float(_segments[_seg]["ticks"]) - float(delay)
-	var u := t if delay <= 0 else clampf((_tick - delay) / maxf(span, 1.0), 0.0, 1.0)
+	# Usually travel runs from the start of the clip to the segment end.
+	# The cutter defender braces in place, then travels only during the drop.
+	var travel_from: int = beat.get("travel_from", delay)
+	var travel_until: int = beat.get("travel_until", segment_ticks)
+	var u := clampf(float(_tick - travel_from) / maxi(travel_until - travel_from, 1),
+			0.0, 1.0)
 	w.global_position = from.lerp(to, u)
 	var facing: Vector3 = beat["facing"]
 	if facing == Vector3.ZERO:
@@ -381,14 +397,16 @@ func _frame_shot(seg: Dictionary, cut: bool, delta: float) -> void:
 
 
 func _finish() -> void:
+	var cutter := ending_of(attacker) == CUTTER_MOVE
 	for entry: Array in _frozen:
 		(entry[0] as Node).set_physics_process(entry[1])
 	for w: WrestlerController in [attacker, defender]:
 		w.velocity = Vector3.ZERO
-		w.end_presentation()
-	# He lies head away from Cody, as the kick's victim half ends: turned
-	# round on the mat and down, the knockdown a move gives.
-	defender._turn_round_on_the_mat()
+		w.end_presentation(cutter and w == defender)
+	# The cutter's victim rolls into Down facing the apron. The kick and
+	# moonsault victims lie the other way and need the usual root half-turn.
+	if not cutter:
+		defender._turn_round_on_the_mat()
 	defender._go_down()
 	attacker.last_landed_tier = CombatSystem.Tier.SIGNATURE
 	if _camera:

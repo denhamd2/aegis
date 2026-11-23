@@ -33,6 +33,18 @@ control through the inversion and Roman's late boot clearance remain open.
 [Side and match-camera samples](ff_review/moves/cross_rhodes.png).
 [Unreal timing and fitting cases](../../tools/unreal/GRAPPLE_LIFETIME.md#cross-rhodes-descent-and-wristlock-counter).
 
+The Mac cadence follow-up published at `8dd6467`. The exact tag, release
+target and uploaded 1,034,175,622-byte ZIP were verified.
+[Mac build 45262205794](https://github.com/denhamd2/aegis/actions/runs/45262205794).
+
+## Aerial move releases
+
+The owner requested individual releases from the Fight Forever aerial
+catalogue, with shared motion for future wrestlers and style-appropriate
+assignments for Cody and Kenny. The springboard Cody Cutter leads, followed
+by the Diving Frog Splash and the other base dives.
+[Ordered work and reference timestamps](ff_review/aerial_moves.md).
+
 ## Running inverted drop landing and recovery
 
 The late settle and private Roman and Cody recovery clips address measured

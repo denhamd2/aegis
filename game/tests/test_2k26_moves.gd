@@ -78,6 +78,34 @@ func test_the_seed_picks_each_springboard_ending() -> void:
 	assert_str(DiveSpot.ending_of(_roman)).is_equal(DiveSpot.SPRING_MOVE)
 
 
+func test_the_cutter_damages_at_the_landing_and_preserves_the_down_pose_facing() -> void:
+	await _ticks(2)
+	_cody.match_seed = 4
+	_roman.global_position = Vector3(2.4, 0.0, 0.3)
+	_cody.global_position = Vector3(1.0, 0.0, 0.3)
+	var spot := DiveSpot.new()
+	_scene.add_child(spot)
+	spot.begin(_cody, _roman)
+	spot._seg = spot._segments.size() - 2
+	var hits: Array[int] = []
+	_roman.combat.damaged.connect(func(move: MoveDef) -> void:
+		if move.resource_path == DiveSpot.CUTTER_MOVE:
+			hits.append(spot._tick))
+	spot._next()
+	for i in DiveSpot.CUTTER_TICKS + 3:
+		await get_tree().physics_frame
+		if not is_instance_valid(spot):
+			break
+	assert_array(hits).is_equal([DiveSpot.CUTTER_IMPACT])
+	assert_bool(is_instance_valid(spot)).is_false()
+	assert_int(_roman.fsm.current_state).is_equal(WrestlerFSM.State.DOWN)
+	assert_float(_roman.global_position.x).is_equal_approx(
+			DiveSpot.KICKED_AT - DiveSpot.CUTTER_BUMP_TRAVEL, 0.02)
+	assert_float(-_roman.global_basis.z.x).is_greater(0.95)
+	assert_float(_cody.anim_player.get_animation("strikes/springboard_cutter_attacker").length) \
+			.is_equal_approx(DiveSpot.CUTTER_TICKS / DiveSpot.TPS, 0.001)
+
+
 ## The moonsault ending, played: Roman taken over backward and down, hurt,
 ## inside the ropes; Cody up on his feet inside, past him.
 func test_the_springboard_moonsault_puts_him_down() -> void:

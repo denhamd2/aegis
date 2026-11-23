@@ -272,7 +272,7 @@ const RECIPES := {
 		"seconds": 0.6667, "file": AUTHORED},
 	# DiveSpot's other ending, and the possum attack (PossumSpot).
 	"springboard_cutter_attacker": {"kind": "retime", "source": "Springboard_Cutter_Attacker",
-		"seconds": 1.600, "file": AUTHORED},
+		"seconds": 1.866667, "file": AUTHORED},
 	"springboard_cutter_defender": {"kind": "retime", "source": "Springboard_Cutter_Defender",
 		"seconds": 1.400, "file": AUTHORED},
 	# Its third ending, the springboard moonsault.

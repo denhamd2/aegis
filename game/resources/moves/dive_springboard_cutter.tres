@@ -5,9 +5,9 @@
 [resource]
 script = ExtResource("1")
 animation_pair_id = &"dive_springboard_cutter"
-startup_frames = 96
+startup_frames = 70
 active_frames = 0
-recovery_frames = 0
+recovery_frames = 42
 damage_head = 18.0
 damage_torso = 2.0
 damage_arms = 0.0

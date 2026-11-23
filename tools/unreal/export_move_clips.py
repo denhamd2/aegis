@@ -66,11 +66,22 @@ def strike_clips() -> dict:
     return out
 
 
+def move_clips() -> dict:
+    clips = strike_clips()
+    # DiveSpot plays these two clips from the presentation library. Expose
+    # them under the MoveDef ID so Unreal can resolve both roles together.
+    clips["dive_springboard_cutter"] = {
+        "kind": "aerial",
+        "attacker": clips["springboard_cutter_attacker"]["attacker"],
+        "defender": clips["springboard_cutter_defender"]["attacker"],
+        "seconds": clips["springboard_cutter_attacker"]["seconds"],
+    }
+    clips.update(paired_clips())
+    return clips
+
+
 def main() -> None:
-    table = {}
-    table.update(strike_clips())
-    table.update(paired_clips())  # a paired recipe wins over a strike of the same id
-    json.dump(dict(sorted(table.items())), sys.stdout, indent=1)
+    json.dump(dict(sorted(move_clips().items())), sys.stdout, indent=1)
     sys.stdout.write("\n")
 
 

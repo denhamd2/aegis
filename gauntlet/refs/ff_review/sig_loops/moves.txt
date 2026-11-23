@@ -1,4 +1,3 @@
-cody_disaster_kick signature_disaster_kick 375.3 376.3 377.3
 cody_cross_rhodes finisher_cross_rhodes 380.4 384.95 385.4
 cody_figure_four submission_figure_four 388.0 391.0 395.0
 kenny_v_trigger ff/v_trigger_1 615.0 615.8 617.6 --orbit 0 --dist 6

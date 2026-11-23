@@ -9,7 +9,7 @@ import struct
 import subprocess
 import tempfile
 
-from export_move_clips import paired_clips, strike_clips
+from export_move_clips import move_clips, paired_clips
 
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[1]
@@ -100,7 +100,7 @@ def export(bundle, godot):
                             "XDG_CONFIG_HOME": str(project / "config"),
                         })
     paired = paired_clips()
-    clips = {**strike_clips(), **paired}
+    clips = move_clips()
     write_json(bundle / "move_clips.json", clips)
     shutil.copy2(REPO / "game/assets/animations/wrestling_clips.glb", bundle / "wrestling_clips.glb")
     available = glb_clips(bundle / "wrestling_clips.glb")
@@ -120,6 +120,13 @@ def export(bundle, godot):
         if trajectories["moves"].get(move) != pair:
             raise ValueError(f"Missing trajectory mapping for {move}")
         required.update((roles["attacker"], roles["defender"]))
+    for move, roles in clips.items():
+        if roles["kind"] == "aerial":
+            if move not in definitions:
+                raise ValueError(f"No MoveDef for aerial clip {move}")
+            required.update((roles["attacker"], roles["defender"]))
+    if not required.issubset(available):
+        raise ValueError(f"Missing Blender source clips: {sorted(required - available)}")
 
     commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=REPO, text=True).strip()
     dirty = subprocess.check_output(

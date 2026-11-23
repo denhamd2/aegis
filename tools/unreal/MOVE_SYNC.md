@@ -51,8 +51,8 @@ does not activate those behaviors in Unreal.
    `import_move_sync.py` in the Unreal editor. The editor Python bridge can also
    pass `SYNC_BUNDLE` and `SOURCE_ANIM_DIR` as script globals.
 
-The editor script verifies payload hashes, checks that the eight source
-clips for the initial four moves exist, and verifies the move-to-trajectory
+The editor script verifies payload hashes, checks required source clips
+for the staged moves, and verifies the move-to-trajectory
 joins before writing the two DataTables. The import receipt records the bundle
 commit, hashes, table row counts, and source clip names checked. It confirms
 table import and asset presence. Reimport and retargeting still establish the
@@ -64,6 +64,18 @@ and the Down transition. Cross Rhodes grip and yaw behavior and the Roman and
 Cody running-drop fits still need Unreal equivalents or engine-neutral bakes.
 The exported rule fields are available for that work. The current Unreal
 DataTable structs consume the existing move and trajectory columns.
+
+## Springboard Cody Cutter
+
+The `dive_springboard_cutter` row resolves to both springboard role clips
+under the `aerial` kind. The bundle requires both source assets and exports
+the 70-tick startup and 42-tick recovery. The Godot director starts Cody on
+the apron 1.30 m from the opponent, starts the defender clip at tick 28,
+holds the catch at tick 48 and applies damage at tick 70. Cody's root moves
+0.85 m in and 0.42 m to his right. The defender travels 0.34 m inward from
+the catch through the bump, then rolls onto his back facing the apron at
+the shared Down transition. Check those cases in both slots when porting
+the aerial director. [Godot director](../../game/core/match/dive_spot.gd).
 
 After Unreal meets the gameplay, animation, and native M1 acceptance checks,
 make Unreal the source for new gameplay. Keep Godot on critical fixes until

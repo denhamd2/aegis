@@ -38,7 +38,7 @@ def build():
         spec = importlib.util.spec_from_file_location("export_move_clips", path)
         clips_mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(clips_mod)
-        clips = {**clips_mod.strike_clips(), **clips_mod.paired_clips()}
+        clips = clips_mod.move_clips()
         src = unreal.load_asset(SOURCE_TABLE)
         rows = json.loads(unreal.DataTableFunctionLibrary.export_data_table_to_json_string(src))
     out_rows = []

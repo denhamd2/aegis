@@ -44,8 +44,9 @@ All times are seconds into the video. There are 14 rows, covering the
 following moves.
 
 **Cody**
-- Disaster Kick, 375.3 → 376.3: a run-up and a leaping horizontal kick to the
-  head; both men crash down.
+- The footage at 375.3–377.3 s shows the springboard Cody Cutter. The first
+  loop labelled it Disaster Kick, so its historical likeness score for that
+  comparison is invalid. [Verified catch and landing](../aerial_moves.md#verified-footage-beats).
 - Cross Rhodes, 380.4 → 384.95:
   1. a collar-and-elbow tie-up;
   2. a front facelock with the arms hooked, held about 100 frames;

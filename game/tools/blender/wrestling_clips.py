@@ -395,7 +395,7 @@ def _lerp_value(a, b, t):
     return a
 
 
-def _world_clip(frames, root_to, keys):
+def _world_clip(frames, root_to, keys, root_right=0.0):
     """Per-frame root-relative poses from sparse world-space keys.
 
     `keys` is [(frame, full pose dict in world space)], first at 0 and last
@@ -413,11 +413,12 @@ def _world_clip(frames, root_to, keys):
         t = t * t * (3.0 - 2.0 * t)
         pose_now = {key: _lerp_value(k0[key], k1.get(key, k0[key]), t)
                     for key in k0}
+        rr = root_right * f / float(frames)
         rf = root_to[0] * f / float(frames)
         ru = root_to[1] * f / float(frames)
         for field in _TRAVEL_FIELDS:
             x, y, z = pose_now[field]
-            pose_now[field] = (x, y - rf, z - ru)
+            pose_now[field] = (x - rr, y - rf, z - ru)
         out.append((f, pose_now))
     return out
 
@@ -9193,71 +9194,147 @@ CLIPS["Crossbody_Land"] = [
 ]
 
 
-# --- The springboard Cody Cutter (DiveSpot's other ending) -----------------------
-#
-# 2K26's Cody Cutter list has two springboard variants
-# (gauntlet/refs/moveset_audit_2k26.md). The dive spot's last beat used to be
-# the springboard Disaster Kick only; on alternate matches it is this: the
-# same boot onto the middle rope from the apron and the same spring, but in
-# the air he catches the head in a three-quarter facelock and falls back to a
-# seat, driving the man's face into the mat in front of him. World space, the
-# Disaster Kick's travel (0.85 m in from the apron), the man 1.30 m in.
-CLIPS["Springboard_Cutter_Attacker"] = _world_clip(48, (0.85, 0.0), _unified([
-    (0,  P(hand_r=(0.30, 0.06, 1.25), hand_l=(-0.30, 0.06, 1.25),
-           fist_r=0.8, fist_l=0.8)),
-    (8,  P(pelvis=(0.0, 0.05, 1.050), hips=(-10, 0, 0), spine=(-14, 0, 0),
-           hand_r=(0.30, 0.08, 1.24), hand_l=(-0.30, 0.08, 1.24),
-           foot_r=(0.12, 0.06, 0.80), knee_r=(0.1, 1.0, 0.4),
-           foot_l=(-0.14, -0.02, 0.104), free_feet=True,
-           fist_r=0.8, fist_l=0.8)),
-    # Sprung high, reaching for the head.
-    (14, P(pelvis=(0.0, 0.45, 1.700), hips=(-18, 0, 0), spine=(-18, 0, 0),
-           head=(10, 0, 0),
-           hand_r=(0.12, 1.00, 1.95), hand_l=(-0.26, 0.80, 1.80),
-           foot_r=(0.15, 0.20, 1.20), foot_l=(-0.15, 0.15, 1.10), free_feet=True,
-           fist_r=0.5, fist_l=0.5)),
-    # Caught: the arm round his head, legs swinging under.
-    (19, P(pelvis=(0.0, 0.85, 1.500), hips=(-30, 0, 0), spine=(-14, 0, 0),
-           head=(6, 0, 0),
-           hand_r=(-0.04, 1.28, 1.55), hand_l=(-0.20, 1.22, 1.62),
-           elbow_r=(0.6, -0.4, -0.6), elbow_l=(-0.6, -0.4, -0.6),
-           foot_r=(0.15, 0.95, 0.80), foot_l=(-0.15, 0.90, 0.85), free_feet=True,
-           fist_r=0.6, fist_l=0.6)),
-    # Down to the seat, the head driven into the mat ahead of him.
-    (24, dict(pelvis=(0.0, 0.85, 0.220), hips=(12, 0, 0), spine=(6, 0, 0),
-              head=(-6, 0, 0),
-              hand_r=(-0.04, 1.20, 0.30), hand_l=(-0.24, 1.00, 0.12),
-              elbow_r=(0.7, 0.0, 0.7), elbow_l=(-0.6, 0.0, -0.8),
-              fist_r=0.6, fist_l=0.0,
-              foot_r=(0.18, 1.40, 0.104), foot_l=(-0.18, 1.34, 0.104),
-              knee_r=(0.2, 0.3, 1.0), knee_l=(-0.2, 0.3, 1.0))),
-    (30, dict(pelvis=(0.0, 0.85, 0.220), hips=(8, 0, 0), spine=(0, 0, 0),
-              head=(-10, 0, 0),
-              hand_r=(0.10, 1.10, 0.24), hand_l=(-0.24, 1.00, 0.10),
-              elbow_r=(0.7, 0.0, 0.7), elbow_l=(-0.6, 0.0, -0.8),
-              fist_r=0.3, fist_l=0.0,
-              foot_r=(0.18, 1.40, 0.104), foot_l=(-0.18, 1.34, 0.104),
-              knee_r=(0.2, 0.3, 1.0), knee_l=(-0.2, 0.3, 1.0))),
-    (38, _shifted(pose(GATHER), 0.85, 0.0)),
-    (48, _shifted(P(), 0.85, 0.0)),
-]))
+def _moved(base, right, fwd, up=0.0):
+    """`base` moved in world space: every travelling field together, and the
+    lateral too, which _shifted leaves alone."""
+    out = dict(base)
+    for field in _TRAVEL_FIELDS:
+        x, y, z = base[field]
+        out[field] = (x + right, y + fwd, z + up)
+    return out
 
-# The man it is done to: facing the apron, pulled forward and down by the
-# head on frame 18 (the Disaster Kick victim's contact frame, so DiveSpot's
-# timing holds), face-first, then over onto his back.
-CLIPS["Springboard_Cutter_Defender"] = [
-    (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(-14, 0, 0),
-           hand_r=(0.22, 0.46, 1.32), hand_l=(-0.20, 0.48, 1.30),
-           fist_r=0.6, fist_l=0.6)),
-    (12, P(spine=(-6, 0, 0), head=(6, 0, 0),
-           hand_r=(0.26, 0.24, 1.10), hand_l=(-0.24, 0.26, 1.08),
-           fist_r=0.6, fist_l=0.6)),
-    (18, dict(pelvis=(0.0, 0.08, 0.740), hips=(-40, 0, 0), spine=(-14, 0, 0),
-              head=(14, 0, 0),
-              hand_r=(0.24, 0.40, 1.00), hand_l=(-0.22, 0.42, 1.00),
-              fist_r=0.3, fist_l=0.3,
-              foot_r=(0.20, -0.18, 0.12), foot_l=(-0.18, -0.10, 0.16))),
-] + _face_first_then_roll(22, 42)
+
+# --- Springboard cutter (DiveSpot) ----------------------------------------
+#
+# From the apron: load the middle rope, jump inward, turn the hips away as
+# the right arm catches the head, then land on the back beside the opponent.
+# The opponent's knees give at the catch and his hands take part of the
+# face-down bump. Leave time on the mat before either wrestler changes pose.
+# See gauntlet/refs/ff_review/aerial_moves.md for the footage timing.
+#
+# The attacker ends 0.85 m inward and 0.42 m beside the opponent's lane.
+# Their faces and shoulders have room throughout the descent. Source frames
+# 24 and 35 are the catch and mat contact. The defender clip joins on source
+# frame 14 of the attacker, ten frames before the catch.
+_CUTTER_SIDE = 0.42
+_CUTTER_END = 0.85
+_CUTTER_APRON = P(hand_r=(0.30, 0.10, 1.20), hand_l=(-0.30, 0.10, 1.20),
+                 elbow_r=(0.55, -0.15, -0.82), elbow_l=(-0.52, -0.16, -0.83),
+                 ankle_r=(0, 0, 0), ankle_l=(0, 0, 0))
+_CUTTER_LOAD = pose(_CUTTER_APRON,
+                    pelvis=(0.0, 0.04, 1.15), hips=(-18, -8, 0), spine=(-22, 0, 0),
+                    head=(18, 0, 0), hand_r=(0.31, 0.09, 1.23), hand_l=(-0.30, 0.07, 1.23),
+                    foot_r=(0.14, 0.05, 0.85), foot_l=(-0.13, -0.16, 0.57),
+                    knee_r=(0.26, 0.9, 0.22), knee_l=(-0.24, 0.9, 0.16),
+                    fist_r=0.66, fist_l=0.56, free_feet=True)
+
+
+def _spring_cutter_air(hips, pelvis, hook, other_hand, extension):
+    # Carry the bent legs and elbow hints around the same turn as the torso.
+    # The right wrist stays a room-space target so it can meet the head.
+    spread = 0.05 * extension
+    spec = _body(hips, pelvis,
+                 foot_r=(0.15 + spread, 0.26 - 0.12 * extension, -0.54 - 0.18 * extension),
+                 foot_l=(-0.15 - spread, 0.32 - 0.12 * extension, -0.49 - 0.18 * extension),
+                 knee_r=(0.30, 0.92, 0.13), knee_l=(-0.27, 0.92, 0.12),
+                 elbow_r=(0.82, -0.27, -0.25), elbow_l=(-0.76, -0.33, -0.30),
+                 free_feet=True)
+    ankle_pitch = 14.0 + 31.0 * extension
+    return dict(spec, spine=(-5, 0, 2), head=(-2, -8, 0), hand_r=hook, hand_l=other_hand,
+                fist_r=0.48, fist_l=0.22,
+                ankle_r=(ankle_pitch, hips[1], 0), ankle_l=(ankle_pitch - 5, hips[1] + 8, 0))
+
+
+_CUTTER_ON_BACK = pose(_moved(_yawed(S(head=(-11, 0, 5), pelvis=(0, 0, 0.234),
+                                      hand_r=(0.26, -0.35, 0.22), hand_l=(-0.34, 0.10, 0.12),
+                                      foot_r=(0.21, 0.37, 0.117), foot_l=(-0.18, 0.53, 0.132))),
+                             0.37, 0.65),
+                       hips=(85, -169, -5), ankle_r=(0, -162, 0), ankle_l=(0, -174, 0))
+
+CLIPS["Springboard_Cutter_Attacker"] = _world_clip(56, (_CUTTER_END, 0.0), _unified([
+    (0, _CUTTER_APRON),
+    (5, pose(_CUTTER_APRON, pelvis=(0.0, -0.03, 0.87), hips=(-12, -10, 0),
+             spine=(-10, 0, 0), foot_r=(0.15, 0.00, 0.42),
+             foot_l=(-0.18, -0.13, 0.104), free_feet=True)),
+    (9, pose(_CUTTER_LOAD, pelvis=(0.0, 0.04, 1.24), foot_r=(0.14, 0.05, 0.90))),
+    (12, _CUTTER_LOAD),
+    (14, pose(_spring_cutter_air((-3, -16, 3), (0.01, 0.10, 1.40),
+                                 (0.35, 0.28, 1.46), (-0.32, 0.17, 1.43), 0.14),
+              elbow_r=(0.64, -0.12, -0.73), fist_r=0.61, fist_l=0.48)),
+    (16, pose(_spring_cutter_air((18, -37, 6), (0.04, 0.22, 1.60),
+                                 (0.34, 0.54, 1.81), (-0.34, 0.23, 1.64), 0.39),
+              fist_r=0.54, fist_l=0.35)),
+    (18, _spring_cutter_air((33, -72, 6), (0.09, 0.34, 1.68),
+                            (0.29, 0.80, 1.96), (-0.27, 0.19, 1.73), 0.57)),
+    (21, _spring_cutter_air((62, -130, 3), (0.20, 0.55, 1.69),
+                            (0.12, 1.13, 1.76), (0.37, 0.44, 1.94), 0.80)),
+    # Right forearm passes below the far jaw; reach with the shoulder as the
+    # boots carry his momentum away from the opponent's face.
+    (24, _spring_cutter_air((78, -163, -4), (0.27, 0.68, 1.55),
+                            (-0.11, 1.10, 1.48), (0.55, 0.72, 1.76), 1.0)),
+    (28, _spring_cutter_air((81, -169, -8), (0.32, 0.65, 1.19),
+                            (-0.10, 0.92, 1.27), (0.58, 0.78, 1.30), 0.75)),
+    (32, dict(_spring_cutter_air((84, -171, -8), (0.36, 0.63, 0.69),
+                                (-0.07, 0.90, 0.70), (0.63, 0.71, 0.73), 0.33),
+              elbow_l=(0.640, -0.33, 0.42))),
+    (35, dict(_CUTTER_ON_BACK, hand_r=(-0.04, 0.92, 0.26), hand_l=(0.73, 0.65, 0.12),
+              elbow_r=(-0.78, 0.28, -0.17), elbow_l=(0.72, -0.13, 0.63))),
+    (38, pose(_CUTTER_ON_BACK, pelvis=(0.41, 0.68, 0.231), hand_r=(0.14, 1.00, 0.24),
+              elbow_r=(-0.71, 0.25, -0.16), elbow_l=(0.71, 0.0, 0.66))),
+    # Release the neck, tuck the legs in and post on his left to rise.
+    (43, dict(_body((54, -121, -47), (0.48, 0.77, 0.37),
+               hand_r=(0.25, 0.30, 0.38), hand_l=(-0.38, 0.16, 0.08),
+               elbow_r=(0.63, -0.2, -0.6), elbow_l=(-0.64, -0.2, -0.6),
+               foot_r=(0.20, 0.30, -0.54), foot_l=(-0.15, 0.17, -0.52),
+               knee_r=(0.36, 0.94, 0.1), knee_l=(-0.2, 0.94, 0.1),
+               spine=(-27, 0, 4), head=(-8, 0, 0), free_feet=True),
+              ankle_r=(22, -103, 0), ankle_l=(18, -117, 0))),
+    (48, P(pelvis=(0.47, 0.82, 0.47), hips=(-18, -46, -8), spine=(-25, 0, 0),
+           head=(3, 14, 0), hand_r=(0.70, 0.94, 0.71), hand_l=(0.20, 0.83, 0.19),
+           foot_r=(0.62, 0.98, 0.116), foot_l=(0.26, 0.60, 0.155),
+           knee_r=(0.56, 0.8, 0.06), knee_l=(-0.24, 0.8, -0.15),
+           ankle_r=(0, -46, 0), ankle_l=(6, -52, 0))),
+    (52, _moved(pose(CROUCH, ankle_r=(0, -14, 0), ankle_l=(0, -4, 0)), _CUTTER_SIDE, _CUTTER_END)),
+    (55, _moved(pose(STANCE, ankle_r=(0, -10, 0), ankle_l=(0, 10, 0)), _CUTTER_SIDE, _CUTTER_END)),
+    (56, _moved(pose(STANCE, head=(-2, 8, 0), ankle_r=(0, -10, 0), ankle_l=(0, 10, 0)),
+                _CUTTER_SIDE, _CUTTER_END)),
+]), root_right=_CUTTER_SIDE)
+
+_CUTTER_BRACING = P(pelvis=(0.0, 0.02, 0.844), hips=(0, -6, 0), spine=(-7, 3, -2),
+                    head=(14, 3, 0), hand_r=(0.25, 0.25, 1.18), hand_l=(-0.27, 0.27, 1.22),
+                    fist_r=0.52, fist_l=0.52)
+_CUTTER_BUMP = pose(PRONE_SELL, pelvis=(0.0, -0.34, 0.224), spine=(-7, 0, 2),
+                    head=(7, 6, 0), hand_r=(0.41, 0.02, 0.09), hand_l=(-0.36, 0.12, 0.11),
+                    foot_r=(0.16, -1.09, 0.30), foot_l=(-0.20, -1.06, 0.22))
+CLIPS["Springboard_Cutter_Defender"] = _world_clip_path(42, [
+    (0, (0.0, 0.0)), (10, (0.0, 0.0)), (21, (-0.34, 0.0)), (42, (-0.34, 0.0)),
+], _unified([
+    (0, _CUTTER_BRACING),
+    (6, pose(_CUTTER_BRACING, head=(19, 3, 0),
+             hand_r=(0.24, 0.27, 1.28), hand_l=(-0.29, 0.24, 1.30))),
+    (10, pose(_CUTTER_BRACING, head=(6, -8, -5), spine=(-13, 6, -2),
+              hand_r=(0.24, 0.33, 1.26), hand_l=(-0.34, 0.26, 1.32), fist_r=0.40, fist_l=0.40)),
+    (13, P(pelvis=(0.0, -0.08, 0.76), hips=(-20, 2, 0), spine=(-18, 6, -5),
+           head=(-7, -9, 9), hand_r=(0.23, 0.35, 0.89), hand_l=(-0.39, 0.36, 1.02),
+           foot_r=(0.18, -0.22, 0.104), foot_l=(-0.16, 0.16, 0.104), fist_r=0.25, fist_l=0.25)),
+    (17, P(pelvis=(0.0, -0.24, 0.57), hips=(-54, 1, 0), spine=(-18, 2, -4),
+           head=(-7, 4, 3), hand_r=(0.38, 0.17, 0.35), hand_l=(-0.37, 0.24, 0.40),
+           foot_r=(0.18, -0.54, 0.27), foot_l=(-0.14, -0.47, 0.19),
+           knee_r=(0.22, 0.32, -0.8), knee_l=(-0.22, 0.48, -0.65),
+           fist_r=0.1, fist_l=0.1, free_feet=True)),
+    # The palms catch his weight before the chest settles.
+    (19, pose(_CUTTER_BUMP, pelvis=(0.0, -0.31, 0.39), hips=(-65, 0, 0),
+              spine=(-10, 1, -2), head=(-3, 4, 0), hand_r=(0.41, 0.02, 0.125),
+              hand_l=(-0.38, 0.20, 0.129), foot_r=(0.16, -0.88, 0.37),
+              foot_l=(-0.20, -0.85, 0.27))),
+    (21, _CUTTER_BUMP),
+    (24, pose(_CUTTER_BUMP, pelvis=(0.0, -0.34, 0.202),
+              foot_r=(0.14, -1.18, 0.14), foot_l=(-0.18, -1.15, 0.13))),
+    (28, _shifted(_moved(_rolled(27), 0, 0, 0.04), -0.34, 0.0)),
+    (32, _shifted(_moved(_rolled(92), 0, 0, 0.09), -0.34, 0.0)),
+    (37, _shifted(_moved(_rolled(150), 0, 0, 0.05), -0.34, 0.0)),
+    (42, _shifted(S(), -0.34, 0.0)),
+]))
 
 
 # --- The springboard moonsault (DiveSpot's third ending) ------------------------
@@ -9281,16 +9358,6 @@ CLIPS["Springboard_Cutter_Defender"] = [
 SPRING_MS_TRAVEL = -2.65
 SPRING_MS_LAUNCH = 18
 SPRING_MS_CONTACT = 33
-
-
-def _moved(base, right, fwd, up=0.0):
-    """`base` moved in world space: every travelling field together, and the
-    lateral too, which _shifted leaves alone."""
-    out = dict(base)
-    for field in _TRAVEL_FIELDS:
-        x, y, z = base[field]
-        out[field] = (x + right, y + fwd, z + up)
-    return out
 
 
 def _smooth(t):
