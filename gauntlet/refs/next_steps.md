@@ -139,6 +139,15 @@ Scripted covers obey the match's stipulation and normal ring boundaries.
 Native visual review and [Unreal runtime parity](../../tools/unreal/GRAPPLE_LIFETIME.md#pin-and-rope-break-resolution)
 remain open.
 
+All 183 focused checks passed. Both seed-1 Roman–Cody slot orders retained
+their pinfall winner, finish tick and recorded move counts from `ea08a2a`.
+The [Unreal move sync run](https://github.com/denhamd2/aegis/actions/runs/45215733475)
+passed for the shared bundle.
+
+[Mac run 45215733542](https://github.com/denhamd2/aegis/actions/runs/45215733542)
+published `047b2c7`. The exact tag, release target and uploaded
+1,034,175,347-byte ZIP were verified.
+
 ## Grapple cancellation and teardown
 
 Godot releases surviving wrestlers and restores their previous physics state
@@ -158,7 +167,7 @@ approach sides. Defender shin clearance improves in all three probe pairings.
 The move completes and restores physics in both player slots. Published for Mac
 at `0c15f09` with the exact tag and uploaded ZIP. [Validation and remaining hold and landing work](snap_dragon_3_2026_11_22/README.md).
 
-## Latest Mac batch: Mexican Destroyer timing
+## Mexican Destroyer timing
 
 Published at `6afc76d` with the exact `mac-latest` tag and uploaded Aegis.zip
 verified. Both role clips finish with the 2.533 s root track. All 34 focused
