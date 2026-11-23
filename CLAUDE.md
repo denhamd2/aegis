@@ -7,11 +7,12 @@ where the vendored Blender skills came from and under what licence.
 
 ## Blender in this repo
 
-Blender 4.3.2 is installed at `/usr/bin/blender`, with its bundled `bpy`.
-Codex does not have a Blender MCP tool connected in this environment, so the
-vendored guides are read as craft reference and Blender work is done with
-repeatable headless scripts. (`import-wrestler` is project-specific guidance,
-not a separate Blender runtime.) The work follows this repo's asset pipeline:
+Blender 5.3 is at `/Applications/Blender.app/Contents/MacOS/Blender` (the
+`/usr/bin/blender` 4.3.2 path is the Linux box). A live Blender MCP is
+available — see **Editor tooling** below — and is the way to iterate and look
+at a model. What gets committed is still a repeatable headless script.
+(`import-wrestler` is project-specific guidance, not a separate Blender
+runtime.) The work follows this repo's asset pipeline:
 
 - an idempotent script committed under `game/tools/blender/` (rig and animation
   work, e.g. `wrestling_clips.py`) or `tools/blender/` (environment, e.g.
@@ -26,6 +27,27 @@ not a separate Blender runtime.) The work follows this repo's asset pipeline:
   `wrestling_clips.glb.import` at `animation/fps=60`; re-bake the strike and
   paired libraries after a rebuild. `tests/test_sixty_fps.gd` fails on any
   authored clip below 60.
+
+## Editor tooling (Unreal 5.9 and Blender MCPs) — use these
+
+The game is being ported to Unreal 5.9 at
+`~/Documents/Unreal Projects/MyProject2`. Both editors expose MCP servers on
+this Mac, and the clients for them are committed in that repo's
+`Tools/MCP/`. **Before any Unreal or Blender task, read the `unreal-editor`
+skill** (`.claude/skills/unreal-editor/SKILL.md`). In short:
+
+- Unreal editor MCP on `http://127.0.0.1:8000/mcp`: `Tools/MCP/ue.py py
+  <file.py>` runs Python in the editor; `ue.py call <Toolset.Tool> '<json>'`
+  calls any of its ~120 toolsets (Niagara, PCG, materials, live coding,
+  capture, Fab).
+- Look at the game with `Tools/MCP/shot.py out.png`, which reads the PIE
+  framebuffer at that instant. Not window screenshots: they lag PIE by
+  seconds and miss short beats.
+- Blender MCP on `localhost:9876`: `Tools/MCP/bl.py run <file.py>` executes
+  `bpy` in the running Blender; `bl.py cmd get_viewport_screenshot '{}'`.
+- Never use that add-on's AI mesh generators (Hyper3D, Meshy, Tripo,
+  Hunyuan): no provenance. Fab installs and Sketchfab models need the
+  owner's OK and a CREDITS line.
 
 Two practical consequences when reading a skill:
 
@@ -48,6 +70,7 @@ Work down this table; the first row that matches the task is the one to read.
 
 | The task | Read | Notes |
 | --- | --- | --- |
+| Any work in the Unreal port, or driving Blender live | **`unreal-editor`** | The MCP bridges, `shot.py` frame capture, probes and the determinism gate. Read it first; the Blender rows below still apply to what gets committed. |
 | Stress-testing a plan before building it -- the owner types `/grill-me` | **`grill-me`** → `grilling` (Matt Pocock, MIT) | Rounds of numbered questions, each with a recommended answer, until the plan is settled. The protocol says to send a sub-agent for facts; use the project's configured specialist subagents only when the routing rules in `AGENTS.md` call for them. Provenance: `.claude/skills/BLENDER_SKILLS.md`. |
 | A new wrestler model dropped into the project, or an imported one renders wrong (magenta, bald, backwards, T-posed, floating beard, head-down animation) | **`import-wrestler`** | Project-specific and measured against this rig. It **overrides** every generic skill below — do not start from `character-artist` or `rigging` for an import. |
 | Authoring a wrestling clip (bump, lock-up, cover, celebration) on the base rig | `blender-animation` (bpy keyframes, F-curves, easing) + `animation` (blocking → breakdown → splining, cycle frame counts) | This is the project's real gap: the 42 CC0 actions on `wrestler_base.glb` contain no wrestling. Extend `game/tools/blender/wrestling_clips.py`; rotations are Euler degrees over the rest pose, matching `paired_recipes.gd`. |
