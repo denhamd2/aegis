@@ -102,3 +102,26 @@ replacement finishes. Verify that normal completion lands only the
 replacement and an interruption lands neither move. The exported data and
 role clips are shared. Unreal playback and counter handling still need the
 Mac project.
+
+
+## Arm-hook and running Spear counters
+
+Use the same committed-counter and replay rules for these mappings. Frame
+bounds are inclusive at 60 Hz and use the paired clip clock after walk-in.
+
+| Source MoveDef | Window | Replacement |
+| --- | --- | --- |
+| `strike_arm_hook_takedown` | 20–26, during the right-arm sweep before the hook at tick 28 | `chain_wristlock` |
+| `running_spear` and `finisher_running_spear` | 16–22, during the approach before the dive and contact at tick 30 | `chain_headlock` |
+
+The replacement starts from the current roots and uses the existing paired
+alignment and pose blend. Resolve only one source attempt and cancel its
+pending impact on a successful read. The reversed finisher earns no cover
+eligibility and does not spend the landing-only finisher meter. A late
+press leaves the finisher on its normal completion path.
+
+Check both physical slots, including a late Spear that lands, and verify
+the two Spear resources map to the same source clip and timing. The Godot
+AI keys each read by match seed, player slot, source move and attempt,
+then uses the match phase's reversal scale. Shared move data and role clips
+are exported for Unreal. Editor runtime integration remains open.

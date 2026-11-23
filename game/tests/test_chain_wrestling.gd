@@ -235,23 +235,32 @@ func test_leaving_the_hold_during_counter_playback_cancels_the_pair() -> void:
 
 
 const VERTICAL_SUPLEX := preload("res://resources/moves/grapple_vertical_suplex.tres")
+const ARM_HOOK := preload("res://resources/moves/strike_arm_hook_takedown.tres")
+const RUNNING_SPEAR := preload("res://resources/moves/running_spear.tres")
+const FINISHER_SPEAR := preload("res://resources/moves/finisher_running_spear.tres")
 
 
 func _start_suplex(attacker: WrestlerController) -> void:
 	attacker.grapple_move = VERTICAL_SUPLEX
 	attacker._process_grapple_hold({"chain": "none"})
+	await _wait_for_paired_clip(attacker, VERTICAL_SUPLEX)
+
+
+func _wait_for_paired_clip(attacker: WrestlerController, move: MoveDef) -> void:
 	var player := attacker.grapple_rig.animation_player
 	for _tick in 50:
-		if player.current_animation == &"grapple_vertical_suplex":
+		if player.current_animation == move.animation_pair_id:
 			break
 		await get_tree().physics_frame
-	assert_str(String(player.current_animation)).is_equal("grapple_vertical_suplex")
+	assert_str(String(player.current_animation)).is_equal(String(move.animation_pair_id))
 
 
-func _press_suplex_reversal(swapped: bool, attacker: WrestlerController,
-		defender: WrestlerController, frame: int) -> void:
+func _press_committed_reversal(swapped: bool, attacker: WrestlerController,
+		defender: WrestlerController, frame: int) -> float:
 	var player := attacker.grapple_rig.animation_player
 	player.seek(float(frame) / 60.0, true)
+	var attacker_root := attacker.global_position
+	var defender_root := defender.global_position
 	var former_mode := ReplaySystem.mode
 	var former_replay := ReplaySystem.replay
 	var replay := ReplayResource.new()
@@ -265,6 +274,8 @@ func _press_suplex_reversal(swapped: bool, attacker: WrestlerController,
 	referee.free()
 	ReplaySystem.mode = former_mode
 	ReplaySystem.replay = former_replay
+	return maxf(attacker_root.distance_to(attacker.global_position),
+			defender_root.distance_to(defender.global_position))
 
 
 func test_suplex_counter_uses_the_grounded_window_in_either_slot() -> void:
@@ -283,7 +294,7 @@ func test_suplex_counter_uses_the_grounded_window_in_either_slot() -> void:
 		for wrestler: WrestlerController in pair:
 			wrestler.move_landed.connect(func(_a, _d, move): landed.append(move.animation_pair_id))
 		await _start_suplex(attacker)
-		_press_suplex_reversal(swapped, attacker, defender, window_edge)
+		_press_committed_reversal(swapped, attacker, defender, window_edge)
 		assert_int(cancelled[0]).is_equal(1)
 		assert_bool(defender._is_grapple_attacker).is_true()
 		assert_bool(attacker._is_grapple_attacker).is_false()
@@ -320,11 +331,11 @@ func test_mistimed_or_exhausted_suplex_reversals_leave_the_throw_intact() -> voi
 			frame -= 1
 		elif situation == "late":
 			frame = VERTICAL_SUPLEX.reversal_window_end + 1
-		_press_suplex_reversal(false, attacker, defender, frame)
+		_press_committed_reversal(false, attacker, defender, frame)
 		assert_bool(attacker._is_grapple_attacker).is_true()
 		var after_press := defender.combat.stamina
 		if situation == "early":
-			_press_suplex_reversal(false, attacker, defender, frame + 1)
+			_press_committed_reversal(false, attacker, defender, frame + 1)
 			assert_float(defender.combat.stamina).is_equal(after_press)
 		elif situation == "late":
 			assert_float(after_press).is_equal(stamina)
@@ -347,7 +358,7 @@ func test_cancelled_suplex_counter_lands_neither_move() -> void:
 	defender.player_index = 1
 	var rig := attacker.grapple_rig
 	await _start_suplex(attacker)
-	_press_suplex_reversal(false, attacker, defender, VERTICAL_SUPLEX.reversal_window_start)
+	_press_committed_reversal(false, attacker, defender, VERTICAL_SUPLEX.reversal_window_start)
 	assert_bool(defender._is_grapple_attacker).is_true()
 	rig.cancel()
 	await get_tree().physics_frame
@@ -357,3 +368,101 @@ func test_cancelled_suplex_counter_lands_neither_move() -> void:
 		assert_bool(wrestler._is_grapple_attacker).is_false()
 		assert_bool(rig.grapple_finished.is_connected(wrestler._on_grapple_finished)).is_false()
 		assert_float(wrestler.combat.health()).is_equal(1.0)
+
+
+func _start_moving_pair(attacker: WrestlerController, move: MoveDef) -> void:
+	if move == ARM_HOOK:
+		assert_bool(attacker._throw_paired_strike(move)).is_true()
+	elif move == FINISHER_SPEAR:
+		attacker.finisher_run_move = move
+		attacker.combat.finisher_lit = true
+		attacker.combat.momentum = CombatSystem.MOMENTUM_MAX
+		assert_bool(attacker.try_running_finisher()).is_true()
+	else:
+		attacker.running_attack_move = move
+		attacker.fsm.transition_to(WrestlerFSM.State.RUN)
+		attacker._maybe_start_running_attack({"strike": true})
+	assert_object(attacker.grapple_rig.current_move()).is_same(move)
+	await _wait_for_paired_clip(attacker, move)
+
+
+func _check_moving_counter(move: MoveDef, counter: MoveDef, swapped: bool) -> void:
+	var pair := _chain_pair(swapped)
+	var attacker := pair[0]
+	var defender := pair[1]
+	attacker._release_grapple_hold()
+	attacker.player_index = 1 if swapped else 0
+	defender.player_index = 0 if swapped else 1
+	var rig := attacker.grapple_rig
+	var landed: Array[StringName] = []
+	for wrestler: WrestlerController in pair:
+		wrestler.move_landed.connect(func(_a, _d, landed_move): landed.append(landed_move.animation_pair_id))
+	var camera: MatchCamera = auto_free(MatchCamera.new())
+	camera.grapple_rig = rig
+	rig.grapple_started.connect(func(a, _d, paired_move): camera._arm_impact_shake(a, paired_move))
+	rig.grapple_cancelled.connect(camera._on_grapple_cancelled)
+	await _start_moving_pair(attacker, move)
+	assert_int(attacker._attempted_moves.get(move.animation_pair_id, 0)).is_equal(1)
+	assert_float(camera._impact_shake_at).is_greater_equal(0.0)
+
+	var edge := move.reversal_window_end if swapped else move.reversal_window_start
+	var displacement := _press_committed_reversal(swapped, attacker, defender, edge)
+	assert_float(displacement).is_equal_approx(0.0, 0.0001)
+	assert_object(rig.current_move()).is_same(counter)
+	assert_bool(defender._is_grapple_attacker).is_true()
+	assert_bool(rig.grapple_finished.is_connected(attacker._on_grapple_finished)).is_false()
+	assert_float(camera._impact_shake_at).is_equal(-1.0)
+	assert_float(defender.combat.stamina).is_equal_approx(
+			1.0 - CombatSystem.STAMINA_REVERSAL, 0.0001)
+	await _wait_for_paired_clip(defender, counter)
+	for _tick in 180:
+		if not rig.is_active():
+			break
+		await get_tree().physics_frame
+	assert_array(landed).is_equal([counter.animation_pair_id])
+	assert_float(defender.combat.health()).is_equal(1.0)
+	assert_int(defender.fsm.current_state).is_equal(WrestlerFSM.State.IDLE)
+	assert_int(attacker.fsm.current_state).is_equal(WrestlerFSM.State.HIT_REACT)
+	if move == FINISHER_SPEAR:
+		assert_bool(attacker.combat.finisher_resting()).is_false()
+
+
+func test_a_read_on_the_arm_hook_catches_the_right_wrist_in_both_slots() -> void:
+	for swapped: bool in [false, true]:
+		await _check_moving_counter(ARM_HOOK, WrestlerController.CHAIN_HOLDS["wristlock"], swapped)
+
+
+func test_the_running_spear_variants_share_the_grounded_headlock_counter() -> void:
+	assert_str(String(FINISHER_SPEAR.animation_pair_id)).is_equal(String(RUNNING_SPEAR.animation_pair_id))
+	assert_str(String(FINISHER_SPEAR.paired_counter_id)).is_equal(String(RUNNING_SPEAR.paired_counter_id))
+	assert_int(FINISHER_SPEAR.reversal_window_start).is_equal(RUNNING_SPEAR.reversal_window_start)
+	assert_int(FINISHER_SPEAR.reversal_window_end).is_equal(RUNNING_SPEAR.reversal_window_end)
+	for swapped: bool in [false, true]:
+		await _check_moving_counter(FINISHER_SPEAR, WrestlerController.CHAIN_HOLDS["headlock"], swapped)
+	await _check_moving_counter(RUNNING_SPEAR, WrestlerController.CHAIN_HOLDS["headlock"], false)
+
+
+func test_a_late_spear_reversal_leaves_a_real_finisher_and_its_cover_eligibility() -> void:
+	var pair := _chain_pair(false)
+	var attacker := pair[0]
+	var defender := pair[1]
+	attacker._release_grapple_hold()
+	defender.player_index = 1
+	var referee := MatchReferee.new()
+	referee.wrestler_a_path = NodePath("../WrestlerA")
+	referee.wrestler_b_path = NodePath("../WrestlerB")
+	attacker.get_parent().add_child(referee)
+	referee.set_physics_process(false)
+	var rig := attacker.grapple_rig
+	await _start_moving_pair(attacker, FINISHER_SPEAR)
+	_press_committed_reversal(false, attacker, defender, FINISHER_SPEAR.reversal_window_end + 1)
+	assert_object(rig.current_move()).is_same(FINISHER_SPEAR)
+	assert_float(defender.combat.stamina).is_equal(1.0)
+	for _tick in 180:
+		if not rig.is_active():
+			break
+		await get_tree().physics_frame
+	assert_int(attacker._landed_moves.get(FINISHER_SPEAR.animation_pair_id, 0)).is_equal(1)
+	assert_float(defender.combat.health()).is_less(1.0)
+	assert_bool(attacker.combat.finisher_resting()).is_true()
+	assert_bool(referee.can_be_finished(defender)).is_true()

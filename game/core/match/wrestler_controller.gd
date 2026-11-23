@@ -2311,9 +2311,12 @@ func _poll_live_input() -> Dictionary:
 		"weapon_pick": _take_wheel_pick(),
 	}
 
-func sample_committed_counter(ai_due: bool, attempt: int) -> bool:
-	var input := {"reversal": ai != null and ai_due and ai.wants_committed_grapple_counter(attempt)} \
-			if is_ai else _poll_live_input()
+func sample_committed_counter(ai_due: bool, move_id: StringName, attempt: int) -> bool:
+	var input: Dictionary
+	if is_ai:
+		input = {"reversal": ai_due and ai != null and ai.wants_committed_grapple_counter(move_id, attempt)}
+	else:
+		input = _poll_live_input()
 	if ReplaySystem:
 		input = ReplaySystem.get_input(player_index, input)
 	return input.get("reversal", false)
@@ -3053,7 +3056,6 @@ func _throw_paired_strike(move: MoveDef) -> bool:
 		return false
 	if not _in_range(maxf(STRIKE_HIT_RANGE, grapple_rig.start_gap(move) + 0.05)):
 		return false
-	_record_move_attempt(move)
 	_begin_running_paired(move)
 	return true
 
@@ -3063,9 +3065,7 @@ func _begin_running_paired(move: MoveDef) -> void:
 	opponent._is_grapple_attacker = false
 	fsm.transition_to(WrestlerFSM.State.GRAPPLE_HOLD)
 	opponent.fsm.transition_to(WrestlerFSM.State.GRAPPLE_HOLD)
-	_active_move = move
-	grapple_rig.begin(self, opponent, move)
-	grapple_rig.grapple_finished.connect(_on_grapple_finished, CONNECT_ONE_SHOT)
+	_begin_grapple_move(move)
 
 
 # --- off the ropes: the whipper's move (the owner, 25 Oct: "AI staples:

@@ -441,15 +441,15 @@ func _chain_input() -> Dictionary:
 	return {"chain": holds[_chain_rng().randi_range(0, holds.size() - 1)]}
 
 
-## One independent read per incoming counterable throw. Its seed doesn't advance other
-## AI decisions, and the resulting button press goes through ReplaySystem.
-func wants_committed_grapple_counter(attempt: int) -> bool:
+## Keep this read independent of other moves and of the AI's other decisions.
+func wants_committed_grapple_counter(move_id: StringName, attempt: int) -> bool:
 	var stamina: float = controller.combat.stamina
 	if stamina < CombatSystem.STAMINA_REVERSAL:
 		return false
 	var rng := RandomNumberGenerator.new()
-	rng.seed = _match_seed * 11213 + _player_index * 137 + attempt
-	return rng.randf() < CHAIN_REVERSAL_CHANCE \
+	rng.seed = hash([_match_seed, _player_index, move_id, attempt])
+	var flow_scale := controller.flow.reverse_scale(controller) if controller.flow else 1.0
+	return rng.randf() < CHAIN_REVERSAL_CHANCE * flow_scale \
 			* (REVERSAL_SPENT_SHARE + (1.0 - REVERSAL_SPENT_SHARE) * stamina)
 
 

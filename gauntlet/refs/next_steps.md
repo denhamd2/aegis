@@ -73,9 +73,20 @@ one reversal press and one counter landing in each slot.
 published `f2c98c8`. The exact tag, release target and uploaded 1,034,175,370-byte
 ZIP were verified. The [Unreal bundle](https://github.com/denhamd2/aegis/actions/runs/45201992008)
 contains the window, counter ID and both source role clips.
-Native transition review, directional and special counter animations, and
-Unreal runtime integration remain open.
+Directional and special counters have separate coverage below. Native
+transition review and Unreal runtime integration remain open.
 [Unreal parity cases](../../tools/unreal/GRAPPLE_LIFETIME.md#committed-vertical-suplex-counter).
+
+## Arm-hook and running Spear counters
+
+Kenny's right-arm sweep can be caught in a wristlock on ticks 20–26.
+Either running Spear variant can be caught in a side headlock on ticks 16–22,
+before the dive. Both routes cancel the pending impact and use the existing
+paired lead-in and role clips. A late Spear attempt still lands the finisher
+with its ordinary meter and cover rules. Committed AI reads now use the
+move ID and the match phase's reversal scale. The arm-hook counts one
+attempt at rig acceptance. All 118 focused checks passed.
+[Unreal parity cases](../../tools/unreal/GRAPPLE_LIFETIME.md#arm-hook-and-running-spear-counters).
 
 ## Grapple cancellation and teardown
 

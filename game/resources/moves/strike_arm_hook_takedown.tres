@@ -10,6 +10,7 @@ active_frames = 5
 recovery_frames = 39
 reversal_window_start = 20
 reversal_window_end = 26
+paired_counter_id = &"chain_wristlock"
 damage_head = 9.0
 damage_torso = 8.0
 damage_arms = 0.0

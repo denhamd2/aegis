@@ -37,6 +37,8 @@ var _counter_attempted := false
 var _counter_ai_decided := false
 
 const PAIRED_COUNTERS := {
+	&"chain_headlock": preload("res://resources/moves/chain_headlock.tres"),
+	&"chain_wristlock": preload("res://resources/moves/chain_wristlock.tres"),
 	&"chain_waistlock": preload("res://resources/moves/chain_waistlock.tres"),
 }
 
@@ -353,7 +355,7 @@ func resolve_committed_counter() -> void:
 	var ai_due := not _counter_ai_decided and frame >= _move.reversal_window_start
 	_counter_ai_decided = _counter_ai_decided or ai_due
 	var attempt := int(attacker._attempted_moves.get(_move.animation_pair_id, 0))
-	if not defender.sample_committed_counter(ai_due, attempt):
+	if not defender.sample_committed_counter(ai_due, _move.animation_pair_id, attempt):
 		return
 	_counter_attempted = true
 	var has_stamina := defender.combat.stamina >= CombatSystem.STAMINA_REVERSAL
