@@ -27,8 +27,12 @@ def write_json(path, data):
 
 
 def sha256(path):
+    # hashlib.file_digest is Python 3.11+; the Mac's system python3 is 3.9.
+    digest = hashlib.sha256()
     with path.open("rb") as payload:
-        return hashlib.file_digest(payload, "sha256").hexdigest()
+        for block in iter(lambda: payload.read(1 << 20), b""):
+            digest.update(block)
+    return digest.hexdigest()
 
 
 def glb_clips(path):

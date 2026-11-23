@@ -17,8 +17,8 @@ Run them with the sandbox disabled (they open local sockets).
 | `python3 "$T/ue.py" py file.py` | Runs Python in the editor. Top-level `await` works; the last expression is returned as `returnValue`. |
 | `python3 "$T/ue.py" call <Toolset.Tool> '<json>'` | Calls any toolset tool. |
 | `python3 "$T/ue.py" call list_toolsets '{}'` / `describe_tools '{"tool_names":[...]}'` | Discovery: always read a tool's schema before first use. |
-| `python3 "$T/shot.py" out.png [maxRes]` | Saves the PIE frame as drawn, at that instant. **The only way to look at the game.** Then Read the PNG. |
-| `bash "$T/build.sh"` | Full C++ build: quits the editor, builds (log `/tmp/aegis_build.log`), relaunches. Needed for any header / UPROPERTY / UFUNCTION / .uproject change. |
+| `python3 "$T/shot.py" out.png [maxRes] [--editor]` | Saves the PIE frame as drawn, at that instant. **The only way to look at the game.** Then Read the PNG. `--editor` grabs the editor viewport instead (for checking placement with PIE stopped; aim it with `EditorAppToolset.SetCameraTransform`). PIL is not installed: Read the frames one by one rather than tiling them. |
+| `bash "$T/build.sh"` | Full C++ build: quits the editor, builds (log `/tmp/aegis_build.log`), relaunches. Needed for **every** C++ change, .cpp included: Live Coding is not available in this Mac build. |
 
 After an editor relaunch: `rm -f "$T/ue_sid"`, then loop `ue.py py probes/dirty.py`
 until it returns a `returnValue`.
@@ -26,15 +26,22 @@ until it returns a `returnValue`.
 ### Toolsets worth knowing (≈120 exist)
 
 - **SceneCaptureToolset**: `CaptureGameViewport` (what `shot.py` wraps), `RecordViewport` / `StartViewportRecording` (MP4, for checking animation and timing), `Capture` offscreen diagnostic modes (lighting-only, normals, overdraw). Read the engine skill `SceneCaptureDiagnosticsSkill` (via `ToolsetRegistry.AgentSkillToolset.GetSkills`) before lighting or material diagnosis.
-- **LiveCodingToolset**: `CompileLiveCoding` for .cpp-only edits, with no editor restart. Check `IsLiveCodingReady` first. Anything touching a header still needs `build.sh`.
+- **LiveCodingToolset**: present, but `IsLiveCodingReady` is false in this Mac build configuration. Do not wait on it; use `build.sh`.
 - **EditorToolset.EditorAppToolset**: StartPIE / StopPIE / IsPIERunning, CaptureAssetImage (thumbnail any mesh or material), Set/GetCameraTransform, FocusOnActors.
 - **NiagaraToolsets.\***: create systems from templates, add emitters/modules/renderers, set stack inputs, read compile state and stack issues. Pyro, sparks, confetti, smoke.
 - **PCGToolset** (+ engine PCG skills): graphs for scattering instances (crowd seats, chairs).
 - **EditorToolset.MaterialToolset / MaterialInstanceToolset / TextureGraphToolset**: build and inspect materials; `GetStatistics` for shader cost.
 - **MetaSoundToolset**, **animation_toolset ControlRigTools**, **SequencerScripting.\***: audio, rigs, sequences.
-- **PerfToolset.GpuProfilerToolset / StatsToolset**: per-pass GPU cost. Check after adding crowds, lights or particles.
+- **PerfToolset.GpuProfilerToolset / StatsToolset**: per-pass GPU cost. Check after adding crowds, lights or particles: `PerfToolset.GpuProfilerToolset.TriggerGPUProfile '{"minInclusiveMs":1.0}'`, `PerfToolset.StatsToolset.GetFrameTimings '{}'`. With the editor in the background frames are throttled to ~333 ms and the broadcast camera keeps cutting, so A/B a change over several samples, not one.
 - **ConsoleToolset.LogsToolset**: read the output log (build and runtime errors).
 - **FabToolset**: search Fab. Installing anything needs the owner's explicit OK, and its licence goes in CREDITS.
+
+### Editor Python pitfalls
+
+- `unreal.Rotator(a, b, c)` positional order is **(roll, pitch, yaw)**. Always pass keywords: `unreal.Rotator(roll=0, pitch=0, yaw=y)`.
+- `set_editor_property` runs PostEditChange, which reruns an actor's construction script; there is no `rerun_construction_scripts` in Python. Properties a script sets must be `EditAnywhere`.
+- Interchange drops a glTF armature node's own transform (Rocketbox: scale 0.01 and a 90° X turn): apply it in Blender before export or the mesh comes in 100× large and head-down.
+- Instanced meshes: never `MarkRenderStateDirty` per frame (2 s frames at 7,000 instances); `SetCustomData` with dirty false is a cheap delta update. Keep crowds out of Lumen, distance fields and ray tracing.
 
 ### Probes (`$T/probes/`), all run with `ue.py py`
 

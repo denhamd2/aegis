@@ -72,6 +72,7 @@ Work down this table; the first row that matches the task is the one to read.
 | --- | --- | --- |
 | Any work in the Unreal port, or driving Blender live | **`unreal-editor`** | The MCP bridges, `shot.py` frame capture, probes and the determinism gate. Read it first; the Blender rows below still apply to what gets committed. |
 | Stress-testing a plan before building it -- the owner types `/grill-me` | **`grill-me`** → `grilling` (Matt Pocock, MIT) | Rounds of numbered questions, each with a recommended answer, until the plan is settled. The protocol says to send a sub-agent for facts; use the project's configured specialist subagents only when the routing rules in `AGENTS.md` call for them. Provenance: `.claude/skills/BLENDER_SKILLS.md`. |
+| Any sound: a reference video "for the sound", SFX, crowd, chants, wrestler voices, the mix | **`audio-director`** | Project-written. Reference audio is measurement only; only CC0 ships, each download needs the owner's OK. Covers both the Godot `core/audio/` and the port's `UAegisMatchAudio`. |
 | A new wrestler model dropped into the project, or an imported one renders wrong (magenta, bald, backwards, T-posed, floating beard, head-down animation) | **`import-wrestler`** | Project-specific and measured against this rig. It **overrides** every generic skill below — do not start from `character-artist` or `rigging` for an import. |
 | Authoring a wrestling clip (bump, lock-up, cover, celebration) on the base rig | `blender-animation` (bpy keyframes, F-curves, easing) + `animation` (blocking → breakdown → splining, cycle frame counts) | This is the project's real gap: the 42 CC0 actions on `wrestler_base.glb` contain no wrestling. Extend `game/tools/blender/wrestling_clips.py`; rotations are Euler degrees over the rest pose, matching `paired_recipes.gd`. |
 | Getting a clip or mesh out to the game | `godot-export` first (GLB, +Y up, Godot-friendly materials), then `blender-export` for the actual `bpy.ops.export_scene.gltf` arguments | Verify the track paths come back as `Armature/Skeleton3D:<bone>` — that is the shape `AnimationTree` consumes. |
@@ -102,7 +103,8 @@ except `godot-export`, which wins on target-format questions.
 
 ### What was deleted, and why it is not coming back
 
-141 skills were vendored; 103 were deleted and **38 remain** — every one of them
+141 skills were vendored; 103 were deleted and **38 remain** (plus the project-written
+`import-wrestler`, `unreal-editor` and `audio-director`) — every one of them
 in the table above. If you find yourself wanting one of the deleted names, the
 reasoning was:
 
