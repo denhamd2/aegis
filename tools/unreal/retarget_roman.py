@@ -119,6 +119,13 @@ for rtg_name, rig_name, dest in TARGETS:
     rtg = fix_retargeter(rtg_name, rig_name)
     target_mesh = unreal.IKRigController.get_controller(unreal.load_asset(RIG_DIR + "/" + rig_name)).get_skeletal_mesh()
     out_dir = dest + DEST_SUFFIX
+    # The batch operation does not overwrite: given an existing clip it writes
+    # "<name>1" beside it, and the game loads clips by their plain name. So
+    # clear each destination clip first, which keeps the script idempotent.
+    for a in clips:
+        old = out_dir + "/" + str(a.asset_name)
+        if unreal.EditorAssetLibrary.does_asset_exist(old):
+            unreal.EditorAssetLibrary.delete_asset(old)
     done = unreal.IKRetargetBatchOperation.duplicate_and_retarget(
         clips, source_mesh, target_mesh, rtg,
         target_path=out_dir, include_referenced_assets=False, overwrite_existing_files=True)
