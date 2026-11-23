@@ -1,0 +1,1850 @@
+{
+  "materials": {
+    "VM_BarricadeBlank00": {
+      "albedo": [
+        0.015,
+        0.015,
+        0.018,
+        1.0
+      ],
+      "albedo_texture": "",
+      "ao_texture": "",
+      "emission": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "emission_enabled": false,
+      "emission_energy": 1.0,
+      "emission_operator": "add",
+      "emission_texture": "",
+      "kind": "standard",
+      "metallic": 0.0,
+      "node": "LightRig/BarricadeBlank00",
+      "normal_scale": 1.0,
+      "normal_texture": "",
+      "roughness": 1.0,
+      "roughness_texture": "",
+      "specular": 0.0,
+      "transparent": false,
+      "two_sided": false,
+      "unshaded": false,
+      "uv1_offset": [
+        0.0,
+        0.0
+      ],
+      "uv1_scale": [
+        1.0,
+        1.0
+      ]
+    },
+    "VM_BarricadeBlank01": {
+      "albedo": [
+        0.015,
+        0.015,
+        0.018,
+        1.0
+      ],
+      "albedo_texture": "",
+      "ao_texture": "",
+      "emission": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "emission_enabled": false,
+      "emission_energy": 1.0,
+      "emission_operator": "add",
+      "emission_texture": "",
+      "kind": "standard",
+      "metallic": 0.0,
+      "node": "LightRig/BarricadeBlank01",
+      "normal_scale": 1.0,
+      "normal_texture": "",
+      "roughness": 1.0,
+      "roughness_texture": "",
+      "specular": 0.0,
+      "transparent": false,
+      "two_sided": false,
+      "unshaded": false,
+      "uv1_offset": [
+        0.0,
+        0.0
+      ],
+      "uv1_scale": [
+        1.0,
+        1.0
+      ]
+    },
+    "VM_BarricadeBlank02": {
+      "albedo": [
+        0.015,
+        0.015,
+        0.018,
+        1.0
+      ],
+      "albedo_texture": "",
+      "ao_texture": "",
+      "emission": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "emission_enabled": false,
+      "emission_energy": 1.0,
+      "emission_operator": "add",
+      "emission_texture": "",
+      "kind": "standard",
+      "metallic": 0.0,
+      "node": "LightRig/BarricadeBlank02",
+      "normal_scale": 1.0,
+      "normal_texture": "",
+      "roughness": 1.0,
+      "roughness_texture": "",
+      "specular": 0.0,
+      "transparent": false,
+      "two_sided": false,
+      "unshaded": false,
+      "uv1_offset": [
+        0.0,
+        0.0
+      ],
+      "uv1_scale": [
+        1.0,
+        1.0
+      ]
+    },
+    "VM_BarricadeBlank03": {
+      "albedo": [
+        0.015,
+        0.015,
+        0.018,
+        1.0
+      ],
+      "albedo_texture": "",
+      "ao_texture": "",
+      "emission": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "emission_enabled": false,
+      "emission_energy": 1.0,
+      "emission_operator": "add",
+      "emission_texture": "",
+      "kind": "standard",
+      "metallic": 0.0,
+      "node": "LightRig/BarricadeBlank03",
+      "normal_scale": 1.0,
+      "normal_texture": "",
+      "roughness": 1.0,
+      "roughness_texture": "",
+      "specular": 0.0,
+      "transparent": false,
+      "two_sided": false,
+      "unshaded": false,
+      "uv1_offset": [
+        0.0,
+        0.0
+      ],
+      "uv1_scale": [
+        1.0,
+        1.0
+      ]
+    },
+    "VM_BarricadeBlank04": {
+      "albedo": [
+        0.015,
+        0.015,
+        0.018,
+        1.0
+      ],
+      "albedo_texture": "",
+      "ao_texture": "",
+      "emission": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "emission_enabled": false,
+      "emission_energy": 1.0,
+      "emission_operator": "add",
+      "emission_texture": "",
+      "kind": "standard",
+      "metallic": 0.0,
+      "node": "LightRig/BarricadeBlank04",
+      "normal_scale": 1.0,
+      "normal_texture": "",
+      "roughness": 1.0,
+      "roughness_texture": "",
+      "specular": 0.0,
+      "transparent": false,
+      "two_sided": false,
+      "unshaded": false,
+      "uv1_offset": [
+        0.0,
+        0.0
+      ],
+      "uv1_scale": [
+        1.0,
+        1.0
+      ]
+    },
+    "VM_BarricadeBlank05": {
+      "albedo": [
+        0.015,
+        0.015,
+        0.018,
+        1.0
+      ],
+      "albedo_texture": "",
+      "ao_texture": "",
+      "emission": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "emission_enabled": false,
+      "emission_energy": 1.0,
+      "emission_operator": "add",
+      "emission_texture": "",
+      "kind": "standard",
+      "metallic": 0.0,
+      "node": "LightRig/BarricadeBlank05",
+      "normal_scale": 1.0,
+      "normal_texture": "",
+      "roughness": 1.0,
+      "roughness_texture": "",
+      "specular": 0.0,
+      "transparent": false,
+      "two_sided": false,
+      "unshaded": false,
+      "uv1_offset": [
+        0.0,
+        0.0
+      ],
+      "uv1_scale": [
+        1.0,
+        1.0
+      ]
+    },
+    "VM_BarricadeBlank06": {
+      "albedo": [
+        0.015,
+        0.015,
+        0.018,
+        1.0
+      ],
+      "albedo_texture": "",
+      "ao_texture": "",
+      "emission": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "emission_enabled": false,
+      "emission_energy": 1.0,
+      "emission_operator": "add",
+      "emission_texture": "",
+      "kind": "standard",
+      "metallic": 0.0,
+      "node": "LightRig/BarricadeBlank06",
+      "normal_scale": 1.0,
+      "normal_texture": "",
+      "roughness": 1.0,
+      "roughness_texture": "",
+      "specular": 0.0,
+      "transparent": false,
+      "two_sided": false,
+      "unshaded": false,
+      "uv1_offset": [
+        0.0,
+        0.0
+      ],
+      "uv1_scale": [
+        1.0,
+        1.0
+      ]
+    },
+    "VM_BarricadeBlank07": {
+      "albedo": [
+        0.015,
+        0.015,
+        0.018,
+        1.0
+      ],
+      "albedo_texture": "",
+      "ao_texture": "",
+      "emission": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "emission_enabled": false,
+      "emission_energy": 1.0,
+      "emission_operator": "add",
+      "emission_texture": "",
+      "kind": "standard",
+      "metallic": 0.0,
+      "node": "LightRig/BarricadeBlank07",
+      "normal_scale": 1.0,
+      "normal_texture": "",
+      "roughness": 1.0,
+      "roughness_texture": "",
+      "specular": 0.0,
+      "transparent": false,
+      "two_sided": false,
+      "unshaded": false,
+      "uv1_offset": [
+        0.0,
+        0.0
+      ],
+      "uv1_scale": [
+        1.0,
+        1.0
+      ]
+    },
+    "VM_BarricadeBlank08": {
+      "albedo": [
+        0.015,
+        0.015,
+        0.018,
+        1.0
+      ],
+      "albedo_texture": "",
+      "ao_texture": "",
+      "emission": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "emission_enabled": false,
+      "emission_energy": 1.0,
+      "emission_operator": "add",
+      "emission_texture": "",
+      "kind": "standard",
+      "metallic": 0.0,
+      "node": "LightRig/BarricadeBlank08",
+      "normal_scale": 1.0,
+      "normal_texture": "",
+      "roughness": 1.0,
+      "roughness_texture": "",
+      "specular": 0.0,
+      "transparent": false,
+      "two_sided": false,
+      "unshaded": false,
+      "uv1_offset": [
+        0.0,
+        0.0
+      ],
+      "uv1_scale": [
+        1.0,
+        1.0
+      ]
+    },
+    "VM_BarricadeBlank09": {
+      "albedo": [
+        0.015,
+        0.015,
+        0.018,
+        1.0
+      ],
+      "albedo_texture": "",
+      "ao_texture": "",
+      "emission": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "emission_enabled": false,
+      "emission_energy": 1.0,
+      "emission_operator": "add",
+      "emission_texture": "",
+      "kind": "standard",
+      "metallic": 0.0,
+      "node": "LightRig/BarricadeBlank09",
+      "normal_scale": 1.0,
+      "normal_texture": "",
+      "roughness": 1.0,
+      "roughness_texture": "",
+      "specular": 0.0,
+      "transparent": false,
+      "two_sided": false,
+      "unshaded": false,
+      "uv1_offset": [
+        0.0,
+        0.0
+      ],
+      "uv1_scale": [
+        1.0,
+        1.0
+      ]
+    },
+    "VM_BarricadeBlank10": {
+      "albedo": [
+        0.015,
+        0.015,
+        0.018,
+        1.0
+      ],
+      "albedo_texture": "",
+      "ao_texture": "",
+      "emission": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "emission_enabled": false,
+      "emission_energy": 1.0,
+      "emission_operator": "add",
+      "emission_texture": "",
+      "kind": "standard",
+      "metallic": 0.0,
+      "node": "LightRig/BarricadeBlank10",
+      "normal_scale": 1.0,
+      "normal_texture": "",
+      "roughness": 1.0,
+      "roughness_texture": "",
+      "specular": 0.0,
+      "transparent": false,
+      "two_sided": false,
+      "unshaded": false,
+      "uv1_offset": [
+        0.0,
+        0.0
+      ],
+      "uv1_scale": [
+        1.0,
+        1.0
+      ]
+    },
+    "VM_BarricadeBlank11": {
+      "albedo": [
+        0.015,
+        0.015,
+        0.018,
+        1.0
+      ],
+      "albedo_texture": "",
+      "ao_texture": "",
+      "emission": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "emission_enabled": false,
+      "emission_energy": 1.0,
+      "emission_operator": "add",
+      "emission_texture": "",
+      "kind": "standard",
+      "metallic": 0.0,
+      "node": "LightRig/BarricadeBlank11",
+      "normal_scale": 1.0,
+      "normal_texture": "",
+      "roughness": 1.0,
+      "roughness_texture": "",
+      "specular": 0.0,
+      "transparent": false,
+      "two_sided": false,
+      "unshaded": false,
+      "uv1_offset": [
+        0.0,
+        0.0
+      ],
+      "uv1_scale": [
+        1.0,
+        1.0
+      ]
+    },
+    "VM_BarricadeBlank12": {
+      "albedo": [
+        0.015,
+        0.015,
+        0.018,
+        1.0
+      ],
+      "albedo_texture": "",
+      "ao_texture": "",
+      "emission": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "emission_enabled": false,
+      "emission_energy": 1.0,
+      "emission_operator": "add",
+      "emission_texture": "",
+      "kind": "standard",
+      "metallic": 0.0,
+      "node": "LightRig/BarricadeBlank12",
+      "normal_scale": 1.0,
+      "normal_texture": "",
+      "roughness": 1.0,
+      "roughness_texture": "",
+      "specular": 0.0,
+      "transparent": false,
+      "two_sided": false,
+      "unshaded": false,
+      "uv1_offset": [
+        0.0,
+        0.0
+      ],
+      "uv1_scale": [
+        1.0,
+        1.0
+      ]
+    },
+    "VM_BarricadeBlank13": {
+      "albedo": [
+        0.015,
+        0.015,
+        0.018,
+        1.0
+      ],
+      "albedo_texture": "",
+      "ao_texture": "",
+      "emission": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "emission_enabled": false,
+      "emission_energy": 1.0,
+      "emission_operator": "add",
+      "emission_texture": "",
+      "kind": "standard",
+      "metallic": 0.0,
+      "node": "LightRig/BarricadeBlank13",
+      "normal_scale": 1.0,
+      "normal_texture": "",
+      "roughness": 1.0,
+      "roughness_texture": "",
+      "specular": 0.0,
+      "transparent": false,
+      "two_sided": false,
+      "unshaded": false,
+      "uv1_offset": [
+        0.0,
+        0.0
+      ],
+      "uv1_scale": [
+        1.0,
+        1.0
+      ]
+    },
+    "VM_BarricadeBlank14": {
+      "albedo": [
+        0.015,
+        0.015,
+        0.018,
+        1.0
+      ],
+      "albedo_texture": "",
+      "ao_texture": "",
+      "emission": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "emission_enabled": false,
+      "emission_energy": 1.0,
+      "emission_operator": "add",
+      "emission_texture": "",
+      "kind": "standard",
+      "metallic": 0.0,
+      "node": "LightRig/BarricadeBlank14",
+      "normal_scale": 1.0,
+      "normal_texture": "",
+      "roughness": 1.0,
+      "roughness_texture": "",
+      "specular": 0.0,
+      "transparent": false,
+      "two_sided": false,
+      "unshaded": false,
+      "uv1_offset": [
+        0.0,
+        0.0
+      ],
+      "uv1_scale": [
+        1.0,
+        1.0
+      ]
+    },
+    "VM_BarricadeBlank15": {
+      "albedo": [
+        0.015,
+        0.015,
+        0.018,
+        1.0
+      ],
+      "albedo_texture": "",
+      "ao_texture": "",
+      "emission": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "emission_enabled": false,
+      "emission_energy": 1.0,
+      "emission_operator": "add",
+      "emission_texture": "",
+      "kind": "standard",
+      "metallic": 0.0,
+      "node": "LightRig/BarricadeBlank15",
+      "normal_scale": 1.0,
+      "normal_texture": "",
+      "roughness": 1.0,
+      "roughness_texture": "",
+      "specular": 0.0,
+      "transparent": false,
+      "two_sided": false,
+      "unshaded": false,
+      "uv1_offset": [
+        0.0,
+        0.0
+      ],
+      "uv1_scale": [
+        1.0,
+        1.0
+      ]
+    },
+    "VM_BarricadeBlank16": {
+      "albedo": [
+        0.015,
+        0.015,
+        0.018,
+        1.0
+      ],
+      "albedo_texture": "",
+      "ao_texture": "",
+      "emission": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "emission_enabled": false,
+      "emission_energy": 1.0,
+      "emission_operator": "add",
+      "emission_texture": "",
+      "kind": "standard",
+      "metallic": 0.0,
+      "node": "LightRig/BarricadeBlank16",
+      "normal_scale": 1.0,
+      "normal_texture": "",
+      "roughness": 1.0,
+      "roughness_texture": "",
+      "specular": 0.0,
+      "transparent": false,
+      "two_sided": false,
+      "unshaded": false,
+      "uv1_offset": [
+        0.0,
+        0.0
+      ],
+      "uv1_scale": [
+        1.0,
+        1.0
+      ]
+    },
+    "VM_BarricadeBlank17": {
+      "albedo": [
+        0.015,
+        0.015,
+        0.018,
+        1.0
+      ],
+      "albedo_texture": "",
+      "ao_texture": "",
+      "emission": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "emission_enabled": false,
+      "emission_energy": 1.0,
+      "emission_operator": "add",
+      "emission_texture": "",
+      "kind": "standard",
+      "metallic": 0.0,
+      "node": "LightRig/BarricadeBlank17",
+      "normal_scale": 1.0,
+      "normal_texture": "",
+      "roughness": 1.0,
+      "roughness_texture": "",
+      "specular": 0.0,
+      "transparent": false,
+      "two_sided": false,
+      "unshaded": false,
+      "uv1_offset": [
+        0.0,
+        0.0
+      ],
+      "uv1_scale": [
+        1.0,
+        1.0
+      ]
+    },
+    "VM_BarricadeBlank18": {
+      "albedo": [
+        0.015,
+        0.015,
+        0.018,
+        1.0
+      ],
+      "albedo_texture": "",
+      "ao_texture": "",
+      "emission": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "emission_enabled": false,
+      "emission_energy": 1.0,
+      "emission_operator": "add",
+      "emission_texture": "",
+      "kind": "standard",
+      "metallic": 0.0,
+      "node": "LightRig/BarricadeBlank18",
+      "normal_scale": 1.0,
+      "normal_texture": "",
+      "roughness": 1.0,
+      "roughness_texture": "",
+      "specular": 0.0,
+      "transparent": false,
+      "two_sided": false,
+      "unshaded": false,
+      "uv1_offset": [
+        0.0,
+        0.0
+      ],
+      "uv1_scale": [
+        1.0,
+        1.0
+      ]
+    },
+    "VM_BarricadeBlank19": {
+      "albedo": [
+        0.015,
+        0.015,
+        0.018,
+        1.0
+      ],
+      "albedo_texture": "",
+      "ao_texture": "",
+      "emission": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "emission_enabled": false,
+      "emission_energy": 1.0,
+      "emission_operator": "add",
+      "emission_texture": "",
+      "kind": "standard",
+      "metallic": 0.0,
+      "node": "LightRig/BarricadeBlank19",
+      "normal_scale": 1.0,
+      "normal_texture": "",
+      "roughness": 1.0,
+      "roughness_texture": "",
+      "specular": 0.0,
+      "transparent": false,
+      "two_sided": false,
+      "unshaded": false,
+      "uv1_offset": [
+        0.0,
+        0.0
+      ],
+      "uv1_scale": [
+        1.0,
+        1.0
+      ]
+    },
+    "VM_BarricadeCorner0": {
+      "albedo": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "albedo_texture": "res://assets/environment/materials/barricade_corner_aew.png",
+      "ao_texture": "",
+      "emission": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "emission_enabled": true,
+      "emission_energy": 0.25,
+      "emission_operator": "add",
+      "emission_texture": "res://assets/environment/materials/barricade_corner_aew.png",
+      "kind": "standard",
+      "metallic": 0.0,
+      "node": "LightRig/BarricadeCorner0",
+      "normal_scale": 1.0,
+      "normal_texture": "",
+      "roughness": 0.55,
+      "roughness_texture": "",
+      "specular": 0.5,
+      "transparent": false,
+      "two_sided": false,
+      "unshaded": false,
+      "uv1_offset": [
+        0.0745,
+        0.0
+      ],
+      "uv1_scale": [
+        0.8511,
+        1.0
+      ]
+    },
+    "VM_BarricadeCorner1": {
+      "albedo": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "albedo_texture": "res://assets/environment/materials/barricade_corner_aew.png",
+      "ao_texture": "",
+      "emission": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "emission_enabled": true,
+      "emission_energy": 0.25,
+      "emission_operator": "add",
+      "emission_texture": "res://assets/environment/materials/barricade_corner_aew.png",
+      "kind": "standard",
+      "metallic": 0.0,
+      "node": "LightRig/BarricadeCorner1",
+      "normal_scale": 1.0,
+      "normal_texture": "",
+      "roughness": 0.55,
+      "roughness_texture": "",
+      "specular": 0.5,
+      "transparent": false,
+      "two_sided": false,
+      "unshaded": false,
+      "uv1_offset": [
+        0.0745,
+        0.0
+      ],
+      "uv1_scale": [
+        0.8511,
+        1.0
+      ]
+    },
+    "VM_BarricadeCorner2": {
+      "albedo": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "albedo_texture": "res://assets/environment/materials/barricade_corner_aew.png",
+      "ao_texture": "",
+      "emission": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "emission_enabled": true,
+      "emission_energy": 0.25,
+      "emission_operator": "add",
+      "emission_texture": "res://assets/environment/materials/barricade_corner_aew.png",
+      "kind": "standard",
+      "metallic": 0.0,
+      "node": "LightRig/BarricadeCorner2",
+      "normal_scale": 1.0,
+      "normal_texture": "",
+      "roughness": 0.55,
+      "roughness_texture": "",
+      "specular": 0.5,
+      "transparent": false,
+      "two_sided": false,
+      "unshaded": false,
+      "uv1_offset": [
+        0.0745,
+        0.0
+      ],
+      "uv1_scale": [
+        0.8511,
+        1.0
+      ]
+    },
+    "VM_BarricadeCorner3": {
+      "albedo": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "albedo_texture": "res://assets/environment/materials/barricade_corner_aew.png",
+      "ao_texture": "",
+      "emission": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "emission_enabled": true,
+      "emission_energy": 0.25,
+      "emission_operator": "add",
+      "emission_texture": "res://assets/environment/materials/barricade_corner_aew.png",
+      "kind": "standard",
+      "metallic": 0.0,
+      "node": "LightRig/BarricadeCorner3",
+      "normal_scale": 1.0,
+      "normal_texture": "",
+      "roughness": 0.55,
+      "roughness_texture": "",
+      "specular": 0.5,
+      "transparent": false,
+      "two_sided": false,
+      "unshaded": false,
+      "uv1_offset": [
+        0.0745,
+        0.0
+      ],
+      "uv1_scale": [
+        0.8511,
+        1.0
+      ]
+    },
+    "VM_BarricadeLed00": {
+      "albedo": [
+        0.02,
+        0.02,
+        0.025,
+        1.0
+      ],
+      "albedo_texture": "",
+      "ao_texture": "",
+      "emission": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "emission_enabled": true,
+      "emission_energy": 1.1,
+      "emission_operator": "add",
+      "emission_texture": "res://assets/environment/materials/barricade_led_dynamite.png",
+      "kind": "standard",
+      "metallic": 0.0,
+      "node": "LightRig/BarricadeLed00",
+      "normal_scale": 1.0,
+      "normal_texture": "",
+      "roughness": 1.0,
+      "roughness_texture": "",
+      "specular": 0.0,
+      "transparent": false,
+      "two_sided": false,
+      "unshaded": false,
+      "uv1_offset": [
+        0.0,
+        0.0
+      ],
+      "uv1_scale": [
+        0.25,
+        1.0
+      ]
+    },
+    "VM_BarricadeLed01": {
+      "albedo": [
+        0.02,
+        0.02,
+        0.025,
+        1.0
+      ],
+      "albedo_texture": "",
+      "ao_texture": "",
+      "emission": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "emission_enabled": true,
+      "emission_energy": 1.1,
+      "emission_operator": "add",
+      "emission_texture": "res://assets/environment/materials/barricade_led_dynamite.png",
+      "kind": "standard",
+      "metallic": 0.0,
+      "node": "LightRig/BarricadeLed01",
+      "normal_scale": 1.0,
+      "normal_texture": "",
+      "roughness": 1.0,
+      "roughness_texture": "",
+      "specular": 0.0,
+      "transparent": false,
+      "two_sided": false,
+      "unshaded": false,
+      "uv1_offset": [
+        0.25,
+        0.0
+      ],
+      "uv1_scale": [
+        0.25,
+        1.0
+      ]
+    },
+    "VM_BarricadeLed02": {
+      "albedo": [
+        0.02,
+        0.02,
+        0.025,
+        1.0
+      ],
+      "albedo_texture": "",
+      "ao_texture": "",
+      "emission": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "emission_enabled": true,
+      "emission_energy": 1.1,
+      "emission_operator": "add",
+      "emission_texture": "res://assets/environment/materials/barricade_led_dynamite.png",
+      "kind": "standard",
+      "metallic": 0.0,
+      "node": "LightRig/BarricadeLed02",
+      "normal_scale": 1.0,
+      "normal_texture": "",
+      "roughness": 1.0,
+      "roughness_texture": "",
+      "specular": 0.0,
+      "transparent": false,
+      "two_sided": false,
+      "unshaded": false,
+      "uv1_offset": [
+        0.5,
+        0.0
+      ],
+      "uv1_scale": [
+        0.25,
+        1.0
+      ]
+    },
+    "VM_BarricadeLed03": {
+      "albedo": [
+        0.02,
+        0.02,
+        0.025,
+        1.0
+      ],
+      "albedo_texture": "",
+      "ao_texture": "",
+      "emission": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "emission_enabled": true,
+      "emission_energy": 1.1,
+      "emission_operator": "add",
+      "emission_texture": "res://assets/environment/materials/barricade_led_dynamite.png",
+      "kind": "standard",
+      "metallic": 0.0,
+      "node": "LightRig/BarricadeLed03",
+      "normal_scale": 1.0,
+      "normal_texture": "",
+      "roughness": 1.0,
+      "roughness_texture": "",
+      "specular": 0.0,
+      "transparent": false,
+      "two_sided": false,
+      "unshaded": false,
+      "uv1_offset": [
+        0.75,
+        0.0
+      ],
+      "uv1_scale": [
+        0.25,
+        1.0
+      ]
+    },
+    "VM_BarricadeLed04": {
+      "albedo": [
+        0.02,
+        0.02,
+        0.025,
+        1.0
+      ],
+      "albedo_texture": "",
+      "ao_texture": "",
+      "emission": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "emission_enabled": true,
+      "emission_energy": 1.1,
+      "emission_operator": "add",
+      "emission_texture": "res://assets/environment/materials/barricade_led_dynamite.png",
+      "kind": "standard",
+      "metallic": 0.0,
+      "node": "LightRig/BarricadeLed04",
+      "normal_scale": 1.0,
+      "normal_texture": "",
+      "roughness": 1.0,
+      "roughness_texture": "",
+      "specular": 0.0,
+      "transparent": false,
+      "two_sided": false,
+      "unshaded": false,
+      "uv1_offset": [
+        0.0,
+        0.0
+      ],
+      "uv1_scale": [
+        0.25,
+        1.0
+      ]
+    },
+    "VM_BarricadeLed05": {
+      "albedo": [
+        0.02,
+        0.02,
+        0.025,
+        1.0
+      ],
+      "albedo_texture": "",
+      "ao_texture": "",
+      "emission": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "emission_enabled": true,
+      "emission_energy": 1.1,
+      "emission_operator": "add",
+      "emission_texture": "res://assets/environment/materials/barricade_led_dynamite.png",
+      "kind": "standard",
+      "metallic": 0.0,
+      "node": "LightRig/BarricadeLed05",
+      "normal_scale": 1.0,
+      "normal_texture": "",
+      "roughness": 1.0,
+      "roughness_texture": "",
+      "specular": 0.0,
+      "transparent": false,
+      "two_sided": false,
+      "unshaded": false,
+      "uv1_offset": [
+        0.25,
+        0.0
+      ],
+      "uv1_scale": [
+        0.25,
+        1.0
+      ]
+    },
+    "VM_BarricadeLed06": {
+      "albedo": [
+        0.02,
+        0.02,
+        0.025,
+        1.0
+      ],
+      "albedo_texture": "",
+      "ao_texture": "",
+      "emission": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "emission_enabled": true,
+      "emission_energy": 1.1,
+      "emission_operator": "add",
+      "emission_texture": "res://assets/environment/materials/barricade_led_dynamite.png",
+      "kind": "standard",
+      "metallic": 0.0,
+      "node": "LightRig/BarricadeLed06",
+      "normal_scale": 1.0,
+      "normal_texture": "",
+      "roughness": 1.0,
+      "roughness_texture": "",
+      "specular": 0.0,
+      "transparent": false,
+      "two_sided": false,
+      "unshaded": false,
+      "uv1_offset": [
+        0.5,
+        0.0
+      ],
+      "uv1_scale": [
+        0.25,
+        1.0
+      ]
+    },
+    "VM_BarricadeLed07": {
+      "albedo": [
+        0.02,
+        0.02,
+        0.025,
+        1.0
+      ],
+      "albedo_texture": "",
+      "ao_texture": "",
+      "emission": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "emission_enabled": true,
+      "emission_energy": 1.1,
+      "emission_operator": "add",
+      "emission_texture": "res://assets/environment/materials/barricade_led_dynamite.png",
+      "kind": "standard",
+      "metallic": 0.0,
+      "node": "LightRig/BarricadeLed07",
+      "normal_scale": 1.0,
+      "normal_texture": "",
+      "roughness": 1.0,
+      "roughness_texture": "",
+      "specular": 0.0,
+      "transparent": false,
+      "two_sided": false,
+      "unshaded": false,
+      "uv1_offset": [
+        0.75,
+        0.0
+      ],
+      "uv1_scale": [
+        0.25,
+        1.0
+      ]
+    },
+    "VM_EntranceStage": {
+      "albedo": [
+        0.062,
+        0.078,
+        0.118,
+        1.0
+      ],
+      "albedo_texture": "res://assets/environment/materials/DiamondPlate009_1K-PNG_Color.png",
+      "ao_texture": "res://assets/environment/materials/DiamondPlate009_1K-PNG_AmbientOcclusion.png",
+      "emission": [
+        0.062,
+        0.078,
+        0.118,
+        1.0
+      ],
+      "emission_enabled": true,
+      "emission_energy": 4.9061,
+      "emission_operator": "multiply",
+      "emission_texture": "res://assets/environment/materials/DiamondPlate009_1K-PNG_Color.png",
+      "kind": "standard",
+      "metallic": 0.0,
+      "node": "Arena/EntranceSet/EntranceStage",
+      "normal_scale": 1.0,
+      "normal_texture": "res://assets/environment/materials/DiamondPlate009_1K-PNG_NormalGL.png",
+      "roughness": 0.26,
+      "roughness_texture": "",
+      "specular": 0.5,
+      "transparent": false,
+      "two_sided": false,
+      "unshaded": false,
+      "uv1_offset": [
+        0.0,
+        0.0
+      ],
+      "uv1_scale": [
+        0.4,
+        0.4
+      ]
+    },
+    "VM_ParCans": {
+      "albedo": [
+        0.0586,
+        0.071,
+        0.0911,
+        1.0
+      ],
+      "albedo_texture": "",
+      "ao_texture": "",
+      "emission": [
+        0.0586,
+        0.071,
+        0.0911,
+        1.0
+      ],
+      "emission_enabled": true,
+      "emission_energy": 0.5501,
+      "emission_operator": "add",
+      "emission_texture": "",
+      "kind": "standard",
+      "metallic": 0.0,
+      "node": "Arena/OverheadRig/ParCans",
+      "normal_scale": 1.0,
+      "normal_texture": "",
+      "roughness": 0.85,
+      "roughness_texture": "",
+      "specular": 0.5,
+      "transparent": false,
+      "two_sided": false,
+      "unshaded": false,
+      "uv1_offset": [
+        0.0,
+        0.0
+      ],
+      "uv1_scale": [
+        1.0,
+        1.0
+      ]
+    },
+    "VM_ParLenses": {
+      "kind": "shader",
+      "node": "Arena/OverheadRig/ParLenses",
+      "shader": ""
+    },
+    "VM_RibbonBoards": {
+      "albedo": [
+        0.02,
+        0.02,
+        0.025,
+        1.0
+      ],
+      "albedo_texture": "",
+      "ao_texture": "",
+      "emission": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "emission_enabled": true,
+      "emission_energy": 1.1,
+      "emission_operator": "add",
+      "emission_texture": "res://assets/environment/materials/ribbon_board.png",
+      "kind": "standard",
+      "metallic": 0.0,
+      "node": "Arena/BowlModel/RibbonBoards",
+      "normal_scale": 1.0,
+      "normal_texture": "",
+      "roughness": 1.0,
+      "roughness_texture": "",
+      "specular": 0.0,
+      "transparent": false,
+      "two_sided": false,
+      "unshaded": false,
+      "uv1_offset": [
+        0.0,
+        0.0
+      ],
+      "uv1_scale": [
+        1.0,
+        1.0
+      ]
+    },
+    "VM_StageBackdrop": {
+      "albedo": [
+        0.15,
+        0.115,
+        0.235,
+        1.0
+      ],
+      "albedo_texture": "res://assets/environment/materials/Fabric063_1K-PNG_Color.png",
+      "ao_texture": "res://assets/environment/materials/Fabric063_1K-PNG_AmbientOcclusion.png",
+      "emission": [
+        0.15,
+        0.115,
+        0.235,
+        1.0
+      ],
+      "emission_enabled": true,
+      "emission_energy": 5.8661,
+      "emission_operator": "multiply",
+      "emission_texture": "res://assets/environment/materials/Fabric063_1K-PNG_Color.png",
+      "kind": "standard",
+      "metallic": 0.0,
+      "node": "Arena/EntranceSet/StageBackdrop",
+      "normal_scale": 1.0,
+      "normal_texture": "res://assets/environment/materials/Fabric063_1K-PNG_NormalGL.png",
+      "roughness": 0.8,
+      "roughness_texture": "res://assets/environment/materials/Fabric063_1K-PNG_Roughness.png",
+      "specular": 0.5,
+      "transparent": false,
+      "two_sided": false,
+      "unshaded": false,
+      "uv1_offset": [
+        0.0,
+        0.0
+      ],
+      "uv1_scale": [
+        0.9091,
+        0.9091
+      ]
+    },
+    "VM_StageCentreScreen": {
+      "albedo": [
+        0.02,
+        0.02,
+        0.025,
+        1.0
+      ],
+      "albedo_texture": "",
+      "ao_texture": "",
+      "emission": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "emission_enabled": true,
+      "emission_energy": 0.9,
+      "emission_operator": "add",
+      "emission_texture": "res://assets/environment/materials/stage_centre_screen.png",
+      "kind": "standard",
+      "metallic": 0.0,
+      "node": "Arena/EntranceSet/StageCentreScreen",
+      "normal_scale": 1.0,
+      "normal_texture": "",
+      "roughness": 1.0,
+      "roughness_texture": "",
+      "specular": 0.0,
+      "transparent": false,
+      "two_sided": false,
+      "unshaded": false,
+      "uv1_offset": [
+        0.0,
+        0.0
+      ],
+      "uv1_scale": [
+        1.0,
+        1.0
+      ]
+    },
+    "VM_StageDrape": {
+      "albedo": [
+        0.07,
+        0.09,
+        0.13,
+        1.0
+      ],
+      "albedo_texture": "res://assets/environment/materials/DiamondPlate009_1K-PNG_Color.png",
+      "ao_texture": "res://assets/environment/materials/DiamondPlate009_1K-PNG_AmbientOcclusion.png",
+      "emission": [
+        0.07,
+        0.09,
+        0.13,
+        1.0
+      ],
+      "emission_enabled": true,
+      "emission_energy": 2.3392,
+      "emission_operator": "multiply",
+      "emission_texture": "res://assets/environment/materials/DiamondPlate009_1K-PNG_Color.png",
+      "kind": "standard",
+      "metallic": 0.0,
+      "node": "Arena/EntranceSet/StageDrape",
+      "normal_scale": 1.0,
+      "normal_texture": "res://assets/environment/materials/DiamondPlate009_1K-PNG_NormalGL.png",
+      "roughness": 1.0,
+      "roughness_texture": "res://assets/environment/materials/DiamondPlate009_1K-PNG_RoughnessBand.png",
+      "specular": 0.5,
+      "transparent": false,
+      "two_sided": false,
+      "unshaded": false,
+      "uv1_offset": [
+        0.0,
+        0.0
+      ],
+      "uv1_scale": [
+        0.6667,
+        0.6667
+      ]
+    },
+    "VM_StageFloorCans": {
+      "albedo": [
+        1.0,
+        0.16,
+        0.12,
+        1.0
+      ],
+      "albedo_texture": "",
+      "ao_texture": "",
+      "emission": [
+        1.0,
+        0.16,
+        0.12,
+        1.0
+      ],
+      "emission_enabled": true,
+      "emission_energy": 10.4671,
+      "emission_operator": "add",
+      "emission_texture": "",
+      "kind": "standard",
+      "metallic": 0.0,
+      "node": "Arena/EntranceSet/StageFloorCans",
+      "normal_scale": 1.0,
+      "normal_texture": "",
+      "roughness": 1.0,
+      "roughness_texture": "",
+      "specular": 0.5,
+      "transparent": false,
+      "two_sided": false,
+      "unshaded": false,
+      "uv1_offset": [
+        0.0,
+        0.0
+      ],
+      "uv1_scale": [
+        1.0,
+        1.0
+      ]
+    },
+    "VM_StageScreen": {
+      "albedo": [
+        0.55,
+        0.55,
+        0.55,
+        1.0
+      ],
+      "albedo_texture": "res://assets/environment/video/dynamite_tron_still.png",
+      "ao_texture": "",
+      "emission": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "emission_enabled": true,
+      "emission_energy": 4.2573,
+      "emission_operator": "multiply",
+      "emission_texture": "res://assets/environment/video/dynamite_tron_still.png",
+      "kind": "standard",
+      "metallic": 0.0,
+      "node": "Arena/EntranceSet/StageScreen",
+      "normal_scale": 1.0,
+      "normal_texture": "",
+      "roughness": 0.2,
+      "roughness_texture": "",
+      "specular": 0.5,
+      "transparent": false,
+      "two_sided": false,
+      "unshaded": false,
+      "uv1_offset": [
+        0.0,
+        0.19
+      ],
+      "uv1_scale": [
+        1.0,
+        0.62
+      ]
+    },
+    "VM_StageScreenBezel": {
+      "albedo": [
+        0.07,
+        0.09,
+        0.13,
+        1.0
+      ],
+      "albedo_texture": "res://assets/environment/materials/DiamondPlate009_1K-PNG_Color.png",
+      "ao_texture": "res://assets/environment/materials/DiamondPlate009_1K-PNG_AmbientOcclusion.png",
+      "emission": [
+        0.07,
+        0.09,
+        0.13,
+        1.0
+      ],
+      "emission_enabled": true,
+      "emission_energy": 2.3392,
+      "emission_operator": "multiply",
+      "emission_texture": "res://assets/environment/materials/DiamondPlate009_1K-PNG_Color.png",
+      "kind": "standard",
+      "metallic": 0.0,
+      "node": "Arena/EntranceSet/StageScreenBezel",
+      "normal_scale": 1.0,
+      "normal_texture": "res://assets/environment/materials/DiamondPlate009_1K-PNG_NormalGL.png",
+      "roughness": 1.0,
+      "roughness_texture": "res://assets/environment/materials/DiamondPlate009_1K-PNG_RoughnessBand.png",
+      "specular": 0.5,
+      "transparent": false,
+      "two_sided": false,
+      "unshaded": false,
+      "uv1_offset": [
+        0.0,
+        0.0
+      ],
+      "uv1_scale": [
+        0.6667,
+        0.6667
+      ]
+    },
+    "VM_StageScreenWings": {
+      "albedo": [
+        0.02,
+        0.02,
+        0.025,
+        1.0
+      ],
+      "albedo_texture": "",
+      "ao_texture": "",
+      "emission": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "emission_enabled": true,
+      "emission_energy": 1.1,
+      "emission_operator": "add",
+      "emission_texture": "res://assets/environment/materials/stage_screen_wing.png",
+      "kind": "standard",
+      "metallic": 0.0,
+      "node": "Arena/EntranceSet/StageScreenWings",
+      "normal_scale": 1.0,
+      "normal_texture": "",
+      "roughness": 1.0,
+      "roughness_texture": "",
+      "specular": 0.0,
+      "transparent": false,
+      "two_sided": false,
+      "unshaded": false,
+      "uv1_offset": [
+        0.0,
+        0.0
+      ],
+      "uv1_scale": [
+        1.0,
+        1.0
+      ]
+    },
+    "VM_StageSideScreenFrame": {
+      "albedo": [
+        0.07,
+        0.09,
+        0.13,
+        1.0
+      ],
+      "albedo_texture": "res://assets/environment/materials/DiamondPlate009_1K-PNG_Color.png",
+      "ao_texture": "res://assets/environment/materials/DiamondPlate009_1K-PNG_AmbientOcclusion.png",
+      "emission": [
+        0.07,
+        0.09,
+        0.13,
+        1.0
+      ],
+      "emission_enabled": true,
+      "emission_energy": 2.3392,
+      "emission_operator": "multiply",
+      "emission_texture": "res://assets/environment/materials/DiamondPlate009_1K-PNG_Color.png",
+      "kind": "standard",
+      "metallic": 0.0,
+      "node": "Arena/EntranceSet/StageSideScreenFrame",
+      "normal_scale": 1.0,
+      "normal_texture": "res://assets/environment/materials/DiamondPlate009_1K-PNG_NormalGL.png",
+      "roughness": 1.0,
+      "roughness_texture": "res://assets/environment/materials/DiamondPlate009_1K-PNG_RoughnessBand.png",
+      "specular": 0.5,
+      "transparent": false,
+      "two_sided": false,
+      "unshaded": false,
+      "uv1_offset": [
+        0.0,
+        0.0
+      ],
+      "uv1_scale": [
+        0.6667,
+        0.6667
+      ]
+    },
+    "VM_StageSideScreens": {
+      "albedo": [
+        0.55,
+        0.55,
+        0.55,
+        1.0
+      ],
+      "albedo_texture": "res://assets/environment/video/dynamite_tron_still.png",
+      "ao_texture": "",
+      "emission": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "emission_enabled": true,
+      "emission_energy": 1.192,
+      "emission_operator": "multiply",
+      "emission_texture": "res://assets/environment/video/dynamite_tron_still.png",
+      "kind": "standard",
+      "metallic": 0.0,
+      "node": "Arena/EntranceSet/StageSideScreens",
+      "normal_scale": 1.0,
+      "normal_texture": "",
+      "roughness": 0.2,
+      "roughness_texture": "",
+      "specular": 0.5,
+      "transparent": false,
+      "two_sided": false,
+      "unshaded": false,
+      "uv1_offset": [
+        0.0002,
+        0.0
+      ],
+      "uv1_scale": [
+        0.9996,
+        1.0
+      ]
+    },
+    "VM_StageTruss": {
+      "albedo": [
+        0.52,
+        0.55,
+        0.6,
+        1.0
+      ],
+      "albedo_texture": "res://assets/environment/materials/Metal032_1K-PNG_Color.png",
+      "ao_texture": "",
+      "emission": [
+        0.52,
+        0.55,
+        0.6,
+        1.0
+      ],
+      "emission_enabled": true,
+      "emission_energy": 0.1363,
+      "emission_operator": "multiply",
+      "emission_texture": "res://assets/environment/materials/Metal032_1K-PNG_Color.png",
+      "kind": "standard",
+      "metallic": 1.0,
+      "node": "Arena/EntranceSet/StageTruss",
+      "normal_scale": 1.0,
+      "normal_texture": "",
+      "roughness": 0.7,
+      "roughness_texture": "res://assets/environment/materials/Metal032_1K-PNG_Roughness.png",
+      "specular": 0.5,
+      "transparent": false,
+      "two_sided": false,
+      "unshaded": false,
+      "uv1_offset": [
+        0.0,
+        0.0
+      ],
+      "uv1_scale": [
+        2.2222,
+        2.2222
+      ]
+    },
+    "VM_StairNosing": {
+      "albedo": [
+        1.0,
+        0.8,
+        0.22,
+        1.0
+      ],
+      "albedo_texture": "",
+      "ao_texture": "",
+      "emission": [
+        1.0,
+        0.8,
+        0.22,
+        1.0
+      ],
+      "emission_enabled": true,
+      "emission_energy": 0.4326,
+      "emission_operator": "add",
+      "emission_texture": "",
+      "kind": "standard",
+      "metallic": 0.0,
+      "node": "Arena/BowlModel/StairNosing",
+      "normal_scale": 1.0,
+      "normal_texture": "",
+      "roughness": 0.55,
+      "roughness_texture": "",
+      "specular": 0.5,
+      "transparent": false,
+      "two_sided": false,
+      "unshaded": false,
+      "uv1_offset": [
+        0.0,
+        0.0
+      ],
+      "uv1_scale": [
+        1.0,
+        1.0
+      ]
+    }
+  },
+  "meshes": [
+    "Arena/EntranceSet/EntranceStage",
+    "Arena/EntranceSet/StageBackdrop",
+    "Arena/EntranceSet/StageScreenBezel",
+    "Arena/EntranceSet/StageScreen",
+    "Arena/EntranceSet/StageCentreScreen",
+    "Arena/EntranceSet/StageScreenWings",
+    "Arena/EntranceSet/StageSideScreens",
+    "Arena/EntranceSet/StageSideScreenFrame",
+    "Arena/EntranceSet/StageFloorCans",
+    "Arena/EntranceSet/StageDrape",
+    "Arena/EntranceSet/StageTruss",
+    "Arena/OverheadRig/ParCans",
+    "Arena/OverheadRig/ParLenses",
+    "LightRig/BarricadeCorner0",
+    "LightRig/BarricadeLed00",
+    "LightRig/BarricadeLed01",
+    "LightRig/BarricadeLed02",
+    "LightRig/BarricadeLed03",
+    "LightRig/BarricadeCorner1",
+    "LightRig/BarricadeCorner2",
+    "LightRig/BarricadeLed04",
+    "LightRig/BarricadeLed05",
+    "LightRig/BarricadeLed06",
+    "LightRig/BarricadeLed07",
+    "LightRig/BarricadeCorner3",
+    "LightRig/BarricadeBlank00",
+    "LightRig/BarricadeBlank01",
+    "LightRig/BarricadeBlank02",
+    "LightRig/BarricadeBlank03",
+    "LightRig/BarricadeBlank04",
+    "LightRig/BarricadeBlank05",
+    "LightRig/BarricadeBlank06",
+    "LightRig/BarricadeBlank07",
+    "LightRig/BarricadeBlank08",
+    "LightRig/BarricadeBlank09",
+    "LightRig/BarricadeBlank10",
+    "LightRig/BarricadeBlank11",
+    "LightRig/BarricadeBlank12",
+    "LightRig/BarricadeBlank13",
+    "LightRig/BarricadeBlank14",
+    "LightRig/BarricadeBlank15",
+    "LightRig/BarricadeBlank16",
+    "LightRig/BarricadeBlank17",
+    "LightRig/BarricadeBlank18",
+    "LightRig/BarricadeBlank19"
+  ]
+}
