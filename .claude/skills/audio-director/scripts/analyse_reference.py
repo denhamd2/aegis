@@ -118,7 +118,10 @@ def features(x, mag, freqs, bed_db, frame):
     band = {k: float(db(head[(freqs >= a) & (freqs < b)].mean())) for k, (a, b) in BANDS.items()}
     level = db(res.sum(axis=1) + 1e-9)
     peak = float(level[:6].max())
-    below = np.where(level[3:] < peak - 20)[0]
+    # Decay ends 20 dB down or once the event is back within 6 dB of what
+    # followed it (the crowd's swell after a hit is the crowd, not the hit).
+    tail_floor = float(np.median(level[int(1.0 * SR / HOP):])) if len(level) > int(1.2 * SR / HOP) else -1e9
+    below = np.where(level[3:] < max(peak - 20, tail_floor + 6))[0]
     decay = float((below[0] + 3) * HOP / SR) if len(below) else 2.0
     centroid = float((freqs * head).sum() / head.sum())
     flatness = float(np.exp(np.log(head).mean()) / head.mean())
@@ -130,10 +133,24 @@ def features(x, mag, freqs, bed_db, frame):
         if lr.sum() > 0:
             peaky = float(np.sort(lr)[-12:].sum() / lr.sum())
             hold = float(lr.sum() / head.sum())
+    # A ring is a few *narrow lines* that persist: in each late frame a bin
+    # stands far over its +-8-bin neighbourhood, and the same bin does so in
+    # most frames. Broadband crowd residue never does either.
+    lines = 0.0
+    late2 = mag[frame + int(0.3 * SR / HOP):frame + int(0.8 * SR / HOP)]
+    if len(late2) > 4:
+        sel = (freqs > 500) & (freqs < 6000)
+        lm = late2[:, sel] + 1e-9
+        k = 17
+        pad = np.pad(lm, ((0, 0), (k // 2, k // 2)), mode="edge")
+        win = np.lib.stride_tricks.sliding_window_view(pad, k, axis=1)
+        prom = lm / np.median(win, axis=-1)
+        steady = np.median(prom, axis=0)  # a line must hold through the window
+        lines = float(db(np.sort(steady)[-3:].mean()))
     ps, f0 = pitch_strength(x[t0 + int(0.03 * SR):t0 + int(0.23 * SR)])
     return {"above_bed_db": round(peak - float(db(pre.sum() + 1e-9)), 1), "decay_s": round(decay, 3),
             "centroid_hz": round(centroid), "flatness": round(flatness, 3),
-            "tonal_peaky": round(peaky, 3), "tonal_hold": round(hold, 3),
+            "tonal_peaky": round(peaky, 3), "tonal_hold": round(hold, 3), "line_db": round(lines, 1),
             "pitch_strength": round(ps, 2), "f0_hz": round(f0),
             "bands_db": {k: round(v, 1) for k, v in band.items()}}
 
@@ -142,10 +159,13 @@ def classify(f):
     b = f["bands_db"]
     bottom = max(b["sub"], b["low"])
     top = max(b["pres"], b["air"])
-    if f["tonal_peaky"] > 0.3 and f["tonal_hold"] > 0.1 and f["centroid_hz"] > 700:
-        return "bell", min(1.0, f["tonal_peaky"] + f["tonal_hold"])
-    if f["tonal_peaky"] > 0.2 and f["centroid_hz"] > 1500 and f["decay_s"] > 0.25:
-        return "metal", 0.5
+    # Lines 12 dB over their neighbours for half a second: bell or ringing
+    # metal. A ring bell's lines start near 900 Hz; struck steel is brighter
+    # and dies faster.
+    if f["line_db"] >= 12 and f["above_bed_db"] >= 6:
+        if f["decay_s"] >= 0.4:
+            return "bell", min(1.0, f["line_db"] / 24)
+        return "metal", min(1.0, f["line_db"] / 24)
     if f["pitch_strength"] > 0.55 and 85 <= f["f0_hz"] <= 380 and f["decay_s"] > 0.15:
         return "voice", f["pitch_strength"]
     if bottom - top > 6 and f["decay_s"] >= 0.12:
