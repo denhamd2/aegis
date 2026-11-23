@@ -85,8 +85,25 @@ before the dive. Both routes cancel the pending impact and use the existing
 paired lead-in and role clips. A late Spear attempt still lands the finisher
 with its ordinary meter and cover rules. Committed AI reads now use the
 move ID and the match phase's reversal scale. The arm-hook counts one
-attempt at rig acceptance. All 118 focused checks passed.
+attempt at rig acceptance. All 118 focused checks passed. The 12 seeded
+real-roster scenarios covered both slot orders for each roster pairing,
+with a counter and a normal landing per pairing. Each counter recorded one
+press and preserved both root positions on the handoff.
+
+[Mac run 45207049716](https://github.com/denhamd2/aegis/actions/runs/45207049716)
+published `e31b7fd`. The exact tag, release target and uploaded
+1,034,175,802-byte ZIP were verified. The [Unreal move bundle](https://github.com/denhamd2/aegis/actions/runs/45207049916)
+exports all three MoveDef mappings and both roles of the two replacement
+clips. Native transition review and Unreal runtime integration remain open.
 [Unreal parity cases](../../tools/unreal/GRAPPLE_LIFETIME.md#arm-hook-and-running-spear-counters).
+
+In the matched seed-1 AI comparison with arena presentation omitted,
+Roman–Cody reached the 48,000-tick cap before and after the batch. Cody–Roman
+ended with Roman winning by pinfall at tick 27,489 before and 26,399 after.
+Both Cody–Roman runs had three Spear attempts. Landings went from three to
+two with one side headlock counter in the new build. Each slot order had
+three rope runs on both builds. AI match completion remains open for the
+capped order.
 
 ## Grapple cancellation and teardown
 
