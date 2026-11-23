@@ -53,7 +53,7 @@ until it returns a `returnValue`.
 | `st.py` | Prepend `WAIT=1.0`: beat, commentary voice, queue, name card, lines said, camera shot |
 | `watch.py` | Logs beat and voice changes through an entrance |
 | `pos2.py`, `vt.py` | Wrestler and camera positions, live view target |
-| `det600t.py` | **Determinism gate**: three same-seed runs must give identical hashes (baseline 300 → `8a241b7f…`, 600 → `6d0629aa…`). Run after any change that could touch the sim. |
+| `det600t.py` | **Determinism gate**: three same-seed runs must give identical hashes (baseline 300 → `8a241b7f…`, 600 → `22c6e8d4…`). Run after any change that could touch the sim. |
 
 ## Blender: the bridge
 
