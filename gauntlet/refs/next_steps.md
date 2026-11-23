@@ -44,9 +44,21 @@ defender gets one stamina-charged attempt per read. A successful read
 immediately transfers both roles to the existing authored paired hold.
 Misses leave the holder's move available. Interrupted reads and cancelled
 playback release both wrestlers without landing wear. All 89 focused checks
-passed, including authored playback and cancellation in both slots. Separately authored
-counters for committed throws, directional attacks and specials still need
-source and animation work. [Unreal parity cases](../../tools/unreal/GRAPPLE_LIFETIME.md#paired-chain-grapple-counters).
+passed, including authored playback and cancellation in both slots.
+[CI](https://github.com/denhamd2/aegis/actions/runs/45181182407) passed.
+[Mac run 45181182339](https://github.com/denhamd2/aegis/actions/runs/45181182339)
+published `5ea5262`. The exact tag, release target and uploaded
+1,034,174,377-byte ZIP were verified.
+
+At seed 1 and 20,000 simulation ticks, the chain-counter tally was five for
+Cody–Roman, zero for Roman–Cody, zero for Kenny–Cody and one for Kenny–Roman.
+All four reached the tick cap. The prior build also reached it in both
+Cody–Roman slot orders, with six and two counters respectively. Native
+visual review and broader match-completion validation remain open.
+
+Counters for committed throws, directional attacks and specials need
+their own authored pairs and gameplay integration. Unreal runtime parity
+remains open. [Unreal parity cases](../../tools/unreal/GRAPPLE_LIFETIME.md#paired-chain-grapple-counters).
 
 ## Grapple cancellation and teardown
 
