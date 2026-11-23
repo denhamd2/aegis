@@ -56,9 +56,22 @@ All four reached the tick cap. The prior build also reached it in both
 Cody–Roman slot orders, with six and two counters respectively. Native
 visual review and broader match-completion validation remain open.
 
-Counters for committed throws, directional attacks and specials need
-their own authored pairs and gameplay integration. Unreal runtime parity
+The vertical suplex is covered in the committed throw follow-up.
+Other throws, directional attacks and specials still need their own
+counter choreography and gameplay integration. Unreal runtime parity
 remains open. [Unreal parity cases](../../tools/unreal/GRAPPLE_LIFETIME.md#paired-chain-grapple-counters).
+
+## Committed vertical suplex counter
+
+The defender can escape the vertical suplex during its grounded facelock.
+Ticks 6–14 of the paired clip accept one stamina-charged attempt. The
+escape cancels the original throw and starts the existing paired waistlock
+go-behind with swapped roles. Mistimed or exhausted attempts preserve the
+original throw. All 92 focused checks passed. The move bundle exports
+the window and counter ID, and both role clips resolved in the source GLB.
+Native transition review, new directional and special counter animations,
+and Unreal runtime integration remain open.
+[Unreal parity cases](../../tools/unreal/GRAPPLE_LIFETIME.md#committed-vertical-suplex-counter).
 
 ## Grapple cancellation and teardown
 

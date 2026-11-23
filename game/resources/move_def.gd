@@ -17,10 +17,12 @@ extends Resource
 ## Reversal window, expressed as an inclusive frame range relative to
 ## move start. reversal_window_end must be >= reversal_window_start.
 ##
-## The standing strike parry reads this window. Its input lead opens the
-## window early enough to commit before the authored contact frame.
+## Standing strike parries add their input lead. A mapped paired counter
+## reads the authored playback frame directly.
 @export var reversal_window_start: int = 0
 @export var reversal_window_end: int = 0
+## Authored paired move ID to play with swapped roles on a committed read.
+@export var paired_counter_id: StringName
 
 ## Damage dealt per limb if the move connects.
 @export var damage_head: float = 0.0

@@ -86,6 +86,8 @@ func _init() -> void:
 			var row := {"animation_pair_id": pair, "total_frames": def.total_frames(),
 					"group": String(def.get_meta("ff_family", "")),
 					"contact_offset": _xyz(def.contact_offset)}
+			if def.paired_counter_id != &"":
+				row["paired_counter_id"] = String(def.paired_counter_id)
 			for field: String in MOVE_FIELDS:
 				row[field] = def.get(field)
 			definitions[id] = row

@@ -2311,6 +2311,14 @@ func _poll_live_input() -> Dictionary:
 		"weapon_pick": _take_wheel_pick(),
 	}
 
+func sample_committed_counter(ai_due: bool, attempt: int) -> bool:
+	var input := {"reversal": ai != null and ai_due and ai.wants_committed_grapple_counter(attempt)} \
+			if is_ai else _poll_live_input()
+	if ReplaySystem:
+		input = ReplaySystem.get_input(player_index, input)
+	return input.get("reversal", false)
+
+
 func _take_wheel_pick() -> StringName:
 	var pick := _wheel_pick
 	_wheel_pick = &""
@@ -5730,10 +5738,26 @@ func _process_grapple_hold(input: Dictionary, defender_input: Dictionary = {}) -
 			_release_grapple_hold()
 		return
 
+	_begin_grapple_move(move)
+
+
+func begin_committed_counter(striker: WrestlerController, move: MoveDef) -> void:
+	if not is_inside_tree() or not striker.is_inside_tree() or striker != opponent \
+			or not grapple_rig or grapple_rig.is_active() \
+			or fsm.current_state != WrestlerFSM.State.IDLE \
+			or striker.fsm.current_state != WrestlerFSM.State.IDLE:
+		return
+	_is_grapple_attacker = true
+	fsm.transition_to(WrestlerFSM.State.GRAPPLE_HOLD)
+	striker.fsm.transition_to(WrestlerFSM.State.GRAPPLE_HOLD)
+	_begin_grapple_move(move)
+
+
+func _begin_grapple_move(move: MoveDef) -> void:
 	_active_move = move
 	if grapple_rig:
-		grapple_rig.begin(self, opponent, move)
 		grapple_rig.grapple_finished.connect(_on_grapple_finished, CONNECT_ONE_SHOT)
+		grapple_rig.begin(self, opponent, move)
 	else:
 		_resolve_grapple_move(move)
 

@@ -59,6 +59,14 @@ def verify_bundle(bundle):
 def validate_joins(definitions, clips, trajectories):
     for move, row in definitions.items():
         clip = clips.get(row["animation_pair_id"]) or clips.get(move)
+        counter = row.get("paired_counter_id")
+        if counter:
+            if not clip or clip["kind"] != "paired":
+                raise ValueError(f"Counter source {move} has no paired clip")
+            if counter not in definitions or counter not in trajectories["moves"]:
+                raise ValueError(f"Counter {counter} for {move} has no paired move")
+            if not 0 <= row["reversal_window_start"] <= row["reversal_window_end"] < row["startup_frames"]:
+                raise ValueError(f"Paired counter window for {move} must fit before contact")
         if not clip or clip["kind"] != "paired":
             continue
         pair = trajectories["moves"].get(move)

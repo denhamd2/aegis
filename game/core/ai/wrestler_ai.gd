@@ -441,6 +441,18 @@ func _chain_input() -> Dictionary:
 	return {"chain": holds[_chain_rng().randi_range(0, holds.size() - 1)]}
 
 
+## One independent read per incoming counterable throw. Its seed doesn't advance other
+## AI decisions, and the resulting button press goes through ReplaySystem.
+func wants_committed_grapple_counter(attempt: int) -> bool:
+	var stamina: float = controller.combat.stamina
+	if stamina < CombatSystem.STAMINA_REVERSAL:
+		return false
+	var rng := RandomNumberGenerator.new()
+	rng.seed = _match_seed * 11213 + _player_index * 137 + attempt
+	return rng.randf() < CHAIN_REVERSAL_CHANCE \
+			* (REVERSAL_SPENT_SHARE + (1.0 - REVERSAL_SPENT_SHARE) * stamina)
+
+
 func _roll_reversal() -> bool:
 	if target.fsm.current_state != WrestlerFSM.State.STRIKE or target._active_move == null \
 			or target._active_move == WrestlerController.REVERSAL_MOVE:

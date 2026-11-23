@@ -33,6 +33,12 @@ var _active: bool = false
 var _playback_id := 0
 var _attacker_physics := false
 var _defender_physics := false
+var _counter_attempted := false
+var _counter_ai_decided := false
+
+const PAIRED_COUNTERS := {
+	&"chain_waistlock": preload("res://resources/moves/chain_waistlock.tres"),
+}
 
 ## Paired clips are authored once against fixed node names -- "WrestlerA" is
 ## always the grounded/lifting role's track, "WrestlerB" always the thrown/
@@ -99,6 +105,8 @@ func begin(attacker: Node3D, defender: Node3D, move: MoveDef) -> void:
 	_attacker = attacker
 	_defender = defender
 	_move = move
+	_counter_attempted = false
+	_counter_ai_decided = false
 	_separation_height_weight = 1.0
 	_separation_height_origin = Vector2.ZERO
 	_separation_height_captured = false
@@ -322,6 +330,44 @@ func cancel() -> void:
 		if is_instance_valid(body) and body.has_method("cancel_paired_playback"):
 			body.cancel_paired_playback(self)
 	grapple_cancelled.emit()
+
+
+## The ordinary controllers are suspended during this phase. The referee
+## samples the defender's input after the controllers, once per match tick.
+func resolve_committed_counter() -> void:
+	if not _active or _counter_attempted or _move == null \
+			or _move.paired_counter_id == &"" \
+			or not animation_player or animation_player.current_animation != _move.animation_pair_id:
+		return
+	var frame := floori(animation_player.current_animation_position * 60.0 + 0.0001)
+	if frame > _move.reversal_window_end:
+		return
+	var attacker := _attacker as WrestlerController
+	var defender := _defender as WrestlerController
+	if not attacker or not defender or attacker.opponent != defender or defender.opponent != attacker:
+		return
+	if attacker.fsm.current_state != WrestlerFSM.State.GRAPPLE_HOLD \
+			or defender.fsm.current_state != WrestlerFSM.State.GRAPPLE_HOLD:
+		cancel()
+		return
+	var ai_due := not _counter_ai_decided and frame >= _move.reversal_window_start
+	_counter_ai_decided = _counter_ai_decided or ai_due
+	var attempt := int(attacker._attempted_moves.get(_move.animation_pair_id, 0))
+	if not defender.sample_committed_counter(ai_due, attempt):
+		return
+	_counter_attempted = true
+	var has_stamina := defender.combat.stamina >= CombatSystem.STAMINA_REVERSAL
+	defender.combat.spend_stamina(CombatSystem.STAMINA_REVERSAL)
+	if not has_stamina or not _move.is_in_reversal_window(frame):
+		return
+	var counter: MoveDef = PAIRED_COUNTERS.get(_move.paired_counter_id)
+	if not counter or not animation_player.has_animation(counter.animation_pair_id):
+		return
+	# Cancelling first removes the original completion, impact and replay cues.
+	# The replacement's walk-in blends both performers from the interrupted pose.
+	cancel()
+	if not _active and is_instance_valid(attacker) and is_instance_valid(defender):
+		defender.begin_committed_counter(attacker, counter)
 
 
 func _owns_playback(playback_id: int) -> bool:

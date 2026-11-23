@@ -232,3 +232,128 @@ func test_leaving_the_hold_during_counter_playback_cancels_the_pair() -> void:
 			assert_float(wrestler.combat.health()).is_equal(1.0)
 			assert_bool(wrestler._active_move == null).is_true()
 	await get_tree().physics_frame
+
+
+const VERTICAL_SUPLEX := preload("res://resources/moves/grapple_vertical_suplex.tres")
+
+
+func _start_suplex(attacker: WrestlerController) -> void:
+	attacker.grapple_move = VERTICAL_SUPLEX
+	attacker._process_grapple_hold({"chain": "none"})
+	var player := attacker.grapple_rig.animation_player
+	for _tick in 50:
+		if player.current_animation == &"grapple_vertical_suplex":
+			break
+		await get_tree().physics_frame
+	assert_str(String(player.current_animation)).is_equal("grapple_vertical_suplex")
+
+
+func _press_suplex_reversal(swapped: bool, attacker: WrestlerController,
+		defender: WrestlerController, frame: int) -> void:
+	var player := attacker.grapple_rig.animation_player
+	player.seek(float(frame) / 60.0, true)
+	var former_mode := ReplaySystem.mode
+	var former_replay := ReplaySystem.replay
+	var replay := ReplayResource.new()
+	replay.add_frame(defender.player_index, ReplaySystem.current_tick, {"reversal": true})
+	ReplaySystem.mode = ReplaySystem.Mode.PLAYING
+	ReplaySystem.replay = replay
+	var referee := MatchReferee.new()
+	referee.wrestler_a = defender if swapped else attacker
+	referee.wrestler_b = attacker if swapped else defender
+	referee._resolve_tick()
+	referee.free()
+	ReplaySystem.mode = former_mode
+	ReplaySystem.replay = former_replay
+
+
+func test_suplex_counter_uses_the_grounded_window_in_either_slot() -> void:
+	for swapped: bool in [false, true]:
+		var pair := _chain_pair(swapped)
+		var attacker := pair[0]
+		var defender := pair[1]
+		attacker.player_index = 1 if swapped else 0
+		defender.player_index = 0 if swapped else 1
+		var window_edge := VERTICAL_SUPLEX.reversal_window_end if swapped \
+				else VERTICAL_SUPLEX.reversal_window_start
+		var rig := attacker.grapple_rig
+		var cancelled := [0]
+		rig.grapple_cancelled.connect(func(): cancelled[0] += 1)
+		var landed: Array[StringName] = []
+		for wrestler: WrestlerController in pair:
+			wrestler.move_landed.connect(func(_a, _d, move): landed.append(move.animation_pair_id))
+		await _start_suplex(attacker)
+		_press_suplex_reversal(swapped, attacker, defender, window_edge)
+		assert_int(cancelled[0]).is_equal(1)
+		assert_bool(defender._is_grapple_attacker).is_true()
+		assert_bool(attacker._is_grapple_attacker).is_false()
+		assert_bool(rig.grapple_finished.is_connected(attacker._on_grapple_finished)).is_false()
+		assert_float(defender.combat.stamina).is_equal_approx(
+				1.0 - CombatSystem.STAMINA_REVERSAL, 0.0001)
+
+		for _tick in 180:
+			if not rig.is_active():
+				break
+			await get_tree().physics_frame
+		assert_array(landed).is_equal([&"chain_waistlock"])
+		assert_float(defender.combat.health()).is_equal(1.0)
+		assert_int(defender.fsm.current_state).is_equal(WrestlerFSM.State.IDLE)
+		assert_int(attacker.fsm.current_state).is_equal(WrestlerFSM.State.HIT_REACT)
+		assert_bool(defender._is_grapple_attacker).is_false()
+		assert_bool(attacker._is_grapple_attacker).is_false()
+
+
+func test_mistimed_or_exhausted_suplex_reversals_leave_the_throw_intact() -> void:
+	for situation: String in ["early", "late", "exhausted"]:
+		var pair := _chain_pair(false)
+		var attacker := pair[0]
+		var defender := pair[1]
+		defender.player_index = 1
+		var rig := attacker.grapple_rig
+		var stamina := 0.01 if situation == "exhausted" else 1.0
+		defender.combat.stamina = stamina
+		var landed: Array[StringName] = []
+		attacker.move_landed.connect(func(_a, _d, move): landed.append(move.animation_pair_id))
+		await _start_suplex(attacker)
+		var frame := VERTICAL_SUPLEX.reversal_window_start
+		if situation == "early":
+			frame -= 1
+		elif situation == "late":
+			frame = VERTICAL_SUPLEX.reversal_window_end + 1
+		_press_suplex_reversal(false, attacker, defender, frame)
+		assert_bool(attacker._is_grapple_attacker).is_true()
+		var after_press := defender.combat.stamina
+		if situation == "early":
+			_press_suplex_reversal(false, attacker, defender, frame + 1)
+			assert_float(defender.combat.stamina).is_equal(after_press)
+		elif situation == "late":
+			assert_float(after_press).is_equal(stamina)
+		else:
+			assert_float(after_press).is_equal(0.0)
+		for _tick in 180:
+			if not rig.is_active():
+				break
+			await get_tree().physics_frame
+		assert_array(landed).is_equal([&"grapple_vertical_suplex"])
+		assert_float(defender.combat.health()).is_less(1.0)
+		assert_bool(attacker._is_grapple_attacker).is_false()
+		assert_bool(defender._is_grapple_attacker).is_false()
+
+
+func test_cancelled_suplex_counter_lands_neither_move() -> void:
+	var pair := _chain_pair(false)
+	var attacker := pair[0]
+	var defender := pair[1]
+	defender.player_index = 1
+	var rig := attacker.grapple_rig
+	await _start_suplex(attacker)
+	_press_suplex_reversal(false, attacker, defender, VERTICAL_SUPLEX.reversal_window_start)
+	assert_bool(defender._is_grapple_attacker).is_true()
+	rig.cancel()
+	await get_tree().physics_frame
+	assert_bool(rig.is_active()).is_false()
+	for wrestler: WrestlerController in pair:
+		assert_int(wrestler.fsm.current_state).is_equal(WrestlerFSM.State.IDLE)
+		assert_bool(wrestler._is_grapple_attacker).is_false()
+		assert_bool(rig.grapple_finished.is_connected(wrestler._on_grapple_finished)).is_false()
+		assert_float(wrestler.combat.health()).is_equal(1.0)

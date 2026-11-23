@@ -232,6 +232,8 @@ func _resolve_tick() -> void:
 	wrestler_b._resolve_reversible_contact()
 	wrestler_a._resolve_pending_hits()
 	wrestler_b._resolve_pending_hits()
+	if wrestler_a.grapple_rig:
+		wrestler_a.grapple_rig.resolve_committed_counter()
 	# Choose the holder once. A role swap cannot advance the new holder's
 	# clock until the next physics tick.
 	if wrestler_a._is_grapple_attacker:

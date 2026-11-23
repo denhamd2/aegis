@@ -79,3 +79,26 @@ In PIE, swap physical slots across the start and end boundary cases
 starts. Verify one stamina charge per attempt, no second counter while
 the rig owns the pair, and no damage or stale completion on cancellation.
 The Unreal runtime and these PIE checks still require the Mac checkout.
+
+## Committed vertical suplex counter
+
+Read the source move's `paired_counter_id` and inclusive reversal bounds
+from the shared MoveDef export. The vertical suplex maps to `chain_waistlock`
+at paired playback ticks 6–14 at 60 Hz. The clock starts with the authored
+role clips, after the walk-in. Use the same replay input path while the
+paired rig owns movement, sampling once per tick before the replay advances.
+
+During playback, an early attempted read spends reversal stamina and uses
+up the attempt for that throw. Inputs after the window closes are ignored.
+An exhausted defender fails the read. For a valid counter, cancel the
+source pair and its damage, camera and replay callbacks, then start the
+waistlock go-behind with swapped roles at the current positions. Use the
+replacement's ordinary lead-in, completion and recovery. The Godot AI makes
+one seeded decision on entering the window and records the resulting input.
+
+In PIE, test the opening and closing bounds across both physical slots,
+early and late reads, an exhausted defender, and cancellation before the
+replacement finishes. Verify that normal completion lands only the
+replacement and an interruption lands neither move. The exported data and
+role clips are shared. Unreal playback and counter handling still need the
+Mac project.
