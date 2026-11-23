@@ -133,3 +133,27 @@ func test_the_grapple_rig_contains_the_bodies_it_has_suspended() -> void:
 		.override_failure_message(
 			"a suspended body is still outside the ring after a rig tick") \
 		.is_less_equal(WrestlerController.RING_KEEP_IN + 0.001)
+
+
+func test_interrupted_rope_absorb_puts_the_runner_back_on_the_mat() -> void:
+	var runner := _wrestler()
+	runner.set_physics_process(false)
+	var rope := StaticBody3D.new()
+	add_child(auto_free(rope))
+	runner.fsm.transition_to(WrestlerFSM.State.IRISH_WHIP)
+	runner.global_position = Vector3(2.55, 0.0, 0.0)
+	runner._irish_whip_launch_velocity = Vector3.RIGHT * 9.0
+	runner._begin_rope_load(Vector3.LEFT, rope)
+	runner._rope_load_tick = 12
+	runner.global_position = Vector3(2.80, -0.08, 3.34)
+	assert_array(runner.get_collision_exceptions()).contains([rope])
+
+	runner._start_move(WrestlerFSM.State.HIT_REACT, runner._timed_stub(20))
+	await get_tree().physics_frame
+	runner._physics_process(1.0 / 60.0)
+
+	assert_array(runner.get_collision_exceptions()).not_contains([rope])
+	assert_int(runner._rope_load_tick).is_equal(-1)
+	assert_float(runner.global_position.z).is_less_equal(WrestlerController.RING_KEEP_IN)
+	assert_float(runner.global_position.y).is_equal_approx(WrestlerController.MAT_LEVEL, 0.001)
+	assert_float(runner.velocity.y).is_equal_approx(0.0, 0.001)

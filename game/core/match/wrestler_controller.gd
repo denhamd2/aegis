@@ -2104,9 +2104,9 @@ func _physics_process(delta: float) -> void:
 			global_position.y = maxf(global_position.y, FLOOR_LEVEL if outside_ring else MAT_LEVEL)
 		_go_down()
 	if _rope_load_body:
-		# Out in the ropes on purpose -- the clamp would snap him back.
 		_end_rope_load_when_clear()
-	else:
+	# Containment resumes on the same tick the rope exception is released.
+	if not _rope_load_body:
 		keep_inside_the_ring()
 		keep_lying_body_inside_the_ropes()
 	_release_cover_contact()
@@ -3738,9 +3738,14 @@ func _turn_off_the_ropes(dt: float) -> float:
 ## Hands the rope collider back once he is inside where it stopped him.
 func _end_rope_load_when_clear() -> void:
 	var out := (global_position - _rope_load_from).dot(_rope_load_out)
-	var loading := _rope_load_tick >= 0 and not _irish_whip_rebounded
-	if out > 0.0 and (loading or _rope_load_tick < ROPE_LOAD_MAX_TICKS):
-		if not loading:
+	var loading := fsm.current_state == WrestlerFSM.State.IRISH_WHIP \
+			and _rope_load_tick >= 0 and not _irish_whip_rebounded
+	var returning := fsm.current_state == WrestlerFSM.State.RUN \
+			and _irish_whip_return_ticks_remaining > 0
+	# The absorb and its return own the exception. A hit or another move can
+	# end either phase before the runner gets back inside the rope collider.
+	if out > 0.0 and _rope_load_tick < ROPE_LOAD_MAX_TICKS and (loading or returning):
+		if returning:
 			_rope_load_tick += 1
 		return
 	if out > 0.0:

@@ -105,6 +105,16 @@ two with one side headlock counter in the new build. Each slot order had
 three rope runs on both builds. AI match completion remains open for the
 capped order.
 
+## AI match completion after an interrupted rope run
+
+Roman–Cody seed 1 stalled after Roman fell below the ring. Cody had his
+finisher ready while Roman was hundreds of metres below him by tick 26,100.
+An interrupted absorb left a rope collision exception active after the
+wrestler left the whip state. Ring containment now resumes the tick that
+the absorb or return releases its exception. The regression fails on the
+previous controller and passes on the fix. All 42 focused checks passed,
+including ordinary whips, rope-running attacks, match flow and replay.
+
 ## Grapple cancellation and teardown
 
 Godot releases surviving wrestlers and restores their previous physics state

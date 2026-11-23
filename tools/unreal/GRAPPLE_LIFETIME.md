@@ -125,3 +125,13 @@ the two Spear resources map to the same source clip and timing. The Godot
 AI keys each read by match seed, player slot, source move and attempt,
 then uses the match phase's reversal scale. Shared move data and role clips
 are exported for Unreal. Editor runtime integration remains open.
+
+## Interrupting a rope absorb
+
+The absorb and its bounded rebound return may temporarily ignore the rope
+collider. On a hit, another state exit, or timeout, release that exception
+and restore legal root containment in the same physics tick. Continue
+the normal authored rebound when the runner clears the ropes under his
+own motion. In PIE, interrupt the absorb after contact in both slots,
+verify the rope blocks the next crossing, and finish the match through
+an earned finisher and cover.
