@@ -228,6 +228,8 @@ func _resolve_tick() -> void:
 	# WrestlerController._pending_hits) are resolved — after every
 	# wrestler has made its own decision for the tick, symmetrically,
 	# regardless of node order.
+	wrestler_a._resolve_reversible_contact()
+	wrestler_b._resolve_reversible_contact()
 	wrestler_a._resolve_pending_hits()
 	wrestler_b._resolve_pending_hits()
 	_update_comebacks()

@@ -73,6 +73,7 @@ func test_read_jab_parries_real_contact_in_either_slot() -> void:
 			striker._process_active_move({})
 		var before := defender.combat.health()
 		striker._process_active_move({})
+		defender._resolve_reversible_contact()
 		defender._resolve_pending_hits()
 		assert_float(defender.combat.health()).is_equal(before)
 		assert_int(defender.reversals_landed).is_equal(1)
@@ -92,6 +93,7 @@ func test_read_does_not_transfer_to_a_restarted_jab() -> void:
 	striker._start_move(WrestlerFSM.State.STRIKE, jab)
 	striker._move_ticks_remaining = jab.total_frames() - jab.startup_frames
 	striker._process_active_move({})
+	defender._resolve_reversible_contact()
 	defender._resolve_pending_hits()
 	assert_int(defender.reversals_landed).is_equal(0)
 	assert_int(defender.fsm.current_state).is_equal(WrestlerFSM.State.HIT_REACT)
@@ -109,7 +111,56 @@ func test_early_read_locks_out_a_second_attempt_and_hit_still_resolves() -> void
 	striker._move_ticks_remaining = jab.total_frames() - jab.startup_frames
 	defender._read_reversal({"reversal": true})
 	striker._process_active_move({})
+	defender._resolve_reversible_contact()
 	defender._resolve_pending_hits()
 	assert_float(defender.combat.stamina).is_equal(after_miss)
 	assert_int(defender.reversals_landed).is_equal(0)
 	assert_int(defender.fsm.current_state).is_equal(WrestlerFSM.State.HIT_REACT)
+
+
+## Close the same physics tick through the referee in both node orders. The
+## last valid frame also catches using the already-incremented strike clock.
+func test_contact_tick_read_parries_in_either_processing_order() -> void:
+	var jab := load("res://resources/moves/strike_jab.tres") as MoveDef
+	for swapped: bool in [false, true]:
+		var pair := _reversal_pair(swapped)
+		var striker := pair[0]
+		var defender := pair[1]
+		var referee: MatchReferee = auto_free(MatchReferee.new())
+		referee.wrestler_a = defender if swapped else striker
+		referee.wrestler_b = striker if swapped else defender
+		striker._start_move(WrestlerFSM.State.STRIKE, jab)
+		striker._move_ticks_remaining = jab.total_frames() - jab.reversal_window_end
+		var health_before := defender.combat.health()
+		if swapped:
+			defender._read_reversal({"reversal": true})
+			striker._process_active_move({})
+		else:
+			striker._process_active_move({})
+			defender._read_reversal({"reversal": true})
+		assert_int(defender.reversals_landed).is_equal(0)
+		referee._resolve_tick()
+		assert_int(defender.reversals_landed).is_equal(1)
+		assert_float(defender.combat.health()).is_equal(health_before)
+		assert_int(defender.strike_frame()).is_equal(0)
+		assert_object(defender._active_move).is_same(WrestlerController.REVERSAL_MOVE)
+		referee._resolve_tick()
+		assert_int(defender.reversals_landed).is_equal(1)
+
+
+func test_ai_reaction_uses_the_original_frame_after_contact_is_queued() -> void:
+	var pair := _reversal_pair(false)
+	var striker := pair[0]
+	var defender := pair[1]
+	var jab := load("res://resources/moves/strike_jab.tres") as MoveDef
+	var ai := defender.ai
+	ai.target = striker
+	ai._reversal_decided = true
+	ai._reversal_intent = true
+	ai._reversal_roll_frame = jab.startup_frames
+	striker._start_move(WrestlerFSM.State.STRIKE, jab)
+	striker._move_ticks_remaining = jab.total_frames() - jab.startup_frames
+	assert_bool(ai._roll_reversal()).is_true()
+	striker._process_active_move({})
+	assert_int(striker.strike_frame()).is_equal(jab.startup_frames + 1)
+	assert_bool(ai._roll_reversal()).is_true()

@@ -4078,8 +4078,13 @@ func _process_active_move(input: Dictionary) -> void:
 			and not opponent.is_digging_for_weapon() \
 			and not _active_move_hit_applied:
 		_active_move_hit_applied = true
-		# Read and parried: nothing lands, and the counter is on its way.
-		if not opponent._take_reversal(self, _active_move):
+		if fsm.current_state == WrestlerFSM.State.STRIKE \
+				and in_reversal_window(_active_move, frame_offset):
+			opponent._reversible_contact_striker = self
+			opponent._reversible_contact_sequence = _move_sequence
+			opponent._reversible_contact_move = _active_move
+			opponent._reversible_contact_frame = frame_offset
+		else:
 			_apply_move_to_opponent(_active_move)
 
 	_move_ticks_remaining -= 1
@@ -5026,6 +5031,13 @@ var _move_sequence := 0
 var _reversal_striker: WrestlerController
 var _reversal_sequence := -1
 var _reversal_lockout := 0
+
+# A reversible contact waits for both wrestlers to sample this tick's input.
+# Eligibility comes from the contact frame, even if the striker has advanced.
+var _reversible_contact_striker: WrestlerController
+var _reversible_contact_sequence := -1
+var _reversible_contact_move: MoveDef
+var _reversible_contact_frame := -1
 ## Reversals landed, for probes and the HUD.
 var reversals_landed := 0
 
@@ -5041,26 +5053,42 @@ func _read_reversal(input: Dictionary) -> void:
 	if _reversal_lockout > 0:
 		_reversal_lockout -= 1
 	var striker := opponent
-	if not _matches_reversal_read(striker) or not CAN_REVERSE.has(fsm.current_state):
+	var can_read := CAN_REVERSE.has(fsm.current_state) and _has_reversible_strike(striker)
+	if not can_read or not _matches_reversal_read(striker):
 		_reversal_striker = null
 	if not input.get("reversal", false) or _reversal_lockout > 0 or _reversal_striker:
 		return
 	combat.spend_stamina(CombatSystem.STAMINA_REVERSAL)
-	if CAN_REVERSE.has(fsm.current_state) and striker \
-			and striker.fsm.current_state == WrestlerFSM.State.STRIKE \
-			and not striker._active_move_hit_applied \
-			and in_reversal_window(striker._active_move, striker.strike_frame()):
+	if can_read:
 		_reversal_striker = striker
 		_reversal_sequence = striker._move_sequence
 	else:
 		_reversal_lockout = REVERSAL_LOCKOUT
 
 
+func _has_reversible_strike(striker: WrestlerController) -> bool:
+	if not is_instance_valid(striker):
+		return false
+	if _contact_is_from(striker):
+		return true
+	return striker.fsm.current_state == WrestlerFSM.State.STRIKE \
+			and not striker._active_move_hit_applied \
+			and in_reversal_window(striker._active_move, striker.strike_frame())
+
+
+func _contact_is_from(striker: WrestlerController) -> bool:
+	return striker == _reversible_contact_striker \
+			and striker._move_sequence == _reversible_contact_sequence
+
+
+## AI reaction timing uses the contact frame if the striker already ran.
+func incoming_strike_frame(striker: WrestlerController) -> int:
+	return _reversible_contact_frame if _contact_is_from(striker) else striker.strike_frame()
+
+
 func _matches_reversal_read(striker: WrestlerController) -> bool:
 	return is_instance_valid(striker) and _reversal_striker == striker \
-			and striker._move_sequence == _reversal_sequence \
-			and striker.fsm.current_state == WrestlerFSM.State.STRIKE \
-			and in_reversal_window(striker._active_move, striker.strike_frame())
+			and striker._move_sequence == _reversal_sequence
 
 
 ## Frames into the strike he is throwing.
@@ -5068,20 +5096,27 @@ func strike_frame() -> int:
 	return _active_move.total_frames() - _move_ticks_remaining if _active_move else -1
 
 
-## Called by the striker at contact. True if this man read it: he parries and
-## counters, and the strike does nothing.
-func _take_reversal(striker: WrestlerController, move: MoveDef) -> bool:
-	if not _matches_reversal_read(striker) or striker._active_move != move:
-		return false
+## Resolve before damage or other match decisions, after both input reads.
+func _resolve_reversible_contact() -> void:
+	var striker := _reversible_contact_striker
+	var move := _reversible_contact_move
+	_reversible_contact_striker = null
+	_reversible_contact_move = null
+	if not is_instance_valid(striker):
+		return
+	if striker.opponent != self or striker._move_sequence != _reversible_contact_sequence \
+			or dead or UNHITTABLE_STATES.has(fsm.current_state) \
+			or is_presentation_protected() or is_digging_for_weapon():
+		return
+	if not _matches_reversal_read(striker) or not CAN_REVERSE.has(fsm.current_state):
+		striker._apply_move_to_opponent(move)
+		return
 	_reversal_striker = null
-	if not CAN_REVERSE.has(fsm.current_state):
-		return false
 	reversals_landed += 1
 	_turn_toward_opponent()
 	_play_strike_clip(REVERSAL_MOVE)
 	_start_move(WrestlerFSM.State.STRIKE, REVERSAL_MOVE)
 	reversed.emit(self, striker, move)
-	return true
 
 
 ## Stamina's per-tick ledger: running costs, standing and lying win it back.

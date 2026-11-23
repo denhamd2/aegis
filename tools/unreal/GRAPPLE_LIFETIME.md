@@ -44,7 +44,15 @@ or the defender leaves a state that can parry.
 Check both physical player slots with a jab. A valid early read should
 prevent damage and enter the existing strike parry. A read made before the
 window should spend stamina and apply its lockout. Restarting the same jab
-after a read should allow the replacement strike to land. Godot parity
-covers those cases. Input that arrives on the exact physics tick of contact
-still needs slot-order arbitration. Paired grapple counters are a later
-slice and are not part of standing strike parry.
+after a read should allow the replacement strike to land.
+
+For a reversible contact, queue the striker, target, strike instance,
+move and contact frame. Resolve it in the same 60 Hz simulation tick
+after both controllers have sampled player, AI or replay input and
+before processing damage and reactions. Validate the target's state
+again and consume the contact once. If the striker updated first,
+AI reaction timing must still use the contact frame. Start the parry
+at frame zero in both slots. In PIE, test a button edge on the last
+legal contact frame in both slots, with full damage suppression and
+one parry. Run the unopposed jab as a control and verify one hit.
+Unreal standing reversal logic and PIE validation remain open.

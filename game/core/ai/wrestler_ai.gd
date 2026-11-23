@@ -464,7 +464,7 @@ func _roll_reversal() -> bool:
 		# A reaction time inside the window, not its first frame.
 		_reversal_roll_frame = move.reversal_window_start - WrestlerController.REVERSAL_LEAD \
 				+ rng.randi_range(0, WrestlerController.REVERSAL_LEAD)
-	return _reversal_intent and target.strike_frame() == _reversal_roll_frame
+	return _reversal_intent and controller.incoming_strike_frame(target) == _reversal_roll_frame
 
 
 ## A wrestler sometimes braces for a quick strike instead of trading punches.

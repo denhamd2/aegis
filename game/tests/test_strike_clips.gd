@@ -250,9 +250,10 @@ func test_jab_contact_starts_the_defenders_head_reaction_after_startup() -> void
 		assert_bool(landed[0]).override_failure_message("jab landed in startup tick %d" % tick).is_false()
 		assert_int(defender.fsm.current_state).is_equal(WrestlerFSM.State.IDLE)
 	attacker._process_active_move({})
+	assert_bool(landed[0]).is_false()
+	# The referee arbitrates contact before resolving the resulting hit.
+	defender._resolve_reversible_contact()
 	assert_bool(landed[0]).is_true()
-	# Contact queues the hit; the referee resolves it after both wrestlers
-	# finish this tick. The reaction cannot pre-empt the arriving fist.
 	assert_int(defender.fsm.current_state).is_equal(WrestlerFSM.State.IDLE)
 	defender._resolve_pending_hits()
 	assert_int(defender.fsm.current_state).is_equal(WrestlerFSM.State.HIT_REACT)

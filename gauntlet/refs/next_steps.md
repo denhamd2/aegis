@@ -28,8 +28,10 @@ at the end of that strike's window. Live jab contacts cover both player slots,
 a restarted jab, and lockout after an early attempt. All 35 focused checks
 passed. Mac run [45175251174](https://github.com/denhamd2/aegis/actions/runs/45175251174)
 published `5b9c253`. The exact tag, release target and uploaded 1,034,173,123-byte
-ZIP were verified. Input arbitration on the contact tick, paired grapple
-counters and Unreal runtime parity remain open.
+ZIP were verified. The contact-tick follow-up resolves valid standing
+contacts after both wrestlers read input, using the original strike frame
+for AI and allowing either slot to start the same parry on the last legal
+contact frame. Paired grapple counters and Unreal runtime parity remain open.
 [Unreal parity cases](../../tools/unreal/GRAPPLE_LIFETIME.md).
 
 ## Grapple cancellation and teardown
