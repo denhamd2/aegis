@@ -67,10 +67,14 @@ The defender can escape the vertical suplex during its grounded facelock.
 Ticks 6–14 of the paired clip accept one stamina-charged attempt. The
 escape cancels the original throw and starts the existing paired waistlock
 go-behind with swapped roles. Mistimed or exhausted attempts preserve the
-original throw. All 92 focused checks passed. The move bundle exports
-the window and counter ID, and both role clips resolved in the source GLB.
-Native transition review, new directional and special counter animations,
-and Unreal runtime integration remain open.
+original throw. All 92 focused checks passed. Live AI smoke checks recorded
+one reversal press and one counter landing in each slot.
+[Mac run 45201991921](https://github.com/denhamd2/aegis/actions/runs/45201991921)
+published `f2c98c8`. The exact tag, release target and uploaded 1,034,175,370-byte
+ZIP were verified. The [Unreal bundle](https://github.com/denhamd2/aegis/actions/runs/45201992008)
+contains the window, counter ID and both source role clips.
+Native transition review, directional and special counter animations, and
+Unreal runtime integration remain open.
 [Unreal parity cases](../../tools/unreal/GRAPPLE_LIFETIME.md#committed-vertical-suplex-counter).
 
 ## Grapple cancellation and teardown
