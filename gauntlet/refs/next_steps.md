@@ -26,8 +26,11 @@ retained. Published and verified for Mac at `bf25f3f`. [Implementation and valid
 Godot binds a standing parry read to the exact incoming strike and expires it
 at the end of that strike's window. Live jab contacts cover both player slots,
 a restarted jab, and lockout after an early attempt. All 35 focused checks
-pass. Arbitration for input on the contact tick and paired grapple counters
-remain open. [Unreal parity cases](../../tools/unreal/GRAPPLE_LIFETIME.md).
+passed. Mac run [45175251174](https://github.com/denhamd2/aegis/actions/runs/45175251174)
+published `5b9c253`. The exact tag, release target and uploaded 1,034,173,123-byte
+ZIP were verified. Input arbitration on the contact tick, paired grapple
+counters and Unreal runtime parity remain open.
+[Unreal parity cases](../../tools/unreal/GRAPPLE_LIFETIME.md).
 
 ## Grapple cancellation and teardown
 
