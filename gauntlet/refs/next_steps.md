@@ -11,7 +11,7 @@ The rotation into the lift, impact pose, and recovery still need review. [Implem
 
 The late settle and private Roman and Cody recovery clips address measured
 boot, head and back penetration. The original Roman head impact fit is
-retained. [Implementation and validation](running_drop_landing_2026_11_22/README.md).
+retained. Published and verified for Mac at `bf25f3f`. [Implementation and validation](running_drop_landing_2026_11_22/README.md).
 
 The grapple interruption and teardown audit is next in the paired queue.
 

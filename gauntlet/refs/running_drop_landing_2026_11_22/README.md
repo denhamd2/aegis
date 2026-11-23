@@ -40,3 +40,18 @@ late boot samples above the mat in both player slots and between ticks.
 The focused run passed 42 of 43 checks. The library-wide cadence count
 remains 29 against its existing budget of 27. The updated running-drop
 defender clip contributes zero cadence snaps. [Focused test report](focused-tests.xml).
+
+The studio side view shows Roman delivering the drop to Cody, from the catch
+through the Down transition. The diagnostic renderer tints Cody blue to make
+the two bodies easier to distinguish. [Side-view capture](running-drop-side.jpg).
+
+The Unreal trajectory snapshot matches the running-drop root path. Unreal
+still needs the new defender animation reimported and retargeted. The Roman
+and Cody recovery adaptations are Godot-side and need an equivalent Unreal
+implementation or engine-neutral bake. A regenerated trajectory export also
+finds stale Snap Dragon 3 and Cross Rhodes entries and a missing Mexican
+Destroyer entry in the checked-in Unreal snapshot.
+
+Mac run [45152581720](https://github.com/denhamd2/aegis/actions/runs/45152581720)
+published `bf25f3f`. The exact release tag, target commit, and uploaded ZIP
+were verified. [Publication receipt](mac-publication.json).

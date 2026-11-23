@@ -1,0 +1,17 @@
+{
+  "source_commit": "bf25f3f7f248ade187830832f38c7c51210e04ff",
+  "verified_tag_sha": "bf25f3f7f248ade187830832f38c7c51210e04ff",
+  "tag": "mac-latest",
+  "mac_result": "success",
+  "release_url": "https://github.com/denhamd2/aegis/releases/tag/mac-latest",
+  "mac_run_id": 45152581720,
+  "mac_run_url": "https://github.com/denhamd2/aegis/actions/runs/45152581720",
+  "asset": {
+    "name": "Aegis.zip",
+    "state": "uploaded",
+    "size": 1034169912,
+    "digest": "sha256:ec2475ce2639783c6253e9097cd4d751d7ca18abe0e8a14080124b737b790c55",
+    "url": "https://github.com/denhamd2/aegis/releases/download/mac-latest/Aegis.zip"
+  },
+  "ci_run_id": 45152581191
+}
