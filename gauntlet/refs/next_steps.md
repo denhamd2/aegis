@@ -13,7 +13,23 @@ and native Unreal parity remain open. [Move sync workflow](../../tools/unreal/MO
 Cody reaches for the left wrist and hooks the neck with his right forearm
 from behind. The regression measures both contacts through the hold with
 Roman, Kenny, and the mannequin. Published and verified for Mac at `1c87df0`.
-The rotation into the lift, impact pose, and recovery still need review. [Implementation and validation](cross_rhodes_opening_2026_11_22/README.md).
+The landing and recovery follow-up is recorded below. [Implementation and validation](cross_rhodes_opening_2026_11_22/README.md).
+
+## Cross Rhodes descent and wristlock counter
+
+Both Blender role clips keep the established rear hold. Cody follows the
+defender farther into the drop before releasing him, and the defender's
+head leads the landing before his shoulders and hips settle. The move hands
+off to Down in the authored direction and eases into a small forearm guard.
+Kenny has an individual fit into the cover.
+
+On the displayed impact sample, Roman's head skin was 0.9 cm below the
+mat and Kenny's was 0.9 cm above it. Kenny's back and boots cleared the mat
+through the first 12 Down frames. All 50 focused checks passed, including
+the opening and closing edges of the wristlock window across both slots. Native
+review, tighter control through the inversion and Roman's late boot and leg
+clearance remain open. [Side and match-camera samples](ff_review/moves/cross_rhodes.png).
+[Unreal timing and fitting cases](../../tools/unreal/GRAPPLE_LIFETIME.md#cross-rhodes-descent-and-wristlock-counter).
 
 ## Running inverted drop landing and recovery
 

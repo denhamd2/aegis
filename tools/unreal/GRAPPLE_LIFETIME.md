@@ -158,3 +158,23 @@ referee actor, approach around both bodies, enter the active slap at its
 elapsed offset and keep the completed third slap visible through contact.
 Cut the third swing on a close kickout. Godot has focused tests for these
 boundaries. The Unreal implementation still requires the Mac project.
+
+## Cross Rhodes descent and wristlock counter
+
+Import both refreshed Cross Rhodes role clips and the updated root track.
+The impact stays at tick 50 of the 114-tick pair. Keep the authored rear
+hold, later release and head-away handoff. Use the head-away flag to turn the
+defender's gameplay root once as Down starts while preserving the world pose.
+Play the smaller guarded reaction after the authored impact.
+
+Use the paired `chain_wristlock` counter at ticks 10–18 inclusive during
+the rear wrist hold. The reversal leaves the defender's roots in place on
+the switch. Charge reversal stamina once, cancel the original impact and
+damage, and apply only the counter's result. Test both window edges and
+a normal landing in each physical slot.
+
+Kenny's private pelvis fit carries the correction into the down-out pose and
+the cover. Use the 60 Hz samples in
+[KennyModel](../../game/core/match/kenny_model.gd) as the fitting reference
+and measure the retargeted mesh on the Unreal canvas. Verify the head
+contact and down transition with both Roman and Kenny in PIE.

@@ -159,6 +159,7 @@ const RUNNING_DROP_DOWN_CLIP := "strikes/running_drop_down_neck"
 const DOWN_KNEE_CLIP := "strikes/down_knee"
 const DOWN_FACE_FIRST_CLIP := "strikes/down_face_first"
 const DOWN_OUT_CLIP := "strikes/down_out"
+const CROSS_RHODES_DOWN_CLIP := "strikes/cross_rhodes_down_out"
 var _down_move: MoveDef
 var _down_clip := "strikes/down_supine"
 
@@ -184,6 +185,9 @@ static func down_sell_clip(move: MoveDef, tier: int, fatal := false) -> String:
 
 func _down_sell_for_model(move: MoveDef, tier: int, fatal := false) -> String:
 	var clip := down_sell_clip(move, tier, fatal)
+	if clip == DOWN_OUT_CLIP and move and move.animation_pair_id == &"finisher_cross_rhodes" \
+			and anim_player and anim_player.has_animation(CROSS_RHODES_DOWN_CLIP):
+		return CROSS_RHODES_DOWN_CLIP
 	if clip == DOWN_NECK_CLIP and move and move.animation_pair_id == &"running_grapple_inverted_drop" \
 			and anim_player and anim_player.has_animation(RUNNING_DROP_DOWN_CLIP):
 		return RUNNING_DROP_DOWN_CLIP
@@ -1907,8 +1911,8 @@ func _take_clip_override(state: WrestlerFSM.State) -> String:
 	_state_clip_override.clear()
 	if clip != "":
 		return clip
-	if state == WrestlerFSM.State.PIN_DEFENDER and _down_clip == DOWN_OUT_CLIP:
-		return DOWN_OUT_CLIP
+	if state == WrestlerFSM.State.PIN_DEFENDER and _down_clip in [DOWN_OUT_CLIP, CROSS_RHODES_DOWN_CLIP]:
+		return _down_clip
 	return clip_for_state(state, _is_grapple_attacker)
 
 ## Clip this state should play, honouring the per-role overrides. Public so

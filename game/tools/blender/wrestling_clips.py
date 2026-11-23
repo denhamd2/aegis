@@ -10546,7 +10546,7 @@ CLIPS["Cross_Rhodes_Attacker"] = [
     # Spinning, leaning back against the man's weight as he comes over.
     (13, P(pelvis=(0.0, 0.04, 0.800), hips=(-8, 0, 0), spine=(-2, -10, 0),
            head=(-4, 0, 0),
-           hand_r=(0.10, 0.34, 1.20), hand_l=(-0.12, 0.36, 1.06),
+           hand_r=(0.04, 0.42, 1.30), hand_l=(-0.12, 0.38, 1.10),
            elbow_r=(0.7, -0.3, -0.4), elbow_l=(-0.6, -0.3, -0.4),
            fist_r=0.8, fist_l=0.8,
            foot_r=(0.24, -0.10, 0.104), foot_l=(-0.22, 0.12, 0.104))),
@@ -10559,9 +10559,13 @@ CLIPS["Cross_Rhodes_Attacker"] = [
     (19, dict(_TD_HOLD)),
     (21, dict(_TD_HOLD, spine=(8, 0, 0), head=(10, 0, 0))),
     # Drops to the seat: the spike lands with him (frame 25, 0.83 s).
-    (23, pose(SIT_DROP, hand_r=(0.20, 0.30, 0.92), hand_l=(-0.20, 0.30, 0.92))),
-    (25, pose(ATK_SEAT, hand_r=(0.24, 0.46, 0.34), hand_l=(-0.24, 0.46, 0.34))),
-    (30, pose(ATK_SEAT)),
+    (23, pose(SIT_DROP, spine=(-15, -6, 0), hand_r=(0.17, 0.48, 0.74),
+              hand_l=(-0.25, 0.38, 0.82))),
+    (25, pose(ATK_SEAT, spine=(-18, -8, -5), hand_r=(0.19, 0.55, 0.23),
+              hand_l=(-0.28, 0.32, 0.38), fist_r=0.25, fist_l=0.15)),
+    (28, pose(ATK_SEAT, spine=(-8, -5, -2), hand_r=(0.26, 0.16, 0.22),
+              hand_l=(-0.32, -0.04, 0.11))),
+    (33, pose(ATK_SEAT, spine=(4, 0, 0))),
     (38, pose(ATK_SEAT)),
 ] + _get_up(42, 57, seated=True)
 
@@ -10587,32 +10591,25 @@ CLIPS["Cross_Rhodes_Defender"] = [
            fist_r=0.3, fist_l=0.3,
            foot_r=(0.22, -0.12, 0.104), foot_l=(-0.20, 0.08, 0.104))),
     # Over his own head as they turn.
-    (12, _body((-45, 0, 0), (0.0, 0.06, 0.920), **_TD_LIMBS)),
-    (14, _body((-85, 0, 0), (0.0, 0.05, 1.120), **_TD_LIMBS)),
-    # One key a frame through the steepest part of the flip: two frames apart
-    # the limbs swung through it in one frame (test_clip_cadence, frame 17).
-    (15, _body((-105, 0, 0), (0.0, 0.04, 1.270), **_TD_LIMBS)),
-    (16, _body((-125, 0, 0), (0.0, 0.03, 1.420), **_TD_LIMBS)),
-    (17, _body((-143, 0, 0), (0.0, 0.02, 1.565), **_TD_LIMBS)),
-    (18, _body((-160, 0, 0), (0.0, 0.01, 1.700), **_TD_LIMBS)),
+    (12, _body((-31, 0, 0), (0.0, 0.06, 0.920), **_TD_LIMBS)),
+    (14, _body((-62, 0, 0), (0.0, 0.05, 1.120), **_TD_LIMBS)),
+    (15, _body((-85, 0, 0), (0.0, 0.04, 1.270), **_TD_LIMBS)),
+    (16, _body((-109, 0, 0), (0.0, 0.03, 1.420), **_TD_LIMBS)),
+    (17, _body((-135, 0, 0), (0.0, 0.02, 1.565), **_TD_LIMBS)),
+    (18, _body((-157, 0, 0), (0.0, 0.01, 1.700), **_TD_LIMBS)),
     (20, _body((-176, 0, 0), (0.0, 0.00, 1.800), **_TD_LIMBS)),
-    # Spiked: the drop gathers from 20 and eases out after the impact, so the
-    # impact is the fastest frame of an even ramp rather than a lone jump.
-    # 9 Nov, the owner: "it spikes the victim on his head, it's high force".
-    # The drop ACCELERATES into the mat -- 0.14, 0.26, 0.38, 0.44 m a frame
-    # -- and the impact is its fastest frame; it used to fall fastest at the
-    # top and ease in, which read as a man set down.
-    (21, _body((-186, 0, 0), (0.0, -0.01, 1.660), **_TD_LIMBS)),
-    (22, _body((-198, 0, 0), (0.0, -0.03, 1.400), **_TD_LIMBS)),
-    (23, _body((-212, 0, 0), (0.0, -0.05, 1.020), **_TD_LIMBS)),
-    (24, _body((-228, 0, 0), (0.0, -0.09, 0.580), **dict(_TD_LIMBS,
-               hand_r=(0.45, 0.00, 0.45), hand_l=(-0.45, 0.00, 0.45)))),
-    (25, _body((-244, 0, 0), (0.0, -0.12, 0.330), **dict(_TD_LIMBS,
-               hand_r=(0.50, 0.00, 0.40), hand_l=(-0.50, 0.00, 0.40)))),
-    (26, _body((-252, 0, 0), (0.0, -0.14, 0.280), **dict(_TD_LIMBS,
-               hand_r=(0.55, 0.00, 0.30), hand_l=(-0.55, 0.00, 0.30)))),
-    # The legs go over.
-    (28, _body((-262, 0, 0), (0.0, -0.16, 0.240), **dict(_TD_LIMBS,
+    # Keep the head below the shoulders through contact at frame 25. The
+    # shoulders and hips follow as the legs roll over after the release.
+    (21, _body((-183, 0, 0), (0.0, -0.01, 1.680), **_TD_LIMBS)),
+    (22, _body((-191, 0, 0), (0.0, -0.03, 1.460), **_TD_LIMBS)),
+    (23, _body((-198, 0, 0), (0.0, -0.05, 1.150), **_TD_LIMBS)),
+    (24, _body((-205, 0, 0), (0.0, -0.08, 0.795), **dict(_TD_LIMBS,
+               hand_r=(0.38, 0.07, 0.43), hand_l=(-0.38, 0.07, 0.43)))),
+    (25, _body((-212, 0, 0), (0.0, -0.11, 0.490), **dict(_TD_LIMBS,
+               hand_r=(0.43, 0.04, 0.36), hand_l=(-0.43, 0.04, 0.36)))),
+    (26, _body((-233, 0, 0), (0.0, -0.14, 0.360), **dict(_TD_LIMBS,
+               hand_r=(0.50, 0.01, 0.33), hand_l=(-0.50, 0.01, 0.33)))),
+    (28, _body((-254, 0, 0), (0.0, -0.16, 0.245), **dict(_TD_LIMBS,
                hand_r=(0.55, 0.00, 0.30), hand_l=(-0.55, 0.00, 0.30)))),
     (31, _body((-268, 0, 0), (0.0, -0.18, 0.215), **dict(_TD_LIMBS, **_LANDED_FLAT))),
     (38, dict(SUPINE_AWAY, pelvis=(0.0, 0.0, 0.190))),

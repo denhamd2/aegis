@@ -25,6 +25,19 @@ func test_paired_finishers_get_distinct_follow_through_profiles() -> void:
 	assert_str(ImpactSell.move_profile(null)).is_empty()
 
 
+func test_kenny_keeps_the_fitted_cross_rhodes_pose_into_the_cover() -> void:
+	var kenny: WrestlerController = auto_free(WRESTLER_SCENE.instantiate())
+	kenny.character_model_scene = load("res://scenes/kenny_model.tscn")
+	add_child(kenny)
+	var cross_rhodes := load("res://resources/moves/finisher_cross_rhodes.tres") as MoveDef
+	kenny._down_clip = kenny._down_sell_for_model(cross_rhodes, CombatSystem.Tier.FINISHER)
+	assert_bool(cross_rhodes.defender_lands_head_away).is_true()
+	assert_str(kenny._down_clip).is_equal(WrestlerController.CROSS_RHODES_DOWN_CLIP)
+	assert_str(kenny._take_clip_override(WrestlerFSM.State.PIN_DEFENDER)).is_equal(kenny._down_clip)
+	assert_str(kenny._down_sell_for_model(null, CombatSystem.Tier.FINISHER)) \
+			.is_equal(WrestlerController.DOWN_OUT_CLIP)
+
+
 func test_surface_landings_route_to_recoil_or_localized_protection() -> void:
 	assert_str(ImpactSell.surface_profile(&"table", true)).is_equal("table_rebound")
 	assert_str(ImpactSell.surface_profile(&"table", false)).is_empty()

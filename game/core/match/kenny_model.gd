@@ -55,6 +55,70 @@ const CURL_ROUGHNESS := 0.7
 const HAIR_CARD := preload("res://core/materials/hair_card.gdshader")
 const CAP_SPECULAR := 0.08
 const CAP_ROUGHNESS := 0.9
+const CROSS_RHODES_DEFENDER := &"finisher_cross_rhodes__defender"
+const CROSS_RHODES_DOWN := &"cross_rhodes_down_out"
+## Local height fit for Kenny's skull, back and boots at the stock stature.
+## Each point is a controller sample at 60 Hz and a height correction in metres.
+const CROSS_RHODES_LANDING := [
+	Vector2(42, 0.0), Vector2(46, 0.020), Vector2(47, 0.045),
+	Vector2(48, 0.090), Vector2(49, 0.150), Vector2(50, 0.237),
+	Vector2(51, 0.307), Vector2(52, 0.299), Vector2(53, 0.240),
+	Vector2(54, 0.182), Vector2(55, 0.141), Vector2(56, 0.111),
+	Vector2(59, 0.053), Vector2(62, 0.016), Vector2(65, 0.015),
+	Vector2(68, 0.028), Vector2(71, 0.056), Vector2(75, 0.099),
+	Vector2(81, 0.093), Vector2(94, 0.096), Vector2(103, 0.105),
+	Vector2(110, 0.120), Vector2(114, 0.120),
+]
+
+
+func adapt_animation_library(source: AnimationLibrary,
+		source_skeleton: Skeleton3D = null) -> AnimationLibrary:
+	var adapted := super.adapt_animation_library(source, source_skeleton)
+	if not adapted.has_animation(CROSS_RHODES_DEFENDER) and not adapted.has_animation(&"down_out"):
+		return adapted
+	var skeleton := get_game_skeleton()
+	var pelvis := skeleton.find_bone("pelvis")
+	var parent := skeleton.get_bone_parent(pelvis)
+	var parent_basis := skeleton.get_bone_global_rest(parent).basis if parent >= 0 else Basis.IDENTITY
+	var up := (global_basis.inverse() * skeleton.global_basis * parent_basis).inverse() * Vector3.UP
+	var path := NodePath("%s:pelvis" % get_path_to(skeleton))
+	if adapted.has_animation(CROSS_RHODES_DEFENDER):
+		_fit_cross_rhodes_impact(adapted.get_animation(CROSS_RHODES_DEFENDER), path, up)
+	if adapted.has_animation(&"down_out"):
+		var down := adapted.get_animation(&"down_out").duplicate() as Animation
+		var track := down.find_track(path, Animation.TYPE_POSITION_3D)
+		assert(track >= 0, "Kenny's Down pose needs the pelvis position track")
+		var final_height: float = CROSS_RHODES_LANDING[-1].y
+		for key in down.track_get_key_count(track):
+			var position: Vector3 = down.track_get_key_value(track, key)
+			down.track_set_key_value(track, key, position + up * final_height)
+		adapted.add_animation(CROSS_RHODES_DOWN, down)
+	return adapted
+
+
+func _fit_cross_rhodes_impact(animation: Animation, path: NodePath, up: Vector3) -> void:
+	var track := animation.find_track(path, Animation.TYPE_POSITION_3D)
+	assert(track >= 0, "Kenny's Cross Rhodes fit needs the pelvis position track")
+	var original := animation.duplicate() as Animation
+	# The controller clock reports the next tick while the skeleton still
+	# displays this sample. Fit the key that was actually evaluated.
+	var first_tick := int(CROSS_RHODES_LANDING[0].x) - 1
+	for key in range(animation.track_get_key_count(track) - 1, -1, -1):
+		if animation.track_get_key_time(track, key) >= first_tick / 60.0 - 0.000001:
+			animation.track_remove_key(track, key)
+	for index in range(1, CROSS_RHODES_LANDING.size()):
+		var start: Vector2 = CROSS_RHODES_LANDING[index - 1]
+		var end: Vector2 = CROSS_RHODES_LANDING[index]
+		for tick in range(int(start.x), int(end.x)):
+			var time := (tick - 1) / 60.0
+			var height := lerpf(start.y, end.y, inverse_lerp(start.x, end.x, tick))
+			animation.position_track_insert_key(track, time,
+					original.position_track_interpolate(track, time) + up * height)
+	var final_height: float = CROSS_RHODES_LANDING[-1].y
+	var settle_start: float = (CROSS_RHODES_LANDING[-1].x - 1.0) / 60.0
+	for time: float in [settle_start, animation.length]:
+		animation.position_track_insert_key(track, time,
+				original.position_track_interpolate(track, time) + up * final_height)
 
 
 func _body_gains() -> Dictionary:

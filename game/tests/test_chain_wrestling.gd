@@ -238,6 +238,7 @@ const VERTICAL_SUPLEX := preload("res://resources/moves/grapple_vertical_suplex.
 const ARM_HOOK := preload("res://resources/moves/strike_arm_hook_takedown.tres")
 const RUNNING_SPEAR := preload("res://resources/moves/running_spear.tres")
 const FINISHER_SPEAR := preload("res://resources/moves/finisher_running_spear.tres")
+const CROSS_RHODES := preload("res://resources/moves/finisher_cross_rhodes.tres")
 
 
 func _start_suplex(attacker: WrestlerController) -> void:
@@ -440,6 +441,39 @@ func test_the_running_spear_variants_share_the_grounded_headlock_counter() -> vo
 	for swapped: bool in [false, true]:
 		await _check_moving_counter(FINISHER_SPEAR, WrestlerController.CHAIN_HOLDS["headlock"], swapped)
 	await _check_moving_counter(RUNNING_SPEAR, WrestlerController.CHAIN_HOLDS["headlock"], false)
+
+
+func test_cross_rhodes_can_be_reversed_during_the_rear_wrist_hold() -> void:
+	for swapped: bool in [false, true]:
+		var pair := _chain_pair(swapped)
+		var cody: WrestlerController = pair[0]
+		var defender: WrestlerController = pair[1]
+		cody.player_index = 1 if swapped else 0
+		defender.player_index = 0 if swapped else 1
+		cody.finisher_move = CROSS_RHODES
+		cody.combat.finisher_lit = true
+		cody.combat.momentum = CombatSystem.MOMENTUM_MAX
+		cody._process_grapple_hold({"chain": "none"})
+		await _wait_for_paired_clip(cody, CROSS_RHODES)
+		var edge := CROSS_RHODES.reversal_window_end if swapped \
+				else CROSS_RHODES.reversal_window_start
+		assert_float(_press_committed_reversal(swapped, cody, defender, edge)) \
+				.is_equal_approx(0.0, 0.0001)
+		var counter: MoveDef = WrestlerController.CHAIN_HOLDS["wristlock"]
+		var rig := cody.grapple_rig
+		assert_object(rig.current_move()).is_same(counter)
+		assert_bool(defender._is_grapple_attacker).is_true()
+		assert_float(defender.combat.stamina).is_equal_approx(
+				1.0 - CombatSystem.STAMINA_REVERSAL, 0.0001)
+		await _wait_for_paired_clip(defender, counter)
+		for tick in 180:
+			if not rig.is_active():
+				break
+			await get_tree().physics_frame
+		assert_int(cody._landed_moves.get(CROSS_RHODES.animation_pair_id, 0)).is_equal(0)
+		assert_int(defender._landed_moves.get(counter.animation_pair_id, 0)).is_equal(1)
+		assert_float(defender.combat.health()).is_equal(1.0)
+		assert_bool(cody.combat.finisher_resting()).is_false()
 
 
 func test_a_late_spear_reversal_leaves_a_real_finisher_and_its_cover_eligibility() -> void:

@@ -169,23 +169,15 @@ func _apply_profile(turns: Dictionary, profile: StringName, part: StringName,
 			_add(turns, "upperarm_l", z, -8.0 * shoulders)
 			_add(turns, "upperarm_r", z, -8.0 * shoulders)
 		&"cross_rhodes":
-			# A sharp upper-body finish, followed by a guarded shoulder roll:
-			# twist through the chest and hips as both forearms draw over the head.
-			var impact := impact_envelope(age, 0.8, 4.0, 1.1)
-			var roll := guard_envelope(age, 22.0, 17.0)
-			_add(turns, "spine_01", x, 12.0 * impact)
-			_add(turns, "spine_02", x, 24.0 * impact)
-			_add(turns, "spine_03", x, 18.0 * impact)
-			_add(turns, "Head", x, -15.0 * impact)
-			_add(turns, "pelvis", z, 13.0 * roll)
-			_add(turns, "spine_02", z, 16.0 * roll)
-			_add(turns, "spine_03", z, 20.0 * roll)
-			_add(turns, "upperarm_l", x, -40.0 * roll)
-			_add(turns, "lowerarm_l", x, -34.0 * roll)
-			_add(turns, "upperarm_r", x, -32.0 * roll)
-			_add(turns, "lowerarm_r", x, -26.0 * roll)
-			_add(turns, "thigh_l", z, 13.0 * roll)
-			_add(turns, "thigh_r", z, -13.0 * roll)
+			# The paired clip already plays the impact. From Down, a small
+			# shoulder roll and forearm guard sell its after-effects.
+			var roll := smoothstep(1.0, 8.0, age) * guard_envelope(age, 22.0, 17.0)
+			_add(turns, "spine_02", z, 5.0 * roll)
+			_add(turns, "spine_03", z, 8.0 * roll)
+			_add(turns, "upperarm_l", x, -13.0 * roll)
+			_add(turns, "lowerarm_l", x, -11.0 * roll)
+			_add(turns, "upperarm_r", x, -9.0 * roll)
+			_add(turns, "lowerarm_r", x, -7.0 * roll)
 		&"table_rebound":
 			# A short arch and recoil as the tabletop gives way, layered over the
 			# suplex or slam already landing on it.

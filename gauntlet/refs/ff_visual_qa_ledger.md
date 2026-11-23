@@ -21,7 +21,7 @@ ledger is the completion record for that gate.
 | `cody_cutter_4` | cutter | reused | pending | pending | Batch sheet only. |
 | `cody_cutter_5` | cutter | reused | pending | pending | Batch sheet only. |
 | `inverted_ddt_1` | ddt | authored | pending | pending | Batch sheet only. |
-| `cross_rhodes` | driver | reused | pending | pending | Batch sheet only. |
+| `cross_rhodes` | driver | authored | [side and match camera](ff_review/moves/cross_rhodes.png) | independent review pending | 23 Nov landing and release pass. Tighter contact through the inversion and Roman's late boot fit remain open. |
 | `one_winged_angel` | driver | authored | side/close done | fail (AAA bar) | Art-director 2.5/3.0/2.5. Weightless carry, skipped impact, no sell. Grip 4.5 cm. |
 | `tiger_driver_98` | driver | authored | pending | pending | Batch sheet only. |
 | `running_v_trigger_1` | knee | authored | pending | pending | Batch sheet only. |
@@ -84,6 +84,7 @@ exist. The row is not marked complete until:
 | 8 Nov 2026 | `one_winged_angel` | `moves/one_winged_angel.png` | DeepSeek V4 Pro (art director) | fail — 2.5 / 3.0 / 2.5 | Weightless carry, skipped impact, no sell. Evidence: `visual-review-owa-samoan.md`. |
 | 8 Nov 2026 | `squatting_samoan_drop` | `moves/squatting_samoan_drop.png` | DeepSeek V4 Pro (art director) | fail — 3.0 / 3.5 / 3.0 | Closest of the three; same weight/impact/sell failures. Evidence: `visual-review-owa-samoan.md`. |
 | 8 Nov 2026 | `chokeslam_1` | `moves/chokeslam_1.png` | DeepSeek V4 Pro (art director) | fail — 2.5 / 3.0 / 2.5 | Peak silhouette reads; grip, impact and sell fail. Evidence: `visual-review-chokeslam.md`. |
+| 23 Nov 2026 | `cross_rhodes` | [cross_rhodes.png](ff_review/moves/cross_rhodes.png) | Codex on the local Godot render | Landing and Down handoff reviewed | Top two rows show the side view. Bottom two show the game’s wide match camera. Both use the real Cody and Kenny rigs. Independent review and Roman's late boot fit remain open. |
 
 ## Video-reference loop
 
