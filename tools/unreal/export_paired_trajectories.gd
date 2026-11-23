@@ -26,6 +26,15 @@ extends SceneTree
 const LIBRARY := "res://resources/animations/paired_moves.tres"
 const MOVES_DIR := "res://resources/moves"
 const HZ := 60
+const MoveResource := preload("res://resources/move_def.gd")
+const Recipes := preload("res://resources/animations/paired_recipes.gd")
+const MOVE_FIELDS := [
+	"startup_frames", "active_frames", "recovery_frames",
+	"reversal_window_start", "reversal_window_end", "damage_head", "damage_torso",
+	"damage_arms", "damage_legs", "momentum_cost", "momentum_gain",
+	"leaves_defender_down", "defender_lands_head_away", "down_face_first",
+	"required_opponent_state", "weight_class_min", "weight_class_max",
+]
 
 
 func _init() -> void:
@@ -61,25 +70,58 @@ func _init() -> void:
 		trajectories[String(anim_name)] = entry
 
 	var moves := {}
-	var dir := DirAccess.open(MOVES_DIR)
-	var files: Array = dir.get_files() if dir else []
-	files.sort()
-	for f: String in files:
-		if not f.ends_with(".tres"):
-			continue
-		var def: Resource = load(MOVES_DIR + "/" + f)
-		if def == null or not ("animation_pair_id" in def):
-			continue
-		var pair := String(def.animation_pair_id)
-		if pair != "" and trajectories.has(pair):
-			moves[f.get_basename()] = pair
+	var definitions := {}
+	for directory: String in [MOVES_DIR, MOVES_DIR + "/ff"]:
+		for filename: String in DirAccess.get_files_at(directory):
+			if not filename.ends_with(".tres"):
+				continue
+			var def := load(directory.path_join(filename)) as MoveResource
+			var id := filename.get_basename()
+			if def == null or definitions.has(id):
+				push_error("Missing or duplicate move definition: " + directory.path_join(filename))
+				quit(1)
+				return
+			var pair := String(def.animation_pair_id)
+			var row := {"animation_pair_id": pair, "total_frames": def.total_frames(),
+					"group": String(def.get_meta("ff_family", ""))}
+			for field: String in MOVE_FIELDS:
+				row[field] = def.get(field)
+			definitions[id] = row
+			if trajectories.has(pair):
+				moves[id] = pair
 
 	var doc := {"tick_hz": HZ, "moves": moves, "trajectories": trajectories}
-	var file := FileAccess.open(out_path, FileAccess.WRITE)
-	file.store_string(JSON.stringify(doc, "", true) + "\n")
-	file.close()
+	if not _write(out_path, doc):
+		quit(1)
+		return
+	if args.size() > 1 and not _write(args[1], {"move_defs": definitions, "paired_rules": _paired_rules()}):
+		quit(1)
+		return
 	print("paired trajectories: %d clips, %d moves -> %s" % [trajectories.size(), moves.size(), out_path])
 	quit(0)
+
+
+func _write(path: String, data: Dictionary) -> bool:
+	var file := FileAccess.open(path, FileAccess.WRITE)
+	if not file:
+		push_error("Cannot write " + path)
+		return false
+	file.store_string(JSON.stringify(data, "", true) + "\n")
+	return file.get_error() == OK
+
+
+func _paired_rules() -> Dictionary:
+	var rules := {}
+	for id: String in Recipes.RECIPES:
+		var recipe: Dictionary = Recipes.RECIPES[id]
+		var row := {}
+		for field: String in ["opening_alignment", "camera_impact_at", "attacker_grips_from",
+				"attacker_grips_until", "defender_grips_until"]:
+			if recipe.has(field):
+				row[field] = recipe[field]
+		if not row.is_empty():
+			rules[id] = row
+	return rules
 
 
 func _tracks(anim: Animation, role_node: String) -> Dictionary:

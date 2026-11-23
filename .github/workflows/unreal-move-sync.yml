@@ -1,0 +1,71 @@
+name: Unreal move sync
+
+on:
+  push:
+    branches: ['**']
+    paths:
+      - '.github/workflows/unreal-move-sync.yml'
+      - 'tools/unreal/**'
+      - 'game/resources/moves/**'
+      - 'game/resources/move_def.gd'
+      - 'game/resources/animations/paired_*.gd'
+      - 'game/resources/animations/paired_*.tres'
+      - 'game/resources/animations/strike_recipes.gd'
+      - 'game/assets/animations/wrestling_clips.glb'
+      - 'game/tools/blender/wrestling_clips.py'
+      - 'game/core/grapple/**'
+      - 'game/core/match/wrestler_controller.gd'
+      - 'game/core/match/inertializer.gd'
+      - 'game/core/match/*landing_fit.gd'
+      - 'game/core/match/cody_model.gd'
+  pull_request:
+    paths:
+      - '.github/workflows/unreal-move-sync.yml'
+      - 'tools/unreal/**'
+      - 'game/resources/moves/**'
+      - 'game/resources/move_def.gd'
+      - 'game/resources/animations/paired_*.gd'
+      - 'game/resources/animations/paired_*.tres'
+      - 'game/resources/animations/strike_recipes.gd'
+      - 'game/assets/animations/wrestling_clips.glb'
+      - 'game/tools/blender/wrestling_clips.py'
+      - 'game/core/grapple/**'
+      - 'game/core/match/wrestler_controller.gd'
+      - 'game/core/match/inertializer.gd'
+      - 'game/core/match/*landing_fit.gd'
+      - 'game/core/match/cody_model.gd'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  export-move-bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /tools/unreal/*.py
+            /tools/unreal/paired_trajectories.json
+            /game/resources/move_def.gd
+            /game/resources/moves/
+            /game/resources/animations/paired_recipes.gd
+            /game/resources/animations/paired_moves.tres
+            /game/resources/animations/strike_recipes.gd
+            /game/assets/animations/wrestling_clips.glb
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.6.3-stable
+          use-dotnet: false
+      - name: Build and verify the move bundle
+        run: python tools/unreal/move_sync.py --output "$RUNNER_TEMP/aegis-moves" --check-snapshot
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aegis-moves-${{ github.sha }}
+          path: ${{ runner.temp }}/aegis-moves
+          if-no-files-found: error

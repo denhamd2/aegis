@@ -30,7 +30,7 @@ DEST_NAME = "DT_AegisPairedTrajectories"
 CANVAS_LABEL = "Aegis_Canvas"
 CANVAS_TAG = "AegisCanvas"
 
-with open(JSON_PATH) as f:
+with open(JSON_PATH, encoding="utf-8") as f:
     doc = json.load(f)
 trajectories = doc["trajectories"]
 pair_of = doc["moves"]
@@ -57,6 +57,8 @@ for name, kind in zip(names, kinds):
         "Defender": [v for key in t["defender"] for v in key],
     })
 rows.sort(key=lambda r: r["Name"])
+if globals().get("STRICT_TRAJECTORIES") and missing:
+    raise RuntimeError(f"Missing paired trajectories for {', '.join(missing)}")
 
 path = DEST_DIR + "/" + DEST_NAME
 table = unreal.EditorAssetLibrary.load_asset(path) if unreal.EditorAssetLibrary.does_asset_exist(path) else None
@@ -65,7 +67,10 @@ if table is None:
     factory.set_editor_property("struct", unreal.AegisPairedTrajectory.static_struct())
     table = unreal.AssetToolsHelpers.get_asset_tools().create_asset(DEST_NAME, DEST_DIR, unreal.DataTable, factory)
 ok = unreal.DataTableFunctionLibrary.fill_data_table_from_json_string(table, json.dumps(rows))
-unreal.EditorAssetLibrary.save_loaded_asset(table)
+expected = {row["Name"].lower() for row in rows}
+actual = {str(name).lower() for name in unreal.DataTableFunctionLibrary.get_data_table_row_names(table)}
+if not ok or actual != expected or not unreal.EditorAssetLibrary.save_loaded_asset(table):
+    raise RuntimeError(f"Paired trajectory table import failed: {path}")
 
 tagged = False
 eas = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
@@ -78,4 +83,5 @@ for actor in eas.get_all_level_actors():
             unreal.get_editor_subsystem(unreal.LevelEditorSubsystem).save_current_level()
         tagged = True
 
-json.dumps({"filled": ok, "rows": len(rows), "missing": missing, "canvas_tagged": tagged})
+result = {"filled": ok, "rows": len(rows), "missing": missing, "canvas_tagged": tagged}
+json.dumps(result)

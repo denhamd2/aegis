@@ -1,5 +1,13 @@
 # Aegis prioritised backlog
 
+## Unreal move sync
+
+CI builds a versioned move bundle and checks the Unreal trajectory snapshot.
+The snapshot now includes the latest Snap Dragon 3, Cross Rhodes and Mexican
+Destroyer data. Reimport and retarget the animation assets, then use the editor
+script to refresh and verify the move tables. Engine-specific grapple behavior
+and native Unreal parity remain open. [Move sync workflow](../../tools/unreal/MOVE_SYNC.md).
+
 ## Cross Rhodes rear hold
 
 Cody reaches for the left wrist and hooks the neck with his right forearm

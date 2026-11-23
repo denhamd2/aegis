@@ -16,6 +16,7 @@ every row, so the table always equals Godot's current data.
 import importlib.util
 import json
 import os
+from pathlib import Path
 
 import unreal
 
@@ -23,20 +24,23 @@ REPO = os.environ.get("AEGIS_REPO", os.path.expanduser("~/code/aegis"))
 SOURCE_TABLE = "/Game/AegisTest/Data/MoveDefs"
 OUT_DIR = "/Game/AegisTest/Data"
 OUT_NAME = "DT_AegisMoves"
-
-_spec = importlib.util.spec_from_file_location(
-    "export_move_clips", os.path.join(REPO, "tools", "unreal", "export_move_clips.py"))
-_clips_mod = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(_clips_mod)
+SYNC_BUNDLE = globals().get("SYNC_BUNDLE")
 
 
 def build():
-    clips = {}
-    clips.update(_clips_mod.strike_clips())
-    clips.update(_clips_mod.paired_clips())
-
-    src = unreal.load_asset(SOURCE_TABLE)
-    rows = json.loads(unreal.DataTableFunctionLibrary.export_data_table_to_json_string(src))
+    if SYNC_BUNDLE:
+        bundle = Path(SYNC_BUNDLE)
+        clips = json.loads((bundle / "move_clips.json").read_text(encoding="utf-8"))
+        definitions = json.loads((bundle / "move_defs.json").read_text(encoding="utf-8"))
+        rows = [{"Name": name, **row} for name, row in definitions["move_defs"].items()]
+    else:
+        path = os.path.join(REPO, "tools", "unreal", "export_move_clips.py")
+        spec = importlib.util.spec_from_file_location("export_move_clips", path)
+        clips_mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(clips_mod)
+        clips = {**clips_mod.strike_clips(), **clips_mod.paired_clips()}
+        src = unreal.load_asset(SOURCE_TABLE)
+        rows = json.loads(unreal.DataTableFunctionLibrary.export_data_table_to_json_string(src))
     out_rows = []
     unmapped = []
     for r in sorted(rows, key=lambda r: r["Name"]):
@@ -75,7 +79,11 @@ def build():
         table = unreal.AssetToolsHelpers.get_asset_tools().create_asset(
             OUT_NAME, OUT_DIR, unreal.DataTable, factory)
     ok = unreal.DataTableFunctionLibrary.fill_data_table_from_json_string(table, json.dumps(out_rows))
-    unreal.EditorAssetLibrary.save_loaded_asset(table)
+    expected = {r["Name"].lower() for r in out_rows}
+    actual = {str(name).lower() for name in
+              unreal.DataTableFunctionLibrary.get_data_table_row_names(table)}
+    if not ok or actual != expected or not unreal.EditorAssetLibrary.save_loaded_asset(table):
+        raise RuntimeError(f"Move table import failed: {path}")
     return {"ok": ok, "rows": len(out_rows), "unmapped": unmapped}
 
 
