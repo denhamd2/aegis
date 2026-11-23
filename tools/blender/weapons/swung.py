@@ -286,19 +286,62 @@ def oval(rx, rz):
     return lambda t, th: 1.0 / math.sqrt((math.cos(th) / rx) ** 2 + (math.sin(th) / rz) ** 2)
 
 
-def build_sledgehammer(root, prefix, wood, steel) -> None:
+def _forged_section(half: float, chamfer: float):
+    """A forged head's section: a square of half-size `half` with its four
+    corners chamfered by `chamfer` -- an octagon with long flats -- as a
+    radius at angle theta (sweep's convention)."""
+    pts = []
+    for k in range(8):
+        a = math.pi * 0.25 * k + math.pi * 0.125
+        pts.append(a)
+
+    def radius(th: float) -> float:
+        c, s_ = abs(math.cos(th)), abs(math.sin(th))
+        flat = half / max(c, s_)                       # the square's flats
+        cham = (2.0 * half - chamfer) / (c + s_)       # the 45-degree chamfer
+        return min(flat, cham)
+    return radius
+
+
+def build_sledgehammer(root, prefix, wood, steel, face_steel=None, grip=None) -> None:
     # hickory handle, 0.90 m, oval, swelling to the knob; head at the top
     h = kit.WeaponPart(prefix + "_handle")
     prof = lambda t: 1.0 + 0.25 * max(0.0, 1 - t / 0.06) + 0.12 * max(0.0, (t - 0.85) / 0.15)
     kit.sweep(h, _y(-0.10, 0.80, 40), lambda t, th: oval(0.0165, 0.012)(t, th) * prof(t),
               sides=20, caps=True, v_scale=1.1)
     kit.add_mesh(root, h, wood, project=False, auto_smooth_deg=180.0)
+    if grip is not None:
+        # a moulded rubber sleeve over the bottom of the handle: ribbed for
+        # the hands, flared at the butt
+        g = kit.WeaponPart(prefix + "_grip")
+        rib = lambda t, th: oval(0.0182, 0.0137)(t, th) * (1.0 + 0.045 * (0.5 + 0.5 * math.cos(t * 2 * math.pi * 14))
+                                                          + 0.22 * max(0.0, 1 - t / 0.08))
+        kit.sweep(g, _y(-0.105, 0.17, 84), rib, sides=20, caps=True, v_scale=3.0)
+        kit.add_mesh(root, g, grip, project=False, auto_smooth_deg=40.0)
+    # The head: forged, a long octagon (a square with chamfered corners),
+    # swelling a touch at the cheeks round the eye and chamfered down to two
+    # domed striking faces -- swept along X, so it reads as one forging, not
+    # a box with discs on it.
     head = kit.WeaponPart(prefix + "_head")
-    head.box(Vector((0, 0.80, 0)), Vector((0.21, 0.065, 0.065)), bevel=0.008, bevel_segments=2)
-    for sx in (-1, 1):                                    # striking faces, a touch proud and domed
-        head.cylinder(Vector((sx * 0.105, 0.80, 0)), Vector((sx, 0, 0)), 0.030, 0.008, 24)
-    head.box(Vector((0, 0.833, 0)), Vector((0.03, 0.004, 0.028)))           # wedge in the eye
+    half, cham = 0.033, 0.016
+    sec = _forged_section(half, cham)
+    hl = 0.104                                          # face to centre
+    # crisp flats and one-segment chamfers on every edge: the octagon down
+    # the length and the chamfer round each face
+    head.box(Vector((0, 0.80, 0)), Vector((2 * hl, 2 * half, 2 * half)), bevel=0.011, bevel_segments=1)
     kit.add_mesh(root, head, steel, uv_scale=6.0)
+    faces = kit.WeaponPart(prefix + "_faces")
+    for sx in (-1, 1):                                  # striking faces, domed and bright from use
+        r0 = sec(0.0) * 0.84
+        dome = [Vector((sx * (hl - 0.0005 + 0.009 * (1 - math.cos(0.5 * math.pi * k / 8))), 0.80, 0)) for k in range(9)]
+        kit.sweep(faces, dome if sx > 0 else dome,
+                  lambda t, th, r0=r0: max(0.001, r0 * math.cos(0.5 * math.pi * t) ** 0.6) * (sec(th) / sec(0.0)) ** 0.5,
+                  sides=32, caps=True, v_scale=4.0)
+    kit.add_mesh(root, faces, face_steel or steel, project=False, auto_smooth_deg=60.0)
+    wedge = kit.WeaponPart(prefix + "_wedge")
+    wedge.box(Vector((0, 0.8335, 0)), Vector((0.034, 0.0035, 0.024)), bevel=0.0012, bevel_segments=1)
+    wedge.box(Vector((0, 0.8345, 0)), Vector((0.004, 0.0025, 0.026)))          # the steel cross-wedge
+    kit.add_mesh(root, wedge, steel, uv_scale=6.0)
     kit.marker(root, "grip_r", Vector((0, 0, 0)), Vector((0, 1, 0)), Vector((0, 0, 1)))
     kit.marker(root, "grip_l", Vector((0, -0.07, 0)), Vector((0, 1, 0)), Vector((0, 0, 1)))
     kit.marker(root, "strike", Vector((0.113, 0.80, 0)), Vector((0, 1, 0)), Vector((1, 0, 0)))
@@ -453,9 +496,13 @@ def build_batch_a(report: list) -> None:
     wid = "sledgehammer"
     wood = kit.pbr_material(wid + "_wood", *kit.wood_textures(wid, (0.66, 0.50, 0.32), (0.44, 0.28, 0.14), 40, 0.5,
                                                                along_rows=False), 0.6)
-    steel = kit.pbr_material(wid + "_head", *kit.metal_textures(wid, (0.05, 0.05, 0.05), 0.35, 0.42, rust=0.3), 0.8)
+    steel = kit.pbr_material(wid + "_head", *kit.metal_textures(wid, (0.035, 0.036, 0.04), 0.12, 0.46, rust=0.06,
+                                                                 size=1024), 0.8)
+    face_steel = kit.pbr_material(wid + "_face", *kit.metal_textures(wid + "_face", (0.55, 0.55, 0.53), 0.9, 0.30,
+                                                                     size=512), 0.6)
+    grip = kit.pbr_material(wid + "_grip", *kit.polymer_textures(wid + "_grip", (0.018, 0.018, 0.02)), 0.8)
     root = kit.state_root("Sledgehammer_Clean")
-    build_sledgehammer(root, root.name, wood, steel)
+    build_sledgehammer(root, root.name, wood, steel, face_steel, grip)
     report.append("sledgehammer: %d triangles" % kit.triangles_under(root))
     kit.export(wid)
 

@@ -53,9 +53,12 @@ SIDES = 12
 def paint_textures(weapon_id: str, paint_rgb: tuple, chip_amount: float) -> tuple:
     rng = np.random.RandomState(kit.seed_of(weapon_id + "_paint"))
     n = kit.TEX_SIZE
-    big = kit.fbm(rng, n, 6, 5)
-    fine = kit.fbm(rng, n, 48, 3)
-    chips = np.clip((big * 0.75 + fine * 0.25 - (1.0 - chip_amount)) * 9.0, 0.0, 1.0)
+    # Chips are flakes where it took the shots: many small ones with ragged
+    # edges, not a few big blotches (the old 6-cell field read as dirt on a
+    # tube at broadcast distance).
+    big = kit.fbm(rng, n, 18, 5)
+    fine = kit.fbm(rng, n, 64, 3)
+    chips = np.clip((big * 0.6 + fine * 0.4 - (1.0 - chip_amount)) * 12.0, 0.0, 1.0)
     # scuffs run mostly one way (a chair is dragged and swung along its
     # length), soft, and in clusters where it was hit -- not a cobweb
     cluster = np.clip((kit.fbm(rng, n, 3, 3) - 0.45) * 4.0, 0, 1)
@@ -358,7 +361,7 @@ def main(only: str = "") -> None:
         kit.reset()
         # charcoal enamel on the arena chair, a lighter grey on the wire one
         base, orm, nrm = paint_textures(weapon_id, (0.15, 0.155, 0.16) if weapon_id == "steel_chair"
-                                        else (0.24, 0.25, 0.26), 0.34 if weapon_id == "steel_chair" else 0.29)
+                                        else (0.24, 0.25, 0.26), 0.25 if weapon_id == "steel_chair" else 0.22)
         paint = kit.pbr_material(weapon_id + "_paint", base, orm, nrm, 0.8)
         rubber = kit.flat_material(weapon_id + "_rubber", (0.025, 0.025, 0.025), 0.85)
         stencil = kit.pbr_material(weapon_id + "_stencil", stencil_texture(weapon_id, "17"), None, None,
