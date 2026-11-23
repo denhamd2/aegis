@@ -48,6 +48,7 @@ jobs:
           sparse-checkout-cone-mode: false
           sparse-checkout: |
             /tools/unreal/*.py
+            /tools/unreal/export_paired_trajectories.gd
             /tools/unreal/paired_trajectories.json
             /game/resources/move_def.gd
             /game/resources/moves/

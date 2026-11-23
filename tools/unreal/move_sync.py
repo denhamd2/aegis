@@ -77,8 +77,10 @@ def export(bundle, godot):
         shutil.copy2(resources / "move_def.gd", target)
         for name in ("paired_moves.tres", "paired_recipes.gd"):
             shutil.copy2(resources / "animations" / name, target / "animations")
+        script = "export_paired_trajectories.gd"
+        shutil.copy2(HERE / script, project)
         subprocess.run([godot, "--headless", "--path", str(project), "--script",
-                        str(HERE / "export_paired_trajectories.gd"), "--",
+                        f"res://{script}", "--",
                         str(bundle / "paired_trajectories.json"),
                         str(bundle / "move_defs.json")], check=True, env={
                             **os.environ, "XDG_DATA_HOME": str(project / "data"),
