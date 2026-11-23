@@ -73,6 +73,7 @@ const BODY_CHAINS := [["pelvis", "spine_02", "neck_01", "Head"],
 		["neck_01", "upperarm_r"]]
 ## ref_slap's palm meets the mat on its frame 12 of 30 fps: 24 ticks at 60 Hz.
 const SLAP_LEAD := 24
+const SLAP_CLIP := "strikes/ref_slap"
 ## Standing beside the winner for the hand raise: on her right (-Z when she
 ## faces the hard camera).
 const WINNER_SIDE := Vector3(0.0, 0.0, 0.48)
@@ -124,7 +125,7 @@ var _moving := false
 var _yaw := 0.0
 var _clip := ""
 var _mode_time := 0.0
-var _last_pin_tick := 0
+var _slap_contact_tick := 0
 var _winner: WrestlerController
 var _separated := false
 ## Waiting in a neutral corner while they walk out and stare (follow()).
@@ -319,6 +320,9 @@ func _process(delta: float) -> void:
 			_play("strikes/ref_stand")
 		Mode.FOLLOW:
 			if _referee.is_pin_active():
+				_cover_target.clear()
+				_cover_from.clear()
+				_slap_contact_tick = 0
 				_set_mode(Mode.TO_COVER)
 			elif _referee.is_submission_active():
 				_set_mode(Mode.SUBMISSION)
@@ -418,7 +422,6 @@ func _set_mode(next: Mode) -> void:
 	match next:
 		Mode.COUNTING:
 			_play("strikes/ref_count_down", 0.12)
-			_last_pin_tick = _referee._pin_ticks
 		Mode.RISE:
 			_play("strikes/ref_count_up", 0.1)
 		Mode.BELL:
@@ -473,6 +476,7 @@ func _to_cover(delta: float) -> void:
 		rotation.y = _yaw_towards(_cover_target[1])
 		_yaw = rotation.y
 		_set_mode(Mode.COUNTING)
+		_counting()
 
 
 ## Both men's flat positions, to tell when the pair have moved since her
@@ -694,27 +698,38 @@ static func _cross2(u: Vector3, v: Vector3) -> float:
 
 func _counting() -> void:
 	var ticks: int = _referee._pin_ticks
-	if _referee.is_pin_active():
-		for count in MatchReferee.COUNT_TICKS:
-			var start: int = count - SLAP_LEAD
-			if _last_pin_tick < start and ticks >= start:
-				_play("strikes/ref_slap", 0.05, true)
-				slaps += 1
-		_last_pin_tick = ticks
-		# The pair settle into the cover after she is down: if they have
-		# shifted onto her, she shuffles to the next clear spot.
-		_recheck += 1
-		if _recheck % 10 == 0 and _referee._pin_defender:
-			var now := body_clearance(global_position, _wrestlers, global_transform.basis.z)
-			if now < COVER_SHUFFLE:
-				var other := cover_spot(_referee._pin_defender, _wrestlers)
-				if body_clearance(other[0], _wrestlers, other[1]) > now + COVER_SHUFFLE:
-					_cover_target = other
-					_cover_from = _pair_at()
-					_set_mode(Mode.TO_COVER)
-	elif _mode_time > 0.1:
-		# A kick-out or the three: either way she gets up.
+	var swinging := _clip == SLAP_CLIP and _player.is_playing()
+	if not _referee.is_pin_active():
+		# The third slap follows through after the pin has ended. A kickout
+		# cuts the windup and Aubrey gets straight up.
+		if _referee.pin_count() == 3 and swinging and _slap_contact_tick == ticks:
+			var contact := float(SLAP_LEAD) / Engine.physics_ticks_per_second
+			if _player.current_animation_position < contact:
+				_player.seek(contact, true)
+			return
 		_set_mode(Mode.RISE)
+		return
+	for count in MatchReferee.COUNT_TICKS:
+		var start: int = count - SLAP_LEAD
+		if ticks >= start and ticks < count and _slap_contact_tick < count:
+			_play(SLAP_CLIP, 0.05, true)
+			_slap_contact_tick = count
+			slaps += 1
+			if ticks > start:
+				_player.seek(float(ticks - start) / Engine.physics_ticks_per_second, true)
+			return
+	if swinging:
+		return
+	# Only shuffle between swings, when the pair can settle out of her way.
+	_recheck += 1
+	if _recheck % 10 == 0 and _referee._pin_defender:
+		var now := body_clearance(global_position, _wrestlers, global_transform.basis.z)
+		if now < COVER_SHUFFLE:
+			var other := cover_spot(_referee._pin_defender, _wrestlers)
+			if body_clearance(other[0], _wrestlers, other[1]) > now + COVER_SHUFFLE:
+				_cover_target = other
+				_cover_from = _pair_at()
+				_set_mode(Mode.TO_COVER)
 
 
 func _submission(delta: float) -> void:

@@ -4803,10 +4803,23 @@ static func rope_within_reach(w: Node3D) -> Vector3:
 	return best
 
 
+## Check the rope the wrestler reached for, even when another side is closer.
+static func can_touch_rope(w: Node3D, side: Vector3) -> bool:
+	for point in ROPE_REACH_POINTS:
+		if side.dot(w.global_transform * point) >= ROPE_TOUCH:
+			return true
+	return false
+
+
 ## Reaches for the ropes on `side`, getting there in `ticks`.
 func reach_for_rope(side: Vector3, ticks: int) -> void:
 	if rope_reach:
 		rope_reach.reach(side, ticks)
+
+
+func release_rope() -> void:
+	if rope_reach:
+		rope_reach.release()
 
 
 # --- ground attacks (gauntlet/refs/animation_gap.md, Phase 4: position) -------

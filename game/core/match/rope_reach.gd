@@ -60,6 +60,10 @@ func is_reaching() -> bool:
 	return _weight > 0.0
 
 
+func release() -> void:
+	_holding = false
+
+
 ## One physics tick; `hold` false lets go.
 func advance(hold: bool) -> void:
 	if not hold:

@@ -143,13 +143,21 @@ func is_resolved() -> bool:
 ## stay for good -- over the replay, the celebration, the rating card and the
 ## post-match menu, ~30 s (the stage 8 show reel, 16:07-16:39).
 const FINISH_COUNT_HOLD := 2.5
+const ROPE_BREAK_HOLD := 1.2
 var _since_decided := 0.0
+var _rope_breaks_seen := 0
+var _rope_break_remaining := 0.0
 
 func _process(delta: float) -> void:
 	if not is_resolved():
 		_resolve()
-	if referee and referee.is_match_over():
-		_since_decided += delta
+	if referee:
+		if referee.is_match_over():
+			_since_decided += delta
+		_rope_break_remaining = maxf(0.0, _rope_break_remaining - delta)
+		if referee.rope_breaks > _rope_breaks_seen:
+			_rope_breaks_seen = referee.rope_breaks
+			_rope_break_remaining = ROPE_BREAK_HOLD
 	if _audio == null and wrestler_a and wrestler_a.get_parent():
 		_audio = wrestler_a.get_parent().get_node_or_null("MatchAudio") as MatchAudio
 	queue_redraw()
@@ -342,6 +350,11 @@ func _draw_momentum(rect: Rect2, fill: float, accent: Color, mirrored: bool) -> 
 ## eases.
 func _draw_count(view: Vector2) -> void:
 	var count := referee.pin_count()
+	if _rope_break_remaining > 0.0 and not referee.is_match_over() \
+			and not referee.is_pin_active() and not referee.is_submission_active():
+		draw_string(ThemeDB.fallback_font, Vector2(0.0, view.y * 0.30), "ROPE BREAK",
+				HORIZONTAL_ALIGNMENT_CENTER, view.x, int(view.y * 0.040), NAME_COLOR)
+		return
 	if count <= 0 or count_cleared():
 		return
 	var font := ThemeDB.fallback_font

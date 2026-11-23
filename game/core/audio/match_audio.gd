@@ -447,6 +447,7 @@ func watch(referee: MatchReferee, wrestlers: Array, crowd: CrowdReaction, match_
 		_cooldown[w] = 0.0
 		_falls[w] = []
 	referee.match_won.connect(_on_match_won)
+	referee.near_fall.connect(_on_near_fall)
 
 
 static func is_in_match(wrestlers: Array, style: String) -> bool:
@@ -1385,25 +1386,21 @@ func _hear_the_count() -> void:
 		_count_heard = count
 		sfx.play_any("count_slap", -1.0)
 		chants.count(count, sfx)
-	if not pinning and _was_pinning and _count_heard >= 2 and not _over:
-		chants.kicked_out(_count_heard)
-		# A kickout after two: the gasp. (A three is the bell, not this.)
-		sfx.play_any("crowd_ooh", CROWD_REACTION_GAIN_DB + -3.0)
-		sfx.play_any("crowd_pop", CROWD_REACTION_GAIN_DB + -4.0)
-	var events := commentary_events_for_kickout(_count_heard, _over,
-			chants.match_time() >= UNBELIEVABLE_LATE_MATCH_AFTER)
-	if not pinning and _was_pinning:
-		for event: String in events:
-			if event == "excalibur_unbelievable":
-				_queue_commentary(event)
-			else:
-				_queue_commentary(event)
-		# A bleeding Cody who will not stay down: the worried and reserved Tony
-		# line, only when the man kicking out at two is a bleeding Cody.
-		var cody_event := commentary_event_for_cody_kickout(_referee._pin_defender, _count_heard)
-		if cody_event != "":
-			_queue_commentary(cody_event)
 	_was_pinning = pinning
+
+
+func _on_near_fall(defender: WrestlerController) -> void:
+	if _over or not can_process():
+		return
+	chants.kicked_out(2)
+	sfx.play_any("crowd_ooh", CROWD_REACTION_GAIN_DB - 3.0)
+	sfx.play_any("crowd_pop", CROWD_REACTION_GAIN_DB - 4.0)
+	var late := chants.match_time() >= UNBELIEVABLE_LATE_MATCH_AFTER
+	for event: String in commentary_events_for_kickout(2, _over, late):
+		_queue_commentary(event)
+	var cody_event := commentary_event_for_cody_kickout(defender, 2)
+	if cody_event != "":
+		_queue_commentary(cody_event)
 
 
 func _hear_bumps(w: WrestlerController, delta: float) -> void:

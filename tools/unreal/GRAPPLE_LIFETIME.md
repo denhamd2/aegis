@@ -135,3 +135,26 @@ the normal authored rebound when the runner clears the ropes under his
 own motion. In PIE, interrupt the absorb after contact in both slots,
 verify the rope blocks the next crossing, and finish the match through
 an earned finisher and cover.
+
+## Pin and rope-break resolution
+
+Drive cover and hold resolution at 60 Hz. Check normal ring legality and the
+current stipulation on scripted covers as well as automatic covers. Use the
+measured count ticks 92, 167 and 227. Input can win on the second count tick
+before that slap lands. A kickout after the second slap and before tick 227
+records one near-fall and queues its presentation once. Lock the decision at
+three. Preserve the finisher-only pinfall rules and the automatic tick-219
+kickout on covers that cannot win.
+
+Start a cover's reach on tick 36 and a submission's on its 60th locked tick.
+Verify the chosen rope from the defender's root on the contact tick, 24
+ticks after the reach starts. Release the cover or hold before broadcasting
+the break. Clear the reach on an early kickout, an escaped hold, or invalid
+contact. Preserve the existing finisher and no-holds-barred exceptions.
+
+In PIE, check a late minigame kickout, a winning three-count, an interrupted
+reach, and a confirmed pin and submission break in both slots. For the
+referee actor, approach around both bodies, enter the active slap at its
+elapsed offset and keep the completed third slap visible through contact.
+Cut the third swing on a close kickout. Godot has focused tests for these
+boundaries. The Unreal implementation still requires the Mac project.

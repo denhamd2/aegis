@@ -180,6 +180,42 @@ func test_the_slap_lands_on_the_count_tick() -> void:
 	assert_int(MatchReferee.COUNT_TICKS[0]).is_greater(RefereeActor.SLAP_LEAD)
 
 
+func test_arriving_during_windup_joins_only_the_current_slap() -> void:
+	var actor: RefereeActor = _scene.get_node("RefereeActor")
+	var referee: MatchReferee = _scene.get_node("MatchReferee")
+	referee._pinning = true
+	referee._pin_ticks = MatchReferee.COUNT_TICKS[1] - 10
+	actor._set_mode(RefereeActor.Mode.COUNTING)
+	actor._counting()
+	actor._counting()
+	assert_int(actor.slaps).is_equal(1)
+	assert_float(actor._player.current_animation_position).is_equal_approx(
+			float(RefereeActor.SLAP_LEAD - 10) / Engine.physics_ticks_per_second, 0.001)
+
+
+func test_a_kickout_cuts_the_third_swing_and_a_pinfall_finishes_it() -> void:
+	var actor: RefereeActor = _scene.get_node("RefereeActor")
+	var referee: MatchReferee = _scene.get_node("MatchReferee")
+	for winning: bool in [false, true]:
+		referee._pinning = true
+		referee._pin_ticks = MatchReferee.PIN_COUNT_TICKS - RefereeActor.SLAP_LEAD
+		actor._slap_contact_tick = 0
+		actor._set_mode(RefereeActor.Mode.COUNTING)
+		actor._counting()
+		referee._pinning = false
+		referee._pin_count_shown = 3 if winning else 0
+		referee._pin_ticks = MatchReferee.PIN_COUNT_TICKS if winning \
+				else MatchReferee.NEAR_FALL_KICKOUT_TICK
+		actor._counting()
+		if winning:
+			assert_int(actor.mode).is_equal(RefereeActor.Mode.COUNTING)
+			assert_float(actor._player.current_animation_position).is_equal_approx(
+					float(RefereeActor.SLAP_LEAD) / Engine.physics_ticks_per_second, 0.001)
+		else:
+			assert_int(actor.mode).is_equal(RefereeActor.Mode.RISE)
+			assert_str(actor._clip).is_equal("strikes/ref_count_up")
+
+
 func test_raise_clip_is_authored_for_both_and_wrists_meet() -> void:
 	var actor: RefereeActor = _scene.get_node("RefereeActor")
 	var a: WrestlerController = _scene.get_node("WrestlerA")

@@ -85,6 +85,7 @@ func test_sneaky_heel_gag_follows_roman_taunt_once_per_match() -> void:
 func test_tonys_gunshot_call_follows_the_handgun_flash_once() -> void:
 	var audio: MatchAudio = auto_free(MatchAudio.new())
 	add_child(audio)
+	audio._commentary_rng.seed = 0
 	var gun: WeaponActor = auto_free(WeaponActor.make(WeaponCatalog.by_id(&"handgun")))
 	audio.on_weapon_event(gun, "flash")
 	assert_bool(audio._commentary_voice.playing).is_false()
@@ -312,6 +313,7 @@ func test_repeatable_commentary_cooldowns_are_long_enough_to_avoid_loops() -> vo
 func test_excalibur_restore_order_only_fires_after_chaos_and_never_repeats() -> void:
 	var audio: MatchAudio = auto_free(MatchAudio.new())
 	add_child(audio)
+	audio._commentary_rng.seed = 0
 	assert_array(MatchAudio.COMMENTARY_CLIPS["excalibur_restore_order"]).is_equal([
 		"res://assets/audio/commentary/excalibur_restore_order.ogg"])
 	audio._register_chaos_activity(1.0)
@@ -414,6 +416,16 @@ func test_pinfall_win_hears_tonys_three_count() -> void:
 	audio._on_match_won(null, "pinfall")
 	assert_array(audio._commentary_queue).is_equal([
 		"tony_pinfall_win", "excalibur_finish", "excalibur_coolest_job"])
+
+
+func test_near_fall_commentary_follows_the_referee_even_without_a_rendered_count() -> void:
+	var audio: MatchAudio = auto_free(MatchAudio.new())
+	var referee: MatchReferee = auto_free(MatchReferee.new())
+	add_child(audio)
+	audio.watch(referee, [], null)
+	referee.near_fall.emit(null)
+	assert_array(audio._commentary_queue).is_equal([
+		"excalibur_two_count", "tony_love_this_business"])
 
 
 func test_cody_return_call_only_queues_on_his_entrance_cue() -> void:

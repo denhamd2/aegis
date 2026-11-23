@@ -109,6 +109,21 @@ func test_the_bar_is_mostly_gone_by_the_time_a_wrestler_is_knocked_down() -> voi
 func test_no_count_is_shown_outside_a_pin() -> void:
 	assert_int(_make_referee().pin_count()).is_equal(0)
 
+
+func test_the_rope_break_cue_holds_once_then_clears() -> void:
+	var hud_root: CanvasLayer = auto_free(HUD_SCENE.instantiate())
+	add_child(hud_root)
+	var hud: MatchHUD = hud_root.get_node("Draw")
+	hud.referee = _make_referee()
+	hud._process(0.0)
+	assert_float(hud._rope_break_remaining).is_equal(0.0)
+	hud.referee.rope_breaks = 1
+	hud._process(0.0)
+	assert_float(hud._rope_break_remaining).is_equal(MatchHUD.ROPE_BREAK_HOLD)
+	hud._process(MatchHUD.ROPE_BREAK_HOLD)
+	assert_float(hud._rope_break_remaining).is_equal(0.0)
+
+
 ## The count follows timings.md's frame-stepped schedule, which is uneven:
 ## "1" to "2" is ~1.25s and "2" to "3" ~1.00s. An evenly divided count is
 ## the one shape the reference says a real one does not have.

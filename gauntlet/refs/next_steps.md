@@ -102,8 +102,7 @@ Roman–Cody reached the 48,000-tick cap before and after the batch. Cody–Roma
 ended with Roman winning by pinfall at tick 27,489 before and 26,399 after.
 Both Cody–Roman runs had three Spear attempts. Landings went from three to
 two with one side headlock counter in the new build. Each slot order had
-three rope runs on both builds. AI match completion remains open for the
-capped order.
+three rope runs on both builds. The capped order was fixed in the next batch.
 
 ## AI match completion after an interrupted rope run
 
@@ -114,6 +113,31 @@ wrestler left the whip state. Ring containment now resumes the tick that
 the absorb or return releases its exception. The regression fails on the
 previous controller and passes on the fix. All 42 focused checks passed,
 including ordinary whips, rope-running attacks, match flow and replay.
+
+With seed 1 and arena presentation omitted, Cody pinned Roman at tick 25,599
+in the previously capped order. Roman pinned Cody at tick 25,705 in the
+swapped order. Roman and Cody also each pinned Kenny, at ticks 28,308 and
+28,214 respectively. Recent power-move repetition varied by slot order.
+
+[Mac run 45211118981](https://github.com/denhamd2/aegis/actions/runs/45211118981)
+published `ea08a2a`. The exact tag, release target and uploaded
+1,034,175,757-byte ZIP were verified.
+[Unreal parity case](../../tools/unreal/GRAPPLE_LIFETIME.md#interrupting-a-rope-absorb).
+
+## Referee and cover resolution
+
+Aubrey picks a fresh route for each cover, joins the current slap if she
+arrives during its windup, and moves between swings when the bodies have
+shifted. Late kickouts cut the third windup and a completed three-count
+retains the follow-through. The measured count schedule stays at ticks 92,
+167 and 227. A kickout after two triggers the same scoring and broadcast cue
+through input and automatic recovery.
+
+Rope breaks use the settled cover position and verify the selected rope on
+the contact tick. The hold or cover releases before the HUD shows ROPE BREAK.
+Scripted covers obey the match's stipulation and normal ring boundaries.
+Native visual review and [Unreal runtime parity](../../tools/unreal/GRAPPLE_LIFETIME.md#pin-and-rope-break-resolution)
+remain open.
 
 ## Grapple cancellation and teardown
 
