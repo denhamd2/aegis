@@ -1653,7 +1653,9 @@ func adapt_animation_library(source: AnimationLibrary,
 		for skeleton in skeletons:
 			_add_helper_tracks(animation, skeleton)
 		target.add_animation(name, animation)
-	preload("res://core/match/roman_landing_fit.gd").apply(target, skeletons, self)
+	const LandingFit := preload("res://core/match/roman_landing_fit.gd")
+	LandingFit.apply(target, skeletons, self)
+	LandingFit.apply_recovery(target, find_child("AnimationPlayer", true, false) as AnimationPlayer, self)
 	if owned_source_root:
 		owned_source_root.free()
 	return target

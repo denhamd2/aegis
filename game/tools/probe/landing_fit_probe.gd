@@ -96,7 +96,9 @@ func _region(sk: Skeleton3D, index: int) -> String:
 		var bone := String(sk.get_bone_name(index)).to_lower()
 		for token in ["arm", "hand", "finger", "thumb", "shoulder", "clavicle"]:
 			if bone.contains(token): return "arm"
-		for token in ["leg", "thigh", "calf", "foot", "toe"]:
+		if bone.contains("foot") or bone.contains("toe"):
+			return "boot"
+		for token in ["leg", "thigh", "calf"]:
 			if bone.contains(token): return "leg"
 		if bone.contains("head"): return "head"
 		if bone.contains("neck"): return "neck"
@@ -191,7 +193,16 @@ func _sample() -> void:
 		results.append({"path": entry.path, "surface": entry.surface,
 			"material": entry.material, "cosmetic": entry.cosmetic,
 			"pose_tick": _stamps[sk], "regions": regions})
-	_rows.append({"tick": _ticks, "physics_tick": Engine.get_physics_frames(),
+	var body := _defender.skeleton
+	var points := {}
+	for bone: String in ["pelvis", "spine_03", "Head", "foot_l", "foot_r"]:
+		var id := body.find_bone(_defender._skeleton_bone_name(bone))
+		if id < 0 or not _poses.has(body):
+			continue
+		var position: Vector3 = body.global_transform * _poses[body][id].origin
+		points[bone] = [position.x, position.y, position.z]
+	_rows.append({"points": points, "down_clip": _defender._down_clip,
+		"tick": _ticks, "physics_tick": Engine.get_physics_frames(),
 		"source_frame": _last_clock * 30.0, "raw_root_seconds": clock, "coherent": coherent, "pose_seconds": _defender._anim_playback.get_current_play_position(), "pose_node": _defender._anim_playback.get_current_node(), "active": _rig.is_active(),
 		"state": _defender.fsm.current_state, "finished_tick": _finished_tick, "surfaces": results})
 	if (_finished_tick >= 0 and _ticks >= _finished_tick + 12) or _ticks > 220:

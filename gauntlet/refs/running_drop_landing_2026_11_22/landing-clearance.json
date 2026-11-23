@@ -1,0 +1,44 @@
+{
+  "roman-standard": {
+    "minimum_skin_or_gear_clearance_m": 0.00799989700317383,
+    "minimum_late_boot_clearance_m": 0.0216829255223274,
+    "observed_down_ticks": 12,
+    "max_handoff_heading_change_deg": 0.05680842733536906,
+    "down_clip": "strikes/running_drop_down_neck"
+  },
+  "roman-half-tick": {
+    "minimum_skin_or_gear_clearance_m": 0.012584924697876,
+    "minimum_late_boot_clearance_m": 0.0240275301039219,
+    "observed_down_ticks": 12,
+    "max_handoff_heading_change_deg": 0.0747949712347804,
+    "down_clip": "strikes/running_drop_down_neck"
+  },
+  "roman-swapped": {
+    "minimum_skin_or_gear_clearance_m": 0.00799989700317383,
+    "minimum_late_boot_clearance_m": 0.0216828677803278,
+    "observed_down_ticks": 12,
+    "max_handoff_heading_change_deg": 0.05680444821533115,
+    "down_clip": "strikes/running_drop_down_neck"
+  },
+  "cody-standard": {
+    "minimum_skin_or_gear_clearance_m": 0.0079953670501709,
+    "minimum_late_boot_clearance_m": 0.0125493332743645,
+    "observed_down_ticks": 12,
+    "max_handoff_heading_change_deg": 0.03442580498781922,
+    "down_clip": "strikes/running_drop_down_neck"
+  },
+  "cody-half-tick": {
+    "minimum_skin_or_gear_clearance_m": 0.00428789015859365,
+    "minimum_late_boot_clearance_m": 0.0125493239611387,
+    "observed_down_ticks": 12,
+    "max_handoff_heading_change_deg": 0.044662614542517076,
+    "down_clip": "strikes/running_drop_down_neck"
+  },
+  "cody-swapped": {
+    "minimum_skin_or_gear_clearance_m": 0.0079953670501709,
+    "minimum_late_boot_clearance_m": 0.0125493239611387,
+    "observed_down_ticks": 12,
+    "max_handoff_heading_change_deg": 0.03442629430270472,
+    "down_clip": "strikes/running_drop_down_neck"
+  }
+}

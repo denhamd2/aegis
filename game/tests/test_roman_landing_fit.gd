@@ -88,5 +88,5 @@ func test_measured_source_clip_and_mesh_have_not_silently_changed() -> void:
 	assert_object(found).is_not_null()
 	var header := '[sub_resource type="Animation" id="%s"]\n' % found.get_string(1)
 	var section := text.get_slice(header, 1).get_slice("\n[", 0)
-	assert_str(section.sha256_text()).is_equal("583f2c73410647deff901ef60e42e91623d1056b203c7811a55986590e5a8888")
+	assert_str(section.sha256_text()).is_equal("b9b102f87a187f3be2ea303f67a0af062568479c70bb8ff88079104e083b6c9c")
 	assert_str(FileAccess.get_sha256("res://assets/characters/roman_reigns.glb")).is_equal("4d6d9c3841334a88d733acc1dd1d2c036e9ebf1de1e8812be817d6769dd639b5")

@@ -155,6 +155,7 @@ const DOUBLE_DOWN_STIR_TICKS := 60
 var knockdown_tier := -1
 const DOWN_BACK_CLIP := "strikes/down_back"
 const DOWN_NECK_CLIP := "strikes/down_neck"
+const RUNNING_DROP_DOWN_CLIP := "strikes/running_drop_down_neck"
 const DOWN_KNEE_CLIP := "strikes/down_knee"
 const DOWN_FACE_FIRST_CLIP := "strikes/down_face_first"
 const DOWN_OUT_CLIP := "strikes/down_out"
@@ -179,6 +180,14 @@ static func down_sell_clip(move: MoveDef, tier: int, fatal := false) -> String:
 	if move.damage_head > move.damage_torso:
 		return DOWN_NECK_CLIP
 	return DOWN_BACK_CLIP
+
+
+func _down_sell_for_model(move: MoveDef, tier: int, fatal := false) -> String:
+	var clip := down_sell_clip(move, tier, fatal)
+	if clip == DOWN_NECK_CLIP and move and move.animation_pair_id == &"running_grapple_inverted_drop" \
+			and anim_player and anim_player.has_animation(RUNNING_DROP_DOWN_CLIP):
+		return RUNNING_DROP_DOWN_CLIP
+	return clip
 
 
 static func down_ticks_for(tier: int) -> int:
@@ -6077,7 +6086,7 @@ func _release_model_facing(force := false) -> void:
 ## back on his feet.
 func _lie_down_after_throw(move: MoveDef = null) -> void:
 	_stop_dead()
-	_down_clip = down_sell_clip(move, -1)
+	_down_clip = _down_sell_for_model(move, -1)
 	_set_state_clip(WrestlerFSM.State.DOWN, _down_clip)
 	fsm.transition_to(WrestlerFSM.State.DOWN)
 	ground_attacks_taken = 0
@@ -6206,7 +6215,7 @@ func _go_down(tier := -1, move: MoveDef = null) -> void:
 		fsm.transition_to(WrestlerFSM.State.HIT_REACT)
 	_stop_dead()
 	_down_clip = DOWN_FACE_FIRST_CLIP if _bump_face_first and not dead \
-			else down_sell_clip(move if move != null else _down_move, tier, dead)
+			else _down_sell_for_model(move if move != null else _down_move, tier, dead)
 	_bump_face_first = false
 	_down_move = null
 	_set_state_clip(WrestlerFSM.State.DOWN, _down_clip)

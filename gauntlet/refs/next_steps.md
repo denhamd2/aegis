@@ -7,8 +7,13 @@ from behind. The regression measures both contacts through the hold with
 Roman, Kenny, and the mannequin. Published and verified for Mac at `1c87df0`.
 The rotation into the lift, impact pose, and recovery still need review. [Implementation and validation](cross_rhodes_opening_2026_11_22/README.md).
 
-Running-drop late boot/back contact and Cody's landing and recovery remain
-next in the paired queue, followed by the interruption and teardown audit.
+## Running inverted drop landing and recovery
+
+The late settle and private Roman and Cody recovery clips address measured
+boot, head and back penetration. The original Roman head impact fit is
+retained. [Implementation and validation](running_drop_landing_2026_11_22/README.md).
+
+The grapple interruption and teardown audit is next in the paired queue.
 
 ## Snap Dragon 3 rear entry and clearance
 
@@ -26,8 +31,8 @@ for both wrestlers. [Timing, release and CI triage](paired_ci_2026_11_22/README.
 
 Continue with the remaining paired contact and source pose failures. Mexican
 Destroyer needs hand and cadence corrections plus real-roster clearance work.
-The Snap Dragon 3 clearance and entry work is recorded above. Cross Rhodes's remaining rotation and impact work, walk-arm cadence, and
-running-drop recovery remain open.
+The Snap Dragon 3 clearance and entry work is recorded above. Cross Rhodes's
+remaining rotation and impact work and walk-arm cadence remain open.
 
 ## Published: character-specific Roman impact fit
 
@@ -39,10 +44,9 @@ published the batch at `d1c1c3e`. Subsequent releases retain the fit.
 [Evidence and remaining anatomical limits](roman_landing_fit_2026_11_16/README.md).
 
 The previous claim that Roman's head reached the mat at61 included hair; actual
-skin needs its own measurement. Late boot/back fitting cannot be solved by a
-single vertical offset. Next: correct that late anatomical pose and Cody's
-penetration, review recovery continuously, then resume grapple lifetime/remaining
-initiative priorities. Full move acceptance and native M1 performance remain open.
+skin needs its own measurement. The running-drop landing and recovery batch
+above records the later anatomical and Cody-specific corrections. Grapple
+lifetime, full move acceptance, and native M1 performance remain open.
 
 ## Published: camera impact-shake repair
 
@@ -67,12 +71,9 @@ The full317-clip export preserves all315 unrelated clips exactly; native Blender
 source and approach baseline are retained. Mac run43753948084 succeeded: exact commitbf785ec and uploaded
 Aegis.zip1,032,800,316bytes verified. [Evidence](ff_initiative_2026_11_14/batch3/running_drop_reauthor/README.md).
 
-Next after verified deployment: character-specific landing fit (Roman reaches
-the mat around61 rather than impact59), torso orientation through55, early
-toe penetration and normal-speed recovery review. Preserve roots and exact
-approach/catch/handoff. Do not lower the shared source or change global Roman
-scaling to hide a character-specific fit. Rig teardown lifetime also stays open.
-This is a bounded wrap/boot-arc improvement, not full-move acceptance.
+The later impact and recovery batches above cover the character-specific fits.
+Torso orientation through frame 55, early toe penetration, and normal-speed
+review remain open. Preserve roots and the authored approach and catch.
 
 ## Previous deployed batch: release fitting and grip timing
 

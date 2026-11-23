@@ -6820,8 +6820,19 @@ CLIPS["Run_Grapple_Defender"] = [
                    elbow_r=(-0.6, 0.2, 0.2), elbow_l=(0.6, 0.2, 0.2), fist_r=0.1, fist_l=0.1,
                    foot_r=(-0.18, -0.60, 0.28), foot_l=(0.20, -0.72, 0.18),
                    knee_r=(-0.2, 0.5, 0.8), knee_l=(0.2, 0.2, 1.0)))),
-    (66, dict(SUPINE_AWAY)),
+    # Let the back drop as the legs open out. Stop the heels short of
+    # full extension so the boots do not cut through the mat on the settle.
+    (66, _yawed(S(pelvis=(0.0, 0.0, 0.150), spine=(2, 0, 0),
+                   foot_r=(-0.17, -0.78, 0.184), foot_l=(0.16, -0.79, 0.182),
+                   ankle_r=(47, -15, 0), ankle_l=(47, 15, 0)))),
 ]
+# Catch the heel descent before the final leg extension. Use the pelvis
+# height on the existing f64 curve to solve the knees without rekeying it.
+_RG_HEEL_CATCH = (64, _yawed(S(pelvis=(0.0, 0.0, 0.172),
+                             foot_r=(-0.18, -0.685, 0.206), foot_l=(0.19, -0.760, 0.182),
+                             knee_r=(-0.24, 0.35, 0.85), knee_l=(0.24, 0.15, 0.98),
+                             ankle_r=(56, -15, 0), ankle_l=(56, 15, 0))))
+_RG_LEG_BONES = ("thigh_", "calf_", "foot_")
 
 # --- Cody Rhodes's moveset (gauntlet/refs/cody_moveset.md) -----------------
 #
@@ -8458,7 +8469,7 @@ def overlap(action, name):
             kps[k].co[0] += min(lag, gap / 3.0)
 
 
-def author(poser, arm, name, frames, exact_timing=False):
+def author(poser, arm, name, frames, exact_timing=False, leg_breakdown=None):
     """Keyframe one action from a list of (frame, pose) entries."""
     action = bpy.data.actions.new(name)
     arm.animation_data_clear()
@@ -8469,6 +8480,12 @@ def author(poser, arm, name, frames, exact_timing=False):
     for frame, spec in frames:
         poser.apply(spec)
         poser.key(frame, bones)
+    if leg_breakdown is not None:
+        frame, spec = leg_breakdown
+        poser.apply(spec)
+        for bone in bones:
+            if bone.startswith(_RG_LEG_BONES):
+                arm.pose.bones[bone].keyframe_insert("rotation_quaternion", frame=frame)
 
     # Quaternion keys made sign-continuous, bone by bone.
     #
@@ -8558,19 +8575,16 @@ def _curve_snapshot(action):
         for k in fc.keyframe_points] for fc in action.fcurves}
 
 
-def _guard_running_approach_curves(action, baseline):
-    """Preserve published approach <=30, including AUTO/overlap handles.
-
-    The upper-body wrap and both-body landing are now authored together;
-    copying the former non-leg performance would erase these corrections.
-    """
-    # Source30's delayed arm/neck keys lie at31..32. Preserve those too;
-    # copying only keys whose timestamp <=30 changes the approach itself.
+def _guard_running_approach_curves(action, baseline, last_frame=32, leg_exit=False):
+    """Preserve the published keys and handles through the approach or impact."""
     for fc in action.fcurves:
+        exit_handle = None
+        if leg_exit and fc.data_path.startswith(tuple('pose.bones["' + bone for bone in _RG_LEG_BONES)):
+            exit_handle = next(tuple(k.handle_right) for k in fc.keyframe_points if k.co.x == last_frame)
         saved = baseline[(fc.data_path, fc.array_index)]
-        original = [k for k in saved if k[0][0] <=32]
+        original = [k for k in saved if k[0][0] <= last_frame]
         for i in range(len(fc.keyframe_points) - 1, -1, -1):
-            if fc.keyframe_points[i].co.x <=32:
+            if fc.keyframe_points[i].co.x <= last_frame:
                 fc.keyframe_points.remove(fc.keyframe_points[i])
         for co, *_ in original:
             fc.keyframe_points.insert(co[0], co[1])
@@ -8583,8 +8597,25 @@ def _guard_running_approach_curves(action, baseline):
             key.interpolation = interp
             key.handle_left_type = key.handle_right_type = "FREE"
             key.handle_left = left
-            key.handle_right = right
+            key.handle_right = exit_handle if exit_handle is not None and co[0] == last_frame else right
         fc.update()
+
+
+def _settle_running_drop_arms(action):
+    # Bring the release of the guard forward as the boots settle. Keep the
+    # final hand pose so it still leads into the neck sell.
+    prefixes = ('pose.bones["clavicle_', 'pose.bones["upperarm_',
+                'pose.bones["lowerarm_', 'pose.bones["hand_', 'pose.bones["thumb_',
+                'pose.bones["index_', 'pose.bones["middle_', 'pose.bones["ring_',
+                'pose.bones["pinky_')
+    for curve in action.fcurves:
+        if not curve.data_path.startswith(prefixes):
+            continue
+        poses = [(frame, curve.evaluate(sample)) for frame, sample in ((64, 64.23), (65, 65.35))]
+        for frame, value in poses:
+            key = curve.keyframe_points.insert(frame, value)
+            key.handle_left_type = key.handle_right_type = "AUTO_CLAMPED"
+        curve.update()
 
 
 def retime_for_export():
@@ -13166,8 +13197,24 @@ def main():
             original = author(poser, arm, name, _RUN_GRAPPLE_APPROACH_BASELINE[name])
             baseline = _curve_snapshot(original)
             bpy.data.actions.remove(original)
-            action = author(poser, arm, name, CLIPS[name], exact_timing=True)
-            _guard_running_approach_curves(action, baseline)
+            # The approach includes delayed arm and neck keys at 31..32.
+            last_frame = 32
+            leg_breakdown = None
+            if name == "Run_Grapple_Defender":
+                # Keep the turnover and first mat beat as published. The
+                # new settle would otherwise alter the preceding handles.
+                impact = [(f, spec) for f, spec in CLIPS[name] if f <= 63]
+                original = author(poser, arm, name, impact + [(66, SUPINE_AWAY)], exact_timing=True)
+                _guard_running_approach_curves(original, baseline, last_frame)
+                baseline = _curve_snapshot(original)
+                bpy.data.actions.remove(original)
+                last_frame = 63
+                leg_breakdown = _RG_HEEL_CATCH
+            action = author(poser, arm, name, CLIPS[name], exact_timing=True, leg_breakdown=leg_breakdown)
+            if leg_breakdown is not None:
+                _settle_running_drop_arms(action)
+            # Only the outgoing leg handles may respond to the new catch.
+            _guard_running_approach_curves(action, baseline, last_frame, leg_exit=leg_breakdown is not None)
         else:
             author(poser, arm, name, CLIPS[name])
     # Every action must survive the export. ACTIONS mode walks the actions
