@@ -250,7 +250,8 @@ lens millimetres or exact cut points. Timestamps are the video's.
 The owner sent a 2K26 Roman capture (1280x720, 60 fps, 174.1 s, Raw,
 Stockholm). It stays out of the repo (third-party footage, not cleared).
 Cuts were found with ffmpeg scene detection (threshold 0.28) and checked
-frame by frame. **t** is the video's own time; **r** is time from his first
+frame by frame. Shot content re-read from the frames on 2026-11-24: the first
+pass had shots 6-18 shifted against their cut times. **t** is the video's own time; **r** is time from his first
 frame on the stage (27.78 s), which is what our director keys from. The
 first 27.8 s are the show's cold open (arena flyover, Raw lower third), not
 his entrance.
@@ -264,29 +265,29 @@ flashes at 45.9-49.8 s are the pyro.
 | --- | --- | --- | --- | --- | --- |
 | 1 | 27.78-33.62 | 0.0 | 5.8 | Square on the stage, long lens, high-ish, the whole wall; the wall's logo animates | Tiny, centred at the top of the stage, standing |
 | 2 | 33.62-45.75 | 5.8 | 12.1 | **Low wide on the ramp floor, dead centre, looking up the ramp**, barricades symmetric. One take; strobes on the 0.533 s pulse. Name plate lower third for its first ~2 s | Walks slowly down the stage at the lens, from tiny to about a quarter of frame height |
-| 3 | 45.75-49.88 | 18.0 | 4.1 | Low medium, full body, front, the wall behind | Stops. Right arm goes up between 46.4 and 46.9; **pyro both sides at 47.0** (sparks, then CO2). Bursts again at 47.5, 47.7, 49.05 and 49.67 |
-| 4 | 49.88-54.15 | 22.1 | 4.3 | Lower, up at him; the CO2 whites the frame | Index finger held up |
-| 5 | 54.15-65.90 | 26.4 | 11.8 | Medium front, tracking back as he walks at the lens | Arm down by ~56; slow walk, looks to the fans on his left, then his right |
-| 6 | 65.90-72.82 | 38.1 | 6.9 | From behind the ramp-side crowd, over raised arms | Walks past along the barricade |
-| 7 | 72.82-76.08 | 45.0 | 3.3 | A fan's hand in extreme foreground, out of focus | Behind it, at the barricade |
-| 8 | 76.08-77.85 | 48.3 | 1.8 | Medium front at the foot of the ramp | Walking |
-| 9 | 77.85-88.62 | 50.1 | 10.8 | High wide over the floor crowd, following him toward the ring | Walks the floor |
-| 10 | 88.62-92.47 | 60.8 | 3.9 | Medium-close 3/4 front at ringside, the wall behind | Head turns over his left shoulder |
-| 11 | 92.47-117.45 | 64.7 | 25.0 | One slow moving camera round the steps: close face (96), rear over the shoulder (100-102), rear wide at the steps (104-106), 3/4 medium (108-114) | Foot of the steps, **head bowed ~98-106**, head up ~108, up the steps ~110-117 |
-| 12 | 117.45-124.85 | 89.7 | 7.4 | Low, from the ring post side | Through the ropes, onto the canvas |
-| 13 | 124.85-132.03 | 97.1 | 7.2 | In the ring behind him | Leans on the top rope, right arm out over the crowd |
-| 14 | 132.03-137.78 | 104.3 | 5.8 | From the crowd, low behind him, then wide | Finger up in the ring |
-| 15 | 137.78-144.90 | 110.0 | 7.1 | In-ring wide from the corner, low | Finger up, then down, looking out |
-| 16 | 144.90-155.88 | 117.1 | 11.0 | Low at the corner, then medium front | Leans into the corner; stands and stares down the lens |
-| 17 | 155.88-168.05 | 128.1 | 12.2 | Very wide from the far end, slow push | Centre of the ring, still |
-| 18 | 168.05-174.15 | 140.3 | 6.1 | Rear 3/4 medium | Looking out; the end |
+| 3 | 45.75-49.88 | 18.0 | 4.1 | Medium front, thighs up, the lens just under his chest, the wall behind | Stops. Right arm goes up between 46.4 and 46.9; **pyro both sides at 47.0** (sparks, then CO2). Bursts again at 47.5, 47.7, 49.05 and 49.67 |
+| 4 | 49.88-54.15 | 22.1 | 4.3 | Lower and closer, waist up, up at him; the CO2 whites the frame | Index finger held up |
+| 5 | 54.15-65.90 | 26.4 | 11.8 | Low and close on the finger (56), then medium front tracking back as he walks at the lens (63) | Arm down by ~56; slow walk, looks to the fans on his left, then his right |
+| 6 | 65.90-72.82 | 38.1 | 6.9 | Medium front, low, walking; the wall behind him (not a crowd shot) | Walking down the ramp |
+| 7 | 72.82-76.08 | 45.0 | 3.3 | From behind the ramp-side crowd, over raised arms | Mid-frame by the right barricade, walking past |
+| 8 | 76.08-77.85 | 48.3 | 1.8 | A fan's hand filling the left foreground, out of focus | Behind it, at the barricade |
+| 9 | 77.85-88.62 | 50.1 | 10.8 | Medium-close front, tracking back ahead of him, barricades both sides | Walks the foot of the ramp and the floor at the lens |
+| 10 | 88.62-92.47 | 60.8 | 3.9 | Behind him, raised over the floor crowd; him small at the left, the ring and steps at the right | Walks toward the steps |
+| 11 | 92.47-117.45 | 64.7 | 25.0 | One moving camera round him on the floor: close 3/4 front, stage behind (96); close profile over the shoulder (101); rear medium (102-103); rear wide, the steps at the right (104-107); front-left, closing to waist up (108-116) | Walks to the steps and turns; **head goes down 107.5, bowed to ~115, up 115.5**. Still on the floor at the cut |
+| 12 | 117.45-124.85 | 89.7 | 7.4 | Low and close outside the corner, the ropes across the foreground | Up the steps and through the ropes at the turnbuckle, onto the canvas |
+| 13 | 124.85-132.03 | 97.1 | 7.2 | In the ring behind him at chest height; the crowd fills the frame | Leans on the top rope, right arm out over the crowd |
+| 14 | 132.03-137.78 | 104.3 | 5.8 | Close behind his head looking up past him (133), pulling back and up until he is small between two posts (137) | Facing out; finger up to that side |
+| 15 | 137.78-144.90 | 110.0 | 7.1 | Low in the ring in front of him, full body, slightly below; ropes and house behind | Turned in; fist up |
+| 16 | 144.90-155.88 | 117.1 | 11.0 | In the ring, full body by the ropes (147), then close front, waist up (154) | By the ropes; stands and looks off to his right |
+| 17 | 155.88-168.05 | 128.1 | 12.2 | Very wide from the far end, the whole ring (158), one long push in to a medium front, thighs up, the ropes behind him (167) | Centre of the ring, still, facing the far end |
+| 18 | 168.05-174.15 | 140.3 | 6.1 | Close over his shoulder from behind, the post at the right | Looking out; the end |
 
 What this changes against ours (`AddRomanEntrance`):
 - The walk down the stage is one 12 s low wide take, not two lead-cam walk shots
 - The finger and pyro land 19.2 s after he appears; ours lands at 45 s from the music
 - After the pyro he walks the ramp in one 11.8 s medium-front tracking shot
-- He then gets three short crowd-side shots (6.9, 3.3, 1.8 s) and a 10.8 s high wide follow
-- The steps are a 25 s block with about 8 s of the head bow (ours: 240 ticks, 4 s)
+- He then gets a low front (6.9 s), two short crowd-side shots (3.3, 1.8 s), a 10.8 s front tracking shot and a 3.9 s raised rear one
+- The steps are a 25 s block on the floor with about 8 s of the head bow at its end (ours: 240 ticks, 4 s); he climbs in shot 12
 - The ring is 57 s and 7 shots, of which ours has 4 poses
 
 Look, from the close-ups at 89.5 and 96 s (against our port at 2026-11-23):
