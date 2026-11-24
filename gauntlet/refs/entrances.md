@@ -245,6 +245,55 @@ lens millimetres or exact cut points. Timestamps are the video's.
 | 3:55-4:08 | Waist-up front; the hard-camera wide | `face_walk`, `ringside` |
 | 4:26-4:30 | Very wide from the far end | `end_wide` |
 
+### Roman, measured frame-accurate (2026-11-24) [V, 60 fps]
+
+The owner sent a 2K26 Roman capture (1280x720, 60 fps, 174.1 s, Raw,
+Stockholm). It stays out of the repo (third-party footage, not cleared).
+Cuts were found with ffmpeg scene detection (threshold 0.28) and checked
+frame by frame. **t** is the video's own time; **r** is time from his first
+frame on the stage (27.78 s), which is what our director keys from. The
+first 27.8 s are the show's cold open (arena flyover, Raw lower third), not
+his entrance.
+
+The 17 "cuts" detected between 34.72 and 43.23 s land every 0.533 s. They
+are the stage strobes in time with the music (112.5 BPM, or 0.533 s per
+half-note pulse), not camera cuts: shot 2 is one unbroken 12 s take. The
+flashes at 45.9-49.8 s are the pyro.
+
+| # | t (s) | r (s) | Len | Shot | Roman |
+| --- | --- | --- | --- | --- | --- |
+| 1 | 27.78-33.62 | 0.0 | 5.8 | Square on the stage, long lens, high-ish, the whole wall; the wall's logo animates | Tiny, centred at the top of the stage, standing |
+| 2 | 33.62-45.75 | 5.8 | 12.1 | **Low wide on the ramp floor, dead centre, looking up the ramp**, barricades symmetric. One take; strobes on the 0.533 s pulse. Name plate lower third for its first ~2 s | Walks slowly down the stage at the lens, from tiny to about a quarter of frame height |
+| 3 | 45.75-49.88 | 18.0 | 4.1 | Low medium, full body, front, the wall behind | Stops. Right arm goes up between 46.4 and 46.9; **pyro both sides at 47.0** (sparks, then CO2). Bursts again at 47.5, 47.7, 49.05 and 49.67 |
+| 4 | 49.88-54.15 | 22.1 | 4.3 | Lower, up at him; the CO2 whites the frame | Index finger held up |
+| 5 | 54.15-65.90 | 26.4 | 11.8 | Medium front, tracking back as he walks at the lens | Arm down by ~56; slow walk, looks to the fans on his left, then his right |
+| 6 | 65.90-72.82 | 38.1 | 6.9 | From behind the ramp-side crowd, over raised arms | Walks past along the barricade |
+| 7 | 72.82-76.08 | 45.0 | 3.3 | A fan's hand in extreme foreground, out of focus | Behind it, at the barricade |
+| 8 | 76.08-77.85 | 48.3 | 1.8 | Medium front at the foot of the ramp | Walking |
+| 9 | 77.85-88.62 | 50.1 | 10.8 | High wide over the floor crowd, following him toward the ring | Walks the floor |
+| 10 | 88.62-92.47 | 60.8 | 3.9 | Medium-close 3/4 front at ringside, the wall behind | Head turns over his left shoulder |
+| 11 | 92.47-117.45 | 64.7 | 25.0 | One slow moving camera round the steps: close face (96), rear over the shoulder (100-102), rear wide at the steps (104-106), 3/4 medium (108-114) | Foot of the steps, **head bowed ~98-106**, head up ~108, up the steps ~110-117 |
+| 12 | 117.45-124.85 | 89.7 | 7.4 | Low, from the ring post side | Through the ropes, onto the canvas |
+| 13 | 124.85-132.03 | 97.1 | 7.2 | In the ring behind him | Leans on the top rope, right arm out over the crowd |
+| 14 | 132.03-137.78 | 104.3 | 5.8 | From the crowd, low behind him, then wide | Finger up in the ring |
+| 15 | 137.78-144.90 | 110.0 | 7.1 | In-ring wide from the corner, low | Finger up, then down, looking out |
+| 16 | 144.90-155.88 | 117.1 | 11.0 | Low at the corner, then medium front | Leans into the corner; stands and stares down the lens |
+| 17 | 155.88-168.05 | 128.1 | 12.2 | Very wide from the far end, slow push | Centre of the ring, still |
+| 18 | 168.05-174.15 | 140.3 | 6.1 | Rear 3/4 medium | Looking out; the end |
+
+What this changes against ours (`AddRomanEntrance`):
+- The walk down the stage is one 12 s low wide take, not two lead-cam walk shots
+- The finger and pyro land 19.2 s after he appears; ours lands at 45 s from the music
+- After the pyro he walks the ramp in one 11.8 s medium-front tracking shot
+- He then gets three short crowd-side shots (6.9, 3.3, 1.8 s) and a 10.8 s high wide follow
+- The steps are a 25 s block with about 8 s of the head bow (ours: 240 ticks, 4 s)
+- The ring is 57 s and 7 shots, of which ours has 4 poses
+
+Look, from the close-ups at 89.5 and 96 s (against our port at 2026-11-23):
+- **Hair:** waist-length, separate wet strands and clumps that move apart, flyaways at the crown, a centre part. Ours draws one solid dark shell, because the two card sheets are hidden for z-fighting and a texture-less slab (`SetupRomanVisual` HiddenParts)
+- **Beard:** full and dense, with a soft broken edge on the cheeks, darker at the chin, the moustache joined in. Ours is blocky with a hard edge
+- **Skin:** the tattoo sleeve reads through a sheen; the face has visible pore and specular breakup. Ours is matte and even
+
 Every high shot in 2K26 is under its lighting grid. Ours were above ours
 (the truss at 7.6 m, the cameras at 8-11 m) and shot down through it; they
 now hang at 6.3 m (EntranceDirector.RIG_CLEAR_Y).
