@@ -23,7 +23,9 @@ const GROUP := &"cage"
 class Spec:
 	extends RefCounted
 	## Its walls stand this far out from the centre, on X and on Z.
-	var half := 3.26
+	## On the apron edge: RingBuilder.APRON_OUT (3.20) plus 6 cm, so it moves
+	## with the apron if the deck is ever widened.
+	var half := RingBuilder.APRON_OUT + 0.06
 	## The walls' foot (the apron's top for the Steel Cage) and their top.
 	var base_y := -0.12
 	var top_y := 4.0

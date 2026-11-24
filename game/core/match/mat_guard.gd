@@ -29,7 +29,7 @@ const GIVE := 0.02
 ## apron round it (RingBuilder.APRON_OUT, 3.2). A point past it is over the
 ## floor, with nothing to go through. Checked per point, not per body: a man
 ## thrown into the ropes lies half on the deck.
-const DECK_HALF := 3.2
+const DECK_HALF := RingBuilder.APRON_OUT
 ## A body below this is off the ring, on the floor.
 const ON_RING_Y := -0.2
 ## How finely a swing is searched: steps each way out to a quarter turn.

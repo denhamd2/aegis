@@ -823,77 +823,14 @@ func _build_canvas() -> void:
 	st.generate_tangents()
 	var mesh := st.commit()
 
-	# Surface 1: the flat apron strip between the mat edge and the roll.
-	var walk := SurfaceTool.new()
-	walk.begin(Mesh.PRIMITIVE_TRIANGLES)
-	for side: int in range(4):
-		var basis_dir: Vector3 = _SIDE_DIRS[side]
-		var tangent := Vector3(basis_dir.z, 0, -basis_dir.x)
-		var inner: float = MAT_HALF
-		var outer: float = APRON_ROLL_AXIS
-		# Wound from -tangent to +tangent: the other way round the normals
-		# come out pointing at the floor and the strip renders as nothing at
-		# all, which is exactly what the first attempt did.
-		_quad(walk,
-			basis_dir * inner - tangent * APRON_OUT + Vector3(0, MAT_TOP_LOCAL, 0),
-			basis_dir * outer - tangent * APRON_OUT + Vector3(0, MAT_TOP_LOCAL, 0),
-			basis_dir * outer + tangent * APRON_OUT + Vector3(0, MAT_TOP_LOCAL, 0),
-			basis_dir * inner + tangent * APRON_OUT + Vector3(0, MAT_TOP_LOCAL, 0),
-			Vector2(0, 0), Vector2(1, 0), Vector2(1, 4), Vector2(0, 4))
-	walk.generate_tangents()
-	walk.commit(mesh)
-
-	# Surface 2: the padded roll the apron edge actually is.
-	var roll := SurfaceTool.new()
-	roll.begin(Mesh.PRIMITIVE_TRIANGLES)
-	for side: int in range(4):
-		var basis_dir: Vector3 = _SIDE_DIRS[side]
-		var tangent := Vector3(basis_dir.z, 0, -basis_dir.x)
-		for step: int in range(APRON_ROLL_STEPS):
-			var t0 := float(step) / float(APRON_ROLL_STEPS)
-			var t1 := float(step + 1) / float(APRON_ROLL_STEPS)
-			var p0 := _roll_point(basis_dir, t0)
-			var p1 := _roll_point(basis_dir, t1)
-			# u runs 0..1 along the side so the banner's chevrons land on the
-			# corners, exactly as they do on the skirt below.
-			_quad(roll,
-				p0 - tangent * APRON_OUT, p1 - tangent * APRON_OUT,
-				p1 + tangent * APRON_OUT, p0 + tangent * APRON_OUT,
-				Vector2(0, t0 * APRON_ROLL_V), Vector2(0, t1 * APRON_ROLL_V),
-				Vector2(1, t1 * APRON_ROLL_V), Vector2(1, t0 * APRON_ROLL_V))
-	roll.generate_tangents()
-	roll.commit(mesh)
-
+	# The apron strip and the padded roll over its edge used to be surfaces 1
+	# and 2 here. They are ApronEdge and ApronRoll in ring.glb now
+	# (tools/blender/ring.py build_apron_edge), mitred at the corners where
+	# these overlapped, and the one mesh the Unreal port imports too.
 	floor_mesh.mesh = mesh
 	floor_mesh.set_surface_override_material(0, _canvas_material())
 	# What a bleeding match leaves on the canvas (CanvasBlood).
 	CanvasBlood.attach(floor_mesh)
-	# The apron a wrestler stands on outside the ropes: the same light cloth as
-	# the mat, not the dark lip that used to stand in for it.
-	floor_mesh.set_surface_override_material(1, _resolve("ring_apron",
-		_mat(Color(0.52, 0.52, 0.53), 0.9), {"tint": Color(0.52, 0.52, 0.53)}))
-	floor_mesh.set_surface_override_material(2, _apron_banner_material())
-
-
-## The four side directions, outward. Shared by the apron strip and the roll so
-## the two cannot disagree about which way a side faces.
-const _SIDE_DIRS := [Vector3(0, 0, 1), Vector3(1, 0, 0),
-	Vector3(0, 0, -1), Vector3(-1, 0, 0)]
-
-
-## A point on the apron roll's arc, `t` running 0 (inboard, level with the mat)
-## to 1 (underneath, where the skirt takes over).
-##
-## The arc is a half-round of radius APRON_ROLL_RADIUS about an axis set back
-## from the skirt plane by exactly that radius, so the roll's widest point
-## lands flush on APRON_OUT. That is what makes it read: the bulge stands proud
-## of the skirt's top edge and catches the light along its crown, which is the
-## single thing that tells a padded apron edge from a folded one.
-func _roll_point(basis_dir: Vector3, t: float) -> Vector3:
-	var angle := t * PI
-	return basis_dir * (APRON_ROLL_AXIS + APRON_ROLL_RADIUS * sin(angle)) \
-		+ Vector3(0, MAT_TOP_LOCAL - APRON_ROLL_RADIUS
-			+ APRON_ROLL_RADIUS * cos(angle), 0)
 
 
 ## The AEW artwork on the front of each turnbuckle pad.
@@ -1167,6 +1104,12 @@ func _model_materials() -> Dictionary:
 		"StepTreads": _resolve("ring_steps_tread", _mat(Color(0.36, 0.37, 0.38), 0.7)),
 		# The flank seam and hand slots: dark, flat, read as recesses.
 		"StepsTrim": _mat(Color(0.05, 0.05, 0.055), 0.9),
+		# The apron a wrestler stands on outside the ropes: the same light
+		# cloth as the mat, not the dark lip that used to stand in for it.
+		"ApronEdge": _resolve("ring_apron", _mat(Color(0.52, 0.52, 0.53), 0.9),
+			{"tint": Color(0.52, 0.52, 0.53)}),
+		# The padded edge: the skirt's banner vinyl, wrapped over it.
+		"ApronRoll": _apron_banner_material(),
 	}
 
 

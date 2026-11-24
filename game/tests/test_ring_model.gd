@@ -36,7 +36,8 @@ func _verts(part: String) -> PackedVector3Array:
 func test_every_part_the_builder_dresses_exists_in_the_model() -> void:
 	var root := _model()
 	for part: String in ["PostMesh", "TurnbuckleFittings", "TurnbucklePads",
-			"TurnbuckleHardware", "RopeMesh", "ApronRail", "StepsMesh"]:
+			"TurnbuckleHardware", "RopeMesh", "ApronRail", "StepsMesh",
+			"ApronEdge", "ApronRoll"]:
 		assert_object(root.find_child(part, true, false)) \
 				.override_failure_message("%s has no '%s' object" % [MODEL, part]) \
 				.is_not_null()

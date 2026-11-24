@@ -6,11 +6,13 @@ Run:  tools/blender/build_venue.sh ring
 What this builds
 ----------------
 The four corner posts, every rope termination on them, the twelve rope spans,
-the apron frame the skirt hangs from, and the steel steps.
+the apron frame the skirt hangs from, the apron strip and the padded edge the
+canvas rolls over into the skirt, and the steel steps.
 
 What it deliberately does not build, and why
 --------------------------------------------
-* **The canvas.** It stays generated in `ring_builder.gd`. Its mesh is two
+* **The canvas** (the mat itself, not the apron round it, which is built
+  here now: `build_apron_edge`). It stays generated in `ring_builder.gd`. Its mesh is two
   flat quads -- there is no shape here for Blender to improve -- while its
   substance is a 1024px procedural texture of weave, panel seams and wear, and
   its node path `Ring/Floor/MeshInstance3D` is what `capture_harness.gd` keys
@@ -72,6 +74,7 @@ WANTED = [
     "TURNBUCKLE_ROD_RADIUS", "TURNBUCKLE_BODY_LENGTH", "TURNBUCKLE_BODY_BAR_RADIUS",
     "TURNBUCKLE_BODY_HALF_GAP", "TURNBUCKLE_BOSS_RADIUS", "TURNBUCKLE_EYE_RADIUS",
     "APRON_OUT", "APRON_TOP", "APRON_BOTTOM",
+    "MAT_HALF", "MAT_TOP_LOCAL", "APRON_ROLL_RADIUS", "APRON_ROLL_STEPS", "APRON_ROLL_V",
     "STEP_TREADS", "STEP_WIDTH", "STEP_RUN", "STEP_TOP_Y", "STEP_FLOOR_Y",
     "STEP_APRON_GAP", "STEP_PLATFORM", "APRON_OUT",
 ]
@@ -88,16 +91,21 @@ PART_COLORS = {
     "StepsMesh": (0.62, 0.62, 0.63, 1.0),
     "StepTreads": (0.36, 0.36, 0.37, 1.0),
     "StepsTrim": (0.05, 0.05, 0.05, 1.0),
+    "ApronEdge": (0.52, 0.52, 0.53, 1.0),
+    "ApronRoll": (0.20, 0.12, 0.30, 1.0),
 }
 # Ropes and sleeves are round and must read that way; the posts, rails and
 # steps are faceted steel and smoothing them only muddies the arris the bevel
 # was added to catch.
 SMOOTH = frozenset({"RopeMesh", "TurnbuckleFittings", "TurnbucklePads",
-                    "TurnbuckleHardware"})
+                    "TurnbuckleHardware", "ApronRoll"})
 ## Parts whose UVs AND winding are authored rather than derived. Both have to
 ## travel together: authored UVs are only meaningful on a face that is shown
 ## the right way round.
-UNPROJECTED = frozenset({"TurnbuckleFaces"})
+UNPROJECTED = frozenset({"TurnbuckleFaces", "ApronRoll"})
+## Sheets whose winding is authored (`_sheet_quad`) but whose UVs are the
+## usual world-metre projection: the apron strip wears a tiled library cloth.
+AUTHORED_WINDING = UNPROJECTED | {"ApronEdge"}
 
 # Bevel widths, as a fraction of the smallest section each piece has. Small:
 # these are chamfers that catch a highlight, not rounded-over furniture.
@@ -385,7 +393,117 @@ def build_apron(cfg: dict[str, float], parts: dict[str, Part]) -> None:
         # the direction that matters: removing a lit surface can only let more
         # dark through, and the floor is a MINIMUM.
         rail.oriented_box(mid + Vector((0.0, cfg["APRON_BOTTOM"] + 0.03, 0.0)),
-                          tangent, out, Vector((6.58, 0.07, 0.13)))
+                          tangent, out, Vector((2.0 * cfg["APRON_OUT"] + 0.18, 0.07, 0.13)))
+
+
+def _sheet_quad(part: Part, a: Vector, b: Vector, c: Vector, d: Vector,
+                uvs: list[tuple[float, float]] | None, want: Vector,
+                verts: dict | None = None) -> None:
+    """A quad wound so its front face points along `want` (Godot space).
+
+    The pad faces settled the convention: (b - a) x (d - a) is the front
+    normal of a quad emitted a-b-c-d. A sheet has no inside for
+    `recalc_face_normals` to find, so the parts built here keep their
+    authored winding and this is where it is authored. `verts`, when given,
+    shares vertices by position so a swept surface shades smooth along its
+    sweep."""
+    def v(p: Vector):
+        if verts is None:
+            return part.vert(p)
+        key = (round(p.x, 5), round(p.y, 5), round(p.z, 5))
+        if key not in verts:
+            verts[key] = part.vert(p)
+        return verts[key]
+
+    if (b - a).cross(d - a).dot(want) < 0.0:
+        a, b, c, d = a, d, c, b
+        if uvs:
+            uvs = [uvs[0], uvs[3], uvs[2], uvs[1]]
+    part.quad(v(a), v(b), v(c), v(d), uvs)
+
+
+def apron_roll_point(cfg: dict[str, float], out: Vector, theta: float) -> Vector:
+    """A point on the padded edge's half-round profile, on the side facing
+    `out`, at `theta` 0 (inboard, level with the mat) to pi (underneath,
+    where the skirt hangs from). Its widest point, theta pi/2, lands exactly
+    on APRON_OUT -- the same arc `ring_builder.gd` used to sweep at runtime."""
+    radius = cfg["APRON_ROLL_RADIUS"]
+    axis = cfg["APRON_OUT"] - radius
+    return out * (axis + radius * math.sin(theta)) + Vector(
+        (0.0, cfg["MAT_TOP_LOCAL"] - radius + radius * math.cos(theta), 0.0))
+
+
+def build_apron_edge(cfg: dict[str, float], parts: dict[str, Part]) -> None:
+    """The apron a wrestler stands on, and the padded edge the canvas rolls
+    over into the skirt: one continuous surface from the mat to the skirt.
+
+    A real ring's canvas is one cover over the padded deck, carried "over the
+    edge of the platform" and laced under it (Virginia 18VAC120-40-415.1;
+    gauntlet/refs/ring.md, AEW section), and the skirt hangs from beneath
+    that roll. So nothing here has a vertical face or a square arris at deck
+    level: the flat apron strip runs from the mat edge (MAT_HALF) to where the
+    half-round begins, and the half-round carries it over and back under to
+    the skirt's top.
+
+    MITRED AT THE CORNERS. This used to be generated in `ring_builder.gd` as
+    four full-length strips and four full-length half-cylinders, each running
+    the whole side to +/-APRON_OUT. At the corners two of each interpenetrated
+    -- two flat strips fighting for the same square and two rolls crossing
+    through each other -- and in the Unreal port, which never had the roll at
+    all, the corner was the canvas slab's own square edge standing above the
+    skirt (the owner's "blocky" note). Here every profile ring of a side spans
+    exactly +/- its own distance from the centre, so neighbouring sides meet
+    on the 45-degree line with no overlap and no gap: the strip is a
+    trapezoid per side and the roll turns the corner as one surface.
+
+    Two parts, because they wear two surfaces: `ApronEdge` is the apron's
+    light cloth (world-metre projected, like every library surface), and
+    `ApronRoll` the skirt's banner vinyl, which wraps over the edge on the
+    reference ring -- u runs 0..1 along each side so the banner's corner
+    chevrons land on the corners, v takes only the top APRON_ROLL_V of the
+    banner (the plain field above the artwork).
+    """
+    strip = parts["ApronEdge"]
+    roll = parts["ApronRoll"]
+    up = Vector((0.0, 1.0, 0.0))
+    top = cfg["MAT_TOP_LOCAL"]
+    inner = cfg["MAT_HALF"]
+    axis = cfg["APRON_OUT"] - cfg["APRON_ROLL_RADIUS"]
+    span = cfg["APRON_OUT"]
+    steps = int(cfg["APRON_ROLL_STEPS"])
+    v_span = cfg["APRON_ROLL_V"]
+    for out in (Vector((0.0, 0.0, 1.0)), Vector((1.0, 0.0, 0.0)),
+                Vector((0.0, 0.0, -1.0)), Vector((-1.0, 0.0, 0.0))):
+        # Screen-right for someone outside the ring looking at this side.
+        right = Vector((out.z, 0.0, -out.x))
+        # The apron strip: mat edge to the roll's start, mitred both ends.
+        _sheet_quad(strip,
+                    out * inner - right * inner + up * top,
+                    out * axis - right * axis + up * top,
+                    out * axis + right * axis + up * top,
+                    out * inner + right * inner + up * top,
+                    None, up)
+        # The roll. Shared vertices along the sweep so it shades round.
+        shared: dict = {}
+        for k in range(steps):
+            t0, t1 = k / steps, (k + 1) / steps
+            p0 = apron_roll_point(cfg, out, t0 * math.pi)
+            p1 = apron_roll_point(cfg, out, t1 * math.pi)
+            # Half-extent along the side at each ring: its own distance out.
+            h0, h1 = p0.dot(out), p1.dot(out)
+            normal = (p0 + p1) * 0.5 - (out * axis + up * (top - cfg["APRON_ROLL_RADIUS"]))
+            normal -= right * normal.dot(right)
+
+            def u(s: float) -> float:
+                return (s + span) / (2.0 * span)
+
+            # Blender's v runs up the image: the banner's top edge is v = 1.
+            _sheet_quad(roll,
+                        p0 - right * h0, p1 - right * h1,
+                        p1 + right * h1, p0 + right * h0,
+                        [(u(-h0), 1.0 - t0 * v_span), (u(-h1), 1.0 - t1 * v_span),
+                         (u(h1), 1.0 - t1 * v_span), (u(h0), 1.0 - t0 * v_span)],
+                        normal, shared)
 
 
 ## The two corners the flights stand on (ring_builder.gd STEP_CORNERS): the
@@ -536,6 +654,7 @@ def main(argv: list[str]) -> int:
     build_pad_faces(cfg, parts)
     build_ropes(cfg, parts)
     build_apron(cfg, parts)
+    build_apron_edge(cfg, parts)
     build_steps(cfg, parts)
     # TurnbuckleFaces is excluded from the planar projection. Everything else
     # here is boxes and tubes wearing tiled library surfaces, for which a
@@ -543,7 +662,7 @@ def main(argv: list[str]) -> int:
     # hand, and cube_project would overwrite the UVs that put it there.
     venue.finish(parts, PART_COLORS, smooth=SMOOTH,
                  projected=frozenset(PART_COLORS) - SMOOTH - UNPROJECTED,
-                 keep_winding=UNPROJECTED)
+                 keep_winding=AUTHORED_WINDING)
 
     out = pathlib.Path(args.out)
     venue.export_glb(out)
@@ -552,4 +671,7 @@ def main(argv: list[str]) -> int:
 
 
 if __name__ == "__main__":
-    bpy_exit.finish(main(sys.argv[1:]))
+    # Under `blender -b --python ring.py -- --out x.glb` sys.argv is
+    # Blender's own command line; this script's arguments follow the "--".
+    argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else sys.argv[1:]
+    bpy_exit.finish(main(argv))

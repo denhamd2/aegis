@@ -142,3 +142,29 @@ The slice's numbers are in `ring_builder.gd`:
 - `ROPE_END` is 2.86. Each rope ends inside its pad.
 - Each pad's back is 0.114 m clear of its post. The `TURNBUCKLE_*` hardware
   spans that gap: a collar, an eye bolt, a turnbuckle body and a hook.
+
+## AEW Dynamite ring: size, apron, edge (researched 2026-11-24)
+
+Added when the owner flagged the Unreal corner: the canvas read as a raised
+slab standing proud of the skirt, and the ropes and pads sat on the deck edge
+with no apron outside them to stand on. Measurements only; no third-party
+images are committed.
+
+| property | source | value |
+| --- | --- | --- |
+| ring size, AEW (US) | [Wikipedia, Wrestling ring](https://en.wikipedia.org/wiki/Wrestling_ring): WWE, AEW and ROH "use a 20-foot ring"; [SEScoops](https://www.sescoops.com/article/aew-ring-size-controversy-explained): "AEW's standard 20′ x 20′ ring used in the United States" | **20 ft = 6.10 m between the ropes** |
+| ring size, AEW (Grand Slam Australia, Feb 2025) | SEScoops, as above | 18 ft × 18 ft, called out by fans as visibly small; QT Marshall confirmed 18 ft |
+| ring size, legal range | [Virginia 18VAC120-40-415.1](https://law.lis.virginia.gov/admincode/title18/agency120/chapter40/section415.1/) | 16–20 ft square inside the ropes |
+| apron beyond the ropes | [dimensions.com, Professional Wrestling Ring](https://www.dimensions.com/element/professional-wrestling-ring) | 1 ft (0.305 m) |
+| apron beyond the ropes, minimum | Virginia 18VAC120-40-415.1: padded floor "must extend at least 18 inches beyond the ropes" | ≥ 18 in (0.457 m) |
+| canvas over the edge | Virginia 18VAC120-40-415.1: padding extends "over the edge of the platform", canvas "tightly stretched and laced to the ring platform"; [Ga. Comp. R. & Regs. 85-5-.06](https://www.law.cornell.edu/regulations/georgia/Ga-Comp-R-Regs-R-85-5-.06) says the same | one continuous cover from the mat, across the apron, rolled over the padded edge and laced under it; the skirt hangs from beneath that roll |
+| padding | Virginia, as above | 1 in (25 mm) closed-cell foam under the canvas |
+| posts | Virginia, as above: "at least 18 inches away from the ring ropes", ≤ 3 in diameter, 58 in above the ring floor | posts stand at the deck corners, outboard of the rope corner, the turnbuckle hardware spanning the gap |
+| rope heights | Virginia: bottom ≥ 18 in, top ≤ 52 in above the floor; dimensions.com: 18 in spacing | 0.46 / 0.91 / 1.37 m legal envelope; ours 0.5 / 0.85 / 1.2 stays inside it |
+| deck height | dimensions.com | 40 in (1.02 m) above the floor; ours is 1.00 |
+
+**What it says about the build.** Our ropes at ±3.10 are 6.20 m apart, which is
+AEW's 20 ft to within 10 cm, so the ring proper is already the right size. The
+apron is what was wrong: the deck stopped at 3.20, 0.10 m (4 in) outside the
+ropes, a third of the 1 ft reference and under a quarter of the 18 in legal
+minimum. Nobody can stand, pose or hang off the ropes on 4 in.
