@@ -586,7 +586,8 @@ def _natural_gait(head=(0.0, 0.0, 0.0), elbow=None, curl=None, steady=0.8, **gai
     return out if curl is None else _open_hands(out, curl=curl)
 
 
-def _methodical_walk():
+def _methodical_walk(speed=0.5, frames=48, contact=28, lift_up=0.06,
+                     hand_fwd=(-0.02, 0.13), shoulder_twist=8.0):
     """Roman's walk to the ring: slow, heavy and continuous, looking around.
 
     0.5 m/s (EntranceDirector.ROMAN_WALK_SPEED), a 1.6 s cycle of two 0.4 m
@@ -601,40 +602,41 @@ def _methodical_walk():
     right and hold, home. The head is stabilised against the shoulders' turn
     (a man's gaze does not swing with his stride) and the return home at the
     loop's seam takes 22 frames; it took 6 and snapped 28 degrees every 4.8 s.
+
+    The same walk at another pace (Roman_Ramp_Walk) scales the cycle, the
+    contact and the looks with it: three cycles, the same two holds.
     """
-    cycle = _open_hands([(f, P(**{k: v for k, v in pose.items() if not k.startswith("_")}))
-                         for f, pose in _heavy_gait(
-        frames=48, fps=FPS, speed=0.5, contact=28,
-        plant_up=0.104, lift_up=0.06,
+    gait = dict(
+        frames=frames, fps=FPS, speed=speed, contact=contact,
+        plant_up=0.104, lift_up=lift_up,
         foot_x={"r": 0.15, "l": -0.14},
         pelvis_up=0.890, pelvis_dip=0.030, sway=0.025,
-        hips_yaw=6.0, spine_lean=-6.0, shoulder_twist=8.0, side_roll=1.5,
-        hand_x={"r": 0.33, "l": -0.32}, hand_fwd=(-0.02, 0.13),
+        hips_yaw=6.0, spine_lean=-6.0, shoulder_twist=shoulder_twist, side_roll=1.5,
+        hand_x={"r": 0.33, "l": -0.32}, hand_fwd=hand_fwd,
         hand_up=(0.89, 0.925), arm_lag=4,
-        heel_strike=8.0)], curl=0.40)
-    twist = {f: pose["_shoulder_yaw"] for f, pose in _heavy_gait(
-        frames=48, fps=FPS, speed=0.5, contact=28, plant_up=0.104, lift_up=0.06,
-        foot_x={"r": 0.15, "l": -0.14}, pelvis_up=0.890, pelvis_dip=0.030,
-        sway=0.025, hips_yaw=6.0, spine_lean=-6.0, shoulder_twist=8.0,
-        side_roll=1.5, hand_x={"r": 0.33, "l": -0.32}, hand_fwd=(-0.02, 0.13),
-        hand_up=(0.89, 0.925), arm_lag=4,
-        heel_strike=8.0)}
+        heel_strike=8.0)
+    cycle = _open_hands([(f, P(**{k: v for k, v in pose.items() if not k.startswith("_")}))
+                         for f, pose in _heavy_gait(**gait)], curl=0.40)
+    twist = {f: pose["_shoulder_yaw"] for f, pose in _heavy_gait(**gait)}
     # (frame, yaw degrees): + is to his left. Long eased moves, long holds.
-    looks = [(0, 0.0), (14, 0.0), (40, 26.0), (62, 26.0), (84, 0.0),
-             (94, 0.0), (112, -24.0), (122, -24.0), (144, 0.0)]
+    # Authored on the 48-frame cycle; another cycle scales the frames.
+    total = frames * 3
+    looks = [(int(round(f * total / 144.0)), y) for f, y in
+             [(0, 0.0), (14, 0.0), (40, 26.0), (62, 26.0), (84, 0.0),
+              (94, 0.0), (112, -24.0), (122, -24.0), (144, 0.0)]]
     out = []
-    for f in range(144 + 1):
+    for f in range(total + 1):
         i = 0
         while i + 1 < len(looks) - 1 and looks[i + 1][0] <= f:
             i += 1
         (f0, y0), (f1, y1) = looks[i], looks[i + 1]
         t = min(max((f - f0) / float(f1 - f0), 0.0), 1.0)
         yaw = y0 + (y1 - y0) * t * t * (3.0 - 2.0 * t)
-        base = cycle[f % 48][1]
+        base = cycle[f % frames][1]
         sp = base["spine"]
         # The gaze stays put while the shoulders swing: the head takes back
         # most of the chest's turn.
-        steady = -twist[f % 48]
+        steady = -twist[f % frames]
         out.append((f, dict(base, head=(-4.0, yaw * 0.75 + steady, 0.0),
                             spine=(sp[0], sp[1] + yaw * 0.25, sp[2]))))
     return out
@@ -2970,6 +2972,16 @@ CLIPS = {
     # the building as he goes (_methodical_walk).
     "Walk_Slow_Look": _methodical_walk(),
 
+    # 111 frames / 3.7s, looping: the same walk down the ramp at 1.08 m/s.
+    # The 2K26 capture (gauntlet/refs/entrances.md, Roman measured, shots
+    # 5-8) has him from the stage lip to the ramp foot in 22.7 s, and the
+    # ramp here is 24.4 m. Longer steps (0.67 m), not a faster cadence: the
+    # 0.5 m/s walk played twice as fast read as a scurry. The arms swing a
+    # little more with the stride; the looks are the same, left then right.
+    "Roman_Ramp_Walk": _methodical_walk(speed=1.08, frames=37, contact=22,
+                                        lift_up=0.08, hand_fwd=(-0.06, 0.17),
+                                        shoulder_twist=10.0),
+
     # 60 frames / 2.0s, looping: standing on his mark. He breathes and that
     # is all -- the camera is supposed to wait on him, not watch him fidget.
     "Roman_Stand": [
@@ -3096,6 +3108,22 @@ CLIPS = {
         (66, pose(ROMAN_STAND, spine=(-10, 0, 0), head=(-46, 0, 0),
                   pelvis=(0.0, 0.0, 0.895))),
         (90, ROMAN_STAND),
+    ],
+
+    # 300 frames / 10.0s: the same bow held as the 2K26 capture holds it
+    # (gauntlet/refs/entrances.md, Roman measured, shot 11: head down at the
+    # foot of the steps ~98-106 s, up by ~108). The chin goes down over a
+    # second, stays there eight -- one slow breath lifts the back and lets
+    # it settle -- and comes up over two.
+    "Head_Bow_Long": [
+        (0,   ROMAN_STAND),
+        (30,  pose(ROMAN_STAND, spine=(-9, 0, 0), head=(-44, 0, 0),
+                   pelvis=(0.0, 0.0, 0.897))),
+        (135, pose(ROMAN_STAND, spine=(-7, 0, 0), head=(-42, 0, 0),
+                   pelvis=(0.0, 0.0, 0.899))),
+        (240, pose(ROMAN_STAND, spine=(-10, 0, 0), head=(-46, 0, 0),
+                   pelvis=(0.0, 0.0, 0.895))),
+        (300, ROMAN_STAND),
     ],
 
     # 120 frames / 4.0s, looping: in the ring after the finger (R-41
@@ -8443,7 +8471,7 @@ AS_AUTHORED = {
 ## seam not at all: the last interval of the loop came out two thirds of a
 ## frame long and the arms hitched across it every cycle (walk_metrics.gd:
 ## Run_Drive's left hand 19 deg/frame at the seam against 7 anywhere else).
-GAIT_LOOPS = {"Walk_Slow_Look", "Walk_Crowd", "Kenny_Walk", "Entrance_Walk",
+GAIT_LOOPS = {"Walk_Slow_Look", "Roman_Ramp_Walk", "Walk_Crowd", "Kenny_Walk", "Entrance_Walk",
               "Walk_Stalk", "Run_Jog", "Run_Drive"}
 
 
