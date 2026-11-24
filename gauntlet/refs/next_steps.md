@@ -39,10 +39,12 @@ target and uploaded 1,034,175,622-byte ZIP were verified.
 
 ## Aerial move releases
 
-The owner requested individual releases from the Fight Forever aerial
-catalogue, with shared motion for future wrestlers and style-appropriate
+The owner requested working through the Fight Forever aerial catalogue one
+move at a time, with shared motion for future wrestlers and style-appropriate
 assignments for Cody and Kenny. The springboard Cody Cutter leads, followed
 by the Diving Frog Splash and the other base dives.
+Commit and deploy after every second completed aerial move. The Cutter
+was already in the Mac pipeline when the owner set that cadence.
 [Ordered work and reference timestamps](ff_review/aerial_moves.md).
 
 ## Running inverted drop landing and recovery

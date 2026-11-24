@@ -77,6 +77,15 @@ the catch through the bump, then rolls onto his back facing the apron at
 the shared Down transition. Check those cases in both slots when porting
 the aerial director. [Godot director](../../game/core/match/dive_spot.gd).
 
+## Frog Splash and Springboard Moonsault
+
+The aerial rows require both Blender roles. Frog Splash has a 98-tick
+sequence. The root holds at the corner through tick 28, arrives at the
+downed opponent at 56, and applies damage at 60 before moving aside for
+the cover. The springboard moonsault has a 120-tick sequence and applies
+damage at 72 after the opponent has settled onto his back. Port these
+director cues with the source clips and validate both slot orders.
+
 After Unreal meets the gameplay, animation, and native M1 acceptance checks,
 make Unreal the source for new gameplay. Keep Godot on critical fixes until
 retirement and retain the Blender assets and portable move data.

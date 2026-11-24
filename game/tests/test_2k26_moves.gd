@@ -146,6 +146,29 @@ func test_a_man_down_mid_ring_can_be_dived_on() -> void:
 	assert_float(reach).is_between(TopRopeSpot.MIN_REACH, TopRopeSpot.MAX_REACH)
 
 
+func test_the_frog_splash_lands_once_then_hands_off_to_the_cover() -> void:
+	await _ticks(2)
+	_cody.top_rope_move = load("res://resources/moves/ff/diving_frog_splash.tres")
+	_roman.global_position = Vector3(0.38, _roman.global_position.y, 0.18)
+	_roman._go_down()
+	var referee := _scene.get_node("MatchReferee") as MatchReferee
+	referee._tying_up = false
+	referee._start_top_rope(_cody, _roman)
+	var spot := _scene.get_node("TopRopeSpot") as TopRopeSpot
+	var hits: Array[int] = []
+	_roman.combat.damaged.connect(func(move: MoveDef) -> void:
+		if move.animation_pair_id == TopRopeSpot.FROG_SPLASH:
+			hits.append(TopRopeSpot.FROG_ARRIVAL + spot._tick))
+	for i in 900:
+		await get_tree().physics_frame
+		if not is_instance_valid(spot):
+			break
+	assert_bool(is_instance_valid(spot)).is_false()
+	assert_array(hits).is_equal([_cody.top_rope_move.startup_frames])
+	assert_int(_roman.fsm.current_state).is_equal(WrestlerFSM.State.PIN_DEFENDER)
+	assert_int(_cody.fsm.current_state).is_equal(WrestlerFSM.State.PIN_ATTACKER)
+
+
 ## The whole moonsault plays in a match and hands back a man covering-ready
 ## beside a man still down, hurt by it.
 func test_the_moonsault_plays_through() -> void:

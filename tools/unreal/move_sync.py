@@ -120,9 +120,10 @@ def export(bundle, godot):
         if trajectories["moves"].get(move) != pair:
             raise ValueError(f"Missing trajectory mapping for {move}")
         required.update((roles["attacker"], roles["defender"]))
+    defined_pairs = {row["animation_pair_id"] for row in definitions.values()}
     for move, roles in clips.items():
         if roles["kind"] == "aerial":
-            if move not in definitions:
+            if move not in defined_pairs:
                 raise ValueError(f"No MoveDef for aerial clip {move}")
             required.update((roles["attacker"], roles["defender"]))
     if not required.issubset(available):

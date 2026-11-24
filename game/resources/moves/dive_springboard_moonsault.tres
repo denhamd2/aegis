@@ -5,9 +5,9 @@
 [resource]
 script = ExtResource("1")
 animation_pair_id = &"dive_springboard_moonsault"
-startup_frames = 120
+startup_frames = 72
 active_frames = 0
-recovery_frames = 0
+recovery_frames = 48
 damage_head = 6.0
 damage_torso = 14.0
 damage_arms = 0.0

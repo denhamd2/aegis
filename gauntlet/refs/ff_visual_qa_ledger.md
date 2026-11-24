@@ -11,11 +11,12 @@ ledger is the completion record for that gate.
 - Re-review after any change to the clip, trajectory, contact family, fit or
   camera.
 
-## Current built moves — 27 / 146
+## Current built moves — 28 / 146
 
 | Move | Family | Kind | Sheet | Visual QA | Notes |
 | --- | --- | --- | --- | --- | --- |
-| `springboard_moonsault_3` | aerial | reused | pending | pending | Batch sheet only. |
+| `diving_frog_splash` | aerial | authored | [side and match camera](ff_review/moves/diving_frog_splash.png) | independent review pending | Kenny's corner route, tuck and impact reviewed in the isolated ring. |
+| `springboard_moonsault_3` | aerial | authored revision | [side and match camera](ff_review/moves/springboard_moonsault_3.png) | independent review pending | Both roles reviewed in Cody's route. The reference uses an in-ring approach. |
 | `powerbomb_v_trigger_combo` | combo | authored | pending | pending | Batch sheet only. |
 | `code_breaker_1` | cutter | authored | pending | pending | Batch sheet only. |
 | `cody_cutter_4` | cutter | authored revision | [side and match camera](ff_review/moves/cody_cutter_4.png) | independent review pending | Rope contact, catch, bump and recovery reviewed in the isolated ring. Camera visibility through the ropes and native review remain open. |

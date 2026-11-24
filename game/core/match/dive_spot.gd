@@ -84,7 +84,7 @@ const CUTTER_BUMP_TRAVEL := 0.34
 ## and stands up past the man's head, MOONSAULT_TO from the centre.
 const MOONSAULT_MOVE := "res://resources/moves/dive_springboard_moonsault.tres"
 const MOONSAULT_TICKS := 120
-const MOONSAULT_CONTACT := 66
+const MOONSAULT_CONTACT := 72
 const MOONSAULT_TO := 0.5
 ## The springboard's endings, in the order the match seed takes them.
 const SPRING_ENDINGS := [SPRING_MOVE, CUTTER_MOVE, MOONSAULT_MOVE]
@@ -223,8 +223,7 @@ func _build() -> void:
 		flip["cut"] = true
 		flip["turn_round"] = true
 		_seg_add(MOONSAULT_TICKS,
-				_go("strikes/springboard_moonsault_defender", kicked, kicked, _out,
-						MOONSAULT_CONTACT - KICKED_CONTACT),
+				_go("strikes/springboard_moonsault_defender", kicked, kicked, _out),
 				flip, "wide", [[MOONSAULT_CONTACT, "kick_hit"]])
 	elif ending == CUTTER_MOVE:
 		var beside := (-_out).cross(Vector3.UP) * CUTTER_SIDE

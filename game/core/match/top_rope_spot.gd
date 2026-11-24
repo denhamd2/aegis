@@ -77,6 +77,13 @@ var _since_through := -1
 ## frame 5): the lift to the table's height runs from here to the contact.
 var _dive_seg := -1
 const TAKEOFF_TICK := 10
+const FROG_SPLASH := &"ff_diving_frog_splash"
+const FROG_TAKEOFF := 28
+const FROG_ARRIVAL := 56
+const FROG_IMPACT := 60
+const FROG_TICKS := 98
+const FROG_SIDE := 0.58
+var _frog := false
 ## Lying in the wreck after the moonsault's own ticks run out, so the fall
 ## through (0.39 s from a table's top) finishes on screen before the cover.
 const THROUGH_TAIL_TICKS := 16
@@ -151,6 +158,8 @@ static func can_dive_on(man: WrestlerController) -> bool:
 func begin(p_attacker: WrestlerController, p_defender: WrestlerController,
 		crossbody := false, table: WeaponActor = null) -> void:
 	_crossbody = crossbody
+	_frog = not crossbody and p_attacker.top_rope_move != null \
+			and p_attacker.top_rope_move.animation_pair_id == FROG_SPLASH
 	_table = table
 	attacker = p_attacker
 	defender = p_defender
@@ -182,7 +191,7 @@ func begin(p_attacker: WrestlerController, p_defender: WrestlerController,
 	else:
 		var chest := defender.global_transform * DOWNED_CHEST
 		chest.y = attacker.global_position.y
-		_land = chest - _out * CHEST_FROM_ROOT
+		_land = chest + _out * CHEST_FROM_ROOT * (1.0 if _frog else -1.0)
 	if attacker.fsm.current_state != WrestlerFSM.State.IDLE:
 		attacker.fsm.transition_to(WrestlerFSM.State.IDLE)
 	_build()
@@ -212,6 +221,25 @@ func _build() -> void:
 		_seg_add(LAND_TICKS, {"clip": "strikes/crossbody_land", "from": _meet, "to": _land,
 				"facing": -_dir}, "dive", [[1, "crossbody_hit"]])
 		_seg_add(LIE_TICKS, {"clip": "", "from": _land, "to": _land, "facing": -_dir}, "dive")
+		return
+	if _frog:
+		_seg_add(FROG_TAKEOFF, {"clip": "strikes/frog_splash_attacker", "from": _stand,
+				"to": _stand, "facing": _out}, "corner")
+		_dive_seg = _segments.size()
+		var impact_ticks := FROG_IMPACT - FROG_ARRIVAL
+		var impact_cues := [[impact_ticks, "landed"]]
+		if _table:
+			impact_cues.append([impact_ticks, "through"])
+		_seg_add(FROG_ARRIVAL - FROG_TAKEOFF, {"clip": "", "from": _stand,
+				"to": _land, "facing": _out}, "dive")
+		_seg_add(impact_ticks, {"clip": "", "from": _land, "to": _land,
+				"facing": _out}, "dive", impact_cues)
+		var recovery := _land + _out.cross(Vector3.UP) * FROG_SIDE
+		var limit := WrestlerController.RING_KEEP_IN
+		recovery.x = clampf(recovery.x, -limit, limit)
+		recovery.z = clampf(recovery.z, -limit, limit)
+		_seg_add(FROG_TICKS - FROG_IMPACT, {"clip": "", "from": _land, "to": recovery,
+				"facing": _out}, "dive")
 		return
 	# 4. The moonsault: carried backward along the mat at a constant speed while
 	# the clip turns him over.
@@ -243,6 +271,8 @@ func _next() -> void:
 	# "" keeps the clip already playing (the crossbody's hold on the man).
 	if String(seg["a"]["clip"]) != "":
 		attacker.play_presentation_clip(seg["a"]["clip"])
+	if _frog and String(seg["a"]["clip"]) == "strikes/frog_splash_attacker":
+		defender.play_presentation_clip("strikes/frog_splash_defender")
 	_frame_shot(seg, true, 1.0 / TPS)
 
 
@@ -292,8 +322,12 @@ func _table_heights() -> void:
 	defender.global_position.y = _mat_y + h
 	var lift := h
 	if _since_through < 0:
-		lift = _table_h * smoothstep(float(TAKEOFF_TICK), float(MOONSAULT_CONTACT), float(_tick)) \
-				if _seg == _dive_seg else 0.0
+		var takeoff := 0.0 if _frog else float(TAKEOFF_TICK)
+		var impact := float(FROG_ARRIVAL - FROG_TAKEOFF) if _frog else float(MOONSAULT_CONTACT)
+		if _seg == _dive_seg:
+			lift = _table_h * smoothstep(takeoff, impact, float(_tick))
+		elif _frog and _seg > _dive_seg:
+			lift = _table_h
 	attacker.global_position.y += lift
 
 
@@ -369,6 +403,9 @@ func _finish() -> void:
 	# Lying across him: the match's cover is carried from here, not from a
 	# cut to standing.
 	attacker.end_presentation(true)
+	if _frog:
+		defender.end_presentation(true)
+		defender._anim_playback.start("DOWN", true)
 	MatchSmoothing.snap(attacker)
 	if _crossbody and _hit:
 		attacker.remove_collision_exception_with(defender)
@@ -376,7 +413,7 @@ func _finish() -> void:
 	if _table:
 		defender.global_position.y = _mat_y
 		MatchSmoothing.snap(defender)
-	if _crossbody or _table:
+	if _crossbody or _table or _frog:
 		var referee := get_parent().get_node_or_null("MatchReferee") as MatchReferee
 		if referee:
 			referee.cover_now(attacker, defender)

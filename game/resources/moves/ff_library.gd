@@ -227,6 +227,7 @@ const EXISTING := {
 	"scoop_slam_2": "res://resources/moves/power_bodyslam.tres",
 	"squatting_samoan_drop": "res://resources/moves/power_samoan_drop.tres",
 	"springboard_moonsault_3": "res://resources/moves/dive_springboard_moonsault.tres",
+	"diving_frog_splash": "res://resources/moves/ff/diving_frog_splash.tres",
 }
 
 ## Library moves that suit our own men, built or not, by roster id: what

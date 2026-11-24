@@ -317,6 +317,7 @@ static func entries() -> Array:
 		# and back in for the springboard moonsault -- not Cody's Disaster
 		# Kick or Cutter, the spot's other endings.
 		"dive": [M + "dive_tope_suicida.tres", M + "dive_springboard_moonsault.tres"],
+		"top_rope": [M + "ff/diving_frog_splash.tres"],
 	}
 	return list
 

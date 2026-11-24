@@ -1,20 +1,23 @@
 # Aegis aerial move releases
 
-The owner requested one move per release, with reusable motion for future
+The owner requested work one move at a time, with reusable motion for future
 wrestlers and assignments for Cody or Kenny where the move fits their style.
 Review each move's takeoff, silhouette, contact, sell and recovery on both
 bodies. Use the reference to judge the beats and hand-author the motion on the
-Aegis rig. Record the matching gameplay case, exact Mac publication and any
-open visual work before moving to the next release.
+Aegis rig. Record the gameplay case and open visual work for each move.
+Commit and deploy after every second completed move and verify the exact
+Mac commit before starting the next pair. The Cody Cutter was already in
+the Mac pipeline when the owner set this cadence. The Diving Frog Splash
+and Springboard Moonsault form the first pair.
 [Reference compilation](https://drive.google.com/file/d/1SYI-phi8Ci-WmbtxqtFEswarYHfhKGqc/view).
 
 ## Order
 
 | Order | Reference move | Wrestler in the catalogue | Aegis delivery |
 | ---: | --- | --- | --- |
-| 1 | Cody Cutter 4 | Cody Rhodes | Authored and validated for Mac publication. |
-| 2 | Diving Frog Splash | Christian Cage | Build the chest-first top-rope dive and its grounded sell for the shared library. |
-| 3 | Springboard Moonsault 3 | Chris Jericho | Review the existing Cody and Kenny route against the footage. |
+| 1 | Cody Cutter 4 | Cody Rhodes | Published on Mac at `e50966c`. |
+| 2 | Diving Frog Splash | Christian Cage | Authored for the shared top-rope library and assigned to Kenny. |
+| 3 | Springboard Moonsault 3 | Chris Jericho | Reworked the existing Cody and Kenny springboard route. |
 | 4 | Diving Shooting Star | PAC, Sammy Guevara | Build the takeoff and backward rotation into a forward landing. Fit a roster test candidate only after review. |
 | 5 | 450 Splash 1 | Nick Jackson | Build the forward rotation and chest-first landing. |
 | 6 | Swanton Bomb | Jeff Hardy | Give the dive its own late rotation and back-first bump. |
@@ -59,6 +62,11 @@ should be playable when assigned to a compatible roster entry.
   together in the air, extends by 320.35 s and lands chest-first around
   320.5 s. The defender absorbs the impact and the attacker rebounds and
   rolls away. The low-angle replay shows the tuck and extension clearly.
+- **Springboard Moonsault 3, 4:42–4:44.** Jericho starts in the ring
+  with his opponent on his back. He approaches and loads the rope, lifts
+  into a backward rotation at roughly 283.0 s, then extends and lands
+  chest-first around 283.55 s. The side view shows the tucked legs at
+  inversion and the open arms on the descent.
 
 ## Springboard Cody Cutter review
 
@@ -99,3 +107,35 @@ independent likeness scoring and Unreal runtime integration remain open.
 [Side and match-camera framing](moves/cody_cutter_4.png).
 [Godot match sequence](../../../game/core/match/dive_spot.gd).
 [Unreal import notes](../../../tools/unreal/MOVE_SYNC.md#springboard-cody-cutter).
+
+Mac build 45269579857 published `e50966c`. The tag, release target and
+uploaded 1,034,138,726-byte ZIP were verified. The Unreal move bundle for
+that commit also passed its export checks.
+[Mac build](https://github.com/denhamd2/aegis/actions/runs/45269579857).
+[Unreal bundle](https://github.com/denhamd2/aegis/actions/runs/45269579845).
+
+## Frog Splash and Springboard Moonsault
+
+**Diving Frog Splash.** Kenny turns on the corner, pushes off, tucks his
+knees, extends chest-first and rolls to the side. The defender compresses
+and settles back into Down. The normal top-rope sequence can hand both
+roles into a cover. Aegis applies damage at tick 60, about 0.53 seconds
+after the push. In the reference, the flight takes about 0.45 seconds.
+Other wrestlers can use the move through their top-rope moveset entry.
+[Review frames](moves/diving_frog_splash.png).
+
+**Springboard Moonsault.** The opponent settles on his back during the
+apron load. Cody or Kenny opens from the backward rotation and lands
+across the torso. The hit moved to tick 72, about 0.60 seconds from
+takeoff. Aegis keeps its apron setup. Jericho starts from inside the ring
+and lands about 0.55 seconds after takeoff in the reference.
+[Review frames](moves/springboard_moonsault_3.png).
+
+The final exports have zero detected one-frame snaps and dead holds
+across both roles for both moves. All 56 focused gameplay, catalogue,
+table-dive, clip and authoring checks passed. The source export preserved
+the original action indices and 319 unrelated action payloads. The updated
+Unreal bundle names all
+four roles and includes their impact and recovery frame values. Native
+M1 performance, Unreal playback and independent likeness scores remain
+open. The next pair is Diving Shooting Star and 450 Splash 1.

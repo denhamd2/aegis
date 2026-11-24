@@ -68,14 +68,20 @@ def strike_clips() -> dict:
 
 def move_clips() -> dict:
     clips = strike_clips()
-    # DiveSpot plays these two clips from the presentation library. Expose
-    # them under the MoveDef ID so Unreal can resolve both roles together.
-    clips["dive_springboard_cutter"] = {
-        "kind": "aerial",
-        "attacker": clips["springboard_cutter_attacker"]["attacker"],
-        "defender": clips["springboard_cutter_defender"]["attacker"],
-        "seconds": clips["springboard_cutter_attacker"]["seconds"],
-    }
+    # The directors play both roles from the presentation library.
+    for move, prefix in {
+        "dive_springboard_cutter": "springboard_cutter",
+        "dive_springboard_moonsault": "springboard_moonsault",
+        "ff_diving_frog_splash": "frog_splash",
+    }.items():
+        attacker = clips[f"{prefix}_attacker"]
+        defender = clips[f"{prefix}_defender"]
+        clips[move] = {
+            "kind": "aerial",
+            "attacker": attacker["attacker"],
+            "defender": defender["attacker"],
+            "seconds": attacker["seconds"],
+        }
     clips.update(paired_clips())
     return clips
 

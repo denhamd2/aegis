@@ -9121,6 +9121,92 @@ CLIPS["Moonsault"] = [
               knee_r=(0.3, 0.0, -1.0), knee_l=(-0.3, 0.0, -1.0))),
 ]
 
+# Diving frog splash. The corner director holds the root through the pivot,
+# carries it during frames 14–28 and moves it sideways during the recovery.
+# Keep the ankle targets on the corner until the actual push. In flight,
+# carry the arms and legs in the frame of the rotating chest and hips.
+_FROG_COIL = pose(TOP_ON, pelvis=(0.0, 0.40, 1.71), hips=(-24, 180, 0),
+                  spine=(-21, 0, 0), head=(14, 0, 0),
+                  hand_r=(-0.34, 0.05, 1.89), hand_l=(0.34, 0.05, 1.89),
+                  elbow_r=(-0.65, 0.26, -0.60), elbow_l=(0.65, 0.26, -0.60),
+                  knee_r=(-0.25, -0.90, 0.18), knee_l=(0.25, -0.90, 0.18),
+                  foot_r=(-0.20, CORNER_FOOT_FWD, TOP_ROPE_FOOT_UP),
+                  foot_l=(0.20, CORNER_FOOT_FWD, TOP_ROPE_FOOT_UP), free_feet=True)
+
+
+def _frog_air(pelvis, pitch, fold, roll=0):
+    spec = _body((pitch, 180, roll), pelvis,
+                 hand_r=(0.43 - 0.23 * fold, 0.38, 0.45 - 0.24 * fold),
+                 hand_l=(-0.45 + 0.23 * fold, 0.41, 0.49 - 0.24 * fold),
+                 foot_r=(0.16, 0.05 + 0.38 * fold, -0.83 + 0.39 * fold),
+                 foot_l=(-0.18, 0.03 + 0.36 * fold, -0.81 + 0.37 * fold),
+                 elbow_r=(0.64, -0.31, -0.52), elbow_l=(-0.62, -0.30, -0.50),
+                 knee_r=(0.25, 0.96, 0.14), knee_l=(-0.25, 0.96, 0.14),
+                 free_feet=True)
+    return dict(spec, spine=(-11 * fold, 2, 0), head=(10, -3, 0), fist_r=0.18, fist_l=0.22)
+
+
+_FROG_LAND = pose(_yawed(PRONE_SELL), pelvis=(0.0, 0.0, 0.49), hips=(-83, 180, 1),
+                  spine=(-4, 0, 0), head=(13, -5, 0), hand_r=(-0.49, -0.32, 0.20),
+                  hand_l=(0.50, -0.30, 0.20), foot_r=(-0.18, 0.88, 0.22),
+                  foot_l=(0.15, 0.86, 0.19), free_feet=True)
+
+CLIPS["Frog_Splash_Attacker"] = _world_clip(49, (0, 0), _unified([
+    (0, TOP_ON),
+    (4, pose(TOP_ON, pelvis=(0.0, 0.27, 1.75), spine=(-14, 13, 0),
+             hand_r=(0.42, 0.35, 1.88), hand_l=(-0.40, 0.38, 1.88))),
+    (7, dict(_body((-10, 83, 0), (0.0, 0.43, 1.94),
+                  hand_r=(0.43, 0.17, 0.19), hand_l=(-0.43, 0.17, 0.19),
+                  knee_r=(0.24, 0.92, 0.16), knee_l=(-0.24, 0.92, 0.16),
+                  elbow_r=(0.60, -0.38, -0.48), elbow_l=(-0.60, -0.38, -0.48)),
+             foot_r=(0.02, CORNER_FOOT_FWD - 0.10, TOP_ROPE_FOOT_UP + 0.12),
+             foot_l=(-0.02, CORNER_FOOT_FWD + 0.12, TOP_ROPE_FOOT_UP + 0.10),
+             fist_r=0.22, fist_l=0.22, free_feet=True)),
+    (11, _FROG_COIL),
+    (14, pose(_FROG_COIL, pelvis=(0.0, 0.26, 2.02), hips=(-25, 180, 0),
+              hand_r=(-0.31, -0.03, 2.30), hand_l=(0.31, -0.04, 2.31))),
+    (17, _frog_air((0.0, 0.08, 2.08), -50, 0.54, -3)),
+    (20, _frog_air((0.0, 0.01, 1.94), -71, 1.0, -2)),
+    (23, _frog_air((0.0, -0.02, 1.56), -80, 0.36, 1)),
+    (26, _frog_air((0.0, -0.02, 0.91), -83, 0.03, 2)),
+    (28, _FROG_LAND),
+    (30, pose(_FROG_LAND, pelvis=(0.02, -0.03, 0.43), head=(8, -10, 0),
+              foot_r=(-0.18, 0.84, 0.16), foot_l=(0.16, 0.84, 0.14))),
+    (34, _body((-75, 180, 48), (0.10, -0.04, 0.43),
+               hand_r=(0.28, 0.43, 0.15), hand_l=(-0.42, 0.32, 0.16),
+               foot_r=(0.16, 0.24, -0.61), foot_l=(-0.17, 0.26, -0.59),
+               elbow_r=(0.63, -0.3, 0.35), elbow_l=(-0.67, -0.3, 0.34),
+               knee_r=(0.28, 0.84, 0.30), knee_l=(-0.23, 0.88, 0.24), spine=(-14, 0, 0),
+               head=(9, 0, 0), fist_r=0.22, fist_l=0.25, free_feet=True)),
+    (40, pose(SIDE_PUSH, pelvis=(0.08, 0.03, 0.43), hips=(-29, 39, -29),
+              hand_r=(0.47, 0.16, 0.13), hand_l=(-0.24, 0.36, 0.64))),
+    (45, pose(CROUCH, pelvis=(0.0, 0.03, 0.61), head=(-12, -15, 0),
+              elbow_r=(0.48, -0.30, -0.80), elbow_l=(-0.48, -0.30, -0.80))),
+    (49, P(head=(-7, -8, 0), elbow_r=(0.16, -0.38, -0.91), elbow_l=(-0.16, -0.38, -0.91))),
+]))
+
+# Both moves land chest-first across a wrestler who is already on his back.
+# His short reaction lifts both knees as his chest compresses, then eases
+# into the same Down pose used by the live game.
+def _splash_sell(hit, end):
+    return [
+        (0, S()),
+        (hit - 4, S(head=(-12, 2, 0), hand_l=(0.34, 0.09, 0.12))),
+        (hit, S(pelvis=(0.0, 0.0, 0.18), head=(-8, 0, 0),
+                hand_r=(-0.41, 0.11, 0.11), hand_l=(0.39, 0.12, 0.11))),
+        (hit + 4, S(pelvis=(0.0, 0.0, 0.20), spine=(-17, 3, 0), head=(-26, 3, 0),
+                    foot_r=(-0.20, -0.54, 0.36), foot_l=(0.21, -0.60, 0.30),
+                    hand_r=(-0.33, 0.13, 0.27), hand_l=(0.35, 0.21, 0.30))),
+        (hit + 10, S(pelvis=(0.0, 0.0, 0.19), spine=(-10, 0, 0),
+                     foot_r=(-0.14, -0.73, 0.18), foot_l=(0.21, -0.68, 0.16),
+                     hand_r=(-0.29, 0.20, 0.26), hand_l=(0.41, 0.16, 0.13))),
+        (end, S()),
+    ]
+
+
+CLIPS["Frog_Splash_Defender"] = _splash_sell(28, 49)
+
+
 # --- Cody's crossbody off the top (TopRopeSpot, crossbody) ---------------------
 #
 # gauntlet/refs/ff_moves_and_gameplay_plan.md, AI staples 5: the other top-rope
@@ -9337,27 +9423,13 @@ CLIPS["Springboard_Cutter_Defender"] = _world_clip_path(42, [
 ]))
 
 
-# --- The springboard moonsault (DiveSpot's third ending) ------------------------
-#
-# Fight Forever's Springboard Moonsault 3 (Jericho's, and tagged a fit for
-# Cody: tools/moves/build_ff_library.py), as the third way his dive spot ends:
-# on the apron he turns his back to the ring, hops up backward onto the middle
-# rope, and springs off it into a backflip over the top rope -- coming down
-# chest first on the man standing 1.30 m in, whose head goes past Cody's hips,
-# and taking him straight over backward. Both down; Cody pushes back off him
-# onto his knees and stands past the man's head, looking down at him.
-#
-# The ROOT FACES OUT for this one, where the Disaster Kick's and the Cutter's
-# face in: the flip is about his own right-left axis only (hips pitch 0 -> 270,
-# as Moonsault's is), and he gets up facing the way he came down, so nothing
-# in it has to unwind. DiveSpot turns the root round on the clip's first tick
-# (WrestlerController._turn_round_on_the_mat), and frame 0 is Apron_Climb's
-# last pose turned half round (_yawed): the same pixels. World space; the man
-# stands at -fwd 1.30, and the root runs 2.65 m back to where Cody stands up.
-# 60 frames; the chest lands on frame 33 (DiveSpot.MOONSAULT_CONTACT, 66 ticks).
+# Springboard moonsault from the apron. The flip is about Cody's
+# right-left axis and the opponent has settled onto his back by takeoff.
+# The pelvis leads the flight, then the torso opens into the chest bump.
+# The travel is 2.65 m to the standing recovery beyond the opponent.
 SPRING_MS_TRAVEL = -2.65
 SPRING_MS_LAUNCH = 18
-SPRING_MS_CONTACT = 33
+SPRING_MS_CONTACT = 36
 
 
 def _smooth(t):
@@ -9427,8 +9499,8 @@ def _spring_ms_flight():
     for frame in range(SPRING_MS_LAUNCH, SPRING_MS_CONTACT + 1):
         u = (frame - SPRING_MS_LAUNCH) / float(span)
         t = (frame - SPRING_MS_LAUNCH) / 30.0
-        pitch = 240.0 * u
-        pelvis = (0.22 * u, -0.08 - 1.38 * u, 1.66 + 2.65 * t - 4.9 * t * t)
+        pitch = _anchored([(0.0, 0.0), (0.40, 99.0), (0.72, 209.0), (1.0, 270.0)], u)
+        pelvis = (0.05 * u, -0.08 - 1.92 * u, 1.66 + 2.4 * t - 7.36 * t * t)
         hr = _anchored(_MS_HANDS, u)
         fr = _anchored(_MS_FEET, u)
         spec = dict(pelvis=pelvis, hips=(pitch, 0, 0), spine=(-6, 0, 0),
@@ -9506,15 +9578,8 @@ CLIPS["Springboard_Moonsault_Attacker"] = _world_clip(60, (SPRING_MS_TRAVEL, 0.0
            foot_r=(0.15, -0.06, 0.76), foot_l=(-0.15, -0.06, 0.76),
            knee_r=(0.2, 1.0, 0.3), knee_l=(-0.2, 1.0, 0.3))),
 ] + _spring_ms_flight() + [
-    # Taking him over: chest on his chest as he goes back.
-    (36, dict(_spring_ms_flight()[-1][1], **{k: v for k, v in _body(
-        (255, 0, 0), (0.21, -1.89, 1.13),
-        hand_r=(0.45, 0.40, 0.20), hand_l=(-0.45, 0.40, 0.20),
-        elbow_r=(0.8, -0.2, -0.3), elbow_l=(-0.8, -0.2, -0.3),
-        foot_r=(0.15, -0.10, -0.85), foot_l=(-0.14, -0.08, -0.86),
-        knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0)).items()})),
-    # Down on him, flat, as Moonsault lands.
-    (40, _moved(_MS_PRONE, 0.20, -2.00)),
+    # The extension reaches the opponent before Cody settles into the brace.
+    (40, _moved(_MS_PRONE, 0.07, -2.00)),
     (44, _moved(dict(_MS_PRONE, pelvis=(0.0, 0.0, 0.40), spine=(2, 0, 0), head=(4, 0, 0),
                      hand_r=(0.44, 0.40, 0.20), hand_l=(-0.48, 0.42, 0.20),
                      fist_r=0.3, fist_l=0.3), 0.20, -2.00)),
@@ -9522,7 +9587,7 @@ CLIPS["Springboard_Moonsault_Attacker"] = _world_clip(60, (SPRING_MS_TRAVEL, 0.0
     # beyond his head.
     (49, dict(pelvis=(0.20, -2.28, 0.62), hips=(280, 0, 0), spine=(0, 0, 0),
               head=(24, 0, 0),
-              hand_r=(0.45, -1.80, 0.06), hand_l=(-0.05, -1.80, 0.26),
+              hand_r=(0.45, -1.80, 0.16), hand_l=(-0.05, -1.80, 0.26),
               elbow_r=(0.3, -1.0, 0.0), elbow_l=(-0.3, -1.0, 0.0),
               fist_r=0.1, fist_l=0.1,
               foot_r=(0.34, -2.70, 0.12), foot_l=(0.06, -2.70, 0.12),
@@ -9534,21 +9599,20 @@ CLIPS["Springboard_Moonsault_Attacker"] = _world_clip(60, (SPRING_MS_TRAVEL, 0.0
     (60, _round(_moved(P(**_MS_ELBOWS_DOWN), 0.0, SPRING_MS_TRAVEL))),
 ]))
 
-# The man it lands on: facing the apron, groggy, looking up at him coming
-# over, and taken straight over backward on frame 18 -- the Disaster Kick
-# victim's contact frame, so DiveSpot's delay does the timing.
+# He staggers down during the apron preparation. The chest bump uses the
+# grounded splash reaction, rotated into the same head-away orientation.
 CLIPS["Springboard_Moonsault_Defender"] = [
-    (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(-14, 0, 0),
-           hand_r=(0.22, 0.46, 1.32), hand_l=(-0.20, 0.48, 1.30),
-           fist_r=0.6, fist_l=0.6)),
-    (10, P(spine=(-6, 0, 0), head=(6, 0, 0),
-           hand_r=(0.26, 0.24, 1.10), hand_l=(-0.24, 0.26, 1.08),
-           fist_r=0.6, fist_l=0.6)),
-    # Chin up, watching him come over, the hands half up.
-    (16, P(spine=(2, 0, 0), head=(18, 0, 0),
-           hand_r=(0.28, 0.30, 1.30), hand_l=(-0.26, 0.32, 1.30),
-           fist_r=0.3, fist_l=0.3)),
-] + _back_fall(18, 42, pelvis_hit=0.82)
+    (0, _CUTTER_BRACING),
+] + _back_fall(3, 20, pelvis_hit=0.81) + [
+    (27, pose(SUPINE_AWAY, head=(-15, 12, 0), hand_r=(0.35, -0.12, 0.14))),
+    (34, pose(SUPINE_AWAY, head=(-11, -3, 0), hand_r=(0.39, -0.04, 0.11))),
+    (36, pose(SUPINE_AWAY, pelvis=(0.0, 0.0, 0.184), head=(-8, 4, 0))),
+    (40, pose(SUPINE_AWAY, pelvis=(0.0, 0.0, 0.199), spine=(-19, 3, 0),
+              head=(-23, -5, 0), hand_r=(0.31, -0.15, 0.25), hand_l=(-0.39, -0.08, 0.16))),
+    (48, pose(SUPINE_AWAY, pelvis=(0.0, 0.0, 0.188), spine=(-10, 0, 0),
+              head=(-15, 7, 0), hand_r=(0.32, -0.20, 0.19))),
+    (60, SUPINE_AWAY),
+]
 
 
 # --- The rebound hurricanrana (whip_rebound reference 05) ------------------------
