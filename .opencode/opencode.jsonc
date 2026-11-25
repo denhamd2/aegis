@@ -1,11 +1,37 @@
-// Project configuration for Aegis. Agent definitions live in
-// .opencode/agents/*.md; this file selects the main agent and names the default
-// model. Reasoning variants are pinned per agent because the root default does
-// not retain a #variant.
+// Project configuration for Aegis. The primary agent runs on Kimi K3.1 Pro
+// (native vision) and owns orchestration plus the 3D spatial checks; two
+// OpenCode Go subagents handle heavy UE 5.9 combat code and repetitive batch
+// work. Reasoning effort is pinned with a #variant on each agent's model
+// (the root default model does not retain a #variant).
 {
   "$schema": "https://opencode.ai/config.json",
-  "model": "opencode-go/deepseek-v4.1-flash",
-  "default_agent": "aegis-main",
+  "model": "opencode-go/kimi-k3.1-pro",
+  "mcp": {
+    "unreal-mcp": {
+      "type": "remote",
+      "url": "http://127.0.0.1:8000/mcp",
+      "oauth": false
+    },
+    "blender-mcp": {
+      "type": "local",
+      "command": ["uvx", "blender-mcp"],
+      "enabled": true
+    }
+  },
+  "agents": {
+    "combat-coder": {
+      "mode": "subagent",
+      "model": "opencode-go/deepseek-v4-pro#high",
+      "description": "High-speed UE 5.9 C++ and Python engineer for arcade wrestling state machines, grapple/reversal windows, momentum meters, and match rules.",
+      "system": "You are the Aegis combat engineer. You implement Unreal Engine 5.9 C++ and Python for the arcade wrestling game: combat state machines, grapple and reversal timing windows, the momentum economy, and match rules. Target UE 5.9 APIs only (no deprecated UE4/early-UE5 calls), work in UE metric scale (1 unit = 1 cm, wrestler height ~180-200 cm), and use UE5 Mannequin / IK Rig bone naming for clean retargeting. Keep changes focused; hand the result back to the primary agent rather than editing the Godot source of truth."
+    },
+    "batch-worker": {
+      "mode": "subagent",
+      "model": "opencode-go/deepseek-v4.1-flash#low",
+      "description": "Ultra-fast worker for repetitive Blender/UE5 batch tasks: bone renaming, socket setup, batch FBX export/import, arena crowd and prop placement.",
+      "system": "You are the Aegis batch worker. You run repetitive, mechanical Blender and UE 5.9 tasks through consolidated Python scripts (execute_blender_code / the Unreal Python tool) rather than dozens of individual transform calls: bone renames, socket setup, batch FBX export/import, arena crowd and prop placement. Prefer one script per batch. Report exactly what you changed and which files you touched; do not redo work whose inputs have not changed."
+    }
+  },
   "permissions": [
     {
       "action": "experimental_image_generate",

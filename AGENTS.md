@@ -59,20 +59,19 @@ trade a major quality gain for a small saving. Work within the owner's OpenCode
 Go subscription; never automatically use a model or service that can incur
 charges outside it.
 
-Verified catalog facts: `opencode-go/deepseek-v4.1-flash` exposes `low`, `high`
-and `max` reasoning variants; `opencode-go/deepseek-v4-pro` exposes `high` and
-`max` and is available in the subscription; Pro has no image input, while Flash
-does. `opencode/nemotron-3.5-super-vl-free` is active, accepts image input and is
-genuinely free: input, output and cache all cost zero. Reasoning variants are
-pinned in agent frontmatter because the root default model does not retain a
-`#variant`.
+Verified catalog facts: `opencode-go/kimi-k3.1-pro` accepts image and video
+input (native vision) and exposes `low`, `high` and `max` reasoning variants;
+`opencode-go/deepseek-v4-pro` exposes `high` and `max` and has no image input;
+`opencode-go/deepseek-v4.1-flash` exposes `low`, `high` and `max`. Reasoning
+effort is pinned as a `#variant` on each agent's model (the root default model
+does not retain a `#variant`); there is no `medium` effort — the valid values
+are `low`, `high` and `max`.
 
 | Agent | Mode | Model | Role |
 | --- | --- | --- | --- |
-| `aegis-main` | primary | `opencode-go/deepseek-v4.1-flash#max` | Default owner: classify, plan, coordinate, implement gameplay, integrate, validate and report. |
-| `blender-specialist` | subagent | `opencode-go/deepseek-v4.1-flash#max` | 3D asset work: modeling, rigging, UV, texturing, materials, lighting, animation, arenas, VFX and export. |
-| `architect` | subagent | `opencode-go/deepseek-v4-pro#max` | Pro escalation for difficult reasoning, architecture, trade-offs and complex choreography; read-only. |
-| `visual-qa` | subagent | `opencode/nemotron-3.5-super-vl-free` | Selective visual review of rendered wrestler models, animations, textures, lighting, arenas and gameplay screenshots; read-only and free. |
+| *(primary)* | primary | `opencode-go/kimi-k3.1-pro` | Default owner: classify, plan, coordinate, implement gameplay, integrate, validate and report, plus the native-vision spatial checks (rigging, ring geometry, paired grapple alignment). |
+| `combat-coder` | subagent | `opencode-go/deepseek-v4-pro#high` | High-speed UE 5.9 C++ and Python engineer for arcade wrestling state machines, grapple/reversal windows, momentum meters and match rules. |
+| `batch-worker` | subagent | `opencode-go/deepseek-v4.1-flash#low` | Ultra-fast worker for repetitive Blender/UE5 batch tasks: bone renaming, socket setup, batch FBX export/import, arena crowd and prop placement. |
 
 OpenCode also reads the root `AGENTS.md` and discovers the shared skills in
 `.claude/skills/` and `.agents/skills/` from the repository root. Start a
@@ -80,24 +79,18 @@ Beechlawn session in `games/beechlawn_rovers/` to load that project's
 `AGENTS.md` and `.agents/skills/`; a root session intentionally does not
 advertise football-only rules or skills.
 
-- Flash Max is the default for roughly 85–90% of work across every discipline.
-  Keep it selected as the main model; do not switch the session to Pro.
-- Pro is reserved for roughly 10–15% of genuinely complex work. It is not a
-  quota and not a discipline label. The main agent invokes `architect`
-  automatically when a trigger below is met, gives it a focused brief, then
-  resumes implementation and testing after the specialist returns.
-- `visual-qa` is selective, not automatic. Invoke it only when automated
-  validation cannot settle a rendered visual claim, and do not run it after
-  every change. Its scope is rendered wrestler models, animations, textures,
-  lighting, arenas and gameplay screenshots.
+- The primary agent runs on Kimi K3.1 Pro and keeps the native-vision spatial
+  checks itself; do not switch the session model mid-work.
+- `combat-coder` owns the heavy C++ gameplay systems, StateTrees and combat
+  logic. The main agent delegates to it when a task is combat-system work, gives
+  it a focused brief, then resumes integration and testing after it returns.
+- `batch-worker` owns repetitive, mechanical asset work. Delegate loops over
+  sockets, bones, props or exports to it rather than doing them one call at a
+  time in the main context.
 - Do not use Gemini or any other paid visual model without the owner's explicit
-  approval, even if it is included in the OpenCode Go allowance. If Nemotron is
-  unavailable, report the limitation and stop; do not silently substitute a paid
+  approval, even if it is included in the OpenCode Go allowance. Vision stays on
+  the primary agent's native input; do not silently substitute a paid vision
   model.
-- No separate gameplay subagent is configured by default: `aegis-main` owns
-  gameplay, controls, physics, AI, cameras, UI and performance so one agent
-  remains accountable. Add another agent only if the owner approves and the
-  structure would materially benefit.
 - Reuse the existing agents and skills. Do not create a subagent per skill. One
   task has one primary owner; do not fan the same question out to several
   agents.
@@ -107,6 +100,44 @@ advertise football-only rules or skills.
   return scripts, findings or plans; they do not publish.
 - Do not commit or push a batch unless the owner has approved that batch for
   publication.
+
+## Engine & Scale
+
+- Always target Unreal Engine 5.9 C++ and the `unreal` Python API. Never use
+  deprecated UE4 or early-UE5 APIs.
+- Enforce strict UE metric scale: 1 unit = 1 cm, standard wrestler height
+  ~180–200 cm.
+- Use UE5 Mannequin / IK Rig bone naming conventions for clean retargeting.
+
+## Visual spatial verification
+
+- Leverage the primary agent's native vision directly. Whenever creating or
+  modifying character meshes, ring props, rope physics, or two-character
+  grapple/paired animations in Blender or UE 5.9, capture multi-angle viewport
+  screenshots (front, side, 3/4) and verify root-motion alignment and check for
+  hand/mesh clipping before finishing.
+- Close every visual claim on the captured frames, not on a probe's numbers or
+  a window screenshot.
+
+## Batching & delegation
+
+- Prefer consolidated Python scripts (`execute_blender_code` / the UE 5.9
+  Python tool) over dozens of individual transform calls.
+- Automatically delegate heavy C++ gameplay systems, StateTrees and combat
+  logic to `@combat-coder`, and offload repetitive asset/socket/prop loops to
+  `@batch-worker`.
+- **MCP Tool Efficiency:** Always prefer UE 5.9's Python execution tool and
+  Blender's `execute_blender_code` over granular single-actor or single-object
+  MCP calls whenever modifying more than 2 items at once.
+- **PIE & State Safety:** Before using Unreal MCP tools to edit level actors,
+  Blueprints, or StateTrees, verify that Play-In-Editor (PIE) is stopped so
+  changes persist cleanly to disk.
+- **Non-Destructive Edits:** Never overwrite or delete existing wrestler
+  skeletal meshes, Animation Blueprints, or move DataTables without first
+  duplicating or saving a backup.
+- **Direct Subagent Execution:** Both `@combat-coder` and `@batch-worker` have
+  direct access to `unreal-mcp` and `blender-mcp`—instruct them to execute their
+  own Python/C++ tool calls rather than only returning code snippets.
 
 ## Blender asset source requirement
 
@@ -125,16 +156,16 @@ claiming visual completion; native M1 performance still requires measurement.
   shell, HTTP, browser, plugin and MCP routes as well as the built-in tool.
 - The project permission denies the built-in tool. Do not attempt to bypass that
   deny.
-- Procedural texture creation, Blender modeling and materials remain with Flash
-  Max and `blender-specialist`. Use Blender shader nodes, procedural materials,
-  bakes, UV/texture workflows and existing project textures. Do not substitute
-  generated images for project-authored or reference-matched assets.
-- Visual QA remains free `opencode/nemotron-3.5-super-vl-free`, selective and
-  read-only. It reviews existing evidence; it does not generate or edit images.
+- Procedural texture creation, Blender modeling and materials remain with the
+  primary agent and `batch-worker`. Use Blender shader nodes, procedural
+  materials, bakes, UV/texture workflows and existing project textures. Do not
+  substitute generated images for project-authored or reference-matched assets.
+- Visual QA uses the primary agent's native vision, selective and direct. It
+  reviews existing evidence; it does not generate or edit images.
 
 ## Automatic Pro escalation
 
-Escalate to `architect` when:
+Escalate to `combat-coder` when:
 
 - two meaningful attempts have failed to resolve a significant problem;
 - a difficult architectural decision is required;
@@ -147,23 +178,23 @@ Give the specialist only the decision, constraints, relevant evidence and files,
 and the options already considered. Do not send whole project histories or large
 logs. It returns a recommendation, risks and a test plan; its task ends and the
 main agent continues. Do not escalate merely because a task belongs to a
-technical discipline, and do not assume Pro outperforms Flash without task
-evidence.
+technical discipline, and do not assume Pro outperforms the primary model
+without task evidence.
 
 ## Discipline routing and validation
 
 | Discipline | Default owner | Core work and validation |
 | --- | --- | --- |
-| Character modeling and rigging | `blender-specialist` | Proportions, anatomy, faces, bodies, clothing, game-ready topology, deformation, bone weights, IK/FK, scale, rig compatibility and LOD. Reuse working meshes and rigs. Validate topology, proportions, weights and deformation. |
-| Texturing and materials | `blender-specialist` | PBR skin, fabric, leather and metal; UVs and texel density; atlases, normal/roughness maps; colour and material response; texture budgets; Godot-compatible materials. Reuse material libraries. Validate missing textures, broken UVs, assignments and memory. |
-| Lighting and rendering | `blender-specialist`; `aegis-main` for in-game lighting | Broadcast arena lighting, skin/clothing response, shadows, exposure, contrast, reflections, atmosphere and consistency across camera angles. Prefer Godot Forward+ for in-game claims. Validate configuration and performance settings; use actual renders where available. |
-| Wrestling animation | `blender-specialist` | Grapples, throws, strikes, submissions, reversals, locomotion, transitions, two-wrestler synchronization, contact constraints, timing, momentum, root motion, selling and Godot integration. Plan attacker and defender choreography together. Validate contacts, foot sliding, joint limits, continuity and exports. |
-| Gameplay and controls | `aegis-main` | Responsive controls, grapple/strike systems, reversals, pins/submissions, match rules, move selection, positioning, camera integration, match flow and state transitions. Test timing, transitions, input handling and failure cases. |
-| Physics and collision | `aegis-main` | Wrestler collision and contact, grapple positioning, knockdowns, impacts, ropes/boundaries, tables/ladders/weapons and animation/physics coordination. Prefer stable, predictable behaviour over unnecessary complexity. Validate collisions, contacts and state transitions. |
-| Opponent AI | `aegis-main` | Decision-making, offence/defence, positioning, reversals, pacing, difficulty, contextual move selection, ring awareness and variety. Use deterministic simulations and scenario tests where practical. |
-| Arenas, crowds, environments and VFX | `blender-specialist` | Arena geometry, ring/ringside assets, crowds, entrances and staging, screens/LED, lighting, atmosphere, pyrotechnics/effects, reuse, instancing and LOD. Prioritise believable broadcast presentation and efficient rendering. Validate scene/instancing and performance cost. |
-| Cameras, UI, HUD and presentation | `aegis-main` | Broadcast camera behaviour, dynamic framing, entrances/cutscenes, HUD/match graphics, menus, replays, transitions and readability. Preserve the approved camera and entrance direction. Validate framing, readability, transitions and continuity. |
-| Performance and optimization | `aegis-main` | Maintain 60 FPS on the M1/16 GB target; reduce render cost, geometry/material cost, animation playback cost, memory/texture pressure and unnecessary physics/AI work; profile bottlenecks. Only native measurements establish M1 performance. |
+| Character modeling and rigging | `primary` (native vision) + `batch-worker` for loops | Proportions, anatomy, faces, bodies, clothing, game-ready topology, deformation, bone weights, IK/FK, scale, rig compatibility and LOD. Reuse working meshes and rigs. Validate topology, proportions, weights and deformation. |
+| Texturing and materials | `primary` + `batch-worker` | PBR skin, fabric, leather and metal; UVs and texel density; atlases, normal/roughness maps; colour and material response; texture budgets; Godot-compatible materials. Reuse material libraries. Validate missing textures, broken UVs, assignments and memory. |
+| Lighting and rendering | `primary`; `batch-worker` for bake/render loops | Broadcast arena lighting, skin/clothing response, shadows, exposure, contrast, reflections, atmosphere and consistency across camera angles. Prefer Godot Forward+ for in-game claims. Validate configuration and performance settings; use actual renders where available. |
+| Wrestling animation | `primary` (native vision) | Grapples, throws, strikes, submissions, reversals, locomotion, transitions, two-wrestler synchronization, contact constraints, timing, momentum, root motion, selling and Godot integration. Plan attacker and defender choreography together. Validate contacts, foot sliding, joint limits, continuity and exports. |
+| Gameplay and controls | `combat-coder` | Responsive controls, grapple/strike systems, reversals, pins/submissions, match rules, move selection, positioning, camera integration, match flow and state transitions. Test timing, transitions, input handling and failure cases. |
+| Physics and collision | `combat-coder` | Wrestler collision and contact, grapple positioning, knockdowns, impacts, ropes/boundaries, tables/ladders/weapons and animation/physics coordination. Prefer stable, predictable behaviour over unnecessary complexity. Validate collisions, contacts and state transitions. |
+| Opponent AI | `combat-coder` | Decision-making, offence/defence, positioning, reversals, pacing, difficulty, contextual move selection, ring awareness and variety. Use deterministic simulations and scenario tests where practical. |
+| Arenas, crowds, environments and VFX | `batch-worker` | Arena geometry, ring/ringside assets, crowds, entrances and staging, screens/LED, lighting, atmosphere, pyrotechnics/effects, reuse, instancing and LOD. Prioritise believable broadcast presentation and efficient rendering. Validate scene/instancing and performance cost. |
+| Cameras, UI, HUD and presentation | `primary` | Broadcast camera behaviour, dynamic framing, entrances/cutscenes, HUD/match graphics, menus, replays, transitions and readability. Preserve the approved camera and entrance direction. Validate framing, readability, transitions and continuity. |
+| Performance and optimization | `combat-coder` | Maintain 60 FPS on the M1/16 GB target; reduce render cost, geometry/material cost, animation playback cost, memory/texture pressure and unnecessary physics/AI work; profile bottlenecks. Only native measurements establish M1 performance. |
 
 The escalation triggers above cover the discipline-specific Pro cases: difficult
 rig architecture or persistent deformation, persistent material-system problems,
@@ -187,11 +218,11 @@ Apply this to every discipline. Run the cheapest meaningful check first.
 - **Level 2 — selective visual testing.** Only when a working Blender, Godot or
   remote rendering environment exists. Generate a small number of representative
   images, use low-resolution previews first, and inspect only changed or
-  problematic areas. Prefer automated diagnostics over AI visual review; use
+  problematic areas.   Prefer automated diagnostics over AI visual review; use
   vision selectively and do not resend identical frames or analyse whole videos.
-  Do not invoke `visual-qa` automatically after every change; Level 1 checks must
+  Do not run visual review automatically after every change; Level 1 checks must
   come first. Every move that is claimed built or fixed still needs its own
-  per-move sheet and a recorded `visual-qa` verdict (see below); batch sheets
+  per-move sheet and a recorded native-vision verdict (see below); batch sheets
   are supporting evidence, not a substitute.
 - **Level 3 — final quality validation.** Use more complete evidence only for
   major milestones or acceptance-ready work: character turnarounds, deformation
@@ -202,7 +233,7 @@ Apply this to every discipline. Run the cheapest meaningful check first.
 - **Per-move visual QA.** Every move that is claimed built or fixed must have
   its own review sheet — both roles, six beats, match camera plus a close or
   side view — stored at `gauntlet/refs/ff_review/moves/<move_id>.png`, and a
-  `visual-qa` verdict recorded in `gauntlet/refs/ff_visual_qa_ledger.md`. A move
+  native-vision verdict recorded in `gauntlet/refs/ff_visual_qa_ledger.md`. A move
   without a sheet and a verdict is not complete. This is per completed move, not
   per code change.
 
@@ -221,7 +252,8 @@ visual and native-performance validation for later.
 
 ## Token efficiency
 
-- Use Flash Max by default; invoke Pro only for justified complexity.
+- Use the primary agent (Kimi) by default; invoke `combat-coder` (Pro) only for
+  justified complexity and `batch-worker` (Flash) for repetitive loops.
 - Reuse existing agents, skills, rigs, materials and infrastructure.
 - Inspect only relevant files; avoid repeated full-project searches.
 - Keep specialist context focused; do not send whole histories or large logs.
