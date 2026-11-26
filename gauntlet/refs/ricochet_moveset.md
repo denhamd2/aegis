@@ -123,6 +123,38 @@ Two notes on that block:
   makes the roster read as unfinished. It is the obvious first pick if Recoil
   is wanted back as a signature.
 
+## The Unreal port has five tiers, not thirteen
+
+`AegisStory::MovesetOf` builds an `FMoveset` with `Strike`, `Grapple`, `Power`,
+`Signature`, `Finisher`, `TauntClip` and `TauntTicks` — nothing else. Its own
+comment says the running, corner, rebound, dive and Spear-run tiers "wait for
+those set-ups to be ported". So on the Unreal side his aerial game has to sit
+in `Signature`/`Finisher` rather than in `dive`/`top_rope`.
+
+The table is not a subset: `DT_AegisMoves` holds **228 rows** and `MoveDefs`
+**227**, against this library's 89 base plus 139 FF moves. Every id this doc
+names was confirmed present by dumping the DataTable's row names from the
+editor (`/Game/AegisTest/Data/DT_AegisMoves`), not inferred from Godot.
+
+The Unreal entry, then:
+
+```cpp
+// Splash 630 is his, and the Recoil shape is code_breaker_3 -- Cody already
+// draws code_breaker_1, and two men sharing one move reads as unfinished.
+FMoveset Ricochet;
+Ricochet.Strike = { "strike_jab", "strike_hook", "strike_cross", "strike_kick_heavy",
+    "strike_turning_back_kick_body", "strike_front_kick_body" };
+Ricochet.Grapple = { "grapple_vertical_suplex", "locomotion_northern_lights",
+    "brainbuster_1", "inverted_ddt_1" };
+Ricochet.Power = { "tiger_driver_98", "running_float_over_liger_bomb",
+    "pop_up_powerbomb_1", "fireman_carry_bomb_2" };
+Ricochet.Signature = { "diving_shooting_star", "poison_rana_1",
+    "avalanche_poison_rana", "code_breaker_3", "magic_girl_450_splash" };
+Ricochet.Finisher = { "splash_630" };
+Ricochet.TauntClip = "Point_Crowd";
+Ricochet.TauntTicks = 90;
+```
+
 ## Gaps worth authoring, in order of how much they are "him"
 
 1. **Spirit Gun** — needs a kneeling-target check plus the pre-move theatrics.
