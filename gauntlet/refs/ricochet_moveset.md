@@ -173,11 +173,27 @@ Ricochet.TauntTicks = 90;
 - Every ID above resolves to a file that exists; the FF ones were read for
   their frame data (all 6 active frames; startup 28–60, recovery 34–40) and
   their damage split (head 10–18, torso 6–12).
-- Not yet checked: whether these clips look right **on his mesh**. His rig is
+- Looked for them in the Unreal port on 2026-11-27 and the look stopped at the
+  tooling. The level that was open held 119 actors — `AegisCrowd`, four cine
+  cameras, `BP_ThirdPersonCharacter_C` at (5594.8, 14754.5, 110), 87 static
+  meshes — and no `SkeletalMeshActor`. The editor's command bridge answers
+  `ping`, `get_actors_in_level`, `find_actors_by_name`, `get_actor_properties`,
+  `set_actor_property`, `set_actor_transform`, `spawn_actor`, `delete_actor`
+  and `take_screenshot`, and rejects every other name tried — asset search,
+  bone read-out, montage playback, viewport camera, level load. Even
+  `get_actor_properties` returns only name, class, location, rotation and
+  scale, so it does not say which mesh is on the actor.
+- Still open, then: whether these clips look right **on his mesh**. His rig is
   a 65-bone Mixamo skeleton retargeted onto the base rig, with a +16.7% arm
   reach mismatch recorded in the rig report, so the arm-led moves in this set
   (Sling Blade, Poisonrana, springboard cutter) are the ones to look at first
-  in `tools/probe/paired_shot.tscn`.
+  in `tools/probe/paired_shot.tscn`. From outside the editor nothing can start
+  a clip, step it, or bring a frame back — `take_screenshot` writes to the
+  editor machine's own disk and the response carries only the path — so
+  closing this needs either a capture taken at the editor, or four commands
+  added to the plugin: a skeletal-mesh and bone read-out, `play_montage` with a
+  start time, a pose query at a given frame, and a screenshot returned inside
+  the response rather than written out.
 - The 630 is a 54-frame startup clip with a 40-frame recovery — the longest
   aerial in the game. It should be the finisher, not a signature, or he will
   spend a fifth of a match in the air.
